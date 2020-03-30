@@ -1,0 +1,14 @@
+---
+namespace: cisco
+name: dcnm
+version: 0.0.1 
+readme: README.md
+authors:
+- Mike Wiebe <mikewiebe>
+- Shrishail Kariyappanavar <nkshrishail>
+description: Ansible collection for the Cisco Data Center Nework Manager
+license_file: LICENSE 
+tags: [cisco, dcnm, nxos, networking, vxlan]
+dependencies:
+  "ansible.netcommon": "*"
+repository: https://github.com/CiscoDevNet/ansible-dcnm

@@ -1,2 +1,3 @@
-# ansible-dcnm
-Ansible collection for the Data Center Network Manager
+# Ansible Collection - cisco.dcnm
+
+An Ansible collection for the Cisco Data Center Network Manager (DCNM)
