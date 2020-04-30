@@ -1,0 +1,106 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+
+- name: Verify if fabric - integration-test is deployed.
+  dcnm_rest:
+    method: GET
+    path: /rest/control/fabrics/integration-test
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: setup - Clean up any existing vrfs
+  dcnm_vrf:
+    fabric: integration-test
+    state: deleted
+
+- name: sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+##############################################
+##                MERGED                    ##
+##############################################
+
+
+- name: Create, Attach and Deploy new VRF
+  dcnm_vrf: &conf
+    fabric: integration-test
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: 10.122.197.224
+        vlan_id: 202
+      - ip_address: 10.122.197.226
+        vlan_id: 203
+      deploy: true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '"VRF is successfully created" in result.response[0].DATA.successList[0].message'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"10.122.197.224" in result.diff[0].attach[0].ip_address'
+    - '"10.122.197.226" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+
+- name: conf1 - Idempotence
+  dcnm_vrf: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+
+- name: Create, Attach and Deploy new VRF - Update with incorrect VRF ID.
+  dcnm_vrf:
+    fabric: integration-test
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: 10.122.197.224
+        vlan_id: 202
+      - ip_address: 10.122.197.226
+        vlan_id: 203
+      deploy: true
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"cant be updated to a different value" in result.msg'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: clean up - remove existing vrfs
+  dcnm_vrf:
+    fabric: integration-test
+    state: deleted

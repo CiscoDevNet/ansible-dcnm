@@ -16,9 +16,9 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import json, socket, time
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, dcnm_send, validate_list_of_dicts
-from ansible.module_utils.connection import Connection
+import json, socket, time, copy
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    get_fabric_inventory_details, dcnm_send, validate_list_of_dicts
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -50,6 +50,32 @@ options:
   state:
     description:
       - The state of the configuration after module completion.
+        Merged: The state of the objects listed on the playbook will be created on the DCNM for the same objects.
+                Only additions will be made if the playbook object or part of the object is missing on DCNM. If an
+                object or part of the object mentioned on playbook is already present on DCNM, no operation will be
+                performed for such objects or part of the objects.
+        Replaced:  The state of the objects listed in the playbook will serve as source of truth for the same objects
+                   on the DCNM under the fabric mentioned. Additions and deletions will be done to bring the DCNM
+                   objects to the state listed in the playbook. Note: Replace will only work on the objects mentioned
+                   in the playbook.
+        Overridden:  The state of the objects listed in the playbook will serve as source of truth for all the objects
+                     under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the
+                     state listed in the playbook. Note: Override will work on the all the objects in the playbook and
+                     also all the objects on DCNM.
+        Deleted:  Deletes the list of objects specified in the playbook, if no objects are provided in the playbook,
+                  all the objects present on DCNM will be deleted.
+        Query:  Returns the current state on the DCNM for the objects listed in the playbook.
+
+        rollback functionality:
+        This module supports task level rollback functionality. If any task runs into failures, as part of failure 
+        handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+        beginning of the task execution. Following few lines provide a logical description of how this works,
+        if (failure)
+            want data = have data
+            have data = get state of DCNM
+            Run the module in override state with above set of data to produce the required set of diffs
+            and push the diff payloads to DCNM.
+        If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
     type: str
     choices:
       - merged
@@ -113,150 +139,149 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Create VRFs
-    dcnm_vrf:
-      fabric: vxlan-fabric
-      state: merged 
-      config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-          attach:
-            - ip_address: 10.122.197.224
-              vlan_id: 202
-              deploy: true
-            - ip_address: 10.122.197.225
-              vlan_id: 203
-            deploy: false
-        - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-          attach:
-            - ip_address: 10.122.197.224
-              vlan_id: 402
-            - ip_address: 10.122.197.225
-              vlan_id: 403
+- name: Merge VRFs
+  dcnm_vrf:
+    fabric: vxlan-fabric
+    state: merged 
+    config:
+    - vrf_name: ansible-vrf-r1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
+      attach:
+      - ip_address: 10.122.197.224
+        vlan_id: 202
+        deploy: true
+      - ip_address: 10.122.197.225
+        vlan_id: 203
+        deploy: false
+    - vrf_name: ansible-vrf-r2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
+      attach:
+      - ip_address: 10.122.197.224
+        vlan_id: 402
+      - ip_address: 10.122.197.225
+        vlan_id: 403
 
 - name: Replace VRFs
-    dcnm_vrf:
-      fabric: vxlan-fabric
-      state: replaced 
-      config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-          attach:
-            - ip_address: 10.122.197.224
-              vlan_id: 202
-              deploy: true
-            # Delete this attachment
-            # - ip_address: 10.122.197.225
-            #   vlan_id: 203
-            # deploy: true
-            # Create the following attachment
-            - ip_address: 10.122.197.226
-              vlan_id: 204
-              deploy: true
-        # Dont touch this if its present on DCNM
-        # - vrf_name: ansible-vrf-r2
-        #   vrf_id: 9008012
-        #   vrf_template: Default_VRF_Universal
-        #   vrf_extension_template: Default_VRF_Extension_Universal
-        #   source: None
-        #   service_vrf_template: None
-        #   attach:
-        #     - ip_address: 10.122.197.224
-        #       vlan_id: 402
-        #     - ip_address: 10.122.197.225
-        #       vlan_id: 403
+  dcnm_vrf:
+    fabric: vxlan-fabric
+    state: replaced 
+    config:
+    - vrf_name: ansible-vrf-r1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
+      attach:
+      - ip_address: 10.122.197.224
+        vlan_id: 202
+        deploy: true
+      # Delete this attachment
+      # - ip_address: 10.122.197.225
+      #   vlan_id: 203
+      # deploy: true
+      # Create the following attachment
+      - ip_address: 10.122.197.226
+        vlan_id: 204
+        deploy: true
+    # Dont touch this if its present on DCNM
+    # - vrf_name: ansible-vrf-r2
+    #   vrf_id: 9008012
+    #   vrf_template: Default_VRF_Universal
+    #   vrf_extension_template: Default_VRF_Extension_Universal
+    #   source: None
+    #   service_vrf_template: None
+    #   attach:
+    #   - ip_address: 10.122.197.224
+    #     vlan_id: 402
+    #   - ip_address: 10.122.197.225
+    #     vlan_id: 403
               
 - name: Override VRFs
-    dcnm_vrf:
-      fabric: vxlan-fabric
-      state: overridden 
-      config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-          attach:
-            - ip_address: 10.122.197.224
-              vlan_id: 202
-              deploy: true
-            # Delete this attachment
-            # - ip_address: 10.122.197.225
-            #   vlan_id: 203
-            # deploy: true
-            # Create the following attachment
-            - ip_address: 10.122.197.226
-              vlan_id: 204
-              deploy: true
-        # Delete this VRF
-        # - vrf_name: ansible-vrf-r2
-        #   vrf_id: 9008012
-        #   vrf_template: Default_VRF_Universal
-        #   vrf_extension_template: Default_VRF_Extension_Universal
-        #   source: None
-        #   service_vrf_template: None
-        #   attach:
-        #     - ip_address: 10.122.197.224
-        #       vlan_id: 402
-        #     - ip_address: 10.122.197.225
-        #       vlan_id: 403
+  dcnm_vrf:
+    fabric: vxlan-fabric
+    state: overridden 
+    config:
+    - vrf_name: ansible-vrf-r1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
+      attach:
+      - ip_address: 10.122.197.224
+        vlan_id: 202
+        deploy: true
+      # Delete this attachment
+      # - ip_address: 10.122.197.225
+      #   vlan_id: 203
+      #   deploy: true
+      # Create the following attachment
+      - ip_address: 10.122.197.226
+        vlan_id: 204
+        deploy: true
+    # Delete this VRF
+    # - vrf_name: ansible-vrf-r2
+    #   vrf_id: 9008012
+    #   vrf_template: Default_VRF_Universal
+    #   vrf_extension_template: Default_VRF_Extension_Universal
+    #   source: None
+    #   service_vrf_template: None
+    #   attach:
+    #   - ip_address: 10.122.197.224
+    #     vlan_id: 402
+    #   - ip_address: 10.122.197.225
+    #     vlan_id: 403
               
 - name: Delete selected VRFs
-    dcnm_vrf:
-      fabric: vxlan-fabric
-      state: deleted 
-      config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-        - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
+  dcnm_vrf:
+    fabric: vxlan-fabric
+    state: deleted 
+    config:
+    - vrf_name: ansible-vrf-r1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
+    - vrf_name: ansible-vrf-r2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
           
 - name: Delete all the VRFs
-    dcnm_vrf:
-      fabric: vxlan-fabric
-      state: deleted
+  dcnm_vrf:
+    fabric: vxlan-fabric
+    state: deleted
       
-- name: Create VRFs
-    dcnm_vrf:
-      fabric: vxlan-fabric
-      state: query
-      config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-        - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
+- name: Query VRFs
+  dcnm_vrf:
+    fabric: vxlan-fabric
+    state: query
+    config:
+    - vrf_name: ansible-vrf-r1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
+    - vrf_name: ansible-vrf-r2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      source: None
+      service_vrf_template: None
 '''
-
 
 class DcnmVrf:
 
@@ -264,21 +289,41 @@ class DcnmVrf:
         self.module = module
         self.params = module.params
         self.fabric = module.params['fabric']
-        self.config = module.params.get('config')
+        self.config = copy.deepcopy(module.params.get('config'))
         self.check_mode = False
-        self.conn = Connection(module._socket_path)
         self.have_create = []
         self.want_create = []
         self.diff_create = []
+        # This variable is created specifically to hold all the create payloads which are missing a
+        # vrfId. These payloads are sent to DCNM out of band (basically in the get_diff_merge())
+        # We lose diffs for these without this variable. The content stored here will be helpful for
+        # cases like "check_mode" and to print diffs[] in the output of each task.
+        self.diff_create_quick = []
         self.have_attach = []
         self.want_attach = []
         self.diff_attach = []
+        # diff_detach is to list all attachments of a vrf being deleted, especially for state: OVERRIDDEN
+        # The diff_detach and delete operations have to happen before create+attach+deploy for vrfs being created.
+        # This is specifically to address cases where VLAN from a vrf which is being deleted is used for another
+        # vrf. Without this additional logic, the create+attach+deploy go out first and complain the VLAN is already
+        # in use.
+        self.diff_detach = []
         self.have_deploy = {}
         self.want_deploy = {}
         self.diff_deploy = {}
+        self.diff_undeploy = {}
         self.diff_delete = {}
+        self.diff_input_format = []
         self.query = []
         self.ip_sn = get_fabric_inventory_details(self.module, self.fabric)
+
+        self.result = dict(
+            changed=False,
+            diff=[],
+            response=[]
+        )
+
+        self.failed_to_rollback = False
 
 
     def diff_for_attach_deploy(self, want_a, have_a):
@@ -351,12 +396,17 @@ class DcnmVrf:
             return {}
 
         create = {}
-        if have['vrfId'] != want['vrfId']:
+        if want['vrfId'] is not None and have['vrfId'] != want['vrfId']:
             self.module.fail_json(msg="vrf_id for VRF:{} cant be updated to a different value".format(want['vrfName']))
         elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
                 have['source'] != want['source'] or \
                 have['vrfTemplate'] != want['vrfTemplate'] or \
                 have['vrfExtensionTemplate'] != want['vrfExtensionTemplate']:
+
+            if want['vrfId'] is None:
+                # The vrf updates with missing vrfId will have to use existing
+                # vrfId from the instance of the same VRF on DCNM.
+                want['vrfId'] = have['vrfId']
             create = want
         else:
             pass
@@ -379,12 +429,12 @@ class DcnmVrf:
             'vrfName': vrf['vrf_name'],
             'vrfTemplate': v_template,
             'vrfExtensionTemplate': ve_template,
-            'vrfId': vrf['vrf_id'],
+            'vrfId': vrf.get('vrf_id', None), # vrf_id will be auto generated in get_diff_merge()
             'serviceVrfTemplate': s_v_template,
             'source': src
         }
         template_conf = {
-            'vrfSegmentId': vrf['vrf_id'],
+            'vrfSegmentId': vrf.get('vrf_id', None),
             'vrfName': vrf['vrf_name']
         }
         vrf_upd.update({'vrfTemplateConfig': json.dumps(template_conf)})
@@ -404,11 +454,15 @@ class DcnmVrf:
 
         vrf_objects = dcnm_send(self.module, method, path)
 
-        if vrf_objects.get('ERROR') == 'Not Found' and vrf_objects.get('RETURN_CODE') == 404:
-            self.module.fail_json(msg="Fabric {} not present on DCNM".format(self.fabric))
-            return
+        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
 
-        if not vrf_objects['DATA']:
+        if missing_fabric or not_ok:
+            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+            msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+
+            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+        if not vrf_objects.get('DATA'):
             return
 
         for vrf in vrf_objects['DATA']:
@@ -417,6 +471,19 @@ class DcnmVrf:
         path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric, curr_vrfs[:-1])
 
         vrf_attach_objects = dcnm_send(self.module, method, path)
+
+        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+
+        if missing_fabric or not_ok:
+            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+            msg2 = "Unable to find attachments for " \
+                   "vrfs: {} under fabric: {}".format(curr_vrfs[:-1], self.fabric)
+
+            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+            return
+
+        if not vrf_attach_objects['DATA']:
+            return
 
         for vrf in vrf_objects['DATA']:
             t_conf = {
@@ -527,8 +594,8 @@ class DcnmVrf:
 
     def get_diff_delete(self):
 
-        diff_attach = []
-        diff_deploy = {}
+        diff_detach = []
+        diff_undeploy = {}
         diff_delete = {}
 
         all_vrfs = ''
@@ -554,10 +621,10 @@ class DcnmVrf:
                         to_del.append(a_h)
                 if to_del:
                     have_a.update({'lanAttachList': to_del})
-                    diff_attach.append(have_a)
+                    diff_detach.append(have_a)
                     all_vrfs += have_a['vrfName'] + ","
             if all_vrfs:
-                diff_deploy.update({'vrfNames': all_vrfs[:-1]})
+                diff_undeploy.update({'vrfNames': all_vrfs[:-1]})
 
         else:
             for have_a in self.have_attach:
@@ -570,15 +637,15 @@ class DcnmVrf:
                         to_del.append(a_h)
                 if to_del:
                     have_a.update({'lanAttachList': to_del})
-                    diff_attach.append(have_a)
+                    diff_detach.append(have_a)
                     all_vrfs += have_a['vrfName'] + ","
 
                 diff_delete.update({have_a['vrfName']: 'DEPLOYED'})
             if all_vrfs:
-                diff_deploy.update({'vrfNames': all_vrfs[:-1]})
+                diff_undeploy.update({'vrfNames': all_vrfs[:-1]})
 
-        self.diff_attach = diff_attach
-        self.diff_deploy = diff_deploy
+        self.diff_detach = diff_detach
+        self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
 
 
@@ -591,7 +658,9 @@ class DcnmVrf:
 
         diff_create = self.diff_create
         diff_attach = self.diff_attach
+        diff_detach = self.diff_detach
         diff_deploy = self.diff_deploy
+        diff_undeploy = self.diff_undeploy
 
         for have_a in self.have_attach:
             found = next((vrf for vrf in self.want_create if vrf['vrfName'] == have_a['vrfName']), None)
@@ -607,20 +676,20 @@ class DcnmVrf:
 
                 if to_del:
                     have_a.update({'lanAttachList': to_del})
-                    diff_attach.append(have_a)
+                    diff_detach.append(have_a)
                     all_vrfs += have_a['vrfName'] + ","
 
                 diff_delete.update({have_a['vrfName']: 'DEPLOYED'})
 
         if all_vrfs:
-            vrfs = (diff_deploy['vrfNames'] + "," + all_vrfs[:-1]) if diff_deploy else all_vrfs[:-1]
-            diff_deploy.update({'vrfNames': vrfs})
+            diff_undeploy.update({'vrfNames': all_vrfs[:-1]})
 
         self.diff_create = diff_create
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
+        self.diff_detach = diff_detach
+        self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
-
 
     def get_diff_replace(self):
         all_vrfs = ''
@@ -661,7 +730,7 @@ class DcnmVrf:
                 if found:
                     atch_h = have_a['lanAttachList']
                     for a_h in atch_h:
-                        if not a_h['isAttached']:
+                        if not bool(a_h['isAttached']):
                             continue
                         del a_h['isAttached']
                         a_h.update({'deployment': False})
@@ -701,9 +770,16 @@ class DcnmVrf:
 
 
     def get_diff_merge(self):
+        # Special cases:
+        # 1. Auto generate vrfId if its not mentioned by user:
+        #    In this case, we need to query the DCNM to get a usable ID and use it in the payload.
+        #    And also, any such vrf create requests need to be pushed individually(not bulk op).
+
         diff_create = []
+        diff_create_quick = []
         diff_attach = []
         diff_deploy = {}
+        prev_vrf_id_fetched = None
 
         all_vrfs = ""
 
@@ -717,7 +793,65 @@ class DcnmVrf:
                         diff_create.append(diff)
                     break
             if not found:
-                diff_create.append(want_c)
+                vrf_id = want_c.get('vrfId', None)
+                if vrf_id is None:
+                # vrfId is not provided by user.
+                # Need to query DCNM to fetch next available vrfId and use it here.
+                    method = 'POST'
+                    result = dict(
+                        changed=False,
+                        response=''
+                    )
+
+                    attempt = 0
+                    while True or attempt < 10:
+                        attempt += 1
+                        path = '/rest/managed-pool/fabrics/{}/partitions/ids'.format(self.fabric)
+                        vrf_id_obj = dcnm_send(self.module, method, path)
+
+                        missing_fabric, not_ok = self.handle_response(vrf_id_obj, 'query_dcnm')
+
+                        if missing_fabric or not_ok:
+                            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+                            msg2 = "Unable to generate vrfId for vrf: {} " \
+                                   "under fabric: {}".format(want_c['vrfName'], self.fabric)
+
+                            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+                        if not vrf_id_obj['DATA']:
+                            continue
+
+                        vrf_id = vrf_id_obj['DATA'].get('partitionSegmentId')
+                        if vrf_id != prev_vrf_id_fetched:
+                            want_c.update({'vrfId': vrf_id})
+                            template_conf = {
+                                'vrfSegmentId': vrf_id,
+                                'vrfName': want_c['vrfName']
+                            }
+                            want_c.update({'vrfTemplateConfig': json.dumps(template_conf)})
+                            prev_vrf_id_fetched = vrf_id
+                            break
+
+                    if not vrf_id:
+                        self.module.fail_json(msg="Unable to generate vrfId for vrf: {} "
+                                                  "under fabric: {}".format(want_c['vrfName'], self.fabric))
+
+                    create_path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+
+                    diff_create_quick.append(want_c)
+
+                    if self.module.check_mode:
+                        continue
+
+                    resp = dcnm_send(self.module, method, create_path,
+                                     json.dumps(want_c))
+                    self.result['response'].append(resp)
+                    fail, result['changed'] = self.handle_response(resp, "create")
+                    if fail:
+                        self.failure(resp)
+
+                else:
+                    diff_create.append(want_c)
 
         for want_a in self.want_attach:
             dep_vrf = ''
@@ -760,6 +894,96 @@ class DcnmVrf:
         self.diff_create = diff_create
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
+        self.diff_create_quick = diff_create_quick
+
+
+    def format_diff(self):
+        diff = []
+
+        diff_create = copy.deepcopy(self.diff_create)
+        diff_create_quick = copy.deepcopy(self.diff_create_quick)
+        diff_attach = copy.deepcopy(self.diff_attach)
+        diff_detach = copy.deepcopy(self.diff_detach)
+        diff_deploy = self.diff_deploy['vrfNames'].split(",") if self.diff_deploy else []
+        diff_undeploy = self.diff_undeploy['vrfNames'].split(",") if self.diff_undeploy else []
+
+        diff_create.extend(diff_create_quick)
+        diff_attach.extend(diff_detach)
+        diff_deploy.extend(diff_undeploy)
+
+        for want_d in diff_create:
+
+            found_a = next((vrf for vrf in diff_attach if vrf['vrfName'] == want_d['vrfName']), None)
+
+            found_c = want_d
+
+            src = found_c['source']
+            found_c.update({'vrf_name': found_c['vrfName']})
+            found_c.update({'vrf_id': found_c['vrfId']})
+            found_c.update({'vrf_template': found_c['vrfTemplate']})
+            found_c.update({'vrf_extension_template': found_c['vrfExtensionTemplate']})
+            del found_c['source']
+            found_c.update({'source': src})
+            found_c.update({'service_vrf_template': found_c['serviceVrfTemplate']})
+            found_c.update({'attach': []})
+
+            del found_c['fabric']
+            del found_c['vrfName']
+            del found_c['vrfId']
+            del found_c['vrfTemplate']
+            del found_c['vrfExtensionTemplate']
+            del found_c['serviceVrfTemplate']
+            del found_c['vrfTemplateConfig']
+
+            diff_deploy.remove(found_c['vrf_name'])
+            if not found_a:
+                diff.append(found_c)
+                continue
+
+            attach = found_a['lanAttachList']
+
+            for a_w in attach:
+                attach_d = {}
+
+                for k, v in self.ip_sn.items():
+                    if v == a_w['serialNumber']:
+                        attach_d.update({'ip_address': k})
+                        break
+                attach_d.update({'vlan_id': a_w['vlan']})
+                attach_d.update({'deploy': a_w['deployment']})
+                found_c['attach'].append(attach_d)
+
+            diff.append(found_c)
+
+            diff_attach.remove(found_a)
+
+        for vrf in diff_attach:
+            new_attach_dict = {}
+            new_attach_list = []
+            attach = vrf['lanAttachList']
+
+            for a_w in attach:
+                attach_d = {}
+
+                for k, v in self.ip_sn.items():
+                    if v == a_w['serialNumber']:
+                        attach_d.update({'ip_address': k})
+                        break
+                attach_d.update({'vlan_id': a_w['vlan']})
+                attach_d.update({'deploy': a_w['deployment']})
+                new_attach_list.append(attach_d)
+
+            if new_attach_list:
+                diff_deploy.remove(vrf['vrfName'])
+                new_attach_dict.update({'attach': new_attach_list})
+                new_attach_dict.update({'vrf_name': vrf['vrfName']})
+                diff.append(new_attach_dict)
+
+        for vrf in diff_deploy:
+            new_deploy_dict = {'vrf_name': vrf}
+            diff.append(new_deploy_dict)
+
+        self.diff_input_format = diff
 
 
     def get_diff_query(self):
@@ -820,6 +1044,99 @@ class DcnmVrf:
         self.query = query
 
 
+    def push_to_remote(self, is_rollback=False):
+
+        #
+        # The detach and un-deploy operations are executed before the create,attach and deploy to particularly
+        # address cases where a VLAN for vrf attachment being deleted is re-used on a new vrf attachment being
+        # created. This is needed specially for state: overridden
+        #
+
+        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        bulk_create_path = '/rest/top-down/bulk-create/vrfs'
+
+        method = 'POST'
+        if self.diff_detach:
+            detach_path = path + '/attachments'
+            resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
+            self.result['response'].append(resp)
+            fail, self.result['changed'] = self.handle_response(resp, "attach")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+        method = 'POST'
+        if self.diff_undeploy:
+            deploy_path = path + '/deployments'
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
+            self.result['response'].append(resp)
+            fail, self.result['changed'] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+        del_failure = ''
+
+        if self.diff_delete and self.wait_for_vrf_del_ready():
+            method = 'DELETE'
+            for vrf, state in self.diff_delete.items():
+                if state == 'OUT-OF-SYNC':
+                    del_failure += vrf + ","
+                    continue
+                delete_path = path + "/" + vrf
+                resp = dcnm_send(self.module, method, delete_path)
+                self.result['response'].append(resp)
+                fail, self.result['changed'] = self.handle_response(resp, "delete")
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    self.failure(resp)
+
+        if del_failure:
+            self.result['response'].append('Deletion of VRFs {} has failed'.format(del_failure[:-1]))
+            self.module.fail_json(msg=self.result)
+
+        method = 'POST'
+        if self.diff_create:
+            resp = dcnm_send(self.module, method, bulk_create_path, json.dumps(self.diff_create))
+            self.result['response'].append(resp)
+            fail, self.result['changed'] = self.handle_response(resp, "create")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+        method = 'POST'
+        if self.diff_attach:
+            attach_path = path + '/attachments'
+            resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
+            self.result['response'].append(resp)
+            fail, self.result['changed'] = self.handle_response(resp, "attach")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+        method = 'POST'
+        if self.diff_deploy:
+            deploy_path = path + '/deployments'
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_deploy))
+            self.result['response'].append(resp)
+            fail, self.result['changed'] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+
     def wait_for_vrf_del_ready(self):
 
         method = 'GET'
@@ -830,7 +1147,7 @@ class DcnmVrf:
                 while not state:
                     resp = dcnm_send(self.module, method, path)
                     state = True
-                    if resp['DATA']:
+                    if resp.get('DATA') is not None:
                         attach_list = resp['DATA'][0]['lanAttachList']
                         for atch in attach_list:
                             if atch['lanAttachState']  == 'OUT-OF-SYNC' or atch['lanAttachState']  == 'FAILED':
@@ -853,9 +1170,9 @@ class DcnmVrf:
 
         vrf_spec = dict(
             vrf_name=dict(required=True, type='str', length_max=32),
-            vrf_id=dict(required=True, type='int', range_max=16777214),
-            vrf_template=dict(required=True, type='str'),
-            vrf_extension_template=dict(type='str', default='Default_Network_Universal'),
+            vrf_id=dict(type='int', range_max=16777214),
+            vrf_template=dict(type='str', default='Default_VRF_Universal'),
+            vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
             source=dict(type='str', default=None),
             service_vrf_template=dict(type='str', default=None),
             attach=dict(type='list'),
@@ -870,8 +1187,8 @@ class DcnmVrf:
         msg = None
         if self.config:
             for vrf in self.config:
-                if not 'vrf_name' in vrf or not 'vrf_id' in vrf:
-                    msg = "vrf_name and vrf_id are mandatory under vrf parameters"
+                if not 'vrf_name' in vrf:
+                    msg = "vrf_name is mandatory under vrf parameters"
 
                 if 'attach' in vrf and vrf['attach']:
                     for attach in vrf['attach']:
@@ -884,7 +1201,7 @@ class DcnmVrf:
                 msg =  "config: element is mandatory for this state {}".format(state)
 
         if msg:
-            raise Exception(msg)
+            self.module.fail_json(msg=msg)
 
         if self.config:
             validated = []
@@ -898,7 +1215,7 @@ class DcnmVrf:
 
             if invalid_params:
                 msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
-                raise Exception(msg)
+                self.module.fail_json(msg=msg)
 
 
     def handle_response(self, res, op):
@@ -906,6 +1223,21 @@ class DcnmVrf:
         fail = False
         changed = True
 
+        if op == 'query_dcnm':
+            # This if blocks handles responses to the query APIs against DCNM.
+            # Basically all GET operations.
+            #
+            if res.get('ERROR') == 'Not Found' and res['RETURN_CODE'] == 404:
+                return True, False
+            if res['RETURN_CODE'] != 200 or res['MESSAGE'] != 'OK':
+                return False, True
+            return False, False
+
+        # Responses to all other operations POST and PUT are handled here.
+        if res.get('MESSAGE') != 'OK':
+            fail = True
+            changed = False
+            return fail, changed
         if res.get('ERROR'):
             fail = True
             changed = False
@@ -917,6 +1249,42 @@ class DcnmVrf:
 
         return fail, changed
 
+    def failure(self, resp):
+
+        # Need to implement a rollback logic here so that we rollback DCNM to the have state
+        # whenever there is a failure in any of the APIs.
+        # The idea would be to run overridden state with want=have and have=dcnm_state
+        self.want_create = self.have_create
+        self.want_attach = self.have_attach
+        self.want_deploy = self.have_deploy
+
+        self.have_create = []
+        self.have_attach = []
+        self.have_deploy = {}
+        self.get_have()
+        self.get_diff_override()
+
+        self.push_to_remote(True)
+
+        if self.failed_to_rollback:
+            msg1 = "FAILED - Attempted rollback of the task has failed, may need manual intervention"
+        else:
+            msg1 = 'SUCCESS - Attempted rollback of the task has succeeded'
+
+        res = copy.deepcopy(resp)
+        res.update({'ROLLBACK_RESULT': msg1})
+
+        if not resp.get('DATA'):
+            data = copy.deepcopy(resp.get('DATA'))
+            if data.get('stackTrace'):
+                data.update({'stackTrace': 'Stack trace is hidden, use \'-vvvvv\' to print it'})
+                res.update({'DATA': data})
+
+        if self.module._verbosity >= 5:
+            self.module.fail_json(msg=res)
+
+        self.module.fail_json(msg=res)
+
 
 def main():
     """ main entry point for module execution
@@ -927,11 +1295,6 @@ def main():
         config=dict(required=False, type='list'),
         state=dict(default='merged',
                    choices=['merged', 'replaced', 'deleted', 'overridden', 'query'])
-    )
-
-    result = dict(
-        changed=False,
-        response=''
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -961,77 +1324,23 @@ def main():
 
     if module.params['state'] == 'query':
         dcnm_vrf.get_diff_query()
-        result['response'] = dcnm_vrf.query
+        dcnm_vrf.result['response'] = dcnm_vrf.query
+
+    dcnm_vrf.format_diff()
+    dcnm_vrf.result['diff'] = dcnm_vrf.diff_input_format
+
+    if dcnm_vrf.diff_create or dcnm_vrf.diff_attach or dcnm_vrf.diff_detach or dcnm_vrf.diff_deploy \
+            or dcnm_vrf.diff_undeploy or dcnm_vrf.diff_delete or dcnm_vrf.diff_create_quick:
+        dcnm_vrf.result['changed'] = True
+    else:
+        module.exit_json(**dcnm_vrf.result)
 
     if module.check_mode:
-        check_mode_results = []
+        module.exit_json(**dcnm_vrf.result)
 
-        if dcnm_vrf.diff_create:
-            check_mode_results.append(dcnm_vrf.diff_create)
-        if dcnm_vrf.diff_attach:
-            check_mode_results.append(dcnm_vrf.diff_attach)
-        if dcnm_vrf.diff_deploy:
-            check_mode_results.append(dcnm_vrf.diff_deploy)
-        if dcnm_vrf.diff_delete:
-            check_mode_results.append(dcnm_vrf.diff_delete)
+    dcnm_vrf.push_to_remote()
 
-        result = dict(
-            changed=False,
-            config=''
-        )
-
-        result['changed'] = True if check_mode_results else False
-        result['config'] = check_mode_results
-
-        module.exit_json(**result)
-
-    method = 'POST'
-    path = '/rest/top-down/fabrics/{}/vrfs'.format(dcnm_vrf.fabric)
-    bulk_create_path = '/rest/top-down/bulk-create/vrfs'
-
-    if dcnm_vrf.diff_create or dcnm_vrf.diff_attach or dcnm_vrf.diff_deploy or dcnm_vrf.diff_delete:
-        result['changed'] = True
-    else:
-        module.exit_json(**result)
-
-    if dcnm_vrf.diff_create:
-        result['response'] = dcnm_send(dcnm_vrf.module, method, bulk_create_path, json.dumps(dcnm_vrf.diff_create))
-        fail, result['changed'] = dcnm_vrf.handle_response(result['response'], "create")
-        if fail:
-            module.fail_json(msg=result['response'])
-
-    if dcnm_vrf.diff_attach:
-        attach_path = path + '/attachments'
-        result['response'] = dcnm_send(dcnm_vrf.module, method, attach_path, json.dumps(dcnm_vrf.diff_attach))
-        fail, result['changed'] = dcnm_vrf.handle_response(result['response'], "attach")
-        if fail:
-            module.fail_json(msg=result['response'])
-
-    if dcnm_vrf.diff_deploy:
-        deploy_path = path + '/deployments'
-        result['response'] = dcnm_send(dcnm_vrf.module, method, deploy_path, json.dumps(dcnm_vrf.diff_deploy))
-        fail, result['changed'] = dcnm_vrf.handle_response(result['response'], "deploy")
-        if fail:
-            module.fail_json(msg=result['response'])
-
-    del_failure = ''
-    if dcnm_vrf.diff_delete and dcnm_vrf.wait_for_vrf_del_ready():
-        method = 'DELETE'
-        for vrf, state in dcnm_vrf.diff_delete.items():
-            if state == 'OUT-OF-SYNC':
-                del_failure += vrf + ","
-                continue
-            delete_path = path + "/" + vrf
-            result['response'] = dcnm_send(dcnm_vrf.module, method, delete_path)
-            fail, result['changed'] = dcnm_vrf.handle_response(result['response'], "delete")
-            if fail:
-                module.fail_json(msg=result['response'])
-
-    if del_failure:
-        result['response'] = 'Deletion of VRFs {} has failed'.format(del_failure[:-1])
-        module.fail_json(msg=result['response'])
-
-    module.exit_json(**result)
+    module.exit_json(**dcnm_vrf.result)
 
 
 if __name__ == '__main__':
