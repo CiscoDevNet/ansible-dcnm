@@ -38,7 +38,7 @@ def validate_list_of_dicts(param_list, spec):
             item = list_entry.get(param)
             if item is None:
                 if spec[param].get('required'):
-                    invalid_params.append('{} : Required parameter not found'.format(item))
+                    invalid_params.append('{} : Required parameter not found'.format(param))
                 else:
                     item = spec[param].get('default')
             else:
@@ -67,8 +67,15 @@ def validate_list_of_dicts(param_list, spec):
                     item = v.check_type_list(item)
                 elif type == 'dict':
                     item = v.check_type_dict(item)
-                elif type == 'ipv4':
+                elif type == 'ipv4_subnet' or 'ipv4':
                     address = item.split('/')[0]
+                    if type == 'ipv4_subnet':
+                        if '/' in item:
+                            subnet = item.split('/')[1]
+                            if not subnet or int(subnet) > 32:
+                                invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
+                        else:
+                            invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
                     try:
                         socket.inet_aton(address)
                     except socket.error:
@@ -78,15 +85,18 @@ def validate_list_of_dicts(param_list, spec):
             valid_params_dict[param] = item
         normalized.append(valid_params_dict)
 
-    return(normalized, invalid_params)
+    return normalized, invalid_params
 
 
 def get_fabric_inventory_details(module, fabric):
     method = 'GET'
     path = '/rest/control/fabrics/{}/inventory'.format(fabric)
 
-    ip_sn = dict()
+    ip_sn = {}
     response = dcnm_send(module, method, path)
+
+    if not response.get('RETURN_CODE'):
+        module.fail_json(msg=response)
 
     if response.get('RETURN_CODE') == 404:
         # RC 404 - Object not found

@@ -36,15 +36,15 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: dcnm_vrf
-short_description: Send REST API requests to DCNM controller for VRF operations
+short_description: Send REST API requests to DCNM controller for vrf operations
 version_added: "2.10"
 description:
-    - "Send REST API requests to DCNM controller for VRF operations - Create, Attach, Deploy and Delete"
+    - "Send REST API requests to DCNM controller for vrf operations - Create, Attach, Deploy and Delete"
 author: Shrishail Kariyappanavar(@nkshrishail)
 options:
   fabric:
     description:
-    - 'Name of the target fabric for VRF operations'
+    - 'Name of the target fabric for vrf operations'
     type: str
     required: yes
   state:
@@ -85,24 +85,24 @@ options:
       - query
     default: merged
   config:
-    description: 'List of details of VRFs being managed'
+    description: 'List of details of vrfs being managed'
     type: list
     elements: dict
     required: true (except for state: deleted)
     suboptions:
       vrf_name:
-        description: 'Name of the VRF being managed'
+        description: 'Name of the vrf being managed'
         type: str
-        required: true 
+        required: true
       vrf_id:
-        description: 'ID of the VRF being managed'
+        description: 'ID of the vrf being managed'
         type: int
         required: true
       vrf_template:
         description: 'Name of the config template to be used'
         type: str
         default: 'Default_VRF_Universal'
-      vrf_extension_template: 
+      vrf_extension_template:
         description: 'Name of the extension config template to be used'
         type: str
         default: 'Default_VRF_Extension_Universal'
@@ -116,7 +116,7 @@ options:
         default: None
       suboptions:
         attach:
-          description: 'List of VRF attachment details'
+          description: 'List of vrf attachment details'
           type: list
           elements: dict
         deploy:
@@ -125,11 +125,11 @@ options:
           default: true
           suboptions:
             ip_address:
-              description: 'IP address of the switch where VRF will be attached or detached'
+              description: 'IP address of the switch where vrf will be attached or detached'
               type: ipv4
               required: true
             vlan_id:
-              description: 'vlan ID for the VRF attachment'
+              description: 'vlan ID for the vrf attachment'
               type: int
               required: true
             deploy:
@@ -139,8 +139,8 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Merge VRFs
-  dcnm_vrf:
+- name: Merge vrfs
+  cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: merged 
     config:
@@ -169,8 +169,8 @@ EXAMPLES = '''
       - ip_address: 10.122.197.225
         vlan_id: 403
 
-- name: Replace VRFs
-  dcnm_vrf:
+- name: Replace vrfs
+  cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: replaced 
     config:
@@ -205,8 +205,8 @@ EXAMPLES = '''
     #   - ip_address: 10.122.197.225
     #     vlan_id: 403
               
-- name: Override VRFs
-  dcnm_vrf:
+- name: Override vrfs
+  cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: overridden 
     config:
@@ -228,7 +228,7 @@ EXAMPLES = '''
       - ip_address: 10.122.197.226
         vlan_id: 204
         deploy: true
-    # Delete this VRF
+    # Delete this vrf
     # - vrf_name: ansible-vrf-r2
     #   vrf_id: 9008012
     #   vrf_template: Default_VRF_Universal
@@ -241,8 +241,8 @@ EXAMPLES = '''
     #   - ip_address: 10.122.197.225
     #     vlan_id: 403
               
-- name: Delete selected VRFs
-  dcnm_vrf:
+- name: Delete selected vrfs
+  cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted 
     config:
@@ -259,13 +259,13 @@ EXAMPLES = '''
       source: None
       service_vrf_template: None
           
-- name: Delete all the VRFs
-  dcnm_vrf:
+- name: Delete all the vrfs
+  cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
       
-- name: Query VRFs
-  dcnm_vrf:
+- name: Query vrfs
+  cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: query
     config:
@@ -324,6 +324,7 @@ class DcnmVrf:
         )
 
         self.failed_to_rollback = False
+        self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
 
     def diff_for_attach_deploy(self, want_a, have_a):
@@ -373,6 +374,10 @@ class DcnmVrf:
             if ip == attach['ip_address']:
                 serial = ser
 
+        if not serial:
+            self.module.fail_json(msg='Fabric: {} does not have the switch: {}'
+                                  .format(self.fabric, attach['ip_address']))
+
         attach.update({'fabric': self.fabric})
         attach.update({'vrfName': vrf_name})
         attach.update({'vlan': attach.get('vlan_id')})
@@ -397,7 +402,7 @@ class DcnmVrf:
 
         create = {}
         if want['vrfId'] is not None and have['vrfId'] != want['vrfId']:
-            self.module.fail_json(msg="vrf_id for VRF:{} cant be updated to a different value".format(want['vrfName']))
+            self.module.fail_json(msg="vrf_id for vrf:{} cant be updated to a different value".format(want['vrfName']))
         elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
                 have['source'] != want['source'] or \
                 have['vrfTemplate'] != want['vrfTemplate'] or \
@@ -405,7 +410,7 @@ class DcnmVrf:
 
             if want['vrfId'] is None:
                 # The vrf updates with missing vrfId will have to use existing
-                # vrfId from the instance of the same VRF on DCNM.
+                # vrfId from the instance of the same vrf on DCNM.
                 want['vrfId'] = have['vrfId']
             create = want
         else:
@@ -458,7 +463,7 @@ class DcnmVrf:
 
         if missing_fabric or not_ok:
             msg1 = "Fabric {} not present on DCNM".format(self.fabric)
-            msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+            msg2 = "Unable to find vrfs under fabric: {}".format(self.fabric)
 
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
@@ -846,7 +851,7 @@ class DcnmVrf:
                     resp = dcnm_send(self.module, method, create_path,
                                      json.dumps(want_c))
                     self.result['response'].append(resp)
-                    fail, result['changed'] = self.handle_response(resp, "create")
+                    fail, self.result['changed'] = self.handle_response(resp, "create")
                     if fail:
                         self.failure(resp)
 
@@ -935,7 +940,8 @@ class DcnmVrf:
             del found_c['serviceVrfTemplate']
             del found_c['vrfTemplateConfig']
 
-            diff_deploy.remove(found_c['vrf_name'])
+            if diff_deploy:
+                diff_deploy.remove(found_c['vrf_name'])
             if not found_a:
                 diff.append(found_c)
                 continue
@@ -974,7 +980,8 @@ class DcnmVrf:
                 new_attach_list.append(attach_d)
 
             if new_attach_list:
-                diff_deploy.remove(vrf['vrfName'])
+                if diff_deploy:
+                    diff_deploy.remove(vrf['vrfName'])
                 new_attach_dict.update({'attach': new_attach_list})
                 new_attach_dict.update({'vrf_name': vrf['vrfName']})
                 diff.append(new_attach_dict)
@@ -1098,7 +1105,7 @@ class DcnmVrf:
                     self.failure(resp)
 
         if del_failure:
-            self.result['response'].append('Deletion of VRFs {} has failed'.format(del_failure[:-1]))
+            self.result['response'].append('Deletion of vrfs {} has failed'.format(del_failure[:-1]))
             self.module.fail_json(msg=self.result)
 
         method = 'POST'
@@ -1156,7 +1163,7 @@ class DcnmVrf:
                             if atch['lanAttachState'] != 'NA':
                                 self.diff_delete.update({vrf: 'DEPLOYED'})
                                 state = False
-                                time.sleep(5)
+                                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                                 break
                             self.diff_delete.update({vrf: 'NA'})
 
@@ -1251,7 +1258,7 @@ class DcnmVrf:
 
     def failure(self, resp):
 
-        # Need to implement a rollback logic here so that we rollback DCNM to the have state
+        # Implementing a per task rollback logic here so that we rollback DCNM to the have state
         # whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
         self.want_create = self.have_create
