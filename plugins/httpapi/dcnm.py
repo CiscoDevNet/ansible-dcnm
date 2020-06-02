@@ -30,8 +30,7 @@ class HttpApi(HttpApiBase):
     def __init__(self, *args, **kwargs):
         super(HttpApi, self).__init__(*args, **kwargs)
         self.headers = {
-            'Content-Type': "application/json",
-            'Dcnm-Token': ''
+            'Content-Type': "application/json"
         }
 
     def login(self, username, password):
@@ -41,15 +40,33 @@ class HttpApi(HttpApiBase):
         '''
         method = 'POST'
         path = '/rest/logon'
-        data = "{'expirationTime': 60000}"
+
+        # Ansible expresses the persistent_connect_timeout in seconds.
+        # This value needs to be converted to milliseconds for DCNM
+        timeout = self.connection.get_option("persistent_connect_timeout") * 1000
+        data = "{'expirationTime': %s}" % timeout
 
         try:
             response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
             response_value = self._get_response_value(response_data)
-            self.headers['Dcnm-Token'] = self._response_to_json(response_value)['Dcnm-Token']
+            self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
         except Exception as e:
             msg = 'Error on attempt to connect and authenticate with DCNM controller: {}'.format(e)
-            raise Exception(self._return_info(None, method, path, msg))
+            raise ConnectionError(self._return_info(None, method, path, msg))
+
+    def logout(self):
+        method = 'POST'
+        path = '/rest/logout'
+
+        try:
+            response, response_data = self.connection.send(path, {}, method=method, headers=self.headers, force_basic_auth=True)
+        except Exception as e:
+            msg = 'Error on attempt to logout from DCNM controller: {}'.format(e)
+            raise ConnectionError(self._return_info(None, method, path, msg))
+
+        self._verify_response(response, method, path, response_data)
+        # Clean up tokens
+        self.connection._auth = None
 
     def send_request(self, method, path, json=None):
         ''' This method handles all DCNM REST API requests other then login '''
@@ -61,7 +78,7 @@ class HttpApi(HttpApiBase):
             path = str(path)
             if path[0] != '/':
                 msg = 'Value of <path> does not appear to be formated properly'
-                raise Exception(self._return_info(None, method, path, msg))
+                raise ConnectionError(self._return_info(None, method, path, msg))
             response, rdata = self.connection.send(path, json, method=method,
                                                    headers=self.headers,
                                                    force_basic_auth=True)
@@ -70,7 +87,7 @@ class HttpApi(HttpApiBase):
             eargs = e.args[0]
             if isinstance(eargs, dict) and eargs.get('METHOD'):
                 return eargs
-            raise Exception(str(e))
+            raise ConnectionError(str(e))
 
     def _verify_response(self, response, method, path, rdata):
         ''' Process the return code and response object from DCNM '''
@@ -80,14 +97,14 @@ class HttpApi(HttpApiBase):
         rc = response.getcode()
         path = response.geturl()
         msg = response.msg
-        if rc == 200:
+        if rc >= 200 and rc <= 299:
             return self._return_info(rc, method, path, msg, jrd)
         if rc >= 400:
             # Add future error code processing here
             pass
         else:
             msg = 'Unknown RETURN_CODE: {}'.format(rc)
-        raise Exception(self._return_info(rc, method, path, msg, jrd))
+        raise ConnectionError(self._return_info(rc, method, path, msg, jrd))
 
     def _get_response_value(self, response_data):
         ''' Extract string data from response_data returned from DCNM '''
