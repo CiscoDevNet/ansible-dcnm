@@ -1,0 +1,118 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: QUERY - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: QUERY - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: QUERY - Merge a Switch using GreenField Deployment
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: admin
+      password: idgeR09!
+      max_hops: 0
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+      preserve_config: False # boolean, default is  true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - 'result.response[6].RETURN_CODE == 200'
+    - 'result.response[1].DATA.status == "Success"'
+    - 'result.response[2].DATA.status == "Success"'
+    - '"Operation is successful" in result.response[3].DATA'
+    - 'result.response[5].DATA.status == "Config save is completed"'
+    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
+
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+#############################################
+#                QUERY                     ##
+#############################################
+
+- name: QUERY - Query a Switch
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+  register: result
+
+- assert:
+    that:
+    - 'result.response[0].ipAddress == "{{ ansible_switch1 }}"'
+    - 'result.response[0].switchRole == "leaf"'
+
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: QUERY - Delete all Switch without config element
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: QUERY - Query a non available Switch
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+  register: result
+
+- assert:
+    that:
+    - '"The queried switch is not part of the fabric configured" in result.response'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: DELETED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted

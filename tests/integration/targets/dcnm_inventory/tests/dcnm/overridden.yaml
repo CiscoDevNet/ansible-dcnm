@@ -1,0 +1,115 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: OVERRIDDEN - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: OVERRIDDEN - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: OVERRIDDEN - Merge a Switch using GreenField Deployment
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip:  "{{ ansible_switch1 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: admin
+      password: idgeR09!
+      max_hops: 0
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+      preserve_config: False # boolean, default is  true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - 'result.response[6].RETURN_CODE == 200'
+    - 'result.response[1].DATA.status == "Success"'
+    - 'result.response[2].DATA.status == "Success"'
+    - '"Operation is successful" in result.response[3].DATA'
+    - 'result.response[5].DATA.status == "Config save is completed"'
+    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
+
+- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+##############################################
+##                OVERRIDDEN                ##
+##############################################
+
+- name: OVERRIDDEN - Update a New Switch using GreenField Deployment - Delete and Create
+  cisco.dcnm.dcnm_inventory: &conf_over
+    fabric: "{{ ansible_it_fabric }}"
+    state: overridden
+    config:
+    - seed_ip: "{{ ansible_switch2 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: admin
+      password: idgeR09!
+      max_hops: 0
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+      preserve_config: False # boolean, default is  true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - 'result.response[6].RETURN_CODE == 200'
+    - 'result.response[7].RETURN_CODE == 200'
+    - 'result.response[2].DATA.status == "Success"'
+    - 'result.response[3].DATA.status == "Success"'
+    - '"Operation is successful" in result.response[4].DATA'
+    - 'result.response[6].DATA.status == "Config save is completed"'
+    - 'result.response[7].DATA.status == "Config deployment has been triggered"'
+
+- name: sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: OVERRIDDEN - conf1 - OV - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_over
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and there is no more device to delete in the fabric"'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: OVERRIDDEN - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
