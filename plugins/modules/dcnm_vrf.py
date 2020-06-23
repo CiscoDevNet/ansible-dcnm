@@ -53,7 +53,7 @@ options:
     description: 'List of details of vrfs being managed'
     type: list
     elements: dict
-    required: true (except for state: deleted)
+    required: true (except for state deleted)
     suboptions:
       vrf_name:
         description: 'Name of the vrf being managed'
@@ -71,10 +71,6 @@ options:
         description: 'Name of the extension config template to be used'
         type: str
         default: 'Default_VRF_Extension_Universal'
-      source:
-        description: '??'
-        type: str
-        default: None
       service_vrf_template:
         description: 'Service vrf template'
         type: str
@@ -159,7 +155,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: None
       attach:
       - ip_address: 10.122.197.224
         vlan_id: 202
@@ -171,7 +166,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: None
       attach:
       - ip_address: 10.122.197.224
         vlan_id: 402
@@ -188,8 +182,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
-      service_vrf_template: None
       attach:
       - ip_address: 10.122.197.224
         vlan_id: 202
@@ -207,8 +199,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
     #   vrf_id: 9008012
     #   vrf_template: Default_VRF_Universal
     #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   source: None
-    #   service_vrf_template: None
     #   attach:
     #   - ip_address: 10.122.197.224
     #     vlan_id: 402
@@ -225,8 +215,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
-      service_vrf_template: None
       attach:
       - ip_address: 10.122.197.224
         vlan_id: 202
@@ -244,8 +232,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
     #   vrf_id: 9008012
     #   vrf_template: Default_VRF_Universal
     #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   source: None
-    #   service_vrf_template: None
     #   attach:
     #   - ip_address: 10.122.197.224
     #     vlan_id: 402
@@ -261,14 +247,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
-      service_vrf_template: None
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
-      service_vrf_template: None
 
 - name: Delete all the vrfs
   cisco.dcnm.dcnm_vrf:
@@ -284,14 +266,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
-      service_vrf_template: None
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
-      service_vrf_template: None
 '''
 
 
