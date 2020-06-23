@@ -63,19 +63,35 @@ The following example task adds a switch to an existing fabric, using the FQCN:
 
 ```yaml
 ---
-    - name: Merge a Switch
+
+- hosts: dcnm
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    password: !vault |
+        $ANSIBLE_VAULT;1.1;AES256
+        32393431346235343736383635656339363132666463316231653862373335356366663561316665
+        3730346133626437383337366664616264656534313536640a303639313666373261633064343361
+        33396463306231313937303766343165333332613636393263343734613136636232636162363639
+        3233353437366362330a623962613031626633396630653530626636383333633065653965383864
+        3165
+
+  tasks:
+    - name: Add switch n9kv-spine1 to fabric vxlan-fabric.
       cisco.dcnm.dcnm_inventory:
         fabric: vxlan-fabric
-        state: merged
+        state: overridden
         config:
-        - seed_ip: 192.168.0.1
+        - seed_ip: n9kv-spine1
           auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
           user_name: admin
-          password: password
+          password: "{{ password }}"
           max_hops: 0
-          role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
-                           # Super Spine, Border Super Spine, Border Gateway Super Spine]
-          preserve_config: False # boolean, default is  true
+          role: spine # default is Leaf - choose from [leaf, spine, border, border_spine, border_gateway, border_gateway_spine
+                           # super_spine, border_super_spine, border_gateway_super_spine]
+          preserve_config: false # boolean, default is  true
+      no_log: true
 ```
 
 Alternately, you can call modules by their short name if you list the `cisco.dcnm` collection in the playbook's `collections`, as follows:
@@ -92,17 +108,7 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
   tasks:
     - name: Merge a Switch
       cisco.dcnm.dcnm_inventory:
-        fabric: vxlan-fabric
-        state: merged
-        config:
-        - seed_ip: 192.168.0.1
-          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-          user_name: admin
-          password: password
-          max_hops: 0
-          role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
-                           # Super Spine, Border Super Spine, Border Gateway Super Spine]
-          preserve_config: False # boolean, default is  true
+        ...parameters...
 ```
 
 
@@ -115,9 +121,6 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
 Ongoing development efforts and contributions to this collection are solely focused on enhancements to current dcnm modules, additional dcnm modules and enhancements to the connection plugin.
 
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco DCNM collection repository](link_to_repo).
-
-See the [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) for details on contributing to Ansible.
-
 
 ## Changelogs
 <!--Add a link to a changelog.md file or an external docsite to cover this information. -->

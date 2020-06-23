@@ -21,7 +21,7 @@ import socket
 import time
 import copy
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
@@ -347,7 +347,8 @@ class DcnmNetwork:
         self.diff_delete = {}
         self.diff_input_format = []
         self.query = []
-        self.ip_sn = get_fabric_inventory_details(self.module, self.fabric)
+        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.ip_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(
             changed=False,
@@ -444,6 +445,7 @@ class DcnmNetwork:
             return {}
 
         serial = ""
+        attach['ip_address'] = dcnm_get_ip_addr_info(attach['ip_address'], None)
         for ip, ser in self.ip_sn.items():
             if ip == attach['ip_address']:
                 serial = ser
@@ -451,6 +453,11 @@ class DcnmNetwork:
         if not serial:
             self.module.fail_json(msg='Fabric: {} does not have the switch: {}'
                                   .format(self.fabric, attach['ip_address']))
+
+        role = self.inventory_data[attach['ip_address']].get('switchRole')
+        if role.lower() == 'spine' or role.lower() == 'super spine':
+            msg = 'Networks cannot be attached to switch {} with role {}'.format(attach['ip_address'], role)
+            self.module.fail_json(msg=msg)
 
         attach.update({'fabric': self.fabric})
         attach.update({'networkName': net_name})
@@ -1380,7 +1387,7 @@ class DcnmNetwork:
             net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
         )
         att_spec = dict(
-            ip_address=dict(required=True, type='ipv4'),
+            ip_address=dict(required=True, type='str'),
             ports=dict(required=True, type='list'),
             deploy=dict(type='bool', default=True)
         )

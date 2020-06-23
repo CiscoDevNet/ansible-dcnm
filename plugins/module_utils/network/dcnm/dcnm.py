@@ -91,11 +91,10 @@ def validate_list_of_dicts(param_list, spec):
 
 def get_fabric_inventory_details(module, fabric):
 
+    inventory_data = {}
     rc = False
     method = 'GET'
     path = '/rest/control/fabrics/{}/inventory'.format(fabric)
-
-    ip_sn = {}
 
     count = 1
     while (rc is False):
@@ -111,7 +110,7 @@ def get_fabric_inventory_details(module, fabric):
         if response.get('RETURN_CODE') == 404:
             # RC 404 - Object not found
             rc = True
-            return ip_sn
+            return inventory_data
 
         if response.get('RETURN_CODE') == 401:
             # RC 401: Server not reachable. Retry a few times
@@ -127,11 +126,22 @@ def get_fabric_inventory_details(module, fabric):
             # for any error other then 404.
             raise Exception(response)
 
-        for device in response.get('DATA'):
-            ip = device.get('ipAddress')
-            sn = device.get('serialNumber')
-            ip_sn.update({ip: sn})
-            rc = True
+        for device_data in response.get('DATA'):
+            key = device_data.get('ipAddress')
+            inventory_data[key] = device_data
+        rc = True
+
+    return inventory_data
+
+
+def get_ip_sn_dict(inventory_data):
+
+    ip_sn = {}
+
+    for device_key in inventory_data.keys():
+        ip = inventory_data[device_key].get('ipAddress')
+        sn = inventory_data[device_key].get('serialNumber')
+        ip_sn.update({ip: sn})
 
     return ip_sn
 
