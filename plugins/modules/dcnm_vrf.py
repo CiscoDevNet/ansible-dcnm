@@ -53,7 +53,8 @@ options:
     description: 'List of details of vrfs being managed'
     type: list
     elements: dict
-    required: true (except for state deleted)
+    required: true
+    note: Not required for state deleted
     suboptions:
       vrf_name:
         description: 'Name of the vrf being managed'
