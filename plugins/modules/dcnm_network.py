@@ -16,20 +16,16 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import json, socket, time, copy
+import json
+import socket
+import time
+import copy
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
     dcnm_send, validate_list_of_dicts
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
-__copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __author__ = "Chris Van Heuveln, Shrishail Kariyappanavar"
-
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
 
 DOCUMENTATION = '''
 ---
@@ -47,33 +43,7 @@ options:
     required: yes
   state:
     description:
-      - The state of the configuration after module completion.
-        Merged: The state of the objects listed on the playbook will be created on the DCNM for the same objects.
-                Only additions will be made if the playbook object or part of the object is missing on DCNM. If an
-                object or part of the object mentioned on playbook is already present on DCNM, no operation will be
-                performed for such objects or part of the objects.
-        Replaced:  The state of the objects listed in the playbook will serve as source of truth for the same objects
-                   on the DCNM under the fabric mentioned. Additions and deletions will be done to bring the DCNM
-                   objects to the state listed in the playbook. Note: Replace will only work on the objects mentioned
-                   in the playbook.
-        Overridden:  The state of the objects listed in the playbook will serve as source of truth for all the objects
-                     under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the
-                     state listed in the playbook. Note: Override will work on the all the objects in the playbook and
-                     also all the objects on DCNM.
-        Deleted:  Deletes the list of objects specified in the playbook, if no objects are provided in the playbook,
-                  all the objects present on DCNM will be deleted.
-        Query:  Returns the current state on the DCNM for the objects listed in the playbook.
-
-        rollback functionality:
-        This module supports task level rollback functionality. If any task runs into failures, as part of failure
-        handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
-        beginning of the task execution. Following few lines provide a logical description of how this works,
-        if (failure)
-            want data = have data
-            have data = get state of DCNM
-            Run the module in override state with above set of data to produce the required set of diffs
-            and push the diff payloads to DCNM.
-        If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
+      - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -91,11 +61,11 @@ options:
       net_name:
         description: 'Name of the network being managed'
         type: str
-        required: true 
+        required: true
       vrf_name:
         description: 'Name of the VRF to which the network belongs to'
         type: str
-        required: true 
+        required: true
       net_id:
         description: 'ID of the network being managed'
         type: int
@@ -104,14 +74,14 @@ options:
         description: 'Name of the config template to be used'
         type: str
         default: 'Default_Network_Universal'
-      net_extension_template: 
+      net_extension_template:
         description: 'Name of the extension config template to be used'
         type: str
         default: 'Default_Network_Extension_Universal'
       vlan_id:
         description: 'VLAN ID for the network'
         type: int
-        required: false 
+        required: false
       gw_ip_subnet:
         description: 'Gateway with subnet for the network'
         type: ipv4
@@ -141,6 +111,40 @@ options:
 '''
 
 EXAMPLES = '''
+This module supports the following states:
+
+Merged:
+  Networks defined in the playbook will be merged into the target fabric.
+    - If the network does not exist it will be added.
+    - If the network exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Networks that are not specified in the playbook will be untouched.
+
+Replaced:
+  Networks defined in the playbook will be replaced in the target fabric.
+    - If the Networks does not exist it will be added.
+    - If the Networks exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Properties that can be managed by the module but are  not specified
+      in the playbook will be deleted or defaulted if possible.
+    - Networks that are not specified in the playbook will be untouched.
+
+Overridden:
+  Networks defined in the playbook will be overridden in the target fabric.
+    - If the Networks does not exist it will be added.
+    - If the Networks exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Properties that can be managed by the module but are not specified
+      in the playbook will be deleted or defaulted if possible.
+    - Networks that are not specified in the playbook will be deleted.
+
+Deleted:
+  Networks defined in the playbook will be deleted.
+  If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+
+Query:
+  Returns the current DCNM state for the Networks listed in the playbook.
+
 - name: Merge networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -451,7 +455,7 @@ class DcnmNetwork:
         attach.update({'networkName': net_name})
         attach.update({'serialNumber': serial})
         attach.update({'switchPorts': ','.join(attach['ports'])})
-        attach.update({'detachSwitchPorts': ""})  ### Is this supported??Need to handle correct
+        attach.update({'detachSwitchPorts': ""})  # Is this supported??Need to handle correct
         attach.update({'vlan': vlan_id})
         attach.update({'dot1QVlan': 0})
         attach.update({'untagged': False})
@@ -647,8 +651,7 @@ class DcnmNetwork:
             for attach in attach_list:
                 attach_state = False if attach['lanAttachState'] == "NA" else True
                 deploy = attach['isLanAttached']
-                if bool(deploy) and (attach['lanAttachState'] == "OUT-OF-SYNC" or
-                                     attach['lanAttachState'] == "PENDING"):
+                if bool(deploy) and (attach['lanAttachState'] == "OUT-OF-SYNC" or attach['lanAttachState'] == "PENDING"):
                     deploy = False
 
                 if bool(deploy):
@@ -658,10 +661,10 @@ class DcnmNetwork:
                 vlan = attach['vlanId']
                 ports = attach['portNames']
 
-                ## The deletes and updates below are done to update the incoming dictionary format to
-                ## match to what the outgoing payload requirements mandate.
-                ## Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
-                ## on the attach section of outgoing payload.
+                # The deletes and updates below are done to update the incoming dictionary format to
+                # match to what the outgoing payload requirements mandate.
+                # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
+                # on the attach section of outgoing payload.
 
                 del attach['vlanId']
                 del attach['switchSerialNo']
@@ -752,13 +755,11 @@ class DcnmNetwork:
         if self.config:
 
             for want_c in self.want_create:
-                if not next((have_c for have_c in self.have_create if have_c['networkName'] == \
-                                                                      want_c['networkName']), None):
+                if not next((have_c for have_c in self.have_create if have_c['networkName'] == want_c['networkName']), None):
                     continue
                 diff_delete.update({want_c['networkName']: 'DEPLOYED'})
 
-                have_a = next((attach for attach in self.have_attach if attach['networkName'] == \
-                               want_c['networkName']), None)
+                have_a = next((attach for attach in self.have_attach if attach['networkName'] == want_c['networkName']), None)
 
                 if not have_a:
                     continue
@@ -1546,5 +1547,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-

@@ -1,34 +1,26 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
-"""dcnm_rest module
-Copyright (c) 2019 Cisco and/or its affiliates.
-This software is licensed to you under the terms of the Cisco Sample
-Code License, Version 1.0 (the "License"). You may obtain a copy of the
-License at
-               https://developer.cisco.com/docs/licenses
-All use of the material herein must be in accordance with the terms of
-the License. All rights not expressly granted by the License are
-reserved. Unless required by applicable law or agreed to separately in
-writing, software distributed under the License is distributed on an "AS
-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-or implied.
-"""
+#
+# Copyright (c) 2020 Cisco and/or its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-__copyright__ = "Copyright (c) 2019 Cisco and/or its affiliates."
-__license__ = "Cisco Sample Code License, Version 1.0"
 __author__ = "Mike Wiebe"
-
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
 
 DOCUMENTATION = '''
 ---
 module: dcnm_rest
 short_description: Send REST API requests to DCNM controller.
-version_added: "2.10"
+version_added: "0.9.0"
 description:
     - "Send REST API requests to DCNM controller."
 options:
