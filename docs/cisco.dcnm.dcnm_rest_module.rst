@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_rest
 **Send REST API requests to DCNM controller.**
 
 
-Version added: 2.10
+Version added: 0.9.0
 
 .. contents::
    :local:

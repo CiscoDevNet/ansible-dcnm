@@ -58,7 +58,7 @@ options:
     description: 'List of switches being managed'
     type: list
     elements: dict
-    required: true (except for state: deleted)
+    required: true (except for state deleted)
     suboptions:
       seed_ip:
         description: 'Seed Name(support both IP address and dns_name) of the switch which needs to be added to the DCNM Fabric'

@@ -56,7 +56,7 @@ options:
     description: 'List of details of networks being managed'
     type: list
     elements: dict
-    required: true (except for state: deleted)
+    required: true (except for state deleted)
     suboptions:
       net_name:
         description: 'Name of the network being managed'

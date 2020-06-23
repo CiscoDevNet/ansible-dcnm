@@ -8,7 +8,7 @@ cisco.dcnm.dcnm
 **Send REST api calls to Data Center Network Manager (DCNM) NX-OS Fabric Controller.**
 
 
-Version added: 2.10
+Version added: 0.9.0
 
 .. contents::
    :local:

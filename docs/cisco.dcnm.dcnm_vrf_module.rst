@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_vrf
 **Send REST API requests to DCNM controller for vrf operations**
 
 
-Version added: 2.10
+Version added: 0.9.0
 
 .. contents::
    :local:
@@ -63,23 +63,6 @@ Parameters
                                     </td>
                                                                 <td>
                                             <div>Service vrf template</div>
-                                                        </td>
-            </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>source</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"None"</div>
-                                    </td>
-                                                                <td>
-                                            <div>??</div>
                                                         </td>
             </tr>
                                 <tr>
@@ -198,8 +181,7 @@ Parameters
                                                                                     </ul>
                                                                             </td>
                                                                 <td>
-                                            <div>The state of the configuration after module completion. Merged - The state of the objects listed on the playbook will be created on the DCNM for the same objects. Only additions will be made if the playbook object or part of the object is missing on DCNM. If an object or part of the object mentioned on playbook is already present on DCNM, no operation will be performed for such objects or part of the objects. Replaced - The state of the objects listed in the playbook will serve as source of truth for the same objects on the DCNM under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the state listed in the playbook. Note - Replace will only work on the objects mentioned in the playbook. Overridden - The state of the objects listed in the playbook will serve as source of truth for all the objects under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the state listed in the playbook. Note - Override will work on the all the objects in the playbook and also all the objects on DCNM. Deleted - Deletes the list of objects specified in the playbook, if no objects are provided in the playbook, all the objects present on DCNM will be deleted. Query - Returns the current state on the DCNM for the objects listed in the playbook.
-    rollback functionality - This module supports task level rollback functionality. If any task runs into failures, as part of failure handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the beginning of the task execution. Following few lines provide a logical description of how this works, if (failure) want data = have data have data = get state of DCNM Run the module in override state with above set of data to produce the required set of diffs and push the diff payloads to DCNM. If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.</div>
+                                            <div>The state of DCNM after module completion.</div>
                                                         </td>
             </tr>
                         </table>
@@ -214,17 +196,61 @@ Examples
 .. code-block:: yaml+jinja
 
     
+    This module supports the following states:
+
+    Merged:
+      VRFs defined in the playbook will be merged into the target fabric.
+        - If the VRF does not exist it will be added.
+        - If the VRF exists but properties managed by the playbook are different
+          they will be updated if possible.
+        - VRFs that are not specified in the playbook will be untouched.
+
+    Replaced:
+      VRFs defined in the playbook will be replaced in the target fabric.
+        - If the VRF does not exist it will be added.
+        - If the VRF exists but properties managed by the playbook are different
+          they will be updated if possible.
+        - Properties that can be managed by the module but are  not specified
+          in the playbook will be deleted or defaulted if possible.
+        - VRFs that are not specified in the playbook will be untouched.
+
+    Overridden:
+      VRFs defined in the playbook will be overridden in the target fabric.
+        - If the VRF does not exist it will be added.
+        - If the VRF exists but properties managed by the playbook are different
+          they will be updated if possible.
+        - Properties that can be managed by the module but are not specified
+          in the playbook will be deleted or defaulted if possible.
+        - VRFs that are not specified in the playbook will be deleted.
+
+    Deleted:
+      VRFs defined in the playbook will be deleted.
+      If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
+
+    Query:
+      Returns the current DCNM state for the VRFs listed in the playbook.
+
+    rollback functionality:
+    This module supports task level rollback functionality. If any task runs into failures, as part of failure
+    handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+    beginning of the task execution. Following few lines provide a logical description of how this works,
+    if (failure)
+        want data = have data
+        have data = get state of DCNM
+        Run the module in override state with above set of data to produce the required set of diffs
+        and push the diff payloads to DCNM.
+    If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
+
+    # The two VRFs below will be merged into the target fabric.
     - name: Merge vrfs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
-        state: merged 
+        state: merged
         config:
         - vrf_name: ansible-vrf-r1
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
           attach:
           - ip_address: 10.122.197.224
             vlan_id: 202
@@ -236,25 +262,22 @@ Examples
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
           attach:
           - ip_address: 10.122.197.224
             vlan_id: 402
           - ip_address: 10.122.197.225
             vlan_id: 403
 
+    # The two VRFs below will be replaced in the target fabric.
     - name: Replace vrfs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
-        state: replaced 
+        state: replaced
         config:
         - vrf_name: ansible-vrf-r1
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
           attach:
           - ip_address: 10.122.197.224
             vlan_id: 202
@@ -272,25 +295,22 @@ Examples
         #   vrf_id: 9008012
         #   vrf_template: Default_VRF_Universal
         #   vrf_extension_template: Default_VRF_Extension_Universal
-        #   source: None
-        #   service_vrf_template: None
         #   attach:
         #   - ip_address: 10.122.197.224
         #     vlan_id: 402
         #   - ip_address: 10.122.197.225
         #     vlan_id: 403
-                  
+
+    # The two VRFs below will be overridden in the target fabric.
     - name: Override vrfs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
-        state: overridden 
+        state: overridden
         config:
         - vrf_name: ansible-vrf-r1
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
           attach:
           - ip_address: 10.122.197.224
             vlan_id: 202
@@ -308,37 +328,31 @@ Examples
         #   vrf_id: 9008012
         #   vrf_template: Default_VRF_Universal
         #   vrf_extension_template: Default_VRF_Extension_Universal
-        #   source: None
-        #   service_vrf_template: None
         #   attach:
         #   - ip_address: 10.122.197.224
         #     vlan_id: 402
         #   - ip_address: 10.122.197.225
         #     vlan_id: 403
-                  
+
     - name: Delete selected vrfs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
-        state: deleted 
+        state: deleted
         config:
         - vrf_name: ansible-vrf-r1
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
-              
+
     - name: Delete all the vrfs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: deleted
-          
+
     - name: Query vrfs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
@@ -348,14 +362,10 @@ Examples
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: None
-          service_vrf_template: None
 
 
 

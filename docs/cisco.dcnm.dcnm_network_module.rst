@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_network
 **Send REST API requests to DCNM controller for network operations**
 
 
-Version added: 0.9.0
+Version added: 2.10
 
 .. contents::
    :local:
@@ -212,8 +212,7 @@ Parameters
                                                                                     </ul>
                                                                             </td>
                                                                 <td>
-                                            <div>The state of the configuration after module completion. Merged - The state of the objects listed on the playbook will be created on the DCNM for the same objects. Only additions will be made if the playbook object or part of the object is missing on DCNM. If an object or part of the object mentioned on playbook is already present on DCNM, no operation will be performed for such objects or part of the objects. Replaced - The state of the objects listed in the playbook will serve as source of truth for the same objects on the DCNM under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the state listed in the playbook. Note - Replace will only work on the objects mentioned in the playbook. Overridden - The state of the objects listed in the playbook will serve as source of truth for all the objects under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the state listed in the playbook. Note - Override will work on the all the objects in the playbook and also all the objects on DCNM. Deleted - Deletes the list of objects specified in the playbook, if no objects are provided in the playbook, all the objects present on DCNM will be deleted. Query - Returns the current state on the DCNM for the objects listed in the playbook.
-    rollback functionality - This module supports task level rollback functionality. If any task runs into failures, as part of failure handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the beginning of the task execution. Following few lines provide a logical description of how this works, if (failure) want data = have data have data = get state of DCNM Run the module in override state with above set of data to produce the required set of diffs and push the diff payloads to DCNM. If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.</div>
+                                            <div>The state of DCNM after module completion.</div>
                                                         </td>
             </tr>
                         </table>
@@ -228,6 +227,40 @@ Examples
 .. code-block:: yaml+jinja
 
     
+    This module supports the following states:
+
+    Merged:
+      Networks defined in the playbook will be merged into the target fabric.
+        - If the network does not exist it will be added.
+        - If the network exists but properties managed by the playbook are different
+          they will be updated if possible.
+        - Networks that are not specified in the playbook will be untouched.
+
+    Replaced:
+      Networks defined in the playbook will be replaced in the target fabric.
+        - If the Networks does not exist it will be added.
+        - If the Networks exists but properties managed by the playbook are different
+          they will be updated if possible.
+        - Properties that can be managed by the module but are  not specified
+          in the playbook will be deleted or defaulted if possible.
+        - Networks that are not specified in the playbook will be untouched.
+
+    Overridden:
+      Networks defined in the playbook will be overridden in the target fabric.
+        - If the Networks does not exist it will be added.
+        - If the Networks exists but properties managed by the playbook are different
+          they will be updated if possible.
+        - Properties that can be managed by the module but are not specified
+          in the playbook will be deleted or defaulted if possible.
+        - Networks that are not specified in the playbook will be deleted.
+
+    Deleted:
+      Networks defined in the playbook will be deleted.
+      If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+
+    Query:
+      Returns the current DCNM state for the Networks listed in the playbook.
+
     - name: Merge networks
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
