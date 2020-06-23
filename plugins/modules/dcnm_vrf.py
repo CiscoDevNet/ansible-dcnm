@@ -27,10 +27,10 @@ __author__ = "Shrishail Kariyappanavar"
 DOCUMENTATION = '''
 ---
 module: dcnm_vrf
-short_description: Send REST API requests to DCNM controller for vrf operations
+short_description: Add and remove VRFs from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
-    - "Send REST API requests to DCNM controller for vrf operations - Create, Attach, Deploy and Delete"
+    - "Add and remove VRFs from a DCNM managed VXLAN fabric."
 author: Shrishail Kariyappanavar(@nkshrishail)
 options:
   fabric:

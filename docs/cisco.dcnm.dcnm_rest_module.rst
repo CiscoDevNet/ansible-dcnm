@@ -96,6 +96,12 @@ Examples
 .. code-block:: yaml+jinja
 
     
+    This module can be used to send any REST API requests that are supported by
+    the DCNM controller.
+
+    This module is not idempotent but can be used as a stop gap until a feature
+    module can be developed for the target DCNM functionality.
+
     - name: Gather List of Fabrics from DCNM
       dcnm_rest:
         method: GET

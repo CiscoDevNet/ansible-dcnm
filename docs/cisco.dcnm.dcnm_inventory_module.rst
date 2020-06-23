@@ -5,7 +5,7 @@
 cisco.dcnm.dcnm_inventory
 *************************
 
-**Send REST API requests to DCNM controller for INVENTORY operations**
+**Add and remove Switches from a DCNM managed VXLAN fabric.**
 
 
 Version added: 0.9.0
@@ -17,7 +17,7 @@ Version added: 0.9.0
 
 Synopsis
 --------
-- Send REST API requests to DCNM controller for INVENTORY operations - Discover/Register/Save/Deploy/Assign Role/Delete a Switch
+- Add and remove Switches from a DCNM managed VXLAN fabric.
 
 
 
@@ -188,6 +188,21 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
                                                  / <span style="color: red">required</span>                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>Name of the target fabric for Inventory operations</div>
+                                                        </td>
+            </tr>
+                                <tr>
+                                                                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                                                                    </div>
                                     </td>
                                 <td>
                                                                                                                             <ul style="margin: 0; padding: 0"><b>Choices:</b>

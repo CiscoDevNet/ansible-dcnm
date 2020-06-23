@@ -5,7 +5,7 @@
 cisco.dcnm.dcnm_network
 ***********************
 
-**Send REST API requests to DCNM controller for network operations**
+**Add and remove Networks from a DCNM managed VXLAN fabric.**
 
 
 Version added: 2.10
@@ -17,7 +17,7 @@ Version added: 2.10
 
 Synopsis
 --------
-- Send REST API requests to DCNM controller for network operations - Create, Update, Attach, Deploy and Delete
+- Add and remove Networks from a DCNM managed VXLAN fabric.
 
 
 

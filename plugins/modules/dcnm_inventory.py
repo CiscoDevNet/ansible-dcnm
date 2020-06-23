@@ -33,18 +33,18 @@ __author__ = "Karthik Babu Harichandra Babu"
 DOCUMENTATION = '''
 ---
 module: dcnm_inventory
-short_description: Send REST API requests to DCNM controller for INVENTORY operations
+short_description: Add and remove Switches from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
-    - "Send REST API requests to DCNM controller for INVENTORY operations - Discover/Register/Save/Deploy/Assign Role/Delete a Switch"
+    - "Add and remove Switches from a DCNM managed VXLAN fabric."
 author: Karthik Babu Harichandra Babu(kharicha@cisco.com)
 options:
   fabric:
     description:
-    - 'Name of the target fabric for Inventory operations'
+      - 'Name of the target fabric for Inventory operations'
     type: str
     required: yes
-    state:
+  state:
     description:
       - The state of DCNM after module completion.
     type: str

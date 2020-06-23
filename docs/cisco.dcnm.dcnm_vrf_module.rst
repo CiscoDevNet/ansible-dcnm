@@ -5,7 +5,7 @@
 cisco.dcnm.dcnm_vrf
 *******************
 
-**Send REST API requests to DCNM controller for vrf operations**
+**Add and remove VRFs from a DCNM managed VXLAN fabric.**
 
 
 Version added: 0.9.0
@@ -17,7 +17,7 @@ Version added: 0.9.0
 
 Synopsis
 --------
-- Send REST API requests to DCNM controller for vrf operations - Create, Attach, Deploy and Delete
+- Add and remove VRFs from a DCNM managed VXLAN fabric.
 
 
 

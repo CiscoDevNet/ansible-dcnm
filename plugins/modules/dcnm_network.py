@@ -30,10 +30,10 @@ __author__ = "Chris Van Heuveln, Shrishail Kariyappanavar"
 DOCUMENTATION = '''
 ---
 module: dcnm_network
-short_description: Send REST API requests to DCNM controller for network operations
+short_description: Add and remove Networks from a DCNM managed VXLAN fabric.
 version_added: "2.10"
 description:
-    - "Send REST API requests to DCNM controller for network operations - Create, Update, Attach, Deploy and Delete"
+    - "Add and remove Networks from a DCNM managed VXLAN fabric."
 author: Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail)
 options:
   fabric:

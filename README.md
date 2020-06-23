@@ -30,10 +30,10 @@ Name | Description
 Name | Description
 --- | ---
 [cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
-[cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_inventory_module.rst)|Send REST API requests to DCNM controller for INVENTORY operations
-[cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_network_module.rst)|Send REST API requests to DCNM controller for network operations
+[cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_rest](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
-[cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_vrf_module.rst)|Send REST API requests to DCNM controller for vrf operations
+[cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
 
 <!--end collection content-->
 
