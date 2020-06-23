@@ -1,22 +1,25 @@
 #!/usr/bin/python
 #
-# This file is part of Ansible
+# Copyright (c) 2020 Cisco and/or its affiliates.
 #
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import socket, time, copy, json, datetime, re
+import socket
+import time
+import copy
+import json
+import datetime
+import re
 from textwrap import dedent
 from ansible.module_utils.six.moves.urllib.parse import urlencode, urlsplit
 
@@ -25,14 +28,13 @@ from ansible.module_utils.connection import Connection
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
     dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info
 
-__copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __author__ = "Karthik Babu Harichandra Babu"
 
 DOCUMENTATION = '''
 ---
 module: dcnm_inventory
 short_description: Send REST API requests to DCNM controller for INVENTORY operations
-version_added: "2.10"
+version_added: "0.9.0"
 description:
     - "Send REST API requests to DCNM controller for INVENTORY operations - Discover/Register/Save/Deploy/Assign Role/Delete a Switch"
 author: Karthik Babu Harichandra Babu(kharicha@cisco.com)
@@ -44,19 +46,7 @@ options:
     required: yes
     state:
     description:
-      - The state of the configuration after module completion.
-        Merged: The switches listed on the playbook will be created on the DCNM for the fabric given.
-                Only additions will be made if the playbook switches or part of the switch is missing on DCNM. If an
-                switch mentioned on playbook is already present on DCNM, no operation will be performed for such 
-                switch.
-        Overridden:  The state of the switches listed in the playbook will serve as source of truth for all the switches
-                     under the fabric mentioned. Additions and deletions will be done to bring the DCNM switches to the
-                     state listed in the playbook. Note: Override will work on the all the switches in the playbook and
-                     also all the switches on DCNM Fabric.
-        Deleted:  Deletes the list of switches specified in the playbook, if no switches are provided in the playbook,
-                  all the switches present on that DCNM fabric will be deleted.
-        Query:  Returns the current state on the DCNM for the switches listed in the playbook.
-        
+      - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -70,7 +60,7 @@ options:
     elements: dict
     required: true (except for state: deleted)
     suboptions:
-      seed_ip:     
+      seed_ip:
         description: 'Seed Name(support both IP address and dns_name) of the switch which needs to be added to the DCNM Fabric'
         type: ipv4
         required: true
@@ -78,36 +68,58 @@ options:
         description: 'Name of the authentication protocol to be used'
         choices: ['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES']
         type: str
-        required: true 
+        required: true (except for state 'deleted' and 'query')
       user_name:
         description: 'Login username to the switch'
         type: str
-        required: true 
+        required: true (except for state 'deleted' and 'query')
       password:
         description: 'Login password to the switch'
         type: str
-        required: true
+        required: true (except for state 'deleted' and 'query')
       max_hops:
         description: 'Maximum Hops to reach the switch'
         type: str
-        required: true 
+        required: true (except for state 'deleted' and 'query')
       role:
         description: 'Role which needs to be assigned to the switch'
-        choices: ['leaf', 'spine', 'border', 'border spine', 'border gateway', 'border gateway spine',
-                 'super spine', 'border super spine', 'border gateway super spine']
+        choices: ['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
+                 'super_spine', 'border_super_spine', 'border_gateway_super_spine']
         type: str
         required: true
+        deafault: leaf
       preserve_configs:
         description: 'Set this to false for greenfield deployment and true for brownfield deployment'
         type: str
-        required: true
+        required: true (except for state 'deleted' and 'query')
 '''
 
 EXAMPLES = '''
-# The following two switches will be merged in the existing fabric 
+This module supports the following states:
+
+Merged:
+  Switches defined in the playbook will be merged into the target fabric.
+    - If the switch does not exist it will be added.
+    - Switches that are not specified in the playbook will be untouched.
+
+Overridden:
+  The playbook will serve as source of truth for the target fabric.
+    - If the switch does not exist it will be added.
+    - If the switch is not defined in the playbook but exists in DCNM it will be removed.
+    - If the switch exists, properties that need to be modified and can be modified will be modified.
+
+Deleted:
+  Deletes the list of switches specified in the playbook.
+  If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
+
+Query:
+  Returns the current DCNM state for the switches listed in the playbook.
+
+
+# The following two switches will be merged into the existing fabric
 -name: Merge switch into fabric
     cisco.dcnm.dcnm_inventory:
-      fabric: kharicha-fabric
+      fabric: vxlan-fabric
       state: merged # merged / deleted / overridden / query
       config:
        - seed_ip: 192.168.0.1
@@ -125,11 +137,11 @@ EXAMPLES = '''
          role: leaf
          preserve_config: False # boolean, default is  true
 
-# The following two switches will be added or updated in the existing fabric and all other 
+# The following two switches will be added or updated in the existing fabric and all other
 # switches will be removed from the fabric
 - name: Override Switch
     cisco.dcnm.dcnm_inventory:
-      fabric: kharicha-fabric
+      fabric: vxlan-fabric
       state: merged # merged / deleted / overridden / query
       config:
        - seed_ip: 192.168.0.1
@@ -147,10 +159,10 @@ EXAMPLES = '''
          role: leaf
          preserve_config: False # boolean, default is  true
 
-# The following two switches will be deleted in the existing fabric 
+# The following two switches will be deleted in the existing fabric
 - name: Delete selected switches
     cisco.dcnm.dcnm_inventory:
-      fabric: kharicha-fabric
+      fabric: vxlan-fabric
       state: deleted # merged / deleted / overridden / query
       config:
        - seed_ip: 192.168.0.1
@@ -168,33 +180,24 @@ EXAMPLES = '''
          role: leaf
          preserve_config: False # boolean, default is  true
 
-# All the switches will be deleted in the existing fabric 
+# All the switches will be deleted in the existing fabric
 - name: Delete all the switches
     cisco.dcnm.dcnm_inventory:
-      fabric: kharicha-fabric
+      fabric: vxlan-fabric
       state: deleted # merged / deleted / overridden
-      
-# The following two switches information will be queried in the existing fabric 
+
+# The following two switches information will be queried in the existing fabric
 -name: Query switch into fabric
     cisco.dcnm.dcnm_inventory:
-      fabric: kharicha-fabric
+      fabric: vxlan-fabric
       state: query # merged / deleted / overridden / query
       config:
        - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: admin
-         password: switch_password
-         max_hops: 0
          role: spine
-         preserve_config: False # boolean, default is  true
        - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: admin
-         password: switch_password
-         max_hops: 0
          role: leaf
-         preserve_config: False # boolean, default is  true   
       '''
+
 
 class DcnmInventory:
 
@@ -346,21 +349,29 @@ class DcnmInventory:
     def get_diff_replace_delete(self):
 
         diff_delete = []
-        found_match = False
 
-        for want_c in self.want_create:
-            for have_c in self.have_create:
+        def have_in_want(have_c):
+            match_found = False
+            for want_c in self.want_create:
                 match = re.search(r'\S+\((\S+)\)', want_c["switches"][0]['deviceIndex'])
-                serial_num = match.groups()[0]
-                if want_c["switches"][0]['ipaddr'] == have_c["switches"][0]['ipaddr'] and \
-                        serial_num == have_c["switches"][0]['serialNumber'] \
-                        and want_c["switches"][0]['platform'] == have_c["switches"][0]['platform'] and \
-                        want_c["switches"][0]['version'] == have_c["switches"][0]['version'] \
-                        and want_c["switches"][0]['sysName'] == have_c["switches"][0]['sysName'] \
-                        and want_c['role'] == have_c["switches"][0]['role']:
-                        found_match = True
-                else:
-                    diff_delete.append(have_c["switches"][0]['serialNumber'])
+                if match is None:
+                    continue
+                want_serial_num = match.groups()[0]
+                if have_c["switches"][0]['serialNumber'] == want_serial_num:
+                    if have_c["switches"][0]['ipaddr'] == want_c["switches"][0]['ipaddr'] and \
+                       have_c["switches"][0]['platform'] == want_c["switches"][0]['platform'] and \
+                       have_c["switches"][0]['version'] == want_c["switches"][0]['version'] and \
+                       have_c["switches"][0]['sysName'] == want_c["switches"][0]['sysName'] and \
+                       have_c["switches"][0]['role'] == want_c['role']:
+                        match_found = True
+
+            return match_found
+
+        for have_c in self.have_create:
+            if have_in_want(have_c):
+                continue
+            else:
+                diff_delete.append(have_c["switches"][0]['serialNumber'])
 
         self.diff_delete = diff_delete
 
@@ -389,6 +400,8 @@ class DcnmInventory:
             found = False
             for have_c in self.have_create:
                 match = re.search(r'\S+\((\S+)\)', want_c["switches"][0]['deviceIndex'])
+                if match is None:
+                    continue
                 serial_num = match.groups()[0]
                 if want_c["switches"][0]['ipaddr'] == have_c["switches"][0]['ipaddr'] and \
                         serial_num == have_c["switches"][0]['serialNumber'] \
@@ -436,21 +449,21 @@ class DcnmInventory:
 
             inv_spec = dict(
                 seed_ip=dict(required=True, type='str'),
-                auth_proto=dict(required=True, type='str',default='MD5'),
+                auth_proto=dict(required=True, type='str', default='MD5'),
                 user_name=dict(required=True, type='str', length_max=32),
                 password=dict(required=True, type='str', no_log=True, length_max=32),
                 max_hops=dict(type='int', default=0),
                 role=dict(type='str',
-                          choices=['leaf', 'spine', 'border', 'border spine', 'border gateway', 'border gateway spine',
-                          'super spine', 'border super spine', 'border gateway super spine'],
-                          default='Leaf'),
+                          choices=['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
+                                   'super_spine', 'border_super_spine', 'border_gateway_super_spine'],
+                          default='leaf'),
                 preserve_config=dict(type='bool', default=False)
             )
 
             msg = None
             if self.config:
                 for inv in self.config:
-                    if not 'seed_ip' in inv or not 'user_name' in inv or not 'password' in inv:
+                    if 'seed_ip' not in inv or 'user_name' not in inv or 'password' not in inv:
                         msg = "seed ip/user name and password are mandatory under inventory parameters"
 
             else:
@@ -479,7 +492,7 @@ class DcnmInventory:
             msg = None
             if self.config:
                 for inv in self.config:
-                    if not 'seed_ip' in inv:
+                    if 'seed_ip' not in inv:
                         msg = "seed ip is mandatory under inventory parameters for switch deletion"
 
             if msg:
@@ -500,15 +513,15 @@ class DcnmInventory:
             inv_spec = dict(
                 seed_ip=dict(required=True, type='str'),
                 role=dict(type='str',
-                          choices=['leaf', 'spine', 'border', 'border spine', 'border gateway', 'border gateway spine',
-                                   'super spine', 'border super spine', 'border gateway super spine'],
-                          default='Leaf')
+                          choices=['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
+                                   'super_spine', 'border_super_spine', 'border_gateway_super_spine'],
+                          default='leaf')
             )
 
             msg = None
             if self.config:
                 for inv in self.config:
-                    if not 'seed_ip' in inv:
+                    if 'seed_ip' not in inv:
                         msg = "seed ip is mandatory under inventory parameters for switch deletion"
 
             if msg:
@@ -812,6 +825,7 @@ class DcnmInventory:
 
         self.module.fail_json(msg=res)
 
+
 def main():
     """ main entry point for module execution
     """
@@ -912,7 +926,7 @@ def main():
             # Verify all devices came up finally
             if not dcnm_inv.all_switches_ok():
                 msg = "Unable to make all the switches up after discover under fabric: {}".format(dcnm_inv.fabric)
-                self.module.fail_json(msg=msg)
+                module.fail_json(msg=msg)
 
             # Step 5
             # Save LAN Credentials for each switch
@@ -931,6 +945,7 @@ def main():
             dcnm_inv.config_deploy()
 
     module.exit_json(**dcnm_inv.result)
+
 
 if __name__ == '__main__':
     main()
