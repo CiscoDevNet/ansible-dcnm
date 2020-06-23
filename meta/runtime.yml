@@ -1,0 +1,14 @@
+---
+requires_ansible: '>=2.9.10,<2.11'
+plugin_routing:
+  action:
+    dcnm_inventory:
+      redirect: cisco.dcnm.dcnm
+    dcnm_interface:
+      redirect: cisco.dcnm.dcnm
+    dcnm_network:
+      redirect: cisco.dcnm.dcnm
+    dcnm_vrf:
+      redirect: cisco.dcnm.dcnm
+    dcnm_rest:
+      redirect: cisco.dcnm.dcnm
