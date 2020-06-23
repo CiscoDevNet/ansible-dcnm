@@ -1,43 +1,34 @@
 #!/usr/bin/python
 #
-# This file is part of Ansible
+# Copyright (c) 2020 Cisco and/or its affiliates.
 #
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import json, socket, time, copy
+import json
+import socket
+import time
+import copy
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    get_fabric_inventory_details, dcnm_send, validate_list_of_dicts
+    get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info
 from ansible.module_utils.basic import AnsibleModule
 
-
-__copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __author__ = "Shrishail Kariyappanavar"
-
-
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 
 DOCUMENTATION = '''
 ---
 module: dcnm_vrf
 short_description: Send REST API requests to DCNM controller for vrf operations
-version_added: "2.10"
+version_added: "0.9.0"
 description:
     - "Send REST API requests to DCNM controller for vrf operations - Create, Attach, Deploy and Delete"
 author: Shrishail Kariyappanavar(@nkshrishail)
@@ -49,33 +40,7 @@ options:
     required: yes
   state:
     description:
-      - The state of the configuration after module completion.
-        Merged: The state of the objects listed on the playbook will be created on the DCNM for the same objects.
-                Only additions will be made if the playbook object or part of the object is missing on DCNM. If an
-                object or part of the object mentioned on playbook is already present on DCNM, no operation will be
-                performed for such objects or part of the objects.
-        Replaced:  The state of the objects listed in the playbook will serve as source of truth for the same objects
-                   on the DCNM under the fabric mentioned. Additions and deletions will be done to bring the DCNM
-                   objects to the state listed in the playbook. Note: Replace will only work on the objects mentioned
-                   in the playbook.
-        Overridden:  The state of the objects listed in the playbook will serve as source of truth for all the objects
-                     under the fabric mentioned. Additions and deletions will be done to bring the DCNM objects to the
-                     state listed in the playbook. Note: Override will work on the all the objects in the playbook and
-                     also all the objects on DCNM.
-        Deleted:  Deletes the list of objects specified in the playbook, if no objects are provided in the playbook,
-                  all the objects present on DCNM will be deleted.
-        Query:  Returns the current state on the DCNM for the objects listed in the playbook.
-
-        rollback functionality:
-        This module supports task level rollback functionality. If any task runs into failures, as part of failure 
-        handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
-        beginning of the task execution. Following few lines provide a logical description of how this works,
-        if (failure)
-            want data = have data
-            have data = get state of DCNM
-            Run the module in override state with above set of data to produce the required set of diffs
-            and push the diff payloads to DCNM.
-        If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
+      - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -139,16 +104,61 @@ options:
 '''
 
 EXAMPLES = '''
+This module supports the following states:
+
+Merged:
+  VRFs defined in the playbook will be merged into the target fabric.
+    - If the VRF does not exist it will be added.
+    - If the VRF exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - VRFs that are not specified in the playbook will be untouched.
+
+Replaced:
+  VRFs defined in the playbook will be replaced in the target fabric.
+    - If the VRF does not exist it will be added.
+    - If the VRF exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Properties that can be managed by the module but are  not specified
+      in the playbook will be deleted or defaulted if possible.
+    - VRFs that are not specified in the playbook will be untouched.
+
+Overridden:
+  VRFs defined in the playbook will be overridden in the target fabric.
+    - If the VRF does not exist it will be added.
+    - If the VRF exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Properties that can be managed by the module but are not specified
+      in the playbook will be deleted or defaulted if possible.
+    - VRFs that are not specified in the playbook will be deleted.
+
+Deleted:
+  VRFs defined in the playbook will be deleted.
+  If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
+
+Query:
+  Returns the current DCNM state for the VRFs listed in the playbook.
+
+rollback functionality:
+This module supports task level rollback functionality. If any task runs into failures, as part of failure
+handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+beginning of the task execution. Following few lines provide a logical description of how this works,
+if (failure)
+    want data = have data
+    have data = get state of DCNM
+    Run the module in override state with above set of data to produce the required set of diffs
+    and push the diff payloads to DCNM.
+If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
+
+# The two VRFs below will be merged into the target fabric.
 - name: Merge vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
-    state: merged 
+    state: merged
     config:
     - vrf_name: ansible-vrf-r1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
       service_vrf_template: None
       attach:
       - ip_address: 10.122.197.224
@@ -161,7 +171,6 @@ EXAMPLES = '''
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: None
       service_vrf_template: None
       attach:
       - ip_address: 10.122.197.224
@@ -169,10 +178,11 @@ EXAMPLES = '''
       - ip_address: 10.122.197.225
         vlan_id: 403
 
+# The two VRFs below will be replaced in the target fabric.
 - name: Replace vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
-    state: replaced 
+    state: replaced
     config:
     - vrf_name: ansible-vrf-r1
       vrf_id: 9008011
@@ -204,11 +214,12 @@ EXAMPLES = '''
     #     vlan_id: 402
     #   - ip_address: 10.122.197.225
     #     vlan_id: 403
-              
+
+# The two VRFs below will be overridden in the target fabric.
 - name: Override vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
-    state: overridden 
+    state: overridden
     config:
     - vrf_name: ansible-vrf-r1
       vrf_id: 9008011
@@ -240,11 +251,11 @@ EXAMPLES = '''
     #     vlan_id: 402
     #   - ip_address: 10.122.197.225
     #     vlan_id: 403
-              
+
 - name: Delete selected vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
-    state: deleted 
+    state: deleted
     config:
     - vrf_name: ansible-vrf-r1
       vrf_id: 9008011
@@ -258,12 +269,12 @@ EXAMPLES = '''
       vrf_extension_template: Default_VRF_Extension_Universal
       source: None
       service_vrf_template: None
-          
+
 - name: Delete all the vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
-      
+
 - name: Query vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
@@ -282,6 +293,7 @@ EXAMPLES = '''
       source: None
       service_vrf_template: None
 '''
+
 
 class DcnmVrf:
 
@@ -326,7 +338,6 @@ class DcnmVrf:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
-
     def diff_for_attach_deploy(self, want_a, have_a):
 
         attach_list = []
@@ -363,13 +374,13 @@ class DcnmVrf:
 
         return attach_list, dep_vrf
 
-
     def update_attach_params(self, attach, vrf_name, deploy):
 
         if not attach:
             return {}
 
         serial = ""
+        attach['ip_address'] = dcnm_get_ip_addr_info(attach['ip_address'], None)
         for ip, ser in self.ip_sn.items():
             if ip == attach['ip_address']:
                 serial = ser
@@ -394,7 +405,6 @@ class DcnmVrf:
 
         return attach
 
-
     def diff_for_create(self, want, have):
 
         if not have:
@@ -418,7 +428,6 @@ class DcnmVrf:
 
         return create
 
-
     def update_create_params(self, vrf):
 
         if not vrf:
@@ -434,7 +443,7 @@ class DcnmVrf:
             'vrfName': vrf['vrf_name'],
             'vrfTemplate': v_template,
             'vrfExtensionTemplate': ve_template,
-            'vrfId': vrf.get('vrf_id', None), # vrf_id will be auto generated in get_diff_merge()
+            'vrfId': vrf.get('vrf_id', None),  # vrf_id will be auto generated in get_diff_merge()
             'serviceVrfTemplate': s_v_template,
             'source': src
         }
@@ -445,7 +454,6 @@ class DcnmVrf:
         vrf_upd.update({'vrfTemplateConfig': json.dumps(template_conf)})
 
         return vrf_upd
-
 
     def get_have(self):
 
@@ -520,10 +528,10 @@ class DcnmVrf:
                 sn = attach['switchSerialNo']
                 vlan = attach['vlanId']
 
-                ## The deletes and updates below are done to update the incoming dictionary format to
-                ## match to what the outgoing payload requirements mandate.
-                ## Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
-                ## on the attach section of outgoing payload.
+                # The deletes and updates below are done to update the incoming dictionary format to
+                # match to what the outgoing payload requirements mandate.
+                # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
+                # on the attach section of outgoing payload.
 
                 del attach['vlanId']
                 del attach['switchSerialNo']
@@ -556,7 +564,6 @@ class DcnmVrf:
         self.have_attach = have_attach
         self.have_deploy = have_deploy
 
-
     def get_want(self):
         want_create = []
         want_attach = []
@@ -580,8 +587,8 @@ class DcnmVrf:
             for attach in vrf['attach']:
                 deploy = vrf_deploy if "deploy" not in attach else attach['deploy']
                 vrfs.append(self.update_attach_params(attach,
-                                                 vrf['vrf_name'],
-                                                 deploy))
+                                                      vrf['vrf_name'],
+                                                      deploy))
             if vrfs:
                 vrf_attach.update({'vrfName': vrf['vrf_name']})
                 vrf_attach.update({'lanAttachList': vrfs})
@@ -595,7 +602,6 @@ class DcnmVrf:
         self.want_create = want_create
         self.want_attach = want_attach
         self.want_deploy = want_deploy
-
 
     def get_diff_delete(self):
 
@@ -652,7 +658,6 @@ class DcnmVrf:
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
-
 
     def get_diff_override(self):
 
@@ -773,7 +778,6 @@ class DcnmVrf:
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
 
-
     def get_diff_merge(self):
         # Special cases:
         # 1. Auto generate vrfId if its not mentioned by user:
@@ -800,8 +804,8 @@ class DcnmVrf:
             if not found:
                 vrf_id = want_c.get('vrfId', None)
                 if vrf_id is None:
-                # vrfId is not provided by user.
-                # Need to query DCNM to fetch next available vrfId and use it here.
+                    # vrfId is not provided by user.
+                    # Need to query DCNM to fetch next available vrfId and use it here.
                     method = 'POST'
                     result = dict(
                         changed=False,
@@ -901,7 +905,6 @@ class DcnmVrf:
         self.diff_deploy = diff_deploy
         self.diff_create_quick = diff_create_quick
 
-
     def format_diff(self):
         diff = []
 
@@ -992,7 +995,6 @@ class DcnmVrf:
 
         self.diff_input_format = diff
 
-
     def get_diff_query(self):
 
         query = []
@@ -1020,7 +1022,7 @@ class DcnmVrf:
             del found_c['serviceVrfTemplate']
             del found_c['vrfTemplateConfig']
 
-            if  not found_w:
+            if not found_w:
                 query.append(found_c)
                 continue
 
@@ -1049,7 +1051,6 @@ class DcnmVrf:
                 query.append(found_c)
 
         self.query = query
-
 
     def push_to_remote(self, is_rollback=False):
 
@@ -1143,7 +1144,6 @@ class DcnmVrf:
                     return
                 self.failure(resp)
 
-
     def wait_for_vrf_del_ready(self):
 
         method = 'GET'
@@ -1157,7 +1157,7 @@ class DcnmVrf:
                     if resp.get('DATA') is not None:
                         attach_list = resp['DATA'][0]['lanAttachList']
                         for atch in attach_list:
-                            if atch['lanAttachState']  == 'OUT-OF-SYNC' or atch['lanAttachState']  == 'FAILED':
+                            if atch['lanAttachState'] == 'OUT-OF-SYNC' or atch['lanAttachState'] == 'FAILED':
                                 self.diff_delete.update({vrf: 'OUT-OF-SYNC'})
                                 break
                             if atch['lanAttachState'] != 'NA':
@@ -1168,7 +1168,6 @@ class DcnmVrf:
                             self.diff_delete.update({vrf: 'NA'})
 
             return True
-
 
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
@@ -1186,7 +1185,7 @@ class DcnmVrf:
             deploy=dict(type='bool')
         )
         att_spec = dict(
-            ip_address=dict(required=True, type='ipv4'),
+            ip_address=dict(required=True, type='str'),
             vlan_id=dict(type='int', range_max=4094),
             deploy=dict(type='bool', default=True)
         )
@@ -1194,18 +1193,18 @@ class DcnmVrf:
         msg = None
         if self.config:
             for vrf in self.config:
-                if not 'vrf_name' in vrf:
+                if 'vrf_name' not in vrf:
                     msg = "vrf_name is mandatory under vrf parameters"
 
                 if 'attach' in vrf and vrf['attach']:
                     for attach in vrf['attach']:
-                        if not 'ip_address' in attach or not 'vlan_id' in attach:
-                            msg =  "ip_address and vlan_id are mandatory under attach parameters"
+                        if 'ip_address' not in attach or 'vlan_id' not in attach:
+                            msg = "ip_address and vlan_id are mandatory under attach parameters"
 
         else:
             if state == 'merged' or state == 'overridden' or \
                     state == 'replaced' or state == 'query':
-                msg =  "config: element is mandatory for this state {}".format(state)
+                msg = "config: element is mandatory for this state {}".format(state)
 
         if msg:
             self.module.fail_json(msg=msg)
@@ -1223,7 +1222,6 @@ class DcnmVrf:
             if invalid_params:
                 msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
                 self.module.fail_json(msg=msg)
-
 
     def handle_response(self, res, op):
 

@@ -16,9 +16,13 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import re
 import socket
+import json
+import time
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
+
 
 def validate_list_of_dicts(param_list, spec):
     """ Validate/Normalize playbook params. Will raise when invalid parameters found.
@@ -26,7 +30,6 @@ def validate_list_of_dicts(param_list, spec):
     spec: an argument spec dict
           e.g. spec = dict(ip=dict(required=True, type='ipv4'),
                            foo=dict(type='str', default='bar'))
-
     return: list of normalized input data
     """
     v = validation
@@ -67,7 +70,7 @@ def validate_list_of_dicts(param_list, spec):
                     item = v.check_type_list(item)
                 elif type == 'dict':
                     item = v.check_type_dict(item)
-                elif type == 'ipv4_subnet' or 'ipv4':
+                elif ((type == 'ipv4_subnet') or (type == 'ipv4')):
                     address = item.split('/')[0]
                     if type == 'ipv4_subnet':
                         if '/' in item:
@@ -89,29 +92,94 @@ def validate_list_of_dicts(param_list, spec):
 
 
 def get_fabric_inventory_details(module, fabric):
+
+    rc = False
     method = 'GET'
     path = '/rest/control/fabrics/{}/inventory'.format(fabric)
 
     ip_sn = {}
-    response = dcnm_send(module, method, path)
 
-    if not response.get('RETURN_CODE'):
-        module.fail_json(msg=response)
+    count = 1
+    while (rc is False):
 
-    if response.get('RETURN_CODE') == 404:
-        # RC 404 - Object not found
-        return ip_sn
-    if response.get('RETURN_CODE') >= 400:
-        # Handle additional return codes as needed but for now raise
-        # for any error other then 404.
-        raise Exception(response)
+        response = dcnm_send(module, method, path)
 
-    for device in response.get('DATA'):
-        ip = device.get('ipAddress')
-        sn = device.get('serialNumber')
-        ip_sn.update({ip: sn})
+        with open("dcnm_fab.log", "w") as f:
+            f.write("FAB RESP = {}\n".format(response))
+        if not response.get('RETURN_CODE'):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get('RETURN_CODE') == 404:
+            # RC 404 - Object not found
+            rc = True
+            return ip_sn
+
+        if response.get('RETURN_CODE') == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if (count <= 20):
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+            else:
+                raise Exception(response)
+        elif response.get('RETURN_CODE') >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        for device in response.get('DATA'):
+            ip = device.get('ipAddress')
+            sn = device.get('serialNumber')
+            ip_sn.update({ip: sn})
+            rc = True
 
     return ip_sn
+
+
+def dcnm_get_ip_addr_info(sw_elem, ip_sn):
+
+    msg_dict = {'Error': ''}
+    msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
+    msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+
+    ip_addr = re.findall(r'\d+\.\d+\.\d+\.\d+', sw_elem)
+    if (ip_addr == []):
+        # Given element is not an IP address. Try DNS or
+        # hostname
+        try:
+            addr_info = socket.getaddrinfo(sw_elem, 0, socket.AF_INET, 0, 0, 0)
+            if (None is ip_sn):
+                return addr_info[0][4][0]
+            if addr_info:
+                if (addr_info[0][4][0] in ip_sn.keys()):
+                    return addr_info[0][4][0]
+                else:
+                    msg_dict['Error'] = msg.format(sw_elem)
+                    raise Exception(json.dumps(msg_dict))
+        except socket.gaierror:
+            if (None is ip_sn):
+                msg_dict['Error'] = msg1.format(sw_elem)
+                raise Exception(json.dumps(msg_dict))
+            # This means that the given element is neither an IP
+            # address nor a host/DNS name. Assume that be a
+            # Serial number. Loop up the ip_sn and verify that it is
+            # a valid one. Else raise an error
+            ip_addr = [k for k, v in ip_sn.items() if v == sw_elem]
+            if (ip_addr):
+                return ip_addr[0]
+            else:
+                msg_dict['Error'] = msg.format(sw_elem)
+                raise Exception(json.dumps(msg_dict))
+    else:
+        if (None is ip_sn):
+            return ip_addr[0]
+        if (ip_addr[0] in ip_sn.keys()):
+            return ip_addr[0]
+        else:
+            msg_dict['Error'] = msg.format(sw_elem)
+            raise Exception(json.dumps(msg_dict))
 
 
 def dcnm_send(module, method, path, json_data=None):
