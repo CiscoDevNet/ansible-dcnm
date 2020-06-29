@@ -1,0 +1,285 @@
+{
+	"mock_ip_sn" : {
+		"10.122.84.109": "FOX1821H035",
+			"10.122.84.108": "SAL1819SAN8" 
+	},
+
+		"mock_vpc_sno" : {
+			"10.122.84.108" : "FOX1821H035~SAL1819SAN8",
+			"10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+		},
+
+		"mock_succ_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+			"RETURN_CODE": 200
+		},
+
+		"mock_deploy_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+			"RETURN_CODE": 200
+		},
+
+		"subint_merged_config": [
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.1",
+			"profile_subint": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 100,
+				"mtu": 9216,
+				"ipv4_addr": "1.1.1.1",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/25.1",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "sub interface eth25/1.1 configuration"
+			}
+		},
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.2",
+			"profile_subint": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 101,
+				"mtu": 9216,
+				"ipv4_addr": "1.1.1.2",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/25.2",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "sub interface eth1/25.2 configuration"
+			}
+		}],
+
+		"subint_replaced_config_non_exist": [
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/27.1",
+			"profile_subint": {
+				"ipv6_addr": "fe80::01",
+				"int_vrf": "default",
+				"ipv4_mask_len": 	16,
+				"ipv6_mask_len": 78,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 200,
+				"mtu": 1500,
+				"ipv4_addr": "2.2.1.1",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/27.1",
+				"cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"description": "sub interface eth27/1.1 configuration - replaced"
+			}
+    }],
+
+		"subint_replaced_config": [
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.1",
+			"profile_subint": {
+				"ipv6_addr": "fe80::01",
+				"int_vrf": "default",
+				"ipv4_mask_len": 	16,
+				"ipv6_mask_len": 78,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 200,
+				"mtu": 1500,
+				"ipv4_addr": "2.2.1.1",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/25.1",
+				"cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"description": "sub interface eth25/1.1 configuration - replaced"
+			}
+		},
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.2",
+			"profile_subint": {
+				"ipv6_addr": "fe80::02",
+				"int_vrf": "default",
+				"ipv4_mask_len": 16,
+				"ipv6_mask_len": 48,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 201,
+				"mtu": 1516,
+				"ipv4_addr": "5.1.1.2",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/25.2",
+				"cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"description": "sub interface eth1/25.2 configuration - replaced"
+			}
+		}],
+
+		"subint_deleted_config": [
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.1",
+			"profile_subint": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 100,
+				"mtu": 9216,
+				"ipv4_addr": "1.1.1.1",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/25.1",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "sub interface eth25/1.1 configuration"
+			}
+		},
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.2",
+			"profile_subint": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 101,
+				"mtu": 9216,
+				"ipv4_addr": "1.1.1.2",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/25.2",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "sub interface eth1/25.2 configuration"
+			}
+		}],
+
+		"subint_overridden_config": [
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/25.1",
+			"profile_subint": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 100,
+				"mtu": 9216,
+				"ipv4_addr": "1.1.1.1",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/25.1",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "sub interface eth25/1.1 configuration"
+			}
+		}],
+
+		"subint_deleted_non_existing_config": [
+		{
+			"switch": [
+				"10.122.84.108"
+			],
+			"deploy": "True",
+			"type": "sub_int",
+			"name": "eth1/1.1",
+			"profile_subint": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"fabric": "test_fabric",
+				"sno": "SAL1819SAN8",
+				"vlan": 100,
+				"mtu": 9216,
+				"ipv4_addr": "1.1.1.1",
+				"mode": "subint",
+				"policy": "int_subif_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/1.1",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "sub interface eth25/1.1 configuration"
+			}
+		}]
+}

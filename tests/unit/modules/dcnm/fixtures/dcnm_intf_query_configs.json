@@ -1,0 +1,51 @@
+{
+    "mock_ip_sn" : {
+     "10.122.84.109": "FOX1821H035",
+     "10.122.84.108": "SAL1819SAN8" 
+    },
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "query_config" : [
+    {
+      "switch": [
+        "10.122.84.108"
+      ]
+    },
+    {
+      "name": "po350",
+      "switch": [
+        "10.122.84.108"
+      ]
+    },
+    {
+      "name": "lo450",
+      "switch": [
+        "10.122.84.108"
+      ]
+    },
+    {
+      "name": "eth1/1",
+      "switch": [
+        "10.122.84.108"
+      ]
+    },
+    {
+      "name": "eth1/15.2",
+      "switch": [
+        "10.122.84.108"
+      ]
+    },
+    {
+      "name": "vpc750",
+      "switch": [
+        "10.122.84.108"
+      ]
+    }]
+}

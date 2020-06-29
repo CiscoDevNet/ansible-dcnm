@@ -1,0 +1,77 @@
+{
+	"vpc_merged_trunk_payloads" : 
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=vPC750",
+			"DATA": [
+			{
+				"policy": "int_vpc_trunk_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_VPC",
+					"nvPairs": {
+						"PEER2_MEMBER_INTERFACES": "e1/14",
+						"PEER2_PO_CONF": "no shutdown",
+						"PEER2_PO_DESC": "VPC acting as trunk peer2",
+						"PEER1_PO_CONF": "no shutdown",
+						"PEER1_PCID": "1",
+						"MTU": "jumbo",
+						"PEER1_PO_DESC": "VPC acting as trunk peer1",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PEER1_MEMBER_INTERFACES": "e1/14",
+						"PC_MODE": "on",
+						"PEER1_ALLOWED_VLANS": "none",
+						"INTF_NAME": "vPC750",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"PEER2_PCID": "1",
+						"PEER2_ALLOWED_VLANS": "none"
+					},
+					"ifName": "vPC750",
+					"serialNumber": "FOX1821H035~SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}
+				],
+				"skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+		"vpc_merged_access_payloads" : 
+		{
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=vPC751",
+			"DATA": [
+			{
+				"policy": "int_vpc_access_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_VPC",
+					"nvPairs": {
+						"PEER2_MEMBER_INTERFACES": "e1/15",
+						"PEER2_PO_CONF": "no shutdown",
+						"PEER2_PO_DESC": "VPC acting as access peer2",
+						"PEER1_PO_CONF": "no shutdown",
+						"PEER1_ACCESS_VLAN": "",
+						"PEER1_PCID": "2",
+						"MTU": "jumbo",
+						"PEER1_PO_DESC": "VPC acting as access peer1",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PEER1_MEMBER_INTERFACES": "e1/15",
+						"PC_MODE": "on",
+						"INTF_NAME": "vPC751",
+						"PEER2_ACCESS_VLAN": "",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"PEER2_PCID": "2"
+					},
+					"ifName": "vPC751",
+					"serialNumber": "FOX1821H035~SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+				"skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		}
+}

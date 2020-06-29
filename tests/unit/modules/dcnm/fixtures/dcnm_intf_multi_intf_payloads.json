@@ -1,0 +1,37 @@
+
+{
+	"pc_merged_trunk_payloads" : 
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel300",
+			"DATA": [
+			{
+				"policy": "int_port_channel_trunk_host_11_1",
+				"interfaces": [
+				{
+					"ifName": "port-channel300",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"MEMBER_INTERFACES": "e1/9",
+						"FABRIC_NAME": "test_fabric",
+						"PO_ID": "Port-channel300",
+						"MTU": "jumbo",
+						"PRIORITY": "500",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PC_MODE": "on",
+						"POLICY_DESC": "",
+						"CONF": "no shutdown",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"POLICY_ID": "POLICY-1849470",
+						"ALLOWED_VLANS": "none",
+						"DESC": "port channel acting as trunk"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}
+		],
+		"RETURN_CODE": 200,
+		"METHOD": "GET"
+	},
+}

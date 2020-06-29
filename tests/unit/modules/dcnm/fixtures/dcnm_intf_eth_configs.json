@@ -1,0 +1,450 @@
+{
+	"mock_ip_sn" : {
+		"10.122.84.109": "FOX1821H035",
+			"10.122.84.108": "SAL1819SAN8" 
+	},
+
+		"mock_vpc_sno" : {
+			"10.122.84.108" : "FOX1821H035~SAL1819SAN8",
+			"10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+		},
+
+		"mock_succ_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+			"RETURN_CODE": 200
+		},
+
+		"mock_deploy_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+			"RETURN_CODE": 200
+		},
+
+		"eth_merged_config" : [
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"description": "eth interface  acting as trunk",
+				"bpdu_guard": "True",
+				"sno": "SAL1819SAN8",
+				"mtu": "jumbo",
+				"admin_state": "True",
+				"mode": "trunk",
+				"port_type_fast": "True",
+				"policy": "int_trunk_host_11_1",
+				"allowed_vlans": "none",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "auto",
+				"ifname": "Ethernet1/30",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/30",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"access_vlan": 31,
+				"description": "eth interface acting as access",
+				"bpdu_guard": "True",
+				"sno": "SAL1819SAN8",
+				"mtu": "default",
+				"admin_state": "False",
+				"mode": "access",
+				"port_type_fast": "True",
+				"policy": "int_access_host_11_1",
+				"ifname": "Ethernet1/31",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "auto",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/31",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"int_vrf": "",
+				"route_tag": "",
+				"ipv4_mask_len": 24,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "routed",
+				"policy": "int_routed_host_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/32",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "auto",
+				"description": "eth interface acting as routed"
+			},
+			"name": "eth1/32",
+			"deploy": "False"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "epl_routed",
+				"policy": "epl_routed_intf",
+				"admin_state": "False",
+				"ifname": "Ethernet1/33",
+				"route_tag": "",
+				"speed": "auto",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "eth interface acting as epl_routed"
+			},
+			"name": "eth1/33",
+			"deploy": "False"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"policy": "int_monitor_ethernet_11_1",
+				"sno": "SAL1819SAN8",
+				"ifname": "Ethernet1/34",
+				"mode": "monitor",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/34",
+			"deploy": "False"
+		}], 
+
+		"eth_replaced_config" : [
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"description": "eth interface  acting as trunk - replaced",
+				"bpdu_guard": "False",
+				"sno": "SAL1819SAN8",
+				"mtu": "default",
+				"admin_state": "False",
+				"mode": "trunk",
+				"port_type_fast": "False",
+				"policy": "int_trunk_host_11_1",
+				"allowed_vlans": "all",
+				"cmds": [
+					"no shutdown",
+				"no shutdown"
+				],
+				"speed": "1Gb",
+				"ifname": "Ethernet1/30",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/30",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"access_vlan": 41,
+				"description": "eth interface acting as access - replaced",
+				"bpdu_guard": "False",
+				"sno": "SAL1819SAN8",
+				"mtu": "jumbo",
+				"admin_state": "True",
+				"mode": "access",
+				"port_type_fast": "False",
+				"policy": "int_access_host_11_1",
+				"ifname": "Ethernet1/31",
+				"cmds": [
+					"no shutdown",
+				"no shutdown"
+				],
+				"speed": "10Gb",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/31",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"int_vrf": "default",
+				"route_tag": "1234",
+				"ipv4_mask_len": 16,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 1500,
+				"ipv4_addr": "41.1.1.1",
+				"mode": "routed",
+				"policy": "int_routed_host_11_1",
+				"admin_state": "True",
+				"ifname": "Ethernet1/32",
+				"cmds": [
+					"no shutdown",
+				"no shutdown"
+				],
+				"speed": "100Mb",
+				"description": "eth interface acting as routed - raplaced"
+			},
+			"name": "eth1/32",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"ipv6_addr": "fe80:01",
+				"int_vrf": "default",
+				"ipv4_mask_len": 16,
+				"ipv6_mask_len": 72,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 1500,
+				"ipv4_addr": "61.1.1.1",
+				"mode": "epl_routed",
+				"policy": "epl_routed_intf",
+				"admin_state": "True",
+				"ifname": "Ethernet1/33",
+				"route_tag": "345",
+				"speed": "100Gb",
+				"cmds": [
+					"no shutdown",
+				"no shutdown"
+				],
+				"description": "eth interface acting as epl_routed - replaced"
+			},
+			"name": "eth1/33",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"policy": "int_monitor_ethernet_11_1",
+				"sno": "SAL1819SAN8",
+				"ifname": "Ethernet1/34",
+				"mode": "monitor",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/34",
+			"deploy": "True"
+		}], 
+
+		"eth_deleted_config" : [
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"description": "eth interface  acting as trunk",
+				"bpdu_guard": "True",
+				"sno": "SAL1819SAN8",
+				"mtu": "jumbo",
+				"admin_state": "True",
+				"mode": "trunk",
+				"port_type_fast": "True",
+				"policy": "int_trunk_host_11_1",
+				"allowed_vlans": "none",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "auto",
+				"ifname": "Ethernet1/30",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/30",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"access_vlan": 31,
+				"description": "eth interface acting as access",
+				"bpdu_guard": "True",
+				"sno": "SAL1819SAN8",
+				"mtu": "default",
+				"admin_state": "False",
+				"mode": "access",
+				"port_type_fast": "True",
+				"policy": "int_access_host_11_1",
+				"ifname": "Ethernet1/31",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "auto",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/31",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"int_vrf": "",
+				"route_tag": "",
+				"ipv4_mask_len": 24,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "routed",
+				"policy": "int_routed_host_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/32",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "auto",
+				"description": "eth interface acting as routed"
+			},
+			"name": "eth1/32",
+			"deploy": "False"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "epl_routed",
+				"policy": "epl_routed_intf",
+				"admin_state": "False",
+				"ifname": "Ethernet1/33",
+				"route_tag": "",
+				"speed": "auto",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "eth interface acting as epl_routed"
+			},
+			"name": "eth1/33",
+			"deploy": "False"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"policy": "int_monitor_ethernet_11_1",
+				"sno": "SAL1819SAN8",
+				"ifname": "Ethernet1/34",
+				"mode": "monitor",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/34",
+			"deploy": "False"
+		}], 
+
+		"eth_overridden_config" : [
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"description": "eth interface  acting as trunk",
+				"bpdu_guard": "Fasle",
+				"sno": "SAL1819SAN8",
+				"mtu": "default",
+				"admin_state": "False",
+				"mode": "trunk",
+				"port_type_fast": "False",
+				"policy": "int_trunk_host_11_1",
+				"allowed_vlans": "all",
+				"cmds": [
+					"no shutdown",
+				"no shutdown"
+				],
+				"speed": "auto",
+				"ifname": "Ethernet1/30",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/30",
+			"deploy": "True"
+		}],
+
+		"eth_merged_config_existing" : [
+		{
+			"type": "eth",
+			"switch": [
+				"10.122.84.108"
+			],
+			"profile_eth": {
+				"description": "eth interface  acting as trunk",
+				"bpdu_guard": "False",
+				"sno": "SAL1819SAN8",
+				"mtu": "default",
+				"admin_state": "False",
+				"mode": "trunk",
+				"port_type_fast": "False",
+				"policy": "int_trunk_host_11_1",
+				"allowed_vlans": "all",
+				"cmds": [
+					"no shutdown",
+				"no shutdown"
+				],
+				"speed": "auto",
+				"ifname": "Ethernet1/2",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/2",
+			"deploy": "True"
+		}]
+}

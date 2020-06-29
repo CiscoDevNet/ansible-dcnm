@@ -1,0 +1,196 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_it_fabric }}" 
+    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create vPC interfaces
+      cisco.dcnm.dcnm_interface: &vpc_merge
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - "{{ ansible_eth_intf6 }}"
+              peer2_members:                  # member interfaces on peer 2
+                - "{{ ansible_eth_intf6 }}"
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+
+          - name: vpc751                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: true               # choose from [true, false]
+              mode: access                    # choose from [trunk, access]
+              peer1_pcid: 200                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 200                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - "{{ ansible_eth_intf21 }}"
+              peer2_members:                  # member interfaces on peer 2
+                - "{{ ansible_eth_intf21 }}"
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_access_vlan: ""           # vlan id 
+              peer2_access_vlan: ""           # vlan id
+              peer1_description: "VPC acting as access peer1"
+              peer2_description: "VPC acting as access peer2"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##             DELETE                       ##
+##############################################
+
+    - name: Delete vPC interfaces
+      cisco.dcnm.dcnm_interface: &vpc_del
+        fabric: "{{ ansible_it_fabric }}" 
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}", 
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - "{{ ansible_eth_intf6 }}"
+              peer2_members:                  # member interfaces on peer 2
+                - "{{ ansible_eth_intf6 }}"
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+
+          - name: vpc751                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: true               # choose from [true, false]
+              mode: access                    # choose from [trunk, access]
+              peer1_pcid: 200                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 200                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - "{{ ansible_eth_intf21 }}"
+              peer2_members:                  # member interfaces on peer 2
+                - "{{ ansible_eth_intf21 }}"
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_access_vlan: ""           # vlan id
+              peer2_access_vlan: ""           # vlan id
+              peer1_description: "VPC acting as access peer1"
+              peer2_description: "VPC acting as access peer2"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 2'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Delete vPC interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *vpc_del
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: Put to fabric to default state
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_it_fabric }}" 
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+

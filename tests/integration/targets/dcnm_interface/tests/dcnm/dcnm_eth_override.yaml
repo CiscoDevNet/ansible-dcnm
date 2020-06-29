@@ -1,0 +1,195 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_it_fabric }}" 
+    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create ethernet interfaces
+      cisco.dcnm.dcnm_interface: &eth_merge
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "eth interface  acting as trunk"
+
+          - name: "{{ ansible_eth_intf8 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              admin_state: true               # choose from [true, false]
+              mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: default                    # choose from [default, jumbo]
+              access_vlan: 31                 # 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "eth interface acting as access"
+
+          - name: "{{ ansible_eth_intf9 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              admin_state: true               # choose from [true, false]
+              mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.1.1          # ipv4 address for the interface
+              ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
+              route_tag: ""                   # Routing Tag for the interface
+              mtu: 9216                       # choose from [min=576, max=9216]
+              cmds:
+                - no shutdown
+              description: "eth interface acting as routed"
+
+          - name: "{{ ansible_eth_intf10 }}"  # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              admin_state: true               # choose from [true, false]
+              mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.2.1          # ipv4 address for the interface
+              ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
+              ipv6_addr: fd01::0102           # ipV6 address for the interface
+              ipv6_mask_len: 64               # ipv6 mask len, choose between [min:64, max:127]
+              route_tag: ""                   # Routing Tag for the interface
+              mtu: 9216                       # choose from [min=576, max=9216]
+              cmds:
+                - no shutdown
+              description: "eth interface acting as epl_routed"
+
+          - name: "{{ ansible_eth_intf11 }}"  # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) <= 5'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 4'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##              OVERRIDE                    ##
+##############################################
+
+    - name: Override Ethernet interfaces
+      cisco.dcnm.dcnm_interface: &eth_override
+        fabric: "{{ ansible_it_fabric }}" 
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: "{{ ansible_eth_intf12 }}"  # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: false               ## choose from [true, false, no]
+              port_type_fast: false           ## choose from [true, false]
+              mtu: default                    ## choose from [default, jumbo]
+              allowed_vlans: all              # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "eth interface  acting as trunk - override"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) != 0'
+          - '(result["diff"][0]["overridden"] | length) == 1'
+          - '(result["diff"][0]["deploy"] | length) != 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Override Ethernet interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *eth_override
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) != 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) != 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: Put to fabric to default state
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_it_fabric }}" 
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+

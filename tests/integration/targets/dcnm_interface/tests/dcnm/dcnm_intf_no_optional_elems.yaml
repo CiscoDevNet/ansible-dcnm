@@ -1,0 +1,268 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_it_fabric }}" 
+    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##               MERGE                      ##
+##############################################
+
+    - name: Create all interfaces without optional elements
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+
+          - name: po301                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: access                    # choose from [trunk, access, l3, monitor]
+
+          - name: po302                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: l3                        # choose from [trunk, access, l3, monitor]
+
+          - name: po303                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: monitor                   # choose from [trunk, access, l3, monitor]
+
+          - name: "{{ ansible_eth_intf2 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_eth_intf3 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_eth_intf4 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_eth_intf5 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
+              ipv4_addr: 193.168.100.1        # ipv4 address for the interface
+
+          - name: "{{ ansible_eth_intf6 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_subint:                   # MUST be profile_subint
+              mode: subint                    # choose from [subint]
+              vlan: 100                       # vlan ID [min:2, max:3967]
+              ipv4_addr: 193.168.100.1        # ipv4 address for the sub-interface
+              ipv4_mask_len: 24               # choose between [min:8, max:31]
+
+          - name: lo100                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      # choose from [true, false]
+            profile_lo:                       # MUST be profile_lo
+              mode: lo                        # choose from [lo]
+              ipv4_addr: 192.168.100.1        # ipv4 address for the loopback interface
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 11'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 9'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##               DELETE                     ##
+##############################################
+
+    - name: Delete all interfaces without optional elements
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_it_fabric }}" 
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+
+          - name: po301                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: access                    # choose from [trunk, access, l3, monitor]
+
+          - name: po302                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: l3                        # choose from [trunk, access, l3, monitor]
+
+          - name: po303                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              mode: monitor                   # choose from [trunk, access, l3, monitor]
+
+          - name: "{{ ansible_eth_intf2 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_eth_intf3 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_eth_intf4 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_eth_intf5 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
+              ipv4_addr: 192.169.100.1        # ipv4 address for the interface
+
+          - name: "{{ ansible_eth_intf6 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_eth:                      # MUST be profile_eth
+              mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
+
+          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_subint:                   # MUST be profile_subint
+              mode: subint                    # choose from [subint]
+              vlan: 100                       # vlan ID [min:2, max:3967]
+              ipv4_addr: 192.170.100.1        # ipv4 address for the sub-interface
+              ipv4_mask_len: 24               # choose between [min:8, max:31]
+
+          - name: lo100                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      # choose from [true, false]
+            profile_lo:                       # MUST be profile_lo
+              mode: lo                        # choose from [lo]
+              ipv4_addr: 192.171.100.1        # ipv4 address for the loopback interface
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 6'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: Put to fabric to default state
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_it_fabric }}" 
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
