@@ -113,23 +113,20 @@ options:
 
 EXAMPLES = '''
 This module supports the following states:
-
 Merged:
   Networks defined in the playbook will be merged into the target fabric.
     - If the network does not exist it will be added.
     - If the network exists but properties managed by the playbook are different
       they will be updated if possible.
     - Networks that are not specified in the playbook will be untouched.
-
 Replaced:
   Networks defined in the playbook will be replaced in the target fabric.
     - If the Networks does not exist it will be added.
     - If the Networks exists but properties managed by the playbook are different
       they will be updated if possible.
-    - Properties that can be managed by the module but are  not specified
+    - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
     - Networks that are not specified in the playbook will be untouched.
-
 Overridden:
   Networks defined in the playbook will be overridden in the target fabric.
     - If the Networks does not exist it will be added.
@@ -138,14 +135,11 @@ Overridden:
     - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
     - Networks that are not specified in the playbook will be deleted.
-
 Deleted:
   Networks defined in the playbook will be deleted.
   If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
-
 Query:
   Returns the current DCNM state for the Networks listed in the playbook.
-
 - name: Merge networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -159,10 +153,10 @@ Query:
       vlan_id: 150
       gw_ip_subnet: '192.168.30.1/24'
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
-      - ip_address: 10.122.197.225
+      - ip_address: 192.168.1.225
         ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
         deploy: true
@@ -174,15 +168,13 @@ Query:
       vlan_id: 151
       gw_ip_subnet: '192.168.40.1/24'
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         ports: [Ethernet1/11, Ethernet1/12]
         deploy: true
-      - ip_address: 10.122.197.225
+      - ip_address: 192.168.1.225
         ports: [Ethernet1/11, Ethernet1/12]
         deploy: true
       deploy: false
-
-
 - name: Replace networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -196,13 +188,13 @@ Query:
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
         attach:
-        - ip_address: 10.122.197.224
+        - ip_address: 192.168.1.224
           # Replace the ports with new ports
           # ports: [Ethernet1/13, Ethernet1/14]
           ports: [Ethernet1/16, Ethernet1/17]
           deploy: true
           # Delete this attachment
-        # - ip_address: 10.122.197.225
+        # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         #   deploy: true
         deploy: true
@@ -215,14 +207,13 @@ Query:
         #   vlan_id: 151
         #   gw_ip_subnet: '192.168.40.1/24'
         #   attach:
-        #     - ip_address: 10.122.197.224
+        #     - ip_address: 192.168.1.224
         #       ports: [Ethernet1/11, Ethernet1/12]
         #       deploy: true
-        #     - ip_address: 10.122.197.225
+        #     - ip_address: 192.168.1.225
         #       ports: [Ethernet1/11, Ethernet1/12]
         #       deploy: true
         #   deploy: false
-
 - name: Override networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -236,13 +227,13 @@ Query:
       vlan_id: 150
       gw_ip_subnet: '192.168.30.1/24'
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         # Replace the ports with new ports
         # ports: [Ethernet1/13, Ethernet1/14]
         ports: [Ethernet1/16, Ethernet1/17]
         deploy: true
         # Delete this attachment
-        # - ip_address: 10.122.197.225
+        # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         #   deploy: true
         deploy: true
@@ -255,15 +246,13 @@ Query:
       #   vlan_id: 151
       #   gw_ip_subnet: '192.168.40.1/24'
       #   attach:
-      #   - ip_address: 10.122.197.224
+      #   - ip_address: 192.168.1.224
       #     ports: [Ethernet1/11, Ethernet1/12]
       #     deploy: true
-      #   - ip_address: 10.122.197.225
+      #   - ip_address: 192.168.1.225
       #     ports: [Ethernet1/11, Ethernet1/12]
       #     deploy: true
       #   deploy: false
-
-
 - name: Delete selected networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -284,13 +273,10 @@ Query:
       vlan_id: 151
       gw_ip_subnet: '192.168.40.1/24'
       deploy: false
-
-
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: deleted
-
 - name: Query Networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -311,7 +297,6 @@ Query:
       gw_ip_subnet: '192.168.40.1/24'
       deploy: false
 '''
-
 
 class DcnmNetwork:
 
@@ -1184,61 +1169,63 @@ class DcnmNetwork:
 
         query = []
 
-        for want_c in self.want_create:
-            try:
-                found_c = (
-                    next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
-            except AttributeError as error:
-                continue
-            found_a = next((net for net in self.have_attach if net['networkName'] == want_c['networkName']), None)
-            found_w = next((net for net in self.want_attach if net['networkName'] == want_c['networkName']), None)
+        if self.have_create or self.have_attach:
 
-            json_to_dict = json.loads(found_c['networkTemplateConfig'])
+            for want_c in self.want_create:
+                try:
+                    found_c = (
+                        next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
+                except AttributeError as error:
+                    continue
+                found_a = next((net for net in self.have_attach if net['networkName'] == want_c['networkName']), None)
+                found_w = next((net for net in self.want_attach if net['networkName'] == want_c['networkName']), None)
 
-            found_c.update({'net_name': found_c['networkName']})
-            found_c.update({'vrf_name': found_c['vrf']})
-            found_c.update({'net_id': found_c['networkId']})
-            found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
-            found_c.update({'gw_ip_subnet': json_to_dict.get('gatewayIpAddress', "")})
-            found_c.update({'net_template': found_c['networkTemplate']})
-            found_c.update({'net_extension_template': found_c['networkExtensionTemplate']})
-            found_c.update({'attach': []})
+                json_to_dict = json.loads(found_c['networkTemplateConfig'])
 
-            del found_c['fabric']
-            del found_c['networkName']
-            del found_c['networkId']
-            del found_c['networkTemplate']
-            del found_c['networkExtensionTemplate']
-            del found_c['networkTemplateConfig']
-            del found_c['vrf']
+                found_c.update({'net_name': found_c['networkName']})
+                found_c.update({'vrf_name': found_c['vrf']})
+                found_c.update({'net_id': found_c['networkId']})
+                found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
+                found_c.update({'gw_ip_subnet': json_to_dict.get('gatewayIpAddress', "")})
+                found_c.update({'net_template': found_c['networkTemplate']})
+                found_c.update({'net_extension_template': found_c['networkExtensionTemplate']})
+                found_c.update({'attach': []})
 
-            if not found_w:
-                query.append(found_c)
-                continue
+                del found_c['fabric']
+                del found_c['networkName']
+                del found_c['networkId']
+                del found_c['networkTemplate']
+                del found_c['networkExtensionTemplate']
+                del found_c['networkTemplateConfig']
+                del found_c['vrf']
 
-            attach_w = found_w['lanAttachList']
-            attach_l = found_a['lanAttachList']
+                if not found_w:
+                    query.append(found_c)
+                    continue
 
-            for a_w in attach_w:
-                attach_d = {}
-                serial = a_w['serialNumber']
-                found = False
-                for a_l in attach_l:
-                    if a_l['serialNumber'] == serial:
-                        found = True
-                        break
+                attach_w = found_w['lanAttachList']
+                attach_l = found_a['lanAttachList']
 
-                if found:
-                    for k, v in self.ip_sn.items():
-                        if v == a_l['serialNumber']:
-                            attach_d.update({'ip_address': k})
+                for a_w in attach_w:
+                    attach_d = {}
+                    serial = a_w['serialNumber']
+                    found = False
+                    for a_l in attach_l:
+                        if a_l['serialNumber'] == serial:
+                            found = True
                             break
-                    attach_d.update({'ports': a_l['switchPorts']})
-                    attach_d.update({'deploy': a_l['isAttached']})
-                    found_c['attach'].append(attach_d)
 
-            if attach_d:
-                query.append(found_c)
+                    if found:
+                        for k, v in self.ip_sn.items():
+                            if v == a_l['serialNumber']:
+                                attach_d.update({'ip_address': k})
+                                break
+                        attach_d.update({'ports': a_l['switchPorts']})
+                        attach_d.update({'deploy': a_l['isAttached']})
+                        found_c['attach'].append(attach_d)
+
+                if attach_d:
+                    query.append(found_c)
 
         self.query = query
 

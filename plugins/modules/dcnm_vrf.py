@@ -103,14 +103,12 @@ options:
 
 EXAMPLES = '''
 This module supports the following states:
-
 Merged:
   VRFs defined in the playbook will be merged into the target fabric.
     - If the VRF does not exist it will be added.
     - If the VRF exists but properties managed by the playbook are different
       they will be updated if possible.
     - VRFs that are not specified in the playbook will be untouched.
-
 Replaced:
   VRFs defined in the playbook will be replaced in the target fabric.
     - If the VRF does not exist it will be added.
@@ -119,7 +117,6 @@ Replaced:
     - Properties that can be managed by the module but are  not specified
       in the playbook will be deleted or defaulted if possible.
     - VRFs that are not specified in the playbook will be untouched.
-
 Overridden:
   VRFs defined in the playbook will be overridden in the target fabric.
     - If the VRF does not exist it will be added.
@@ -128,14 +125,11 @@ Overridden:
     - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
     - VRFs that are not specified in the playbook will be deleted.
-
 Deleted:
   VRFs defined in the playbook will be deleted.
   If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
-
 Query:
   Returns the current DCNM state for the VRFs listed in the playbook.
-
 rollback functionality:
 This module supports task level rollback functionality. If any task runs into failures, as part of failure
 handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
@@ -146,7 +140,6 @@ if (failure)
     Run the module in override state with above set of data to produce the required set of diffs
     and push the diff payloads to DCNM.
 If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
-
 # The two VRFs below will be merged into the target fabric.
 - name: Merge vrfs
   cisco.dcnm.dcnm_vrf:
@@ -158,10 +151,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         vlan_id: 202
         deploy: true
-      - ip_address: 10.122.197.225
+      - ip_address: 192.168.1.225
         vlan_id: 203
         deploy: false
     - vrf_name: ansible-vrf-r2
@@ -169,11 +162,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         vlan_id: 402
-      - ip_address: 10.122.197.225
+      - ip_address: 192.168.1.225
         vlan_id: 403
-
 # The two VRFs below will be replaced in the target fabric.
 - name: Replace vrfs
   cisco.dcnm.dcnm_vrf:
@@ -185,15 +177,15 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         vlan_id: 202
         deploy: true
       # Delete this attachment
-      # - ip_address: 10.122.197.225
+      # - ip_address: 192.168.1.225
       #   vlan_id: 203
       # deploy: true
       # Create the following attachment
-      - ip_address: 10.122.197.226
+      - ip_address: 192.168.1.226
         vlan_id: 204
         deploy: true
     # Dont touch this if its present on DCNM
@@ -202,11 +194,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
     #   vrf_template: Default_VRF_Universal
     #   vrf_extension_template: Default_VRF_Extension_Universal
     #   attach:
-    #   - ip_address: 10.122.197.224
+    #   - ip_address: 192.168.1.224
     #     vlan_id: 402
-    #   - ip_address: 10.122.197.225
+    #   - ip_address: 192.168.1.225
     #     vlan_id: 403
-
 # The two VRFs below will be overridden in the target fabric.
 - name: Override vrfs
   cisco.dcnm.dcnm_vrf:
@@ -218,15 +209,15 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       attach:
-      - ip_address: 10.122.197.224
+      - ip_address: 192.168.1.224
         vlan_id: 202
         deploy: true
       # Delete this attachment
-      # - ip_address: 10.122.197.225
+      # - ip_address: 192.168.1.225
       #   vlan_id: 203
       #   deploy: true
       # Create the following attachment
-      - ip_address: 10.122.197.226
+      - ip_address: 192.168.1.226
         vlan_id: 204
         deploy: true
     # Delete this vrf
@@ -235,11 +226,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
     #   vrf_template: Default_VRF_Universal
     #   vrf_extension_template: Default_VRF_Extension_Universal
     #   attach:
-    #   - ip_address: 10.122.197.224
+    #   - ip_address: 192.168.1.224
     #     vlan_id: 402
-    #   - ip_address: 10.122.197.225
+    #   - ip_address: 192.168.1.225
     #     vlan_id: 403
-
 - name: Delete selected vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
@@ -253,12 +243,10 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-
 - name: Delete all the vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
-
 - name: Query vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
@@ -273,7 +261,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
 '''
-
 
 class DcnmVrf:
 
@@ -985,59 +972,61 @@ class DcnmVrf:
 
         query = []
 
-        for want_c in self.want_create:
-            try:
-                found_c = (next((vrf for vrf in self.have_create if vrf['vrfName'] == want_c['vrfName']), None)).copy()
-            except AttributeError as error:
-                continue
-            found_a = next((vrf for vrf in self.have_attach if vrf['vrfName'] == want_c['vrfName']), None)
-            found_w = next((vrf for vrf in self.want_attach if vrf['vrfName'] == want_c['vrfName']), None)
+        if self.have_create or self.have_attach:
 
-            src = found_c['source']
-            found_c.update({'vrf_name': found_c['vrfName']})
-            found_c.update({'vrf_id': found_c['vrfId']})
-            found_c.update({'vrf_template': found_c['vrfTemplate']})
-            found_c.update({'vrf_extension_template': found_c['vrfExtensionTemplate']})
-            del found_c['source']
-            found_c.update({'source': src})
-            found_c.update({'service_vrf_template': found_c['serviceVrfTemplate']})
-            found_c.update({'attach': []})
+            for want_c in self.want_create:
+                try:
+                    found_c = (next((vrf for vrf in self.have_create if vrf['vrfName'] == want_c['vrfName']), None)).copy()
+                except AttributeError as error:
+                    continue
+                found_a = next((vrf for vrf in self.have_attach if vrf['vrfName'] == want_c['vrfName']), None)
+                found_w = next((vrf for vrf in self.want_attach if vrf['vrfName'] == want_c['vrfName']), None)
 
-            del found_c['fabric']
-            del found_c['vrfName']
-            del found_c['vrfId']
-            del found_c['vrfTemplate']
-            del found_c['vrfExtensionTemplate']
-            del found_c['serviceVrfTemplate']
-            del found_c['vrfTemplateConfig']
+                src = found_c['source']
+                found_c.update({'vrf_name': found_c['vrfName']})
+                found_c.update({'vrf_id': found_c['vrfId']})
+                found_c.update({'vrf_template': found_c['vrfTemplate']})
+                found_c.update({'vrf_extension_template': found_c['vrfExtensionTemplate']})
+                del found_c['source']
+                found_c.update({'source': src})
+                found_c.update({'service_vrf_template': found_c['serviceVrfTemplate']})
+                found_c.update({'attach': []})
 
-            if not found_w:
-                query.append(found_c)
-                continue
+                del found_c['fabric']
+                del found_c['vrfName']
+                del found_c['vrfId']
+                del found_c['vrfTemplate']
+                del found_c['vrfExtensionTemplate']
+                del found_c['serviceVrfTemplate']
+                del found_c['vrfTemplateConfig']
 
-            attach_w = found_w['lanAttachList']
-            attach_l = found_a['lanAttachList']
+                if not found_w:
+                    query.append(found_c)
+                    continue
 
-            for a_w in attach_w:
-                attach_d = {}
-                serial = a_w['serialNumber']
-                found = False
-                for a_l in attach_l:
-                    if a_l['serialNumber'] == serial:
-                        found = True
-                        break
+                attach_w = found_w['lanAttachList']
+                attach_l = found_a['lanAttachList']
 
-                if found:
-                    for k, v in self.ip_sn.items():
-                        if v == a_l['serialNumber']:
-                            attach_d.update({'ip_address': k})
+                for a_w in attach_w:
+                    attach_d = {}
+                    serial = a_w['serialNumber']
+                    found = False
+                    for a_l in attach_l:
+                        if a_l['serialNumber'] == serial:
+                            found = True
                             break
-                    attach_d.update({'vlan_id': a_l['vlan']})
-                    attach_d.update({'deploy': a_l['isAttached']})
-                    found_c['attach'].append(attach_d)
 
-            if attach_d:
-                query.append(found_c)
+                    if found:
+                        for k, v in self.ip_sn.items():
+                            if v == a_l['serialNumber']:
+                                attach_d.update({'ip_address': k})
+                                break
+                        attach_d.update({'vlan_id': a_l['vlan']})
+                        attach_d.update({'deploy': a_l['isAttached']})
+                        found_c['attach'].append(attach_d)
+
+                if attach_d:
+                    query.append(found_c)
 
         self.query = query
 
