@@ -1001,7 +1001,8 @@ from textwrap import dedent
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import dcnm_send, get_fabric_inventory_details, dcnm_get_ip_addr_info, validate_list_of_dicts
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send, get_fabric_inventory_details, dcnm_get_ip_addr_info, validate_list_of_dicts, get_ip_sn_dict
 
 import datetime
 
@@ -1033,7 +1034,8 @@ class DcnmIntf:
         self.vpc_ip_sn     = {}
         self.changed_dict  = [{'merged' : [], 'deleted' : [], 'replaced' : [], 'overridden' : [], 'deploy' : [], 'query' : []}]
 
-        self.ip_sn, self.hn_sn = get_fabric_inventory_details(self.module, self.fabric)
+        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.dcnm_intf_facts = {
             'fabric' : module.params['fabric'],
@@ -2882,7 +2884,7 @@ def main():
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
     # Sleep for 10 secs to ensure that the DCNM will be set to proper state
-    time.sleep(20)
+    # time.sleep(20)
     module.exit_json(**dcnm_intf.result)
 
 if __name__ == '__main__':

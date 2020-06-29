@@ -295,7 +295,7 @@ class DcnmVrf:
         self.diff_input_format = []
         self.query = []
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
-        self.ip_sn = get_ip_sn_dict(self.inventory_data)
+        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(
             changed=False,
@@ -348,7 +348,7 @@ class DcnmVrf:
             return {}
 
         serial = ""
-        attach['ip_address'] = dcnm_get_ip_addr_info(attach['ip_address'], None)
+        attach['ip_address'] = dcnm_get_ip_addr_info(self.module, attach['ip_address'], None, None)
         for ip, ser in self.ip_sn.items():
             if ip == attach['ip_address']:
                 serial = ser

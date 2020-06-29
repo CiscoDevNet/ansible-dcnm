@@ -243,7 +243,8 @@ class DcnmInventory:
 
     def update_create_params(self, inv):
 
-        s_ip = dcnm_get_ip_addr_info(inv['seed_ip'], None)
+        s_ip = dcnm_get_ip_addr_info(self.module, inv['seed_ip'], None, None)
+        #dcnm_get_ip_addr_info (self.module, sw_elem, ip_sn, hn_sn)
 
         state = self.params['state']
 

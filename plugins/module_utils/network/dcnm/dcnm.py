@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import re
 import socket
 import json
@@ -137,22 +138,41 @@ def get_fabric_inventory_details(module, fabric):
 def get_ip_sn_dict(inventory_data):
 
     ip_sn = {}
+    hn_sn = {}
 
     for device_key in inventory_data.keys():
         ip = inventory_data[device_key].get('ipAddress')
         sn = inventory_data[device_key].get('serialNumber')
+        hn = inventory_data[device_key].get('logicalName')
         ip_sn.update({ip: sn})
+        hn_sn.update({hn: sn})
 
-    return ip_sn
+    return ip_sn, hn_sn
 
 
-def dcnm_get_ip_addr_info(sw_elem, ip_sn):
+# sw_elem can be ip_addr, hostname, dns name or serial number. If the given
+# sw_elem is ip_addr, then it is returned as is. If DNS or hostname then a DNS
+# lookup is performed to get the IP address to be returned. If not ip_sn
+# database (if not none) is looked up to find the mapping IP address which is
+# returned
+def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 
     msg_dict = {'Error': ''}
     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
     msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
 
-    ip_addr = re.findall(r'\d+\.\d+\.\d+\.\d+', sw_elem)
+    # Check if the given sw_elem is a v4 ip_addr
+    try:
+        socket.inet_pton(socket.AF_INET, sw_elem)
+        ip_addr = sw_elem
+    except socket.error:
+        # Check if the given sw_elem is a v6 ip_addr
+        try:
+            socket.inet_pton(socket.AF_INET6, sw_elem)
+            ip_addr = sw_elem
+        except socket.error:
+            # Not legal
+            ip_addr = []
     if (ip_addr == []):
         # Given element is not an IP address. Try DNS or
         # hostname
@@ -165,29 +185,79 @@ def dcnm_get_ip_addr_info(sw_elem, ip_sn):
                     return addr_info[0][4][0]
                 else:
                     msg_dict['Error'] = msg.format(sw_elem)
-                    raise Exception(json.dumps(msg_dict))
+                    raise module.fail_json(msg=json.dumps(msg_dict))
         except socket.gaierror:
             if (None is ip_sn):
                 msg_dict['Error'] = msg1.format(sw_elem)
-                raise Exception(json.dumps(msg_dict))
+                raise module.fail_json(msg=json.dumps(msg_dict))
             # This means that the given element is neither an IP
-            # address nor a host/DNS name. Assume that be a
-            # Serial number. Loop up the ip_sn and verify that it is
-            # a valid one. Else raise an error
-            ip_addr = [k for k, v in ip_sn.items() if v == sw_elem]
+            # address nor a DNS name.
+            # First look up hn_sn. Get the serial number and look up ip_sn to
+            # get the IP address.
+            sno = None
+            if (None is not hn_sn):
+                sno = hn_sn.get(sw_elem, None)
+            if (sno is not None):
+                ip_addr = [k for k, v in ip_sn.items() if v == sno]
+            else:
+                ip_addr = [k for k, v in ip_sn.items() if v == sw_elem]
             if (ip_addr):
                 return ip_addr[0]
             else:
                 msg_dict['Error'] = msg.format(sw_elem)
-                raise Exception(json.dumps(msg_dict))
+                raise module.fail_json(msg=json.dumps(msg_dict))
     else:
+        # Given sw_elem is an ip_addr. check if this is valid
         if (None is ip_sn):
-            return ip_addr[0]
-        if (ip_addr[0] in ip_sn.keys()):
-            return ip_addr[0]
+            return ip_addr
+        if (ip_addr in ip_sn.keys()):
+            return ip_addr
         else:
             msg_dict['Error'] = msg.format(sw_elem)
-            raise Exception(json.dumps(msg_dict))
+            raise module.fail_json(msg=json.dumps(msg_dict))
+
+# def dcnm_get_ip_addr_info(sw_elem, ip_sn):
+#
+#     msg_dict = {'Error': ''}
+#     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
+#     msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+#
+#     ip_addr = re.findall(r'\d+\.\d+\.\d+\.\d+', sw_elem)
+#     if (ip_addr == []):
+#         # Given element is not an IP address. Try DNS or
+#         # hostname
+#         try:
+#             addr_info = socket.getaddrinfo(sw_elem, 0, socket.AF_INET, 0, 0, 0)
+#             if (None is ip_sn):
+#                 return addr_info[0][4][0]
+#             if addr_info:
+#                 if (addr_info[0][4][0] in ip_sn.keys()):
+#                     return addr_info[0][4][0]
+#                 else:
+#                     msg_dict['Error'] = msg.format(sw_elem)
+#                     raise Exception(json.dumps(msg_dict))
+#         except socket.gaierror:
+#             if (None is ip_sn):
+#                 msg_dict['Error'] = msg1.format(sw_elem)
+#                 raise Exception(json.dumps(msg_dict))
+#             # This means that the given element is neither an IP
+#             # address nor a host/DNS name. Assume that be a
+#             # Serial number. Loop up the ip_sn and verify that it is
+#             # a valid one. Else raise an error
+#             ip_addr = [k for k, v in ip_sn.items() if v == sw_elem]
+#             if (ip_addr):
+#                 return ip_addr[0]
+#             else:
+#                 msg_dict['Error'] = msg.format(sw_elem)
+#                 raise Exception(json.dumps(msg_dict))
+#     else:
+#         if (None is ip_sn):
+#             return ip_addr[0]
+#         if (ip_addr[0] in ip_sn.keys()):
+#             return ip_addr[0]
+#         else:
+#             msg_dict['Error'] = msg.format(sw_elem)
+#             raise Exception(json.dumps(msg_dict))
 
 
 def dcnm_send(module, method, path, json_data=None):
