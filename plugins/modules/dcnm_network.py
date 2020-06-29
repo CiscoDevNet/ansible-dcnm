@@ -1185,8 +1185,11 @@ class DcnmNetwork:
         query = []
 
         for want_c in self.want_create:
-            found_c = (
-                next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
+            try:
+                found_c = (
+                    next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
+            except AttributeError as error:
+                continue
             found_a = next((net for net in self.have_attach if net['networkName'] == want_c['networkName']), None)
             found_w = next((net for net in self.want_attach if net['networkName'] == want_c['networkName']), None)
 
