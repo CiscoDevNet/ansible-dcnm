@@ -91,6 +91,9 @@ The following example task adds a switch to an existing fabric, using the FQCN:
           role: spine # default is Leaf - choose from [leaf, spine, border, border_spine, border_gateway, border_gateway_spine
                            # super_spine, border_super_spine, border_gateway_super_spine]
           preserve_config: false # boolean, default is  true
+      vars:
+          ansible_command_timeout: 1000
+          ansible_connect_timeout: 1000
       no_log: true
 ```
 
