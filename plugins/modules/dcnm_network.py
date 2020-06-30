@@ -85,28 +85,27 @@ options:
         description: 'Gateway with subnet for the network'
         type: ipv4
         required: false
-      suboptions:
-        attach:
-          description: 'List of network attachment details'
-          type: list
-          elements: dict
-        deploy:
-          description: 'Global knob to control whether to deploy the attachment'
-          type: bool
-          default: true
-          suboptions:
-            ip_address:
-              description: 'IP address of the switch where the network will be attached or detached'
-              type: ipv4
-              required: true
-            ports:
-              description: 'List of switch interfaces where the network will be attached'
-              type: str
-              required: true
-            deploy:
-              description: 'Per switch knob to control whether to deploy the attachment'
-              type: bool
-              default: true
+      attach:
+        description: 'List of network attachment details'
+        type: list
+        elements: dict
+        suboptions:
+          ip_address:
+            description: 'IP address of the switch where the network will be attached or detached'
+            type: ipv4
+            required: true
+          ports:
+            description: 'List of switch interfaces where the network will be attached'
+            type: str
+            required: true
+          deploy:
+            description: 'Per switch knob to control whether to deploy the attachment'
+            type: bool
+            default: true
+      deploy:
+        description: 'Global knob to control whether to deploy the attachment'
+        type: bool
+        default: true
 '''
 
 EXAMPLES = '''
