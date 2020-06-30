@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_interface
 **DCNM Ansible Module for managing interfaces.**
 
 
-Version added: 2.10
+Version added: 0.9.0
 
 .. contents::
    :local:
@@ -54,22 +54,20 @@ Parameters
                                                     <td class="elbow-placeholder"></td>
                                                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>mode</b>
+                    <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
+                        <span style="color: purple">boolean</span>
+                                                                    </div>
                                     </td>
                                 <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>trunk</li>
-                                                                                                                                                                                                <li>access</li>
-                                                                                                                                                                                                <li>mirror</li>
-                                                                                                                                                                                                <li>routed</li>
+                                                                                                                                                                                                                    <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                                                                                                                                                <li>no</li>
+                                                                                                                                                                                                <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                                                                                     </ul>
                                                                             </td>
                                                                 <td>
-                                            <div>Interface port mode.</div>
+                                            <div>Flag indicating if the configuration must be pushed to the switch. If not included it is considered true by default</div>
                                                         </td>
             </tr>
                                 <tr>
@@ -85,14 +83,14 @@ Parameters
                                 <td>
                                                                                                                                                             </td>
                                                                 <td>
-                                            <div>Full name of the interface. Example, PortChannel55, Ethernet2/1.</div>
+                                            <div>Name of the interface. Example, po55, eth2/1, lo100, vpc25, eth1/1.1.</div>
                                                         </td>
             </tr>
                                 <tr>
                                                     <td class="elbow-placeholder"></td>
                                                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>profile</b>
+                    <b>profile_eth</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">-</span>
@@ -101,7 +99,71 @@ Parameters
                                 <td>
                                                                                                                                                             </td>
                                                                 <td>
-                                            <div>Interface profile.</div>
+                                            <div>Object profile which must be included for ethernet interface configurations.</div>
+                                                        </td>
+            </tr>
+                                <tr>
+                                                    <td class="elbow-placeholder"></td>
+                                                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_lo</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>Object profile which must be included for loopback interface configurations.</div>
+                                                        </td>
+            </tr>
+                                <tr>
+                                                    <td class="elbow-placeholder"></td>
+                                                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_pc</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>Object profile which must be included for port channel interface configurations.</div>
+                                                        </td>
+            </tr>
+                                <tr>
+                                                    <td class="elbow-placeholder"></td>
+                                                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_subint</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>Object profile which must be included for sub-interface configurations.</div>
+                                                        </td>
+            </tr>
+                                <tr>
+                                                    <td class="elbow-placeholder"></td>
+                                                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_vpc</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>Object profile which must be included for virtual port channel inetrface configurations.</div>
                                                         </td>
             </tr>
                                 <tr>
@@ -117,7 +179,7 @@ Parameters
                                 <td>
                                                                                                                                                             </td>
                                                                 <td>
-                                            <div>IP address or DNS name of the management interface.</div>
+                                            <div>IP address or DNS name of the management interface. All switches mentioned in this list will be deployed with the included configuration. For vPC interfaces this list object will contain elements each of which is a list of pair of switches</div>
                                                         </td>
             </tr>
                                 <tr>
@@ -136,10 +198,11 @@ Parameters
                                                                                                                                                                                                 <li>vpc</li>
                                                                                                                                                                                                 <li>sub_int</li>
                                                                                                                                                                                                 <li>lo</li>
+                                                                                                                                                                                                <li>eth</li>
                                                                                     </ul>
                                                                             </td>
                                                                 <td>
-                                            <div>Interface type. Example, pc, vpc, sub_int, lo</div>
+                                            <div>Interface type. Example, pc, vpc, sub_int, lo, eth</div>
                                                         </td>
             </tr>
                     
@@ -158,6 +221,28 @@ Parameters
                                             <div>Name of the target fabric for interface operations</div>
                                                         </td>
             </tr>
+                                <tr>
+                                                                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                                                                                                                                                <li><div style="color: blue"><b>merged</b>&nbsp;&larr;</div></li>
+                                                                                                                                                                                                <li>replaced</li>
+                                                                                                                                                                                                <li>overridden</li>
+                                                                                                                                                                                                <li>deleted</li>
+                                                                                                                                                                                                <li>query</li>
+                                                                                    </ul>
+                                                                            </td>
+                                                                <td>
+                                            <div>The required state of the configuration after module completion.</div>
+                                                        </td>
+            </tr>
                         </table>
     <br/>
 
@@ -170,42 +255,516 @@ Examples
 .. code-block:: yaml+jinja
 
     
-    - name: Create Interace Object in DCNM
-      dcnm_interface:
-        # TBD
+
+    States:
+    This module supports the following states:
+    Merged:
+      Interfaces defined in the playbook will be merged into the target fabric.
+
+      The interfaces listed in the playbook will be created if not already present on the DCNM
+      server. If the interface is already present and the configuration information included
+      in the playbook is either different or not present in DCNM, then the corresponding
+      information is added to the interface on DCNM. If an interface mentioned in playbook
+      is already present on DCNM and there is no difference in configuration, no operation
+      will be performed for such interface.
+
+    Replaced:
+      Interfaces defined in the playbook will be replaced in the target fabric.
+
+      The state of the interfaces listed in the playbook will serve as source of truth for the
+      same interfaces present on the DCNM under the fabric mentioned. Additions and updations
+      will be done to bring the DCNM interfaces to the state listed in the playbook.
+      Note: Replace will only work on the interfaces mentioned in the playbook.
+
+    Overridden:
+      Interfaces defined in the playbook will be overridden in the target fabric.
+
+      The state of the interfaces listed in the playbook will serve as source of truth for all
+      the interfaces under the fabric mentioned. Additions and deletions will be done to bring
+      the DCNM interfaces to the state listed in the playbook. All interfaces other than the
+      ones mentioned in the playbook will either be deleted or reset to default state.
+      Note: Override will work on the all the interfaces present in the DCNM Fabric.
+
+    Deleted:
+      Interfaces defined in the playbook will be deleted in the target fabric.
+
+      Deletes the list of interfaces specified in the playbook.  If the playbook does not include
+      any switches or interface information, then all interfaces from all switches in the
+      fabric will either be deleted or put to default state. If configuuration includes information
+      pertaining to any particular switch, then interfaces belonging to that switch will either be
+      deleted or put to default. If configuration includes both interface and switch information,
+      then the specified interfaces will either be deleted or reset on all the seitches specified
+
+    Query:
+      Returns the current DCNM state for the interfaces listed in the playbook.
+
+    LOOPBACK INTERFACE
+
+    - name: Create loopback interfaces
+      cisco.dcnm.dcnm_interface: &lo_merge
+        fabric: mmudigon-fabric
+        state: merged                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: lo100                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      # choose from [true, false]
+            profile_lo:                       # MUST be profile_lo
+              admin_state: true               # choose from [true, false]
+              mode: lo                        # choose from [lo]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.169.10.1         # ipv4 address for the loopback interface
+              ipv6_addr: fd01::0201           # ipV6 address for the loopback interface
+              route_tag: ""                   # Routing Tag for the interface
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "loopback interface 100 configuration"
+
+    - name: Replace loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: replaced                       # only choose from [merged, replaced, deleted, overridden. query]
+        config:
+          - name: lo100                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      ## choose from [true, false]
+            profile_lo:                       # MUST be profile_lo
+              admin_state: false              ## choose from [true, false]
+              mode: lo                        # choose from [lo]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.169.12.1         ## ipv4 address for the loopback interface
+              ipv6_addr: fd01:0203            # ipV6 address for the loopback interface
+              route_tag: "100"                ## Routing Tag for the interface
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "loopback interface 100 configuration - replaced"
+
+    # To delete or reset all interfaces on all switches in the fabric
+    - name: Delete loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+
+    # To delete or reset all interfaces on a specific switch in the fabric
+    - name: Delete loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+    # To delete or reset a particular interface on all switches in the fabric
+    - name: Delete loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: lo100                       # should be of the form lo<port-id>
+
+    # To delete or reset a particular interface on a specific switch in the fabric
+    - name: Delete loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: lo100                       # should be of the form lo<port-id>
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+    # To override with a particular interface configuration
+    - name: Override loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: lo103                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      # choose from [true, false]
+            profile_lo:                       # MUST be profile_lo
+              admin_state: true               # choose from [true, false]
+              mode: lo                        # choose from [lo]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.169.14.1         # ipv4 address for the loopback interface
+              ipv6_addr: fd01::0205           # ipV6 address for the loopback interface
+              route_tag: ""                   # Routing Tag for the interface
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "loopback interface 103 configuration - overridden"
+
+    # To override all interface on all switches in the fabric
+    - name: Override loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
+
+    # To override all interfaces on a particular switche in the fabric
+    - name: Override loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+    PORTCHANNEL INTERFACE
+
+    - name: Create port channel interfaces
+      cisco.dcnm.dcnm_interface: &pc_merge
+        fabric: mmudigon-fabric
+        state: merged                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces
+                - e1/10
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "port channel acting as trunk"
+
+          - name: po301                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              admin_state: false              # choose from [true, false]
+              mode: access                    # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces
+                - e1/11
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: default                    # choose from [default, jumbo]
+              access_vlan: 301                #
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "port channel acting as access"
+
+    - name: Replace port channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: replaced                       # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              admin_state: false              ## choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces
+                - e1/10
+              pc_mode: 'active'               ## choose from ['on', 'active', 'passive']
+              bpdu_guard: false               ## choose from [true, false, no]
+              port_type_fast: false           ## choose from [true, false]
+              mtu: default                    ## choose from [default, jumbo]
+              allowed_vlans: all              ## choose from [none, all, vlan range]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "port channel acting as trunk - replace"
+
+    # To delete or reset a particular interface on a specific switch in the fabric
+    - name: Delete port channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+
+    # To delete or reset all interfaces on all switches in the fabric
+    - name: Delete port channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+
+    # To delete or reset a particular interface on all switches in the fabric
+    - name: Delete port-channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+
+    # To delete or reset all interfaces on a specific switch in the fabric
+    - name: Delete port channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+
+    - name: Override port channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po320                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_pc:                       # MUST be profile_pc
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces
+                - e1/10
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "port channel acting as trunk"
+
+    SUB-INTERFACE
+
+    - name: Create sub-interfaces
+      cisco.dcnm.dcnm_interface: &sub_merge
+        fabric: mmudigon-fabric
+        state: merged                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_subint:                   # MUST be profile_subint
+              admin_state: true               # choose from [true, false]
+              mode: subint                    # choose from [subint]
+              vlan: 100                       # vlan ID [min:2, max:3967]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.30.1         # ipv4 address for the sub-interface
+              ipv4_mask_len: 24               # choose between [min:8, max:31]
+              ipv6_addr: fd01::0401           # ipV6 address for the sub-interface
+              ipv6_mask_len: 64               # choose between [min:64, max:127]
+              mtu: 9216                       # choose between [min:576, max:9216]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "sub interface eth1/1.1 configuration"
+
+    - name: Replace sub-interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: replaced                       # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_subint:                   # MUST be profile_subint
+              admin_state: false              ## choose from [true, false]
+              mode: subint                    # choose from [subint]
+              vlan: 200                       ## vlan ID [min:2, max:3967]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.32.1         ## ipv4 address for the sub-interface
+              ipv4_mask_len: 20               # choose between [min:8, max:31]
+              ipv6_addr: fd01::0403           # ipV6 address for the sub-interface
+              ipv6_mask_len: 64               # choose between [min:64, max:127]
+              mtu: 1500                       ## choose between [min:576, max:9216]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "sub interface eth1/1.1 configuration - replace"
+
+    # To delete or reset all interfaces on all switches in the fabric
+    - name: Delete sub-interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+
+    # To delete or reset a particular interface on all switches in the fabric
+    - name: Delete port-channel interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
+
+    - name: Override sub-interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: eth1/1.3                    # should be of the form eth<port-num>.<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile_subint:                   # MUST be profile_subint
+              admin_state: true               # choose from [true, false]
+              mode: subint                    # choose from [subint]
+              vlan: 103                       # vlan ID [min:2, max:3967]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.35.1         # ipv4 address for the sub-interface
+              ipv4_mask_len: 24               # choose between [min:8, max:31]
+              ipv6_addr: fd01::0405           # ipV6 address for the sub-interface
+              ipv6_mask_len: 64               # choose between [min:64, max:127]
+              mtu: 9216                       # choose between [min:576, max:9216]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "sub interface eth1/1.3 configuration - override"
+
+    VPC INTERFACE
+
+    - name: Create vPC interfaces
+      cisco.dcnm.dcnm_interface: &vpc_merge
+        fabric: mmudigon-fabric
+        state: merged                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - e1/24
+              peer2_members:                  # member interfaces on peer 2
+                - e1/24
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_allowed_vlans: none       # choose from [none, all, vlan range]
+              peer2_allowed_vlans: none       # choose from [none, all, vlan range]
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+
+
+    - name: Replace vPC interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: replaced                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: false              ## choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  ## member interfaces on peer 1
+                - e1/26
+              peer2_members:                  ## member interfaces on peer 2
+                - e1/26
+              pc_mode: 'active'               ## choose from ['on', 'active', 'passive']
+              bpdu_guard: false               ## choose from [true, false, 'no']
+              port_type_fast: false           ## choose from [true, false]
+              mtu: default                    ## choose from [default, jumbo]
+              peer1_allowed_vlans: all        ## choose from [none, all, vlan range]
+              peer2_allowed_vlans: all        ## choose from [none, all, vlan range]
+              peer1_description: "VPC acting as trunk peer1 - modified"
+              peer2_description: "VPC acting as trunk peer2 - modified"
+              peer1_cmds:                     # Freeform config
+                  - no shutdown
+              peer2_cmds:                     # Freeform config
+                  - no shutdown
+
+    # To delete or reset a particular interface on a specific switch in the fabric
+    - name: Delete vPC interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: deleted                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+
+    - name: Override vPC interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: overridden                         # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc752                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - ["{{ ansible_switch1 }}",
+                 "{{ ansible_switch2 }}"]
+            deploy: true                      # choose from [true, false]
+            profile_vpc:                      # MUST be profile_vpc
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 752                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              #peer2_pcid: 1                  # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - e1/26
+              peer2_members:                  # member interfaces on peer 2
+                - e1/27
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_allowed_vlans: none       # choose from [none, all, vlan range]
+              peer2_allowed_vlans: none       # choose from [none, all, vlan range]
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+              peer1_cmds:                     # Freeform config
+                  - no shutdown
+                  - no shutdown
+              peer2_cmds:                     # Freeform config
+                  - no shutdown
+                  - no shutdown
+
+    QUERY
+
+     - name: Query interface details
+          cisco.dcnm.dcnm_interface:
+            fabric: mmudigon-fabric
+            state: query                        # only choose from [merged, replaced, deleted, overridden, query]
+            config:
+              - switch:
+                  - "{{ ansible_switch1 }}"     # provide the switch information where the config is to be deployed
+              - name: po350
+                switch:
+                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - name: lo450
+                switch:
+                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - name: eth1/1
+                switch:
+                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - name: eth1/15.2
+                switch:
+                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - name: vpc750
+                switch:
+                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
 
 
 
 
-Return Values
--------------
-Common return values are documented `here <https://docs.ansible.com/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
-
-.. raw:: html
-
-    <table border=0 cellpadding=0 class="documentation-table">
-        <tr>
-            <th colspan="1">Key</th>
-            <th>Returned</th>
-            <th width="100%">Description</th>
-        </tr>
-                    <tr>
-                                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>response</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">list</span>
-                       / <span style="color: purple">elements=dictionary</span>                    </div>
-                                    </td>
-                <td></td>
-                <td>
-                                                                        <div>Success or Error Data retrieved from DCNM</div>
-                                                                <br/>
-                                    </td>
-            </tr>
-                        </table>
-    <br/><br/>
 
 
 Status
@@ -215,6 +774,6 @@ Status
 Authors
 ~~~~~~~
 
-- Mike Wiebe (@mikewiebe)
+- Mallik Mudigonda
 
 

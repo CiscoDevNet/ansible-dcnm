@@ -25,10 +25,11 @@ description:
     - "DCNM Ansible Module for the following interface service operations"
     - "Create, Delete, Modify PortChannel, VPC, Loopback and Sub-Interfaces"
     - "Modify Ethernet Interfaces"
+author: Mallik Mudigonda
 options:
   fabric:
     description:
-    - 'Name of the target fabric for interface operations'
+      - 'Name of the target fabric for interface operations'
     type: str
     required: true
   state:
@@ -77,8 +78,7 @@ options:
           - Object profile which must be included for port channel interface configurations.
         sub_options:
           mode:
-            description:
-              Interface mode
+            description: Interface mode
             choices: ['trunk', 'access', 'l3', 'monitor']
             type: str
             required: true
@@ -88,37 +88,6 @@ options:
             type: list
             elements: str
             required: true
-          pc_mode:
-            descrption:
-              - Port channel mode
-            type: str
-            choices: ['active', 'passive', 'on']
-            default: active
-          bpdu_guard:
-            description:
-              - Spanning-tree bpduguard
-            type: str
-            choices: ['true', 'false', 'no']
-            default: true
-          port_type_fast:
-            description:
-              - Spanning-tree edge port behavior
-            type: bool
-            choices: [true, false]
-            default: true
-          mtu:
-            description:
-              - Interface MTU
-            type: str
-            choices: ['default', 'jumbo']
-            default: jumbo
-          allowed_vlans:
-            description:
-              - Vlans that are allowed on this interface. This option is applicable only for interfaces
-                whose 'mode' is 'trunk'
-            type: str
-            choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)]
-            default: none
           access_vlan:
             description:
               - Vlan for the interface. This option is applicable only for interfaces whose 'mode'
@@ -223,30 +192,26 @@ options:
             default: jumbo
           peer1_allowed_vlans:
             description:
-              - Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces
-                whose 'mode' is 'trunk'
+              - Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
-            choices: ['none', 'all', vlan-range(e.g., 1-2, 3-40)]
+            choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           peer2_allowed_vlans:
             description:
-              - Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces
-                whose 'mode' is 'trunk'
+              - Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
-            choices: ['none', 'all', vlan-range(e.g., 1-2, 3-40)]
+            choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           peer1_access_vlan:
-            description
-              - Vlan for the interface of first peer. This option is applicable only for interfaces whose 'mode'
-                is 'access'
+            description:
+              - Vlan for the interface of first peer. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
-            default: ""
+            default: ''
           peer2_access_vlan:
             description:
-              - Vlan for the interface of second peer. This option is applicable only for interfaces whose 'mode'
-                is 'access'
+              - Vlan for the interface of second peer. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
-            default: ""
+            default: ''
           peer1_cmds:
             description:
               - Commands to be included in the configuration under this interface of first peer
@@ -275,9 +240,9 @@ options:
       profile_subint:
         description:
           - Object profile which must be included for sub-interface configurations.
+        sub_options:
           mode:
-            description:
-              Interface mode
+            description: Interface mode
             choices: ['subint']
             type: str
             required: true
@@ -314,7 +279,7 @@ options:
             type: int
             choices: [Min: 576, Max: 9216]
             default: 9216
-          vlan
+          vlan:
             description:
               - DOT1Q vlan id for this interface
             type: int
@@ -338,9 +303,9 @@ options:
       profile_lo:
         description:
           - Object profile which must be included for loopback interface configurations.
+        sub_options:
           mode:
-            description:
-              Interface mode
+            description: Interface mode
             choices: ['lo']
             type: str
             required: true
@@ -384,8 +349,7 @@ options:
           - Object profile which must be included for ethernet interface configurations.
         sub_options:
           mode:
-            description:
-              Interface mode
+            description: Interface mode
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
             type: str
             required: true
@@ -409,15 +373,13 @@ options:
             default: jumbo
           allowed_vlans:
             description:
-              - Vlans that are allowed on this interface. This option is applicable only for interfaces
-                whose 'mode' is 'trunk'
+              - Vlans that are allowed on this interface. This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
-            choices: ['none', 'all', vlan-range(e.g., 1-2, 3-40)]
+            choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           access_vlan:
             description:
-              - Vlan for the interface. This option is applicable only for interfaces whose 'mode'
-                is 'access'
+              - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ""
           speed:
@@ -433,8 +395,7 @@ options:
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface. This object is applicable only if the 'mode' is 'routed'
-                or 'epl_routed'
+              - IPV4 address of the interface. This object is applicable only if the 'mode' is 'routed' or 'epl_routed'
             type: ipv4
             default: ""
           ipv4_mask_len:
@@ -476,9 +437,6 @@ options:
               - Administrative state of the interface
             type: bool
             default: true
-
-author:
-    - Mallik Mudigonda (@mmudigon)
 '''
 
 EXAMPLES = '''
