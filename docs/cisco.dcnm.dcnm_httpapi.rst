@@ -5,7 +5,7 @@
 cisco.dcnm.dcnm
 ***************
 
-**Send REST api calls to Data Center Network Manager (DCNM) NX-OS Fabric Controller.**
+**Ansible DCNM HTTPAPI Plugin.**
 
 
 Version added: 0.9.0

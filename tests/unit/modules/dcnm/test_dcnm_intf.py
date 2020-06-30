@@ -1,19 +1,18 @@
-# (c) 2020 Red Hat Inc.
+#!/usr/bin/python
 #
-# This file is part of Ansible
+# Copyright (c) 2020 Cisco and/or its affiliates.
 #
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 # Make coding more python3-ish
 from __future__ import (absolute_import, division, print_function)
@@ -71,7 +70,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [self.playbook_mock_vpc_resp, self.playbook_mock_vpc_resp,
                                               playbook_pc_intf, playbook_vpc_intf,
                                               playbook_subint_intf, playbook_lo_intf,
-                                              playbook_eth_intf, 
+                                              playbook_eth_intf,
                                               playbook_have_all_data, playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -127,7 +126,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
- 
+
     def load_bunched_intf_elems_fixtures (self):
 
         if ('_bunched_intf_merged_new' in self._testMethodName):
@@ -159,7 +158,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
- 
+
     def load_missing_members_fixtures (self):
 
         if ('_missing_peer_members' in self._testMethodName):
@@ -168,7 +167,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
             self.run_dcnm_send.side_effect = [self.playbook_mock_vpc_resp, self.playbook_mock_vpc_resp,
                                               playbook_intf,
-                                              playbook_have_all_data, 
+                                              playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -176,7 +175,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
- 
+
     def load_type_missing_fixtures (self):
 
         if ('_type_missing_merged_new' in self._testMethodName):
@@ -191,7 +190,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
- 
+
     def load_missing_state_fixtures (self):
 
         if ('_missing_state' in self._testMethodName):
@@ -207,20 +206,20 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
- 
+
     def load_query_state_fixtures (self):
 
         if ('_query' in self._testMethodName):
             playbook_all_intf  = self.payloads_data.get('all_payload')
             playbook_pc_intf  = self.payloads_data.get('pc_payload')
-            playbook_lo_intf  = self.payloads_data.get('lo_payload') 
+            playbook_lo_intf  = self.payloads_data.get('lo_payload')
             playbook_eth_intf = self.payloads_data.get('eth_payload')
             playbook_sub_intf = self.payloads_data.get('subint_payload')
             playbook_vpc_intf = self.payloads_data.get('vpc_payload')
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
-            self.run_dcnm_send.side_effect = [playbook_all_intf, playbook_pc_intf, 
-                                              playbook_lo_intf, playbook_eth_intf, 
+            self.run_dcnm_send.side_effect = [playbook_all_intf, playbook_pc_intf,
+                                              playbook_lo_intf, playbook_eth_intf,
                                               playbook_sub_intf, playbook_vpc_intf,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -229,7 +228,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
- 
+
 #################################### PC-FIXTURES ############################
 
     def load_pc_fixtures (self):
@@ -256,7 +255,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_pc_intf1  = self.payloads_data.get('pc_merged_trunk_payloads')
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
-            self.run_dcnm_send.side_effect = [playbook_pc_intf1, 
+            self.run_dcnm_send.side_effect = [playbook_pc_intf1,
                                               playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -285,7 +284,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp]
 
-        # Use the same payloads that we use for creating new. 
+        # Use the same payloads that we use for creating new.
         if ('_pc_deleted_existing' in self._testMethodName):
             playbook_pc_intf1  = self.payloads_data.get('pc_merged_trunk_payloads')
             playbook_pc_intf2  = self.payloads_data.get('pc_merged_access_payloads')
@@ -355,8 +354,8 @@ class TestDcnmIntfModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [playbook_eth_intf1, playbook_eth_intf2,
                                               playbook_eth_intf3, playbook_eth_intf4,
-                                              playbook_eth_intf5, 
-                                              playbook_have_all_data, 
+                                              playbook_eth_intf5,
+                                              playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -390,7 +389,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [playbook_eth_intf1, playbook_eth_intf2,
                                               playbook_eth_intf3, playbook_eth_intf4,
-                                              playbook_eth_intf5, 
+                                              playbook_eth_intf5,
                                               playbook_have_all_data, playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -411,7 +410,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [playbook_eth_intf1, playbook_eth_intf2,
                                               playbook_eth_intf3, playbook_eth_intf4,
-                                              playbook_eth_intf5, 
+                                              playbook_eth_intf5,
                                               playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -435,7 +434,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_vpc_resp, self.playbook_mock_vpc_resp,
                                               playbook_eth_intf1, playbook_eth_intf2,
                                               playbook_eth_intf3, playbook_eth_intf4,
-                                              playbook_eth_intf5, 
+                                              playbook_eth_intf5,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -476,7 +475,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
             self.run_dcnm_send.side_effect = [playbook_sub_intf1, playbook_sub_intf2,
-                                              playbook_have_all_data, 
+                                              playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -491,7 +490,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
             self.run_dcnm_send.side_effect = [playbook_subint_intf1, playbook_subint_intf2,
-                                              playbook_have_all_data, 
+                                              playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
 
         if ('_subint_replaced_existing' in self._testMethodName):
@@ -501,7 +500,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
             self.run_dcnm_send.side_effect = [playbook_subint_intf1, playbook_subint_intf2,
-                                              playbook_have_all_data, 
+                                              playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -513,8 +512,8 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_subint_intf1  = self.payloads_data.get('subint_merged_payloads_1')
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
-            self.run_dcnm_send.side_effect = [playbook_subint_intf1, 
-                                              playbook_have_all_data, 
+            self.run_dcnm_send.side_effect = [playbook_subint_intf1,
+                                              playbook_have_all_data,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
@@ -632,7 +631,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp]
 
-        # We are overriding 2 interfaces here which is different from other cases. So we need 
+        # We are overriding 2 interfaces here which is different from other cases. So we need
         # side-effects for both
         if ('_lo_overridden_existing' in self._testMethodName):
 
@@ -716,7 +715,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                                               self.playbook_mock_succ_resp, self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp]
 
-        # Use the same payloads that we use for creating new. 
+        # Use the same payloads that we use for creating new.
         if ('_vpc_deleted_existing' in self._testMethodName):
             playbook_vpc_intf1  = self.payloads_data.get('vpc_merged_trunk_payloads')
             playbook_vpc_intf2  = self.payloads_data.get('vpc_merged_access_payloads')
@@ -754,7 +753,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
 
             self.run_dcnm_send.side_effect = [self.playbook_mock_vpc_resp, self.playbook_mock_vpc_resp,
-                                              playbook_vpc_intf1, 
+                                              playbook_vpc_intf1,
                                               playbook_have_all_data,
                                               self.playbook_mock_succ_resp,
                                               self.playbook_mock_succ_resp,
@@ -835,8 +834,8 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['merged']), 5)
         for d in result['diff'][0]['merged']:
             for intf in d['interfaces']:
-                self.assertEqual ((intf['ifName'] in ['Port-channel300', 
-                                                      'vPC301', 
+                self.assertEqual ((intf['ifName'] in ['Port-channel300',
+                                                      'vPC301',
                                                       'Ethernet1/1.1',
                                                       'Ethernet1/10',
                                                       'Loopback303']), True)
@@ -863,9 +862,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['merged']), 5)
         for d in result['diff'][0]['merged']:
             for intf in d['interfaces']:
-                self.assertEqual ((intf['ifName'] in ['Port-channel301', 
-                                                      'Port-channel302', 
-                                                      'Ethernet1/25.1', 
+                self.assertEqual ((intf['ifName'] in ['Port-channel301',
+                                                      'Port-channel302',
+                                                      'Ethernet1/25.1',
                                                       'Ethernet1/32',
                                                       'vPC751']), True)
 
@@ -890,7 +889,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['merged']), 4)
         for d in result['diff'][0]['merged']:
             for intf in d['interfaces']:
-                self.assertEqual ((intf['ifName'] in ['Port-channel300', 'Port-channel301', 
+                self.assertEqual ((intf['ifName'] in ['Port-channel300', 'Port-channel301',
                                                       'Port-channel302', 'Port-channel303']), True)
 
     def test_dcnm_intf_pc_merged_idempotent(self):
@@ -949,10 +948,10 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='deleted',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 4)
         for intf in result['diff'][0]['deleted']:
-            self.assertEqual ((intf['ifName'] in ['Port-channel300', 'Port-channel301', 
+            self.assertEqual ((intf['ifName'] in ['Port-channel300', 'Port-channel301',
                                                   'Port-channel302', 'Port-channel303']), True)
 
     def test_dcnm_intf_pc_replaced_existing(self):
@@ -971,12 +970,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='replaced',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['replaced']), 3)
 
         changed_objs = ['MEMBER_INTERFACES', 'PC_MODE', 'BPDUGUARD_ENABLED',
-                        'PORTTYPE_FAST_ENABLED', 'MTU', 'ALLOWED_VLANS', 
-                        'DESC', 'ADMIN_STATE', 'INTF_VRF', 'IP', 'PREFIX', 
+                        'PORTTYPE_FAST_ENABLED', 'MTU', 'ALLOWED_VLANS',
+                        'DESC', 'ADMIN_STATE', 'INTF_VRF', 'IP', 'PREFIX',
                         'ROUTING_TAG']
 
         for d in result['diff'][0]['replaced']:
@@ -1002,9 +1001,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='overridden',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 6)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'ethernet1/3.2', 'loopback200', 'vpc300']
 
@@ -1064,7 +1063,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['merged']), 5)
         for d in result['diff'][0]['merged']:
             for intf in d['interfaces']:
-                self.assertEqual ((intf['ifName'] in ['Ethernet1/30', 'Ethernet1/31', 
+                self.assertEqual ((intf['ifName'] in ['Ethernet1/30', 'Ethernet1/31',
                                                       'Ethernet1/32', 'Ethernet1/33', 'Ethernet1/34' ]), True)
 
     def test_dcnm_intf_eth_merged_idempotent(self):
@@ -1104,11 +1103,11 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='replaced',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['replaced']), 4)
 
         changed_objs = ['BPDUGUARD_ENABLED', 'PORTTYPE_FAST_ENABLED', 'MTU', 'CONF',
-                        'ALLOWED_VLANS', 'DESC', 'ADMIN_STATE', 'INTF_VRF', 'ACCESS_VLAN', 
+                        'ALLOWED_VLANS', 'DESC', 'ADMIN_STATE', 'INTF_VRF', 'ACCESS_VLAN',
                         'IP', 'PREFIX', 'ROUTING_TAG', 'SPEED', 'IPv6', 'IPv6_PREFIX']
 
         for d in result['diff'][0]['replaced']:
@@ -1134,7 +1133,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='deleted',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 0)
         self.assertEqual(len(result['diff'][0]['merged']), 0)
         self.assertEqual(len(result['diff'][0]['replaced']), 0)
@@ -1155,9 +1154,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='overridden',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 7)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'port-channel300', 'ethernet1/3.2', 'loopback200', 'vpc300']
 
@@ -1235,10 +1234,10 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='replaced',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['replaced']), 2)
 
-        changed_objs = ['MTU', 'CONF', 'VLAN', 'DESC', 'ADMIN_STATE', 
+        changed_objs = ['MTU', 'CONF', 'VLAN', 'DESC', 'ADMIN_STATE',
                         'INTF_VRF', 'IP', 'PREFIX', 'IPv6', 'IPv6_PREFIX']
 
         for d in result['diff'][0]['replaced']:
@@ -1265,7 +1264,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                              fabric='test_fabric',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['replaced']), 1)
         self.assertEqual(len(result['diff'][0]['merged']), 0)
 
@@ -1285,7 +1284,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='deleted',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 2)
         for intf in result['diff'][0]['deleted']:
             self.assertEqual ((intf['ifName'] in ['Ethernet1/25.1', 'Ethernet1/25.2']), True)
@@ -1307,7 +1306,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                              fabric='test_fabric',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 0)
 
     def test_dcnm_intf_subint_overridden_existing(self):
@@ -1326,9 +1325,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='overridden',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 7)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'port-channel300', 'ethernet1/3.2', 'loopback200', 'vpc300']
 
@@ -1428,8 +1427,8 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='replaced',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
-        
+
+
         self.assertEqual(len(result['diff'][0]['replaced']), 2)
 
         changed_objs = ['CONF', 'DESC', 'ADMIN_STATE', 'ROUTE_MAP_TAG',
@@ -1458,7 +1457,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='deleted',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 2)
         for intf in result['diff'][0]['deleted']:
             self.assertEqual ((intf['ifName'] in ['Loopback100', 'Loopback101']), True)
@@ -1479,9 +1478,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='overridden',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 7)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'port-channel300', 'ethernet1/3.2', 'loopback200', 'vpc300']
 
@@ -1516,9 +1515,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                              fabric='test_fabric',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 6)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'port-channel300', 'ethernet1/3.2', 'vpc300']
 
@@ -1553,9 +1552,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                              fabric='test_fabric',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 7)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'port-channel300', 'ethernet1/3.2', 'loopback200', 'vpc300']
 
@@ -1638,7 +1637,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='deleted',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 2)
         for intf in result['diff'][0]['deleted']:
             self.assertEqual ((intf['ifName'] in ['vPC750', 'vPC751']), True)
@@ -1660,13 +1659,13 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='replaced',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['replaced']), 2)
 
-        changed_objs = ['PEER1_MEMBER_INTERFACES', 'PEER2_MEMBER_INTERFACES', 
+        changed_objs = ['PEER1_MEMBER_INTERFACES', 'PEER2_MEMBER_INTERFACES',
                         'PC_MODE', 'BPDUGUARD_ENABLED',
-                        'PORTTYPE_FAST_ENABLED', 'MTU', 'PEER1_ALLOWED_VLANS', 
-                        'PEER2_ALLOWED_VLANS', 'PEER1_PO_DESC','PEER2_PO_DESC', 'ADMIN_STATE', 
+                        'PORTTYPE_FAST_ENABLED', 'MTU', 'PEER1_ALLOWED_VLANS',
+                        'PEER2_ALLOWED_VLANS', 'PEER1_PO_DESC','PEER2_PO_DESC', 'ADMIN_STATE',
                         'PEER1_ACCESS_VLAN', 'PEER2_ACCESS_VLAN',
                         'PEER1_CONF', 'PEER2_CONF', 'INTF_NAME']
 
@@ -1694,9 +1693,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         set_module_args(dict(state='overridden',
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
-  
+
         self.assertEqual(len(result['diff'][0]['deleted']), 7)
- 
+
         del_if_names = ['port-channel301', 'port-channel302', 'port-channel303',
                         'port-channel300', 'ethernet1/3.2', 'loopback200', 'vpc300']
 
@@ -1781,7 +1780,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['replaced']), 0)
         self.assertEqual(len(result['diff'][0]['deploy']), 10)
 
-        if_names = ['port-channel300', 'port-channel400', 'port-channel301', 
+        if_names = ['port-channel300', 'port-channel400', 'port-channel301',
                     'port-channel401', 'ethernet1/14', 'ethernet1/32', 'ethernet1/22',
                     'ethernet1/13', 'vpc850', 'vpc750']
 
@@ -1809,7 +1808,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual (result['msg'], '<type> element, which is mandatory is missing in config')
         self.assertEqual (result['failed'], True)
 
-       
+
     def test_dcnm_intf_missing_state (self):
 
         self.config_data    = loadPlaybookData('dcnm_intf_pc_configs')
@@ -1878,7 +1877,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                              fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
-        
+
         self.assertEqual (result['changed'], False)
 
         self.assertEqual(len(result['diff'][0]['merged']), 0)
@@ -1886,4 +1885,3 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['replaced']), 0)
         self.assertEqual(len(result['diff'][0]['deploy']), 0)
         self.assertEqual(len(result['diff'][0]['query']), 6)
-

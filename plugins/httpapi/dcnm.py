@@ -21,7 +21,7 @@ DOCUMENTATION = """
 ---
 author: Mike Wiebe (mikewiebe)
 httpapi: dcnm
-short_description: Send REST api calls to Data Center Network Manager (DCNM) NX-OS Fabric Controller.
+short_description: Ansible DCNM HTTPAPI Plugin.
 description:
   - This DCNM plugin provides the HTTPAPI transport methods needed to initiate
     a connection to the DCNM controller, send API requests and process the
