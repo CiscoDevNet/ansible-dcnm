@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_network
 **Add and remove Networks from a DCNM managed VXLAN fabric.**
 
 
-Version added: 2.10
+Version added: 0.9.0
 
 .. contents::
    :local:
@@ -228,12 +228,14 @@ Examples
 
     
     This module supports the following states:
+
     Merged:
       Networks defined in the playbook will be merged into the target fabric.
         - If the network does not exist it will be added.
         - If the network exists but properties managed by the playbook are different
           they will be updated if possible.
         - Networks that are not specified in the playbook will be untouched.
+
     Replaced:
       Networks defined in the playbook will be replaced in the target fabric.
         - If the Networks does not exist it will be added.
@@ -242,6 +244,7 @@ Examples
         - Properties that can be managed by the module but are not specified
           in the playbook will be deleted or defaulted if possible.
         - Networks that are not specified in the playbook will be untouched.
+
     Overridden:
       Networks defined in the playbook will be overridden in the target fabric.
         - If the Networks does not exist it will be added.
@@ -250,11 +253,14 @@ Examples
         - Properties that can be managed by the module but are not specified
           in the playbook will be deleted or defaulted if possible.
         - Networks that are not specified in the playbook will be deleted.
+
     Deleted:
       Networks defined in the playbook will be deleted.
       If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+
     Query:
       Returns the current DCNM state for the Networks listed in the playbook.
+
     - name: Merge networks
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
@@ -290,6 +296,7 @@ Examples
             ports: [Ethernet1/11, Ethernet1/12]
             deploy: true
           deploy: false
+
     - name: Replace networks
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
@@ -329,6 +336,7 @@ Examples
             #       ports: [Ethernet1/11, Ethernet1/12]
             #       deploy: true
             #   deploy: false
+
     - name: Override networks
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
@@ -368,6 +376,7 @@ Examples
           #     ports: [Ethernet1/11, Ethernet1/12]
           #     deploy: true
           #   deploy: false
+
     - name: Delete selected networks
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
@@ -388,10 +397,12 @@ Examples
           vlan_id: 151
           gw_ip_subnet: '192.168.40.1/24'
           deploy: false
+
     - name: Delete all the networkss
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
         state: deleted
+
     - name: Query Networks
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric

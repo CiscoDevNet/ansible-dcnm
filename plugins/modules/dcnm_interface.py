@@ -443,6 +443,7 @@ EXAMPLES = '''
 
 States:
 This module supports the following states:
+
 Merged:
   Interfaces defined in the playbook will be merged into the target fabric.
 
