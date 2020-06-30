@@ -77,28 +77,27 @@ options:
         description: 'Service vrf template'
         type: str
         default: None
-      suboptions:
-        attach:
-          description: 'List of vrf attachment details'
-          type: list
-          elements: dict
-        deploy:
-          description: 'Global knob to control whether to deploy the attachment'
-          type: bool
-          default: true
-          suboptions:
-            ip_address:
-              description: 'IP address of the switch where vrf will be attached or detached'
-              type: ipv4
-              required: true
-            vlan_id:
-              description: 'vlan ID for the vrf attachment'
-              type: int
-              required: true
-            deploy:
-              description: 'Per switch knob to control whether to deploy the attachment'
-              type: bool
-              default: true
+      attach:
+        description: 'List of vrf attachment details'
+        type: list
+        elements: dict
+        suboptions:
+          ip_address:
+            description: 'IP address of the switch where vrf will be attached or detached'
+            type: ipv4
+            required: true
+          vlan_id:
+            description: 'vlan ID for the vrf attachment'
+            type: int
+            required: true
+          deploy:
+            description: 'Per switch knob to control whether to deploy the attachment'
+            type: bool
+            default: true
+      deploy:
+        description: 'Global knob to control whether to deploy the attachment'
+        type: bool
+        default: true
 '''
 
 EXAMPLES = '''
