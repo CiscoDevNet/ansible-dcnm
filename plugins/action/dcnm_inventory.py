@@ -64,6 +64,6 @@ class ActionModule(ActionNetworkModule):
             )
             return {"failed": True, "msg": msg}
 
-        display.v("Adding switches to a switchs to a VXLAN fabric can take a while.  Please be patient...")
+        display.v("Adding switches to a VXLAN fabric can take a while.  Please be patient...")
         self.result = super(ActionModule, self).run(task_vars=task_vars)
         return self.result
