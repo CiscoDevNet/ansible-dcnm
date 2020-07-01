@@ -42,7 +42,10 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         super(TestDcnmIntfModule, self).setUp()
 
-        self.mock_dcnm_ip_sn = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.get_fabric_inventory_details')
+        self.mock_dcnm_fabric_details = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.get_fabric_inventory_details')
+        self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
+
+        self.mock_dcnm_ip_sn = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.get_ip_sn_dict')
         self.run_dcnm_ip_sn = self.mock_dcnm_ip_sn.start()
 
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.dcnm_send')
@@ -53,6 +56,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         super(TestDcnmIntfModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
+        self.mock_dcnm_fabric_details.stop()
 
 #################################### GEN-FIXTURES ############################
 
@@ -775,6 +779,7 @@ class TestDcnmIntfModule(TestDcnmModule):
     def load_fixtures(self, response=None, device=''):
 
         # setup the side effects
+        self.run_dcnm_fabric_details.side_effect = [[]]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, []]]
 
         # Load port channel related side-effects

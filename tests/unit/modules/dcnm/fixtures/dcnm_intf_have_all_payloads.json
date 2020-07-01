@@ -11,6 +11,7 @@
 				"ifType": "INTERFACE_PORT_CHANNEL",
 				"isPhysical": "False",
 				"deletable": "False",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -30,6 +31,7 @@
 				"ifType": "INTERFACE_PORT_CHANNEL",
 				"isPhysical": "False",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -49,6 +51,7 @@
 				"ifType": "INTERFACE_PORT_CHANNEL",
 				"isPhysical": "False",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -68,6 +71,7 @@
 				"ifType": "INTERFACE_PORT_CHANNEL",
 				"isPhysical": "False",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -87,6 +91,7 @@
 				"ifType": "INTERFACE_PORT_CHANNEL",
 				"isPhysical": "False",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -106,6 +111,7 @@
 				"ifType": "INTERFACE_ETHERNET",
 				"isPhysical": "None",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
            "source" : ""
@@ -125,6 +131,7 @@
 				"ifType": "INTERFACE_ETHERNET",
 				"isPhysical": "True",
 				"deletable": "False",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -144,6 +151,7 @@
 				"ifType": "INTERFACE_ETHERNET",
 				"isPhysical": "True",
 				"deletable": "False",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -163,6 +171,7 @@
 				"ifType": "INTERFACE_LOOPBACK",
 				"isPhysical": "False",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -182,6 +191,7 @@
 				"ifType": "INTERFACE_VPC",
 				"isPhysical": "True",
 				"deletable": "True",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""
@@ -201,6 +211,7 @@
 				"ifType": "INTERFACE_ETHERNET",
 				"isPhysical": "True",
 				"deletable": "False",
+        "alias": "",
         "underlayPolicies": [
          {
             "source" : ""

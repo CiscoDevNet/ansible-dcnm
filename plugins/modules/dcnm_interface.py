@@ -76,7 +76,7 @@ options:
       profile_pc:
         description:
           - Object profile which must be included for port channel interface configurations.
-        sub_options:
+        suboptions:
           mode:
             description: Interface mode
             choices: ['trunk', 'access', 'l3', 'monitor']
@@ -133,7 +133,7 @@ options:
       profile_vpc:
         description:
           - Object profile which must be included for virtual port channel inetrface configurations.
-        sub_options:
+        suboptions:
           mode:
             description:
               Interface mode
@@ -240,7 +240,7 @@ options:
       profile_subint:
         description:
           - Object profile which must be included for sub-interface configurations.
-        sub_options:
+        suboptions:
           mode:
             description: Interface mode
             choices: ['subint']
@@ -303,7 +303,7 @@ options:
       profile_lo:
         description:
           - Object profile which must be included for loopback interface configurations.
-        sub_options:
+        suboptions:
           mode:
             description: Interface mode
             choices: ['lo']
@@ -347,7 +347,7 @@ options:
       profile_eth:
         description:
           - Object profile which must be included for ethernet interface configurations.
-        sub_options:
+        suboptions:
           mode:
             description: Interface mode
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
@@ -1491,16 +1491,16 @@ class DcnmIntf:
             cfg.append(citem)
 
             if (self.module.params['state'] == 'deleted'):
-                # config for delete state is different for all interafces. It does not have the profile
+                # config for delete state is different for all interafces. It may not have the profile
                 # construct. So validate deleted state differently
                 self.dcnm_intf_validate_delete_state_input(cfg)
             elif (self.module.params['state'] == 'query'):
-                # config for delete state is different for all interafces. It does not have the profile
-                # construct. So validate deleted state differently
+                # config for query state is different for all interafces. It may not have the profile
+                # construct. So validate query state differently
                 self.dcnm_intf_validate_query_state_input(cfg)
             elif ((self.module.params['state'] == 'overridden') and not (any('profile_' in key for key in item))):
-                # config for delete state is different for all interafces. It does not have the profile
-                # construct. So validate deleted state differently
+                # config for overridden state is different for all interafces. It may not have the profile
+                # construct. So validate overridden state differently
                 self.dcnm_intf_validate_overridden_state_input(cfg)
             else:
                 if ('type' not in item):
