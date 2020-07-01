@@ -18,6 +18,7 @@ import json
 import socket
 import time
 import copy
+import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
     dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
 from ansible.module_utils.connection import Connection
@@ -1350,10 +1351,23 @@ class DcnmNetwork:
         method = 'POST'
         if self.diff_attach:
             attach_path = path + '/attachments'
-            resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
+            for attempt in range(0, 50):
+                resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
+                update_in_progress = False
+                for key in resp['DATA'].keys():
+                    if re.search(r'Failed.*Please try after some time', resp['DATA'][key]):
+                        update_in_progress = True
+                if update_in_progress:
+                    time.sleep(1)
+                    continue
+                else:
+                    break
             self.result['response'].append(resp)
             fail, self.result['changed'] = self.handle_response(resp, "attach")
-            if fail:
+            # If we get here and an update_in_progress is True then
+            # not all of the attachments were successful which represents a
+            # failure condition.
+            if fail or update_in_progress:
                 if is_rollback:
                     self.failed_to_rollback = True
                     return
