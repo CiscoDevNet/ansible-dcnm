@@ -130,7 +130,7 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## More information
 
-- [DCNM configuration guide](https://www.cisco.com/c/en/us/td/docs/switches/datacenter/sw/11_3_1/config_guide/lanfabric/b_dcnm_fabric_lan.html)
+- [DCNM installation and configuration guides](https://www.cisco.com/c/en/us/support/cloud-systems-management/prime-data-center-network-manager/products-installation-and-configuration-guides-list.html)
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 
