@@ -81,7 +81,8 @@ options:
       vlan_id:
         description: 'VLAN ID for the network'
         type: int
-        required: false
+        required: false 
+	note: If not specified in the playbook, DCNM will auto-select an available vlan_id
       gw_ip_subnet:
         description: 'Gateway with subnet for the network'
         type: ipv4
@@ -434,7 +435,7 @@ class DcnmNetwork:
 
         return attach_list, dep_net
 
-    def update_attach_params(self, attach, net_name, deploy, vlan_id=""):
+    def update_attach_params(self, attach, net_name, deploy):
 
         if not attach:
             return {}
@@ -459,7 +460,7 @@ class DcnmNetwork:
         attach.update({'serialNumber': serial})
         attach.update({'switchPorts': ','.join(attach['ports'])})
         attach.update({'detachSwitchPorts': ""})  # Is this supported??Need to handle correct
-        attach.update({'vlan': vlan_id})
+        attach.update({'vlan': 0})
         attach.update({'dot1QVlan': 0})
         attach.update({'untagged': False})
         attach.update({'deployment': deploy})
@@ -475,6 +476,7 @@ class DcnmNetwork:
         return attach
 
     def diff_for_create(self, want, have):
+        
         # Possible update scenarios
         # vlanId - Changing vlanId on an already deployed network only affects new attachments
         # gwIpAddress - Changing the gwIpAddress needs all attachments to be re-deployed
@@ -503,20 +505,36 @@ class DcnmNetwork:
         vlanId_want = json_to_dict_want.get('vlanId', "")
         vlanId_have = json_to_dict_have.get('vlanId', "")
 
-        if have['networkTemplate'] != want['networkTemplate'] or \
-                have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
-                gw_ip_have != gw_ip_want or vlanId_have != vlanId_want:
-            # The network updates with missing networkId will have to use existing
-            # networkId from the instance of the same network on DCNM.
+        if vlanId_want:
 
-            if vlanId_have != vlanId_want:
-                warn_msg = 'The VLAN change will effect only new attachments.'
+            if have['networkTemplate'] != want['networkTemplate'] or \
+                    have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
+                    gw_ip_have != gw_ip_want or vlanId_have != vlanId_want:
+                # The network updates with missing networkId will have to use existing
+                # networkId from the instance of the same network on DCNM.
 
-            if gw_ip_have != gw_ip_want:
-                gw_changed = True
+                if vlanId_have != vlanId_want:
+                    warn_msg = 'The VLAN change will effect only new attachments.'
 
-            want.update({'networkId': have['networkId']})
-            create = want
+                if gw_ip_have != gw_ip_want:
+                    gw_changed = True
+
+                want.update({'networkId': have['networkId']})
+                create = want
+
+        else:
+
+            if have['networkTemplate'] != want['networkTemplate'] or \
+                    have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
+                    gw_ip_have != gw_ip_want:
+                # The network updates with missing networkId will have to use existing
+                # networkId from the instance of the same network on DCNM.
+
+                if gw_ip_have != gw_ip_want:
+                    gw_changed = True
+
+                want.update({'networkId': have['networkId']})
+                create = want
 
         return create, gw_changed, warn_msg
 
@@ -707,6 +725,7 @@ class DcnmNetwork:
         self.have_deploy = have_deploy
 
     def get_want(self):
+
         want_create = []
         want_attach = []
         want_deploy = {}
@@ -731,8 +750,7 @@ class DcnmNetwork:
                 deploy = net_deploy if "deploy" not in attach else attach['deploy']
                 networks.append(self.update_attach_params(attach,
                                                           net['net_name'],
-                                                          deploy,
-                                                          vlan_id))
+                                                          deploy))
             if networks:
                 net_attach.update({'networkName': net['net_name']})
                 net_attach.update({'lanAttachList': networks})
@@ -853,6 +871,7 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_replace(self):
+
         all_nets = ''
 
         warn_msg = self.get_diff_merge(replace=True)
@@ -937,6 +956,7 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_merge(self, replace=False):
+
         #
         # Special cases:
         # 1. Update gateway on an existing network:
@@ -1071,6 +1091,7 @@ class DcnmNetwork:
         return warn_msg
 
     def format_diff(self):
+
         diff = []
 
         diff_create = copy.deepcopy(self.diff_create)
@@ -1337,16 +1358,37 @@ class DcnmNetwork:
                 return
             self.failure(resp)
 
-        method = 'POST'
         if self.diff_create:
-            resp = dcnm_send(self.module, method, bulk_create_path, json.dumps(self.diff_create))
-            self.result['response'].append(resp)
-            fail, self.result['changed'] = self.handle_response(resp, "create")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
+            for net in self.diff_create:
+                json_to_dict = json.loads(net['networkTemplateConfig'])
+                vlanId = json_to_dict.get('vlanId', "")
+
+                if not vlanId:
+                    vlan_path = '/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN'.format(self.fabric)
+                    vlan_data = dcnm_send(self.module, 'GET', vlan_path)
+
+                    if vlan_data['RETURN_CODE'] != 200:
+                        self.module.fail_json(msg='Failure getting autogenerated vlan_id {}'.format(vlan_data))
+                    vlanId = vlan_data['DATA']
+
+                t_conf = {
+                    'vlanId': vlanId,
+                    'gatewayIpAddress': json_to_dict.get('gatewayIpAddress', ""),
+                    'isLayer2Only': json_to_dict.get('isLayer2Only', False),
+                    'tag': json_to_dict.get('tag', "")
+                }
+
+                net.update({'networkTemplateConfig': json.dumps(t_conf)})
+
+                method = 'POST'
+                resp = dcnm_send(self.module, method, path, json.dumps(net))
+                self.result['response'].append(resp)
+                fail, self.result['changed'] = self.handle_response(resp, "create")
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    self.failure(resp)
 
         method = 'POST'
         if self.diff_attach:
@@ -1386,6 +1428,7 @@ class DcnmNetwork:
                 self.failure(resp)
 
     def validate_input(self):
+
         """Parse the playbook values, validate to param specs."""
 
         net_spec = dict(
@@ -1434,6 +1477,7 @@ class DcnmNetwork:
             self.module.fail_json(msg=msg)
 
     def handle_response(self, resp, op):
+
         fail = False
         changed = True
 
@@ -1469,6 +1513,7 @@ class DcnmNetwork:
         return fail, changed
 
     def failure(self, resp):
+
         # Implementing a per task rollback logic here so that we rollback DCNM to the have state
         # whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
@@ -1505,6 +1550,7 @@ class DcnmNetwork:
 
 
 def main():
+
     """ main entry point for module execution
     """
 
@@ -1565,6 +1611,6 @@ def main():
 
     module.exit_json(**dcnm_net.result)
 
-
 if __name__ == '__main__':
     main()
+

@@ -21,7 +21,7 @@
   wait_for:
     timeout: 40
 
-- name: DELETED - Create, Attach and Deploy Single Network with multiple switch attach
+- name: DELETED - Create, Attach and Deploy Single Network with multiple switch Attach
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
@@ -49,9 +49,6 @@
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
-    - '"Network is successfully created" in result.response[0].DATA.successList[0].message'
-    - '"ansible-net13" in result.response[0].DATA.successList[0].name'
-    - '"Success" in result.response[0].DATA.successList[0].status'
     - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
@@ -115,7 +112,7 @@
   wait_for:
     timeout: 20
 
-- name: DELETED - Create, Attach and Deploy Multiple Network with single switch attach
+- name: DELETED - Create, Attach and Deploy Multiple Network with single switch Attach
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
@@ -151,14 +148,9 @@
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
-    - '"Network is successfully created" in result.response[0].DATA.successList[0].message'
-    - '"ansible-net13" in result.response[0].DATA.successList[0].name'
-    - '"Success" in result.response[0].DATA.successList[0].status'
-    - '"Network is successfully created" in result.response[0].DATA.successList[1].message'
-    - '"ansible-net12" in result.response[0].DATA.successList[1].name'
-    - '"Success" in result.response[0].DATA.successList[1].status'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.response[3].RETURN_CODE == 200'
+    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
     - 'result.diff[0].net_name == "ansible-net13"'
@@ -254,7 +246,7 @@
   wait_for:
     timeout: 20
 
-- name: DELETED - Create, Attach and Deploy Multiple Network with single switch attach
+- name: DELETED - Create, Attach and Deploy Multiple Network with single switch Attach
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
@@ -290,14 +282,9 @@
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
-    - '"Network is successfully created" in result.response[0].DATA.successList[0].message'
-    - '"ansible-net13" in result.response[0].DATA.successList[0].name'
-    - '"Success" in result.response[0].DATA.successList[0].status'
-    - '"Network is successfully created" in result.response[0].DATA.successList[1].message'
-    - '"ansible-net12" in result.response[0].DATA.successList[1].name'
-    - '"Success" in result.response[0].DATA.successList[1].status'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.response[3].RETURN_CODE == 200'
+    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
     - 'result.diff[0].net_name == "ansible-net13"'
