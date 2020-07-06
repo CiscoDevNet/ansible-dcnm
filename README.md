@@ -24,7 +24,7 @@ The Cisco DCNM collection supports ``httpapi`` connections.
 ### Httpapi plugins
 Name | Description
 --- | ---
-[cisco.dcnm.dcnm](https://github.com/CiscoDevNet/ansible-dcnm/blob/master/docs/cisco.dcnm.dcnm_httpapi.rst)|Ansible DCNM HTTPAPI Plugin.
+[cisco.dcnm.dcnm](docs/cisco.dcnm.dcnm_httpapi.rst)|Ansible DCNM HTTPAPI Plugin.
 
 ### Modules
 Name | Description
