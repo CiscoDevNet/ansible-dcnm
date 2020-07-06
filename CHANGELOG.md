@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## 0.9.0 - 2020-07
+## 0.9.0 - 2020-07-06
 
 - Initial release of the Ansible DCNM collection, supporting DCNM release 11.4
 
