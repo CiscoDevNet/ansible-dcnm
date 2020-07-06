@@ -128,10 +128,6 @@ We welcome community contributions to this collection. If you find problems, ple
 ## Changelogs
 <!--Add a link to a changelog.md file or an external docsite to cover this information. -->
 
-## Roadmap
-
-<!-- Optional. Include the roadmap for this collection, and the proposed release/versioning strategy so users can anticipate the upgrade/update cycle. -->
-
 ## More information
 
 - [DCNM configuration guide](https://www.cisco.com/c/en/us/td/docs/switches/datacenter/sw/11_3_1/config_guide/lanfabric/b_dcnm_fabric_lan.html)
