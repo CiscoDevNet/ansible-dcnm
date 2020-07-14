@@ -88,7 +88,7 @@ options:
                  'super_spine', 'border_super_spine', 'border_gateway_super_spine']
         type: str
         required: true
-        deafault: leaf
+        default: leaf
       preserve_configs:
         description: 'Set this to false for greenfield deployment and true for brownfield deployment'
         type: str
@@ -185,7 +185,7 @@ Query:
 - name: Delete all the switches
     cisco.dcnm.dcnm_inventory:
       fabric: vxlan-fabric
-      state: deleted # merged / deleted / overridden
+      state: deleted # merged / deleted / overridden / query
 
 # The following two switches information will be queried in the existing fabric
 -name: Query switch into fabric
@@ -197,8 +197,13 @@ Query:
          role: spine
        - seed_ip: 192.168.0.2
          role: leaf
+         
+# All the existing switches will be queried in the existing fabric
+- name: Query all the switches in the fabric
+    cisco.dcnm.dcnm_inventory:
+      fabric: vxlan-fabric
+      state: query # merged / deleted / overridden / query
       '''
-
 
 class DcnmInventory:
 
@@ -209,6 +214,7 @@ class DcnmInventory:
         self.fabric = module.params['fabric']
         self.config = module.params.get('config')
         self.check_mode = False
+        self.validated = []
         self.have_create = []
         self.want_create = []
         self.diff_create = []
@@ -244,7 +250,6 @@ class DcnmInventory:
     def update_create_params(self, inv):
 
         s_ip = dcnm_get_ip_addr_info(self.module, inv['seed_ip'], None, None)
-        #dcnm_get_ip_addr_info (self.module, sw_elem, ip_sn, hn_sn)
 
         state = self.params['state']
 
@@ -255,12 +260,27 @@ class DcnmInventory:
         elif state == 'query':
             inv_upd = {
                 "seedIP": s_ip,
-                "role": inv['role'].replace(" ", ""),
+                "role": inv['role'].replace(" ", "")
             }
         else:
+            if inv['auth_proto'] == 'MD5':
+                pro = 0
+            elif inv['auth_proto'] == 'SHA':
+                pro = 1
+            elif inv['auth_proto'] == 'MD5_DES':
+                pro = 2
+            elif inv['auth_proto'] == 'MD5_AES':
+                pro = 3
+            elif inv['auth_proto'] == 'SHA_DES':
+                pro = 4
+            elif inv['auth_proto'] == 'SHA_AES':
+                pro = 5
+            else:
+                pro = 0
+
             inv_upd = {
                 "seedIP": s_ip,
-                "snmpV3AuthProtocol": "0",
+                "snmpV3AuthProtocol": pro,
                 "username": inv['user_name'],
                 "password": inv['password'],
                 "maxHops": inv['max_hops'],
@@ -322,7 +342,7 @@ class DcnmInventory:
         if not self.config:
             return
 
-        for inv in self.config:
+        for inv in self.validated:
             want_create.append(self.update_create_params(inv))
 
         if not want_create:
@@ -451,7 +471,9 @@ class DcnmInventory:
 
             inv_spec = dict(
                 seed_ip=dict(required=True, type='str'),
-                auth_proto=dict(required=True, type='str', default='MD5'),
+                auth_proto=dict(type='str',
+                                choices=['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES'],
+                                default='MD5'),
                 user_name=dict(required=True, type='str', length_max=32),
                 password=dict(required=True, type='str', no_log=True, length_max=32),
                 max_hops=dict(type='int', default=0),
@@ -479,7 +501,7 @@ class DcnmInventory:
                 validated = []
                 valid_inv, invalid_params = validate_list_of_dicts(self.config, inv_spec)
                 for inv in valid_inv:
-                    validated.append(inv)
+                    self.validated.append(inv)
 
                 if invalid_params:
                     msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
@@ -504,7 +526,7 @@ class DcnmInventory:
                 validated = []
                 valid_inv, invalid_params = validate_list_of_dicts(self.config, inv_spec)
                 for inv in valid_inv:
-                    validated.append(inv)
+                    self.validated.append(inv)
 
                 if invalid_params:
                     msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
@@ -516,8 +538,8 @@ class DcnmInventory:
                 seed_ip=dict(required=True, type='str'),
                 role=dict(type='str',
                           choices=['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
-                                   'super_spine', 'border_super_spine', 'border_gateway_super_spine'],
-                          default='leaf')
+                                   'super_spine', 'border_super_spine', 'border_gateway_super_spine', 'None'],
+                          default='None')
             )
 
             msg = None
@@ -530,10 +552,9 @@ class DcnmInventory:
                 self.module.fail_json(msg=msg)
 
             if self.config:
-                validated = []
                 valid_inv, invalid_params = validate_list_of_dicts(self.config, inv_spec)
                 for inv in valid_inv:
-                    validated.append(inv)
+                    self.validated.append(inv)
 
                 if invalid_params:
                     msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
@@ -732,7 +753,6 @@ class DcnmInventory:
     def config_deploy(self):
 
         # config-deploy
-
         method = 'POST'
         path = '/rest/control/fabrics/{}'.format(self.fabric)
         deploy_path = path + '/config-deploy'
@@ -781,11 +801,21 @@ class DcnmInventory:
         if not inv_objects['DATA']:
             return
 
-        for want_c in self.want_create:
+        if self.config:
+            for want_c in self.want_create:
+                for inv in inv_objects['DATA']:
+                    if want_c['role'] == 'None':
+                        if want_c["seedIP"] == inv['ipAddress']:
+                            query.append(inv)
+                            continue
+                    else:
+                        if want_c["seedIP"] == inv['ipAddress'] and \
+                                want_c['role'] == inv['switchRole'].replace(" ", ""):
+                            query.append(inv)
+                            continue
+        else:
             for inv in inv_objects['DATA']:
-                if want_c["seedIP"] == inv['ipAddress'] and \
-                        want_c['role'] == inv['switchRole'].replace(" ", ""):
-                    query.append(inv)
+                query.append(inv)
 
         self.query = query
 
@@ -826,7 +856,6 @@ class DcnmInventory:
                 res.update({'DATA': data})
 
         self.module.fail_json(msg=res)
-
 
 def main():
     """ main entry point for module execution
@@ -947,7 +976,6 @@ def main():
             dcnm_inv.config_deploy()
 
     module.exit_json(**dcnm_inv.result)
-
 
 if __name__ == '__main__':
     main()
