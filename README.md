@@ -123,7 +123,7 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
 
 Ongoing development efforts and contributions to this collection are solely focused on enhancements to current dcnm modules, additional dcnm modules and enhancements to the connection plugin.
 
-We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco DCNM collection repository](link_to_repo).
+We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco DCNM collection repository](https://github.com/CiscoDevNet/ansible-dcnm/issues).
 
 ## Changelogs
 
