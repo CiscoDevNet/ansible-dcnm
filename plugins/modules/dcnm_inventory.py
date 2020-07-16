@@ -205,6 +205,7 @@ Query:
       state: query # merged / deleted / overridden / query
       '''
 
+
 class DcnmInventory:
 
     def __init__(self, module):
@@ -856,6 +857,7 @@ class DcnmInventory:
                 res.update({'DATA': data})
 
         self.module.fail_json(msg=res)
+
 
 def main():
     """ main entry point for module execution
