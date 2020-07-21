@@ -4,7 +4,7 @@
 
 The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
 
-Early field trial release for use with `DCNM Release 11.4`.
+Early field trial release for use with `DCNM Release 11.4(1)`.
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -110,7 +110,7 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
 
   tasks:
     - name: Merge a Switch
-      cisco.dcnm.dcnm_inventory:
+      dcnm_inventory:
         ...parameters...
 ```
 
