@@ -64,7 +64,7 @@ class ActionModule(ActionNetworkModule):
             )
             return {"failed": True, "msg": msg}
 
-        if self._task.args.get('state') != 'deleted':
+        if self._task.args.get('state') == 'merged' or self._task.args.get('state') == 'overridden':
             display.warning("Adding switches to a VXLAN fabric can take a while.  Please be patient...")
         self.result = super(ActionModule, self).run(task_vars=task_vars)
         return self.result
