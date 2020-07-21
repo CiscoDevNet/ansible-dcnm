@@ -27,10 +27,10 @@
           - name: vpc750                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
             deploy: true                      # choose from [true, false]
-            profile_vpc:                      # MUST be profile_vpc
+            profile:
               admin_state: true               # choose from [true, false]
               mode: trunk                     # choose from [trunk, access]
               peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -51,10 +51,10 @@
           - name: vpc751                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
             deploy: true                      # choose from [true, false]
-            profile_vpc:                      # MUST be profile_vpc
+            profile:
               admin_state: true               # choose from [true, false]
               mode: access                    # choose from [trunk, access]
               peer1_pcid: 200                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -99,10 +99,10 @@
           - name: vpc750                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
             deploy: true                      # choose from [true, false]
-            profile_vpc:                      # MUST be profile_vpc
+            profile:
               admin_state: true               ## choose from [true, false]
               mode: trunk                     # choose from [trunk, access]
               peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -128,10 +128,10 @@
           - name: vpc751                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
             deploy: true                      # choose from [true, false]
-            profile_vpc:                      # MUST be profile_vpc
+            profile:
               admin_state: true               ## choose from [true, false]
               mode: access                    # choose from [trunk, access]
               peer1_pcid: 200                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -179,7 +179,6 @@
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 2'
 
     - assert:
         that:

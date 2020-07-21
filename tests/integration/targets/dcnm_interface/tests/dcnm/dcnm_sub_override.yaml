@@ -29,7 +29,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_subint:                   # MUST be profile_subint
+            profile:
               admin_state: true               # choose from [true, false]
               mode: subint                    # choose from [subint]
               vlan: 100                       # vlan ID [min:2, max:3967]
@@ -48,7 +48,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_subint:                   # MUST be profile_subint
+            profile:
               admin_state: true               # choose from [true, false]
               mode: subint                    # choose from [subint]
               vlan: 101                       # vlan ID [min:2, max:3967]
@@ -91,7 +91,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_subint:                   # MUST be profile_subint
+            profile:
               admin_state: true               # choose from [true, false]
               mode: subint                    # choose from [subint]
               vlan: 103                       # vlan ID [min:2, max:3967]

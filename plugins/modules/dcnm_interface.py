@@ -76,6 +76,9 @@ options:
       profile_pc:
         description:
           - Object profile which must be included for port channel interface configurations.
+          - NOTE: Though the key shown here is 'profile_pc' the actual key to be used in playbook 
+                  is 'profile'. The key 'profile_pc' is used here to logically segregate the interface
+                  objects applicable for this profile
         suboptions:
           mode:
             description: Interface mode
@@ -133,6 +136,9 @@ options:
       profile_vpc:
         description:
           - Object profile which must be included for virtual port channel inetrface configurations.
+          - NOTE: Though the key shown here is 'profile_vpc' the actual key to be used in playbook 
+                  is 'profile'. The key 'profile_vpc' is used here to logically segregate the interface
+                  objects applicable for this profile
         suboptions:
           mode:
             description:
@@ -240,6 +246,9 @@ options:
       profile_subint:
         description:
           - Object profile which must be included for sub-interface configurations.
+          - NOTE: Though the key shown here is 'profile_subint' the actual key to be used in playbook 
+                  is 'profile'. The key 'profile_subint' is used here to logically segregate the interface
+                  objects applicable for this profile
         suboptions:
           mode:
             description: Interface mode
@@ -303,6 +312,9 @@ options:
       profile_lo:
         description:
           - Object profile which must be included for loopback interface configurations.
+          - NOTE: Though the key shown here is 'profile_lo' the actual key to be used in playbook 
+                  is 'profile'. The key 'profile_lo' is used here to logically segregate the interface
+                  objects applicable for this profile
         suboptions:
           mode:
             description: Interface mode
@@ -347,6 +359,9 @@ options:
       profile_eth:
         description:
           - Object profile which must be included for ethernet interface configurations.
+          - NOTE: Though the key shown here is 'profile_eth' the actual key to be used in playbook 
+                  is 'profile'. The key 'profile_eth' is used here to logically segregate the interface
+                  objects applicable for this profile
         suboptions:
           mode:
             description: Interface mode
@@ -496,7 +511,7 @@ LOOPBACK INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
         deploy: true                      # choose from [true, false]
-        profile_lo:                       # MUST be profile_lo
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: lo                        # choose from [lo]
           int_vrf: ""                     # VRF name
@@ -517,7 +532,7 @@ LOOPBACK INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
         deploy: true                      ## choose from [true, false]
-        profile_lo:                       # MUST be profile_lo
+        profile:                          
           admin_state: false              ## choose from [true, false]
           mode: lo                        # choose from [lo]
           int_vrf: ""                     # VRF name
@@ -572,7 +587,7 @@ LOOPBACK INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
         deploy: true                      # choose from [true, false]
-        profile_lo:                       # MUST be profile_lo
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: lo                        # choose from [lo]
           int_vrf: ""                     # VRF name
@@ -610,7 +625,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_pc:                       # MUST be profile_pc
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -629,7 +644,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_pc:                       # MUST be profile_pc
+        profile:                          
           admin_state: false              # choose from [true, false]
           mode: access                    # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -653,7 +668,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_pc:                       # MUST be profile_pc
+        profile:                          
           admin_state: false              ## choose from [true, false]
           mode: trunk                     # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -710,7 +725,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_pc:                       # MUST be profile_pc
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -736,7 +751,7 @@ SUB-INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_subint:                   # MUST be profile_subint
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: subint                    # choose from [subint]
           vlan: 100                       # vlan ID [min:2, max:3967]
@@ -760,7 +775,7 @@ SUB-INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_subint:                   # MUST be profile_subint
+        profile:                          
           admin_state: false              ## choose from [true, false]
           mode: subint                    # choose from [subint]
           vlan: 200                       ## vlan ID [min:2, max:3967]
@@ -798,7 +813,7 @@ SUB-INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile_subint:                   # MUST be profile_subint
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: subint                    # choose from [subint]
           vlan: 103                       # vlan ID [min:2, max:3967]
@@ -825,7 +840,7 @@ VPC INTERFACE
           - ["{{ ansible_switch1 }}",
              "{{ ansible_switch2 }}"]
         deploy: true                      # choose from [true, false]
-        profile_vpc:                      # MUST be profile_vpc
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -855,7 +870,7 @@ VPC INTERFACE
           - ["{{ ansible_switch1 }}",
              "{{ ansible_switch2 }}"]
         deploy: true                      # choose from [true, false]
-        profile_vpc:                      # MUST be profile_vpc
+        profile:                          
           admin_state: false              ## choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -899,7 +914,7 @@ VPC INTERFACE
           - ["{{ ansible_switch1 }}",
              "{{ ansible_switch2 }}"]
         deploy: true                      # choose from [true, false]
-        profile_vpc:                      # MUST be profile_vpc
+        profile:                          
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 752                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -1051,15 +1066,6 @@ class DcnmIntf:
         }
 
         # New Interfaces
-        self.prof_names = {
-            "pc"      : "profile_pc",
-            "vpc"     : "profile_vpc",
-            "sub_int" : "profile_subint",
-            "lo"      : "profile_lo",
-            "eth"     : "profile_eth"
-        }
-
-        # New Interfaces
         self.pol_types = {
             "pc_monitor"     : "int_monitor_port_channel_11_1",
             "pc_trunk"       : "int_port_channel_trunk_host_11_1",
@@ -1136,35 +1142,7 @@ class DcnmIntf:
 
             if(None is cfg.get('switch', None)):
                 continue
-            for sw_elem in cfg['switch']:
-
-                # vPC playbooks will have pair of switches in the config and there can be
-                # many such pairs.
-                if (isinstance(sw_elem, list)):
-                    sw = sw_elem[0]
-                    # The sno is a combined serial number of both the switches in the pair.
-                    # So this configuration is not device (switch) specific. A single request
-                    # with a combined serial number will take care of doing the needful on both
-                    # the switches of the pair.
-                    sno = self.dcnm_intf_get_vpc_serial_number(sw)
-
-                    if ('~' not in sno):
-                        mesg = 'Switch {} is not part of vPC pair, SNO = {}\n'.format(sw, sno)
-                        self.module.fail_json(msg=mesg)
-                    self.vpc_ip_sn[sw] = sno
-                    sw = sw_elem[1]
-                    # The sno is a combined serial number of both the switches in the pair.
-                    # So this configuration is not device (switch) specific. A single request
-                    # with a combined serial number will take care of doing the needful on both
-                    # the switches of the pair.
-                    sno = self.dcnm_intf_get_vpc_serial_number(sw)
-                    if ('~' not in sno):
-                        mesg = 'Switch {} is not part of vPC pair, SNO = {}\n'.format(sw, sno)
-                        self.module.fail_json(msg=mesg)
-                    self.vpc_ip_sn[sw] = sno
-                else:
-                    sw  = sw_elem
-                    sno = self.ip_sn[sw]
+            for sw in cfg['switch']:
 
                 c = copy.deepcopy(cfg)
 
@@ -1176,10 +1154,13 @@ class DcnmIntf:
                         if ('type' not in cfg):
                             self.module.fail_json(msg='<type> element, which is mandatory is missing in config')
 
-                        pol_ind_str = cfg['type'] + '_' + cfg[self.prof_names[cfg['type']]]['mode']
+                        pol_ind_str = cfg['type'] + '_' + cfg['profile']['mode']
 
                         c[ck]['fabric']   = self.dcnm_intf_facts['fabric']
-                        c[ck]['sno']      = sno
+                        if (cfg['type'] == 'vpc'):
+                            c[ck]['sno']  = self.vpc_ip_sn[sw]
+                        else:
+                            c[ck]['sno']  = self.ip_sn[sw]
                         ifname,port_id    = self.dcnm_intf_get_if_name (c['name'], c['type'])
                         c[ck]['ifname']   = ifname
                         c[ck]['policy']   = self.pol_types[pol_ind_str]
@@ -1200,16 +1181,14 @@ class DcnmIntf:
 
             for item in intf_info:
 
-                profile = self.prof_names[item['type']]
-
-                plist.append(item[profile])
+                plist.append(item['profile'])
                 intf_profile, invalid_params = validate_list_of_dicts(plist, prof_spec)
 
                 # Merge the info from the intf_profile into the intf_info to have a single dict to be used for building
                 # payloads
-                item[profile].update(intf_profile[0])
+                item['profile'].update(intf_profile[0])
 
-                plist.remove(item[profile])
+                plist.remove(item['profile'])
                 if invalid_params:
                     mesg = 'Invalid parameters in playbook: {}'.format("while processing interface " + config[0]['name'] + '\n'  +'\n'.join(invalid_params))
                     self.module.fail_json(msg=mesg)
@@ -1221,7 +1200,7 @@ class DcnmIntf:
             switch         = dict(required=True, type='list'),
             type           = dict(required=True, type='str'),
             deploy         = dict(type='bool', default=True),
-            profile_pc     = dict(required=True, type='dict')
+            profile        = dict(required=True, type='dict')
         )
 
         pc_prof_spec_trunk = dict(
@@ -1264,13 +1243,13 @@ class DcnmIntf:
             admin_state    = dict(type='bool', default=True)
         )
 
-        if ('trunk' == config[0]['profile_pc']['mode']):
+        if ('trunk' == config[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (config, pc_spec, pc_prof_spec_trunk)
-        if ('access' == config[0]['profile_pc']['mode']):
+        if ('access' == config[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (config, pc_spec, pc_prof_spec_access)
-        if ('l3' == config[0]['profile_pc']['mode']):
+        if ('l3' == config[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (config, pc_spec, pc_prof_spec_l3)
-        if ('monitor' == config[0]['profile_pc']['mode']):
+        if ('monitor' == config[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (config, pc_spec, None)
 
     def dcnm_intf_validate_virtual_port_channel_input (self, cfg):
@@ -1280,7 +1259,7 @@ class DcnmIntf:
             switch         = dict(required=True, type='list'),
             type           = dict(required=True, type='str'),
             deploy         = dict(type='str', default=True),
-            profile_vpc     = dict(required=True, type='dict')
+            profile         = dict(required=True, type='dict')
         )
 
         vpc_prof_spec_trunk = dict(
@@ -1321,9 +1300,9 @@ class DcnmIntf:
             admin_state          = dict(type='bool', default=True)
         )
 
-        if ('trunk' == cfg[0]['profile_vpc']['mode']):
+        if ('trunk' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, vpc_spec, vpc_prof_spec_trunk)
-        if ('access' == cfg[0]['profile_vpc']['mode']):
+        if ('access' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, vpc_spec, vpc_prof_spec_access)
 
     def dcnm_intf_validate_sub_interface_input (self, cfg):
@@ -1333,7 +1312,7 @@ class DcnmIntf:
             switch         = dict(required=True, type='list'),
             type           = dict(required=True, type='str'),
             deploy         = dict(type='str', default=True),
-            profile_subint = dict(required=True, type='dict'),
+            profile        = dict(required=True, type='dict'),
         )
 
         sub_prof_spec = dict(
@@ -1359,7 +1338,7 @@ class DcnmIntf:
             switch         = dict(required=True, type='list'),
             type           = dict(required=True, type='str'),
             deploy         = dict(type='str', default=True),
-            profile_lo     = dict(required=True, type='dict'),
+            profile        = dict(required=True, type='dict'),
         )
 
         lo_prof_spec = dict(
@@ -1382,7 +1361,7 @@ class DcnmIntf:
             switch         = dict(required=True, type='list'),
             type           = dict(required=True, type='str'),
             deploy         = dict(type='str', default=True),
-            profile_eth    = dict(required=True, type='dict'),
+            profile        = dict(required=True, type='dict'),
         )
 
         eth_prof_spec_trunk = dict(
@@ -1435,15 +1414,15 @@ class DcnmIntf:
             admin_state    = dict(type='bool', default=True)
         )
 
-        if ('trunk' == cfg[0]['profile_eth']['mode']):
+        if ('trunk' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, eth_spec, eth_prof_spec_trunk)
-        if ('access' == cfg[0]['profile_eth']['mode']):
+        if ('access' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, eth_spec, eth_prof_spec_access)
-        if ('routed' == cfg[0]['profile_eth']['mode']):
+        if ('routed' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, eth_spec, eth_prof_spec_routed_host)
-        if ('monitor' == cfg[0]['profile_eth']['mode']):
+        if ('monitor' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, eth_spec, None)
-        if ('epl_routed' == cfg[0]['profile_eth']['mode']):
+        if ('epl_routed' == cfg[0]['profile']['mode']):
             self.dcnm_intf_validate_interface_input (cfg, eth_spec, eth_prof_spec_epl_routed_host)
 
     def dcnm_intf_validate_delete_state_input(self, cfg):
@@ -1498,7 +1477,7 @@ class DcnmIntf:
                 # config for query state is different for all interafces. It may not have the profile
                 # construct. So validate query state differently
                 self.dcnm_intf_validate_query_state_input(cfg)
-            elif ((self.module.params['state'] == 'overridden') and not (any('profile_' in key for key in item))):
+            elif ((self.module.params['state'] == 'overridden') and not (any('profile' in key for key in item))):
                 # config for overridden state is different for all interafces. It may not have the profile
                 # construct. So validate overridden state differently
                 self.dcnm_intf_validate_overridden_state_input(cfg)
@@ -1771,12 +1750,10 @@ class DcnmIntf:
         # Each interface type will have a different profile name. Set that based on the interface type and use that
         # below to extract the required parameters
 
-        profile = self.prof_names[delem['type']]
-
         # Monitor ports are not put into diff_deploy, since they don't have any
         # commands to be executed on switch. This will affect the idempotence
         # check
-        if (delem[profile]['mode'] == 'monitor'):
+        if (delem['profile']['mode'] == 'monitor'):
             intf.update ({"deploy" : False})
         else:
             intf.update ({"deploy" : delem['deploy']})
@@ -1794,30 +1771,30 @@ class DcnmIntf:
         intf["interfaces"][0].update ({"interfaceType" : self.int_types[delem['type']]})
         intf["interfaces"][0].update ({"fabricName"    : self.fabric})
 
-        if (profile not in delem.keys()):
-            # for state 'deleted', profile construct is not included. So just update the ifName here
-            # and return. Rest of the code is all profile specific and hence not required for 'deleted'
+        if ('profile' not in delem.keys()):
+            # for state 'deleted', 'profile' construct is not included. So just update the ifName here
+            # and return. Rest of the code is all 'profile' specific and hence not required for 'deleted'
 
             ifname, port_id = self.dcnm_intf_get_if_name (delem['name'], delem['type'])
             intf["interfaces"][0].update ({"ifName"        : ifname})
             return intf
 
-        pol_ind_str = delem['type'] + '_' + delem[profile]['mode']
-        #intf.update ({"policy" : self.pol_types[delem[profile]['mode']]})
+        pol_ind_str = delem['type'] + '_' + delem['profile']['mode']
+        #intf.update ({"policy" : self.pol_types[delem['profile']['mode']]})
         intf.update ({"policy" : self.pol_types[pol_ind_str]})
 
         # Rest of the data in the dict depends on the interface type and the template
 
         if ('pc' == delem['type']):
-            self.dcnm_intf_get_pc_payload(delem, intf, profile)
+            self.dcnm_intf_get_pc_payload(delem, intf, 'profile')
         if ('sub_int' == delem['type']):
-            self.dcnm_intf_get_sub_intf_payload(delem, intf, profile)
+            self.dcnm_intf_get_sub_intf_payload(delem, intf, 'profile')
         if ('lo' == delem['type']):
-            self.dcnm_intf_get_loopback_payload (delem, intf, profile)
+            self.dcnm_intf_get_loopback_payload (delem, intf, 'profile')
         if ('vpc' == delem['type']):
-            self.dcnm_intf_get_vpc_payload(delem, intf, profile)
+            self.dcnm_intf_get_vpc_payload(delem, intf, 'profile')
         if ('eth' == delem['type']):
-            self.dcnm_intf_get_eth_payload(delem, intf, profile)
+            self.dcnm_intf_get_eth_payload(delem, intf, 'profile')
 
             # Ethernet interface payload does not have interfaceType and skipResourceCheck flags. Pop
             # them out
@@ -1849,22 +1826,11 @@ class DcnmIntf:
         # self.intf_info is a list of directories each having config related to a particular interface
 
         for delem in self.intf_info:
-
-            processed = []
-
-            if (any('profile_' in key for key in delem)):
-                for sw_elem in delem['switch']:
-                    # Even for vPC switch pairs, we need to apply the config on one of the
-                    # switches and not both
-                    if (isinstance (sw_elem, list)):
-                        sw = sw_elem[0]
-                    else:
-                        sw = sw_elem
-
-                    if (sw not in processed):
-                        intf_payload = self.dcnm_get_intf_payload (delem, sw)
+            if (any('profile' in key for key in delem)):
+                for sw in delem['switch']:
+                    intf_payload = self.dcnm_get_intf_payload (delem, sw)
+                    if (intf_payload not in self.want):
                         self.want.append(intf_payload)
-                        processed.append(sw)
 
     def dcnm_intf_get_intf_info_from_dcnm(self, intf):
 
@@ -2254,28 +2220,18 @@ class DcnmIntf:
 
         if(None is cfg.get('switch', None)):
             return
-        for sw_elem in cfg['switch']:
-            if (isinstance(sw_elem, list)):
-                sw = sw_elem[0]
-                if (sw not in processed):
-                    processed.append (sw)
-                    if not any(d.get('serialNo', None) == self.ip_sn[sw] for d in self.have_all):
-                        self.dcnm_intf_get_have_all(sw)
+        for sw in cfg['switch']:
 
-                # For VPC switches, a GET on a single switch may return all
-                # interfaces belonging to both the switches. Check if that
-                # is the case
-                sw = sw_elem[1]
-                if (sw not in processed):
-                    processed.append (sw)
-                    if not any(d.get('serialNo', None) == self.ip_sn[sw] for d in self.have_all):
-                        self.dcnm_intf_get_have_all(sw)
-            else:
-                sw = sw_elem
-                if (sw not in processed):
-                    processed.append (sw)
-                    if not any(d.get('serialNo', None) == self.ip_sn[sw] for d in self.have_all):
-                        self.dcnm_intf_get_have_all(sw)
+            sno = self.ip_sn[sw]
+
+            if (sno not in processed):
+                processed.append (sno)
+
+                # If the switch is part of VPC pair, then a GET on any serial number will fetch details of 
+                # both the switches. So check before adding to have_all
+
+                if not any(d.get('serialNo', None) == self.ip_sn[sw] for d in self.have_all):
+                    self.dcnm_intf_get_have_all(sw)
 
     def dcnm_intf_get_diff_overridden(self, cfg):
 
@@ -2286,7 +2242,6 @@ class DcnmIntf:
 
         if ((cfg is not None) and (cfg != [])):
             self.dcnm_intf_process_config(cfg)
-
         elif ([] == cfg):
             for address in self.ip_sn.keys():
                 # the given switch may be part of a VPC pair. In that case we
@@ -2352,6 +2307,13 @@ class DcnmIntf:
                     if (have['ifType']  == 'INTERFACE_PORT_CHANNEL'):
                           if (have['alias'] == '"vpc-peer-link"'):
                               continue
+
+                    # VPC interfaces sometimes take time to get deleted from DCNM. Such interfaces will have 
+                    # underlayPolicies set to "None". Such interfaces need not be deleted again
+
+                    if ((have['ifType']  == 'INTERFACE_VPC') and
+                        (have['underlayPolicies'] is None)):
+                        continue
 
                     # For interfaces that are matching, leave them alone. We will overwrite the config anyway
                     # For all other interfaces, if they are PC, vPC, SUBINT, LOOPBACK, delete them.
@@ -2444,10 +2406,6 @@ class DcnmIntf:
                         intf  = {}
                         delem = {}
 
-                        if (sw not in processed):
-                            processed.append(sw)
-                        else:
-                            continue
                         if_name, if_type = self.dcnm_extract_if_name(cfg)
 
                         # Ethernet interfaces cannot be deleted
@@ -2456,11 +2414,16 @@ class DcnmIntf:
 
                         # Check if the interface is present in DCNM
                         intf['interfaceType'] = if_type
-                        if (isinstance(sw, list)):
-                          intf['serialNumber']  = self.vpc_ip_sn[sw[0]]
+                        if (if_type == 'INTERFACE_VPC'):
+                          intf['serialNumber']  = self.vpc_ip_sn[sw]
                         else:
                           intf['serialNumber']  = self.ip_sn[sw]
                         intf['ifName']        = if_name
+
+                        if (intf['serialNumber'] not in processed):
+                            processed.append(intf['serialNumber'])
+                        else:
+                            continue
 
                         intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
 
@@ -2555,11 +2518,15 @@ class DcnmIntf:
                 succ_resp['MESSAGE']      = 'OK'
                 succ_resp['METHOD']       = 'DEPLOY'
                 return succ_resp, True
-            elif (ent_resp[ent] == 'No Commands to execute.'):
+            elif ((ent_resp[ent] == 'No Commands to execute.') or
+                  (ent_resp[ent] == 'Failed to fetch policies') or
+                  (ent_resp[ent] == 'Failed to fetch switch configuration')):
                 # Consider this case as success.
                 succ_resp['REQUEST_PATH'] = resp['REQUEST_PATH']
                 succ_resp['MESSAGE']      = 'OK'
                 succ_resp['METHOD']       = 'DEPLOY'
+                succ_resp['ORIG_MSG']     = ent_resp[ent]
+
                 changed = False
             else:
                 changed = False
@@ -2623,6 +2590,7 @@ class DcnmIntf:
 
     def dcnm_intf_send_message_to_dcnm (self):
 
+        resp    = None
         changed = False
 
         delete  = False
@@ -2635,10 +2603,6 @@ class DcnmIntf:
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
 
-        # Delete must be sent as a list of dicts. Since self.diff_delete is already a list of dicts
-        # send the entire list at once.
-        # NOTE: vPC interfaces will have a separate list and not mixed with
-        # other interface types
         for delem in self.diff_delete:
 
            if (delem == []):
@@ -2667,6 +2631,7 @@ class DcnmIntf:
            delete = changed
            self.result['response'].append(resp)
 
+        resp    = None
         time.sleep(1)
 
         # In 11.4 version of DCNM, sometimes interfaces don't get deleted
@@ -2682,6 +2647,8 @@ class DcnmIntf:
            json_payload = json.dumps(delem)
            resp = dcnm_send(self.module, 'POST', path, json_payload)
 
+        resp    = None
+
         path = '/rest/interface'
         for payload in self.diff_replace:
 
@@ -2693,6 +2660,8 @@ class DcnmIntf:
                 self.module.fail_json(msg=resp)
             else:
                 replace  = True
+
+        resp    = None
 
         time.sleep(1)
 
@@ -2707,6 +2676,8 @@ class DcnmIntf:
                 self.module.fail_json(msg=resp)
             else:
                 create = True
+
+        resp    = None
 
         time.sleep(1)
 
@@ -2725,11 +2696,15 @@ class DcnmIntf:
 
             self.result['response'].append(resp)
 
+        resp    = None
+
         # Do a second deploy. Sometimes even if interfaces are created, they are
         # not being deployed. A second deploy solves the same. Don't worry about
         # the return values
 
         resp = dcnm_send(self.module, 'POST', path, json_payload)
+
+        resp    = None
 
         # In overridden and deleted states, if no delete or create is happening and we have
         # only replace, then check the return message for deploy. If it says
@@ -2756,16 +2731,25 @@ class DcnmIntf:
            if (None is cfg.get('switch', None)):
                continue
            for sw_elem in cfg['switch']:
-               if (isinstance(sw_elem, list)):
-                   sw_ind = 0
-                   for sw in sw_elem:
-                       addr_info = dcnm_get_ip_addr_info (self.module, sw, ip_sn, hn_sn)
-                       cfg['switch'][index][sw_ind] = addr_info
-                       sw_ind = sw_ind + 1
-               else:
-                   addr_info = dcnm_get_ip_addr_info (self.module, sw_elem, ip_sn, hn_sn)
-                   cfg['switch'][index] = addr_info
+               addr_info = dcnm_get_ip_addr_info (self.module, sw_elem, ip_sn, hn_sn)
+               cfg['switch'][index] = addr_info
                index = index + 1
+
+               # Match this switch in the inventory. If it is a part of VPC pair, then populate the VPC 
+               # serial numbers
+
+               inv_entry = self.inventory_data.get (addr_info, None) 
+
+               # Check if the VPC serial number information is already present. If not fetch that
+
+               if (self.vpc_ip_sn.get (addr_info, None) is None) :
+                   if (inv_entry is not None):
+                       if ((str(inv_entry['isVpcConfigured']).lower() == 'true') and (inv_entry['vpcDomain'] != 0)):
+                           sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
+                           if ('~' not in sno):
+                               mesg = 'Switch {} is not part of vPC pair, SNO = {}\n'.format(sw_elem, sno)
+                               self.module.fail_json(msg=mesg)
+                           self.vpc_ip_sn[addr_info] = sno
 
 def main():
 
@@ -2805,8 +2789,8 @@ def main():
     # state 'deleted' may not include all the information
     if ((module.params['state'] != 'query') and (module.params['state'] != 'deleted')):
         dcnm_intf.dcnm_intf_get_want()
-
         dcnm_intf.dcnm_intf_get_have()
+
 
     if (module.params['state'] == 'merged'):
         dcnm_intf.dcnm_intf_get_diff_merge()

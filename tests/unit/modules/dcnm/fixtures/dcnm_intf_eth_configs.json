@@ -1,4 +1,15 @@
 {
+    "mock_fab_inv_data": {
+      "10.122.84.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "10.122.84.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
 	"mock_ip_sn" : {
 		"10.122.84.109": "FOX1821H035",
 			"10.122.84.108": "SAL1819SAN8" 
@@ -7,6 +18,16 @@
 		"mock_vpc_sno" : {
 			"10.122.84.108" : "FOX1821H035~SAL1819SAN8",
 			"10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+		},
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
 		},
 
 		"mock_succ_resp" : {
@@ -31,7 +52,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"description": "eth interface  acting as trunk",
 				"bpdu_guard": "True",
 				"sno": "SAL1819SAN8",
@@ -56,7 +77,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"access_vlan": 31,
 				"description": "eth interface acting as access",
 				"bpdu_guard": "True",
@@ -81,7 +102,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"int_vrf": "",
 				"route_tag": "",
 				"ipv4_mask_len": 24,
@@ -107,7 +128,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"ipv4_mask_len": 24,
@@ -135,7 +156,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"policy": "int_monitor_ethernet_11_1",
 				"sno": "SAL1819SAN8",
 				"ifname": "Ethernet1/34",
@@ -152,7 +173,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"description": "eth interface  acting as trunk - replaced",
 				"bpdu_guard": "False",
 				"sno": "SAL1819SAN8",
@@ -178,7 +199,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"access_vlan": 41,
 				"description": "eth interface acting as access - replaced",
 				"bpdu_guard": "False",
@@ -204,7 +225,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"int_vrf": "default",
 				"route_tag": "1234",
 				"ipv4_mask_len": 16,
@@ -231,7 +252,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"ipv6_addr": "fe80:01",
 				"int_vrf": "default",
 				"ipv4_mask_len": 16,
@@ -260,7 +281,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"policy": "int_monitor_ethernet_11_1",
 				"sno": "SAL1819SAN8",
 				"ifname": "Ethernet1/34",
@@ -277,7 +298,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"description": "eth interface  acting as trunk",
 				"bpdu_guard": "True",
 				"sno": "SAL1819SAN8",
@@ -302,7 +323,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"access_vlan": 31,
 				"description": "eth interface acting as access",
 				"bpdu_guard": "True",
@@ -327,7 +348,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"int_vrf": "",
 				"route_tag": "",
 				"ipv4_mask_len": 24,
@@ -353,7 +374,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"ipv4_mask_len": 24,
@@ -381,7 +402,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"policy": "int_monitor_ethernet_11_1",
 				"sno": "SAL1819SAN8",
 				"ifname": "Ethernet1/34",
@@ -398,7 +419,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"description": "eth interface  acting as trunk",
 				"bpdu_guard": "Fasle",
 				"sno": "SAL1819SAN8",
@@ -426,7 +447,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"description": "eth interface  acting as trunk",
 				"bpdu_guard": "False",
 				"sno": "SAL1819SAN8",

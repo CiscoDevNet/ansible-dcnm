@@ -1,4 +1,15 @@
 {
+    "mock_fab_inv_data": {
+      "10.122.84.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "10.122.84.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
     "mock_ip_sn" : {
      "10.122.84.109": "FOX1821H035",
      "10.122.84.108": "SAL1819SAN8" 
@@ -40,7 +51,7 @@
       "switch": [
         "10.122.84.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -69,7 +80,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"description": "eth interface  acting as trunk",
 				"bpdu_guard": "True",
 				"sno": "SAL1819SAN8",
@@ -90,7 +101,7 @@
 			"deploy": "True"
 		},
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -121,10 +132,8 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-				[
 					"10.122.84.109",
-			"10.122.84.108"
-				]
+			    "10.122.84.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",
@@ -134,7 +143,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 100 configuration",
@@ -161,7 +170,7 @@
 			"deploy": "True",
 			"type": "sub_int",
 			"name": "eth1/25.1",
-			"profile_subint": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"ipv4_mask_len": 24,

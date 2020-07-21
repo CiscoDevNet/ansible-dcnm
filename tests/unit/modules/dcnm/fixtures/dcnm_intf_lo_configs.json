@@ -1,4 +1,15 @@
 {
+    "mock_fab_inv_data": {
+      "10.122.84.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "10.122.84.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
 	"mock_ip_sn" : {
 		"10.122.84.109": "FOX1821H035",
 			"10.122.84.108": "SAL1819SAN8" 
@@ -7,6 +18,16 @@
 		"mock_vpc_sno" : {
 			"10.122.84.108" : "FOX1821H035~SAL1819SAN8",
 			"10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+		},
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
 		},
 
 		"mock_succ_resp" : {
@@ -30,7 +51,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 100 configuration",
@@ -54,7 +75,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 101 configuration",
@@ -80,7 +101,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "fe80::01",
 				"int_vrf": "blue",
 				"description": "loopback interface 100 configuration - replaced",
@@ -105,7 +126,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "fe80::02",
 				"int_vrf": "red",
 				"description": "loopback interface 101 configuration - replaced",
@@ -132,7 +153,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 100 configuration",
@@ -156,7 +177,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 101 configuration",
@@ -182,7 +203,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 110 configuration",
@@ -206,7 +227,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 111 configuration",
@@ -232,7 +253,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
         "ipv4_addr": "1.1.1.100",
 				"int_vrf": "",
@@ -252,7 +273,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 900 configuration",
@@ -278,7 +299,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_lo": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"description": "loopback interface 200 configuration",

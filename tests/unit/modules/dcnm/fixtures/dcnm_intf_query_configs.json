@@ -1,8 +1,29 @@
 {
+    "mock_fab_inv_data": {
+      "10.122.84.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "10.122.84.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
     "mock_ip_sn" : {
      "10.122.84.109": "FOX1821H035",
      "10.122.84.108": "SAL1819SAN8" 
     },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
 
     "mock_succ_resp" : {
       "DATA": {},

@@ -31,7 +31,7 @@
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
               - "{{ ansible_switch2 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_pc:                       # MUST be profile_pc
+            profile:
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
@@ -41,7 +41,7 @@
               - "{{ ansible_switch2 }}"       # provide the switch information where the config is to be deployed
               - "{{ ansible_switch2 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_subint:                   # MUST be profile_subint
+            profile:
               mode: subint                    # choose from [subint]
               vlan: 100                       # vlan ID [min:2, max:3967]
               ipv4_addr: 193.168.100.1        # ipv4 address for the sub-interface
@@ -54,7 +54,7 @@
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
-            profile_lo:                       # MUST be profile_lo
+            profile:
               mode: lo                        # choose from [lo]
               ipv4_addr: 192.168.100.1        # ipv4 address for the loopback interface
       register: result

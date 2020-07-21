@@ -1,5 +1,16 @@
 
 {
+    "mock_fab_inv_data": {
+      "10.122.84.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "10.122.84.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
     "mock_ip_sn" : {
      "10.122.84.109": "FOX1821H035",
      "10.122.84.108": "SAL1819SAN8" 
@@ -41,7 +52,7 @@
       "switch": [
         "10.122.84.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -69,7 +80,7 @@
       "switch": [
         "10.122.84.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -97,7 +108,7 @@
       "switch": [
         "10.122.84.108"
       ],
-      "profile_pc": {
+      "profile": {
         "access_vlan": 301,
         "description": "port channel acting as access",
         "bpdu_guard": "True",
@@ -125,7 +136,7 @@
       "switch": [
         "10.122.84.108"
       ],
-      "profile_pc": {
+      "profile": {
         "access_vlan": 401,
         "description": "port channel acting as access",
         "bpdu_guard": "True",
@@ -154,7 +165,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"int_vrf": "",
 				"route_tag": "",
 				"ipv4_mask_len": 24,
@@ -180,7 +191,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"int_vrf": "",
 				"route_tag": "",
 				"ipv4_mask_len": 24,
@@ -206,7 +217,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"ipv4_mask_len": 24,
@@ -234,7 +245,7 @@
 			"switch": [
 				"10.122.84.108"
 			],
-			"profile_eth": {
+			"profile": {
 				"ipv6_addr": "",
 				"int_vrf": "",
 				"ipv4_mask_len": 24,
@@ -258,7 +269,7 @@
 			"deploy": "True"
 		},
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -289,17 +300,15 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-				[
 					"10.122.84.109",
-			"10.122.84.108"
-				]
+			    "10.122.84.108"
 			],
 			"type": "vpc",
 			"name": "vpc850",
 			"deploy": "True"
 		},
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -330,10 +339,8 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-				[
 					"10.122.84.109",
-			"10.122.84.108"
-				]
+			    "10.122.84.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",

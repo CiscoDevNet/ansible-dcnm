@@ -29,7 +29,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_eth:                      # MUST be profile_eth
+            profile:
               admin_state: true               # choose from [true, false]
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
               speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
@@ -46,7 +46,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_eth:                      # MUST be profile_eth
+            profile:
               admin_state: true               # choose from [true, false]
               mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
               speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
@@ -63,7 +63,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_eth:                      # MUST be profile_eth
+            profile:
               admin_state: true               # choose from [true, false]
               mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
               speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
@@ -81,7 +81,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_eth:                      # MUST be profile_eth
+            profile:
               admin_state: true               # choose from [true, false]
               mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
               speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
@@ -101,7 +101,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
-            profile_eth:                      # MUST be profile_eth
+            profile:
               mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
       register: result
 
