@@ -60,7 +60,7 @@
 #                QUERY                     ##
 #############################################
 
-- name: QUERY - Query a Switch - Role must match
+- name: QUERY - Query a Switch - Seed IP and Role must match
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: query
@@ -97,6 +97,19 @@
 - assert:
     that:
     - 'result.response[0].ipAddress == "{{ ansible_switch1 }}"'
+
+- name: QUERY - Query a Switch without seed ip - Seed IP does not need to match
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+    - role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                 # Super Spine, Border Super Spine, Border Gateway Super Spine]
+  register: result
+
+- assert:
+    that:
+     - 'result.response[0].switchRole == "leaf"'
 
 - name: QUERY - Query a Switch with wrong role
   cisco.dcnm.dcnm_inventory:
@@ -153,3 +166,4 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
+
