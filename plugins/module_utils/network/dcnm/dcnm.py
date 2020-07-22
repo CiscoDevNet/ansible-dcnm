@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import re
 import socket
 import json
 import time
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
-
 
 def validate_list_of_dicts(param_list, spec):
     """ Validate/Normalize playbook params. Will raise when invalid parameters found.
@@ -84,6 +82,12 @@ def validate_list_of_dicts(param_list, spec):
                         invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
                     if address.count('.') != 3:
                         invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
+
+                choice = spec[param].get('choices')
+                if choice:
+                    if item not in choice:
+                        invalid_params.append('{} : Invalid choice provided'.format(item))
+
             valid_params_dict[param] = item
         normalized.append(valid_params_dict)
 

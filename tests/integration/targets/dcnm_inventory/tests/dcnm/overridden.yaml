@@ -60,7 +60,7 @@
 ##                OVERRIDDEN                ##
 ##############################################
 
-- name: OVERRIDDEN - Update a New Switch using GreenField Deployment - Delete and Create
+- name: OVERRIDDEN - Update a New Switch using GreenField Deployment - Delete and Create - default role
   cisco.dcnm.dcnm_inventory: &conf_over
     fabric: "{{ ansible_it_fabric }}"
     state: overridden
@@ -70,8 +70,6 @@
       user_name: admin
       password: idgeR09!
       max_hops: 0
-      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
-                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
       preserve_config: False # boolean, default is  true
   register: result
 

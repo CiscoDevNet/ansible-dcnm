@@ -114,6 +114,52 @@
     - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
 
+- name: MERGED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: MERGED - Merge a Switch using GreenField Deployment - Using default role/auth_proto
+  cisco.dcnm.dcnm_inventory: &conf_def
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      user_name: admin
+      password: idgeR09!
+      max_hops: 0
+      preserve_config: False # boolean, default is  true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - 'result.response[6].RETURN_CODE == 200'
+    - 'result.response[1].DATA.status == "Success"'
+    - 'result.response[2].DATA.status == "Success"'
+    - '"Operation is successful" in result.response[3].DATA'
+    - 'result.response[5].DATA.status == "Config save is completed"'
+    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
+
+- name: MERGED - conf1 - GF - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_def
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+
 - name: MERGED - Merge a Switch without seed_ip
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
@@ -134,6 +180,49 @@
     that:
     - 'result.changed == false'
     - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in result.msg'
+
+- name: MERGED - Merge a Switch with invalid role choice
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: admin
+      password: idgeR09!
+      max_hops: 0
+      role: nnnnddd # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+      preserve_config: False # boolean, default is  true
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid choice provided" in result.msg'
+
+- name: MERGED - Merge a Switch with invalid role choice
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      auth_proto: MD55DM # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: admin
+      password: idgeR09!
+      max_hops: 0
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+      preserve_config: False # boolean, default is  true
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid choice provided" in result.msg'
+
 
 - name: MERGED - Merge a Switch without a config
   cisco.dcnm.dcnm_inventory:
