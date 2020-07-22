@@ -192,7 +192,7 @@ Query:
          role: spine
        - seed_ip: 192.168.0.2
          role: leaf
-         
+
 # All the existing switches will be queried in the existing fabric
 - name: Query all the switches in the fabric
     cisco.dcnm.dcnm_inventory:
@@ -496,7 +496,6 @@ class DcnmInventory:
                 self.module.fail_json(msg=msg)
 
             if self.config:
-                validated = []
                 valid_inv, invalid_params = validate_list_of_dicts(self.config, inv_spec)
                 for inv in valid_inv:
                     self.validated.append(inv)
@@ -852,11 +851,6 @@ def main():
                    choices=['merged', 'overridden', 'deleted', 'query'])
     )
 
-    result = dict(
-        changed=False,
-        response=''
-    )
-
     module = AnsibleModule(argument_spec=element_spec,
                            supports_check_mode=True)
 
@@ -965,4 +959,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
