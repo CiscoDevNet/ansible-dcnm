@@ -2,7 +2,7 @@
 ##                 SETUP                    ##
 ##############################################
 
-- name: MERGED - Verify if fabric is deployed.
+- name: QUERY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
@@ -12,21 +12,17 @@
     that:
     - 'result.response.DATA != None'
 
-- name: MERGED - Clean up any existing vrfs
+- name: QUERY - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
     timeout: 40
 
-###############################################
-###                MERGED                    ##
-###############################################
-
-- name: MERGED - Create, Attach and Deploy new VRF - VLAN Provided by the User
-  cisco.dcnm.dcnm_vrf: &conf
+- name: QUERY - Create, Attach and Deploy new VRF - VLAN Provided by the User
+  cisco.dcnm.dcnm_vrf:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
     config:
@@ -57,39 +53,51 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: MERGED - conf1 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+###############################################
+###                QUERY                     ##
+###############################################
+
+- name: QUERY - Query the VRF
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        source: null
+        service_vrf_template: null
+        attach:
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
+        deploy: true
   register: result
 
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response|length == 0'
+    - 'result.response[0].attach[0].deploy == true'
+    - 'result.response[0].attach[1].deploy == true'
+    - 'result.response[0].attach[0].ip_address == "{{ ansible_switch1 }}"'
+    - 'result.response[0].attach[1].ip_address == "{{ ansible_switch2 }}"'
+    - 'result.response[0].attach[0].vlan_id == 500'
+    - 'result.response[0].attach[1].vlan_id == 500'
+    - 'result.response[0].vrf_name == "ansible-vrf-int1"'
 
-- name: MERGED - Clean up any existing vrfs
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: QUERY - Clean up existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
-
-- name: MERGED - Create, Attach and Deploy new VRF - VLAN Provided by the DCNM
-  cisco.dcnm.dcnm_vrf: &conf2
-    fabric: "{{ ansible_it_fabric }}"
-    state: merged
-    config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      source: null
-      service_vrf_template: null
-      attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
-      deploy: true
   register: result
 
 - assert:
@@ -97,17 +105,37 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[1].MESSAGE == "OK"'
     - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
+    - 'result.response[2].METHOD == "DELETE"'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - 'result.diff[0].attach[1].deploy == false'
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: MERGED - conf2 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf2
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: QUERY - Query the non available VRF
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        source: null
+        service_vrf_template: null
+        attach:
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
+        deploy: true
   register: result
 
 - assert:
@@ -115,57 +143,11 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: MERGED - Create, Attach and Deploy new VRF - Update with incorrect VRF ID.
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
-    state: merged
-    config:
-      - vrf_name: ansible-vrf-int1
-        vrf_id: 9008012
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        source: null
-        service_vrf_template: null
-        attach:
-          - ip_address: "{{ ansible_switch1 }}"
-          - ip_address: "{{ ansible_switch2 }}"
-        deploy: true
-  register: result
-  ignore_errors: yes
-
-- assert:
-    that:
-    - 'result.changed == false'
-    - '"cant be updated to a different value" in result.msg'
-
-- name: MERGED - Create, Attach and Deploy new VRF - Update with Out of Range VRF ID.
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
-    state: merged
-    config:
-      - vrf_name: ansible-vrf-int1
-        vrf_id: 9008012000000000
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        source: null
-        service_vrf_template: null
-        attach:
-          - ip_address: "{{ ansible_switch1 }}"
-          - ip_address: "{{ ansible_switch2 }}"
-        deploy: true
-  register: result
-  ignore_errors: yes
-
-- assert:
-    that:
-    - 'result.changed == false'
-    - '"The item exceeds the allowed range of max" in result.msg'
-
 ###############################################
 ###                 CLEAN-UP                 ##
 ###############################################
 
-- name: MERGED - Clean up any existing vrfs
+- name: QUERY - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
