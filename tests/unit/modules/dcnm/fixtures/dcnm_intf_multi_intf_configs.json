@@ -1,23 +1,23 @@
 {
     "mock_fab_inv_data": {
-      "10.122.84.108": {
+      "192.168.1.108": {
         "isVpcConfigured": "True",
         "vpcDomain": 1
       },
-      "10.122.84.109": {
+      "192.168.1.109": {
         "isVpcConfigured": "True",
         "vpcDomain": 1
       }
     },
 
   "mock_ip_sn" : {
-    "10.122.84.109": "FOX1821H035",
-      "10.122.84.108": "SAL1819SAN8" 
+    "192.168.1.109": "FOX1821H035",
+      "192.168.1.108": "SAL1819SAN8" 
   },
 
     "mock_vpc_sno" : {
-      "10.122.84.108" : "FOX1821H035~SAL1819SAN8",
-      "10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
     },
 
     "mock_succ_resp" : {
@@ -49,7 +49,7 @@
     "multi_intf_merged_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "description": "port channel acting as trunk",
@@ -107,8 +107,8 @@
         "peer2_allowed_vlans": "none"
       },
       "switch": [
-         "10.122.84.109",
-         "10.122.84.108"
+         "192.168.1.109",
+         "192.168.1.108"
       ],
       "type": "vpc",
       "name": "vpc301",
@@ -117,7 +117,7 @@
     {
       "type": "eth",
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "description": "eth interface  acting as trunk",
@@ -141,7 +141,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "deploy": "True",
       "type": "sub_int",
@@ -168,7 +168,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "ipv6_addr": "",
@@ -194,7 +194,7 @@
     "missing_intf_elems_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "access_vlan": 301,
@@ -219,7 +219,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "int_vrf": "",
@@ -263,8 +263,8 @@
         "peer1_description": "VPC acting as access peer1"
       },
       "switch": [
-          "10.122.84.109",
-          "10.122.84.108"
+          "192.168.1.109",
+          "192.168.1.108"
       ],
       "type": "vpc",
       "name": "vpc751",
@@ -272,7 +272,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "deploy": "True",
       "type": "sub_int",
@@ -297,7 +297,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"int_vrf": "",

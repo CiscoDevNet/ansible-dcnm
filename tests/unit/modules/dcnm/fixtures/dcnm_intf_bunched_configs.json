@@ -1,19 +1,19 @@
 
 {
     "mock_fab_inv_data": {
-      "10.122.84.108": {
+      "192.168.1.108": {
         "isVpcConfigured": "True",
         "vpcDomain": 1
       },
-      "10.122.84.109": {
+      "192.168.1.109": {
         "isVpcConfigured": "True",
         "vpcDomain": 1
       }
     },
 
     "mock_ip_sn" : {
-     "10.122.84.109": "FOX1821H035",
-     "10.122.84.108": "SAL1819SAN8" 
+     "192.168.1.109": "FOX1821H035",
+     "192.168.1.108": "SAL1819SAN8" 
     },
 
 		"mock_vpc_resp" : {
@@ -27,8 +27,8 @@
 		},
 
     "mock_vpc_sno" : {
-      "10.122.84.108" : "FOX1821H035~SAL1819SAN8",
-      "10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
     },
 
     "mock_succ_resp" : {
@@ -50,7 +50,7 @@
     "bunched_merged_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "description": "port channel acting as trunk",
@@ -78,7 +78,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "description": "port channel acting as trunk",
@@ -106,7 +106,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "access_vlan": 301,
@@ -134,7 +134,7 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
       "profile": {
         "access_vlan": 401,
@@ -163,7 +163,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"int_vrf": "",
@@ -189,7 +189,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"int_vrf": "",
@@ -215,7 +215,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"ipv6_addr": "",
@@ -243,7 +243,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"ipv6_addr": "",
@@ -300,8 +300,8 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-					"10.122.84.109",
-			    "10.122.84.108"
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc850",
@@ -339,8 +339,8 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-					"10.122.84.109",
-			    "10.122.84.108"
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",

@@ -1,23 +1,23 @@
 {
     "mock_fab_inv_data": {
-      "10.122.84.108": {
+      "192.168.1.108": {
         "isVpcConfigured": "True",
         "vpcDomain": 1
       },
-      "10.122.84.109": {
+      "192.168.1.109": {
         "isVpcConfigured": "True",
         "vpcDomain": 1
       }
     },
 
 	"mock_ip_sn" : {
-		"10.122.84.109": "FOX1821H035",
-			"10.122.84.108": "SAL1819SAN8" 
+		"192.168.1.109": "FOX1821H035",
+			"192.168.1.108": "SAL1819SAN8" 
 	},
 
 		"mock_vpc_sno" : {
-			"10.122.84.108" : "FOX1821H035~SAL1819SAN8",
-			"10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+			"192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+			"192.168.1.109" : "FOX1821H035~SAL1819SAN8"
 		},
 
 		"mock_vpc_resp" : {
@@ -50,7 +50,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"description": "eth interface  acting as trunk",
@@ -75,7 +75,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"access_vlan": 31,
@@ -100,7 +100,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"int_vrf": "",
@@ -126,7 +126,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"ipv6_addr": "",
@@ -154,7 +154,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"policy": "int_monitor_ethernet_11_1",
@@ -171,7 +171,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"description": "eth interface  acting as trunk - replaced",
@@ -197,7 +197,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"access_vlan": 41,
@@ -223,7 +223,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"int_vrf": "default",
@@ -250,7 +250,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"ipv6_addr": "fe80:01",
@@ -279,7 +279,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"policy": "int_monitor_ethernet_11_1",
@@ -296,7 +296,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"description": "eth interface  acting as trunk",
@@ -321,7 +321,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"access_vlan": 31,
@@ -346,7 +346,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"int_vrf": "",
@@ -372,7 +372,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"ipv6_addr": "",
@@ -400,7 +400,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"policy": "int_monitor_ethernet_11_1",
@@ -417,7 +417,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"description": "eth interface  acting as trunk",
@@ -445,7 +445,7 @@
 		{
 			"type": "eth",
 			"switch": [
-				"10.122.84.108"
+				"192.168.1.108"
 			],
 			"profile": {
 				"description": "eth interface  acting as trunk",
