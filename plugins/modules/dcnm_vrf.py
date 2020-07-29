@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import json
-import socket
 import time
 import copy
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
@@ -65,6 +64,11 @@ options:
         description: 'ID of the vrf being managed'
         type: int
         required: true
+      vlan_id:
+        description: 'vlan ID for the vrf attachment'
+        type: int
+        required: false 
+        note: If not specified in the playbook, DCNM will auto-select an available vlan_id
       vrf_template:
         description: 'Name of the config template to be used'
         type: str
@@ -85,10 +89,6 @@ options:
           ip_address:
             description: 'IP address of the switch where vrf will be attached or detached'
             type: ipv4
-            required: true
-          vlan_id:
-            description: 'vlan ID for the vrf attachment'
-            type: int
             required: true
           deploy:
             description: 'Per switch knob to control whether to deploy the attachment'
@@ -156,22 +156,23 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2000
+      source: null
+      service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        vlan_id: 202
         deploy: true
       - ip_address: 192.168.1.225
-        vlan_id: 203
         deploy: false
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      source: null
+      service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        vlan_id: 402
       - ip_address: 192.168.1.225
-        vlan_id: 403
 
 # The two VRFs below will be replaced in the target fabric.
 - name: Replace vrfs
@@ -183,17 +184,17 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2000
+      source: null
+      service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        vlan_id: 202
         deploy: true
       # Delete this attachment
       # - ip_address: 192.168.1.225
-      #   vlan_id: 203
       # deploy: true
       # Create the following attachment
       - ip_address: 192.168.1.226
-        vlan_id: 204
         deploy: true
     # Dont touch this if its present on DCNM
     # - vrf_name: ansible-vrf-r2
@@ -202,9 +203,7 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
     #   vrf_extension_template: Default_VRF_Extension_Universal
     #   attach:
     #   - ip_address: 192.168.1.224
-    #     vlan_id: 402
     #   - ip_address: 192.168.1.225
-    #     vlan_id: 403
 
 # The two VRFs below will be overridden in the target fabric.
 - name: Override vrfs
@@ -216,28 +215,29 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2000
+      source: null
+      service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        vlan_id: 202
         deploy: true
       # Delete this attachment
       # - ip_address: 192.168.1.225
-      #   vlan_id: 203
       #   deploy: true
       # Create the following attachment
       - ip_address: 192.168.1.226
-        vlan_id: 204
         deploy: true
     # Delete this vrf
     # - vrf_name: ansible-vrf-r2
     #   vrf_id: 9008012
     #   vrf_template: Default_VRF_Universal
     #   vrf_extension_template: Default_VRF_Extension_Universal
+    #   vlan_id: 2000
+    #   source: null
+    #   service_vrf_template: null
     #   attach:
     #   - ip_address: 192.168.1.224
-    #     vlan_id: 402
     #   - ip_address: 192.168.1.225
-    #     vlan_id: 403
 
 - name: Delete selected vrfs
   cisco.dcnm.dcnm_vrf:
@@ -248,10 +248,16 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2000
+      source: null
+      service_vrf_template: null
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2000
+      source: null
+      service_vrf_template: null
 
 - name: Delete all the vrfs
   cisco.dcnm.dcnm_vrf:
@@ -267,16 +273,21 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2000
+      source: null
+      service_vrf_template: null
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      source: null
+      service_vrf_template: null
 '''
-
 
 class DcnmVrf:
 
     def __init__(self, module):
+        
         self.module = module
         self.params = module.params
         self.fabric = module.params['fabric']
@@ -333,12 +344,6 @@ class DcnmVrf:
                     if want['serialNumber'] == have['serialNumber']:
                         found = True
 
-                        if bool(have['isAttached']) and bool(want['isAttached']):
-                            if have['vlan'] != want['vlan']:
-                                del want['isAttached']
-                                attach_list.append(want)
-                                continue
-
                         if bool(have['isAttached']) is not bool(want['isAttached']):
                             del want['isAttached']
                             attach_list.append(want)
@@ -354,7 +359,7 @@ class DcnmVrf:
 
         return attach_list, dep_vrf
 
-    def update_attach_params(self, attach, vrf_name, deploy):
+    def update_attach_params(self, attach, vrf_name, deploy, vlanId=''):
 
         if not attach:
             return {}
@@ -376,7 +381,7 @@ class DcnmVrf:
 
         attach.update({'fabric': self.fabric})
         attach.update({'vrfName': vrf_name})
-        attach.update({'vlan': attach.get('vlan_id')})
+        attach.update({'vlan': vlanId})
         attach.update({'deployment': deploy})
         attach.update({'isAttached': deploy})
         attach.update({'serialNumber': serial})
@@ -385,7 +390,6 @@ class DcnmVrf:
         attach.update({'freeformConfig': ""})
         if 'deploy' in attach:
             del attach['deploy']
-        del attach['vlan_id']
         del attach['ip_address']
 
         return attach
@@ -396,24 +400,52 @@ class DcnmVrf:
             return {}
 
         create = {}
-        if want['vrfId'] is not None and have['vrfId'] != want['vrfId']:
-            self.module.fail_json(msg="vrf_id for vrf:{} cant be updated to a different value".format(want['vrfName']))
-        elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
-                have['source'] != want['source'] or \
-                have['vrfTemplate'] != want['vrfTemplate'] or \
-                have['vrfExtensionTemplate'] != want['vrfExtensionTemplate']:
 
-            if want['vrfId'] is None:
-                # The vrf updates with missing vrfId will have to use existing
-                # vrfId from the instance of the same vrf on DCNM.
-                want['vrfId'] = have['vrfId']
-            create = want
+        json_to_dict_want = json.loads(want['vrfTemplateConfig'])
+        json_to_dict_have = json.loads(have['vrfTemplateConfig'])
+
+        vlanId_want = str(json_to_dict_want.get('vlanId', ""))
+        vlanId_have = json_to_dict_have.get('vlanId', "")
+
+        if vlanId_want != "0":
+
+            if want['vrfId'] is not None and have['vrfId'] != want['vrfId']:
+                self.module.fail_json(msg="vrf_id for vrf:{} cant be updated to a different value".format(want['vrfName']))
+            elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
+                    have['source'] != want['source'] or \
+                    have['vrfTemplate'] != want['vrfTemplate'] or \
+                    have['vrfExtensionTemplate'] != want['vrfExtensionTemplate'] or \
+                    vlanId_have != vlanId_want:
+
+                if want['vrfId'] is None:
+                    # The vrf updates with missing vrfId will have to use existing
+                    # vrfId from the instance of the same vrf on DCNM.
+                    want['vrfId'] = have['vrfId']
+                create = want
+            else:
+                pass
+
         else:
-            pass
+
+            if want['vrfId'] is not None and have['vrfId'] != want['vrfId']:
+                self.module.fail_json(
+                    msg="vrf_id for vrf:{} cant be updated to a different value".format(want['vrfName']))
+            elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
+                    have['source'] != want['source'] or \
+                    have['vrfTemplate'] != want['vrfTemplate'] or \
+                    have['vrfExtensionTemplate'] != want['vrfExtensionTemplate']:
+
+                if want['vrfId'] is None:
+                    # The vrf updates with missing vrfId will have to use existing
+                    # vrfId from the instance of the same vrf on DCNM.
+                    want['vrfId'] = have['vrfId']
+                create = want
+            else:
+                pass
 
         return create
 
-    def update_create_params(self, vrf):
+    def update_create_params(self, vrf, vlanId=''):
 
         if not vrf:
             return vrf
@@ -434,7 +466,8 @@ class DcnmVrf:
         }
         template_conf = {
             'vrfSegmentId': vrf.get('vrf_id', None),
-            'vrfName': vrf['vrf_name']
+            'vrfName': vrf['vrf_name'],
+            'vlanId': vlanId
         }
         vrf_upd.update({'vrfTemplateConfig': json.dumps(template_conf)})
 
@@ -484,9 +517,11 @@ class DcnmVrf:
             return
 
         for vrf in vrf_objects['DATA']:
+            json_to_dict = json.loads(vrf['vrfTemplateConfig'])
             t_conf = {
                 'vrfSegmentId': vrf['vrfId'],
-                'vrfName': vrf['vrfName']
+                'vrfName': vrf['vrfName'],
+                'vlanId': json_to_dict.get('vlanId', 0)
             }
 
             vrf.update({'vrfTemplateConfig': json.dumps(t_conf)})
@@ -550,6 +585,7 @@ class DcnmVrf:
         self.have_deploy = have_deploy
 
     def get_want(self):
+
         want_create = []
         want_attach = []
         want_deploy = {}
@@ -564,8 +600,9 @@ class DcnmVrf:
             vrfs = []
 
             vrf_deploy = vrf.get('deploy', True)
+            vlanId = vrf.get('vlan_id', 0)
 
-            want_create.append(self.update_create_params(vrf))
+            want_create.append(self.update_create_params(vrf, vlanId))
 
             if not vrf.get('attach'):
                 continue
@@ -573,7 +610,9 @@ class DcnmVrf:
                 deploy = vrf_deploy if "deploy" not in attach else attach['deploy']
                 vrfs.append(self.update_attach_params(attach,
                                                       vrf['vrf_name'],
-                                                      deploy))
+                                                      deploy,
+                                                      vlanId))
+
             if vrfs:
                 vrf_attach.update({'vrfName': vrf['vrf_name']})
                 vrf_attach.update({'lanAttachList': vrfs})
@@ -687,6 +726,7 @@ class DcnmVrf:
         self.diff_delete = diff_delete
 
     def get_diff_replace(self):
+
         all_vrfs = ''
 
         self.get_diff_merge()
@@ -764,6 +804,7 @@ class DcnmVrf:
         self.diff_deploy = diff_deploy
 
     def get_diff_merge(self):
+
         # Special cases:
         # 1. Auto generate vrfId if its not mentioned by user:
         #    In this case, we need to query the DCNM to get a usable ID and use it in the payload.
@@ -852,7 +893,6 @@ class DcnmVrf:
             found = False
             for have_a in self.have_attach:
                 if want_a['vrfName'] == have_a['vrfName']:
-
                     found = True
                     diff, vrf = self.diff_for_attach_deploy(want_a['lanAttachList'], have_a['lanAttachList'])
 
@@ -860,6 +900,7 @@ class DcnmVrf:
                         base = want_a.copy()
                         del base['lanAttachList']
                         base.update({'lanAttachList': diff})
+
                         diff_attach.append(base)
                         dep_vrf = want_a['vrfName']
                     else:
@@ -891,6 +932,7 @@ class DcnmVrf:
         self.diff_create_quick = diff_create_quick
 
     def format_diff(self):
+
         diff = []
 
         diff_create = copy.deepcopy(self.diff_create)
@@ -1101,14 +1143,35 @@ class DcnmVrf:
 
         method = 'POST'
         if self.diff_create:
-            resp = dcnm_send(self.module, method, bulk_create_path, json.dumps(self.diff_create))
-            self.result['response'].append(resp)
-            fail, self.result['changed'] = self.handle_response(resp, "create")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
+
+            for vrf in self.diff_create:
+                json_to_dict = json.loads(vrf['vrfTemplateConfig'])
+                vlanId = json_to_dict.get('vlanId', "0")
+
+                if vlanId == 0:
+                    vlan_path = '/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN'.format(self.fabric)
+                    vlan_data = dcnm_send(self.module, 'GET', vlan_path)
+
+                    if vlan_data['RETURN_CODE'] != 200:
+                        self.module.fail_json(msg='Failure getting autogenerated vlan_id {}'.format(vlan_data))
+                    vlanId = vlan_data['DATA']
+
+                t_conf = {
+                    'vrfSegmentId': json_to_dict.get('vrfId', ""),
+                    'vrfName': json_to_dict.get('vrfName', ""),
+                    'vlanId': vlanId
+                }
+
+                vrf.update({'vrfTemplateConfig': json.dumps(t_conf)})
+
+                resp = dcnm_send(self.module, method, path, json.dumps(vrf))
+                self.result['response'].append(resp)
+                fail, self.result['changed'] = self.handle_response(resp, "create")
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    self.failure(resp)
 
         method = 'POST'
         if self.diff_attach:
@@ -1169,6 +1232,7 @@ class DcnmVrf:
             vrf_id=dict(type='int', range_max=16777214),
             vrf_template=dict(type='str', default='Default_VRF_Universal'),
             vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
+            vlan_id=dict(type='int', range_max=4094),
             source=dict(type='str', default=None),
             service_vrf_template=dict(type='str', default=None),
             attach=dict(type='list'),
@@ -1176,7 +1240,6 @@ class DcnmVrf:
         )
         att_spec = dict(
             ip_address=dict(required=True, type='str'),
-            vlan_id=dict(type='int', range_max=4094),
             deploy=dict(type='bool', default=True)
         )
 
@@ -1188,8 +1251,10 @@ class DcnmVrf:
 
                 if 'attach' in vrf and vrf['attach']:
                     for attach in vrf['attach']:
-                        if 'ip_address' not in attach or 'vlan_id' not in attach:
-                            msg = "ip_address and vlan_id are mandatory under attach parameters"
+                        # if 'ip_address' not in attach or 'vlan_id' not in attach:
+                        #     msg = "ip_address and vlan_id are mandatory under attach parameters"
+                        if 'ip_address' not in attach:
+                            msg = "ip_address is mandatory under attach parameters"
 
         else:
             if state == 'merged' or state == 'overridden' or \
