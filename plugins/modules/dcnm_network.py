@@ -81,8 +81,8 @@ options:
       vlan_id:
         description: 'VLAN ID for the network'
         type: int
-        required: false 
-	note: If not specified in the playbook, DCNM will auto-select an available vlan_id
+        required: false
+        note: If not specified in the playbook, DCNM will auto-select an available vlan_id
       gw_ip_subnet:
         description: 'Gateway with subnet for the network'
         type: ipv4
@@ -476,7 +476,7 @@ class DcnmNetwork:
         return attach
 
     def diff_for_create(self, want, have):
-        
+
         # Possible update scenarios
         # vlanId - Changing vlanId on an already deployed network only affects new attachments
         # gwIpAddress - Changing the gwIpAddress needs all attachments to be re-deployed
@@ -1613,4 +1613,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
