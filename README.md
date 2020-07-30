@@ -43,7 +43,7 @@ Click the ``Content`` button to see the list of content included in this collect
 
 You can install the Cisco DCNM collection with the Ansible Galaxy CLI:
 
-    ansible-galaxy collection install cisco.dcnm
+    ansible-galaxy collection install cisco.dcnm:0.9.0-dev5
 
 You can also include it in a `requirements.yml` file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
 
@@ -51,7 +51,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 0.9.0
+    version: 0.9.0-dev5
 ```
 ## Using this collection
 
