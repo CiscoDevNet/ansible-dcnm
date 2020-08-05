@@ -75,10 +75,10 @@ options:
         default: true
       profile_pc:
         description:
-          - Object profile which must be included for port channel interface configurations.
           - NOTE: Though the key shown here is 'profile_pc' the actual key to be used in playbook 
                   is 'profile'. The key 'profile_pc' is used here to logically segregate the interface
                   objects applicable for this profile
+          - Object profile which must be included for port channel interface configurations.
         suboptions:
           mode:
             description: Interface mode
@@ -135,10 +135,10 @@ options:
             default: true
       profile_vpc:
         description:
-          - Object profile which must be included for virtual port channel inetrface configurations.
           - NOTE: Though the key shown here is 'profile_vpc' the actual key to be used in playbook 
                   is 'profile'. The key 'profile_vpc' is used here to logically segregate the interface
                   objects applicable for this profile
+          - Object profile which must be included for virtual port channel inetrface configurations.
         suboptions:
           mode:
             description:
@@ -245,10 +245,10 @@ options:
             default: true
       profile_subint:
         description:
-          - Object profile which must be included for sub-interface configurations.
           - NOTE: Though the key shown here is 'profile_subint' the actual key to be used in playbook 
                   is 'profile'. The key 'profile_subint' is used here to logically segregate the interface
                   objects applicable for this profile
+          - Object profile which must be included for sub-interface configurations.
         suboptions:
           mode:
             description: Interface mode
@@ -311,10 +311,10 @@ options:
             default: true
       profile_lo:
         description:
-          - Object profile which must be included for loopback interface configurations.
           - NOTE: Though the key shown here is 'profile_lo' the actual key to be used in playbook 
                   is 'profile'. The key 'profile_lo' is used here to logically segregate the interface
                   objects applicable for this profile
+          - Object profile which must be included for loopback interface configurations.
         suboptions:
           mode:
             description: Interface mode
@@ -358,10 +358,10 @@ options:
             default: true
       profile_eth:
         description:
-          - Object profile which must be included for ethernet interface configurations.
           - NOTE: Though the key shown here is 'profile_eth' the actual key to be used in playbook 
                   is 'profile'. The key 'profile_eth' is used here to logically segregate the interface
                   objects applicable for this profile
+          - Object profile which must be included for ethernet interface configurations.
         suboptions:
           mode:
             description: Interface mode
