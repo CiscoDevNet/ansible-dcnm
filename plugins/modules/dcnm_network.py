@@ -83,6 +83,11 @@ options:
         type: int
         required: false
         note: If not specified in the playbook, DCNM will auto-select an available vlan_id
+      routing_tag:
+        description: 'Routing Tag for the network profile'
+        type: int
+        required: false
+        note: If not specified in the playbook, Code will auto-configure the default value '12345' as same as DCNM
       gw_ip_subnet:
         description: 'Gateway with subnet for the network'
         type: ipv4
