@@ -1445,7 +1445,7 @@ class DcnmNetwork:
             deploy=dict(type='bool'),
             gw_ip_subnet=dict(type='ipv4_subnet'),
             vlan_id=dict(type='int', range_max=4094),
-            routing_tag=dict(type='int', default = 12345, range_max=4294967295),
+            routing_tag=dict(type='int', default=12345, range_max=4294967295),
             net_template=dict(type='str', default='Default_Network_Universal'),
             net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
         )
