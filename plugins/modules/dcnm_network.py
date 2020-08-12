@@ -87,7 +87,7 @@ options:
         description: 'Routing Tag for the network profile'
         type: int
         required: false
-        note: If not specified in the playbook, Code will auto-configure the default value '12345' as same as DCNM
+        default: 12345
       gw_ip_subnet:
         description: 'Gateway with subnet for the network'
         type: ipv4
