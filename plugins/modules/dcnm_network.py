@@ -83,6 +83,11 @@ options:
         type: int
         required: false
         note: If not specified in the playbook, DCNM will auto-select an available vlan_id
+      routing_tag:
+        description: 'Routing Tag for the network profile'
+        type: int
+        required: false
+        default: 12345
       gw_ip_subnet:
         description: 'Gateway with subnet for the network'
         type: ipv4
@@ -330,6 +335,7 @@ class DcnmNetwork:
         self.have_attach = []
         self.want_attach = []
         self.diff_attach = []
+        self.validated   = []
         # diff_detach is to list all attachments of a network being deleted, especially for state: OVERRIDDEN
         # The diff_detach and delete operations have to happen before create+attach+deploy for networks being created.
         # This is specifically to address cases where VLAN from a network which is being deleted is used for another
@@ -570,7 +576,7 @@ class DcnmNetwork:
             'vlanId': str(net.get('vlan_id', "")),
             'gatewayIpAddress': net.get('gw_ip_subnet', ""),
             'isLayer2Only': False,
-            'tag': ""
+            'tag': net.get('routing_tag', "")
         }
 
         net_upd.update({'networkTemplateConfig': json.dumps(template_conf)})
@@ -735,7 +741,7 @@ class DcnmNetwork:
         if not self.config:
             return
 
-        for net in self.config:
+        for net in self.validated:
             net_attach = {}
             networks = []
 
@@ -1439,6 +1445,7 @@ class DcnmNetwork:
             deploy=dict(type='bool'),
             gw_ip_subnet=dict(type='ipv4_subnet'),
             vlan_id=dict(type='int', range_max=4094),
+            routing_tag=dict(type='int', default=12345, range_max=4294967295),
             net_template=dict(type='str', default='Default_Network_Universal'),
             net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
         )
@@ -1449,7 +1456,7 @@ class DcnmNetwork:
         )
 
         if self.config:
-            validated = []
+            msg = None
             # Validate net params
             valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
             for net in valid_net:
@@ -1457,13 +1464,11 @@ class DcnmNetwork:
                     valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
                     net['attach'] = valid_att
                     invalid_params.extend(invalid_att)
-                validated.append(net)
+                self.validated.append(net)
 
             if invalid_params:
                 msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
                 self.module.fail_json(msg=msg)
-
-            return validated
 
         else:
             state = self.params['state']
@@ -1613,3 +1618,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
