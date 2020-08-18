@@ -32,19 +32,18 @@
             profile_dummy:
               mode: trunk                     # choose from [trunk, access, l3, monitor]
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
 
     - name: Create PC interface with profile name in old format
       cisco.dcnm.dcnm_interface:
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: po300                       # should be of the form po<port-id>
+          - name: po301                       # should be of the form po<port-id>
             type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
@@ -52,12 +51,11 @@
             profile_pc:
               mode: trunk                     # choose from [trunk, access, l3, monitor]
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
 
     - name: Create ETH interface with profile name old format
       cisco.dcnm.dcnm_interface:
@@ -72,12 +70,11 @@
             profile_eth:
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
 
     - name: Create sub-interface with profile name in old format
       cisco.dcnm.dcnm_interface:
@@ -95,12 +92,11 @@
               ipv4_addr: 193.168.100.1        # ipv4 address for the sub-interface
               ipv4_mask_len: 24               # choose between [min:8, max:31]
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
 
     - name: Create Loopback interfaces with profile name in old format
       cisco.dcnm.dcnm_interface:
@@ -116,12 +112,11 @@
               mode: lo                        # choose from [lo]
               ipv4_addr: 192.168.100.1        # ipv4 address for the loopback interface
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
 
     - name: Create vPC interface with profile name in old format
       cisco.dcnm.dcnm_interface:
@@ -135,30 +130,30 @@
               - "{{ ansible_switch2 }}"
             deploy: true                      # choose from [true, false]
             profile_vpc:
+              mode: trunk                     # choose from [trunk, access]
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
 
     - name: Create vPC interface with switch elements in old format
       cisco.dcnm.dcnm_interface: 
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vpc750                      # should be of the form vpc<port-id>
+          - name: vpc751                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
               - ["{{ ansible_switch1 }}",
                  "{{ ansible_switch2 }}"]
             deploy: true                      # choose from [true, false]
             profile:
+              mode: trunk                     # choose from [trunk, access]
       register: result
-      ignore_errors: True
 
     - assert:
         that:
-          - 'result.failed == true'
-          - 'result.changed == false'
+          - 'result.failed == false'
+          - 'result.changed == true'
