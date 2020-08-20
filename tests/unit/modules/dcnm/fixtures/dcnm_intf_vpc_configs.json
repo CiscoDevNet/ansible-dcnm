@@ -1,7 +1,18 @@
 {
+    "mock_fab_inv_data": {
+      "192.168.1.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "192.168.1.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
 	"mock_ip_sn" : {
-		"10.122.84.109": "FOX1821H035",
-		"10.122.84.108": "SAL1819SAN8" 
+		"192.168.1.109": "FOX1821H035",
+		"192.168.1.108": "SAL1819SAN8" 
 	},
 
 		"mock_vpc_resp" : {
@@ -32,7 +43,7 @@
 
 		"vpc_merged_config" : [
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -63,17 +74,15 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",
 			"deploy": "True"
 		},
 		{
-			"profile_vpc": {
+			"profile": {
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_members": [
 					"e1/15"
@@ -104,10 +113,8 @@
 				"peer2_pcid": 2
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc751",
@@ -116,7 +123,7 @@
 
 		"vpc_replaced_config" : [
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -147,17 +154,15 @@
 				"peer2_allowed_vlans": "all"
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",
 			"deploy": "True"
 		},
 		{
-			"profile_vpc": {
+			"profile": {
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_members": [
 					"e1/25"
@@ -190,10 +195,8 @@
 				"peer2_pcid": 2
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc751",
@@ -202,7 +205,7 @@
 
 		"vpc_deleted_config" : [
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -233,17 +236,15 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",
 			"deploy": "True"
 		},
 		{
-			"profile_vpc": {
+			"profile": {
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_members": [
 					"e1/15"
@@ -274,10 +275,8 @@
 				"peer2_pcid": 2
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc751",
@@ -286,7 +285,7 @@
 
 		"vpc_overridden_config" : [
 		{
-			"profile_vpc": {
+			"profile": {
 				"peer2_pcid": 1,
 				"fabric": "test_fabric",
 				"bpdu_guard": "True",
@@ -317,10 +316,8 @@
 				"peer2_allowed_vlans": "none"
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc750",
@@ -329,7 +326,7 @@
 
 		"vpc_members_missing_config" : [
 		{
-			"profile_vpc": {
+			"profile": {
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_access_vlan": "",
 				"bpdu_guard": "True",
@@ -354,10 +351,8 @@
 				"peer2_pcid": 2
 			},
 			"switch": [
-				[
-					"10.122.84.109",
-			"10.122.84.108"
-				]
+					"192.168.1.109",
+			    "192.168.1.108"
 			],
 			"type": "vpc",
 			"name": "vpc751",

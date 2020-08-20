@@ -29,7 +29,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
-            profile_lo:                       # MUST be profile_lo
+            profile:
               admin_state: true               # choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
@@ -45,7 +45,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
-            profile_lo:                       # MUST be profile_lo
+            profile:
               admin_state: true               # choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
@@ -85,7 +85,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      ## choose from [true, false]
-            profile_lo:                       # MUST be profile_lo
+            profile:
               admin_state: true               ## choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
@@ -101,7 +101,7 @@
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
-            profile_lo:                       # MUST be profile_lo
+            profile:
               admin_state: true               ## choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name

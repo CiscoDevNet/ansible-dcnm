@@ -1,13 +1,34 @@
 {
+    "mock_fab_inv_data": {
+      "192.168.1.108": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "192.168.1.109": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
     "mock_ip_sn" : {
-     "10.122.84.109": "FOX1821H035",
-     "10.122.84.108": "SAL1819SAN8" 
+     "192.168.1.109": "FOX1821H035",
+     "192.168.1.108": "SAL1819SAN8" 
     },
 
     "mock_vpc_sno" : {
-      "10.122.84.108" : "FOX1821H035~SAL1819SAN8",
-      "10.122.84.109" : "FOX1821H035~SAL1819SAN8"
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
     },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
 
     "mock_succ_resp" : {
       "DATA": {},
@@ -28,9 +49,9 @@
     "pc_state_missing_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel trunk changed to access",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -58,9 +79,9 @@
     "pc_type_missing_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel trunk changed to access",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -87,9 +108,9 @@
     "pc_merged_config_policy_change" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel trunk changed to access",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -117,9 +138,9 @@
     "pc_merged_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -145,9 +166,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "access_vlan": 301,
         "description": "port channel acting as access",
         "bpdu_guard": "True",
@@ -173,9 +194,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "int_vrf": "",
         "route_tag": "",
         "ipv4_mask_len": 8,
@@ -202,9 +223,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "policy": "int_monitor_port_channel_11_1",
         "sno": "SAL1819SAN8",
         "ifname": "Port-channel303",
@@ -219,9 +240,9 @@
     "pc_deleted_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
@@ -247,9 +268,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "access_vlan": 301,
         "description": "port channel acting as access",
         "bpdu_guard": "True",
@@ -275,9 +296,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "int_vrf": "",
         "route_tag": "",
         "ipv4_mask_len": 8,
@@ -304,9 +325,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "policy": "int_monitor_port_channel_11_1",
         "sno": "SAL1819SAN8",
         "ifname": "Port-channel303",
@@ -321,9 +342,9 @@
     "pc_replaced_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk -replaced",
         "bpdu_guard": "False",
         "sno": "SAL1819SAN8",
@@ -350,9 +371,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "access_vlan": 301,
         "description": "port channel acting as accesa - replaceds",
         "bpdu_guard": "False",
@@ -379,9 +400,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "int_vrf": "default",
         "route_tag": "1234",
         "ipv4_mask_len": 16,
@@ -409,9 +430,9 @@
     },
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "policy": "int_monitor_port_channel_11_1",
         "sno": "SAL1819SAN8",
         "ifname": "Port-channel303",
@@ -426,9 +447,9 @@
     "pc_overridden_config" : [
     {
       "switch": [
-        "10.122.84.108"
+        "192.168.1.108"
       ],
-      "profile_pc": {
+      "profile": {
         "description": "port channel acting as trunk",
         "bpdu_guard": "True",
         "sno": "SAL1819SAN8",
