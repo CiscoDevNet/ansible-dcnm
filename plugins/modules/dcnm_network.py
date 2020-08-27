@@ -1443,7 +1443,7 @@ class DcnmNetwork:
             vrf_name=dict(type='str', length_max=32),
             attach=dict(type='list'),
             deploy=dict(type='bool'),
-            gw_ip_subnet=dict(type='ipv4_subnet'),
+            gw_ip_subnet=dict(type='ipv4_subnet', default=""),
             vlan_id=dict(type='int', range_max=4094),
             routing_tag=dict(type='int', default=12345, range_max=4294967295),
             net_template=dict(type='str', default='Default_Network_Universal'),
