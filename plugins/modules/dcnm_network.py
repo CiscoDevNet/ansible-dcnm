@@ -492,6 +492,7 @@ class DcnmNetwork:
             return {}
 
         gw_changed = False
+        tg_changed = False
         create = {}
 
         if want.get('networkId') and want['networkId'] != have['networkId']:
@@ -509,9 +510,13 @@ class DcnmNetwork:
         gw_ip_want = json_to_dict_want.get('gatewayIpAddress', "")
         gw_ip_have = json_to_dict_have.get('gatewayIpAddress', "")
         vlanId_want = json_to_dict_want.get('vlanId', "")
-        vlanId_have = json_to_dict_have.get('vlanId', "")
+        vlanId_have = json_to_dict_have.get('vlanId')
+        if vlanId_have != "":
+            vlanId_have = int(vlanId_have)
         tag_want = json_to_dict_want.get('tag', "")
-        tag_have = int(json_to_dict_have.get('tag', ""))
+        tag_have = json_to_dict_have.get('tag')
+        if tag_have != "":
+            tag_have = int(tag_have)
 
         if vlanId_want:
 
@@ -527,6 +532,8 @@ class DcnmNetwork:
 
                 if gw_ip_have != gw_ip_want:
                     gw_changed = True
+                if tag_have != tag_want:
+                    tg_changed = True
 
                 want.update({'networkId': have['networkId']})
                 create = want
@@ -541,11 +548,13 @@ class DcnmNetwork:
 
                 if gw_ip_have != gw_ip_want:
                     gw_changed = True
+                if tag_have != tag_want:
+                    tg_changed = True
 
                 want.update({'networkId': have['networkId']})
                 create = want
 
-        return create, gw_changed, warn_msg
+        return create, gw_changed, tg_changed, warn_msg
 
     def update_create_params(self, net):
 
@@ -576,11 +585,16 @@ class DcnmNetwork:
             }
 
         template_conf = {
-            'vlanId': str(net.get('vlan_id', "")),
+            'vlanId': net.get('vlan_id'),
             'gatewayIpAddress': net.get('gw_ip_subnet', ""),
             'isLayer2Only': False,
-            'tag': net.get('routing_tag', "")
+            'tag': net.get('routing_tag')
         }
+
+        if template_conf['vlanId'] is None:
+            template_conf['vlanId'] = ""
+        if template_conf['tag'] is None:
+            template_conf['tag'] = ""
 
         net_upd.update({'networkTemplateConfig': json.dumps(template_conf)})
 
@@ -985,6 +999,7 @@ class DcnmNetwork:
         prev_net_id_fetched = None
 
         gw_changed = {}
+        tg_changed = {}
         warn_msg = None
 
         for want_c in self.want_create:
@@ -993,8 +1008,9 @@ class DcnmNetwork:
                 if want_c['networkName'] == have_c['networkName']:
 
                     found = True
-                    diff, gw_chg, warn_msg = self.diff_for_create(want_c, have_c)
+                    diff, gw_chg, tg_chg, warn_msg = self.diff_for_create(want_c, have_c)
                     gw_changed.update({want_c['networkName']: gw_chg})
+                    tg_changed.update({want_c['networkName']: tg_chg})
                     if diff:
                         diff_create_update.append(diff)
                     break
@@ -1069,7 +1085,8 @@ class DcnmNetwork:
                         diff_attach.append(base)
                         dep_net = want_a['networkName']
                     else:
-                        if net or gw_changed.get(want_a['networkName'], False):
+                        if net or gw_changed.get(want_a['networkName'], False) or \
+                            tg_changed.get(want_a['networkName'], False):
                             dep_net = want_a['networkName']
 
             if not found and want_a.get('lanAttachList'):
@@ -1621,4 +1638,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
