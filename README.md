@@ -127,7 +127,7 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## Changelogs
 
-* [Changelog](CHANGELOG.md)
+* [Changelog](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/CHANGELOG.md)
 
 ## More information
 
