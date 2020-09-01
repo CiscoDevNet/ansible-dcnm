@@ -33,6 +33,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
                  "{{ ansible_switch2 }}"]
       ```
 
+### Fixed
+
+* cisco.dcnm.dcnm_rest:
+  * Module will return a failure now if the return code from DCNM is `400` or greater.
+
 ## 0.9.0 - 2020-07
 
 - Initial release of the Ansible DCNM collection, supporting DCNM release 11.4
