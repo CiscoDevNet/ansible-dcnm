@@ -31,60 +31,62 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>json_data</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">-</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Additional JSON data to include with the REST API call</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Additional JSON data to include with the REST API call</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>method</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">-</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>GET</li>
-                                                                                                                                                                                                <li>POST</li>
-                                                                                                                                                                                                <li>PUT</li>
-                                                                                                                                                                                                <li>DELETE</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>REST API Method</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>GET</li>
+                                    <li>POST</li>
+                                    <li>PUT</li>
+                                    <li>DELETE</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>REST API Method</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">-</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>REST API Path Endpoint</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>REST API Path Endpoint</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -95,7 +97,6 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
     This module can be used to send any REST API requests that are supported by
     the DCNM controller.
 
@@ -106,7 +107,6 @@ Examples
       dcnm_rest:
         method: GET
         path: /rest/control/fabrics
-
 
 
 
@@ -122,22 +122,23 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
-                    <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>response</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                       / <span style="color: purple">elements=dictionary</span>                    </div>
-                                    </td>
+                       / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
                 <td></td>
                 <td>
-                                                                        <div>Success or Error Data retrieved from DCNM</div>
-                                                                <br/>
-                                    </td>
+                            <div>Success or Error Data retrieved from DCNM</div>
+                    <br/>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/><br/>
 
 
@@ -149,5 +150,3 @@ Authors
 ~~~~~~~
 
 - Mike Wiebe (@mikewiebe)
-
-

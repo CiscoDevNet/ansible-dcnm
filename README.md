@@ -4,7 +4,7 @@
 
 The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
 
-Early field trial release for use with `DCNM Release 11.4(1)`.
+This collection is intended for use with `DCNM Release 11.4(1)` or later.
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -24,16 +24,16 @@ The Cisco DCNM collection supports ``httpapi`` connections.
 ### Httpapi plugins
 Name | Description
 --- | ---
-[cisco.dcnm.dcnm](docs/cisco.dcnm.dcnm_httpapi.rst)|Ansible DCNM HTTPAPI Plugin.
+[cisco.dcnm.dcnm](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_httpapi.rst)|Ansible DCNM HTTPAPI Plugin.
 
 ### Modules
 Name | Description
 --- | ---
-[cisco.dcnm.dcnm_interface](docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
-[cisco.dcnm.dcnm_inventory](docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
-[cisco.dcnm.dcnm_network](docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
-[cisco.dcnm.dcnm_rest](docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
-[cisco.dcnm.dcnm_vrf](docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
+[cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_rest](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
+[cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
 
 <!--end collection content-->
 
@@ -43,7 +43,7 @@ Click the ``Content`` button to see the list of content included in this collect
 
 You can install the Cisco DCNM collection with the Ansible Galaxy CLI:
 
-    ansible-galaxy collection install cisco.dcnm:0.9.0-dev5
+    ansible-galaxy collection install cisco.dcnm
 
 You can also include it in a `requirements.yml` file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
 
@@ -51,7 +51,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 0.9.0-dev5
+    version: 1.0.0
 ```
 ## Using this collection
 
