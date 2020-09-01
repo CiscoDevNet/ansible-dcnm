@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 * cisco.dcnm.dcnm_network:
-  * New propery `routing_tag:`
+  * New parameter `routing_tag:`
 
 ### Changed
 
