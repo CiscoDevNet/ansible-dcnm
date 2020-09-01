@@ -510,12 +510,15 @@ class DcnmNetwork:
         gw_ip_have = json_to_dict_have.get('gatewayIpAddress', "")
         vlanId_want = json_to_dict_want.get('vlanId', "")
         vlanId_have = json_to_dict_have.get('vlanId', "")
+        tag_want = json_to_dict_want.get('tag', "")
+        tag_have = int(json_to_dict_have.get('tag', ""))
 
         if vlanId_want:
 
             if have['networkTemplate'] != want['networkTemplate'] or \
                     have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
-                    gw_ip_have != gw_ip_want or vlanId_have != vlanId_want:
+                    gw_ip_have != gw_ip_want or vlanId_have != vlanId_want or \
+                    tag_have != tag_want:
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
@@ -532,7 +535,7 @@ class DcnmNetwork:
 
             if have['networkTemplate'] != want['networkTemplate'] or \
                     have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
-                    gw_ip_have != gw_ip_want:
+                    gw_ip_have != gw_ip_want or tag_have != tag_want:
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
