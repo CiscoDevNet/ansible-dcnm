@@ -511,7 +511,7 @@ LOOPBACK INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: lo                        # choose from [lo]
           int_vrf: ""                     # VRF name
@@ -532,7 +532,7 @@ LOOPBACK INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
         deploy: true                      ## choose from [true, false]
-        profile:                          
+        profile:
           admin_state: false              ## choose from [true, false]
           mode: lo                        # choose from [lo]
           int_vrf: ""                     # VRF name
@@ -587,7 +587,7 @@ LOOPBACK INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: lo                        # choose from [lo]
           int_vrf: ""                     # VRF name
@@ -625,7 +625,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -644,7 +644,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: false              # choose from [true, false]
           mode: access                    # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -668,7 +668,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: false              ## choose from [true, false]
           mode: trunk                     # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -725,7 +725,7 @@ PORTCHANNEL INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access, l3, monitor]
           members:                        # member interfaces
@@ -751,7 +751,7 @@ SUB-INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: subint                    # choose from [subint]
           vlan: 100                       # vlan ID [min:2, max:3967]
@@ -775,7 +775,7 @@ SUB-INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: false              ## choose from [true, false]
           mode: subint                    # choose from [subint]
           vlan: 200                       ## vlan ID [min:2, max:3967]
@@ -813,7 +813,7 @@ SUB-INTERFACE
         switch:
           - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: subint                    # choose from [subint]
           vlan: 103                       # vlan ID [min:2, max:3967]
@@ -840,7 +840,7 @@ VPC INTERFACE
           - ["{{ ansible_switch1 }}",
              "{{ ansible_switch2 }}"]
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -870,7 +870,7 @@ VPC INTERFACE
           - ["{{ ansible_switch1 }}",
              "{{ ansible_switch2 }}"]
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: false              ## choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
@@ -914,7 +914,7 @@ VPC INTERFACE
           - ["{{ ansible_switch1 }}",
              "{{ ansible_switch2 }}"]
         deploy: true                      # choose from [true, false]
-        profile:                          
+        profile:
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 752                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id

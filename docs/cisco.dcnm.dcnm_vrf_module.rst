@@ -31,237 +31,243 @@ Parameters
         <tr>
             <th colspan="3">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="3">
+            <tr>
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=dictionary</span>                         / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>List of details of vrfs being managed</div>
-                                                        </td>
+                         / <span style="color: purple">elements=dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of details of vrfs being managed</div>
+                </td>
             </tr>
-                                                            <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>attach</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=dictionary</span>                                            </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>List of vrf attachment details</div>
-                                                        </td>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of vrf attachment details</div>
+                </td>
             </tr>
-                                                            <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">boolean</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                                                                    <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>no</li>
-                                                                                                                                                                                                <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>Per switch knob to control whether to deploy the attachment</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Per switch knob to control whether to deploy the attachment</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ip_address</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">ipv4</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>IP address of the switch where vrf will be attached or detached</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IP address of the switch where vrf will be attached or detached</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>vlan_id</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">integer</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>vlan ID for the vrf attachment</div>
-                                                        </td>
-            </tr>
-                    
-                                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">boolean</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                                                                    <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>no</li>
-                                                                                                                                                                                                <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>Global knob to control whether to deploy the attachment</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Global knob to control whether to deploy the attachment</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>service_vrf_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"None"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Service vrf template</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"None"</div>
+                </td>
+                <td>
+                        <div>Service vrf template</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vlan_id</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>vlan ID for the vrf attachment</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_extension_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"Default_VRF_Extension_Universal"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Name of the extension config template to be used</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"Default_VRF_Extension_Universal"</div>
+                </td>
+                <td>
+                        <div>Name of the extension config template to be used</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>ID of the vrf being managed</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>ID of the vrf being managed</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Name of the vrf being managed</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the vrf being managed</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="2">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"Default_VRF_Universal"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Name of the config template to be used</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"Default_VRF_Universal"</div>
+                </td>
+                <td>
+                        <div>Name of the config template to be used</div>
+                </td>
             </tr>
-                    
-                                                <tr>
-                                                                <td colspan="3">
+
+            <tr>
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Name of the target fabric for vrf operations</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the target fabric for vrf operations</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="3">
+            <tr>
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li><div style="color: blue"><b>merged</b>&nbsp;&larr;</div></li>
-                                                                                                                                                                                                <li>replaced</li>
-                                                                                                                                                                                                <li>overridden</li>
-                                                                                                                                                                                                <li>deleted</li>
-                                                                                                                                                                                                <li>query</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>The state of DCNM after module completion.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>merged</b>&nbsp;&larr;</div></li>
+                                    <li>replaced</li>
+                                    <li>overridden</li>
+                                    <li>deleted</li>
+                                    <li>query</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>The state of DCNM after module completion.</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -272,7 +278,6 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
     This module supports the following states:
 
     Merged:
@@ -328,22 +333,23 @@ Examples
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          source: null
+          service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            vlan_id: 202
             deploy: true
           - ip_address: 192.168.1.225
-            vlan_id: 203
             deploy: false
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          source: null
+          service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            vlan_id: 402
           - ip_address: 192.168.1.225
-            vlan_id: 403
 
     # The two VRFs below will be replaced in the target fabric.
     - name: Replace vrfs
@@ -355,17 +361,17 @@ Examples
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          source: null
+          service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            vlan_id: 202
             deploy: true
           # Delete this attachment
           # - ip_address: 192.168.1.225
-          #   vlan_id: 203
           # deploy: true
           # Create the following attachment
           - ip_address: 192.168.1.226
-            vlan_id: 204
             deploy: true
         # Dont touch this if its present on DCNM
         # - vrf_name: ansible-vrf-r2
@@ -374,9 +380,7 @@ Examples
         #   vrf_extension_template: Default_VRF_Extension_Universal
         #   attach:
         #   - ip_address: 192.168.1.224
-        #     vlan_id: 402
         #   - ip_address: 192.168.1.225
-        #     vlan_id: 403
 
     # The two VRFs below will be overridden in the target fabric.
     - name: Override vrfs
@@ -388,28 +392,29 @@ Examples
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          source: null
+          service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            vlan_id: 202
             deploy: true
           # Delete this attachment
           # - ip_address: 192.168.1.225
-          #   vlan_id: 203
           #   deploy: true
           # Create the following attachment
           - ip_address: 192.168.1.226
-            vlan_id: 204
             deploy: true
         # Delete this vrf
         # - vrf_name: ansible-vrf-r2
         #   vrf_id: 9008012
         #   vrf_template: Default_VRF_Universal
         #   vrf_extension_template: Default_VRF_Extension_Universal
+        #   vlan_id: 2000
+        #   source: null
+        #   service_vrf_template: null
         #   attach:
         #   - ip_address: 192.168.1.224
-        #     vlan_id: 402
         #   - ip_address: 192.168.1.225
-        #     vlan_id: 403
 
     - name: Delete selected vrfs
       cisco.dcnm.dcnm_vrf:
@@ -420,10 +425,16 @@ Examples
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          source: null
+          service_vrf_template: null
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          source: null
+          service_vrf_template: null
 
     - name: Delete all the vrfs
       cisco.dcnm.dcnm_vrf:
@@ -439,11 +450,15 @@ Examples
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          source: null
+          service_vrf_template: null
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-
+          source: null
+          service_vrf_template: null
 
 
 
@@ -456,5 +471,3 @@ Authors
 ~~~~~~~
 
 - Shrishail Kariyappanavar(@nkshrishail)
-
-

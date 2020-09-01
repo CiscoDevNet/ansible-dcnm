@@ -31,192 +31,202 @@ Parameters
         <tr>
             <th colspan="2">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="2">
+            <tr>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=dictionary</span>                         / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>List of switches being managed</div>
-                                                        </td>
+                         / <span style="color: purple">elements=dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of switches being managed</div>
+                </td>
             </tr>
-                                                            <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>auth_proto</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>MD5</li>
-                                                                                                                                                                                                <li>SHA</li>
-                                                                                                                                                                                                <li>MD5_DES</li>
-                                                                                                                                                                                                <li>MD5_AES</li>
-                                                                                                                                                                                                <li>SHA_DES</li>
-                                                                                                                                                                                                <li>SHA_AES</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>Name of the authentication protocol to be used</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>MD5</li>
+                                    <li>SHA</li>
+                                    <li>MD5_DES</li>
+                                    <li>MD5_AES</li>
+                                    <li>SHA_DES</li>
+                                    <li>SHA_AES</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Name of the authentication protocol to be used</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>max_hops</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Maximum Hops to reach the switch</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Maximum Hops to reach the switch</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>password</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Login password to the switch</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Login password to the switch</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>preserve_configs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Set this to false for greenfield deployment and true for brownfield deployment</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Set this to false for greenfield deployment and true for brownfield deployment</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>role</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>leaf</li>
-                                                                                                                                                                                                <li>spine</li>
-                                                                                                                                                                                                <li>border</li>
-                                                                                                                                                                                                <li>border_spine</li>
-                                                                                                                                                                                                <li>border_gateway</li>
-                                                                                                                                                                                                <li>border_gateway_spine</li>
-                                                                                                                                                                                                <li>super_spine</li>
-                                                                                                                                                                                                <li>border_super_spine</li>
-                                                                                                                                                                                                <li>border_gateway_super_spine</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>Role which needs to be assigned to the switch</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>leaf</b>&nbsp;&larr;</div></li>
+                                    <li>spine</li>
+                                    <li>border</li>
+                                    <li>border_spine</li>
+                                    <li>border_gateway</li>
+                                    <li>border_gateway_spine</li>
+                                    <li>super_spine</li>
+                                    <li>border_super_spine</li>
+                                    <li>border_gateway_super_spine</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Role which needs to be assigned to the switch</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>seed_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">ipv4</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Seed Name(support both IP address and dns_name) of the switch which needs to be added to the DCNM Fabric</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Seed Name(support both IP address and dns_name) of the switch which needs to be added to the DCNM Fabric</div>
+                </td>
             </tr>
-                                <tr>
-                                                    <td class="elbow-placeholder"></td>
-                                                <td colspan="1">
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>user_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Login username to the switch</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Login username to the switch</div>
+                </td>
             </tr>
-                    
-                                                <tr>
-                                                                <td colspan="2">
+
+            <tr>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Name of the target fabric for Inventory operations</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the target fabric for Inventory operations</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="2">
+            <tr>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li><div style="color: blue"><b>merged</b>&nbsp;&larr;</div></li>
-                                                                                                                                                                                                <li>overridden</li>
-                                                                                                                                                                                                <li>deleted</li>
-                                                                                                                                                                                                <li>query</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>The state of DCNM after module completion.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>merged</b>&nbsp;&larr;</div></li>
+                                    <li>overridden</li>
+                                    <li>deleted</li>
+                                    <li>query</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>The state of DCNM after module completion.</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -227,7 +237,6 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
     This module supports the following states:
 
     Merged:
@@ -317,7 +326,7 @@ Examples
     - name: Delete all the switches
         cisco.dcnm.dcnm_inventory:
           fabric: vxlan-fabric
-          state: deleted # merged / deleted / overridden
+          state: deleted # merged / deleted / overridden / query
 
     # The following two switches information will be queried in the existing fabric
     -name: Query switch into fabric
@@ -329,7 +338,12 @@ Examples
              role: spine
            - seed_ip: 192.168.0.2
              role: leaf
-          
+
+    # All the existing switches will be queried in the existing fabric
+    - name: Query all the switches in the fabric
+        cisco.dcnm.dcnm_inventory:
+          fabric: vxlan-fabric
+          state: query # merged / deleted / overridden / query
 
 
 
@@ -342,5 +356,3 @@ Authors
 ~~~~~~~
 
 - Karthik Babu Harichandra Babu(kharicha@cisco.com)
-
-
