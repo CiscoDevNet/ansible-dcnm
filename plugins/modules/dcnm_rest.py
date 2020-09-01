@@ -93,7 +93,7 @@ def main():
     result['response'] = conn.send_request(method, path, json_data)
 
     res = result['response']
-    if res and isinstance(res, list) and res[0].get('ERROR'):
+    if res and res['RETURN_CODE'] >= 400:
         module.fail_json(msg=res)
 
     module.exit_json(**result)
