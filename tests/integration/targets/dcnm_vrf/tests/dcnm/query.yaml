@@ -1,16 +1,16 @@
-##############################################
-##                 SETUP                    ##
-##############################################
+#############################################
+#                 SETUP                    ##
+#############################################
 
 - name: QUERY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - 'result.response.DATA.fabricName == "{{ ansible_it_fabric }}"'
 
 - name: QUERY - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
@@ -89,6 +89,23 @@
     - 'result.response[0].attach[0].vlan_id == 500'
     - 'result.response[0].attach[1].vlan_id == 500'
     - 'result.response[0].vrf_name == "ansible-vrf-int1"'
+
+- name: QUERY - sleep for 10 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 10
+
+- name: QUERY - Query the VRF without a config element and verify the VRF status
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].fabric == "{{ ansible_it_fabric }}"'
+    - 'result.response[0].vrfName == "ansible-vrf-int1"'
+    - 'result.response[0].vrfStatus == "DEPLOYED"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:

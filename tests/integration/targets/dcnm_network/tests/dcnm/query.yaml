@@ -2,15 +2,15 @@
 ##                 SETUP                    ##
 ##############################################
 
-- name: QUERY - Verify if fabric - Fabric1 is deployed.
+- name: QUERY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - 'result.response.DATA.fabricName == "{{ ansible_it_fabric }}"'
 
 - name: QUERY - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
@@ -78,7 +78,7 @@
 ###############################################
 ###                QUERY                     ##
 ###############################################
--
+
 - name: QUERY - Query the Network
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
@@ -118,9 +118,39 @@
     - 'result.response[1].vlan_id == "151"'
     - 'result.response[1].vrf_name == "Tenant-2"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 10 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 10
+
+- name: QUERY - Query the Network without a config element and verify the NETWORK status
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].displayName == "ansible-net13"'
+    - 'result.response[0].fabric == "{{ ansible_it_fabric }}"'
+    - 'result.response[0].networkName == "ansible-net13"'
+    - 'result.response[0].networkId == 7005'
+    - 'result.response[0].networkStatus == "DEPLOYED"'
+    - 'result.response[0].networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].networkExtensionTemplate == "Default_Network_Extension_Universal"'
+    - 'result.response[0].vrf == "Tenant-1"'
+    - 'result.response[1].displayName == "ansible-net12"'
+    - 'result.response[1].fabric == "{{ ansible_it_fabric }}"'
+    - 'result.response[1].networkName == "ansible-net12"'
+    - 'result.response[1].networkId == 7002'
+    - 'result.response[1].networkStatus == "DEPLOYED"'
+    - 'result.response[1].networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].networkExtensionTemplate == "Default_Network_Extension_Universal"'
+    - 'result.response[1].vrf == "Tenant-2"'
+
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
 
 - name: QUERY - Delete all the networks
   cisco.dcnm.dcnm_network:
