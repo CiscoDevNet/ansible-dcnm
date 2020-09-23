@@ -5,12 +5,12 @@
 - name: OVERRIDDEN - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - 'result.response.DATA.fabricName == "{{ ansible_it_fabric }}"'
 
 - name: OVERRIDDEN - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:

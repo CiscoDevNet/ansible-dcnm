@@ -2,15 +2,15 @@
 ##                 SETUP                    ##
 ##############################################
 
-- name: MERGED - Verify if fabric - Fabric1 is deployed.
+- name: MERGED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - 'result.response.DATA.fabricName == "{{ ansible_it_fabric }}"'
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
@@ -113,6 +113,10 @@
     - 'result.diff[0].net_name == "ansible-net13"'
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
+
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:

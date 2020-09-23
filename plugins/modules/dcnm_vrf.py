@@ -1026,61 +1026,82 @@ class DcnmVrf:
 
         query = []
 
-        if self.have_create or self.have_attach:
+        if self.config:
+            if self.have_create or self.have_attach:
+                for want_c in self.want_create:
+                    try:
+                        found_c = (next((vrf for vrf in self.have_create if vrf['vrfName'] == want_c['vrfName']), None)).copy()
+                    except AttributeError as error:
+                        continue
+                    found_a = next((vrf for vrf in self.have_attach if vrf['vrfName'] == want_c['vrfName']), None)
+                    found_w = next((vrf for vrf in self.want_attach if vrf['vrfName'] == want_c['vrfName']), None)
 
-            for want_c in self.want_create:
-                try:
-                    found_c = (next((vrf for vrf in self.have_create if vrf['vrfName'] == want_c['vrfName']), None)).copy()
-                except AttributeError as error:
-                    continue
-                found_a = next((vrf for vrf in self.have_attach if vrf['vrfName'] == want_c['vrfName']), None)
-                found_w = next((vrf for vrf in self.want_attach if vrf['vrfName'] == want_c['vrfName']), None)
+                    src = found_c['source']
+                    found_c.update({'vrf_name': found_c['vrfName']})
+                    found_c.update({'vrf_id': found_c['vrfId']})
+                    found_c.update({'vrf_template': found_c['vrfTemplate']})
+                    found_c.update({'vrf_extension_template': found_c['vrfExtensionTemplate']})
+                    del found_c['source']
+                    found_c.update({'source': src})
+                    found_c.update({'service_vrf_template': found_c['serviceVrfTemplate']})
+                    found_c.update({'attach': []})
 
-                src = found_c['source']
-                found_c.update({'vrf_name': found_c['vrfName']})
-                found_c.update({'vrf_id': found_c['vrfId']})
-                found_c.update({'vrf_template': found_c['vrfTemplate']})
-                found_c.update({'vrf_extension_template': found_c['vrfExtensionTemplate']})
-                del found_c['source']
-                found_c.update({'source': src})
-                found_c.update({'service_vrf_template': found_c['serviceVrfTemplate']})
-                found_c.update({'attach': []})
+                    del found_c['fabric']
+                    del found_c['vrfName']
+                    del found_c['vrfId']
+                    del found_c['vrfTemplate']
+                    del found_c['vrfExtensionTemplate']
+                    del found_c['serviceVrfTemplate']
+                    del found_c['vrfTemplateConfig']
 
-                del found_c['fabric']
-                del found_c['vrfName']
-                del found_c['vrfId']
-                del found_c['vrfTemplate']
-                del found_c['vrfExtensionTemplate']
-                del found_c['serviceVrfTemplate']
-                del found_c['vrfTemplateConfig']
+                    if not found_w:
+                        query.append(found_c)
+                        continue
 
-                if not found_w:
-                    query.append(found_c)
-                    continue
+                    attach_w = found_w['lanAttachList']
+                    attach_l = found_a['lanAttachList']
 
-                attach_w = found_w['lanAttachList']
-                attach_l = found_a['lanAttachList']
-
-                for a_w in attach_w:
-                    attach_d = {}
-                    serial = a_w['serialNumber']
-                    found = False
-                    for a_l in attach_l:
-                        if a_l['serialNumber'] == serial:
-                            found = True
-                            break
-
-                    if found:
-                        for k, v in self.ip_sn.items():
-                            if v == a_l['serialNumber']:
-                                attach_d.update({'ip_address': k})
+                    for a_w in attach_w:
+                        attach_d = {}
+                        serial = a_w['serialNumber']
+                        found = False
+                        for a_l in attach_l:
+                            if a_l['serialNumber'] == serial:
+                                found = True
                                 break
-                        attach_d.update({'vlan_id': a_l['vlan']})
-                        attach_d.update({'deploy': a_l['isAttached']})
-                        found_c['attach'].append(attach_d)
 
-                if attach_d:
-                    query.append(found_c)
+                        if found:
+                            for k, v in self.ip_sn.items():
+                                if v == a_l['serialNumber']:
+                                    attach_d.update({'ip_address': k})
+                                    break
+                            attach_d.update({'vlan_id': a_l['vlan']})
+                            attach_d.update({'deploy': a_l['isAttached']})
+                            found_c['attach'].append(attach_d)
+
+                    if attach_d:
+                        query.append(found_c)
+        else:
+
+            method = 'GET'
+            path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+            vrf_objects = dcnm_send(self.module, method, path)
+            missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+
+            if vrf_objects.get('ERROR') == 'Not Found' and vrf_objects.get('RETURN_CODE') == 404:
+                self.module.fail_json(msg="Fabric {} not present on DCNM".format(self.fabric))
+                return
+
+            if missing_fabric or not_ok:
+                msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+                msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+                self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+            if not vrf_objects['DATA']:
+                return
+
+            for vrf in vrf_objects['DATA']:
+                query.append(vrf)
 
         self.query = query
 
@@ -1227,56 +1248,90 @@ class DcnmVrf:
 
         state = self.params['state']
 
-        vrf_spec = dict(
-            vrf_name=dict(required=True, type='str', length_max=32),
-            vrf_id=dict(type='int', range_max=16777214),
-            vrf_template=dict(type='str', default='Default_VRF_Universal'),
-            vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
-            vlan_id=dict(type='int', range_max=4094),
-            source=dict(type='str', default=None),
-            service_vrf_template=dict(type='str', default=None),
-            attach=dict(type='list'),
-            deploy=dict(type='bool')
-        )
-        att_spec = dict(
-            ip_address=dict(required=True, type='str'),
-            deploy=dict(type='bool', default=True)
-        )
+        if state == 'merged' or state == 'overridden' or state == 'replaced':
 
-        msg = None
-        if self.config:
-            for vrf in self.config:
-                if 'vrf_name' not in vrf:
-                    msg = "vrf_name is mandatory under vrf parameters"
+            vrf_spec = dict(
+                vrf_name=dict(required=True, type='str', length_max=32),
+                vrf_id=dict(type='int', range_max=16777214),
+                vrf_template=dict(type='str', default='Default_VRF_Universal'),
+                vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
+                vlan_id=dict(type='int', range_max=4094),
+                source=dict(type='str', default=None),
+                service_vrf_template=dict(type='str', default=None),
+                attach=dict(type='list'),
+                deploy=dict(type='bool')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                deploy=dict(type='bool', default=True)
+            )
 
-                if 'attach' in vrf and vrf['attach']:
-                    for attach in vrf['attach']:
-                        # if 'ip_address' not in attach or 'vlan_id' not in attach:
-                        #     msg = "ip_address and vlan_id are mandatory under attach parameters"
-                        if 'ip_address' not in attach:
-                            msg = "ip_address is mandatory under attach parameters"
+            msg = None
+            if self.config:
+                for vrf in self.config:
+                    if 'vrf_name' not in vrf:
+                        msg = "vrf_name is mandatory under vrf parameters"
+
+                    if 'attach' in vrf and vrf['attach']:
+                        for attach in vrf['attach']:
+                            # if 'ip_address' not in attach or 'vlan_id' not in attach:
+                            #     msg = "ip_address and vlan_id are mandatory under attach parameters"
+                            if 'ip_address' not in attach:
+                                msg = "ip_address is mandatory under attach parameters"
+
+            else:
+                if state == 'merged' or state == 'overridden' or \
+                        state == 'replaced':
+                    msg = "config: element is mandatory for this state {}".format(state)
+
+            if msg:
+                self.module.fail_json(msg=msg)
+
+            if self.config:
+                validated = []
+                valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
+                for vrf in valid_vrf:
+                    if vrf.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
+                        vrf['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                    validated.append(vrf)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
 
         else:
-            if state == 'merged' or state == 'overridden' or \
-                    state == 'replaced' or state == 'query':
-                msg = "config: element is mandatory for this state {}".format(state)
 
-        if msg:
-            self.module.fail_json(msg=msg)
+            vrf_spec = dict(
+                vrf_name=dict(type='str', length_max=32),
+                vrf_id=dict(type='int', range_max=16777214),
+                vrf_template=dict(type='str', default='Default_VRF_Universal'),
+                vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
+                vlan_id=dict(type='int', range_max=4094),
+                source=dict(type='str', default=None),
+                service_vrf_template=dict(type='str', default=None),
+                attach=dict(type='list'),
+                deploy=dict(type='bool')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                deploy=dict(type='bool', default=True)
+            )
 
-        if self.config:
-            validated = []
-            valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
-            for vrf in valid_vrf:
-                if vrf.get('attach'):
-                    valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
-                    vrf['attach'] = valid_att
-                    invalid_params.extend(invalid_att)
-                validated.append(vrf)
+            if self.config:
+                validated = []
+                valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
+                for vrf in valid_vrf:
+                    if vrf.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
+                        vrf['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                    validated.append(vrf)
 
-            if invalid_params:
-                msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
-                self.module.fail_json(msg=msg)
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
 
     def handle_response(self, res, op):
 

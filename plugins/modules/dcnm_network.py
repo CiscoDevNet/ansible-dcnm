@@ -1226,63 +1226,85 @@ class DcnmNetwork:
 
         query = []
 
-        if self.have_create or self.have_attach:
+        if self.config:
+            if self.have_create or self.have_attach:
+                for want_c in self.want_create:
+                    try:
+                        found_c = (
+                            next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
+                    except AttributeError as error:
+                        continue
+                    found_a = next((net for net in self.have_attach if net['networkName'] == want_c['networkName']), None)
+                    found_w = next((net for net in self.want_attach if net['networkName'] == want_c['networkName']), None)
 
-            for want_c in self.want_create:
-                try:
-                    found_c = (
-                        next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
-                except AttributeError as error:
-                    continue
-                found_a = next((net for net in self.have_attach if net['networkName'] == want_c['networkName']), None)
-                found_w = next((net for net in self.want_attach if net['networkName'] == want_c['networkName']), None)
+                    json_to_dict = json.loads(found_c['networkTemplateConfig'])
 
-                json_to_dict = json.loads(found_c['networkTemplateConfig'])
+                    found_c.update({'net_name': found_c['networkName']})
+                    found_c.update({'vrf_name': found_c['vrf']})
+                    found_c.update({'net_id': found_c['networkId']})
+                    found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
+                    found_c.update({'gw_ip_subnet': json_to_dict.get('gatewayIpAddress', "")})
+                    found_c.update({'net_template': found_c['networkTemplate']})
+                    found_c.update({'net_extension_template': found_c['networkExtensionTemplate']})
+                    found_c.update({'attach': []})
 
-                found_c.update({'net_name': found_c['networkName']})
-                found_c.update({'vrf_name': found_c['vrf']})
-                found_c.update({'net_id': found_c['networkId']})
-                found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
-                found_c.update({'gw_ip_subnet': json_to_dict.get('gatewayIpAddress', "")})
-                found_c.update({'net_template': found_c['networkTemplate']})
-                found_c.update({'net_extension_template': found_c['networkExtensionTemplate']})
-                found_c.update({'attach': []})
+                    del found_c['fabric']
+                    del found_c['networkName']
+                    del found_c['networkId']
+                    del found_c['networkTemplate']
+                    del found_c['networkExtensionTemplate']
+                    del found_c['networkTemplateConfig']
+                    del found_c['vrf']
 
-                del found_c['fabric']
-                del found_c['networkName']
-                del found_c['networkId']
-                del found_c['networkTemplate']
-                del found_c['networkExtensionTemplate']
-                del found_c['networkTemplateConfig']
-                del found_c['vrf']
+                    if not found_w:
+                        query.append(found_c)
+                        continue
 
-                if not found_w:
-                    query.append(found_c)
-                    continue
+                    attach_w = found_w['lanAttachList']
+                    attach_l = found_a['lanAttachList']
 
-                attach_w = found_w['lanAttachList']
-                attach_l = found_a['lanAttachList']
-
-                for a_w in attach_w:
-                    attach_d = {}
-                    serial = a_w['serialNumber']
-                    found = False
-                    for a_l in attach_l:
-                        if a_l['serialNumber'] == serial:
-                            found = True
-                            break
-
-                    if found:
-                        for k, v in self.ip_sn.items():
-                            if v == a_l['serialNumber']:
-                                attach_d.update({'ip_address': k})
+                    for a_w in attach_w:
+                        attach_d = {}
+                        serial = a_w['serialNumber']
+                        found = False
+                        for a_l in attach_l:
+                            if a_l['serialNumber'] == serial:
+                                found = True
                                 break
-                        attach_d.update({'ports': a_l['switchPorts']})
-                        attach_d.update({'deploy': a_l['isAttached']})
-                        found_c['attach'].append(attach_d)
 
-                if attach_d:
-                    query.append(found_c)
+                        if found:
+                            for k, v in self.ip_sn.items():
+                                if v == a_l['serialNumber']:
+                                    attach_d.update({'ip_address': k})
+                                    break
+                            attach_d.update({'ports': a_l['switchPorts']})
+                            attach_d.update({'deploy': a_l['isAttached']})
+                            found_c['attach'].append(attach_d)
+
+                    if attach_d:
+                        query.append(found_c)
+
+        else:
+
+            method = 'GET'
+            path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
+            net_objects = dcnm_send(self.module, method, path)
+            missing_fabric, not_ok = self.handle_response(net_objects, 'query_dcnm')
+
+            if net_objects.get('ERROR') == 'Not Found' and net_objects.get('RETURN_CODE') == 404:
+                self.module.fail_json(msg="Fabric {} not present on DCNM".format(self.fabric))
+                return
+
+            if missing_fabric or not_ok:
+                msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+                msg2 = "Unable to find Network under fabric: {}".format(self.fabric)
+                self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+            if not net_objects['DATA']:
+                return
+
+            for net in net_objects['DATA']:
+                query.append(net)
 
         self.query = query
 
@@ -1457,49 +1479,88 @@ class DcnmNetwork:
 
         """Parse the playbook values, validate to param specs."""
 
-        net_spec = dict(
-            net_name=dict(required=True, type='str', length_max=64),
-            net_id=dict(type='int', range_max=16777214),
-            vrf_name=dict(type='str', length_max=32),
-            attach=dict(type='list'),
-            deploy=dict(type='bool'),
-            gw_ip_subnet=dict(type='ipv4_subnet', default=""),
-            vlan_id=dict(type='int', range_max=4094),
-            routing_tag=dict(type='int', default=12345, range_max=4294967295),
-            net_template=dict(type='str', default='Default_Network_Universal'),
-            net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
-        )
-        att_spec = dict(
-            ip_address=dict(required=True, type='str'),
-            ports=dict(required=True, type='list'),
-            deploy=dict(type='bool', default=True)
-        )
+        state = self.params['state']
 
-        if self.config:
-            msg = None
-            # Validate net params
-            valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
-            for net in valid_net:
-                if net.get('attach'):
-                    valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
-                    net['attach'] = valid_att
-                    invalid_params.extend(invalid_att)
-                self.validated.append(net)
+        if state == 'merged' or state == 'overridden' or state == 'replaced':
 
-            if invalid_params:
-                msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+            net_spec = dict(
+                net_name=dict(required=True, type='str', length_max=64),
+                net_id=dict(type='int', range_max=16777214),
+                vrf_name=dict(type='str', length_max=32),
+                attach=dict(type='list'),
+                deploy=dict(type='bool'),
+                gw_ip_subnet=dict(type='ipv4_subnet', default=""),
+                vlan_id=dict(type='int', range_max=4094),
+                routing_tag=dict(type='int', default=12345, range_max=4294967295),
+                net_template=dict(type='str', default='Default_Network_Universal'),
+                net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                ports=dict(required=True, type='list'),
+                deploy=dict(type='bool', default=True)
+            )
+
+            if self.config:
+                msg = None
+                # Validate net params
+                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                for net in valid_net:
+                    if net.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
+                        net['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                    self.validated.append(net)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
+
+            else:
+                state = self.params['state']
+                msg = None
+
+                if state == 'merged' or state == 'overridden' or \
+                        state == 'replaced':
+                    msg = "config: element is mandatory for this state {}".format(state)
+
+            if msg:
                 self.module.fail_json(msg=msg)
 
         else:
-            state = self.params['state']
-            msg = None
 
-            if state == 'merged' or state == 'overridden' or \
-                    state == 'replaced' or state == 'query':
-                msg = "config: element is mandatory for this state {}".format(state)
+            net_spec = dict(
+                net_name=dict(type='str', length_max=64),
+                net_id=dict(type='int', range_max=16777214),
+                vrf_name=dict(type='str', length_max=32),
+                attach=dict(type='list'),
+                deploy=dict(type='bool'),
+                gw_ip_subnet=dict(type='ipv4_subnet', default=""),
+                vlan_id=dict(type='int', range_max=4094),
+                routing_tag=dict(type='int', default=12345, range_max=4294967295),
+                net_template=dict(type='str', default='Default_Network_Universal'),
+                net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                ports=dict(required=True, type='list'),
+                deploy=dict(type='bool', default=True)
+            )
 
-        if msg:
-            self.module.fail_json(msg=msg)
+            if self.config:
+                msg = None
+                # Validate net params
+                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                for net in valid_net:
+                    if net.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
+                        net['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                    self.validated.append(net)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
 
     def handle_response(self, resp, op):
 
