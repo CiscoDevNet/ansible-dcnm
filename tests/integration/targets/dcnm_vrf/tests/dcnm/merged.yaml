@@ -5,7 +5,7 @@
 - name: MERGED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
@@ -115,6 +115,107 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
+- name: MERGED - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 10
+
+- name: MERGED - Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in one switch
+  cisco.dcnm.dcnm_vrf: &conf3
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+        vrf_lite:
+          - interface: Ethernet1/16 # interface is mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # dot1q can be got from dcnm
+            peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+      deploy: true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+
+- name: MERGED - conf3 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf3
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 10
+
+- name: MERGED - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the DCNM - Only Mandatory option - Rest are populated from DCNM
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+      deploy: true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+
 - name: MERGED - Create, Attach and Deploy new VRF - Update with incorrect VRF ID.
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ ansible_it_fabric }}"
@@ -160,6 +261,63 @@
     that:
     - 'result.changed == false'
     - '"The item exceeds the allowed range of max" in result.msg'
+
+- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without mandatory parameter
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+        vrf_lite:
+          - interface: Ethernet1/16
+      deploy: true
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"peer_vrf is mandatory under attach VRF LITE parameters" in result.msg'
+
+- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE to a non border switch
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        vrf_lite:
+          - interface: Ethernet1/16 # interface is mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # dot1q can be got from dcnm
+            peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+      deploy: true
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"VRF LITE cannot be attached to switch" in result.msg'
 
 ###############################################
 ###                 CLEAN-UP                 ##
