@@ -264,7 +264,11 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 #             raise Exception(json.dumps(msg_dict))
 
 
-def dcnm_send(module, method, path, json_data=None):
+def dcnm_send(module, method, path, data=None, data_type='json'):
 
     conn = Connection(module._socket_path)
-    return conn.send_request(method, path, json_data)
+
+    if (data_type == 'json'):
+        return conn.send_request(method, path, data)
+    elif (data_type == 'text'):
+        return conn.send_txt_request(method, path, data)
