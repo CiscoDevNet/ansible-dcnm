@@ -14,6 +14,7 @@
       - name: template_105  # name is mandatory
       - switch:
           - ip: "{{ ansible_switch1 }}"
+          - ip: "{{ ansible_switch2 }}"
   register: result  
 
 - assert:
