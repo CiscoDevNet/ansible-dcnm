@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json, datetime
+import json
 import time
 import copy
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
@@ -31,7 +31,7 @@ short_description: Add and remove VRFs from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
     - "Add and remove VRFs and VRF Lite Extension from a DCNM managed VXLAN fabric."
-author: Karthik Babu Harichandra Babu (kharicha)
+author: Shrishail Kariyappanavar, Karthik Babu Harichandra Babu (kharicha)
 options:
   fabric:
     description:
@@ -92,8 +92,12 @@ options:
             required: true
             suboptions:
             vrf_lite:
-                description: VRF Lite Extensions options'
-                - interface: 
+                description: 'VRF Lite Extensions options'
+                - peer_vrf: 
+                    description: 'VRF Name to which this extension is attached'
+                    type: str
+                    requited: mandatory
+                  interface: 
                     description: 'Interface of the switch which is connected to the edge router'
                     type: str
                     requited: optional
@@ -222,13 +226,15 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
         vrf_lite:
-          - interface: Ethernet1/16 # optional
+	  # All parameters under vrf_lite except peer_vrf are optional and 
+	  # will be supplied by DCNM when omitted in the playbook
+          - peer_vrf: test_vrf_1 # peer_vrf is mandatory
+            interface: Ethernet1/16 # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm/optional
-            peer_vrf: test_vrf_1 # peer_vrf is mandatory
 
 # The two VRFs below will be replaced in the target fabric.
 - name: Replace vrfs
@@ -472,12 +478,8 @@ class DcnmVrf:
         ext_values = {}
         if attach['vrf_lite']:
             '''Before apply the vrf_lite config, need double check if the swtich role is started wth Border'''
-            if (role.lower() != 'border' and
-                role.lower() != 'border spine' and
-                role.lower() != 'border gateway' and
-                role.lower() != 'border gateway spine' and
-                role.lower() != 'border super spine' and
-                role.lower() != 'border gateway super spine'):
+            r = re.search(r'\bborder\b', role.lower())
+            if not r:
                 msg = 'VRF LITE cannot be attached to switch {} with role {}'.format(attach['ip_address'], role)
                 self.module.fail_json(msg=msg)
 
@@ -779,7 +781,6 @@ class DcnmVrf:
             vrfs = []
 
             vrf_deploy = vrf.get('deploy', True)
-            #vlanId = vrf.get('vlan_id', 0)
             if vrf.get('vlan_id'):
                 vlanId = vrf.get('vlan_id')
             else:
@@ -1367,16 +1368,10 @@ class DcnmVrf:
             for d_a in self.diff_attach:
                 for v_a in d_a['lanAttachList']:
                     if v_a.get('vrf_lite'):
-
                         '''Before apply the vrf_lite config, need double check if the switch role is started wth Border'''
-
-                        if (self.role.lower() != 'border' and
-                            self.role.lower() != 'border spine' and
-                            self.role.lower() != 'border gateway' and
-                            self.role.lower() != 'border gateway spine' and
-                            self.role.lower() != 'border super spine' and
-                            self.role.lower() != 'border gateway super spine'):
-                            msg = 'VRF LITE cannot be attached to switch {} with role {}'.format(attach['ip_address'], self.role)
+                        r = re.search(r'\bborder\b', self.role.lower())
+                        if not r:
+			    msg = 'VRF LITE cannot be attached to switch {} with role {}'.format(attach['ip_address'], self.role)
                             self.module.fail_json(msg=msg)
 
                         '''Get the IP/Interface that is connected to edge router can be get from below query'''
@@ -1698,4 +1693,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

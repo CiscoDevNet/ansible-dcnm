@@ -122,13 +122,13 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - interface: Ethernet1/16 # interface is mandatory
+          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+            interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-            peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
       deploy: true
   register: result
 
@@ -166,13 +166,13 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - interface: Ethernet1/16 # interface is mandatory
+          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+            interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-            peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
       deploy: true
   register: result
 
@@ -224,13 +224,13 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - interface: Ethernet1/16 # interface is mandatory
+          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+            interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-            peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
       deploy: true
   register: result
 
