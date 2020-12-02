@@ -240,7 +240,7 @@
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 6'
-          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 4'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
@@ -255,7 +255,7 @@
 
   always:
 
-    - name: Put to fabric to default state
+    - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
