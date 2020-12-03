@@ -17,6 +17,7 @@
 import json
 import time
 import copy
+import ast
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, \
     dcnm_get_ip_addr_info, get_ip_sn_dict
@@ -412,12 +413,12 @@ class DcnmVrf:
                     if want['serialNumber'] == have['serialNumber']:
                         if want['extensionValues'] != "" and have['extensionValues'] != "":
                             want_ext_values = want['extensionValues']
-                            want_ext_values = eval(want_ext_values)
+                            want_ext_values = ast.literal_eval(want_ext_values)
                             have_ext_values = have['extensionValues']
-                            have_ext_values = eval(have_ext_values)
+                            have_ext_values = ast.literal_eval(have_ext_values)
 
-                            want_e = eval(want_ext_values['VRF_LITE_CONN'])
-                            have_e = eval(have_ext_values['VRF_LITE_CONN'])
+                            want_e = ast.literal_eval(want_ext_values['VRF_LITE_CONN'])
+                            have_e = ast.literal_eval(have_ext_values['VRF_LITE_CONN'])
 
                             if want_e['VRF_LITE_CONN'][0]['IF_NAME'] == have_e['VRF_LITE_CONN'][0]['IF_NAME']:
                                 if want_e['VRF_LITE_CONN'][0]['DOT1Q_ID'] == have_e['VRF_LITE_CONN'][0]['DOT1Q_ID']:
@@ -726,8 +727,8 @@ class DcnmVrf:
                     for epv in sdl['switchDetailsList']:
                         if epv.get('extensionValues'):
                             ext_values = epv['extensionValues']
-                            ext_values = eval(ext_values)
-                            ext_values = eval(ext_values['VRF_LITE_CONN'])
+                            ext_values = ast.literal_eval(ext_values)
+                            ext_values = ast.literal_eval(ext_values['VRF_LITE_CONN'])
                             for ev in ext_values['VRF_LITE_CONN']:
                                 extension_values = {}
                                 vrflite_con = {}
@@ -1385,7 +1386,7 @@ class DcnmVrf:
 
                         lite = lite_objects['DATA'][0]['switchDetailsList'][0]['extensionPrototypeValues']
                         ext_values = lite[0]['extensionValues']
-                        ext_values = eval(ext_values)
+                        ext_values = ast.literal_eval(ext_values)
 
                         extension_values = {}
                         for ad_l in v_a['vrf_lite']:
