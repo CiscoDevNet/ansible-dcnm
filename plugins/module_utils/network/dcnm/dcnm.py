@@ -106,8 +106,6 @@ def get_fabric_inventory_details(module, fabric):
 
         response = dcnm_send(module, method, path)
 
-        with open("dcnm_fab.log", "w") as f:
-            f.write("FAB RESP = {}\n".format(response))
         if not response.get('RETURN_CODE'):
             rc = True
             module.fail_json(msg=response)

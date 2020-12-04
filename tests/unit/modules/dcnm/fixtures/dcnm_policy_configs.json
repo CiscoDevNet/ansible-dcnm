@@ -5,7 +5,7 @@
       "name": "template_125",
       "description": "125 - policy with vars",
       "priority": 125,
-      "Vars": {
+      "policy_vars": {
         "OSPF_TAG": 2000,
         "LOOPBACK_IP": "10.10.10.108"
       }
@@ -15,7 +15,7 @@
     "name": "template_126",
     "description": "126 - policy with vars",
     "priority": 126,
-    "Vars": {
+    "policy_vars": {
       "OSPF_TAG": 3000,
       "LOOPBACK_IP": "10.10.10.109"
     }
@@ -25,7 +25,7 @@
     "name": "template_127",
     "description": "127 - policy with vars",
     "priority": 127,
-    "Vars": {
+    "policy_vars": {
       "OSPF_TAG": 4000,
       "LOOPBACK_IP": "10.10.10.110"
     }
@@ -165,7 +165,7 @@
     "create_additional_policy": false,
     "name": "POLICY-125125",
     "priority": 125,
-    "Vars": {
+    "policy_vars": {
       "OSPF_TAG": 2000,
       "LOOPBACK_IP": "11.11.11.108"
     }

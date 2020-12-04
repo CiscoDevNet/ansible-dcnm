@@ -61,7 +61,7 @@
           - name: my_base_ospf  # This must be a valid template name
             create_additional_policy: true  # Do not create a policy if it already exists
             priority: 101 
-            Vars:
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.108
 
@@ -123,7 +123,7 @@
           - name: "{{ item }}"  # Pick the policy Ids from the facts
             description: Modified the policy "{{ item }}" using policy ID
             priority: "{{ 100 + my_idx }}"
-            Vars:
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.109
 
