@@ -5,7 +5,7 @@
 - name: OVERRIDDEN - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
@@ -92,13 +92,9 @@
     - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
     - '(result.response[4].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result.response[4].DATA|dict2items)[1].value == "SUCCESS"'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].attach[1].deploy == true'
     - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-    - '"{{ ansible_switch1 }}" in result.diff[1].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[1].attach[1].ip_address'
     - 'result.diff[1].attach[0].deploy == false'
     - 'result.diff[1].attach[1].deploy == false'
     - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
@@ -109,6 +105,179 @@
 
 - name: OVERRIDDEN - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: OVERRIDDEN - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: OVERRIDDEN - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the User in one switch
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 1500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+            interface: "{{ ansible_int1 }}" # optional
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # dot1q can be got from dcnm
+      deploy: true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: OVERRIDDEN - Update existing VRF LITE using overridden - VRF stays Whereas Ext is modified/overridden
+  cisco.dcnm.dcnm_vrf: &conf1
+    fabric: "{{ ansible_it_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-vrf-int2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 1500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+            interface: "{{ ansible_int1 }}" # optional
+            ipv4_addr: 10.33.0.7/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:10/64 # optional
+            neighbor_ipv6: 2010::10:34:0:7 # optional
+            dot1q: 21 # dot1q can be got from dcnm
+      deploy: true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[1].attach[0].deploy == true'
+    - 'result.diff[1].attach[1].deploy == true'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
+    - 'result.diff[1].vrf_name == "ansible-vrf-int2"'
+
+- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: OVERRIDDEN - conf - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: OVERRIDDEN - Update existing VRF LITE using overridden - VRF modified and Ext is modified - Old ones deleted
+  cisco.dcnm.dcnm_vrf: &conf2
+    fabric: "{{ ansible_it_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      source: null
+      service_vrf_template: null
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+            interface: "{{ ansible_int1 }}" # optional
+            ipv4_addr: 10.33.0.1/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:1/64 # optional
+            neighbor_ipv6: 2010::10:34:0:2 # optional
+            dot1q: 31 # dot1q can be got from dcnm
+      deploy: true
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - '(result.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[4].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.response[2].METHOD == "DELETE"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result.diff[1].attach[0].deploy == false'
+    - 'result.diff[1].attach[1].deploy == false'
+    - 'result.diff[1].vrf_name == "ansible-vrf-int2"'
+
+- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: OVERRIDDEN - conf - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf2
   register: result
 
 - assert:
