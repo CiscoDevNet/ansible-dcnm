@@ -1644,6 +1644,7 @@ def main():
         config=dict(required=False, type='list'),
         state=dict(default='merged',
                    choices=['merged', 'replaced', 'deleted', 'overridden', 'query'])
+        check_mode = dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -1684,7 +1685,8 @@ def main():
     else:
         module.exit_json(**dcnm_vrf.result)
 
-    if module.check_mode:
+    if module.params['check_mode']:
+        dcnm_vrf.result['changed'] = False
         module.exit_json(**dcnm_vrf.result)
 
     dcnm_vrf.push_to_remote()

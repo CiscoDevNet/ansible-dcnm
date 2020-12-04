@@ -119,6 +119,12 @@ class TestDcnmVrfModule(TestDcnmModule):
         elif '_check_mode' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.blank_data, {}]
 
+        elif '_check_mode' in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+                                              self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att2_only]
+
         elif '_merged_new' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.blank_data, self.blank_data, self.attach_success_resp, self.deploy_success_resp]
 
@@ -356,7 +362,9 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_check_mode(self):
         set_module_args(dict(_ansible_check_mode=True, state='merged',
                              fabric='test_fabric', config=self.playbook_config))
-        self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=False, failed=False)
+        self.assertFalse(result.get('diff'))
+        self.assertFalse(result.get('response'))
 
     def test_dcnm_vrf_merged_new(self):
         set_module_args(dict(state='merged', fabric='test_fabric', config=self.playbook_config))
