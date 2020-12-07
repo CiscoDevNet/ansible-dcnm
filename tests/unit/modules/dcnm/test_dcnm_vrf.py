@@ -70,7 +70,9 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         self.mock_vrf_object = copy.deepcopy(self.test_data.get('mock_vrf_object'))
         self.mock_vrf_attach_object = copy.deepcopy(self.test_data.get('mock_vrf_attach_object'))
+        self.mock_vrf_attach_object_query = copy.deepcopy(self.test_data.get('mock_vrf_attach_object_query'))
         self.mock_vrf_attach_object2 = copy.deepcopy(self.test_data.get('mock_vrf_attach_object2'))
+        self.mock_vrf_attach_object2_query = copy.deepcopy(self.test_data.get('mock_vrf_attach_object2_query'))
         self.mock_vrf_attach_object_pending = copy.deepcopy(self.test_data.get('mock_vrf_attach_object_pending'))
         self.mock_vrf_object_dcnm_only = copy.deepcopy(self.test_data.get('mock_vrf_object_dcnm_only'))
         self.mock_vrf_attach_object_dcnm_only = copy.deepcopy(self.test_data.get('mock_vrf_attach_object_dcnm_only'))
@@ -115,9 +117,6 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         if 'get_have_failure' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.get_have_failure]
-
-        elif '_check_mode' in self._testMethodName:
-            self.run_dcnm_send.side_effect = [self.blank_data, {}]
 
         elif '_check_mode' in self._testMethodName:
             self.init_data()
@@ -329,8 +328,28 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.init_data()
             self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                                              self.mock_vrf_object,
+                                              self.mock_vrf_attach_object_query, self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only]
 
+        elif 'query_vrf_lite' in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+                                              self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                                              self.mock_vrf_object,
+                                              self.mock_vrf_attach_object2_query, self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att4_only]
+
+        elif 'query_vrf_lite_without_config' in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+                                              self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                                              self.mock_vrf_object,
+                                              self.mock_vrf_attach_object2_query, self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att4_only]
 
         else:
             pass
@@ -671,11 +690,38 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(dict(state='query', fabric='test_fabric', config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
         self.assertFalse(result.get('diff'))
-        self.assertTrue(result.get('response')[0]['attach'][0]['deploy'])
-        self.assertTrue(result.get('response')[0]['attach'][1]['deploy'])
-        self.assertEqual(result.get('response')[0]['attach'][0]['ip_address'], '10.10.10.224')
-        self.assertEqual(result.get('response')[0]['attach'][1]['ip_address'], '10.10.10.225')
-        self.assertEqual(result.get('response')[0]['vrf_id'], 9008011)
+        self.assertEqual(result.get('response')[0]['parent']['vrfName'], 'test_vrf_1')
+        self.assertEqual(result.get('response')[0]['parent']['vrfId'], 9008011)
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['lanAttachedState'], 'DEPLOYED')
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['vlan'], '202')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['lanAttachedState'], 'DEPLOYED')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['vlan'], '202')
+
+    def test_dcnm_vrf_query_vrf_lite(self):
+        set_module_args(dict(state='query', fabric='test_fabric', config=self.playbook_vrf_lite_config))
+        result = self.execute_module(changed=False, failed=False)
+        self.assertFalse(result.get('diff'))
+        self.assertEqual(result.get('response')[0]['parent']['vrfName'], 'test_vrf_1')
+        self.assertEqual(result.get('response')[0]['parent']['vrfId'], 9008011)
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['lanAttachedState'], 'DEPLOYED')
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['vlan'], '202')
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['extensionValues'], '')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['lanAttachedState'], 'DEPLOYED')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['vlan'], '202')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['extensionValues'], '')
+
+    def test_dcnm_vrf_query_lite_without_config(self):
+        set_module_args(dict(state='query', fabric='test_fabric', config=[]))
+        result = self.execute_module(changed=False, failed=False)
+        self.assertFalse(result.get('diff'))
+        self.assertEqual(result.get('response')[0]['parent']['vrfName'], 'test_vrf_1')
+        self.assertEqual(result.get('response')[0]['parent']['vrfId'], 9008011)
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['lanAttachedState'], 'DEPLOYED')
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['vlan'], '202')
+        self.assertEqual(result.get('response')[0]['attach'][0]['switchDetailsList'][0]['extensionValues'], '')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['lanAttachedState'], 'DEPLOYED')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['vlan'], '202')
+        self.assertEqual(result.get('response')[0]['attach'][1]['switchDetailsList'][0]['extensionValues'], '')
 
     def test_dcnm_vrf_validation(self):
         set_module_args(dict(state='merged', fabric='test_fabric', config=self.playbook_config_input_validation))

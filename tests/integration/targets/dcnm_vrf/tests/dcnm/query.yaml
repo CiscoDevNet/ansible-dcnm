@@ -82,13 +82,17 @@
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response[0].attach[0].deploy == true'
-    - 'result.response[0].attach[1].deploy == true'
-    - 'result.response[0].attach[0].ip_address == "{{ ansible_switch1 }}"'
-    - 'result.response[0].attach[1].ip_address == "{{ ansible_switch2 }}"'
-    - 'result.response[0].attach[0].vlan_id == 500'
-    - 'result.response[0].attach[1].vlan_id == 500'
-    - 'result.response[0].vrf_name == "ansible-vrf-int1"'
+    - 'result.response[0].parent.vrfName == "ansible-vrf-int1"'
+    - 'result.response[0].parent.vrfId == 9008011'
+    - 'result.response[0].parent.vrfStatus == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].vlan == 500'
+    - 'result.response[0].attach[0].switchDetailsList[0].extensionValues == ""'
+    - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[1].switchDetailsList[0].vlan == 500'
+    - 'result.response[0].attach[1].switchDetailsList[0].extensionValues == ""'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
@@ -191,13 +195,42 @@
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response[0].attach[0].deploy == true'
-    - 'result.response[0].attach[1].deploy == true'
-    - 'result.response[0].attach[0].ip_address == "{{ ansible_switch1 }}"'
-    - 'result.response[0].attach[1].ip_address == "{{ ansible_switch2 }}"'
-    - 'result.response[0].attach[0].vlan_id == 1500'
-    - 'result.response[0].attach[1].vlan_id == 1500'
-    - 'result.response[0].vrf_name == "ansible-vrf-int2"'
+    - 'result.response[0].parent.vrfName == "ansible-vrf-int2"'
+    - 'result.response[0].parent.vrfId == 9008012'
+    - 'result.response[0].parent.vrfStatus == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].vlan == 1500'
+    - 'result.response[0].attach[0].switchDetailsList[0].extensionValues != ""'
+    - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[1].switchDetailsList[0].vlan == 1500'
+    - 'result.response[0].attach[1].switchDetailsList[0].extensionValues == ""'
+
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: QUERY - Query without the config element
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].parent.vrfName == "ansible-vrf-int2"'
+    - 'result.response[0].parent.vrfId == 9008012'
+    - 'result.response[0].parent.vrfStatus == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].vlan == 1500'
+    - 'result.response[0].attach[0].switchDetailsList[0].extensionValues != ""'
+    - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[1].switchDetailsList[0].vlan == 1500'
+    - 'result.response[0].attach[1].switchDetailsList[0].extensionValues == ""'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:

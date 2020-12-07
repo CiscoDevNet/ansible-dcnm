@@ -1216,63 +1216,120 @@ class DcnmVrf:
 
     def get_diff_query(self):
 
-        query = []
+        method = 'GET'
+        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        vrf_objects = dcnm_send(self.module, method, path)
+        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
 
-        if self.have_create or self.have_attach:
+        if vrf_objects.get('ERROR') == 'Not Found' and vrf_objects.get('RETURN_CODE') == 404:
+            self.module.fail_json(msg="Fabric {} not present on DCNM".format(self.fabric))
+            return
 
+        if missing_fabric or not_ok:
+            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+            msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+        if not vrf_objects['DATA']:
+            return
+
+        if self.config:
+            query = []
             for want_c in self.want_create:
-                try:
-                    found_c = (next((vrf for vrf in self.have_create if vrf['vrfName'] == want_c['vrfName']), None)).copy()
-                except AttributeError as error:
-                    continue
-                found_a = next((vrf for vrf in self.have_attach if vrf['vrfName'] == want_c['vrfName']), None)
-                found_w = next((vrf for vrf in self.want_attach if vrf['vrfName'] == want_c['vrfName']), None)
+                # Query the VRF
+                for vrf in vrf_objects['DATA']:
 
-                src = found_c['source']
-                found_c.update({'vrf_name': found_c['vrfName']})
-                found_c.update({'vrf_id': found_c['vrfId']})
-                found_c.update({'vrf_template': found_c['vrfTemplate']})
-                found_c.update({'vrf_extension_template': found_c['vrfExtensionTemplate']})
-                del found_c['source']
-                found_c.update({'source': src})
-                found_c.update({'service_vrf_template': found_c['serviceVrfTemplate']})
-                found_c.update({'attach': []})
+                    json_to_dict = json.loads(vrf['vrfTemplateConfig'])
+                    vrf_vlanId = json_to_dict.get('vlanId', "0")
+                    json_to_dict = json.loads(want_c['vrfTemplateConfig'])
+                    want_vlanId = json_to_dict.get('vlanId', "0")
 
-                del found_c['fabric']
-                del found_c['vrfName']
-                del found_c['vrfId']
-                del found_c['vrfTemplate']
-                del found_c['vrfExtensionTemplate']
-                del found_c['serviceVrfTemplate']
-                del found_c['vrfTemplateConfig']
+                    if (want_c['vrfName'] == vrf['vrfName'] and want_c['vrfId'] == vrf['vrfId'] and \
+                            want_c['source'] == vrf['source'] and str(want_vlanId) == vrf_vlanId):
 
-                if not found_w:
-                    query.append(found_c)
-                    continue
+                        item = {'parent': {}, 'attach': []}
+                        item['parent'] = vrf
 
-                attach_w = found_w['lanAttachList']
-                attach_l = found_a['lanAttachList']
+                        # Query the Attachment for the found VRF
+                        method = 'GET'
+                        path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric,
+                                                                                                vrf['vrfName'])
 
-                for a_w in attach_w:
-                    attach_d = {}
-                    serial = a_w['serialNumber']
-                    found = False
-                    for a_l in attach_l:
-                        if a_l['serialNumber'] == serial:
-                            found = True
-                            break
+                        vrf_attach_objects = dcnm_send(self.module, method, path)
 
-                    if found:
-                        for k, v in self.ip_sn.items():
-                            if v == a_l['serialNumber']:
-                                attach_d.update({'ip_address': k})
-                                break
-                        attach_d.update({'vlan_id': a_l['vlan']})
-                        attach_d.update({'deploy': a_l['isAttached']})
-                        found_c['attach'].append(attach_d)
+                        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
 
-                if attach_d:
-                    query.append(found_c)
+                        if missing_fabric or not_ok:
+                            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+                            msg2 = "Unable to find attachments for " \
+                                   "vrfs: {} under fabric: {}".format(curr_vrfs[:-1], self.fabric)
+
+                            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+                            return
+
+                        if not vrf_attach_objects['DATA']:
+                            return
+
+                        for vrf_attach in vrf_attach_objects['DATA']:
+                            if want_c['vrfName'] == vrf_attach['vrfName']:
+                                if not vrf_attach.get('lanAttachList'):
+                                    continue
+                                attach_list = vrf_attach['lanAttachList']
+
+                                for attach in attach_list:
+                                    path = '/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}'.format(
+                                        self.fabric,
+                                        attach['vrfName'],
+                                        attach['switchSerialNo'])
+                                    lite_objects = dcnm_send(self.module, method, path)
+                                    if not lite_objects.get('DATA'):
+                                        return
+                                    item['attach'].append(lite_objects.get('DATA')[0])
+                                query.append(item)
+
+        else:
+            query = []
+            # Query the VRF
+            for vrf in vrf_objects['DATA']:
+                item = {'parent': {}, 'attach': []}
+                item['parent'] = vrf
+
+                # Query the Attachment for the found VRF
+                method = 'GET'
+                path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric,
+                                                                                        vrf['vrfName'])
+
+                vrf_attach_objects = dcnm_send(self.module, method, path)
+
+                missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+
+                if missing_fabric or not_ok:
+                    msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+                    msg2 = "Unable to find attachments for " \
+                           "vrfs: {} under fabric: {}".format(curr_vrfs[:-1], self.fabric)
+
+                    self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+                    return
+
+                if not vrf_attach_objects['DATA']:
+                    return
+
+                for vrf_attach in vrf_attach_objects['DATA']:
+                    if not vrf_attach.get('lanAttachList'):
+                        continue
+                    attach_list = vrf_attach['lanAttachList']
+
+                    for attach in attach_list:
+                        path = '/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}'.format(
+                            self.fabric,
+                            attach['vrfName'],
+                            attach['switchSerialNo'])
+
+                        lite_objects = dcnm_send(self.module, method, path)
+                        if not lite_objects.get('DATA'):
+                            return
+                        item['attach'].append(lite_objects.get('DATA')[0])
+                    query.append(item)
 
         self.query = query
 
@@ -1497,75 +1554,121 @@ class DcnmVrf:
 
         state = self.params['state']
 
-        vrf_spec = dict(
-            vrf_name=dict(required=True, type='str', length_max=32),
-            vrf_id=dict(type='int', range_max=16777214),
-            vrf_template=dict(type='str', default='Default_VRF_Universal'),
-            vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
-            vlan_id=dict(type='int', range_max=4094),
-            source=dict(type='str', default=None),
-            service_vrf_template=dict(type='str', default=None),
-            attach=dict(type='list'),
-            deploy=dict(type='bool')
-        )
-        att_spec = dict(
-            ip_address=dict(required=True, type='str'),
-            deploy=dict(type='bool', default=True),
-            vrf_lite=dict(type='list', default=[])
-        )
-        lite_spec = dict(
-            interface=dict(type='str'),
-            peer_vrf=dict(required=True, type='str'),
-            ipv4_addr=dict(type='ipv4_subnet'),
-            neighbor_ipv4=dict(type='ipv4'),
-            ipv6_addr=dict(type='ipv6'),
-            neighbor_ipv6=dict(type='ipv6'),
-            dot1q=dict(type='int')
-        )
+        if state == 'merged' or state == 'overridden' or state == 'replaced':
 
-        msg = None
-        if self.config:
-            for vrf in self.config:
-                if 'vrf_name' not in vrf:
-                    msg = "vrf_name is mandatory under vrf parameters"
+            vrf_spec = dict(
+                vrf_name=dict(required=True, type='str', length_max=32),
+                vrf_id=dict(type='int', range_max=16777214),
+                vrf_template=dict(type='str', default='Default_VRF_Universal'),
+                vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
+                vlan_id=dict(type='int', range_max=4094),
+                source=dict(type='str', default=None),
+                service_vrf_template=dict(type='str', default=None),
+                attach=dict(type='list'),
+                deploy=dict(type='bool')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                deploy=dict(type='bool', default=True),
+                vrf_lite=dict(type='list', default=[])
+            )
+            lite_spec = dict(
+                interface=dict(type='str'),
+                peer_vrf=dict(required=True, type='str'),
+                ipv4_addr=dict(type='ipv4_subnet'),
+                neighbor_ipv4=dict(type='ipv4'),
+                ipv6_addr=dict(type='ipv6'),
+                neighbor_ipv6=dict(type='ipv6'),
+                dot1q=dict(type='int')
+            )
 
-                if 'attach' in vrf and vrf['attach']:
-                    for attach in vrf['attach']:
-                        # if 'ip_address' not in attach or 'vlan_id' not in attach:
-                        #     msg = "ip_address and vlan_id are mandatory under attach parameters"
-                        if 'ip_address' not in attach:
-                            msg = "ip_address is mandatory under attach parameters"
-                        if attach.get('vrf_lite'):
-                            for vl in attach['vrf_lite']:
-                                if not vl.get('peer_vrf'):
-                                    msg = "peer_vrf is mandatory under attach VRF LITE parameters"
+            msg = None
+            if self.config:
+                for vrf in self.config:
+                    if 'vrf_name' not in vrf:
+                        msg = "vrf_name is mandatory under vrf parameters"
 
-        else:
-            if state == 'merged' or state == 'overridden' or \
-                    state == 'replaced' or state == 'query':
-                msg = "config: element is mandatory for this state {}".format(state)
+                    if 'attach' in vrf and vrf['attach']:
+                        for attach in vrf['attach']:
+                            # if 'ip_address' not in attach or 'vlan_id' not in attach:
+                            #     msg = "ip_address and vlan_id are mandatory under attach parameters"
+                            if 'ip_address' not in attach:
+                                msg = "ip_address is mandatory under attach parameters"
+                            if attach.get('vrf_lite'):
+                                for vl in attach['vrf_lite']:
+                                    if not vl.get('peer_vrf'):
+                                        msg = "peer_vrf is mandatory under attach VRF LITE parameters"
 
-        if msg:
-            self.module.fail_json(msg=msg)
+            else:
+                if state == 'merged' or state == 'overridden' or \
+                        state == 'replaced':
+                    msg = "config: element is mandatory for this state {}".format(state)
 
-        if self.config:
-            validated = []
-            valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
-            for vrf in valid_vrf:
-                if vrf.get('attach'):
-                    valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
-                    vrf['attach'] = valid_att
-                    invalid_params.extend(invalid_att)
-                    for lite in vrf.get('attach'):
-                        if lite.get('vrf_lite'):
-                            valid_lite, invalid_lite = validate_list_of_dicts(lite['vrf_lite'], lite_spec)
-                            lite['vrf_lite'] = valid_lite
-                            invalid_params.extend(invalid_lite)
-                self.validated.append(vrf)
-
-            if invalid_params:
-                msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+            if msg:
                 self.module.fail_json(msg=msg)
+
+            if self.config:
+                valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
+                for vrf in valid_vrf:
+                    if vrf.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
+                        vrf['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                        for lite in vrf.get('attach'):
+                            if lite.get('vrf_lite'):
+                                valid_lite, invalid_lite = validate_list_of_dicts(lite['vrf_lite'], lite_spec)
+                                lite['vrf_lite'] = valid_lite
+                                invalid_params.extend(invalid_lite)
+                    self.validated.append(vrf)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
+        else:
+
+            vrf_spec = dict(
+                vrf_name=dict(required=True, type='str', length_max=32),
+                vrf_id=dict(type='int', range_max=16777214),
+                vrf_template=dict(type='str', default='Default_VRF_Universal'),
+                vrf_extension_template=dict(type='str', default='Default_VRF_Extension_Universal'),
+                vlan_id=dict(type='int', range_max=4094),
+                source=dict(type='str', default=None),
+                service_vrf_template=dict(type='str', default=None),
+                attach=dict(type='list'),
+                deploy=dict(type='bool')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                deploy=dict(type='bool', default=True),
+                vrf_lite=dict(type='list', default=[])
+            )
+            lite_spec = dict(
+                interface=dict(type='str'),
+                peer_vrf=dict(required=True, type='str'),
+                ipv4_addr=dict(type='ipv4_subnet'),
+                neighbor_ipv4=dict(type='ipv4'),
+                ipv6_addr=dict(type='ipv6'),
+                neighbor_ipv6=dict(type='ipv6'),
+                dot1q=dict(type='int')
+            )
+
+            if self.config:
+                valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
+                for vrf in valid_vrf:
+                    if vrf.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
+                        vrf['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                        for lite in vrf.get('attach'):
+                            if lite.get('vrf_lite'):
+                                valid_lite, invalid_lite = validate_list_of_dicts(lite['vrf_lite'], lite_spec)
+                                lite['vrf_lite'] = valid_lite
+                                invalid_params.extend(invalid_lite)
+                    self.validated.append(vrf)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
 
     def handle_response(self, res, op):
 
