@@ -18,6 +18,7 @@ import json
 import time
 import copy
 import ast
+import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, \
     dcnm_get_ip_addr_info, get_ip_sn_dict
@@ -1372,7 +1373,7 @@ class DcnmVrf:
                         '''Before apply the vrf_lite config, need double check if the switch role is started wth Border'''
                         r = re.search(r'\bborder\b', self.role.lower())
                         if not r:
-			    msg = 'VRF LITE cannot be attached to switch {} with role {}'.format(attach['ip_address'], self.role)
+                            msg = 'VRF LITE cannot be attached to switch {} with role {}'.format(attach['ip_address'], self.role)
                             self.module.fail_json(msg=msg)
 
                         '''Get the IP/Interface that is connected to edge router can be get from below query'''
@@ -1643,7 +1644,7 @@ def main():
         fabric=dict(required=True, type='str'),
         config=dict(required=False, type='list'),
         state=dict(default='merged',
-                   choices=['merged', 'replaced', 'deleted', 'overridden', 'query'])
+                   choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
         check_mode = dict(required=False, type="bool", default=False)
     )
 
