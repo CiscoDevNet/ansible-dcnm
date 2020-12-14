@@ -117,9 +117,6 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [self.get_have_failure]
 
         elif '_check_mode' in self._testMethodName:
-            self.run_dcnm_send.side_effect = [self.blank_data, {}]
-
-        elif '_check_mode' in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
