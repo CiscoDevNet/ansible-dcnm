@@ -249,7 +249,7 @@
   wait_for:
     timeout: 20
 
-- name: MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach wuth check mode set to true
+- name: MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach with check mode set to true
   cisco.dcnm.dcnm_network: &conf1
     fabric: "{{ ansible_it_fabric }}"
     state: merged
