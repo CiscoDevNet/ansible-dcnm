@@ -64,7 +64,7 @@ The following example task adds a switch to an existing fabric, using the FQCN:
 ```yaml
 ---
 
-- hosts: dcnm
+- hosts: dcnm_controllers
   gather_facts: false
   connection: ansible.netcommon.httpapi
 
@@ -101,7 +101,7 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
 
 ```yaml
 ---
-- hosts: dcnm_hosts
+- hosts: dcnm_controllers
   gather_facts: false
   connection: httpapi
 
@@ -114,6 +114,38 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
         ...parameters...
 ```
 
+Sample hosts file using the dcnm httpapi connection plugin in either the INI or YAML format.
+
+* Ansible INI Format
+
+```ini
+[dcnm_controllers]
+192.168.2.10
+
+[dcnm_controllers:vars]
+ansible_user=dcnm_username
+ansible_ssh_pass=dcnm_password
+ansible_network_os=cisco.dcnm.dcnm
+ansible_httpapi_validate_certs=False
+ansible_httpapi_use_ssl=True
+```
+
+* Ansible YAML Format
+
+```yaml
+all:
+  vars:
+    ansible_user: "dcnm_username"
+    ansible_password: "dcnm_password"
+    ansible_python_interpreter: python
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_use_ssl: True
+  children:
+    dcnm_controllers:
+      hosts:
+        192.168.2.10:
+           ansible_network_os: cisco.dcnm.dcnm
+```
 
 ### See Also:
 
