@@ -1101,6 +1101,13 @@ class DcnmIntf:
 
         }
 
+    def log_msg (self, msg):
+
+        if (self.fd is None):
+            self.fd = open("interface.log", "w+")
+        if (self.fd is not None):
+            self.fd.write (msg)
+
     # New Interfaces
     def dcnm_intf_get_if_name (self, name, if_type):
 
@@ -2158,9 +2165,35 @@ class DcnmIntf:
 
         self.dcnm_intf_compare_want_and_have ('merged')
 
-    def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
+    def dcnm_compare_default_payload (self, intf, have):
 
-        intf = {}
+        if(intf.get('policy') != have.get('policy')):
+            return 'DCNM_INTF_NOT_MATCH' 
+
+        intf_nv = intf.get('interfaces')[0].get('nvPairs')
+        have_nv = have.get('interfaces')[0].get('nvPairs')
+
+        if(intf_nv.get('INTF_VRF') != have_nv.get('INTF_VRF')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('IP') != have_nv.get('IP')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('PREFIX') != have_nv.get('PREFIX')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('ROUTING_TAG') != have_nv.get('ROUTING_TAG')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('MTU') != have_nv.get('MTU')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('SPEED') != have_nv.get('SPEED')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('DESC') != have_nv.get('DESC')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('CONF') != have_nv.get('CONF')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        if(intf_nv.get('ADMIN_STATE') != have_nv.get('ADMIN_STATE')):
+            return 'DCNM_INTF_NOT_MATCH' 
+        return 'DCNM_INTF_MATCH'
+
+    def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
 
         # default payload to be sent to DCNM for override case
         eth_payload = {
@@ -2191,16 +2224,15 @@ class DcnmIntf:
         eth_payload ['interfaces'][0]["serialNumber"] = sno
         eth_payload ['interfaces'][0]["fabricName"]   = fabric
 
-        intf['interfaceType'] = 'INTERFACE_ETHERNET'
-        intf['serialNumber']   = sno
-        intf['ifName']         = ifname
-
         return eth_payload
 
     def dcnm_intf_can_be_replaced(self, have):
 
         for item in self.pb_input:
-            if (item['ifname'] == have['ifName']):
+            # For overridden state, we will not touch anything that is present in incoming config, 
+            # because those interfaces will anyway be mopdified in the current run
+            if ((self.module.params['state'] == 'overridden') and
+                (item['ifname'] == have['ifName'])):
                 return False, item['ifname']
             if (item.get('members')):
                 if (have['ifName'] in \
@@ -2270,7 +2302,7 @@ class DcnmIntf:
             if ((have['ifType'] == 'INTERFACE_ETHERNET') and
                 ((str(have['isPhysical']).lower() != 'none') and (str(have['isPhysical']).lower() == 'true'))):
 
-                if (str(have['deletable']) == 'False'):
+                if (str(have['deletable']).lower() == 'false'):
                     # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
                     defer_list.append(have)
                     continue
@@ -2301,18 +2333,17 @@ class DcnmIntf:
                  ((str(have['isPhysical']).lower() == 'none') or (str(have['isPhysical']).lower() == "false")))):
 
                 # Certain interfaces cannot be deleted, so check before deleting.
-                if (str(have['deletable']) == 'True'):
+                if (str(have['deletable']).lower() == 'true'):
 
                     #Port-channel which are created as part of VPC peer link should not be deleted
                     if (have['ifType']  == 'INTERFACE_PORT_CHANNEL'):
                           if (have['alias'] == '"vpc-peer-link"'):
                               continue
 
-                    # VPC interfaces sometimes take time to get deleted from DCNM. Such interfaces will have 
+                    # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have 
                     # underlayPolicies set to "None". Such interfaces need not be deleted again
 
-                    if ((have['ifType']  == 'INTERFACE_VPC') and
-                        (have['underlayPolicies'] is None)):
+                    if (have['underlayPolicies'] is None):
                         continue
 
                     # For interfaces that are matching, leave them alone. We will overwrite the config anyway
@@ -2392,6 +2423,7 @@ class DcnmIntf:
             for cfg in self.config:
                 if (cfg.get('name', None) is not None):
                     processed = []
+                    have_all  = []
 
                     # If interface name alone is given, then delete or reset the
                     # interface on all switches in the fabric
@@ -2408,10 +2440,6 @@ class DcnmIntf:
 
                         if_name, if_type = self.dcnm_extract_if_name(cfg)
 
-                        # Ethernet interfaces cannot be deleted
-                        if (if_type == 'INTERFACE_ETHERNET'):
-                            continue
-
                         # Check if the interface is present in DCNM
                         intf['interfaceType'] = if_type
                         if (if_type == 'INTERFACE_VPC'):
@@ -2425,36 +2453,73 @@ class DcnmIntf:
                         else:
                             continue
 
-                        intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+                        # Ethernet interfaces cannot be deleted
+                        if (if_type == 'INTERFACE_ETHERNET'):
 
-                        if (intf_payload != []):
-                            delem["interfaceDbId"] = 0
-                            delem["interfaceType"] = if_type
-                            delem["ifName"]        = if_name
-                            delem["serialNumber"]  = intf['serialNumber']
-                            delem["fabricName"]    = self.fabric
+                            if (sw not in have_all):
+                                have_all.append (sw)
+                                self.dcnm_intf_get_have_all (sw)
 
-                            self.diff_delete[self.int_index[if_type]].append(delem)
-                            self.changed_dict[0]['deleted'].append(copy.deepcopy(delem))
+                            # Get the matching interface from have_all
+                            match_have = [have for have in self.have_all if ((intf['ifName'].lower() == have['ifName'].lower()) and
+                                                                             (intf['serialNumber'] == have['serialNo']))][0]
+                            if (match_have and (str(match_have['isPhysical']).lower() != 'none') and (str(match_have['isPhysical']).lower() == 'true')):
+
+                                if (str(match_have['deletable']).lower() == 'false'):
+                                    continue
+
+                                uelem = self.dcnm_intf_get_default_eth_payload(intf['ifName'], intf['serialNumber'], self.fabric)
+                                intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+
+                                # Before we add the interface to replace list, check if the default payload is same as 
+                                # what is already present. If both are same, skip the interface. This is required specifically
+                                # for ethernet interfaces because they donlt actually get deleted. they will only be defaulted.
+                                # So during idempotence, we may add the same interface again if we don't compare
+                                if (intf_payload != []):
+                                    if (self.dcnm_compare_default_payload (uelem, intf_payload) == 'DCNM_INTF_MATCH'):
+                                        continue
+
+                                if (uelem is not None):
+                                    # Before defaulting ethernet interfaces, check if they are
+                                    # member of any port-channel. If so, do not default that
+                                    rc, iface = self.dcnm_intf_can_be_replaced(match_have)
+                                    if (True == rc):
+                                        self.dcnm_intf_merge_intf_info (uelem, self.diff_replace)
+                                        self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
+                                        delem['serialNumber'] = intf['serialNumber']
+                                        delem['ifName']       = if_name
+                                        self.diff_deploy.append(delem)
+                        else:
+                            intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+
+                            if (intf_payload != []):
+                                delem["interfaceDbId"] = 0
+                                delem["interfaceType"] = if_type
+                                delem["ifName"]        = if_name
+                                delem["serialNumber"]  = intf['serialNumber']
+                                delem["fabricName"]    = self.fabric
+
+                                self.diff_delete[self.int_index[if_type]].append(delem)
+                                self.changed_dict[0]['deleted'].append(copy.deepcopy(delem))
                 else:
                     self.dcnm_intf_get_diff_overridden(cfg)
 
     def dcnm_extract_if_name(self, cfg):
 
-        if (cfg['name'][0:2] == 'po'):
+        if (cfg['name'][0:2].lower() == 'po'):
             if_name,port_id = self.dcnm_intf_get_if_name (cfg['name'], 'pc')
             if_type = 'INTERFACE_PORT_CHANNEL'
-        elif (cfg['name'][0:2] == 'lo'):
+        elif (cfg['name'][0:2].lower() == 'lo'):
             if_name,port_id = self.dcnm_intf_get_if_name (cfg['name'], 'lo')
             if_type = 'INTERFACE_LOOPBACK'
-        elif (cfg['name'][0:3] == 'eth'):
+        elif (cfg['name'][0:3].lower() == 'eth'):
             if ('.' not in cfg['name']):
                 if_name,port_id = self.dcnm_intf_get_if_name (cfg['name'], 'eth')
                 if_type = 'INTERFACE_ETHERNET'
             else:
                 if_name,port_id = self.dcnm_intf_get_if_name (cfg['name'], 'sub_int')
                 if_type = 'SUBINTERFACE'
-        elif (cfg['name'][0:3] == 'vpc'):
+        elif (cfg['name'][0:3].lower() == 'vpc'):
             if_name,port_id = self.dcnm_intf_get_if_name (cfg['name'], 'vpc')
             if_type = 'INTERFACE_VPC'
         else:

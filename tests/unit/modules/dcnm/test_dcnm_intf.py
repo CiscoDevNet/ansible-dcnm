@@ -445,9 +445,10 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_eth_intf3  = self.payloads_data.get('eth_merged_routed_payloads')
             playbook_eth_intf4  = self.payloads_data.get('eth_merged_epl_routed_payloads')
             playbook_eth_intf5  = self.payloads_data.get('eth_merged_monitor_payloads')
-            playbook_have_all_data  = self.have_all_payloads_data.get('payloads')
+            playbook_have_all_data  = self.have_all_payloads_data.get('eth_payloads')
 
             self.run_dcnm_send.side_effect = [self.playbook_mock_vpc_resp,
+                                              playbook_have_all_data,
                                               playbook_eth_intf1, playbook_eth_intf2,
                                               playbook_eth_intf3, playbook_eth_intf4,
                                               playbook_eth_intf5,
@@ -1177,7 +1178,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         self.assertEqual(len(result['diff'][0]['deleted']), 0)
         self.assertEqual(len(result['diff'][0]['merged']), 0)
-        self.assertEqual(len(result['diff'][0]['replaced']), 0)
+        self.assertEqual(len(result['diff'][0]['replaced']), 5)
 
     def test_dcnm_intf_eth_overridden_existing(self):
 
