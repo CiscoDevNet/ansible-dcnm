@@ -1,0 +1,200 @@
+{
+  "template_merge_new_config": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 101\n    ip address 101.195.225.176 port 57101 protocol gRPC encoding GPB\n  sensor-group 101\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 101\n    dst-grp 101\n    snsr-grp 101 sample-interval 10101\n",
+      "description": "Template_101",
+      "name": "template_101",
+      "tags": "internal policy 101"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 102\n    ip address 102.195.225.176 port 57102 protocol gRPC encoding GPB\n  sensor-group 102\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 102\n    dst-grp 102\n    snsr-grp 102 sample-interval 10102\n",
+    "description": "Template_102",
+    "name": "template_102",
+    "tags": "internal policy 102"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 103\n    ip address 103.195.225.176 port 57103 protocol gRPC encoding GPB\n  sensor-group 103\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 103\n    dst-grp 103\n    snsr-grp 103 sample-interval 10103\n",
+    "description": "Template_103",
+    "name": "template_103",
+    "tags": "internal policy 103"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 104\n    ip address 104.195.225.176 port 57104 protocol gRPC encoding GPB\n  sensor-group 104\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 104\n    dst-grp 104\n    snsr-grp 104 sample-interval 10104\n",
+    "description": "Template_104",
+    "name": "template_104",
+    "tags": "internal policy 104"
+  }],
+
+  "template_merge_existing_config": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 201\n    ip address 201.195.225.176 port 57201 protocol gRPC encoding GPB\n  sensor-group 201\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 201\n    dst-grp 201\n    snsr-grp 101 sample-interval 10201\n",
+    "description": "Template_101",
+    "name": "template_101",
+    "tags": "internal policy 101 modified"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 202\n    ip address 202.195.225.176 port 57202 protocol gRPC encoding GPB\n  sensor-group 202\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 202\n    dst-grp 202\n    snsr-grp 202 sample-interval 10202\n",
+    "description": "Template_102",
+    "name": "template_102",
+    "tags": "internal policy 102 modified"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 203\n    ip address 203.195.225.176 port 57203 protocol gRPC encoding GPB\n  sensor-group 203\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 203\n    dst-grp 203\n    snsr-grp 203 sample-interval 10203\n",
+    "description": "Template_103",
+    "name": "template_103",
+    "tags": "internal policy 103 modified"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 204\n    ip address 204.195.225.176 port 57204 protocol gRPC encoding GPB\n  sensor-group 204\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 204\n    dst-grp 204\n    snsr-grp 204 sample-interval 10204\n",
+    "description": "Template_104",
+    "name": "template_104",
+    "tags": "internal policy 104 modified"
+  }],
+
+  "template_replace_config": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 1001\n    ip address 101.195.225.176 port 51001 protocol gRPC encoding GPB\n  sensor-group 1001\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 1001\n    dst-grp 1001\n    snsr-grp 1001 sample-interval 10001\n",
+    "description": "Template_101 being replaced",
+    "name": "template_101",
+    "tags": "internal policy 101 after replacement"
+  }],
+
+  "template_replace_no_description": [ 
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 101\n    ip address 101.195.225.176 port 57101 protocol gRPC encoding GPB\n  sensor-group 101\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 101\n    dst-grp 101\n    snsr-grp 101 sample-interval 10101\n",
+    "name": "template_101",
+    "tags": "internal policy 101 being replaced"
+  }],
+
+  "template_replace_no_tags": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 101\n    ip address 101.195.225.176 port 57101 protocol gRPC encoding GPB\n  sensor-group 101\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 101\n    dst-grp 101\n    snsr-grp 101 sample-interval 10101\n",
+    "name": "template_101",
+    "description": "Template_101 being replaced"
+  }],
+
+  "template_replace_one_config": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 1001\n    ip address 101.195.225.176 port 51001 protocol gRPC encoding GPB\n  sensor-group 1001\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 1001\n    dst-grp 1001\n    snsr-grp 1001 sample-interval 10001\n",
+    "description": "Template_101 being replaced",
+    "name": "template_101",
+    "tags": "internal policy 101 after replacement"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 102\n    ip address 102.195.225.176 port 57102 protocol gRPC encoding GPB\n  sensor-group 102\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 102\n    dst-grp 102\n    snsr-grp 102 sample-interval 10102\n",
+    "description": "Template_102",
+    "name": "template_102",
+    "tags": "internal policy 102"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 103\n    ip address 103.195.225.176 port 57103 protocol gRPC encoding GPB\n  sensor-group 103\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 103\n    dst-grp 103\n    snsr-grp 103 sample-interval 10103\n",
+    "description": "Template_103",
+    "name": "template_103",
+    "tags": "internal policy 103"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 104\n    ip address 104.195.225.176 port 57104 protocol gRPC encoding GPB\n  sensor-group 104\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 104\n    dst-grp 104\n    snsr-grp 104 sample-interval 10104\n",
+    "description": "Template_104",
+    "name": "template_104",
+    "tags": "internal policy 104"
+  }],
+
+  "template_delete_existing_config": [
+  {
+    "name": "template_101"
+  },
+  {
+    "name": "template_102"
+  },
+  {
+    "name": "template_103"
+  },
+  {
+    "name": "template_104"
+  }],
+
+  "template_merge_inuse_config": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 110\n    ip address 110.195.225.176 port 57110 protocol gRPC encoding GPB\n  sensor-group 110\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 110\n    dst-grp 110\n    snsr-grp 110 sample-interval 10110\n",
+    "description": "Template in use",
+    "name": "template_110_inuse",
+    "tags": "internal policy 110"
+  },
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 111\n    ip address 111.195.225.176 port 57111 protocol gRPC encoding GPB\n  sensor-group 111\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 111\n    dst-grp 111\n    snsr-grp 111 sample-interval 10111\n",
+    "description": "Template in use",
+    "name": "template_111_inuse",
+    "tags": "internal policy 111"
+  }],
+
+  "template_delete_inuse_only_config": [
+  {
+    "name": "template_110_inuse"
+  },
+  {
+    "name": "template_111_inuse"
+  }],
+
+  "template_delete_inuse_config": [
+  {
+    "name": "template_101"
+  },
+  {
+    "name": "template_110_inuse"
+  },
+  {
+    "name": "template_111_inuse"
+  }],
+
+  "template_delete_non_existing_config": [
+  {
+    "name": "template_901"
+  },
+  {
+    "name": "template_902"
+  },
+  {
+    "name": "template_903"
+  },
+  {
+    "name": "template_904"
+  }],
+
+  "template_query_config": [
+  {
+    "name": "template_101"
+  },
+  {
+    "name": "template_102"
+  },
+  {
+    "name": "template_103"
+  },
+  {
+    "name": "template_104"
+  }],
+
+  "template_query_inuse_config": [
+  {
+    "name": "template_110_inuse"
+  },
+  {
+    "name": "template_111_inuse"
+  }],
+
+  "template_wrong_state_config": [
+  {
+    "content": "telemetry\n  certificate /bootflash/telegraf.crt telegraf\n  destination-profile\n    use-vrf management\n  destination-group 101\n    ip address 101.195.225.176 port 57101 protocol gRPC encoding GPB\n  sensor-group 101\n    data-source DME\n    path sys/ch depth unbounded\n  subscription 101\n    dst-grp 101\n    snsr-grp 101 sample-interval 10101\n",
+    "description": "Template_101",
+    "name": "template_101",
+    "tags": "internal policy 101"
+  }],
+
+  "template_validation_fail_config": [
+  {
+    "content": "#    Copyright (c) 2018 by Cisco Systems, Inc.\n#    All rights reserved.\n\n@(DisplayName=\"AAA Server Name/IP\", Description=\"Name or IPv4/IPv6 Address of an AAA Server\")\nipAddressWithoutPrefix AAA_SERVER;\n\n@(DisplayName=\"AAA group\", Description=\"Name of AAA Group\")\nstring AAA_GROUP {\nminLength = 1;\nmaxLength = 127;\n};\naaa group server radius $$AAA_GROUP$$\nserver $$AAA_SERVER$$\n",
+    "description": "Config to test validation failure",
+    "name": "test_validation_fail",
+    "tags": "template validation failure"
+  }]
+}
