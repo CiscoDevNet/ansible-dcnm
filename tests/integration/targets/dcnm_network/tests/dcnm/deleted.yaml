@@ -5,7 +5,7 @@
 - name: DELETED - Verify if fabric - Fabric1 is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
@@ -35,10 +35,10 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: [Ethernet1/1, Ethernet1/2]
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
         deploy: true
       - ip_address: "{{ ansible_switch2 }}"
-        ports: [Ethernet1/11, Ethernet1/12]
+        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
       deploy: false
   register: result
@@ -126,7 +126,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: [Ethernet1/1, Ethernet1/2]
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
         deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
@@ -137,7 +137,7 @@
       gw_ip_subnet: '192.168.40.1/24'
       attach:
       - ip_address: "{{ ansible_switch2 }}"
-        ports: [Ethernet1/11, Ethernet1/12]
+        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
       deploy: false
   register: result
@@ -260,7 +260,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: [Ethernet1/1, Ethernet1/2]
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
         deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
@@ -271,7 +271,7 @@
       gw_ip_subnet: '192.168.40.1/24'
       attach:
       - ip_address: "{{ ansible_switch2 }}"
-        ports: [Ethernet1/11, Ethernet1/12]
+        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
       deploy: false
   register: result

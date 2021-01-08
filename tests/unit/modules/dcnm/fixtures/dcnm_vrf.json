@@ -437,7 +437,79 @@
       }
     ]
   },
+   "mock_vrf_attach_object_query" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "202",
+            "vrfId": "9008011"
+          },
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf2",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK2",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.225",
+            "vlanId": "202",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
   "mock_vrf_attach_object2" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "202",
+            "vrfId": "9008011"
+          },
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf4",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK4",
+            "switchRole": "border",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.227",
+            "vlanId": "202",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vrf_attach_object2_query" : {
     "MESSAGE": "OK",
     "METHOD": "POST",
     "RETURN_CODE": 200,

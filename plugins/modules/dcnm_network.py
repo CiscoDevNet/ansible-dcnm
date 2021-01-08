@@ -24,7 +24,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
-__author__ = "Chris Van Heuveln, Shrishail Kariyappanavar"
+__author__ = "Chris Van Heuveln, Shrishail Kariyappanavar, Karthik Babu Harichandra Babu"
 
 DOCUMENTATION = '''
 ---
@@ -1224,65 +1224,91 @@ class DcnmNetwork:
 
     def get_diff_query(self):
 
-        query = []
+        method = 'GET'
+        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
 
-        if self.have_create or self.have_attach:
+        vrf_objects = dcnm_send(self.module, method, path)
 
-            for want_c in self.want_create:
-                try:
-                    found_c = (
-                        next((net for net in self.have_create if net['networkName'] == want_c['networkName']), None)).copy()
-                except AttributeError as error:
+        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+
+        if missing_fabric or not_ok:
+            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
+            msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+
+            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+            return
+
+        if not vrf_objects['DATA']:
+            return
+
+        if self.config:
+            query = []
+            if self.have_create or self.have_attach:
+                for want_c in self.want_create:
+                    # Query the Network
+                    for vrf in vrf_objects['DATA']:
+                        item = {'parent': {}, 'attach': []}
+                        path = '/rest/top-down/fabrics/{}/networks?vrf-name={}'.format(self.fabric, vrf['vrfName'])
+                        networks_per_vrf = dcnm_send(self.module, method, path)
+
+                        if not networks_per_vrf['DATA']:
+                            continue
+
+                        for net in networks_per_vrf['DATA']:
+                            if (want_c['networkName'] == net['networkName'] and want_c['networkId'] == net['networkId']) and \
+                                    want_c['vrf'] == net['vrf']:
+                                item['parent'] = net
+
+                                # Query the Attachment for the found VRF
+                                path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
+                                    format(self.fabric, net['networkName'])
+                                net_attach_objects = dcnm_send(self.module, method, path)
+
+                                if not net_attach_objects['DATA']:
+                                    return
+
+                                for net_attach in net_attach_objects['DATA']:
+                                    if want_c['networkName'] == net_attach['networkName']:
+                                        if not net_attach.get('lanAttachList'):
+                                            continue
+                                        attach_list = net_attach['lanAttachList']
+
+                                        for attach in attach_list:
+                                            # append the attach network details
+                                            item['attach'].append(attach)
+                                        query.append(item)
+
+        else:
+            query = []
+            for vrf in vrf_objects['DATA']:
+                item = {'parent': {}, 'attach': []}
+                path = '/rest/top-down/fabrics/{}/networks?vrf-name={}'.format(self.fabric, vrf['vrfName'])
+                networks_per_vrf = dcnm_send(self.module, method, path)
+
+                if not networks_per_vrf['DATA']:
                     continue
-                found_a = next((net for net in self.have_attach if net['networkName'] == want_c['networkName']), None)
-                found_w = next((net for net in self.want_attach if net['networkName'] == want_c['networkName']), None)
 
-                json_to_dict = json.loads(found_c['networkTemplateConfig'])
+                for net in networks_per_vrf['DATA']:
+                    # append the parent network details
+                    item['parent'] = net
 
-                found_c.update({'net_name': found_c['networkName']})
-                found_c.update({'vrf_name': found_c['vrf']})
-                found_c.update({'net_id': found_c['networkId']})
-                found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
-                found_c.update({'gw_ip_subnet': json_to_dict.get('gatewayIpAddress', "")})
-                found_c.update({'net_template': found_c['networkTemplate']})
-                found_c.update({'net_extension_template': found_c['networkExtensionTemplate']})
-                found_c.update({'attach': []})
+                    #fetch the attachment for the network
+                    path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
+                                format(self.fabric, net['networkName'])
+                    net_attach_objects = dcnm_send(self.module, method, path)
 
-                del found_c['fabric']
-                del found_c['networkName']
-                del found_c['networkId']
-                del found_c['networkTemplate']
-                del found_c['networkExtensionTemplate']
-                del found_c['networkTemplateConfig']
-                del found_c['vrf']
+                    if not net_attach_objects['DATA']:
+                        return
 
-                if not found_w:
-                    query.append(found_c)
-                    continue
+                    for net_attach in net_attach_objects['DATA']:
+                        if not net_attach.get('lanAttachList'):
+                            continue
+                        attach_list = net_attach['lanAttachList']
 
-                attach_w = found_w['lanAttachList']
-                attach_l = found_a['lanAttachList']
-
-                for a_w in attach_w:
-                    attach_d = {}
-                    serial = a_w['serialNumber']
-                    found = False
-                    for a_l in attach_l:
-                        if a_l['serialNumber'] == serial:
-                            found = True
-                            break
-
-                    if found:
-                        for k, v in self.ip_sn.items():
-                            if v == a_l['serialNumber']:
-                                attach_d.update({'ip_address': k})
-                                break
-                        attach_d.update({'ports': a_l['switchPorts']})
-                        attach_d.update({'deploy': a_l['isAttached']})
-                        found_c['attach'].append(attach_d)
-
-                if attach_d:
-                    query.append(found_c)
+                        for attach in attach_list:
+                            #append the attach network details
+                            item['attach'].append(attach)
+                        query.append(item)
 
         self.query = query
 
@@ -1457,49 +1483,88 @@ class DcnmNetwork:
 
         """Parse the playbook values, validate to param specs."""
 
-        net_spec = dict(
-            net_name=dict(required=True, type='str', length_max=64),
-            net_id=dict(type='int', range_max=16777214),
-            vrf_name=dict(type='str', length_max=32),
-            attach=dict(type='list'),
-            deploy=dict(type='bool'),
-            gw_ip_subnet=dict(type='ipv4_subnet', default=""),
-            vlan_id=dict(type='int', range_max=4094),
-            routing_tag=dict(type='int', default=12345, range_max=4294967295),
-            net_template=dict(type='str', default='Default_Network_Universal'),
-            net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
-        )
-        att_spec = dict(
-            ip_address=dict(required=True, type='str'),
-            ports=dict(required=True, type='list'),
-            deploy=dict(type='bool', default=True)
-        )
+        state = self.params['state']
 
-        if self.config:
-            msg = None
-            # Validate net params
-            valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
-            for net in valid_net:
-                if net.get('attach'):
-                    valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
-                    net['attach'] = valid_att
-                    invalid_params.extend(invalid_att)
-                self.validated.append(net)
+        if state == 'query':
 
-            if invalid_params:
-                msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
-                self.module.fail_json(msg=msg)
+            net_spec = dict(
+                net_name=dict(required=True, type='str', length_max=64),
+                net_id=dict(type='int', range_max=16777214),
+                vrf_name=dict(type='str', length_max=32),
+                attach=dict(type='list'),
+                deploy=dict(type='bool'),
+                gw_ip_subnet=dict(type='ipv4_subnet', default=""),
+                vlan_id=dict(type='int', range_max=4094),
+                routing_tag=dict(type='int', default=12345, range_max=4294967295),
+                net_template=dict(type='str', default='Default_Network_Universal'),
+                net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                ports=dict(required=True, type='list'),
+                deploy=dict(type='bool', default=True)
+            )
+
+            if self.config:
+                msg = None
+                # Validate net params
+                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                for net in valid_net:
+                    if net.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
+                        net['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                    self.validated.append(net)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
 
         else:
-            state = self.params['state']
-            msg = None
 
-            if state == 'merged' or state == 'overridden' or \
-                    state == 'replaced' or state == 'query':
-                msg = "config: element is mandatory for this state {}".format(state)
+            net_spec = dict(
+                net_name=dict(required=True, type='str', length_max=64),
+                net_id=dict(type='int', range_max=16777214),
+                vrf_name=dict(type='str', length_max=32),
+                attach=dict(type='list'),
+                deploy=dict(type='bool'),
+                gw_ip_subnet=dict(type='ipv4_subnet', default=""),
+                vlan_id=dict(type='int', range_max=4094),
+                routing_tag=dict(type='int', default=12345, range_max=4294967295),
+                net_template=dict(type='str', default='Default_Network_Universal'),
+                net_extension_template=dict(type='str', default='Default_Network_Extension_Universal')
+            )
+            att_spec = dict(
+                ip_address=dict(required=True, type='str'),
+                ports=dict(required=True, type='list'),
+                deploy=dict(type='bool', default=True)
+            )
 
-        if msg:
-            self.module.fail_json(msg=msg)
+            if self.config:
+                msg = None
+                # Validate net params
+                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                for net in valid_net:
+                    if net.get('attach'):
+                        valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
+                        net['attach'] = valid_att
+                        invalid_params.extend(invalid_att)
+                    self.validated.append(net)
+
+                if invalid_params:
+                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    self.module.fail_json(msg=msg)
+
+            else:
+                state = self.params['state']
+                msg = None
+
+                if state == 'merged' or state == 'overridden' or \
+                        state == 'replaced' or state == 'query':
+                    msg = "config: element is mandatory for this state {}".format(state)
+
+            if msg:
+                self.module.fail_json(msg=msg)
 
     def handle_response(self, resp, op):
 
@@ -1583,7 +1648,8 @@ def main():
         fabric=dict(required=True, type='str'),
         config=dict(required=False, type='list'),
         state=dict(default='merged',
-                   choices=['merged', 'replaced', 'deleted', 'overridden', 'query'])
+                   choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
+        check_mode = dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -1619,8 +1685,9 @@ def main():
 
     dcnm_net.result['warnings'].append(warn_msg) if warn_msg else []
 
-    if module.check_mode:
-        module.exit_json(**dcnm_net.result)
+    if module.params['check_mode']:
+        dcnm_vrf.result['changed'] = False
+        module.exit_json(**dcnm_vrf.result)
 
     if dcnm_net.diff_create or dcnm_net.diff_create_quick or dcnm_net.diff_attach \
             or dcnm_net.diff_deploy or dcnm_net.diff_delete or dcnm_net.diff_create_update \

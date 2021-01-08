@@ -319,7 +319,7 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - interface: Ethernet1/16
+          - interface: "{{ ansible_int1 }}"
       deploy: true
   register: result
   ignore_errors: yes

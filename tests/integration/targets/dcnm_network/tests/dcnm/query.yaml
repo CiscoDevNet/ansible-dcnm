@@ -5,7 +5,7 @@
 - name: QUERY - Verify if fabric - Fabric1 is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
@@ -22,7 +22,7 @@
     timeout: 40
 
 - name: QUERY - Create, Attach and Deploy Multiple Network with Single Switch Attach
-  cisco.dcnm.dcnm_network: &conf1
+  cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
     config:
@@ -78,7 +78,7 @@
 ###############################################
 ###                QUERY                     ##
 ###############################################
--
+
 - name: QUERY - Query the Network
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
@@ -103,20 +103,60 @@
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response[0].gw_ip_subnet == "192.168.30.1/24"'
-    - 'result.response[0].net_extension_template == "Default_Network_Extension_Universal"'
-    - 'result.response[0].net_id == 7005'
-    - 'result.response[0].net_name == "ansible-net13"'
-    - 'result.response[0].net_template == "Default_Network_Universal"'
-    - 'result.response[0].vlan_id == "1500"'
-    - 'result.response[0].vrf_name == "Tenant-1"'
-    - 'result.response[1].gw_ip_subnet == "192.168.40.1/24"'
-    - 'result.response[1].net_extension_template == "Default_Network_Extension_Universal"'
-    - 'result.response[1].net_id == 7002'
-    - 'result.response[1].net_name == "ansible-net12"'
-    - 'result.response[1].net_template == "Default_Network_Universal"'
-    - 'result.response[1].vlan_id == "151"'
-    - 'result.response[1].vrf_name == "Tenant-2"'
+    - 'result.response[0].parent.networkName == "ansible-net13"'
+    - 'result.response[0].parent.networkId == 7005'
+    - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].parent.vrf == "Tenant-1"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName== "ansible-net13"'
+    - 'result.response[1].parent.networkName == "ansible-net12"'
+    - 'result.response[1].parent.networkId == 7002'
+    - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].parent.vrf == "Tenant-2"'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName== "ansible-net12"'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName== "ansible-net12"'
+
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: QUERY - Query the Network without the config element
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].parent.networkName == "ansible-net13"'
+    - 'result.response[0].parent.networkId == 7005'
+    - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].parent.vrf == "Tenant-1"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName== "ansible-net13"'
+    - 'result.response[1].parent.networkName == "ansible-net12"'
+    - 'result.response[1].parent.networkId == 7002'
+    - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].parent.vrf == "Tenant-2"'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName== "ansible-net12"'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName== "ansible-net12"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
