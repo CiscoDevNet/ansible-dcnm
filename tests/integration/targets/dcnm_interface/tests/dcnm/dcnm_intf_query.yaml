@@ -155,8 +155,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - '(result["response"] | length) != 0'
 
 ##############################################
 ##               QUERY                      ##
@@ -190,8 +189,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - '(result["response"] | length) == 0'
 
 ##############################################
 ##             CLEANUP                      ##
@@ -209,5 +207,3 @@
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
-
-

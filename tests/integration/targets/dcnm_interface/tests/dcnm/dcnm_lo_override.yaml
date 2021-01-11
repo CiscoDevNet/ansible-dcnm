@@ -118,7 +118,7 @@
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 1'
-          - '(result["diff"][0]["replaced"] | length) != 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 1'
           - '(result["diff"][0]["deploy"] | length) != 0'
 
@@ -136,9 +136,9 @@
           - 'result.changed == false'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) != 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) != 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
 
     - assert:
         that:
