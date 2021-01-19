@@ -211,7 +211,7 @@
 
     - assert:
         that:
-          - 'result.changed == false'
+          - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 5'
@@ -233,6 +233,88 @@
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create ethernet interfaces
+      cisco.dcnm.dcnm_interface: 
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "eth interface  acting as trunk"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##              DELETE                      ##
+##############################################
+
+    - name: Delete a single ethernet interface
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_it_fabric }}" 
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "eth interface  acting as trunk"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 1'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 

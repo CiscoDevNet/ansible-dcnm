@@ -1174,7 +1174,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         set_module_args(dict(state='deleted',
                              fabric='test_fabric', config=self.playbook_config))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result['diff'][0]['deleted']), 0)
         self.assertEqual(len(result['diff'][0]['merged']), 0)

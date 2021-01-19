@@ -149,9 +149,9 @@
         that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) != 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) != 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
 
     - assert:
         that:

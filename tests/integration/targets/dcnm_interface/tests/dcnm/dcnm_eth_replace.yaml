@@ -136,7 +136,7 @@
             profile:
               admin_state: true               ## choose from [true, false]
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: '1G'                     ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              speed: '1Gb'                    ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
               bpdu_guard: 'no'                ## choose from [true, false, 'no']
               port_type_fast: false           ## choose from [true, false]
               mtu: default                    ## choose from [default, jumbo]
@@ -153,7 +153,7 @@
             profile:
               admin_state: true               ## choose from [true, false]
               mode: access                    # choose from [trunk, access, l3, monitor, epl_routed]
-              speed: '1G'                     ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              speed: '1Gb'                    ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
               bpdu_guard: false               ## choose from [true, false, 'no']
               port_type_fast: false           ## choose from [true, false]
               mtu: jumbo                      ## choose from [default, jumbo]
@@ -170,7 +170,7 @@
             profile:
               admin_state: true               ## choose from [true, false]
               mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: '1G'                     ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              speed: '1Gb'                    ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.168.3.1          # ipv4 address for the interface
               ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
@@ -188,7 +188,7 @@
             profile:
               admin_state: true               ## choose from [true, false]
               mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: '1G'                     ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              speed: '1Gb'                    ## choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.168.4.1          # ipv4 address for the interface
               ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]

@@ -509,7 +509,7 @@ LOOPBACK INTERFACE
       - name: lo100                       # should be of the form lo<port-id>
         type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "192.172.1.1"                 # provide the switch where to deploy the config
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -530,7 +530,7 @@ LOOPBACK INTERFACE
       - name: lo100                       # should be of the form lo<port-id>
         type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "192.172.1.1"                 # provide the switch where to deploy the config
         deploy: true                      ## choose from [true, false]
         profile:
           admin_state: false              ## choose from [true, false]
@@ -556,7 +556,7 @@ LOOPBACK INTERFACE
     state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
     config:
       - switch:
-          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "192.172.1.1"                 # provide the switch where to deploy the config
 
 # To delete or reset a particular interface on all switches in the fabric
 - name: Delete loopback interfaces
@@ -574,7 +574,7 @@ LOOPBACK INTERFACE
     config:
       - name: lo100                       # should be of the form lo<port-id>
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "192.172.1.1"                 # provide the switch where to deploy the config
 
 # To override with a particular interface configuration
 - name: Override loopback interfaces
@@ -585,7 +585,7 @@ LOOPBACK INTERFACE
       - name: lo103                       # should be of the form lo<port-id>
         type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "192.172.1.1"                 # provide the switch where to deploy the config
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -611,7 +611,7 @@ LOOPBACK INTERFACE
     state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
     config:
       - switch:
-          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "192.172.1.1"                 # provide the switch where to deploy the config
 
 PORTCHANNEL INTERFACE
 
@@ -623,7 +623,7 @@ PORTCHANNEL INTERFACE
       - name: po300                       # should be of the form po<port-id>
         type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -642,7 +642,7 @@ PORTCHANNEL INTERFACE
       - name: po301                       # should be of the form po<port-id>
         type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: false              # choose from [true, false]
@@ -666,7 +666,7 @@ PORTCHANNEL INTERFACE
       - name: po300                       # should be of the form po<port-id>
         type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: false              ## choose from [true, false]
@@ -690,7 +690,7 @@ PORTCHANNEL INTERFACE
     config:
       - name: po300                       # should be of the form po<port-id>
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
 
 # To delete or reset all interfaces on all switches in the fabric
 - name: Delete port channel interfaces
@@ -713,7 +713,7 @@ PORTCHANNEL INTERFACE
     state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
     config:
       - switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
 
 - name: Override port channel interfaces
   cisco.dcnm.dcnm_interface:
@@ -723,7 +723,7 @@ PORTCHANNEL INTERFACE
       - name: po320                       # should be of the form po<port-id>
         type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -749,7 +749,7 @@ SUB-INTERFACE
       - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
         type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -773,7 +773,7 @@ SUB-INTERFACE
       - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
         type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: false              ## choose from [true, false]
@@ -811,7 +811,7 @@ SUB-INTERFACE
       - name: eth1/1.3                    # should be of the form eth<port-num>.<port-id>
         type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:
-          - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+          - "192.172.1.1"                 # provide the switch information where the config is to be deployed
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -837,8 +837,8 @@ VPC INTERFACE
       - name: vpc750                      # should be of the form vpc<port-id>
         type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:                           # provide switches of vPC pair
-          - ["{{ ansible_switch1 }}",
-             "{{ ansible_switch2 }}"]
+          - ["192.172.1.1",
+             "192.172.1.2"]
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -867,8 +867,8 @@ VPC INTERFACE
       - name: vpc750                      # should be of the form vpc<port-id>
         type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:                           # provide switches of vPC pair
-          - ["{{ ansible_switch1 }}",
-             "{{ ansible_switch2 }}"]
+          - ["192.172.1.1",
+             "192.172.1.2"]
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: false              ## choose from [true, false]
@@ -900,8 +900,8 @@ VPC INTERFACE
     config:
       - name: vpc750                      # should be of the form vpc<port-id>
         switch:                           # provide switches of vPC pair
-          - ["{{ ansible_switch1 }}",
-             "{{ ansible_switch2 }}"]
+          - ["192.172.1.1",
+             "192.172.1.2"]
 
 - name: Override vPC interfaces
   cisco.dcnm.dcnm_interface:
@@ -911,8 +911,8 @@ VPC INTERFACE
       - name: vpc752                      # should be of the form vpc<port-id>
         type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
         switch:                           # provide switches of vPC pair
-          - ["{{ ansible_switch1 }}",
-             "{{ ansible_switch2 }}"]
+          - ["192.172.1.1",
+             "192.172.1.2"]
         deploy: true                      # choose from [true, false]
         profile:
           admin_state: true               # choose from [true, false]
@@ -943,25 +943,25 @@ QUERY
  - name: Query interface details
       cisco.dcnm.dcnm_interface:
         fabric: mmudigon-fabric
-        state: query                        # only choose from [merged, replaced, deleted, overridden, query]
+        state: query            # only choose from [merged, replaced, deleted, overridden, query]
         config:
           - switch:
-              - "{{ ansible_switch1 }}"     # provide the switch information where the config is to be deployed
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
           - name: po350
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
           - name: lo450
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
           - name: eth1/1
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
           - name: eth1/15.2
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
           - name: vpc750
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
 
 '''
 
@@ -1741,6 +1741,7 @@ class DcnmIntf:
         intf = {
             "deploy": False,
             "policy": "",
+            "interfaceType": "",
             "interfaces": [
                 {
                     "serialNumber": "",
@@ -1789,6 +1790,7 @@ class DcnmIntf:
         pol_ind_str = delem['type'] + '_' + delem['profile']['mode']
         #intf.update ({"policy" : self.pol_types[delem['profile']['mode']]})
         intf.update ({"policy" : self.pol_types[pol_ind_str]})
+        intf.update ({"interfaceType" : self.int_types[delem['type']]})
 
         # Rest of the data in the dict depends on the interface type and the template
 
@@ -1839,23 +1841,27 @@ class DcnmIntf:
                     if (intf_payload not in self.want):
                         self.want.append(intf_payload)
 
-    def dcnm_intf_get_intf_info_from_dcnm(self, intf):
+    def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
         # For VPC interfaces the serialNumber will be a combibed one. But GET on interface cannot
         # pass this combined serial number. We will have to pass individual ones
 
-        if (intf['interfaceType'] == 'INTERFACE_VPC'):
-            sno = intf['serialNumber'].split('~')[0]
+        if (ifType == 'INTERFACE_VPC'):
+            sno = serialNumber.split('~')[0]
         else:
-            sno = intf['serialNumber']
+            sno = serialNumber
 
-        path = '/rest/interface?serialNumber=' + sno + '&ifName=' +  intf['ifName']
+        path = '/rest/interface?serialNumber=' + sno + '&ifName=' +  ifName
         resp = dcnm_send (self.module, 'GET', path)
 
         if ('DATA' in resp and resp['DATA']):
             return resp['DATA'][0]
         else:
             return []
+
+    def dcnm_intf_get_intf_info_from_dcnm(self, intf):
+
+        return self.dcnm_intf_get_intf_info (intf['ifName'], intf['serialNumber'], intf['interfaceType'])
 
     def dcnm_intf_get_have_all (self, sw):
 
@@ -2020,6 +2026,8 @@ class DcnmIntf:
                 wkeys = list(want.keys())
                 if ('skipResourceCheck' in wkeys):
                     wkeys.remove('skipResourceCheck')
+                if ('interfaceType' in wkeys):
+                    wkeys.remove('interfaceType')
 
                 for d in match_have:
 
@@ -2106,6 +2114,9 @@ class DcnmIntf:
                 self.changed_dict[0][state].append(changed_dict)
                 intf_changed = True
             elif (action == 'update'):
+                # Remove the 'interfaceType' key from 'want'. It is not required for 'replace'
+                if (want.get('interfaceType', None) != None):
+                    want.pop('interfaceType')
                 self.dcnm_intf_merge_intf_info(want, self.diff_replace)
                 # Add the changed_dict to self.changed_dict
                 self.changed_dict[0][state].append(changed_dict)
@@ -2230,7 +2241,7 @@ class DcnmIntf:
 
         for item in self.pb_input:
             # For overridden state, we will not touch anything that is present in incoming config, 
-            # because those interfaces will anyway be mopdified in the current run
+            # because those interfaces will anyway be modified in the current run
             if ((self.module.params['state'] == 'overridden') and
                 (item['ifname'] == have['ifName'])):
                 return False, item['ifname']
@@ -2308,6 +2319,14 @@ class DcnmIntf:
                     continue
 
                 uelem = self.dcnm_intf_get_default_eth_payload(name, sno, fabric)
+                # Before we add the interface to replace list, check if the default payload is same as 
+                # what is already present. If both are same, skip the interface. 
+                # So during idempotence, we may add the same interface again if we don't compare
+
+                intf = self.dcnm_intf_get_intf_info(have['ifName'], have['serialNo'], have['ifType'])
+                if (self.dcnm_compare_default_payload (uelem, intf) == 'DCNM_INTF_MATCH'):
+                    continue
+
                 if (uelem is not None):
                     # Before defaulting ethernet interfaces, check if they are
                     # member of any port-channel. If so, do not default that
@@ -2380,7 +2399,7 @@ class DcnmIntf:
             name    = intf['underlayPolicies'][0]['source']
 
             match = [d for d in del_list if ((name.lower() == d['ifName'].lower()) and
-                                             (sno == d['serialNo']) and
+                                             (sno in d['serialNo']) and
                                              (fabric == d['fabricName']))]
             if (match):
 
@@ -2473,7 +2492,7 @@ class DcnmIntf:
 
                                 # Before we add the interface to replace list, check if the default payload is same as 
                                 # what is already present. If both are same, skip the interface. This is required specifically
-                                # for ethernet interfaces because they donlt actually get deleted. they will only be defaulted.
+                                # for ethernet interfaces because they don't actually get deleted. they will only be defaulted.
                                 # So during idempotence, we may add the same interface again if we don't compare
                                 if (intf_payload != []):
                                     if (self.dcnm_compare_default_payload (uelem, intf_payload) == 'DCNM_INTF_MATCH'):
@@ -2544,6 +2563,7 @@ class DcnmIntf:
           if ('DATA' in resp and resp['DATA']):
               self.diff_query.extend(resp['DATA'])
       self.changed_dict[0]['query'].extend(self.diff_query)
+      self.result['response'].extend(self.diff_query)
 
     def dcnm_parse_response (self, resp):
 
@@ -2697,7 +2717,7 @@ class DcnmIntf:
            self.result['response'].append(resp)
 
         resp    = None
-        time.sleep(1)
+#time.sleep(1)
 
         # In 11.4 version of DCNM, sometimes interfaces don't get deleted
         # completely, but only marked for deletion. They get removed only after a
@@ -2728,7 +2748,7 @@ class DcnmIntf:
 
         resp    = None
 
-        time.sleep(1)
+#time.sleep(1)
 
         path = '/rest/globalInterface'
         for payload in self.diff_create:
@@ -2744,7 +2764,7 @@ class DcnmIntf:
 
         resp    = None
 
-        time.sleep(1)
+#time.sleep(1)
 
         path = '/rest/globalInterface/deploy'
         if (self.diff_deploy):
@@ -2756,6 +2776,8 @@ class DcnmIntf:
             if ((resp.get('MESSAGE') != 'OK') and (resp.get('RETURN_CODE') != 200)):
                 resp, rc = self.dcnm_parse_response (resp)
                 changed = rc
+            else:
+                changed = True
 
             deploy = changed
 
@@ -2800,21 +2822,13 @@ class DcnmIntf:
                cfg['switch'][index] = addr_info
                index = index + 1
 
-               # Match this switch in the inventory. If it is a part of VPC pair, then populate the VPC 
-               # serial numbers
-
-               inv_entry = self.inventory_data.get (addr_info, None) 
-
                # Check if the VPC serial number information is already present. If not fetch that
 
                if (self.vpc_ip_sn.get (addr_info, None) is None) :
-                   if (inv_entry is not None):
-                       if ((str(inv_entry['isVpcConfigured']).lower() == 'true') and (inv_entry['vpcDomain'] != 0)):
-                           sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
-                           if ('~' not in sno):
-                               mesg = 'Switch {} is not part of vPC pair, SNO = {}\n'.format(sw_elem, sno)
-                               self.module.fail_json(msg=mesg)
-                           self.vpc_ip_sn[addr_info] = sno
+                   sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
+                   if ('~' in sno):
+                       # This switch is part of VPC pair. Populate the VPC serial number DB
+                       self.vpc_ip_sn[addr_info] = sno
 
 def main():
 
