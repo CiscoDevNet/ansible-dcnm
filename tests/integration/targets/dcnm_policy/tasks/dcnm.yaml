@@ -19,6 +19,22 @@
   loop_control:
     loop_var: test_case_to_run
 
+- name: Final Cleanup - delete telemetry policy that we created during init
+  cisco.dcnm.dcnm_policy: 
+    fabric: "{{ ansible_it_fabric }}" 
+    state: deleted                     # only choose form [merged, deleted, query]
+    config: 
+      - name: my_feature_telemetry
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+          - ip: "{{ ansible_switch2 }}"
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
 - name: Final Cleanup - delete all templates created during init
   cisco.dcnm.dcnm_template: 
     state: deleted       # only choose form [merged, deleted, query]
@@ -28,6 +44,7 @@
       - name: template_103
       - name: template_104
       - name: template_105
+      - name: my_feature_telemetry
 
   register: result
 
