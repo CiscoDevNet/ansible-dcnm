@@ -1,5 +1,5 @@
 ---
-- debug: msg="Starting dcnm_fabric spine_leaf_merged test"
+- debug: msg="Starting dcnm_fabric spine_leaf_overridden test"
 - debug: msg="Role Path {{ role_path }}"
 
 - name: Include VRF List Items
@@ -20,7 +20,7 @@
   - name: Add Tenant VRF Objects
     cisco.dcnm.dcnm_vrf: &add_vrfs
       fabric: "{{ fabric_name }}"
-      state: merged
+      state: overridden
       config: "{{ vrfs }}"
     register: result
 
@@ -73,7 +73,7 @@
   - name: Specify attachments to switches with global deploy flag set to false
     cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
-      state: merged
+      state: overridden
       config:
         - vrf_name: green_red
           vrf_id: 470000
@@ -115,7 +115,7 @@
   - name: Specify attachments to switches with global deploy flag set to true
     cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
-      state: merged
+      state: overridden
       config:
         - vrf_name: green_red
           vrf_id: 470000
@@ -203,7 +203,7 @@
   - name: Add vrfs with global and per attach deploy override
     cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
-      state: merged
+      state: overridden
       config:
         - vrf_name: green_red
           vrf_id: 470000
@@ -266,7 +266,7 @@
   - name: Add VRFs with vrf_id and vlan_id autoselection by DCNM
     cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
-      state: merged
+      state: overridden
       config:
         - vrf_name: green_red
           # vrf_id: 470000
@@ -340,4 +340,4 @@
       - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
 
   always:
-    - debug: msg="End dcnm_fabric spine_leaf_merged test"
+    - debug: msg="End dcnm_fabric spine_leaf_overridden test"
