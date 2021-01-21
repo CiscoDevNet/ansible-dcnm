@@ -69,7 +69,7 @@ options:
       vlan_id:
         description: 'vlan ID for the vrf attachment'
         type: int
-        required: false 
+        required: false
         note: If not specified in the playbook, DCNM will auto-select an available vlan_id
       vrf_template:
         description: 'Name of the config template to be used'
@@ -95,11 +95,11 @@ options:
             suboptions:
             vrf_lite:
                 description: 'VRF Lite Extensions options'
-                - peer_vrf: 
+                - peer_vrf:
                     description: 'VRF Name to which this extension is attached'
                     type: str
                     requited: mandatory
-                  interface: 
+                  interface:
                     description: 'Interface of the switch which is connected to the edge router'
                     type: str
                     requited: optional
@@ -123,7 +123,7 @@ options:
                     description: 'DOT1Q Id'
                     type: str
                     requited: optional
-                  peer_vrf: 
+                  peer_vrf:
                     description: 'VRF Name to which this extension is attached'
                     type: str
                     requited: mandatory
@@ -194,7 +194,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
@@ -205,7 +204,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: null
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
@@ -222,13 +220,12 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
         vrf_lite:
-	  # All parameters under vrf_lite except peer_vrf are optional and 
+	  # All parameters under vrf_lite except peer_vrf are optional and
 	  # will be supplied by DCNM when omitted in the playbook
           - peer_vrf: test_vrf_1 # peer_vrf is mandatory
             interface: Ethernet1/16 # optional
@@ -249,7 +246,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
@@ -280,7 +276,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
@@ -297,7 +292,6 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
     #   vrf_template: Default_VRF_Universal
     #   vrf_extension_template: Default_VRF_Extension_Universal
     #   vlan_id: 2000
-    #   source: null
     #   service_vrf_template: null
     #   attach:
     #   - ip_address: 192.168.1.224
@@ -313,14 +307,12 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
 
 - name: Delete all the vrfs
@@ -338,13 +330,11 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2000
-      source: null
       service_vrf_template: null
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: null
       service_vrf_template: null
 '''
 
@@ -352,7 +342,7 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
 class DcnmVrf:
 
     def __init__(self, module):
-        
+
         self.module = module
         self.params = module.params
         self.fabric = module.params['fabric']
@@ -552,7 +542,6 @@ class DcnmVrf:
             if want['vrfId'] is not None and have['vrfId'] != want['vrfId']:
                 self.module.fail_json(msg="vrf_id for vrf:{} cant be updated to a different value".format(want['vrfName']))
             elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
-                    have['source'] != want['source'] or \
                     have['vrfTemplate'] != want['vrfTemplate'] or \
                     have['vrfExtensionTemplate'] != want['vrfExtensionTemplate'] or \
                     vlanId_have != vlanId_want:
@@ -571,7 +560,6 @@ class DcnmVrf:
                 self.module.fail_json(
                     msg="vrf_id for vrf:{} cant be updated to a different value".format(want['vrfName']))
             elif have['serviceVrfTemplate'] != want['serviceVrfTemplate'] or \
-                    have['source'] != want['source'] or \
                     have['vrfTemplate'] != want['vrfTemplate'] or \
                     have['vrfExtensionTemplate'] != want['vrfExtensionTemplate']:
 
@@ -592,7 +580,7 @@ class DcnmVrf:
 
         v_template = vrf.get('vrf_template', 'Default_VRF_Universal')
         ve_template = vrf.get('vrf_extension_template', 'Default_VRF_Extension_Universal')
-        src = vrf.get('source', None)
+        src = None
         s_v_template = vrf.get('service_vrf_template', None)
 
         vrf_upd = {
@@ -1203,7 +1191,7 @@ class DcnmVrf:
                 new_attach_list.append(attach_d)
 
             if new_attach_list:
-                if diff_deploy:
+                if diff_deploy and vrf['vrfName'] in diff_deploy:
                     diff_deploy.remove(vrf['vrfName'])
                 new_attach_dict.update({'attach': new_attach_list})
                 new_attach_dict.update({'vrf_name': vrf['vrfName']})
@@ -1246,7 +1234,7 @@ class DcnmVrf:
                     want_vlanId = json_to_dict.get('vlanId', "0")
 
                     if (want_c['vrfName'] == vrf['vrfName'] and want_c['vrfId'] == vrf['vrfId'] and \
-                            want_c['source'] == vrf['source'] and str(want_vlanId) == vrf_vlanId):
+                            str(want_vlanId) == vrf_vlanId):
 
                         item = {'parent': {}, 'attach': []}
                         item['parent'] = vrf
@@ -1566,7 +1554,7 @@ class DcnmVrf:
                 source=dict(type='str', default=None),
                 service_vrf_template=dict(type='str', default=None),
                 attach=dict(type='list'),
-                deploy=dict(type='bool')
+                deploy=dict(type='bool', default=True)
             )
             att_spec = dict(
                 ip_address=dict(required=True, type='str'),
@@ -1586,6 +1574,12 @@ class DcnmVrf:
             msg = None
             if self.config:
                 for vrf in self.config:
+                    # A few user provided vrf parameters need special handling
+                    # Ignore user input for src and hard code it to None
+                    vrf['source'] = None
+                    if not vrf.get('service_vrf_template'):
+                        vrf['service_vrf_template'] = None
+
                     if 'vrf_name' not in vrf:
                         msg = "vrf_name is mandatory under vrf parameters"
 
@@ -1612,8 +1606,21 @@ class DcnmVrf:
                 valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
                 for vrf in valid_vrf:
                     if vrf.get('attach'):
+                        # The deploy setting provided in the user parameters
+                        # has the following behavior:
+                        # (1) By default deploy is true
+                        # (2) The global 'deploy' option for the vrf applies to
+                        #     any attachments that don't have the 'deploy'
+                        #     option explicity set.
+                        for entry in vrf.get('attach'):
+                            if 'deploy' not in entry.keys() and 'deploy' in vrf:
+                                # This attach entry does not have a deploy key
+                                # but the vrf global deploy flag is set so set
+                                # it to the global 'deploy' value
+                                entry['deploy'] = vrf['deploy']
                         valid_att, invalid_att = validate_list_of_dicts(vrf['attach'], att_spec)
                         vrf['attach'] = valid_att
+
                         invalid_params.extend(invalid_att)
                         for lite in vrf.get('attach'):
                             if lite.get('vrf_lite'):
@@ -1625,6 +1632,7 @@ class DcnmVrf:
                 if invalid_params:
                     msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
                     self.module.fail_json(msg=msg)
+
         else:
 
             vrf_spec = dict(
