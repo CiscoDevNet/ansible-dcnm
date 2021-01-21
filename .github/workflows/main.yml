@@ -1,0 +1,88 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the develop branch
+  push:
+    branches: [ test-ci ]
+  pull_request:
+    branches: [ test-ci ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    name: Build DCNM collection
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible: [2.9.12, 2.10.0]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install ansible-base (v${{ matrix.ansible }})
+      run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+    - name: Build a DCNM collection tarball
+      run: ansible-galaxy collection build --output-path "${GITHUB_WORKSPACE}/.cache/collection-tarballs"
+
+    - name: Store migrated collection artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: collection
+        path: .cache/collection-tarballs
+
+  unit-tests:
+    name: Run DCNM Unit Tests
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible: [2.9.12, 2.10.0]
+    steps:
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install ansible-base (v${{ matrix.ansible }})
+      run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+    - name: Install coverage (v4.5.4)
+      run: pip install coverage==4.5.4
+    
+    - name: Install pytest (v5.4.1)
+      run: pip install pytest==5.4.1
+
+    - name: Download migrated collection artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: collection
+        path: .cache/collection-tarballs
+
+    - name: Install the collection tarball
+      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+
+    - name: Run DCNM Unit tests
+      run: coverage run --source=. -m pytest tests/unit/modules/dcnm/. -vvvv
+      #run: ansible-test units --docker -v --color --truncate 0 --coverage
+      working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
+      env:
+        PYTHONPATH: /home/runner/.ansible/collections
+
+    - name: Generate coverage report
+      run: coverage report
+      working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
+
