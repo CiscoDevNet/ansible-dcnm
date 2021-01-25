@@ -242,7 +242,7 @@ class DcnmTemplate:
     def dcnm_template_get_template_payload(self, ditem):
 
         if self.module.params["state"] == "merged":
-            std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template variables\n##\n##template content\n"
+            std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
 
             template_payload = {}
 
@@ -334,11 +334,22 @@ class DcnmTemplate:
             # DATA may have multiple dicts with different reports. Check all reports and ignore warnings.
             # If there are errors, take it as validation failure
 
-            for d in resp["DATA"]:
-                if d["reportItemType"].lower() == "error":
+            # resp['DATA'] may be a list in case of templates with no parameters. But for templates
+            # with parameters resp['DATA'] will be a dict directly with 'status' as 'Template Validation Successful'
+            if isinstance(resp['DATA'], list):
+                for d in resp["DATA"]:
+                    if d.get("reportItemType", ' ').lower() == "error":
+                        self.result["response"].append(resp)
+                        return 0
+                return resp["RETURN_CODE"]
+            elif isinstance(resp['DATA'], dict):
+                if resp['DATA'].get("status",  ' ').lower() != "template validation successful":
                     self.result["response"].append(resp)
                     return 0
-            return resp["RETURN_CODE"]
+                return resp["RETURN_CODE"]
+            else:
+                self.result["response"].append(resp)
+                return 0
         else:
             return 0
 
@@ -589,7 +600,7 @@ class DcnmTemplate:
 
     def dcnm_template_build_content(self, content, name, desc, tags):
 
-        std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template variables\n##\n##template content\n"
+        std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
         template_payload = {}
 
         mod_cont = re.sub(" +", " ", content)
