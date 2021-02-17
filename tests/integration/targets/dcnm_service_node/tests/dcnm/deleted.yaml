@@ -42,7 +42,7 @@
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
-      attach_interface: vPC1
+      attach_interface: "{{ ansible_vpc1 }}"
       switches:
       - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
@@ -53,7 +53,7 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "vPC1"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
     - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
     - 'result.response[0].DATA.formFactor == "Virtual"'
     - 'result.response[0].DATA.interfaceName == "svc1"'
@@ -69,7 +69,7 @@
 ###                 DELETED                  ##
 ###############################################
 
-- name: DELETED - Create Service Node with 2 switches and vPC Interface with type firewall
+- name: DELETED - Delete Service Node with 2 switches and vPC Interface with type firewall
   cisco.dcnm.dcnm_service_node: &conf
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -79,7 +79,7 @@
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
-      attach_interface: vPC1
+      attach_interface: "{{ ansible_vpc1 }}"
       switches:
       - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
@@ -119,7 +119,7 @@
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
-      attach_interface: Ethernet1/1
+      attach_interface: "{{ ansible_int1 }}"
       switches:
       - "{{ ansible_switch1 }}"
   register: result
@@ -129,7 +129,7 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "Ethernet1/1"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
     - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
     - 'result.response[0].DATA.formFactor == "Virtual"'
     - 'result.response[0].DATA.interfaceName == "svc1"'
@@ -151,7 +151,7 @@
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
-      attach_interface: Ethernet1/1
+      attach_interface: "{{ ansible_int1 }}"
       switches:
       - "{{ ansible_switch1 }}"
   register: result
@@ -191,7 +191,7 @@
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
-      attach_interface: vPC1
+      attach_interface: "{{ ansible_vpc1 }}"
       switches:
       - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
@@ -202,7 +202,7 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "vPC1"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
     - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
     - 'result.response[0].DATA.formFactor == "Virtual"'
     - 'result.response[0].DATA.interfaceName == "svc1"'
@@ -255,7 +255,7 @@
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
-      attach_interface: Ethernet1/1
+      attach_interface: "{{ ansible_int1 }}"
       switches:
       - "{{ ansible_switch1 }}"
   register: result
@@ -265,7 +265,7 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "Ethernet1/1"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
     - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
     - 'result.response[0].DATA.formFactor == "Virtual"'
     - 'result.response[0].DATA.interfaceName == "svc1"'

@@ -449,7 +449,7 @@ class DcnmServiceNode:
 
         diff_delete = []
 
-        def have_in_want(have_c):
+        for have_c in self.have_create:
             match_found = False
             for want_c in self.want_create:
                 if want_c['name'] == have_c['name']:
@@ -459,11 +459,7 @@ class DcnmServiceNode:
                             want_c['attachedSwitchSn'] == have_c['attachedSwitchSn'] and \
                             want_c['interfaceName'] == have_c['interfaceName']:
                         match_found = True
-
-            return match_found
-
-        for have_c in self.have_create:
-            if have_in_want(have_c):
+            if match_found:
                 continue
             else:
                 diff_delete.append(have_c['name'])
