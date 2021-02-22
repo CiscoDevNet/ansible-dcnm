@@ -1,0 +1,79 @@
+---
+- debug: msg="Starting dcnm_fabric spine_leaf_replaced_2 test"
+- debug: msg="Role Path {{ role_path }}"
+
+- name: Cleanup - Delete Networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ fabric_name }}"
+    state: deleted
+
+- name: Cleanup - Delete Tenant VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_name }}"
+    state: deleted
+
+- block:
+
+  - name: Add 3 VRFs and deploy them to all leaf devices
+    cisco.dcnm.dcnm_vrf:
+      fabric: "{{ fabric_name }}"
+      state: replaced
+      config:
+        - vrf_name: green_red
+          vrf_id: 470000
+          vlan_id: 201
+          attach:
+            - ip_address: "{{ leaf1 }}"
+            - ip_address: "{{ leaf2 }}"
+            - ip_address: "{{ leaf3 }}"
+            - ip_address: "{{ leaf4 }}"
+        - vrf_name: engineering
+          vrf_id: 480000
+          vlan_id: 401
+          attach:
+            - ip_address: "{{ leaf1 }}"
+            - ip_address: "{{ leaf2 }}"
+            - ip_address: "{{ leaf3 }}"
+            - ip_address: "{{ leaf4 }}"
+        - vrf_name: sales
+          vrf_id: 550000
+          vlan_id: 501
+          attach:
+            - ip_address: "{{ leaf1 }}"
+            - ip_address: "{{ leaf2 }}"
+            - ip_address: "{{ leaf3 }}"
+            - ip_address: "{{ leaf4 }}"
+    register: result
+
+  - name: Query fabric state until vrfStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_vrf:
+      fabric: "{{ fabric_name }}"
+      state: query
+    register: result
+    until:
+      - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+      - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+      - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
+    retries: 20
+    delay: 5
+
+  - name: Replace engineering VRF to remove attachments
+    cisco.dcnm.dcnm_vrf:
+      fabric: "{{ fabric_name }}"
+      state: replaced
+      config:
+        - vrf_name: engineering
+          vrf_id: 480000
+          vlan_id: 401
+          deploy: true
+    register: result
+
+  - name: Query VRF State
+    cisco.dcnm.dcnm_vrf:
+      fabric: "{{ fabric_name }}"
+      state: query
+    register: result
+
+
+  always:
+    - debug: msg="End dcnm_fabric spine_leaf_replaced_2 test"

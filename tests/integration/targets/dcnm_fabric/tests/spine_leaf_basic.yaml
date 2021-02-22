@@ -1,0 +1,164 @@
+---
+- debug: msg="Starting dcnm_fabric spine_leaf_basic test"
+- debug: msg="Role Path {{ role_path }}"
+
+- name: Cleanup - Reset or Default Ethernet Interfaces
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ fabric_name }}"
+    state: deleted
+    config:
+      - name: "Ethernet1/3"
+      - name: "Ethernet1/4"
+
+- name: Cleanup - Delete Networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ fabric_name }}"
+    state: deleted
+
+- name: Cleanup - Delete Tenant VRF
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_name }}"
+    state: deleted
+
+- block:
+
+  - name: Configure access ethernet interfaces
+    cisco.dcnm.dcnm_interface: &config_interfaces
+      fabric: "{{ fabric_name }}"
+      state: merged
+      config:
+        - name: "Ethernet1/3"
+          type: eth
+          switch:
+            - "{{ leaf1 }}"
+            - "{{ leaf3 }}"
+          deploy: true
+          profile:
+            admin_state: true
+            mode: access
+            speed: 'Auto'
+            bpdu_guard: true
+            port_type_fast: true
+            mtu: default
+            access_vlan: 55
+            cmds:
+              - no shutdown
+            description: "Access interface for vlan55"
+        - name: "Ethernet1/4"
+          type: eth
+          switch:
+            - "{{ leaf1 }}"
+            - "{{ leaf3 }}"
+          deploy: true
+          profile:
+            admin_state: true
+            mode: access
+            speed: 'Auto'
+            bpdu_guard: true
+            port_type_fast: true
+            mtu: default
+            access_vlan: 65
+            cmds:
+              - no shutdown
+            description: "Access interface for vlan65"
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+
+  - name: Configure access ethernet interfaces - Idempotence
+    cisco.dcnm.dcnm_interface: *config_interfaces
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+
+  - name: Add Tenant VRF
+    cisco.dcnm.dcnm_vrf: &add_vrf
+      fabric: "{{ fabric_name }}"
+      state: merged
+      config:
+        - vrf_name: green_red
+          vrf_id: 470000
+          vlan_id: 201
+          attach:
+            - ip_address: "{{ leaf1 }}"
+            - ip_address: "{{ leaf3 }}"
+          deploy: true
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+
+  - name: Add Tenant VRF - Idempotence
+    cisco.dcnm.dcnm_vrf: *add_vrf
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+
+  - name: Add Networks
+    cisco.dcnm.dcnm_network: &add_networks
+      fabric: "{{ fabric_name }}"
+      state: merged
+      config:
+        - net_name: l2vni_4000
+          vrf_name: green_red
+          net_id: 4000
+          vlan_id: 55
+          gw_ip_subnet: '192.168.1.1/24'
+          attach:
+          - ip_address: "{{ leaf1 }}"
+            ports: [ Ethernet1/3 ]
+            deploy: true
+          - ip_address: "{{ leaf3 }}"
+            ports: [ Ethernet1/3 ]
+            deploy: true
+        - net_name: l2vni_7000
+          vrf_name: green_red
+          net_id: 7000
+          vlan_id: 65
+          gw_ip_subnet: '192.168.2.1/24'
+          attach:
+          - ip_address: "{{ leaf1 }}"
+            ports: [ ]
+            deploy: true
+          - ip_address: "{{ leaf3 }}"
+            ports: [ ]
+            deploy: true
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - 'result.response[3].RETURN_CODE == 200'
+
+  - name: Sleep for 30 seconds before checking idempotence state
+    wait_for:
+      timeout: 30
+
+  - name: Add Networks - Idempotence
+    cisco.dcnm.dcnm_network: *add_networks
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+
+  always:
+    - debug: msg="End dcnm_fabric spine_leaf_basic test"

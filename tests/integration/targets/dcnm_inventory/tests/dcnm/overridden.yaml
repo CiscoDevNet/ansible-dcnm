@@ -5,7 +5,7 @@
 - name: OVERRIDDEN - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/"{{ ansible_it_fabric }}"
+    path: /rest/control/fabrics/{{ ansible_it_fabric }}
   register: result
 
 - assert:
@@ -28,8 +28,8 @@
     config:
     - seed_ip:  "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: admin
-      password: idgeR09!
+      user_name: "{{ ansible_username }}"
+      password: "{{ ansible_pwd }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -67,8 +67,8 @@
     config:
     - seed_ip: "{{ ansible_switch2 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: admin
-      password: idgeR09!
+      user_name: "{{ ansible_username }}"
+      password: "{{ ansible_pwd }}"
       max_hops: 0
       preserve_config: False # boolean, default is  true
   register: result

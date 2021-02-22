@@ -7,7 +7,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -19,7 +19,7 @@
         "preserve_config": true,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -31,7 +31,7 @@
         "preserve_config": true,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       },
       {
         "auth_proto": "MD5",
@@ -40,7 +40,7 @@
         "preserve_config": true,
         "role": "leaf",
         "seed_ip": "192.168.1.107",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -52,7 +52,7 @@
         "preserve_config": true,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       },
       {
         "auth_proto": "MD5",
@@ -61,7 +61,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.107",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -73,7 +73,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.109",
-        "user_name": "admin"
+        "user_name": "username"
       },
       {
         "auth_proto": "MD5",
@@ -82,7 +82,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -94,7 +94,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -111,7 +111,7 @@
         "preserve_config": true,
         "role": "leaf",
         "seed_ip": "192.168.1.109",
-        "user_name": "admin"
+        "user_name": "username"
       },
       {
         "auth_proto": "MD5",
@@ -120,7 +120,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -132,7 +132,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -144,7 +144,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -156,7 +156,7 @@
         "preserve_config": false,
         "role": "leaf",
         "seed_ip": "192.168.1.110",
-        "user_name": "admin"
+        "user_name": "username"
       }
     ],
 
@@ -1505,7 +1505,7 @@
             "groupName": "Fabric1",
             "ipAddress": "192.168.1.109",
             "sshPassword": "*****",
-            "sshUserName": "admin",
+            "sshUserName": "username",
             "switchDbID": "410200",
             "switchName": "n9k-109"
         }
