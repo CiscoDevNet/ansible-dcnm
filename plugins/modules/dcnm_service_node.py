@@ -106,7 +106,7 @@ Replaced:
       they will be updated if possible.
     - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
-    - Service node that are not specified in the playbook will be untouched.
+    - Service Nodes that are not specified in the playbook will be untouched.
 
 Overridden:
   Service Node defined in the playbook will be overridden in the service fabric.
@@ -115,11 +115,11 @@ Overridden:
       they will be updated if possible.
     - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
-    - Service Node that are not specified in the playbook will be deleted.
+    - Service Nodes that are not specified in the playbook will be deleted.
 
 Deleted:
   Service Node defined in the playbook will be deleted.
-  If no Service Node are provided in the playbook, all service node present on that DCNM fabric will be deleted.
+  If no Service Nodes are provided in the playbook, all service node present on that DCNM fabric will be deleted.
 
 Query:
   Returns the current DCNM state for the service node listed in the playbook.
@@ -232,7 +232,7 @@ Query:
     service_fabric: external
     state: deleted
 
-- name: Query Service Nodes
+- name: Query Service Node state for SN-11 and SN-12
   cisco.dcnm.dcnm_service_node:
     fabric: Fabric1
     service_fabric: external

@@ -28,9 +28,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: OVERRIDDEN -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: OVERRIDDEN - Create Service Node with 2 switches and vPC Interface with type firewall
   cisco.dcnm.dcnm_service_node:
@@ -123,9 +131,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- name: OVERRIDDEN -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: OVERRIDDEN - Create 2 Service Nodes
   cisco.dcnm.dcnm_service_node:
@@ -236,19 +252,23 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: OVERRIDDEN - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- name: OVERRIDDEN -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 ##############################################
 ##                 CLEAN-UP                 ##

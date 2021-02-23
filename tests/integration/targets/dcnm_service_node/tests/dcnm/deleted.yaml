@@ -28,9 +28,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: DELETED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: DELETED - Create Service Node with 2 switches and vPC Interface with type firewall
   cisco.dcnm.dcnm_service_node:
@@ -105,9 +113,17 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: DELETED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: DELETED - Create Service Node with single switch
   cisco.dcnm.dcnm_service_node:
@@ -162,7 +178,6 @@
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].MESSAGE == ""'
 
-
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
     timeout: 20
@@ -177,9 +192,17 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: DELETED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: DELETED - Create Service Node with 2 switches and vPC Interface
   cisco.dcnm.dcnm_service_node:
@@ -226,7 +249,6 @@
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].MESSAGE == ""'
 
-
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
     timeout: 20
@@ -241,9 +263,17 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: DELETED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: DELETED - Create Service Node with single switch
   cisco.dcnm.dcnm_service_node:
@@ -302,7 +332,6 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
-
 
 ################################################
 ####                 CLEAN-UP                 ##

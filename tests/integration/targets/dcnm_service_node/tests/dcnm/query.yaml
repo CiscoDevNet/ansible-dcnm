@@ -28,9 +28,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: QUERY -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: QUERY - Create Service Node with 2 switches and vPC Interface with type firewall
   cisco.dcnm.dcnm_service_node:
@@ -114,9 +122,17 @@
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].MESSAGE == ""'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- name: QUERY -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: QUERY - Create Service Node with single switch
   cisco.dcnm.dcnm_service_node:
@@ -209,9 +225,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- name: QUERY -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: QUERY - Create Service Node with single/mutiple switch - 2 tasks
   cisco.dcnm.dcnm_service_node:
@@ -334,10 +358,6 @@
     - 'result.response[1].linkTemplateName == "service_link_trunk"'
     - 'result.response[1].type == "Firewall"'
     - 'result.response[1].name == "SN-12"'
-
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: QUERY - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:

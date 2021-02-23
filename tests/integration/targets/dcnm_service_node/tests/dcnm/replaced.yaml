@@ -28,9 +28,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: REPLACED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: REPLACED - Create Service Node with 2 switches and vPC Interface with type firewall
   cisco.dcnm.dcnm_service_node:
@@ -161,9 +169,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: REPLACED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: REPLACED - Create Service Node with single switch
   cisco.dcnm.dcnm_service_node:
@@ -225,9 +241,9 @@
     - 'result.response[0].DATA.type == "Firewall"'
     - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
+- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 40
+    timeout: 20
 
 - name: REPLACED - conf2 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf2

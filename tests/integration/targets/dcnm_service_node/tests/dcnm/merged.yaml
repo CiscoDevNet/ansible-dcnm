@@ -28,9 +28,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: MERGED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 ###############################################
 ###                MERGED                    ##
@@ -79,9 +87,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: MERGED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: MERGED - Create Service Node with form factor physical
   cisco.dcnm.dcnm_service_node: &conf1
@@ -126,9 +142,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: MERGED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: MERGED - Create Service Node with type load balancer
   cisco.dcnm.dcnm_service_node: &conf2
@@ -173,9 +197,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: MERGED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: MERGED - Create Service Node with type virtual network function
   cisco.dcnm.dcnm_service_node: &conf3
@@ -220,9 +252,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: MERGED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: MERGED - Create Service Node with check mode set to true
   cisco.dcnm.dcnm_service_node:
@@ -251,9 +291,17 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
+- name: MERGED -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
 
 - name: MERGED - Create Service Node with 2 switches and vPC Interface with type firewall
   cisco.dcnm.dcnm_service_node: &conf4
