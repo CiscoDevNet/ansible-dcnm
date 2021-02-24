@@ -321,7 +321,7 @@
   wait_for:
     timeout: 20
 
-- name: REPLACED - Replace Service Node with not supported change of already created name
+- name: REPLACED - Replace Service Node with a new creation of service node, since the sn is not created already
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -339,7 +339,16 @@
 
 - assert:
     that:
-    - 'result.changed == false'
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[0].DATA.formFactor == "Physical"'
+    - 'result.response[0].DATA.interfaceName == "svc11"'
+    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[0].DATA.type == "Firewall"'
+    - 'result.response[0].DATA.name == "SN-11111111111"'
 
 - name: REPLACED - Replace Service Node with not supported change of already created svc int name
   cisco.dcnm.dcnm_service_node:

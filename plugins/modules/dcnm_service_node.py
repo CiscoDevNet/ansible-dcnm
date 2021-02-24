@@ -101,7 +101,7 @@ Merged:
 
 Replaced:
   Service Nodes defined in the playbook will be replaced in the service fabric.
-    - If the service node does not exist it will not be added.
+    - If the service node does not exist it will be added.
     - If the service node exists but properties managed by the playbook are different
       they will be updated if possible.
     - Properties that can be managed by the module but are not specified
@@ -232,7 +232,7 @@ Query:
     service_fabric: external
     state: deleted
 
-- name: Query Service Node state for SN-11 and SN-12
+- name: Query Service Nodes state for SN-11 and SN-12
   cisco.dcnm.dcnm_service_node:
     fabric: Fabric1
     service_fabric: external
@@ -440,9 +440,15 @@ class DcnmServiceNode:
 
         self.diff_replace = diff_replace
 
-        state = self.params['state']
+        found = False
+        for replace_c in self.diff_replace:
+            for have_c in self.have_create:
+                if have_c['name'] == replace_c['name'] :
+                    found = True
 
-        if state == 'replaced':
+        if not found:
+            self.diff_replace = []
+        else:
             self.diff_create = []
 
     def get_diff_replace_delete(self):
