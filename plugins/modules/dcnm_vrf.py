@@ -1233,6 +1233,15 @@ class DcnmVrf:
                     json_to_dict = json.loads(want_c['vrfTemplateConfig'])
                     want_vlanId = json_to_dict.get('vlanId', "0")
 
+                    if (want_c['vrfName'] == vrf['vrfName']):
+
+                        if want_c.get('vrfId', None) is not None:
+                            if want_c['vrfId'] != vrf['vrfId']:
+                                continue
+
+                        if want_c.get('vlanId', None) is not None:
+                            if str(want_vlanId) != vrf_vlanId:
+                                continue
                     if (want_c['vrfName'] == vrf['vrfName'] and want_c['vrfId'] == vrf['vrfId'] and \
                             str(want_vlanId) == vrf_vlanId):
 
@@ -1246,7 +1255,7 @@ class DcnmVrf:
 
                         vrf_attach_objects = dcnm_send(self.module, method, path)
 
-                        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+                        missing_fabric, not_ok = self.handle_response(vrf_attach_objects, 'query_dcnm')
 
                         if missing_fabric or not_ok:
                             msg1 = "Fabric {} not present on DCNM".format(self.fabric)
