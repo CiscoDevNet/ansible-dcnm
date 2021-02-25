@@ -242,7 +242,11 @@ class DcnmTemplate:
     def dcnm_template_get_template_payload(self, ditem):
 
         if self.module.params["state"] == "merged":
-            std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
+
+            if (("template variables" not in ditem['content']) and ("template content" not in  ditem["content"])):
+                std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template variables\n##\n##template content\n"
+            else:
+                std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n"
 
             template_payload = {}
 

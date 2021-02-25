@@ -26,6 +26,7 @@
     config: 
       - name: template_inuse_1  # name is mandatory
       - name: template_inuse_2  # name is mandatory
+      - name: my_feature_telemetry
       - switch:
           - ip: "{{ ansible_switch1 }}"
   register: result  
@@ -41,6 +42,7 @@
     config:
       - name: template_inuse_1
       - name: template_inuse_2
+      - name: my_feature_telemetry
 
   register: result
 
