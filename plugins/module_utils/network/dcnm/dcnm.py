@@ -92,6 +92,11 @@ def validate_list_of_dicts(param_list, spec, module=None):
                 if no_log:
                     if module is not None:
                         module.no_log_values.add(item)
+                    else:
+                        msg = "\n\n'{}' is a no_log parameter".format(param)
+                        msg += "\nAnsible module object must be passed to this "
+                        msg += "\nfunction to ensure it is not logged\n\n"
+                        raise Exception(msg)
 
             valid_params_dict[param] = item
         normalized.append(valid_params_dict)
