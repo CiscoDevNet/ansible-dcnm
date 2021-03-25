@@ -21,7 +21,7 @@ import time
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
-def validate_list_of_dicts(param_list, spec):
+def validate_list_of_dicts(param_list, spec, module=None):
     """ Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
     spec: an argument spec dict
@@ -87,6 +87,11 @@ def validate_list_of_dicts(param_list, spec):
                 if choice:
                     if item not in choice:
                         invalid_params.append('{} : Invalid choice provided'.format(item))
+
+                no_log = spec[param].get('no_log')
+                if no_log:
+                    if module is not None:
+                        module.no_log_values.add(item)
 
             valid_params_dict[param] = item
         normalized.append(valid_params_dict)
