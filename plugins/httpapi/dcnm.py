@@ -52,7 +52,6 @@ class HttpApi(HttpApiBase):
             'Content-Type': "text/plain"
         }
 
-
     def login(self, username, password):
         ''' DCNM Login Method.  This method is automatically called by the
             Ansible plugin architecture if an active Dcnm-Token is not already
@@ -92,6 +91,18 @@ class HttpApi(HttpApiBase):
         ''' This method handles all DCNM REST API requests other then login '''
         if json is None:
             json = {}
+
+        # Verify HTTPS request URL for DCNM controller is accessible
+        try:
+            requests.head(self.connection._url, verify=False)
+        except requests.exceptions.RequestException as e:
+            msg = """
+
+                  Please verify that the DCNM controller HTTPS URL ({}) is
+                  reachable from the Ansible controller and try again
+
+                  """.format(self.connection._url)
+            raise ConnectionError(str(e) + msg)
 
         try:
             # Perform some very basic path input validation.
