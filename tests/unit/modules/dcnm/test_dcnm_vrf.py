@@ -36,6 +36,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     mock_ip_sn = test_data.get('mock_ip_sn')
     vrf_inv_data = test_data.get('vrf_inv_data')
+    fabric_details = test_data.get("fabric_details")
     playbook_config_input_validation = test_data.get('playbook_config_input_validation')
     playbook_config = test_data.get('playbook_config')
     playbook_config_update = test_data.get('playbook_config_update')
@@ -103,10 +104,14 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.dcnm_send')
         self.run_dcnm_send = self.mock_dcnm_send.start()
 
+        self.mock_dcnm_fabric_details = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.get_fabric_details')
+        self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
+
     def tearDown(self):
         super(TestDcnmVrfModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
+        self.mock_dcnm_fabric_details.stop()
 
     def load_fixtures(self, response=None, device=''):
 
@@ -114,6 +119,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_ip_sn.side_effect = [{}]
         else:
             self.run_dcnm_ip_sn.side_effect = [self.vrf_inv_data]
+
+        self.run_dcnm_fabric_details.side_effect = [self.fabric_details]
 
         if 'get_have_failure' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.get_have_failure]
@@ -165,7 +172,16 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
-                                              self.attach_success_resp, self.deploy_success_resp]
+                                              self.blank_data, self.attach_success_resp,
+                                              self.deploy_success_resp]
+
+        elif '_merged_lite_update_vlan' in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+                                              self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                                              self.blank_data, self.attach_success_resp,
+                                              self.deploy_success_resp]
 
         elif '_merged_lite_update' in self._testMethodName:
             self.init_data()
@@ -237,30 +253,30 @@ class TestDcnmVrfModule(TestDcnmModule):
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only]
 
+        elif 'lite_override_with_additions' in self._testMethodName:
+            self.run_dcnm_send.side_effect = [self.blank_data, self.blank_data,
+                                              self.attach_success_resp, self.deploy_success_resp]
+
         elif 'override_with_additions' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.blank_data, self.blank_data, self.attach_success_resp,
                                               self.deploy_success_resp]
-
-        elif 'lite_override_with_additions' in self._testMethodName:
-            self.run_dcnm_send.side_effect = [self.blank_data, self.blank_data, self.blank_data,
-                                              self.attach_success_resp, self.deploy_success_resp]
-
-        elif 'override_with_deletions' in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
-                                              self.mock_vrf_attach_get_ext_object_ov_att1_only,
-                                              self.mock_vrf_attach_get_ext_object_ov_att2_only,
-                                              self.attach_success_resp, self.deploy_success_resp,
-                                              self.mock_vrf_attach_object_del_not_ready,
-                                              self.mock_vrf_attach_object_del_ready, self.delete_success_resp,
-                                              self.blank_data,
-                                              self.attach_success_resp2, self.deploy_success_resp]
 
         elif 'lite_override_with_deletions' in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                                              self.attach_success_resp, self.deploy_success_resp,
+                                              self.mock_vrf_attach_object_del_not_ready,
+                                              self.mock_vrf_attach_object_del_ready, self.delete_success_resp,
+                                              self.blank_data,
+                                              self.attach_success_resp2, self.deploy_success_resp]
+
+        elif 'override_with_deletions' in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+                                              self.mock_vrf_attach_get_ext_object_ov_att1_only,
+                                              self.mock_vrf_attach_get_ext_object_ov_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
                                               self.mock_vrf_attach_object_del_not_ready,
                                               self.mock_vrf_attach_object_del_ready, self.delete_success_resp,
@@ -448,32 +464,29 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_merged_with_update_vlan(self):
         set_module_args(dict(state='merged', fabric='test_fabric', config=self.playbook_config_update_vlan))
         result = self.execute_module(changed=True, failed=False)
-        self.assertTrue(result.get('diff')[1]['attach'][0]['deploy'])
-        self.assertTrue(result.get('diff')[1]['attach'][1]['deploy'])
-        self.assertEqual(result.get('diff')[1]['attach'][0]['ip_address'], '10.10.10.225')
-        self.assertEqual(result.get('diff')[1]['attach'][1]['ip_address'], '10.10.10.226')
-        self.assertEqual(result.get('diff')[1]['attach'][0]['vlan_id'], 303)
-        self.assertEqual(result.get('diff')[1]['attach'][1]['vlan_id'], 303)
+        self.assertTrue(result.get('diff')[0]['attach'][0]['deploy'])
+        self.assertTrue(result.get('diff')[0]['attach'][1]['deploy'])
+        self.assertEqual(result.get('diff')[0]['attach'][0]['ip_address'], '10.10.10.225')
+        self.assertEqual(result.get('diff')[0]['attach'][1]['ip_address'], '10.10.10.226')
+        self.assertEqual(result.get('diff')[0]['attach'][0]['vlan_id'], 303)
+        self.assertEqual(result.get('diff')[0]['attach'][1]['vlan_id'], 303)
         self.assertEqual(result.get('diff')[0]['vrf_name'], 'test_vrf_1')
-        self.assertEqual(result['response'][0]['DATA']['test-vrf-1--XYZKSJHSMK1(leaf1)'], 'SUCCESS')
-        self.assertEqual(result['response'][0]['DATA']['test-vrf-1--XYZKSJHSMK2(leaf2)'], 'SUCCESS')
-        self.assertEqual(result['response'][1]['DATA']['status'], '')
-        self.assertEqual(result['response'][1]['RETURN_CODE'], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result['response'][1]['DATA']['test-vrf-1--XYZKSJHSMK1(leaf1)'], 'SUCCESS')
+        self.assertEqual(result['response'][1]['DATA']['test-vrf-1--XYZKSJHSMK2(leaf2)'], 'SUCCESS')
+        self.assertEqual(result['response'][2]['DATA']['status'], '')
+        self.assertEqual(result['response'][2]['RETURN_CODE'], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_merged_lite_update_vlan(self):
         set_module_args(dict(state='merged', fabric='test_fabric', config=self.playbook_vrf_lite_update_vlan_config))
         result = self.execute_module(changed=True, failed=False)
-        self.assertTrue(result.get('diff')[1]['attach'][0]['deploy'])
-        self.assertTrue(result.get('diff')[1]['attach'][1]['deploy'])
-        self.assertEqual(result.get('diff')[1]['attach'][0]['ip_address'], '10.10.10.224')
-        self.assertEqual(result.get('diff')[1]['attach'][1]['ip_address'], '10.10.10.228')
-        self.assertEqual(result.get('diff')[1]['attach'][0]['vlan_id'], 402)
-        self.assertEqual(result.get('diff')[1]['attach'][1]['vlan_id'], 402)
+        self.assertTrue(result.get('diff')[0]['attach'][0]['deploy'])
+        self.assertEqual(result.get('diff')[0]['attach'][0]['ip_address'], '10.10.10.228')
+        self.assertEqual(result.get('diff')[0]['attach'][0]['vlan_id'], 402)
         self.assertEqual(result.get('diff')[0]['vrf_name'], 'test_vrf_1')
-        self.assertEqual(result['response'][0]['DATA']['test-vrf-1--XYZKSJHSMK1(leaf1)'], 'SUCCESS')
-        self.assertEqual(result['response'][0]['DATA']['test-vrf-1--XYZKSJHSMK2(leaf2)'], 'SUCCESS')
-        self.assertEqual(result['response'][1]['DATA']['status'], '')
-        self.assertEqual(result['response'][1]['RETURN_CODE'], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result['response'][1]['DATA']['test-vrf-1--XYZKSJHSMK1(leaf1)'], 'SUCCESS')
+        self.assertEqual(result['response'][1]['DATA']['test-vrf-1--XYZKSJHSMK2(leaf2)'], 'SUCCESS')
+        self.assertEqual(result['response'][2]['DATA']['status'], '')
+        self.assertEqual(result['response'][2]['RETURN_CODE'], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_error1(self):
         set_module_args(dict(state='merged', fabric='test_fabric', config=self.playbook_config))
@@ -611,13 +624,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertFalse(result.get('diff')[0]['attach'][1]['deploy'])
         self.assertEqual(result.get('diff')[0]['attach'][0]['vlan_id'], 202)
         self.assertEqual(result.get('diff')[0]['attach'][1]['vlan_id'], '202')
-
-
-        self.assertTrue(result.get('diff')[1]['attach'][0]['deploy'])
-        self.assertTrue(result.get('diff')[1]['attach'][1]['deploy'])
-        self.assertEqual(result.get('diff')[1]['attach'][0]['vlan_id'], 202)
-        self.assertEqual(result.get('diff')[1]['attach'][1]['vlan_id'], 202)
-        self.assertEqual(result.get('diff')[1]['vrf_name'], 'test_vrf_1')
 
         self.assertEqual(result['response'][0]['DATA']['test-vrf-1--XYZKSJHSMK1(leaf1)'], 'SUCCESS')
         self.assertEqual(result['response'][0]['DATA']['test-vrf-1--XYZKSJHSMK2(leaf2)'], 'SUCCESS')

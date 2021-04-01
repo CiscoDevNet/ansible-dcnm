@@ -152,6 +152,20 @@ def get_ip_sn_dict(inventory_data):
     return ip_sn, hn_sn
 
 
+def get_ip_sn_fabric_dict(inventory_data):
+    ip_fab = {}
+    sn_fab = {}
+
+    for device_key in inventory_data.keys():
+        ip = inventory_data[device_key].get('ipAddress')
+        sn = inventory_data[device_key].get('serialNumber')
+        fabric_name = inventory_data[device_key].get('fabricName')
+        ip_fab.update({ip: fabric_name})
+        sn_fab.update({sn: fabric_name})
+
+    return ip_fab, sn_fab
+
+
 # sw_elem can be ip_addr, hostname, dns name or serial number. If the given
 # sw_elem is ip_addr, then it is returned as is. If DNS or hostname then a DNS
 # lookup is performed to get the IP address to be returned. If not ip_sn
@@ -260,6 +274,47 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 #         else:
 #             msg_dict['Error'] = msg.format(sw_elem)
 #             raise Exception(json.dumps(msg_dict))
+
+
+def get_fabric_details(module, fabric):
+
+    fabric_data = {}
+    rc = False
+    method = 'GET'
+    path = '/rest/control/fabrics/{}'.format(fabric)
+
+    count = 1
+    while (rc is False):
+
+        response = dcnm_send(module, method, path)
+
+        if not response.get('RETURN_CODE'):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get('RETURN_CODE') == 404:
+            # RC 404 - Object not found
+            rc = True
+            return fabric_data
+
+        if response.get('RETURN_CODE') == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if (count <= 20):
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+            else:
+                raise Exception(response)
+        elif response.get('RETURN_CODE') >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        fabric_data = response.get('DATA')
+        rc = True
+
+    return fabric_data
 
 
 def dcnm_send(module, method, path, data=None, data_type='json'):
