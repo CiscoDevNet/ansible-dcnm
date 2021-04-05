@@ -20,7 +20,7 @@ import time
 import copy
 import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
@@ -351,6 +351,9 @@ class DcnmNetwork:
         self.query = []
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
+        self.fabric_det = get_fabric_details(module, self.fabric)
+        self.is_ms_fabric = True if self.fabric_det['fabricType'] == 'MFD' else False
 
         self.result = dict(
             changed=False,
@@ -377,56 +380,57 @@ class DcnmNetwork:
                     if want['serialNumber'] == have['serialNumber']:
                         found = True
 
-                        if bool(have['isAttached']) and bool(want['isAttached']):
-                            h_sw_ports = have['switchPorts'].split(",") if have['switchPorts'] else []
-                            w_sw_ports = want['switchPorts'].split(",") if want['switchPorts'] else []
+                        if want.get('isAttached') is not None:
+                            if bool(have['isAttached']) and bool(want['isAttached']):
+                                h_sw_ports = have['switchPorts'].split(",") if have['switchPorts'] else []
+                                w_sw_ports = want['switchPorts'].split(",") if want['switchPorts'] else []
 
-                            # This is needed to handle cases where vlan is updated after deploying the network
-                            # and attachments. This ensures that the attachments before vlan update will use previous
-                            # vlan id. All the active attachments on DCNM will have a vlan-id.
-                            if have.get('vlan'):
-                                want['vlan'] = have.get('vlan')
+                                # This is needed to handle cases where vlan is updated after deploying the network
+                                # and attachments. This ensures that the attachments before vlan update will use previous
+                                # vlan id. All the active attachments on DCNM will have a vlan-id.
+                                if have.get('vlan'):
+                                    want['vlan'] = have.get('vlan')
 
-                            if sorted(h_sw_ports) != sorted(w_sw_ports):
-                                atch_sw_ports = list(set(w_sw_ports) - set(h_sw_ports))
+                                if sorted(h_sw_ports) != sorted(w_sw_ports):
+                                    atch_sw_ports = list(set(w_sw_ports) - set(h_sw_ports))
 
-                                # Adding some logic which is needed for replace and override.
-                                if replace:
-                                    dtach_sw_ports = list(set(h_sw_ports) - set(w_sw_ports))
+                                    # Adding some logic which is needed for replace and override.
+                                    if replace:
+                                        dtach_sw_ports = list(set(h_sw_ports) - set(w_sw_ports))
 
-                                    if not atch_sw_ports and not dtach_sw_ports:
+                                        if not atch_sw_ports and not dtach_sw_ports:
+                                            continue
+
+                                        want.update({'switchPorts': ','.join(atch_sw_ports) if atch_sw_ports else ""})
+                                        want.update(
+                                            {'detachSwitchPorts': ','.join(dtach_sw_ports) if dtach_sw_ports else ""})
+
+                                        del want['isAttached']
+                                        attach_list.append(want)
+
                                         continue
 
-                                    want.update({'switchPorts': ','.join(atch_sw_ports) if atch_sw_ports else ""})
-                                    want.update(
-                                        {'detachSwitchPorts': ','.join(dtach_sw_ports) if dtach_sw_ports else ""})
+                                    if not atch_sw_ports:
+                                        # The attachments in the have consist of attachments in want and more.
+                                        continue
 
+                                    want.update({'switchPorts': ','.join(atch_sw_ports)})
                                     del want['isAttached']
                                     attach_list.append(want)
-
                                     continue
 
-                                if not atch_sw_ports:
-                                    # The attachments in the have consist of attachments in want and more.
-                                    continue
+                            if bool(have['isAttached']) is not bool(want['isAttached']):
+                                # When the attachment is to be detached and undeployed, ignore any changes
+                                # to the attach section in the want(i.e in the playbook).
 
-                                want.update({'switchPorts': ','.join(atch_sw_ports)})
+                                if not bool(want['isAttached']):
+                                    del have['isAttached']
+                                    have.update({'deployment': False})
+                                    attach_list.append(have)
+                                    continue
                                 del want['isAttached']
                                 attach_list.append(want)
                                 continue
-
-                        if bool(have['isAttached']) is not bool(want['isAttached']):
-                            # When the attachment is to be detached and undeployed, ignore any changes
-                            # to the attach section in the want(i.e in the playbook).
-
-                            if not bool(want['isAttached']):
-                                del have['isAttached']
-                                have.update({'deployment': False})
-                                attach_list.append(have)
-                                continue
-                            del want['isAttached']
-                            attach_list.append(want)
-                            continue
 
                         if bool(have['deployment']) is not bool(want['deployment']):
                             # We hit this section when attachment is successful, but, deployment is stuck in PENDING or
@@ -721,6 +725,13 @@ class DcnmNetwork:
                 del attach['portNames']
                 del attach['switchDbId']
                 del attach['networkId']
+
+                if 'displayName' in attach.keys():
+                    del attach['displayName']
+                if 'interfaceGroups' in attach.keys():
+                    del attach['interfaceGroups']
+                #if 'freeformConfig' in attach.keys():
+                #    del node['freeformConfig']
 
                 attach.update({'fabric': self.fabric})
                 attach.update({'vlan': vlan})
@@ -1055,7 +1066,11 @@ class DcnmNetwork:
                         self.module.fail_json(msg="Unable to generate networkId for network: {} "
                                                   "under fabric: {}".format(want_c['networkName'], self.fabric))
 
-                    create_path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
+                    if not self.is_ms_fabric:
+                        create_path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
+                    else:
+                        create_path = '/rest/top-down/fabrics/{}/networks'.format(self.inventory_data['displayValues'][2])
+
                     diff_create_quick.append(want_c)
 
                     resp = dcnm_send(self.module, method, create_path, json.dumps(want_c))
@@ -1337,6 +1352,35 @@ class DcnmNetwork:
 
             return True
 
+
+    def update_ms_fabric(self, diff):
+        if not self.is_ms_fabric:
+            return
+
+        for list_elem in diff:
+            for node in list_elem['lanAttachList']:
+                node['fabric'] = self.sn_fab[node['serialNumber']]
+
+
+    def update_detach_dcnm_resend(self, diff_detach, method, detach_path, is_rollback):
+        for list_elem in diff_detach:
+            for node in list_elem['lanAttachList']:
+                if node.get('displayName') is not None:
+                    del node['displayName']
+                if node.get('interfaceGroups') is not None:
+                    del node['interfaceGroups']
+                if node.get('freeformConfig') is not None:
+                    del node['freeformConfig']
+                resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
+                self.result['response'].append(resp)
+                fail, self.result['changed'] = self.handle_response(resp, "attach")
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    self.failure(resp)
+
+
     def push_to_remote(self, is_rollback=False):
 
         path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
@@ -1364,6 +1408,10 @@ class DcnmNetwork:
         method = 'POST'
         if self.diff_detach:
             detach_path = path + '/attachments'
+
+            #Update the fabric name to specific fabric which the switches are part of.
+            self.update_ms_fabric(self.diff_detach)
+
             resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
             self.result['response'].append(resp)
             fail, self.result['changed'] = self.handle_response(resp, "attach")
@@ -1445,6 +1493,10 @@ class DcnmNetwork:
         method = 'POST'
         if self.diff_attach:
             attach_path = path + '/attachments'
+
+            #Update the fabric name to specific fabric which the switches are part of.
+            self.update_ms_fabric(self.diff_attach)
+
             for attempt in range(0, 50):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
                 update_in_progress = False
@@ -1686,8 +1738,8 @@ def main():
     dcnm_net.result['warnings'].append(warn_msg) if warn_msg else []
 
     if module.params['check_mode']:
-        dcnm_vrf.result['changed'] = False
-        module.exit_json(**dcnm_vrf.result)
+        dcnm_net.result['changed'] = False
+        module.exit_json(**dcnm_net.result)
 
     if dcnm_net.diff_create or dcnm_net.diff_create_quick or dcnm_net.diff_attach \
             or dcnm_net.diff_deploy or dcnm_net.diff_delete or dcnm_net.diff_create_update \
