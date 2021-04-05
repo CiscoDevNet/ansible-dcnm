@@ -152,6 +152,9 @@ def get_ip_sn_dict(inventory_data):
     return ip_sn, hn_sn
 
 
+# This call is mainly used while configuraing multisite fabrics.
+# It maps the switch IP Address/Serial No. in the multisite inventory
+# data to respective member site fabric name to which it was actually added.
 def get_ip_sn_fabric_dict(inventory_data):
     ip_fab = {}
     sn_fab = {}
@@ -276,6 +279,7 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 #             raise Exception(json.dumps(msg_dict))
 
 
+# This call is used to get the details of the given fabric from the DCNM
 def get_fabric_details(module, fabric):
 
     fabric_data = {}
