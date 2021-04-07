@@ -730,8 +730,6 @@ class DcnmNetwork:
                     del attach['displayName']
                 if 'interfaceGroups' in attach.keys():
                     del attach['interfaceGroups']
-                #if 'freeformConfig' in attach.keys():
-                #    del node['freeformConfig']
 
                 attach.update({'fabric': self.fabric})
                 attach.update({'vlan': vlan})
@@ -1360,25 +1358,6 @@ class DcnmNetwork:
         for list_elem in diff:
             for node in list_elem['lanAttachList']:
                 node['fabric'] = self.sn_fab[node['serialNumber']]
-
-
-    def update_detach_dcnm_resend(self, diff_detach, method, detach_path, is_rollback):
-        for list_elem in diff_detach:
-            for node in list_elem['lanAttachList']:
-                if node.get('displayName') is not None:
-                    del node['displayName']
-                if node.get('interfaceGroups') is not None:
-                    del node['interfaceGroups']
-                if node.get('freeformConfig') is not None:
-                    del node['freeformConfig']
-                resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
-                self.result['response'].append(resp)
-                fail, self.result['changed'] = self.handle_response(resp, "attach")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
 
 
     def push_to_remote(self, is_rollback=False):
