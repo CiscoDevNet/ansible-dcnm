@@ -51,8 +51,7 @@ class HttpApi(HttpApiBase):
         self.txt_headers = {
             'Content-Type': "text/plain"
         }
-
-
+ 
     def login(self, username, password):
         ''' DCNM Login Method.  This method is automatically called by the
             Ansible plugin architecture if an active Dcnm-Token is not already
@@ -70,6 +69,7 @@ class HttpApi(HttpApiBase):
             response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
             response_value = self._get_response_value(response_data)
             self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
+
         except Exception as e:
             msg = 'Error on attempt to connect and authenticate with DCNM controller: {}'.format(e)
             raise ConnectionError(self._return_info(None, method, path, msg))
@@ -79,12 +79,13 @@ class HttpApi(HttpApiBase):
         path = '/rest/logout'
 
         try:
-            response, response_data = self.connection.send(path, {}, method=method, headers=self.headers, force_basic_auth=True)
+            response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
         except Exception as e:
             msg = 'Error on attempt to logout from DCNM controller: {}'.format(e)
             raise ConnectionError(self._return_info(None, method, path, msg))
 
         self._verify_response(response, method, path, response_data)
+
         # Clean up tokens
         self.connection._auth = None
 

@@ -68,20 +68,36 @@ def validate_list_of_dicts(param_list, spec):
                 elif type == 'dict':
                     item = v.check_type_dict(item)
                 elif ((type == 'ipv4_subnet') or (type == 'ipv4')):
-                    address = item.split('/')[0]
-                    if type == 'ipv4_subnet':
-                        if '/' in item:
-                            subnet = item.split('/')[1]
-                            if not subnet or int(subnet) > 32:
+                    if (item.strip() != ''):
+                        address = item.split('/')[0]
+                        if type == 'ipv4_subnet':
+                            if '/' in item:
+                                subnet = item.split('/')[1]
+                                if not subnet or int(subnet) > 32:
+                                    invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
+                            else:
                                 invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
-                        else:
-                            invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
-                    try:
-                        socket.inet_aton(address)
-                    except socket.error:
-                        invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
-                    if address.count('.') != 3:
-                        invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
+                        try:
+                            socket.inet_pton(socket.AF_INET, address)
+                        except socket.error:
+                            invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
+                        if address.count('.') != 3:
+                            invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
+
+                elif ((type == 'ipv6_subnet') or (type == 'ipv6')):
+                    if (item.strip() != ''):
+                        address = item.split('/')[0]
+                        if type == 'ipv6_subnet':
+                            if '/' in item:
+                                subnet = item.split('/')[1]
+                                if not subnet or int(subnet) > 128:
+                                    invalid_params.append('{} : Invalid IPv6 gw/subnet syntax'.format(item))
+                            else:
+                                invalid_params.append('{} : Invalid IPv6 gw/subnet syntax'.format(item))
+                        try:
+                            socket.inet_pton(socket.AF_INET6, address)
+                        except socket.error:
+                            invalid_params.append('{} : Invalid IPv6 address syntax'.format(item))
 
                 choice = spec[param].get('choices')
                 if choice:
@@ -218,49 +234,6 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
             msg_dict['Error'] = msg.format(sw_elem)
             raise module.fail_json(msg=json.dumps(msg_dict))
 
-# def dcnm_get_ip_addr_info(sw_elem, ip_sn):
-#
-#     msg_dict = {'Error': ''}
-#     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
-#     msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
-#
-#     ip_addr = re.findall(r'\d+\.\d+\.\d+\.\d+', sw_elem)
-#     if (ip_addr == []):
-#         # Given element is not an IP address. Try DNS or
-#         # hostname
-#         try:
-#             addr_info = socket.getaddrinfo(sw_elem, 0, socket.AF_INET, 0, 0, 0)
-#             if (None is ip_sn):
-#                 return addr_info[0][4][0]
-#             if addr_info:
-#                 if (addr_info[0][4][0] in ip_sn.keys()):
-#                     return addr_info[0][4][0]
-#                 else:
-#                     msg_dict['Error'] = msg.format(sw_elem)
-#                     raise Exception(json.dumps(msg_dict))
-#         except socket.gaierror:
-#             if (None is ip_sn):
-#                 msg_dict['Error'] = msg1.format(sw_elem)
-#                 raise Exception(json.dumps(msg_dict))
-#             # This means that the given element is neither an IP
-#             # address nor a host/DNS name. Assume that be a
-#             # Serial number. Loop up the ip_sn and verify that it is
-#             # a valid one. Else raise an error
-#             ip_addr = [k for k, v in ip_sn.items() if v == sw_elem]
-#             if (ip_addr):
-#                 return ip_addr[0]
-#             else:
-#                 msg_dict['Error'] = msg.format(sw_elem)
-#                 raise Exception(json.dumps(msg_dict))
-#     else:
-#         if (None is ip_sn):
-#             return ip_addr[0]
-#         if (ip_addr[0] in ip_sn.keys()):
-#             return ip_addr[0]
-#         else:
-#             msg_dict['Error'] = msg.format(sw_elem)
-#             raise Exception(json.dumps(msg_dict))
-
 
 def dcnm_send(module, method, path, data=None, data_type='json'):
 
@@ -270,3 +243,10 @@ def dcnm_send(module, method, path, data=None, data_type='json'):
         return conn.send_request(method, path, data)
     elif (data_type == 'text'):
         return conn.send_txt_request(method, path, data)
+
+def dcnm_reset_connection(module):
+
+    conn = Connection(module._socket_path)
+
+    conn.logout()
+    return conn.login (conn.get_option("remote_user"), conn.get_option("password"))
