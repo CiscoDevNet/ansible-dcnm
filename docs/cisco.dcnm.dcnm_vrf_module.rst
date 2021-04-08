@@ -17,7 +17,7 @@ Version added: 0.9.0
 
 Synopsis
 --------
-- Add and remove VRFs from a DCNM managed VXLAN fabric.
+- Add and remove VRFs and VRF Lite Extension from a DCNM managed VXLAN fabric.
 
 
 
@@ -29,12 +29,12 @@ Parameters
 
     <table  border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="3">Parameter</th>
+            <th colspan="5">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -52,7 +52,7 @@ Parameters
             </tr>
                                 <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>attach</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -70,7 +70,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -91,7 +91,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ip_address</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -106,10 +106,164 @@ Parameters
                         <div>IP address of the switch where vrf will be attached or detached</div>
                 </td>
             </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_lite</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VRF Lite Extensions options</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dot1q</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>DOT1Q Id</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>interface</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Interface of the switch which is connected to the edge router</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ipv4_addr</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">ipv4</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IP address of the interface which is connected to the edge router</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ipv6_addr</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">ipv6</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IPv6 address of the interface which is connected to the edge router</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>neighbor_ipv4</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">ipv4</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Neighbor IP address of the edge router</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>neighbor_ipv6</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">ipv6</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Neighbor IPv6 address of the edge router</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer_vrf</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VRF Name to which this extension is attached</div>
+                </td>
+            </tr>
+
+
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -129,7 +283,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>service_vrf_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -146,7 +300,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -162,7 +316,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_extension_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -179,7 +333,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -196,7 +350,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -213,7 +367,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -230,7 +384,7 @@ Parameters
             </tr>
 
             <tr>
-                <td colspan="3">
+                <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -246,7 +400,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -334,7 +488,6 @@ Examples
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
           vlan_id: 2000
-          source: null
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
@@ -345,11 +498,36 @@ Examples
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: null
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
+
+    # VRF LITE Extension attached
+    - name: Merge vrfs
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-fabric
+        state: merged
+        config:
+        - vrf_name: ansible-vrf-r1
+          vrf_id: 9008011
+          vrf_template: Default_VRF_Universal
+          vrf_extension_template: Default_VRF_Extension_Universal
+          vlan_id: 2000
+          service_vrf_template: null
+          attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+            vrf_lite:
+    	  # All parameters under vrf_lite except peer_vrf are optional and
+    	  # will be supplied by DCNM when omitted in the playbook
+              - peer_vrf: test_vrf_1 # peer_vrf is mandatory
+                interface: Ethernet1/16 # optional
+                ipv4_addr: 10.33.0.2/30 # optional
+                neighbor_ipv4: 10.33.0.1 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 2 # dot1q can be got from dcnm/optional
 
     # The two VRFs below will be replaced in the target fabric.
     - name: Replace vrfs
@@ -362,7 +540,6 @@ Examples
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
           vlan_id: 2000
-          source: null
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
@@ -393,7 +570,6 @@ Examples
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
           vlan_id: 2000
-          source: null
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
@@ -410,7 +586,6 @@ Examples
         #   vrf_template: Default_VRF_Universal
         #   vrf_extension_template: Default_VRF_Extension_Universal
         #   vlan_id: 2000
-        #   source: null
         #   service_vrf_template: null
         #   attach:
         #   - ip_address: 192.168.1.224
@@ -426,14 +601,12 @@ Examples
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
           vlan_id: 2000
-          source: null
           service_vrf_template: null
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
           vlan_id: 2000
-          source: null
           service_vrf_template: null
 
     - name: Delete all the vrfs
@@ -451,13 +624,11 @@ Examples
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
           vlan_id: 2000
-          source: null
           service_vrf_template: null
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
           vrf_extension_template: Default_VRF_Extension_Universal
-          source: null
           service_vrf_template: null
 
 
@@ -470,4 +641,4 @@ Status
 Authors
 ~~~~~~~
 
-- Shrishail Kariyappanavar(@nkshrishail)
+- Shrishail Kariyappanavar, Karthik Babu Harichandra Babu (kharicha)

@@ -42,7 +42,7 @@ options:
       - query
     default: merged
 
-  deploy: 
+  deploy:
     description:
       - A flag specifying if a policy is to be deployed on the switches
     type: boolean
@@ -56,10 +56,10 @@ options:
     suboptions:
       name:
         description:
-          - This can be one of the following:
-            a. Template Name - A unique name identifying the template. Please note that a template name can be used by
+          - This can be one of the following
+            a) Template Name - A unique name identifying the template. Please note that a template name can be used by
                multiple policies and hence a template name does not identify a policy uniquely.
-            b. Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
+            b) Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
                template names cannot uniquely identify a policy
         type: str
         required: true
@@ -78,7 +78,7 @@ options:
         type: str
         required: false
         default: 500
-       
+
       create_additional_policy:
         description:
           - A flag indicating if a policy is to be created even if an identical policy already exists
@@ -102,9 +102,11 @@ options:
         type: list
         elements: dict
         suboptions:
-          ip: IP address of the switch where the policy is to be deployed. This can be IPV4 address, IPV6 address or hostname
-          type: str
-          required: true
+          ip:
+            description:
+              - IP address of the switch where the policy is to be deployed. This can be IPV4 address, IPV6 address or hostname
+            type: str
+            required: true
 
           policies:
             description:
@@ -117,10 +119,10 @@ options:
             suboptions:
               name:
                 description:
-                  - This can be one of the following:
-                    a. Template Name - A unique name identifying the template. Please note that a template name can be used by
+                  - This can be one of the following
+                    a) Template Name - A unique name identifying the template. Please note that a template name can be used by
                        multiple policies and hence a template name does not identify a policy uniquely.
-                    b. Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
+                    b) Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
                        template names cannot uniquely identify a policy
                 type: str
                 required: true
@@ -138,7 +140,7 @@ options:
                 type: str
                 required: false
                 default: 500
-               
+
               create_additional_policy:
                 description:
                   - A flag indicating if a policy is to be created even if an identical policy already exists
@@ -178,17 +180,17 @@ Query:
 
 CREATE POLICY
 
-NOTE: In the following create task, policies identified by template names template_101, 
+NOTE: In the following create task, policies identified by template names template_101,
       template_102, and template_103 are deployed on ansible_switch2 where as policies
       template_104 and template_105 are the only policies installed on ansible_switch1.
 
-- name: Create different policies 
-  cisco.dcnm.dcnm_policy: 
-    fabric: "{{ ansible_it_fabric }}" 
-    config: 
+- name: Create different policies
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    config:
       - name: template_101  # This must be a valid template name
         create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101 
+        priority: 101
 
       - name: template_102  # This must be a valid template name
         create_additional_policy: false  # Do not create a policy if it already exists
@@ -216,12 +218,12 @@ CREATE POLICY (including arguments)
 NOTE: The actual arguments to be included depends on the template used to create the policy
 
 - name: Create policy including required variables
-  cisco.dcnm.dcnm_policy: 
+  cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
     config:
       - name: my_base_ospf               # This must be a valid template name
         create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101 
+        priority: 101
         policy_vars:
           OSPF_TAG: 2000
           LOOPBACK_IP: 10.122.84.108
@@ -234,13 +236,13 @@ MODIFY POLICY
 NOTE: Since there can be multiple policies with the same template name, policy-id MUST be used
       to modify a particular policy.
 
-- name: Modify different policies 
-  cisco.dcnm.dcnm_policy: 
-    fabric: "{{ ansible_it_fabric }}" 
-    config: 
+- name: Modify different policies
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    config:
       - name: POLICY-101101  # This must be a valid POLICY ID
         create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101 
+        priority: 101
 
       - name: POLICY-102102  # This must be a valid POLICY ID
         create_additional_policy: false  # Do not create a policy if it already exists
@@ -298,7 +300,7 @@ NOTE: In the case of deleting policies using template names, all policies using 
 
 QUERY
 
-NOTE: In the case of Query using template names, all policies that have a matching template name will be 
+NOTE: In the case of Query using template names, all policies that have a matching template name will be
       returned
 
 - name: Query all policies from the specified switches
