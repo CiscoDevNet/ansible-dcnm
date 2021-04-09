@@ -296,6 +296,7 @@ def get_fabric_details(module, fabric):
     Used to get the details of the given fabric from the DCNM
 
     Parameters:
+        module: Data for module under execution
         fabric: Fabric name
 
     Returns:

@@ -435,6 +435,8 @@ class DcnmVrf:
                         else:
                             found = True
 
+                            # When the attachment is to be detached and undeployed, ignore any changes
+                            # to the attach section in the want(i.e in the playbook).
                             if want.get('isAttached') is not None:
                                 if bool(have['isAttached']) is not bool(want['isAttached']):
                                     del want['isAttached']
@@ -1520,7 +1522,7 @@ class DcnmVrf:
                                     del v_a['vrf_lite']
 
                         if ext_values == None:
-                            msg = 'There is no VRF LITE capable interface in switch {}'.format(attach['ip_address'])
+                            msg = 'There is no VRF LITE capable interface on this witch {}'.format(attach['ip_address'])
                             self.module.fail_json(msg=msg)
 
                     else:
