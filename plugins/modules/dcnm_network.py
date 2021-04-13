@@ -33,6 +33,7 @@ short_description: Add and remove Networks from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
     - "Add and remove Networks from a DCNM managed VXLAN fabric."
+    - "In Multisite fabrics, Networks can be created only on Multisite fabric"
 author: Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail)
 options:
   fabric:
@@ -1064,11 +1065,7 @@ class DcnmNetwork:
                         self.module.fail_json(msg="Unable to generate networkId for network: {} "
                                                   "under fabric: {}".format(want_c['networkName'], self.fabric))
 
-                    if not self.is_ms_fabric:
-                        create_path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
-                    else:
-                        create_path = '/rest/top-down/fabrics/{}/networks'.format(self.inventory_data['displayValues'][2])
-
+                    create_path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
                     diff_create_quick.append(want_c)
 
                     resp = dcnm_send(self.module, method, create_path, json.dumps(want_c))

@@ -322,10 +322,10 @@
     - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == false'
     - 'result.diff[1].attach[0].deploy == false'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch1 }}" in result.diff[1].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net12"'
-    - 'result.diff[1].net_name == "ansible-net13"'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[1].net_name == "ansible-net12"'
 
 - name: DELETED - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf3
