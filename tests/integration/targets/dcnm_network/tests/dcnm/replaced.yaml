@@ -188,7 +188,7 @@
   wait_for:
     timeout: 40
 
-- name: REPLACED - conf1 - Idempotence
+- name: REPLACED - conf2 - Idempotence
   cisco.dcnm.dcnm_network: *conf2
   register: result
 

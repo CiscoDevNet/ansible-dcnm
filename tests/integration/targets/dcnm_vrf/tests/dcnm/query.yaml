@@ -88,11 +88,9 @@
     - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
     - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[0].switchDetailsList[0].vlan == 500'
-    - 'result.response[0].attach[0].switchDetailsList[0].extensionValues == ""'
     - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
     - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[1].switchDetailsList[0].vlan == 500'
-    - 'result.response[0].attach[1].switchDetailsList[0].extensionValues == ""'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
@@ -201,11 +199,9 @@
     - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
     - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[0].switchDetailsList[0].vlan == 1500'
-    - 'result.response[0].attach[0].switchDetailsList[0].extensionValues != ""'
     - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
     - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[1].switchDetailsList[0].vlan == 1500'
-    - 'result.response[0].attach[1].switchDetailsList[0].extensionValues == ""'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
@@ -226,11 +222,9 @@
     - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
     - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[0].switchDetailsList[0].vlan == 1500'
-    - 'result.response[0].attach[0].switchDetailsList[0].extensionValues != ""'
     - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
     - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[1].switchDetailsList[0].vlan == 1500'
-    - 'result.response[0].attach[1].switchDetailsList[0].extensionValues == ""'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:

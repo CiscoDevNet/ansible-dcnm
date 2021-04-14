@@ -138,7 +138,7 @@ Query:
 - name: Override Switch
     cisco.dcnm.dcnm_inventory:
       fabric: vxlan-fabric
-      state: merged # merged / deleted / overridden / query
+      state: overridden # merged / deleted / overridden / query
       config:
        - seed_ip: 192.168.0.1
          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
