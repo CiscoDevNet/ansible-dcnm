@@ -182,6 +182,21 @@ Parameters
                     </div>
                 </td>
                 <td>
+                </td>
+                <td>
+                        <div>Name of external fabric where the service node is located</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li><div style="color: blue"><b>merged</b>&nbsp;&larr;</div></li>
                                     <li>replaced</li>
@@ -243,7 +258,7 @@ Examples
       cisco.dcnm.dcnm_service_node:
         fabric: Fabric1
         service_fabric: external
-        state: merged 
+        state: merged
         config:
         - name: SN-11
           type: firewall
@@ -276,7 +291,7 @@ Examples
           attach_interface: Ethernet1/1
           switches:
           - 192.168.1.224
-       #   Nothing will be replaced in the below service node as there is no change 
+       #   Nothing will be replaced in the below service node as there is no change
        #   Dont touch this if its present on DCNM
        # - name: SN-12
        #   type: firewall
@@ -308,7 +323,7 @@ Examples
        #   svc_int_name: svc1
        #   attach_interface: Ethernet1/1
        #   switches:
-       #   - 192.168.1.224 
+       #   - 192.168.1.224
        # Delete this service node from the DCNM
        # - name: SN-12
        #   type: firewall

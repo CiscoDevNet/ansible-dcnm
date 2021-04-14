@@ -18,6 +18,8 @@ Version added: 0.9.0
 Synopsis
 --------
 - Add and remove VRFs and VRF Lite Extension from a DCNM managed VXLAN fabric.
+- In Multisite fabrics, VRFs can be created only on Multisite fabric
+- In Multisite fabrics, VRFs cannot be created on member fabric
 
 
 
