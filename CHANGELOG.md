@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 * Bug fixes
+* Support for DCNM `11.5(1)` release
 
 ## [1.0.0] - 2020-09
 
