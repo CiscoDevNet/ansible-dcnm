@@ -33,7 +33,10 @@ Name | Description
 [cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
 [cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_policy_module.rst)|DCNM Ansible Module for managing policies.
 [cisco.dcnm.dcnm_rest](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
+[cisco.dcnm.dcnm_service_node](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_node_module.rst)|Create/Modify/Delete service node based on type and attached interfaces from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_template](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_template_module.rst)|DCNM Ansible Module for managing templates.
 [cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
 
 <!--end collection content-->

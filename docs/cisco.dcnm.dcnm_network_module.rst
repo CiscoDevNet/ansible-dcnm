@@ -18,6 +18,7 @@ Version added: 0.9.0
 Synopsis
 --------
 - Add and remove Networks from a DCNM managed VXLAN fabric.
+- In Multisite fabrics, Networks can be created only on Multisite fabric
 
 
 

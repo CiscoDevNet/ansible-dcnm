@@ -95,9 +95,13 @@ options:
             type: ipv4
             required: true
             suboptions:
-            vrf_lite:
+              vrf_lite:
+                type: list
                 description: 'VRF Lite Extensions options'
-                - peer_vrf:
+                elements: dict
+                required: false
+                suboptions:
+                  peer_vrf:
                     description: 'VRF Name to which this extension is attached'
                     type: str
                     requited: mandatory
@@ -125,10 +129,6 @@ options:
                     description: 'DOT1Q Id'
                     type: str
                     requited: optional
-                  peer_vrf:
-                    description: 'VRF Name to which this extension is attached'
-                    type: str
-                    requited: mandatory
           deploy:
             description: 'Per switch knob to control whether to deploy the attachment'
             type: bool

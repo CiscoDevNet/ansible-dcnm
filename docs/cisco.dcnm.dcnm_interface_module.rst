@@ -1579,7 +1579,7 @@ Examples
           - name: lo100                       # should be of the form lo<port-id>
             type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "192.172.1.1"                 # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1600,7 +1600,7 @@ Examples
           - name: lo100                       # should be of the form lo<port-id>
             type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "192.172.1.1"                 # provide the switch where to deploy the config
             deploy: true                      ## choose from [true, false]
             profile:
               admin_state: false              ## choose from [true, false]
@@ -1626,7 +1626,7 @@ Examples
         state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
         config:
           - switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "192.172.1.1"                 # provide the switch where to deploy the config
 
     # To delete or reset a particular interface on all switches in the fabric
     - name: Delete loopback interfaces
@@ -1644,7 +1644,7 @@ Examples
         config:
           - name: lo100                       # should be of the form lo<port-id>
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "192.172.1.1"                 # provide the switch where to deploy the config
 
     # To override with a particular interface configuration
     - name: Override loopback interfaces
@@ -1655,7 +1655,7 @@ Examples
           - name: lo103                       # should be of the form lo<port-id>
             type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "192.172.1.1"                 # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1681,7 +1681,7 @@ Examples
         state: overridden                     # only choose from [merged, replaced, deleted, overridden, query]
         config:
           - switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "192.172.1.1"                 # provide the switch where to deploy the config
 
     PORTCHANNEL INTERFACE
 
@@ -1693,7 +1693,7 @@ Examples
           - name: po300                       # should be of the form po<port-id>
             type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1712,7 +1712,7 @@ Examples
           - name: po301                       # should be of the form po<port-id>
             type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: false              # choose from [true, false]
@@ -1736,7 +1736,7 @@ Examples
           - name: po300                       # should be of the form po<port-id>
             type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: false              ## choose from [true, false]
@@ -1760,7 +1760,7 @@ Examples
         config:
           - name: po300                       # should be of the form po<port-id>
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
 
     # To delete or reset all interfaces on all switches in the fabric
     - name: Delete port channel interfaces
@@ -1783,7 +1783,7 @@ Examples
         state: deleted                        # only choose from [merged, replaced, deleted, overridden, query]
         config:
           - switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
 
     - name: Override port channel interfaces
       cisco.dcnm.dcnm_interface:
@@ -1793,7 +1793,7 @@ Examples
           - name: po320                       # should be of the form po<port-id>
             type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1819,7 +1819,7 @@ Examples
           - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
             type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1843,7 +1843,7 @@ Examples
           - name: eth1/1.1                    # should be of the form eth<port-num>.<port-id>
             type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: false              ## choose from [true, false]
@@ -1881,7 +1881,7 @@ Examples
           - name: eth1/1.3                    # should be of the form eth<port-num>.<port-id>
             type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+              - "192.172.1.1"                 # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1907,8 +1907,8 @@ Examples
           - name: vpc750                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - ["192.172.1.1",
+                 "192.172.1.2"]
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -1937,8 +1937,8 @@ Examples
           - name: vpc750                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - ["192.172.1.1",
+                 "192.172.1.2"]
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: false              ## choose from [true, false]
@@ -1970,8 +1970,8 @@ Examples
         config:
           - name: vpc750                      # should be of the form vpc<port-id>
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - ["192.172.1.1",
+                 "192.172.1.2"]
 
     - name: Override vPC interfaces
       cisco.dcnm.dcnm_interface:
@@ -1981,8 +1981,8 @@ Examples
           - name: vpc752                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
             switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
+              - ["192.172.1.1",
+                 "192.172.1.2"]
             deploy: true                      # choose from [true, false]
             profile:
               admin_state: true               # choose from [true, false]
@@ -2013,25 +2013,25 @@ Examples
      - name: Query interface details
           cisco.dcnm.dcnm_interface:
             fabric: mmudigon-fabric
-            state: query                        # only choose from [merged, replaced, deleted, overridden, query]
+            state: query            # only choose from [merged, replaced, deleted, overridden, query]
             config:
               - switch:
-                  - "{{ ansible_switch1 }}"     # provide the switch information where the config is to be deployed
+                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
               - name: po350
                 switch:
-                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
               - name: lo450
                 switch:
-                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
               - name: eth1/1
                 switch:
-                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
               - name: eth1/15.2
                 switch:
-                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
               - name: vpc750
                 switch:
-                    - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
 
 
 

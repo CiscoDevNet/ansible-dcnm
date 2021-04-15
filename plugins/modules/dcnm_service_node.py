@@ -43,6 +43,7 @@ options:
     - 'Name of external fabric where the service node is located'
     type: str
     required: yes
+  state:
     description:
       - The state of DCNM after module completion.
     type: str
@@ -128,7 +129,7 @@ Query:
   cisco.dcnm.dcnm_service_node:
     fabric: Fabric1
     service_fabric: external
-    state: merged 
+    state: merged
     config:
     - name: SN-11
       type: firewall
@@ -161,7 +162,7 @@ Query:
       attach_interface: Ethernet1/1
       switches:
       - 192.168.1.224
-   #   Nothing will be replaced in the below service node as there is no change 
+   #   Nothing will be replaced in the below service node as there is no change
    #   Dont touch this if its present on DCNM
    # - name: SN-12
    #   type: firewall
@@ -193,7 +194,7 @@ Query:
    #   svc_int_name: svc1
    #   attach_interface: Ethernet1/1
    #   switches:
-   #   - 192.168.1.224 
+   #   - 192.168.1.224
    # Delete this service node from the DCNM
    # - name: SN-12
    #   type: firewall
