@@ -21,7 +21,7 @@ import time
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
-def validate_list_of_dicts(param_list, spec):
+def validate_list_of_dicts(param_list, spec, module=None):
     """ Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
     spec: an argument spec dict
@@ -88,6 +88,16 @@ def validate_list_of_dicts(param_list, spec):
                     if item not in choice:
                         invalid_params.append('{} : Invalid choice provided'.format(item))
 
+                no_log = spec[param].get('no_log')
+                if no_log:
+                    if module is not None:
+                        module.no_log_values.add(item)
+                    else:
+                        msg = "\n\n'{}' is a no_log parameter".format(param)
+                        msg += "\nAnsible module object must be passed to this "
+                        msg += "\nfunction to ensure it is not logged\n\n"
+                        raise Exception(msg)
+
             valid_params_dict[param] = item
         normalized.append(valid_params_dict)
 
@@ -106,8 +116,6 @@ def get_fabric_inventory_details(module, fabric):
 
         response = dcnm_send(module, method, path)
 
-        with open("dcnm_fab.log", "w") as f:
-            f.write("FAB RESP = {}\n".format(response))
         if not response.get('RETURN_CODE'):
             rc = True
             module.fail_json(msg=response)
@@ -152,6 +160,34 @@ def get_ip_sn_dict(inventory_data):
         hn_sn.update({hn: sn})
 
     return ip_sn, hn_sn
+
+
+# This call is mainly used while configuraing multisite fabrics.
+# It maps the switch IP Address/Serial No. in the multisite inventory
+# data to respective member site fabric name to which it was actually added.
+def get_ip_sn_fabric_dict(inventory_data):
+    """
+    Maps the switch IP Address/Serial No. in the multisite inventory
+    data to respective member site fabric name to which it was actually added.
+
+    Parameters:
+        inventory_data: Fabric inventory data
+
+    Returns:
+        dict: Switch ip - fabric_name mapping
+        dict: Switch serial_no - fabric_name mapping
+    """
+    ip_fab = {}
+    sn_fab = {}
+
+    for device_key in inventory_data.keys():
+        ip = inventory_data[device_key].get('ipAddress')
+        sn = inventory_data[device_key].get('serialNumber')
+        fabric_name = inventory_data[device_key].get('fabricName')
+        ip_fab.update({ip: fabric_name})
+        sn_fab.update({sn: fabric_name})
+
+    return ip_fab, sn_fab
 
 
 # sw_elem can be ip_addr, hostname, dns name or serial number. If the given
@@ -264,7 +300,62 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 #             raise Exception(json.dumps(msg_dict))
 
 
-def dcnm_send(module, method, path, json_data=None):
+# This call is used to get the details of the given fabric from the DCNM
+def get_fabric_details(module, fabric):
+    """
+    Used to get the details of the given fabric from the DCNM
+
+    Parameters:
+        module: Data for module under execution
+        fabric: Fabric name
+
+    Returns:
+        dict: Fabric details
+    """
+    fabric_data = {}
+    rc = False
+    method = 'GET'
+    path = '/rest/control/fabrics/{}'.format(fabric)
+
+    count = 1
+    while (rc is False):
+
+        response = dcnm_send(module, method, path)
+
+        if not response.get('RETURN_CODE'):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get('RETURN_CODE') == 404:
+            # RC 404 - Object not found
+            rc = True
+            return fabric_data
+
+        if response.get('RETURN_CODE') == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if (count <= 20):
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+            else:
+                raise Exception(response)
+        elif response.get('RETURN_CODE') >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        fabric_data = response.get('DATA')
+        rc = True
+
+    return fabric_data
+
+
+def dcnm_send(module, method, path, data=None, data_type='json'):
 
     conn = Connection(module._socket_path)
-    return conn.send_request(method, path, json_data)
+
+    if (data_type == 'json'):
+        return conn.send_request(method, path, data)
+    elif (data_type == 'text'):
+        return conn.send_txt_request(method, path, data)

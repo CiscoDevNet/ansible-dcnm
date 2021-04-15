@@ -1,0 +1,86 @@
+---
+- debug: msg="Start adding spine and leaf devices to fabric {{ fabric_name }}"
+
+- name: PreTest Cleanup - Remove all spine and leaf devices from fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: cisco-live-virtual
+    state: deleted
+
+- block:
+  - name: Test Case Setup - Add Spine and Leaf devices to fabric
+    cisco.dcnm.dcnm_inventory: &spine_leaf_merged
+      fabric: "{{ fabric_name }}"
+      state: merged
+      config:
+        - seed_ip: "{{ spine1 }}"
+          auth_proto: MD5
+          user_name: "{{ username }}"
+          password: "{{ password }}"
+          max_hops: 0
+          role: spine
+          preserve_config: false
+        - seed_ip: "{{ spine2 }}"
+          auth_proto: MD5
+          user_name: "{{ username }}"
+          password: "{{ password }}"
+          max_hops: 0
+          role: spine
+          preserve_config: false
+        - seed_ip: "{{ leaf1 }}"
+          auth_proto: MD5
+          user_name: "{{ username }}"
+          password: "{{ password }}"
+          max_hops: 0
+          role: leaf
+          preserve_config: false
+        - seed_ip: "{{ leaf2 }}"
+          auth_proto: MD5
+          user_name: "{{ username }}"
+          password: "{{ password }}"
+          max_hops: 0
+          role: leaf
+          preserve_config: false
+        - seed_ip: "{{ leaf3 }}"
+          auth_proto: MD5
+          user_name: "{{ username }}"
+          password: "{{ password }}"
+          max_hops: 0
+          role: leaf
+          preserve_config: false
+        - seed_ip: "{{ leaf4 }}"
+          auth_proto: MD5
+          user_name: "{{ username }}"
+          password: "{{ password }}"
+          max_hops: 0
+          role: leaf
+          preserve_config: false
+    vars:
+        ansible_command_timeout: 1000
+        ansible_connect_timeout: 1000
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == true'
+
+  - name: Add spine and leaf devices to fabric - idempotence check
+    cisco.dcnm.dcnm_inventory: *spine_leaf_merged
+    vars:
+        ansible_command_timeout: 1000
+        ansible_connect_timeout: 1000
+    register: result
+
+  - assert:
+      that:
+      - 'result.changed == false'
+
+  - name: Query Spine Leaf Fabric
+    cisco.dcnm.dcnm_inventory:
+      fabric: "{{ fabric_name }}"
+      state: query
+    register: result
+
+  - meta: end_play
+
+  always:
+    - debug: msg="Finished adding spine and leaf devices to fabirc {{ fabric_name }}"

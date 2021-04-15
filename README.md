@@ -1,3 +1,4 @@
+[![Actions Status](https://github.com/CiscoDevNet/ansible-dcnm/workflows/CI/badge.svg)](https://github.com/CiscoDevNet/ansible-dcnm/actions)
 
 
 # Cisco DCNM Collection
@@ -32,7 +33,9 @@ Name | Description
 [cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
 [cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_policy_module.rst)|DCNM Ansible Module for managing policies.
 [cisco.dcnm.dcnm_rest](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
+[cisco.dcnm.dcnm_template](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_template_module.rst)|DCNM Ansible Module for managing templates.
 [cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
 
 <!--end collection content-->
@@ -51,7 +54,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 1.0.0
+    version: 1.1.0
 ```
 ## Using this collection
 
@@ -64,7 +67,7 @@ The following example task adds a switch to an existing fabric, using the FQCN:
 ```yaml
 ---
 
-- hosts: dcnm
+- hosts: dcnm_controllers
   gather_facts: false
   connection: ansible.netcommon.httpapi
 
@@ -101,7 +104,7 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
 
 ```yaml
 ---
-- hosts: dcnm_hosts
+- hosts: dcnm_controllers
   gather_facts: false
   connection: httpapi
 
@@ -114,6 +117,38 @@ Alternately, you can call modules by their short name if you list the `cisco.dcn
         ...parameters...
 ```
 
+Sample hosts file using the dcnm httpapi connection plugin in either the INI or YAML format.
+
+* Ansible INI Format
+
+```ini
+[dcnm_controllers]
+192.168.2.10
+
+[dcnm_controllers:vars]
+ansible_user=dcnm_username
+ansible_ssh_pass=dcnm_password
+ansible_network_os=cisco.dcnm.dcnm
+ansible_httpapi_validate_certs=False
+ansible_httpapi_use_ssl=True
+```
+
+* Ansible YAML Format
+
+```yaml
+all:
+  vars:
+    ansible_user: "dcnm_username"
+    ansible_password: "dcnm_password"
+    ansible_python_interpreter: python
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_use_ssl: True
+  children:
+    dcnm_controllers:
+      hosts:
+        192.168.2.10:
+           ansible_network_os: cisco.dcnm.dcnm
+```
 
 ### See Also:
 
@@ -127,7 +162,7 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## Changelogs
 
-* [Changelog](CHANGELOG.md)
+* [Changelog](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/CHANGELOG.md)
 
 ## More information
 

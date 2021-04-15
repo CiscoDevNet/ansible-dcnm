@@ -155,8 +155,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - '(result["response"] | length) != 0'
 
 ##############################################
 ##               QUERY                      ##
@@ -190,8 +189,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - '(result["response"] | length) == 0'
 
 ##############################################
 ##             CLEANUP                      ##
@@ -199,7 +197,7 @@
 
   always:
 
-    - name: Put to fabric to default state
+    - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
@@ -209,5 +207,3 @@
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
-
-

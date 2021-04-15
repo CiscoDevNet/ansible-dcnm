@@ -48,6 +48,9 @@ class HttpApi(HttpApiBase):
         self.headers = {
             'Content-Type': "application/json"
         }
+        self.txt_headers = {
+            'Content-Type': "text/plain"
+        }
 
     def login(self, username, password):
         ''' DCNM Login Method.  This method is automatically called by the
@@ -84,10 +87,25 @@ class HttpApi(HttpApiBase):
         # Clean up tokens
         self.connection._auth = None
 
+    def check_url_connection(self):
+        # Verify HTTPS request URL for DCNM controller is accessible
+        try:
+            requests.head(self.connection._url, verify=False)
+        except requests.exceptions.RequestException as e:
+            msg = """
+
+                  Please verify that the DCNM controller HTTPS URL ({}) is
+                  reachable from the Ansible controller and try again
+
+                  """.format(self.connection._url)
+            raise ConnectionError(str(e) + msg)
+
     def send_request(self, method, path, json=None):
         ''' This method handles all DCNM REST API requests other then login '''
         if json is None:
             json = {}
+
+        self.check_url_connection()
 
         try:
             # Perform some very basic path input validation.
@@ -97,6 +115,29 @@ class HttpApi(HttpApiBase):
                 raise ConnectionError(self._return_info(None, method, path, msg))
             response, rdata = self.connection.send(path, json, method=method,
                                                    headers=self.headers,
+                                                   force_basic_auth=True)
+            return self._verify_response(response, method, path, rdata)
+        except Exception as e:
+            eargs = e.args[0]
+            if isinstance(eargs, dict) and eargs.get('METHOD'):
+                return eargs
+            raise ConnectionError(str(e))
+
+    def send_txt_request(self, method, path, txt=None):
+        ''' This method handles all DCNM REST API requests other then login '''
+        if txt is None:
+            txt = ''
+
+        self.check_url_connection()
+
+        try:
+            # Perform some very basic path input validation.
+            path = str(path)
+            if path[0] != '/':
+                msg = 'Value of <path> does not appear to be formated properly'
+                raise ConnectionError(self._return_info(None, method, path, msg))
+            response, rdata = self.connection.send(path, txt, method=method,
+                                                   headers=self.txt_headers,
                                                    force_basic_auth=True)
             return self._verify_response(response, method, path, rdata)
         except Exception as e:

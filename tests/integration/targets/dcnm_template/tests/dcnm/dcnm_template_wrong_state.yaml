@@ -1,0 +1,54 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Initialize the setup
+  cisco.dcnm.dcnm_template: 
+    state: deleted       # only choose form [merged, deleted, query]
+    config:
+      - name: template_101
+      - name: template_102
+      - name: template_103
+      - name: template_104
+
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create templates
+      cisco.dcnm.dcnm_template: &temp_merge
+        state: replaced        # only choose form [merged, deleted, query]
+        config:
+          - name: template_101
+            description: "Template_101"
+            tags: "internal policy 101"
+            content: |
+              telemetry
+                certificate /bootflash/telegraf.crt telegraf
+                destination-profile
+                  use-vrf management
+                destination-group 1
+                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+                sensor-group 1
+                  data-source DME
+                  path sys/ch depth unbounded
+                subscription 1
+                  dst-grp 1
+                  snsr-grp 1 sample-interval 10000
+
+      register: result
+      ignore_errors: yes
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result["msg"] == "value of state must be one of: merged, deleted, query, got: replaced"'
