@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2021 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,14 +49,14 @@ options:
     default: merged
   attach:
     description:
-      - A flag spcifying if the given route peering is to be attached to the specified service node
+      - A flag specifying if the given route peering is to be attached to the specified service node
     type: bool
     required: false
     default: true
   deploy: 
     description:
       - A flag specifying if a route peering is to be deployed on the switches
-    type: boolean
+    type: bool
     required: false
     default: true
   config:
@@ -67,7 +67,7 @@ options:
     suboptions:
       name:
         description:
-          - Name of the route peering
+          - A unique name which identifies the route peering
         type: str
         required: true
       node_name:
@@ -80,12 +80,12 @@ options:
           - Type of service node. 
         type: str
         required: true
-        choices: ['IntraTenantFW', 'InterTenantFW', 'OneArmADC', 'TwoArmADC']
+        choices: ['intra_tenant_fw', 'inter_tenant_fw', 'one_arm_adc', 'two_arm_adc']
       peering_option: 
         description:
           - Specifies the type of peering
-            NOTE: This object is applicable only when 'deploy_mode' is either 'InterTenantFW'
-                  or 'OneArmADC' or 'TwoArmADC'
+            NOTE: This object is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
+                  or 'one_arm_adc' or 'two_arm_adc'
         type: str
         required: False
         default: 'static'
@@ -93,22 +93,22 @@ options:
       next_hop: 
         description:
           - Nexthop IPV4 information, e.g., 192.168.1.100
-            NOTE: This object is applicable only when 'deploy_mode' is 'IntraTenantFW'
+            NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
         type: int
         required: true
       rev_next_hop:
         description:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
-            NOTE: This object is applicable only when 'deploy_mode' is either 'IntraTenantFW'
-                  or 'OneArmADC' or 'TwoArmADC'
+            NOTE: This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
+                  or 'one_arm_adc' or 'two_arm_adc'
         type: int
         required: false
         default: ""
       inside_network:
         description:
           - Details regarding inside network of the route peering
-          - NOTE: This object is applicable only when 'deploy_mode' is 'IntraTenantFW' 
-                  or 'InterTenantFW'
+          - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw' 
+                  or 'inter_tenant_fw'
         type: dict
         required: true
         suboptions:
@@ -248,8 +248,8 @@ options:
       outside_network:
         description:
           - Details regarding outside network of the route peering
-          - NOTE: This object is applicable only when 'deploy_mode' is 'IntraTenantFW' 
-                  or 'InterTenantFW'
+          - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw' 
+                  or 'inter_tenant_fw'
         type: dict
         required: true
         suboptions:
@@ -307,7 +307,7 @@ options:
                 description:
                   - Static route information
                   - NOTE: This object is applicable only when 'peering_option' is 'static' and
-                          'deploy_mode' is 'IntraTenantFW'
+                          'deploy_mode' is 'intra_tenant_fw'
                 type: list
                 elements: dict
                 required: false
@@ -331,53 +331,62 @@ options:
                 type: ipv4
                 required: True
               ipv4_lo:
+                description:
                   - IPv4 loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv4
                 required: True
               ipv4_vpc_peer_lo:
+                description:
                   - IPv4 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv4
                 required: False
                 default: ''
               ipv6_neighobor:
+                description:
                   - IPv6 neighbor address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               ipv6_lo:
+                description:
                   - IPv6 loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
+                description:
                   - IPv6 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               route_map_tag: 
+                description:
                   - Route Tag
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
+                description:
                   - Description of the interface
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
+                description:
                   - Local ASN number
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host: 
+                description:
                   - Flag indicating if the host is to be advertised
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: bool
@@ -387,7 +396,7 @@ options:
         description:
           - Details regarding firast arm of the route peering
           - NOTE: This object is applicable only when 'deploy_mode' is either
-                  'OneArmADC' or 'TwoArmADC'
+                  'one_arm_adc' or 'two_arm_adc'
         type: dict
         required: true
         suboptions:
@@ -468,53 +477,62 @@ options:
                 type: ipv4
                 required: True
               ipv4_lo:
+                description:
                   - IPv4 loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv4
                 required: True
               ipv4_vpc_peer_lo:
+                description:
                   - IPv4 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv4
                 required: False
                 default: ''
               ipv6_neighobor:
+                description:
                   - IPv6 neighbor address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               ipv6_lo:
+                description:
                   - IPv6 loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
+                description:
                   - IPv6 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               route_map_tag: 
+                description:
                   - Route Tag
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr: lb-two-arm
+                description:
                   - Description of the interface
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn: 65101
+                description:
                   - Local ASN number
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host: true
+                description:
                   - Flag indicating if the host is to be advertised
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: bool
@@ -524,7 +542,7 @@ options:
         description:
           - Details regarding second arm of the route peering
           - NOTE: This object is applicable only when 'deploy_mode' is either
-                  'OneArmADC' or 'TwoArmADC'
+                  'one_arm_adc' or 'two_arm_adc'
         type: dict
         required: true
         suboptions:
@@ -587,33 +605,31 @@ This module supports the following states:
 
 Merged:
   Route Peerings defined in the playbook will be merged into the target fabric.
-
-  The route peerings listed in the playbook will be created if not already present on the DCNM
-  server. If the route peering is already present and the configuration information included
-  in the playbook is either different or not present in DCNM, then the corresponding
-  information is added to the route peering on DCNM. If an route peering mentioned in playbook
-  is already present on DCNM and there is no difference in configuration, no operation
-  will be performed for such route peering.
+    - If the Route Peerings does not exist it will be added.
+    - If the Route Peerings exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Route peerings that are not specified in the playbook will be untouched.
 
 Replaced:
-  Route peerings defined in the playbook will be replaced in the target fabric.
-
-  The state of the route peerings listed in the playbook will serve as source of truth for the
-  same route peerings present on the DCNM under the fabric mentioned. Additions and updations
-  will be done to bring the DCNM route peerings to the state listed in the playbook.
-  Note: Replace will only work on the interfaces mentioned in the playbook.
+  Route Peerings defined in the playbook will be replaced in the target fabric.
+    - If the Route Peerings does not exist it will be added.
+    - If the Route Peerings exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Properties that can be managed by the module but are not specified
+      in the playbook will be deleted or defaulted if possible.
+    - Route Peerings that are not specified in the playbook will be untouched.
 
 Overridden:
-  Route peerings defined in the playbook will be overridden in the target fabric.
-
-  The state of the route peerings listed in the playbook will serve as source of truth for all
-  the route peerings under the fabric mentioned. Additions and deletions will be done to bring
-  the DCNM route peerings to the state listed in the playbook. All route peerings other than the
-  ones mentioned in the playbook will either be deleted.
-  Note: Override will work on the all the route peerings present in the DCNM Fabric.
+  Route Peerings defined in the playbook will be overridden in the target fabric.
+    - If the Route Peerings does not exist it will be added.
+    - If the Route Peerings exists but properties managed by the playbook are different
+      they will be updated if possible.
+    - Properties that can be managed by the module but are not specified
+      in the playbook will be deleted or defaulted if possible.
+    - Roue Peerings that are not specified in the playbook will be deleted.
 
 Deleted:
-  Route Peerings defined in the playbook will be deleted in the target fabric.
+  Route Peerings defined in the playbook will be deleted.
 
 Query:
   Returns the current DCNM state for the route peerings listed in the playbook.
@@ -623,14 +639,15 @@ CREATING ROUTE PEERINGS
 
 INTRA-TENANT FIREWALL
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-FW-RP1                                  # mandatory
         node_name: IT-SN-1                               # mandatory
-        deploy_mode: IntraTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+        deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
         inside_network:                                  # 
           vrf: IT-VRF-11                                 # mandatory
           name: rp1-sn1-inside-net                       # mandatory
@@ -655,18 +672,18 @@ INTRA-TENANT FIREWALL
         rev_next_hop: 192.161.2.100                      # optional, default is ''
     attach: true
     deploy: true
-    state: merged
 
 INTER-TENANT FIREWALL with STATIC peering
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-FW-RP2                                  # mandatory
         node_name: IT-SN-1                               # mandatory
-        deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+        deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
         peering_option: static                           # optional, default is static, choices=[static, ebgp]
         inside_network:                                  # 
           vrf: IT-VRF-21                                 # mandatory
@@ -700,18 +717,18 @@ INTER-TENANT FIREWALL with STATIC peering
             tag: 22222                                   # optional, default is 12345
     attach: true
     deploy: true
-    state: merged
 
 INTER-TENANT FIREWALL with EBGP peering
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
-      - name: IT-FW-RP3                                  # mandatory
-            node_name: IT-SN-1                                # mandatory
-            deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+      - name: IT-FW-RP3                                      # mandatory
+            node_name: IT-SN-1                               # mandatory
+            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             inside_network:
               vrf: IT-VRF-31                                 # mandatory
@@ -727,8 +744,8 @@ INTER-TENANT FIREWALL with EBGP peering
                 ipv4_lo: 31.31.31.2                          # mandatory
                 ipv4_vpc_peer_lo: 31.31.31.3                 # optional, default is ''
                 ipv6_neighbor: 2003:3131::1                  # optional, default is ''
-                ipv6_lo: 2003:3132::1                       # optional, default is ''
-                ipv6_vpc_peer_lo: 2003:3133::1              # optional, default is ''
+                ipv6_lo: 2003:3132::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2003:3133::1               # optional, default is ''
                 route_map_tag: 33111                         # optional, default is 12345 ????
                 neigh_int_descr: "RP3 SN1 inside interface"  # optional, default is '' ????
                 local_asn: 65301                             # optional, default is ''
@@ -755,18 +772,18 @@ INTER-TENANT FIREWALL with EBGP peering
                 adv_host: true                               # optional, default is false
     attach: true
     deploy: true
-    state: merged
 
 ONEARM ADC with EBGP peering
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-ADC-RP4
-            node_name: IT-SN-2                                # mandatory
-            deploy_mode: OneArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            node_name: IT-SN-2                               # mandatory
+            deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: IT-VRF-41                                 # mandatory
@@ -774,7 +791,7 @@ ONEARM ADC with EBGP peering
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
-                ipv6_gw: 2004:db01::1/64                  # optional, default is ''
+                ipv6_gw: 2004:db01::1/64                     # optional, default is ''
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
                 tag: 41111                                   # optional, default is 12345
@@ -784,25 +801,25 @@ ONEARM ADC with EBGP peering
                 ipv6_neighbor: 2004:4141::1                  # optional, default is ''
                 ipv6_lo: 2004:4142::1                        # optional, default is ''
                 ipv6_vpc_peer_lo: 2004:4143::1               # optional, default is ''
-                route_map_tag: 41112                         # optional, default is 12345 ????
-                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is '' ????
+                route_map_tag: 41112                         # optional, default is 12345
+                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
                 local_asn: 65401                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             rev_next_hop: 192.164.1.100                      # mandatory
     attach: true
     deploy: true
-    state: merged
 
 TWOARM ADC with EBGP peering
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-ADC-RP5
             node_name: IT-SN-2                               # mandatory
-            deploy_mode: TwoArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: IT-VRF-51            "                    # mandatory
@@ -820,8 +837,8 @@ TWOARM ADC with EBGP peering
                 ipv6_neighbor: 2005:5151::1                  # optional, default is ''
                 ipv6_lo: 2005:5152::1                        # optional, default is ''
                 ipv6_vpc_peer_lo: 2005:5153::1               # optional, default is ''
-                route_map_tag: 51115                         # optional, default is 12345 ????
-                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is '' ????
+                route_map_tag: 51115                         # optional, default is 12345
+                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is ''
                 local_asn: 65501                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             second_arm:
@@ -837,18 +854,18 @@ TWOARM ADC with EBGP peering
             rev_next_hop: 192.165.1.100                      # mandatory
     attach: true
     deploy: true
-    state: merged
 
 ONEARM ADC with STATIC peering
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-ADC-RP6
             node_name: IT-SN-2                               # mandatory
-            deploy_mode: OneArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: IT-VRF-61                                 # mandatory
@@ -872,18 +889,18 @@ ONEARM ADC with STATIC peering
             rev_next_hop: 192.166.1.100                      # mandatory
     attach: true
     deploy: true
-    state: merged
 
 TWOARM ADC with STATIC peering
 
-- name: Create different non-existing service route peering including all objects
+- name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
+    state: merged
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-ADC-RP7
-            node_name: IT-SN-2                                # mandatory
-            deploy_mode: TwoArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            node_name: IT-SN-2                               # mandatory
+            deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: IT-VRF-71                                 # mandatory
@@ -913,31 +930,31 @@ TWOARM ADC with STATIC peering
             rev_next_hop: 192.167.1.100                      # mandatory
     attach: true
     deploy: true
-    state: deleted
 
 DELETE ROUTE PEERINGS
 =====================
 
 - name: Delete route peerings
   cisco.dcnm.dcnm_service_route_peering:                    
+    state: deleted
     fabric: test-fabric
     service_fabric: external
     config:     
       - name: IT-FW-RP1                                   # mandatory
         node_name: IT-SN-1                                # mandatory
-    state: deleted
 
 OVERRIDE ROUTE PEERINGS
 =======================
 
 - name: Override existing route peerings with new peerings
   cisco.dcnm.dcnm_service_route_peering:
+    state: overridden
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-FW-RP-OVR1                              # mandatory
         node_name: IT-SN-1                               # mandatory
-        deploy_mode: IntraTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+        deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
         inside_network:                                  # 
           vrf: IT-VRF-12                                 # mandatory
           name: rp1-sn1-inside-net-ovr                   # mandatory
@@ -962,18 +979,18 @@ OVERRIDE ROUTE PEERINGS
         rev_next_hop: 192.161.92.100                     # optional, default is ''
     attach: true
     deploy: true
-    state: overridden
 
 - name: Override existing route peerings with no new peerings
   cisco.dcnm.dcnm_service_route_peering:
+    state: overridden
     fabric: test-fabric
     service_fabric: external
     attach: true
     deploy: true
-    state: overridden
 
 - name: Override existing route peerings with just service node names
   cisco.dcnm.dcnm_service_route_peering:
+    state: overridden
     fabric: test-fabric
     service_fabric: external
     config:
@@ -981,19 +998,19 @@ OVERRIDE ROUTE PEERINGS
       - node_name: IT-SN-2                                # optional
     attach: true
     deploy: true
-    state: overridden
 
 REPLACE ROUTE PEERINGS
 ======================
 
 - name: Replace service route peerings RP1
   cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_rep_13
+    state: replaced
     fabric: test-fabric
     service_fabric: external
     config:
       - name: IT-FW-RP1                                  # mandatory
         node_name: IT-SN-1                               # mandatory
-        deploy_mode: IntraTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+        deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
         inside_network:                                  # 
           vrf: IT-VRF-11                                 # mandatory
           name: rp1-sn1-inside-net                       # mandatory
@@ -1018,13 +1035,13 @@ REPLACE ROUTE PEERINGS
         rev_next_hop: 192.161.2.200                      # optional, default is ''
     attach: true
     deploy: true
-    state: replaced
 
 QUERY ROUTE PEERINGS
 ====================
 
 - name: Query existing route peerings with specific peering names
   cisco.dcnm.dcnm_service_route_peering:
+    state: query
     fabric: test-fabric
     service_fabric: external
     config:
@@ -1048,16 +1065,15 @@ QUERY ROUTE PEERINGS
 
       - name: IT-ADC-RP7                                  # optional
         node_name: IT-SN-2                                # mandatory
-    state: query
 
 - name: Query existing route peerings without specific peering names
   cisco.dcnm.dcnm_service_route_peering:
+    state: query
     fabric: test-fabric
     service_fabric: external
     config:
         node_name: IT-SN-1                                # mandatory
         node_name: IT-SN-2                                # mandatory
-    state: query
 
 """
 
@@ -1097,37 +1113,15 @@ class DcnmServiceRoutePeering:
         self.changed_dict = [
             {"merged": [], "modified": [], "deleted": [], "deploy": [], "query": []}
         ]
-
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):
 
         if self.fd == None:
-            self.fd = open("srp.log", "w+")
+            self.fd = open("srp.log", "a+")
         if self.fd != None:
             self.fd.write(msg)
-
-    #############################################################################################################################
-    # Routine to validate the playbook input and fill up default values for objects not included. It takes specific profiles
-    # to validate the input against. In this csase we validate the playbook against srp_spec which inlcudes common information
-    # srp_network_spec which inlcudes network specific information and profile_specX which inlciudes network profile information.
-    # For route peering we have two networks or arms and hence two profile specs
-    #
-    # Input:
-    #        cfg- The config from playbook
-		#        srp_spec	- Route peering common spec
-    #        srp_network_spec	- Rourte peering network related config spec
-		#				 srp_prof1_spec	- Route peering profile spec for inside-network/outside-network/first-arm
-		#				 srp_prof2_spec	- Route peering profile spec for second-arm
-    #        net_name1 - Name of inside-network/first-arm
-    #        net_name2 - Name of outside-network/second-arm
-    #
-    # Output:
-    #        self.srp_info		- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    #############################################################################################################################
+            self.fd.flush()
 
     def dcnm_srp_validate_and_build_srp_info(
         self,
@@ -1139,6 +1133,26 @@ class DcnmServiceRoutePeering:
         net_name1,
         net_name2,
     ):
+
+        '''
+        Routine to validate the playbook input and fill up default values for objects not included. It takes specific profiles
+        to validate the input against. In this csase we validate the playbook against srp_spec which inlcudes common information
+        srp_network_spec which inlcudes network specific information and profile_specX which inlciudes network profile information.
+        For route peering we have two networks or arms and hence two profile specs. This routine updates self.srp_info with validated 
+        playbook information by defaulting values not included
+      
+        Parameters:
+            cfg (dict): The config from playbook
+            srp_spec (dict): Route peering common spec
+            srp_network_spec (dict): Rourte peering network related config spec
+            srp_prof1_spec (dict): Route peering profile spec for inside-network/outside-network/first-arm
+            srp_prof2_spec (dict): Route peering profile spec for second-arm
+            net_name1 (string): Name of inside-network/first-arm
+            net_name2 (string): Name of outside-network/second-arm
+      
+        Returns:
+            None
+        '''
 
         srp_static_route_spec = dict(
             subnet=dict(required=True, type="ipv4"),
@@ -1284,20 +1298,41 @@ class DcnmServiceRoutePeering:
                         out_list.remove(rt)
                         rt.update(out_net_route[0])
 
-    #############################################################################################
-    # Routine to validate the given playbook input based on the type of peering
-    #
-    # Input:
-    #        self	- SRP class object containing the playbook config and all payload information
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    #############################################################################################
+    def dcnm_srp_translate_deploy_mode (self, item):
 
+        '''
+        Routine to translate the deploy_mode string from the playbook format to the payload format. The translated
+        value is updated in the 'item' object directly
+        
+        Parameters:
+            item (dict) : route peering block whose 'deploy_mode' object need to be translated 
+        
+        Returns:
+            None
+        '''
+
+        trans_dict = {'intra_tenant_fw': 'IntraTenantFW', 'inter_tenant_fw': 'InterTenantFW', 'one_arm_adc': 'OneArmADC', 'two_arm_adc': 'TwoArmADC'}
+       
+        if item["deploy_mode"] not in trans_dict.keys():
+            mesg = "Invalid 'deploy_mode' = {}, in playbook, Expected values = {}".format(item["deploy_mode"], trans_dict.keys())
+            self.module.fail_json(msg=mesg)
+
+        return trans_dict[item["deploy_mode"]]
+         
     def dcnm_srp_validate_input(self):
+
+        '''
+        Routine to validate the given playbook input based on the type of peering.
+        This routine updates self.srp_info with validated playbook information by defaulting values 
+        not included. Since each state has a different config structure, this routine handles the 
+        validation based on the given state
+        
+        Parameters:
+            None
+        
+        Returns:
+            None
+        '''
 
         if None is self.config:
             return
@@ -1323,16 +1358,20 @@ class DcnmServiceRoutePeering:
             elif (self.module.params["state"] == "overridden") and (
                 item.get("name", None) is None
             ):
-                # config for query state is different. So validate query state differently
+                # config for overridden state is different. So validate overridden state differently
                 self.dcnm_srp_validate_overridden_state_input(cfg)
             else:
                 if "deploy_mode" not in item:
                     mesg = "Invalid parameters in playbook: {}".format(
                         "while processing Route Peering - "
                         + item["name"]
-                        + ", deploy_mode : Required parameter not found"
+                        + ", deploy_mode - Required parameter not found"
                     )
                     self.module.fail_json(msg=mesg)
+
+                # Translate the deploy_mode from playbook format to a format that DCNM expects
+                item["deploy_mode"] = self.dcnm_srp_translate_deploy_mode (item)
+                citem["deploy_mode"] = item["deploy_mode"]
 
                 if (item["deploy_mode"].lower() == "intratenantfw") or (
                     item["deploy_mode"].lower() == "intertenantfw"
@@ -1346,20 +1385,19 @@ class DcnmServiceRoutePeering:
                     self.dcnm_srp_validate_adc_input(cfg, item["deploy_mode"].lower())
             cfg.remove(citem)
 
-    #########################################################################################
-    # Routine to validate the playbook input based on Firewall perring type intra-tenant
-    #
-    # Input:
-    #        self	- SRP  object containing the playbook config and all payload information
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    ###########################################################################################
-
     def dcnm_srp_validate_intra_tenant_firewall_input(self, cfg):
+
+        '''
+        Routine to validate the playbook input based on Firewall perring type intra-tenant.
+        This routine updates self.srp_info with validated intra-tenant firewall related playbook 
+        information by defaulting values not included
+        
+        Parameters:
+            cfg (dict): The config from playbook
+
+        Returns:
+            None
+        '''
 
         srp_spec = dict(
             name=dict(required=True, type="str"),
@@ -1396,20 +1434,19 @@ class DcnmServiceRoutePeering:
             "outside_network",
         )
 
-    ############################################################################################
-    # Routine to validate the playbook input based on Firewall perring type inter-tenant
-    #
-    # Input:
-    #        cfg	- The config from playbook
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_validate_inter_tenant_firewall_input(self, cfg):
+
+        '''
+        Routine to validate the playbook input based on Firewall perring type inter-tenant.
+        This routine updates self.srp_info with validated inter-tenant firewall related playbook 
+        information by defaulting values not included
+       
+        Parameters:
+            cfg (dict): The config from playbook
+       
+        Returns:
+            None
+        '''
 
         srp_spec = dict(
             name=dict(required=True, type="str"),
@@ -1477,21 +1514,20 @@ class DcnmServiceRoutePeering:
                 "outside_network",
             )
 
-    ###############################################################################################
-    # Routine to validate the playbook input based on Loadbalance perring type one-arm and two-arm
-    #
-    # Input:
-    #        cfg	- The config from playbook
-    #        deploy_mode	- Deployment mode identifying the type of ADC
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    ###############################################################################################
-
     def dcnm_srp_validate_adc_input(self, cfg, deploy_mode):
+
+        '''
+        Routine to validate the playbook input based on Loadbalance perring type one-arm and two-arm.
+        This routine updates self.srp_info with validated adc related playbook information by defaulting 
+        values not included
+       
+        Parameters:
+            cfg (dict): The config from playbook
+            deploy_mode (string): Deployment mode identifying the type of ADC
+       
+        Returns:
+            None
+        '''
 
         srp_spec = dict(
             name=dict(required=True, type="str"),
@@ -1575,21 +1611,19 @@ class DcnmServiceRoutePeering:
         elif deploy_mode == "intertenantfw":
             self.dcnm_srp_validate_inter_tenant_firewall_input(cfg)
 
-    ##################################################################################################
-    # Playbook input will be different for differnt states. This routine validates the delete state
-    # input
-    #
-    # Input:
-    #        cfg	- The config from playbook
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    ##################################################################################################
-
     def dcnm_srp_validate_delete_state_input(self, cfg):
+
+        '''
+        Playbook input will be different for differnt states. This routine validates the delete state
+        input. This routine updates self.srp_info with validated playbook information related to delete 
+        state.
+       
+        Parameters:
+            cfg (dict): The config from playbook
+       
+        Returns:
+            None
+        '''
 
         srp_delete_spec = dict(
             name=dict(required=True, type="str"),
@@ -1614,21 +1648,19 @@ class DcnmServiceRoutePeering:
 
         self.srp_info.extend(srp_info)
 
-    ###############################################################################################
-    # Playbook input will be different for differnt states. This routine validates the query state
-    # input
-    #
-    # Input:
-    #        cfg	- The config from playbook
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    ###############################################################################################
-
     def dcnm_srp_validate_query_state_input(self, cfg):
+
+        '''
+        Playbook input will be different for differnt states. This routine validates the query state
+        input. This routine updates self.srp_info with validated playbook information related to query 
+        state.
+       
+        Parameters:
+            cfg (dict): The config from playbook
+       
+        Returns:
+           None
+        '''
 
         srp_query_spec = dict(
             name=dict(type="str", default="None"),
@@ -1647,21 +1679,19 @@ class DcnmServiceRoutePeering:
 
         self.srp_info.extend(srp_info)
 
-    #####################################################################################################
-    # Playbook input will be different for differnt states. This routine validates the overridden state
-    # input
-    #
-    # Input:
-    #        cfg	- The config from playbook
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    #####################################################################################################
-
     def dcnm_srp_validate_overridden_state_input(self, cfg):
+
+        '''
+        Playbook input will be different for differnt states. This routine validates the overridden state
+        input. This routine updates self.srp_info with validated playbook information related to overridden 
+        state.
+       
+        Parameters:
+            cfg	(dict): The config from playbook
+       
+        Returns:
+            None
+        '''
 
         srp_overridden_spec = dict(
             name=dict(required=False, type="str", default=""),
@@ -1680,20 +1710,19 @@ class DcnmServiceRoutePeering:
 
         self.srp_info.extend(srp_info)
 
-    ############################################################################################
-    # This routine builds the route peering payload information from the playbook input
-    #
-    # Input:
-    #        srp	- The route peering information from self.want
-    #
-    # Output:
-		#        srp_payload	- Route peering payload related to routing information
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_get_payload_route_info(self, srp, srp_payload):
+
+        '''
+        This routine builds the route peering payload information from the playbook input
+        that is related to static of ebgp route information.
+       
+        Parameters:
+            srp (dict): The route peering information from self.want
+            srp_payload (dict): Route peering information to be filled from the given srp config
+       
+        Returns:
+            None
+        '''
 
         in_route_info = {"nvPairs": {}}
 
@@ -1795,22 +1824,19 @@ class DcnmServiceRoutePeering:
 
                 srp_payload["routes"][1]["vrfName"] = srp[net_name2]["vrf"]
 
-    #################################################################################################################
-    # This routine builds the common part of the route peering payload. By common we mean information that is common
-    # to both inside and outside networks or one-arm and two-arm adc
-    #
-    # Input:
-		#        srp	- Route peering information from self.want
-    #        deploy_mode - Rourte peering deployment mode
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        srp_payload - Route peering common payload information populated from playbook configuration
-    #################################################################################################################
-
     def dcnm_srp_get_common_payload(self, srp, deploy_mode):
+
+        '''
+        This routine builds the common part of the route peering payload. By common we mean information that is common
+        to both inside and outside networks or one-arm and two-arm adc.
+       
+        Parameters:
+            srp (dict): Route peering information from self.want
+            deploy_mode (string): Rourte peering deployment mode
+       
+        Returns:
+            srp_payload (dict): Route peering common payload information populated from playbook configuration
+        '''
 
         in_network_defaults = {
             "templateName": "Service_Network_Universal",
@@ -1919,22 +1945,18 @@ class DcnmServiceRoutePeering:
 
         return srp_payload
 
-    ##################################################################################################
-    # This routine builds the complete payload step-by-step first by building common part, then other
-    # parts based on the deploy_mode and peering_option
-    #
-    # Input:
-    #        cfg	- The config from playbook
-		#        srp  - Route peering information
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        self.srp_info	- SRP information populated with appropriate data from playbook config
-    ##################################################################################################
-
     def dcnm_get_srp_payload(self, srp):
+
+        '''
+        This routine builds the complete payload step-by-step first by building common part, then other
+        parts based on the deploy_mode and peering_option.
+       
+        Parameters:
+            srp (dict): Route peering information
+       
+        Returns:
+            self.srp_payuload (dict): SRP payload information populated with appropriate data from playbook config
+        '''
 
         deploy_mode = srp["deploy_mode"].lower()
         srp_payload = self.dcnm_srp_get_common_payload(srp, deploy_mode)
@@ -1972,25 +1994,23 @@ class DcnmServiceRoutePeering:
 
         return srp_payload
 
-    ###########################################################################################################
-    # This routine is invoked after self.want is populated based on playbook info. For merging route peerings
-    # all the information that is not included in the playbook must be left as is and the information which 
-    # is included must be updated. This routine checks for playbook info and updates self.want as required
-    #
-    # Input:
-    #        cfg	- The config from playbook
-		#        want - Route peering payload information populated from playbook config
-    #        have - Rourte peering information that exists on the DCNM server
-    #
-    # Output:
-    #        self.want 	- SRP information related to routes populated with appropriate data in self.want 
-    #                     after appropriate comparisons
-    #
-    # Returns:
-    #        None
-    ###########################################################################################################
-
     def dcnm_srp_update_route_info(self, want, have, cfg):
+
+        '''
+        This routine is invoked after self.want is populated based on playbook info. For merging route peerings
+        all the information that is not included in the playbook must be left as is and the information which 
+        is included must be updated. This routine checks for playbook info and updates self.want as required
+        This routine updates self.want with appriopriate route information from playbook and self.have based on 
+        objects included in the playbook.
+       
+        Parameters:
+            cfg (dict): The config from playbook
+            want (dict): Route peering payload information populated from playbook config
+            have (dict): Rourte peering information that exists on the DCNM server
+       
+        Returns:
+            None
+        '''
 
         if (want["deploymentMode"].lower() == "intratenantfw") or (
             want["deploymentMode"].lower() == "intertenantfw"
@@ -2121,23 +2141,21 @@ class DcnmServiceRoutePeering:
                 if cfg.get("vrf", None) is None:
                     want["routes"][1]["vrfName"] = have["routes"][1]["vrfName"]
 
-    ############################################################################################
-    # Routine to update the common part of the route peering
-    #
-    # Input:
-    #        cfg	- The config from playbook
-		#        want - Route peering payload information populated from playbook config
-    #        have - Rourte peering information that exists on the DCNM server
-    #
-    # Output:
-    #        self.want - SRP common information populated with appropriate data in self.want 
-    #                    after appropriate comparisons
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_update_common_info(self, want, have, cfg):
+
+        '''
+        Routine to update the common part of the route peering information in self.want
+        This routine updates self.want with common information from playbook and self.have based on objects
+        included in the playbook.
+       
+        Parameters:
+            cfg (dict): The config from playbook
+            want (dict): Route peering payload information populated from playbook config
+            have (dict): Rourte peering information that exists on the DCNM server
+       
+        Returns:
+            None
+        '''
 
         if (want["deploymentMode"].lower() == "intratenantfw") or (
             want["deploymentMode"].lower() == "intertenantfw"
@@ -2253,27 +2271,20 @@ class DcnmServiceRoutePeering:
         if self.module.params["attach"] == "default":
             want["enabled"] = have["enabled"]
 
-    ##########################################################################################################
-    # Routine to compare want and have and make approriate changes to want. This routine checks the existing 
-    # informationm with the config from playbook and populates the payloads in self.want apropriately
-    #
-    # Input:
-    #        cfg	- The config from playbook
-		#        srp_spec	- Route peering common spec
-    #        srp_network_spec	- Rourte peering network related config spec
-		#				 srp_prof1_spec	- Route peering profile spec for inside-network/outside-network/first-arm
-		#				 srp_prof2_spec	- Route peering profile spec for second-arm
-    #        net_name1 - Name of inside-network/first-arm
-    #        net_name2 - Name of outside-network/second-arm
-    #
-    # Output:
-    #        self.srp_info	- SRP information populated with appropriate data after validation
-    #
-    # Returns:
-    #        None
-    ##########################################################################################################
-
     def dcnm_srp_update_want(self):
+
+        '''
+        Routine to compare want and have and make approriate changes to want. This routine checks the existing 
+        informationm with the config from playbook and populates the payloads in self.want apropriately.
+        This routine updates self.want with final paylload information after comparing self.want and self.have and
+        the playbook information.
+       
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
 
         # only for 'merged' state we need to update the objects that are not included in playbook with
         # values from self.have.
@@ -2317,20 +2328,17 @@ class DcnmServiceRoutePeering:
             self.dcnm_srp_update_common_info(srp, match_have[0], match_cfg[0])
             self.dcnm_srp_update_route_info(srp, match_have[0], match_cfg[0])
 
-    ######################################################################################################
-    # This routine builds the required payloads and populates self.want based on the playbook information
-    #
-    # Input:
-    #        self	- The SRP class object containing playbook config
-    #
-    # Output:
-    #        self.want - SRP information populated with required payloads
-    #
-    # Returns:
-    #        None
-    ######################################################################################################
-
     def dcnm_srp_get_want(self):
+
+        '''
+        This routine updates self.want with the payload information based on the playbook configuration.
+        
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
 
         if None is self.config:
             return
@@ -2340,7 +2348,7 @@ class DcnmServiceRoutePeering:
 
         # self.srp_info is a list of directories each having config related to a particular srp
         for srp_elem in self.srp_info:
-            # If route peering name is not given, then that means we are habdling the case of Playbook
+            # If route peering name is not given, then that means we are handling the case of Playbook
             # including just the service node name. In such a casse we don't have to worry about filling want
             if srp_elem.get("name", "") == "":
                 continue
@@ -2348,20 +2356,17 @@ class DcnmServiceRoutePeering:
             if srp_payload not in self.want:
                 self.want.append(srp_payload)
 
-    ############################################################################################
-    # Routine to get all route peerings based on the Service Node
-    #
-    # Input:
-    #        node_name	- service node name to fetch the route peerings information from
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        All route peerings present on the specified service node 
-    ############################################################################################
-
     def dcnm_srp_get_srp_info_with_service_node(self, node_name):
+
+        '''
+        Routine to get all route peerings based on the Service Node information included in the playbook.
+       
+        Parameters:
+            node_name (string): service node name to fetch the route peerings information from
+       
+        Returns:
+            resp["DATA"] (dict): All route peerings present on the specified service node 
+        '''
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
@@ -2371,56 +2376,71 @@ class DcnmServiceRoutePeering:
             + "/peerings/"
             + self.module.params["fabric"]
         )
-        resp = dcnm_send(self.module, "GET", path)
+
+        retries = 0
+        while (retries < 5):
+            retries += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp and resp["RETURN_CODE"] != 200:
+                time.sleep(10)
+                continue
+            else:
+                break
 
         if resp and (resp["RETURN_CODE"] == 200) and resp["DATA"]:
+            resp["RETRIES"] = retries
             return resp["DATA"]
         else:
             return []
 
-    ############################################################################################
-    # Routine to all service nodes from DCNM
-    #
-    # Input:
-    #        self  - The SRP class object containing playbook config
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        All service nodes on the specified fabric
-    ############################################################################################
-
     def dcnm_srp_get_service_nodes_from_dcnm(self):
+
+        '''
+        Routine to get list of all service nodes from DCNM.
+       
+        Parameters:
+            None
+       
+        Returns:
+            resp["DATA"] (dict): All service nodes on the specified fabric
+        '''
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric="
             + self.module.params["fabric"]
         )
 
-        resp = dcnm_send(self.module, "GET", path)
+        retries = 0
+        while (retries < 5):
+            retries += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp and resp["RETURN_CODE"] != 200:
+                time.sleep(10)
+                continue
+            else:
+                break
 
         if resp and (resp["RETURN_CODE"] == 200) and resp["DATA"]:
+            resp["RETRIES"] = retries
             return resp["DATA"]
         else:
             return []
 
-    ############################################################################################
-    # Routine to get existing Route peering information from DCNM which match the given SRP
-    #
-    # Input:
-		#        srp  - Route peering information
-    #        srp_type - Flag indicating whether the 'srp' passed is in 'PLAYBOOK' format
-    #                   or 'PAYLOAD' format
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        SRP informatikon obtained from the DCNM server
-    ############################################################################################
-
     def dcnm_srp_get_srp_info_from_dcnm(self, srp, srp_type):
+
+        '''
+        Routine to get existing Route peering information from DCNM which matches the given SRP.
+       
+        Parameters:
+            srp  (dict): Route peering information
+            srp_type (string): String indicating whether the 'srp' passed is in 'PLAYBOOK' format
+                            or 'PAYLOAD' format
+        Returns:
+            resp["DATA"] (dict): SRP informatikon obtained from the DCNM server if it exists
+            [] otherwise
+        '''
 
         if srp_type == "PAYLOAD":
             path = (
@@ -2445,27 +2465,40 @@ class DcnmServiceRoutePeering:
                 + srp["name"]
             )
 
-        resp = dcnm_send(self.module, "GET", path)
+        retries = 0
+        while (retries < 5):
+            retries += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp and resp["RETURN_CODE"] != 200:
+                # Check if the error is "ResourceNotFound". In that case we can return without
+                # retrying.
+                if resp.get("error", None) is not None:
+                    if resp["error"].get("code") is "ResourceNotFound":
+                        break
+                time.sleep(10)
+                continue
+            else:
+                break
 
         if resp and (resp["RETURN_CODE"] == 200) and resp["DATA"]:
+            resp["RETRIES"] = retries
             return resp["DATA"]
         else:
             return []
 
-    ############################################################################################
-    # Routine to get exisitng roue peering information from DCNM that matches self.want
-    #
-    # Input:
-    #        self	- The SRP class object containing playbook config
-    #
-    # Output:
-    #        self.have - Existing SRP information from DCNM server populated 
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_get_have(self):
+
+        '''
+        Routine to get exisitng roue peering information from DCNM that matches information in self.want.
+        This routine updates self.have with all the route peerings that match the given playbook configuration
+       
+        Parameters:
+            None    
+
+        Returns:
+            None
+        '''
 
         if self.want == []:
             return
@@ -2475,23 +2508,21 @@ class DcnmServiceRoutePeering:
             if (have != []) and (have not in self.have):
                 self.have.append(have)
 
-    #####################################################################################################
-    # Routine to compare common information from want and have
-    #
-    # Input:
-    #        want	- SRP Payload information populated using playbook config
-		#        have - SRP information existing on the DCNM server
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        - DCNM_SRP_NO_MATCH: if information in want and have don't match
-    #          DCNM_SRP_MATCH: if want and have match
-    #        - mismatch_reasons: A list containing strings identifying which objects did not match or []
-    #####################################################################################################
-
     def dcnm_srp_compare_common_info(self, want, have):
+
+        '''
+        Routine to compare common information from want and have to decide if the information from self.want is to
+        be added to the create list/replace list or not.
+       
+        Parameters:
+            want (dict): SRP Payload information populated using playbook config
+            have (dict): SRP information existing on the DCNM server
+       
+        Returns:
+            DCNM_SRP_NO_MATCH (string): if information in want and have don't match
+            DCNM_SRP_MATCH (string): if want and have match
+            mismatch_reasons (list): A list containing strings identifying which objects did not match or []
+        '''
 
         mismatch_reasons = []
 
@@ -2647,22 +2678,19 @@ class DcnmServiceRoutePeering:
         else:
             return "DCNM_SRP_NO_MATCH", mismatch_reasons
 
-    ############################################################################################
-    # Routine to compare MULTIROUTE object of route peering
-    #
-    # Input:
-    #        wmr - Multi-Route info object from want
-    #        hmr - Multi-Route info object from have
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        DCNM_MR_NO_MATCH: if multi-route objects do not match
-    #        DCNM_MR_MATCH: if multi-route objects match
-    ############################################################################################
-
     def dcnm_srp_compare_multi_routes(self, wmr, hmr):
+
+        '''
+        Routine to compare MULTIROUTE object of route peerings from self.want and self.have.
+       
+        Parameters:
+            wmr (dict): Multi-Route info object from want
+            hmr (dict): Multi-Route info object from have
+       
+        Returns:
+            DCNM_MR_NO_MATCH (string): if multi-route objects do not match
+            DCNM_MR_MATCH (string): if multi-route objects match
+        '''
 
         wmrl = wmr.split("\n")
         hmrl = hmr.split("\n")
@@ -2675,23 +2703,20 @@ class DcnmServiceRoutePeering:
                 return "DCNM_MR_NO_MATCH"
         return "DCNM_MR_MATCH"
 
-    #################################################################################################
-    # Routine to compare route information from want and have
-    #
-    # Input:
-    #        want - SRP Payload information populated using playbook config
-		#        have - SRP information existing on the DCNM server
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        - DCNM_SRP_MATCH: if route information in want and have match
-    #          DCNM_SRP_NO_MATCH: if route information in want and have do not match
-    #        - mismatch_reasons: A list containing strings indicating which objects did not match
-    #################################################################################################
-
     def dcnm_srp_compare_route_info(self, want, have):
+
+        '''
+        Routine to compare route objects of route peerings from self.want and self.have.
+       
+        Parameters:
+            want (dict): SRP Payload information populated using playbook config
+            have (dict): SRP information existing on the DCNM server
+       
+        Returns:
+            DCNM_SRP_MATCH (string): if route information in want and have match
+            DCNM_SRP_NO_MATCH (string): if route information in want and have do not match
+            mismatch_reasons (list): A list containing strings indicating which objects did not match
+        '''
 
         mismatch_reasons = []
         if (want["deploymentMode"].lower() == "intratenantfw") or (
@@ -2837,22 +2862,19 @@ class DcnmServiceRoutePeering:
         else:
             return "DCNM_SRP_NO_MATCH", mismatch_reasons
 
-    ############################################################################################
-    # Routine to compare two route peerings. Used during merge and replace
-    #
-    # Input:
-    #        srp	- The SRP payload information
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        - DCNM_SRP_ADD_NEW: if the given SRP does not exist
-    #          DCNM_SRP_DONT_ADD: if given SRP already exist and is exactly the same
-    #          DCNM_SRP_MERGE: if given SRP already exists but not exactly the same
-    ############################################################################################
-
     def dcnm_srp_compare_route_peerings(self, srp):
+
+        '''
+        Routine to compare route peerings from self.want and self.have. Used during merge and replace.
+       
+        Parameters:
+            srp (dict): The SRP payload information
+       
+        Returns:
+            DCNM_SRP_ADD_NEW (string): if the given SRP does not exist
+            DCNM_SRP_DONT_ADD (string): if given SRP already exist and is exactly the same
+            DCNM_SRP_MERGE (string): if given SRP already exists but not exactly the same
+        '''
 
         found = False
         match_srp = []
@@ -2889,77 +2911,21 @@ class DcnmServiceRoutePeering:
         else:
             return ("DCNM_SRP_ADD_NEW", None)
 
-    ############################################################################################
-    # Routine to get the detachment information for a given route peering
-    #
-    # Input:
-    #        srp	- Route peering information
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        - attached: a flag indicating is the given SRP is attached
-    #        - deployed: a flag indicating is the given SRP is deployed
-    ############################################################################################
-
-    def dcnm_srp_get_srp_detachment_status(self, srp):
-
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-            + "/attachments"
-        )
-
-        resp = dcnm_send(self.module, "GET", path)
-
-        attached = False
-        deployed = False
-
-        if (
-            resp
-            and (resp["RETURN_CODE"] == 200)
-            and (resp.get("DATA", None) is not None)
-        ):
-
-            for item in resp["DATA"]:
-                for attach in item["switchAttaches"]:
-                    # The API will return status for all switches whether the service node is attached to it or not.
-                    # Hence check only entries taht are relevant. We can find this by checking for 'portNames' and
-                    # vlanID which will be updated only for those switches to which the service node is attached. We
-                    # can  ignore the rest.
-                    if (attach.get("portNames", None) is None) or (
-                        attach.get("vlanId", 0) == 0
-                    ):
-                        continue
-                    if attach["lanAttached"] == True:
-                        attached = True
-                    if attach["attachState"] == "DEPLOYED":
-                        deployed = True
-        return (attached, deployed)
-
-    ############################################################################################
-    # Routine to get the attachment information for a given route peering
-    #
-    # Input:
-    #        srp	- Route peering information
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        - attached: a flag indicating is the given SRP is attached
-    #        - deployed: a flag indicating is the given SRP is deployed
-    ############################################################################################
-
     def dcnm_srp_get_srp_attachment_status(self, srp):
 
+        '''
+        Routine to get the attachment/deployment information for a given route peering. This information
+        is used to implement idempotent operations. Change is deployment state will be treated as a change
+        in route peering during merge and replace operations.
+       
+        Parameters:
+            srp (dict): Route peering information
+       
+        Returns:
+            attached (bool): a flag indicating is the given SRP is attached
+            deployed (bool): a flag indicating is the given SRP is deployed
+        '''
+
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
             + srp["fabricName"]
@@ -2972,7 +2938,20 @@ class DcnmServiceRoutePeering:
             + "/attachments"
         )
 
-        resp = dcnm_send(self.module, "GET", path)
+        retries = 0
+        while (retries < 5):
+            retries += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp and resp["RETURN_CODE"] != 200:
+                time.sleep(10)
+                continue
+            else:
+                break
+
+        if resp:
+            resp["RETRIES"] = retries
+            self.result["response"].append (resp)
 
         attached = True
         deployed = True
@@ -2985,7 +2964,7 @@ class DcnmServiceRoutePeering:
             for item in resp["DATA"]:
                 for attach in item["switchAttaches"]:
                     # The API will return status for all switches whether the service node is attached to it or not.
-                    # Hence check only entries taht are relevant. We can find this by checking for 'portNames' and
+                    # Hence check only entries that are relevant. We can find this by checking for 'portNames' and
                     # vlanID which will be updated only for those switches to which the service node is attached. We
                     # can  ignore the rest.
                     if (attach.get("portNames", None) is None) or (
@@ -3000,20 +2979,19 @@ class DcnmServiceRoutePeering:
                         deployed = False
         return (attached, deployed)
 
-    ############################################################################################
-    # Routine to get payload information for merged state.
-    #
-    # Input:
-    #        self	- SRP class object that inlcudes the playbook config
-    #
-    # Output:
-    #        self.diff_merge	- contains all payloads that are to be created new on the server
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_get_diff_merge(self):
+
+        '''
+        Routine to get a list of payload information, self.diff_create/self.diff_modify to create new or modify
+        existing peerings. This routine updates self.diff_merge/self.diff_modify	with route peering payloads 
+        that are to created or modified.
+       
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
 
         if not self.want:
             return
@@ -3043,7 +3021,7 @@ class DcnmServiceRoutePeering:
                     ditem["peeringName"] = srp["peeringName"]
                     self.diff_deploy.append(ditem)
             else:
-                # Get the attachments and deploy status for the given SRP
+
                 attached, deployed = self.dcnm_srp_get_srp_attachment_status(srp)
 
                 if self.deploy == True:
@@ -3063,20 +3041,19 @@ class DcnmServiceRoutePeering:
         if self.diff_deploy != []:
             self.changed_dict[0]["deploy"].extend(self.diff_deploy)
 
-    ############################################################################################
-    # Routine to get payload information for deleted state
-    #
-    # Input:
-    #        self	- SRP class object that inlcudes the playbook config
-    #
-    # Output:
-    #        self.diff_delete	- contains all payloads that are to be deleted from the server
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_get_diff_deleted(self):
+
+        '''
+        Routine to get a list of payload information that will be used to delete route peerings.
+        This routine updates self.diff_delete	with payloads that are used to delete route peerings 
+        from the server.
+       
+        Parameters:
+            None 
+
+        Returns:
+            None
+        '''
 
         for srp in self.srp_info:
 
@@ -3088,20 +3065,19 @@ class DcnmServiceRoutePeering:
                 self.diff_delete.append(resp)
                 self.changed_dict[0]["deleted"].append(srp)
 
-    ############################################################################################
-    # Routine to get SRP information from DCNM server
-    #
-    # Input:
-    #        self	- SRP class object that inlcudes the playbook config
-    #
-    # Output:
-    #        self.result	- contains information regarding all SRPs requested for in the playbook 
-    #
-    # Returns:
-    #        None
-    ############################################################################################
-
     def dcnm_srp_get_diff_query(self):
+
+        '''
+        Routine to get route peering information based on the playbook configuration.
+        This routine updates self.result with SRPs requested for in the playbook if they exist on
+        the DCNM server.
+       
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
 
         for srp in self.srp_info:
 
@@ -3123,22 +3099,20 @@ class DcnmServiceRoutePeering:
                     self.result["response"].extend(resp)
             self.changed_dict[0]["query"].append(srp)
 
-    ############################################################################################################################
-    # Routine to build payload information for overridden state. This routine will build delete list, merge list, replace list
-    # etc. based on what is required and what isa laready existing on the DCNM server
-    #
-    # Input:
-    #        self	- SRP class object that inlcudes the playbook config
-    #
-    # Output:
-    #        self.diff_merge: contains all payloads that are to be created new
-    #        self.diff_dlete: contains all payloads that are to be deleted
-    #
-    # Returns:
-    #        None
-    ############################################################################################################################
-
     def dcnm_srp_get_diff_overridden(self):
+
+        '''
+        Routine to build payload information for overridden state. This routine will build delete list, 
+        merge list, replace list etc. based on what is required and what is already existing on the DCNM server.
+        This routine updates self.diff_merge that contains all route peerings that are to be created afresh and 
+        self.diff_dlete that contains all route peerings that are to be deleted.
+       
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
 
         # There are 3 cases with overridden state:
         #   1. Peering Name and Service Node Name are given
@@ -3184,21 +3158,18 @@ class DcnmServiceRoutePeering:
         # Now go and handle SRPs in self.want
         self.dcnm_srp_get_diff_merge()
 
-    ############################################################################################
-    # Routine to send create payload to DCNM
-    #
-    # Input:
-		#        srp  - Route peering information
-    #        command - REST API command
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ############################################################################################
-
     def dcnm_srp_create_srp(self, srp, command):
+
+        '''
+        Routine to send create payload to DCNM.
+       
+        Parameters:
+            srp  (dict): Route peering information
+            command (string): REST API command, either POST or PUT
+       
+        Returns:
+            resp (dict): Response from DCNM server
+        '''
 
         if command == "POST":
             path = (
@@ -3225,61 +3196,47 @@ class DcnmServiceRoutePeering:
         resp = dcnm_send(self.module, command, path, json_payload)
         return resp
 
-    ############################################################################################
-    # Routine to detach SRP from service node
-    #
-    # Input:
-		#        srp - Route peering information
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ############################################################################################
-
     def dcnm_srp_detach_srp(self, srp):
+
+        '''
+        Routine to detach SRP from service node.
+       
+        Parameters:
+            srp (dict): Route peering to be detached
+       
+        Returns:
+            resp (dict): Response from DCNM server
+        '''
 
         resp = None
 
-        # First check if the given route peering is attached. If attached then detach the same
-        attached, deployed = self.dcnm_srp_get_srp_detachment_status(srp)
+        # First detach the route peerings
+        path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+            + "/"
+            + srp["peeringName"]
+            + "/attachments"
+        )
 
-        if attached == True:
-            # First detach the route peerings
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + srp["fabricName"]
-                + "/service-nodes/"
-                + srp["serviceNodeName"]
-                + "/peerings/"
-                + srp["attachedFabricName"]
-                + "/"
-                + srp["peeringName"]
-                + "/attachments"
-            )
-
-            resp = dcnm_send(self.module, "DELETE", path, "")
-            return resp
-        if attached == False:
-            return "Not-attached"
-        else:
-            return None
-
-    ############################################################################################
-    # Routine to delete an SRP from service node
-    #
-    # Input:
-		#        srp - Route peering information
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ############################################################################################
+        resp = dcnm_send(self.module, "DELETE", path, "")
+        return resp
 
     def dcnm_srp_delete_srp(self, srp):
+
+        '''
+        Routine to delete an SRP from service node.
+       
+        Parameters:
+            srp (dict): Route peering information that is to be deleted
+       
+        Returns:
+            resp (dict): Response from DCNM server
+        '''
 
         # Delete the route peering
         path = (
@@ -3295,20 +3252,17 @@ class DcnmServiceRoutePeering:
         resp = dcnm_send(self.module, "DELETE", path, "")
         return resp
 
-    ############################################################################################
-    # Routine to save and deploy configuration for the entire box.
-    #
-    # Input:
-		#        None
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ############################################################################################
-
     def dcnm_srp_config_save_and_deploy(self):
+
+        '''
+        Routine to save and deploy configuration for the entire box. 
+       
+        Parameters:
+            None
+       
+        Returns:
+            resp (dict): Response from DCNM server
+        '''
 
         path = (
             "/rest/control/fabrics/" + self.module.params["fabric"] + "/config-deploy"
@@ -3317,21 +3271,18 @@ class DcnmServiceRoutePeering:
         resp = dcnm_send(self.module, "POST", path, "")
         return resp
 
-    ############################################################################################
-    # Routine to deploy SRP
-    #
-    # Input:
-		#        srp - Route peering information
-    #        command	- REST API command
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ############################################################################################
-
     def dcnm_srp_deploy_srp(self, srp, command):
+
+        '''
+        Routine to deploy SRP on the service node.
+       
+        Parameters:
+            srp (dict): Route peering information to be deployed
+            command (string): REST API command which is POST
+       
+        Returns:
+            resp (dict): Response from DCNM server
+        '''
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
@@ -3348,57 +3299,19 @@ class DcnmServiceRoutePeering:
         resp = dcnm_send(self.module, command, path, "")
         return resp
 
-    ############################################################################################
-    # Routine to attach SRP to service node
-    #
-    # Input:
-		#        None
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ############################################################################################
-
-    def dcnm_srp_attach_route_peering(self, srp):
-
-        resp = []
-        attach_payload = {"peeringNames": []}
-
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + "/attachments"
-        )
-
-        # Retry attaching SRP.
-        attach_payload["peeringNames"].append(srp["peeringName"])
-        json_payload = json.dumps(attach_payload)
-        resp = dcnm_send(self.module, "POST", path, json_payload)
-        return resp
-
-    ###########################################################################################################
-    # Routine to check for "unauthorized" errors in which case the conncetion must be reset by logging out and
-    # logging in again
-    #
-    # Input:
-		#        resp	- Response which has to be checked for "unauthorized error"
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - unauthorized_error: if resp["DATA"]["error"]["code"] is UserUnauthorized
-    #               other_error: otherwise
-    ###########################################################################################################
-
     def dcnm_srp_check_unauthorized_error_in_resp(self, resp):
+
+        '''
+        Routine to check for "unauthorized" errors in which case the conncetion must be reset by logging out and
+        logging in again.
+       
+        Parameters:
+            resp (dict): Response which has to be checked for "unauthorized error"
+       
+        Returns:
+            rc (string): unauthorized_error, if resp["DATA"]["error"]["code"] is UserUnauthorized
+                         other_error, otherwise
+        '''
 
         rc = "other_error"
         if resp.get("DATA"):
@@ -3411,51 +3324,19 @@ class DcnmServiceRoutePeering:
                     rc = "unauthorized_error"
         return rc
 
-    ##########################################################################################################################
-    # Routine which attcahes and immediately detaches a SRP from service node. This is required in case of repeated failures
-    # in delete or deploy operations with DCNM
-    #
-    # Input:
-		#        srp	- SRP to be attached and detached
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        resp - Response from DCNM server
-    ##########################################################################################################################
-
-    def dcnm_srp_attach_and_detach(self, srp):
-
-        resp = []
-
-        resp = self.dcnm_srp_attach_route_peering(srp)
-        if resp.get("RETURN_CODE") == 200:
-            time.sleep(10)
-            resp = self.dcnm_srp_deploy_srp(srp, "POST")
-            if resp.get("RETURN_CODE") == 200:
-                time.sleep(10)
-                self.dcnm_srp_detach_srp(srp)
-                if resp.get("RETURN_CODE") == 200:
-                    time.sleep(10)
-                    resp = self.dcnm_srp_deploy_srp(srp, "POST")
-        return resp
-
-    ##########################################################################################################################
-    # Routine to push payloads to DCNM server. This routine implements reqquired error checks and retry mechanisms to handle
-    # transient errors
-    #
-    # Input:
-    #        self	- SRP class object containing playbook config
-    #
-    # Output:
-    #        None
-    #
-    # Returns:
-    #        None
-    ##########################################################################################################################
-
     def dcnm_srp_send_message_to_dcnm(self):
+
+        '''
+        Routine to push payloads to DCNM server. This routine implements reqquired error checks and retry mechanisms to handle
+        transient errors. This routine checks self.diff_create, self.diff_modify, self.diff_delete and self.diff_deploy lists
+        and push appropriate requests to DCNM.
+        
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
 
         resp = None
         create_flag = False
@@ -3515,9 +3396,6 @@ class DcnmServiceRoutePeering:
             while retries < 10:
                 retries += 1
                 resp = self.dcnm_srp_detach_srp(srp)
-                if resp == "Not-attached":
-                    resp = None
-                    break
                 if (resp is not None) and (resp.get("RETURN_CODE") == 200):
                     delete_flag = True
                     break
@@ -3570,15 +3448,12 @@ class DcnmServiceRoutePeering:
                     # from the connection module
                     rc = self.dcnm_srp_check_unauthorized_error_in_resp(resp)
 
-                    if (retries == 10) or (retries == 15):
-                        # We will try to attach/deploy/detach/deploy before we try delete again to see if that resolves this
-                        # issue
-                        resp = self.dcnm_srp_attach_and_detach(srp)
-                    elif retries == 20:
+                    if retries == 15:
                         # We failed to delete even after all retries. Try a config save and deploy which
                         # may pull out of the situation
 
                         resp = self.dcnm_srp_config_save_and_deploy()
+                        self.result["response"].append(resp)
                     elif deploy_in_prog == False:
                         # We will require a deploy here. Otherwise we may see delete errors in some cases
                         # indicating that a deploy operation is still in progress and peering cannot be deleted

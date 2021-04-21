@@ -52,15 +52,15 @@
         service_fabric: "{{ ansible_it_service_fabric }}" 
         config: 
           - name: IT-FW-RP1                                  # mandatory
-            node_name: "{{ ansible_snode_1 }}"                # mandatory
-            deploy_mode: IntraTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+            node_name: "{{ ansible_snode_1 }}"               # mandatory
+            deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             inside_network:                                  # 
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
               name: rp1-sn1-inside-net                       # mandatory
               vlan_id: 101                                   # mandatory
               profile: 
                 ipv4_gw: 192.161.1.1/24                      # mandatory
-                ipv6_gw: 2001:db01::1/64                    # optional, default is ''
+                ipv6_gw: 2001:db01::1/64                     # optional, default is ''
                 vlan_name: rp1-sn1-inside                    # optional, default is ''
                 int_descr: "RP1 SN1 inside interface"        # optional, default is ''
                 tag: 11111                                   # optional, default is 12345
@@ -78,8 +78,8 @@
             rev_next_hop: 192.161.2.100                      # optional, default is ''
 
           - name: IT-FW-RP2                                  # mandatory
-            node_name: "{{ ansible_snode_1 }}"                # mandatory
-            deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+            node_name: "{{ ansible_snode_1 }}"               # mandatory
+            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             inside_network:                                  # 
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
@@ -113,8 +113,8 @@
                 tag: 22222                                   # optional, default is 12345
 
           - name: IT-FW-RP3                                  # mandatory
-            node_name: "{{ ansible_snode_1 }}"                # mandatory
-            deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+            node_name: "{{ ansible_snode_1 }}"               # mandatory
+            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             inside_network:
               vrf: "{{ ansible_vrf_31 }}"                    # mandatory
@@ -130,10 +130,10 @@
                 ipv4_lo: 31.31.31.2                          # mandatory
                 ipv4_vpc_peer_lo: 31.31.31.3                 # optional, default is ''
                 ipv6_neighbor: 2003:3131::1                  # optional, default is ''
-                ipv6_lo: 2003:3132::1                       # optional, default is ''
-                ipv6_vpc_peer_lo: 2003:3133::1              # optional, default is ''
-                route_map_tag: 33111                         # optional, default is 12345 ????
-                neigh_int_descr: "RP3 SN1 inside interface"  # optional, default is '' ????
+                ipv6_lo: 2003:3132::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2003:3133::1               # optional, default is ''
+                route_map_tag: 33111                         # optional, default is 12345 
+                neigh_int_descr: "RP3 SN1 inside interface"  # optional, default is '' 
                 local_asn: 65301                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             outside_network:
@@ -152,14 +152,14 @@
                 ipv6_neighbor: 2003:8383::1                  # optional, default is ''
                 ipv6_lo: 2003:8384::1:100:1                  # optional, default is ''
                 ipv6_vpc_peer_lo: 2003:8385::1               # optional, default is ''
-                route_map_tag: 31113                         # optional, default is 12345 ????
-                neigh_int_descr: "RP3 SN1 outside interface" # optional, default is '' ????
+                route_map_tag: 31113                         # optional, default is 12345 
+                neigh_int_descr: "RP3 SN1 outside interface" # optional, default is '' 
                 local_asn: 65302                             # optional, default is ''
                 adv_host: true                               # optional, default is false
 
           - name: IT-ADC-RP4
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            deploy_mode: OneArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            node_name: "{{ ansible_snode_2 }}"               # mandatory
+            deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm: 
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
@@ -167,7 +167,7 @@
               vlan_id: 401                                   # mandatory
               profile: 
                 ipv4_gw: 192.164.1.1/24                      # mandatory
-                ipv6_gw: 2004:db01::1/64                  # optional, default is ''
+                ipv6_gw: 2004:db01::1/64                     # optional, default is ''
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
                 tag: 41111                                   # optional, default is 12345
@@ -177,15 +177,15 @@
                 ipv6_neighbor: 2004:4141::1                  # optional, default is ''
                 ipv6_lo: 2004:4142::1                        # optional, default is ''
                 ipv6_vpc_peer_lo: 2004:4143::1               # optional, default is ''
-                route_map_tag: 41112                         # optional, default is 12345 ????
-                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is '' ????
+                route_map_tag: 41112                         # optional, default is 12345 
+                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is '' 
                 local_asn: 65401                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             rev_next_hop: 192.164.1.100                      # mandatory
 
           - name: IT-ADC-RP5
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            deploy_mode: TwoArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            node_name: "{{ ansible_snode_2 }}"               # mandatory
+            deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm: 
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
@@ -203,8 +203,8 @@
                 ipv6_neighbor: 2005:5151::1                  # optional, default is ''
                 ipv6_lo: 2005:5152::1                        # optional, default is ''
                 ipv6_vpc_peer_lo: 2005:5153::1               # optional, default is ''
-                route_map_tag: 51115                         # optional, default is 12345 ????
-                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is '' ????
+                route_map_tag: 51115                         # optional, default is 12345 
+                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is '' 
                 local_asn: 65501                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             second_arm:
@@ -220,8 +220,8 @@
             rev_next_hop: 192.165.1.100                      # mandatory
 
           - name: IT-ADC-RP6
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            deploy_mode: OneArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            node_name: "{{ ansible_snode_2 }}"               # mandatory
+            deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm: 
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
@@ -245,8 +245,8 @@
             rev_next_hop: 192.166.1.100                      # mandatory
 
           - name: IT-ADC-RP7
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            deploy_mode: TwoArmADC                           # mandatory, choices=[OneArmADC, TwoArmADC]
+            node_name: "{{ ansible_snode_2 }}"               # mandatory
+            deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm: 
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
@@ -346,9 +346,11 @@
 
         state: deleted
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

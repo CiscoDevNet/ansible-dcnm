@@ -52,8 +52,8 @@
         service_fabric: "{{ ansible_it_service_fabric }}" 
         config: 
           - name: IT-FW-RP2                                  # mandatory
-            node_name: "{{ ansible_snode_1 }}"                # mandatory
-            deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+            node_name: "{{ ansible_snode_1 }}"               # mandatory
+            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             inside_network:                                  # 
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
@@ -120,8 +120,8 @@
         service_fabric: "{{ ansible_it_service_fabric }}" 
         config: 
           - name: IT-FW-RP2                                  # mandatory
-            node_name: "{{ ansible_snode_1 }}"                # mandatory
-            deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+            node_name: "{{ ansible_snode_1 }}"               # mandatory
+            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             inside_network:
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
@@ -137,10 +137,10 @@
                 ipv4_lo: 21.21.21.2                          # mandatory
                 ipv4_vpc_peer_lo: 21.21.21.3                 # optional, default is ''
                 ipv6_neighbor: 2002:2121::1                  # optional, default is ''
-                ipv6_lo: 2002:2122::1                       # optional, default is ''
-                ipv6_vpc_peer_lo: 2002:3233::1              # optional, default is ''
-                route_map_tag: 21111                         # optional, default is 12345 ????
-                neigh_int_descr: "RP2 SN1 inside interface"  # optional, default is '' ????
+                ipv6_lo: 2002:2122::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2002:3233::1               # optional, default is ''
+                route_map_tag: 21111                         # optional, default is 12345
+                neigh_int_descr: "RP2 SN1 inside interface"  # optional, default is ''
                 local_asn: 65201                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             outside_network:
@@ -159,8 +159,8 @@
                 ipv6_neighbor: 2002:8282::1                  # optional, default is ''
                 ipv6_lo: 2002:8284::1:100:1                  # optional, default is ''
                 ipv6_vpc_peer_lo: 2002:8285::1               # optional, default is ''
-                route_map_tag: 21112                         # optional, default is 12345 ????
-                neigh_int_descr: "RP2 SN1 outside interface" # optional, default is '' ????
+                route_map_tag: 21112                         # optional, default is 12345
+                neigh_int_descr: "RP2 SN1 outside interface" # optional, default is ''
                 local_asn: 65202                             # optional, default is ''
                 adv_host: true                               # optional, default is false
 
@@ -198,8 +198,8 @@
         service_fabric: "{{ ansible_it_service_fabric }}" 
         config: 
           - name: IT-FW-RP2                                  # mandatory
-            node_name: "{{ ansible_snode_1 }}"                # mandatory
-            deploy_mode: InterTenantFW                       # mandatory, choices=[IntraTenantFW, InterTenantFW]
+            node_name: "{{ ansible_snode_1 }}"               # mandatory
+            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             inside_network:                                  # 
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
@@ -255,6 +255,7 @@
     - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
       wait_for:
         timeout: 180
+      when: IT_CONTEXT is not defined
 
 ##############################################
 ##                CLEANUP                   ##
@@ -291,9 +292,11 @@
 
         state: deleted
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

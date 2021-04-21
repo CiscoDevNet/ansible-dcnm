@@ -413,13 +413,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             have_rp5_resp    = self.payloads_data.get('have_rp5_resp')
             have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
             have_rp7_resp    = self.payloads_data.get('have_rp7_resp')
-            att_rp1_status   = self.payloads_data.get('attach_rp1_resp')
-            att_rp2_status   = self.payloads_data.get('attach_rp2_resp')
-            att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
             det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
@@ -446,10 +439,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp, 
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              att_rp1_status, det_rp1_resp, att_rp2_status, det_rp2_resp, 
-                                              att_rp3_status, det_rp3_resp, att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp, att_rp6_status, det_rp6_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp1_resp, det_rp2_resp, 
+                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
                                               deploy_rp7_resp, 
@@ -467,13 +460,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             have_rp5_resp    = self.payloads_data.get('have_rp5_resp')
             have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
             have_rp7_resp    = self.payloads_data.get('have_rp7_resp')
-            att_rp1_status   = self.payloads_data.get('attach_rp1_resp')
-            att_rp2_status   = self.payloads_data.get('attach_rp2_resp')
-            att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
             det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
@@ -503,12 +489,11 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp, 
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              att_rp1_status, det_rp1_resp_unauth_err, 
-                                              att_rp1_status, det_rp1_resp, 
-                                              att_rp2_status, det_rp2_resp, 
-                                              att_rp3_status, det_rp3_resp, att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp, att_rp6_status, det_rp6_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp1_resp_unauth_err, 
+                                              det_rp1_resp, det_rp2_resp, 
+                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
                                               deploy_rp4_resp_unauth_err, deploy_rp4_resp, 
                                               deploy_rp5_resp, deploy_rp6_resp, 
@@ -523,10 +508,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             have_rp3_resp    = self.payloads_data.get('have_rp3_resp')
             have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
             have_rp7_resp    = self.payloads_data.get('have_rp7_resp')
-            att_rp1_status   = self.payloads_data.get('attach_rp1_resp')
-            att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
             det_rp6_resp     = self.payloads_data.get('detach_rp6_resp')
@@ -544,8 +525,8 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, [], have_rp3_resp, 
                                               [], [], have_rp6_resp,
                                               have_rp7_resp,
-                                              att_rp1_status, det_rp1_resp, att_rp3_status, det_rp3_resp,
-                                              att_rp6_status, det_rp6_resp, att_rp7_status, det_rp7_resp,
+                                              det_rp1_resp, det_rp3_resp,
+                                              det_rp6_resp, det_rp7_resp,
                                               deploy_rp1_resp, deploy_rp3_resp, 
                                               deploy_rp6_resp, deploy_rp7_resp, 
                                               delete_rp1_resp, delete_rp3_resp, 
@@ -605,13 +586,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
             have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
-            att_rp1_status   = self.payloads_data.get('attach_rp1_resp')
-            att_rp2_status   = self.payloads_data.get('attach_rp2_resp')
-            att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
             det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
@@ -642,10 +616,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [[], [], 
                                               have_it_sn1_resp, have_it_sn2_resp, 
                                               create_rp1_resp, create_rp2_resp,
-                                              att_rp1_status, det_rp1_resp, att_rp2_status, det_rp2_resp, 
-                                              att_rp3_status, det_rp3_resp, att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp, att_rp6_status, det_rp6_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp1_resp, det_rp2_resp, 
+                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
                                               deploy_rp7_resp, 
@@ -658,9 +632,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
             have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
             det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
             det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
@@ -675,9 +646,8 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [have_rp6_resp,
                                               have_it_sn2_resp, att_rp6_status,
-                                              att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp4_resp, det_rp5_resp,
+                                              det_rp7_resp,
                                               deploy_rp4_resp, deploy_rp5_resp,
                                               deploy_rp7_resp, 
                                               delete_rp4_resp, delete_rp5_resp, delete_rp7_resp
@@ -688,14 +658,11 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
             create_rp6_resp  = self.payloads_data.get('create_rp6_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
             att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
-            det_rp4_resp     = self.payloads_data.get('attach_rp4_resp')
-            det_rp5_resp     = self.payloads_data.get('attach_rp5_resp')
-            det_rp6_resp     = self.payloads_data.get('attach_rp6_resp')
-            det_rp7_resp     = self.payloads_data.get('attach_rp7_resp')
+            det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
+            det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
+            det_rp6_resp     = self.payloads_data.get('detach_rp6_resp')
+            det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
             delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
             delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
             delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
@@ -707,9 +674,8 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp6_resp,
                                               have_it_sn2_resp, att_rp6_status,
                                               create_rp6_resp,
-                                              att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp4_resp, det_rp5_resp,
+                                              det_rp7_resp,
                                               deploy_rp4_resp, deploy_rp5_resp,
                                               deploy_rp7_resp, 
                                               delete_rp4_resp, delete_rp5_resp, delete_rp7_resp,
@@ -720,13 +686,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
             have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
-            att_rp1_status   = self.payloads_data.get('attach_rp1_resp')
-            att_rp2_status   = self.payloads_data.get('attach_rp2_resp')
-            att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
             det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
@@ -751,10 +710,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
 
             self.run_dcnm_send.side_effect = [have_it_sn1_resp, have_it_sn2_resp, 
-                                              att_rp1_status, det_rp1_resp, att_rp2_status, det_rp2_resp, 
-                                              att_rp3_status, det_rp3_resp, att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp, att_rp6_status, det_rp6_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp1_resp, det_rp2_resp, 
+                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
                                               deploy_rp7_resp, 
@@ -768,13 +727,6 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             serv_nodes_resp  = self.payloads_data.get('serv_nodes_resp')
             have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
-            att_rp1_status   = self.payloads_data.get('attach_rp1_resp')
-            att_rp2_status   = self.payloads_data.get('attach_rp2_resp')
-            att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
-            att_rp4_status   = self.payloads_data.get('attach_rp4_resp')
-            att_rp5_status   = self.payloads_data.get('attach_rp5_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            att_rp7_status   = self.payloads_data.get('attach_rp7_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
             det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
@@ -800,10 +752,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [serv_nodes_resp,
                                               have_it_sn1_resp, have_it_sn2_resp, 
-                                              att_rp1_status, det_rp1_resp, att_rp2_status, det_rp2_resp, 
-                                              att_rp3_status, det_rp3_resp, att_rp4_status, det_rp4_resp, 
-                                              att_rp5_status, det_rp5_resp, att_rp6_status, det_rp6_resp,
-                                              att_rp7_status, det_rp7_resp,
+                                              det_rp1_resp, det_rp2_resp, 
+                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
                                               deploy_rp7_resp, 
@@ -952,7 +904,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         try: 
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
-            self.assertEqual(('deploy_mode : Required parameter not found' in (str(e))), True)
+            self.assertEqual(('deploy_mode - Required parameter not found' in (str(e))), True)
             self.assertEqual (result, None)
 
         ## No name object

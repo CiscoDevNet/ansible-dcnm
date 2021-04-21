@@ -38,7 +38,7 @@
 
   "merge_rp1_rp7_config" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -65,7 +65,7 @@
     "rev_next_hop": "192.161.2.100"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -109,7 +109,7 @@
     "peering_option": "static"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -155,7 +155,7 @@
     "peering_option": "ebgp"
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm",
       "profile": {
@@ -182,7 +182,7 @@
     "rev_next_hop": "192.164.1.100"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp5-sn2-first-arm",
       "profile": {
@@ -219,7 +219,7 @@
     }
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp6-sn2-first-arm",
       "profile": {
@@ -252,7 +252,7 @@
     "rev_next_hop": "192.166.1.100"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp7-sn2-first-arm",
       "profile": {
@@ -290,7 +290,7 @@
   ],
   "create_rp1_rp3_rp5_config" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -321,7 +321,7 @@
     "rev_next_hop": "192.161.2.100"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -371,7 +371,7 @@
     "peering_option": "ebgp"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp5-sn2-first-arm",
       "profile": {
@@ -414,7 +414,7 @@
   ],
   "update_rp2_rp4_config" :  [
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -462,7 +462,7 @@
     "peering_option": "static"
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm",
       "profile": {
@@ -493,7 +493,7 @@
   ],
   "create_rp1_rp7_config" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -524,7 +524,7 @@
     "rev_next_hop": "192.161.2.100"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -572,7 +572,7 @@
     "peering_option": "static"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -622,7 +622,7 @@
     "peering_option": "ebgp"
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm",
       "profile": {
@@ -651,7 +651,7 @@
     "rev_next_hop": "192.164.1.100"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp5-sn2-first-arm",
       "profile": {
@@ -692,7 +692,7 @@
     }
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp6-sn2-first-arm",
       "profile": {
@@ -727,7 +727,7 @@
     "rev_next_hop": "192.166.1.100"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp7-sn2-first-arm",
       "profile": {
@@ -769,7 +769,7 @@
   ],
   "create_no_intra_fw_mand_elems" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -792,7 +792,7 @@
   }],
   "create_no_inter_fw_mand_elems" :  [
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -820,7 +820,7 @@
 
   "create_no_adc_mand_elems" :  [
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm",
       "profile": {
@@ -839,7 +839,7 @@
 
   "create_rp1_rp7_config_no_opt_elems" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -861,7 +861,7 @@
     }
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -882,7 +882,7 @@
     }
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -908,7 +908,7 @@
     "peering_option": "ebgp"
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm",
       "profile": {
@@ -925,7 +925,7 @@
     "rev_next_hop": "192.164.1.100"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp5-sn2-first-arm",
       "profile": {
@@ -950,7 +950,7 @@
     }
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp6-sn2-first-arm",
       "profile": {
@@ -964,7 +964,7 @@
     "rev_next_hop": "192.166.1.100"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp7-sn2-first-arm",
       "profile": {
@@ -1046,7 +1046,7 @@
 
   "replace_rp1_to_rp3_no_opt_elems" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -1068,7 +1068,7 @@
     }
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -1089,7 +1089,7 @@
     }
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -1117,7 +1117,7 @@
 
   "replace_rp1_rp3_no_change" :  [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -1148,7 +1148,7 @@
     "rev_next_hop": "192.161.2.100"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -1196,7 +1196,7 @@
     "peering_option": "static"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -1247,7 +1247,7 @@
   }],
   "replace_rp1_to_rp3": [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net",
       "profile": {
@@ -1278,7 +1278,7 @@
     "rev_next_hop": "192.161.2.200"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp2-sn1-inside-net",
       "profile": {
@@ -1326,7 +1326,7 @@
     "peering_option": "static"
   },
   {
-    "deploy_mode": "InterTenantFW",
+    "deploy_mode": "inter_tenant_fw",
     "inside_network": {
       "name": "rp3-sn1-inside-net",
       "profile": {
@@ -1379,7 +1379,7 @@
 
   "replace_rp4_to_rp7": [
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm",
       "profile": {
@@ -1408,7 +1408,7 @@
     "rev_next_hop": "192.164.1.200"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp5-sn2-first-arm",
       "profile": {
@@ -1449,7 +1449,7 @@
     }
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp6-sn2-first-arm",
       "profile": {
@@ -1484,7 +1484,7 @@
     "rev_next_hop": "192.166.1.200"
   },
   {
-    "deploy_mode": "TwoArmADC",
+    "deploy_mode": "two_arm_adc",
     "first_arm": {
       "name": "rp7-sn2-first-arm",
       "profile": {
@@ -1535,7 +1535,7 @@
   ],
   "override_with_existing_peering": [
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp6-sn2-first-arm",
       "profile": {
@@ -1572,7 +1572,7 @@
   ],
   "override_with_existing_peering_updated": [
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp6-sn2-first-arm",
       "profile": {
@@ -1609,7 +1609,7 @@
   ],
   "override_with_new_peerings": [
   {
-    "deploy_mode": "IntraTenantFW",
+    "deploy_mode": "intra_tenant_fw",
     "inside_network": {
       "name": "rp1-sn1-inside-net-ovr",
       "profile": {
@@ -1640,7 +1640,7 @@
     "rev_next_hop": "192.161.92.100"
   },
   {
-    "deploy_mode": "OneArmADC",
+    "deploy_mode": "one_arm_adc",
     "first_arm": {
       "name": "rp4-sn2-first-arm-ovr",
       "profile": {

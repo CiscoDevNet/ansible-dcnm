@@ -21,6 +21,31 @@ import time
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
+def validate_ip_address_format(type, item, invalid_params):
+
+    if ((type == 'ipv4_subnet') or (type == 'ipv4')):
+        addr_type = 'IPv4'
+        addr_family = socket.AF_INET
+        mask_len = 32
+    if ((type == 'ipv6_subnet') or (type == 'ipv6')):
+        addr_type = 'IPv6'
+        addr_family = socket.AF_INET6
+        mask_len = 128
+
+    if (item.strip() != ''):
+        address = item.split('/')[0]
+        if ('subnet' in type):
+            if '/' in item:
+                subnet = item.split('/')[1]
+                if not subnet or int(subnet) > mask_len:
+                    invalid_params.append('{} : Invalid {} gw/subnet syntax'.format(item, addr_type))
+            else:
+                invalid_params.append('{} : Invalid {} gw/subnet syntax'.format(item, addr_type))
+        try:
+            socket.inet_pton(addr_family, address)
+        except socket.error:
+            invalid_params.append('{} : Invalid {} address syntax'.format(item, addr_type))
+
 def validate_list_of_dicts(param_list, spec):
     """ Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
@@ -67,37 +92,9 @@ def validate_list_of_dicts(param_list, spec):
                     item = v.check_type_list(item)
                 elif type == 'dict':
                     item = v.check_type_dict(item)
-                elif ((type == 'ipv4_subnet') or (type == 'ipv4')):
-                    if (item.strip() != ''):
-                        address = item.split('/')[0]
-                        if type == 'ipv4_subnet':
-                            if '/' in item:
-                                subnet = item.split('/')[1]
-                                if not subnet or int(subnet) > 32:
-                                    invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
-                            else:
-                                invalid_params.append('{} : Invalid IPv4 gw/subnet syntax'.format(item))
-                        try:
-                            socket.inet_pton(socket.AF_INET, address)
-                        except socket.error:
-                            invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
-                        if address.count('.') != 3:
-                            invalid_params.append('{} : Invalid IPv4 address syntax'.format(item))
-
-                elif ((type == 'ipv6_subnet') or (type == 'ipv6')):
-                    if (item.strip() != ''):
-                        address = item.split('/')[0]
-                        if type == 'ipv6_subnet':
-                            if '/' in item:
-                                subnet = item.split('/')[1]
-                                if not subnet or int(subnet) > 128:
-                                    invalid_params.append('{} : Invalid IPv6 gw/subnet syntax'.format(item))
-                            else:
-                                invalid_params.append('{} : Invalid IPv6 gw/subnet syntax'.format(item))
-                        try:
-                            socket.inet_pton(socket.AF_INET6, address)
-                        except socket.error:
-                            invalid_params.append('{} : Invalid IPv6 address syntax'.format(item))
+                elif ((type == 'ipv4_subnet') or (type == 'ipv4')
+                     or (type == 'ipv6_subnet') or (type == 'ipv6')):
+                    validate_ip_address_format(type, item, invalid_params)
 
                 choice = spec[param].get('choices')
                 if choice:
