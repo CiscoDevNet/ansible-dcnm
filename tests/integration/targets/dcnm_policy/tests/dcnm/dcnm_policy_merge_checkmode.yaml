@@ -4,9 +4,9 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_policy:
-    fabric: "{{ ansible_it_fabric }}" 
+    fabric: "{{ ansible_it_fabric }}"
     state: deleted                     # only choose form [merged, deleted, query]
-    config: 
+    config:
       - name: template_101  # name is mandatory
       - name: template_102  # name is mandatory
       - name: template_103  # name is mandatory
@@ -14,11 +14,11 @@
       - name: template_105  # name is mandatory
       - switch:
           - ip: "{{ ansible_switch1 }}"
-  register: result  
+  register: result
 
 - assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 
@@ -28,13 +28,16 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Create different non-existing policies 
+    - name: Create different non-existing policies
       cisco.dcnm.dcnm_policy: &dcnm_pol
-        fabric: "{{ ansible_it_fabric }}" 
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: true
+        state: merged
+        check_mode: true
         config: 
           - name: template_101  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
-            priority: 101 
+            priority: 101
 
           - name: template_102  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
@@ -54,9 +57,6 @@
                   - name: template_105  # This must be a valid template name
                     create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch1 }}"
-        deploy: true
-        state: merged
-        check_mode: true
       register: result
 
     - assert:
@@ -76,9 +76,9 @@
 
     - name: Delete all created policies
       cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}" 
+        fabric: "{{ ansible_it_fabric }}"
         state: deleted                     # only choose form [merged, deleted, query]
-        config: 
+        config:
           - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_102  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_103  # This can either be a policy name like POLICY-xxxxx or template name
@@ -86,7 +86,7 @@
           - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
              - ip: "{{ ansible_switch1 }}"
-      register: result  
+      register: result
 
     - assert:
         that:

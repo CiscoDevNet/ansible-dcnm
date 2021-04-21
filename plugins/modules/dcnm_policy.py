@@ -187,6 +187,8 @@ NOTE: In the following create task, policies identified by template names templa
 - name: Create different policies
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    deploy: true
     config:
       - name: template_101  # This must be a valid template name
         create_additional_policy: false  # Do not create a policy if it already exists
@@ -210,8 +212,6 @@ NOTE: In the following create task, policies identified by template names templa
               - name: template_105  # This must be a valid template name
                 create_additional_policy: false  # Do not create a policy if it already exists
           - ip: "{{ ansible_switch2 }}"
-        deploy: true
-        state: merged
 
 CREATE POLICY (including arguments)
 
@@ -239,6 +239,8 @@ NOTE: Since there can be multiple policies with the same template name, policy-i
 - name: Modify different policies
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    deploy: true
     config:
       - name: POLICY-101101  # This must be a valid POLICY ID
         create_additional_policy: false  # Do not create a policy if it already exists
@@ -262,8 +264,6 @@ NOTE: Since there can be multiple policies with the same template name, policy-i
               - name: POLICY-105105  # This must be a valid POLICY ID
                 create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch2 }}"
-        deploy: true
-        state: merged
 
 DELETE POLICY
 
@@ -306,40 +306,39 @@ NOTE: In the case of Query using template names, all policies that have a matchi
 - name: Query all policies from the specified switches
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
+    state: query
     config:
       - switch:
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
-    state: query
 
 - name: Query policies matching template names
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
+    state: query
     config:
       - name: template_101
       - name: template_102
       - name: template_103
       - switch:
           - ip: "{{ ansible_switch1 }}"
-    state: query
 
 - name: Query policies using policy-ids
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
+    state: query
     config:
       - name: POLICY-101101
       - name: POLICY-102102
       - name: POLICY-103103
       - switch:
           - ip: "{{ ansible_switch1 }}"
-    state: query
 """
 
-import time
 import json
 import re
 import copy
-import sys
+import datetime
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
@@ -350,8 +349,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     get_ip_sn_dict,
 )
-
-import datetime
 
 
 class DcnmPolicy:
