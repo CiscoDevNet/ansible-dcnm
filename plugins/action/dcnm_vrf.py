@@ -16,34 +16,28 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
-import re
-import sys
-
 from ansible_collections.ansible.netcommon.plugins.action.network import (
     ActionModule as ActionNetworkModule,
-)
-from ansible.module_utils.connection import Connection
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
-    load_provider,
 )
 from ansible.utils.display import Display
 
 display = Display()
 
+
 class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
 
-        if self._task.args.get('state') == 'merged' or self._task.args.get('state') == 'overridden' \
-            or self._task.args.get('state') == 'replaced':
-            for con in self._task.args['config']:
-                if 'attach' in con:
-                    for at in con['attach']:
-                        if 'vlan_id' in at:
-                            msg = ("Playbook parameter vlan_id should not be specified under the attach: block. Please specify this under the config: block instead")
+        if (
+            self._task.args.get("state") == "merged"
+            or self._task.args.get("state") == "overridden"
+            or self._task.args.get("state") == "replaced"
+        ):
+            for con in self._task.args["config"]:
+                if "attach" in con:
+                    for at in con["attach"]:
+                        if "vlan_id" in at:
+                            msg = "Playbook parameter vlan_id should not be specified under the attach: block. Please specify this under the config: block instead"
                             return {"failed": True, "msg": msg}
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)
         return self.result
-
-

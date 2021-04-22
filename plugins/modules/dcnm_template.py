@@ -22,7 +22,7 @@ module: dcnm_template
 short_description: DCNM Ansible Module for managing templates.
 version_added: "1.1.0"
 description:
-    - DCNM Ansible Module for creating, deleting and modifying template service 
+    - DCNM Ansible Module for creating, deleting and modifying template service
     - operations
 author: Mallik Mudigonda
 options:
@@ -36,7 +36,7 @@ options:
       - query
     default: merged
 
-  config:   
+  config:
     description: A dictionary of template operations
     type: list
     elements: dict
@@ -84,16 +84,16 @@ Merged:
 Deleted:
   Templates defined in the playbook will be deleted from the target.
 
-  Deletes the list of templates specified in the playbook. 
+  Deletes the list of templates specified in the playbook.
 
 Query:
   Returns the current DCNM state for the templates listed in the playbook.
 
 
-# To create or modify templates 
+# To create or modify templates
 
 - name: Create or modify templates
-    cisco.dcnm.dcnm_template: 
+    cisco.dcnm.dcnm_template:
       state: merged        # only choose form [merged, deleted, query]
       config:
         - name: template_101
@@ -130,7 +130,7 @@ Query:
                 dst-grp 102
                 snsr-grp 102 sample-interval 10102
 
-# To delete templates 
+# To delete templates
 
 - name: Delete templates
     cisco.dcnm.dcnm_template:
@@ -144,7 +144,7 @@ Query:
 
         - name: template_104
 
-# To query templates 
+# To query templates
 
 - name: Query templates
     cisco.dcnm.dcnm_template:
@@ -159,19 +159,15 @@ Query:
         - name: template_104
 """
 
-import time
 import json
 import re
 import copy
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.connection import Connection
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
 )
-
-import datetime
 
 
 class DcnmTemplate:
@@ -243,7 +239,9 @@ class DcnmTemplate:
 
         if self.module.params["state"] == "merged":
 
-            if (("template variables" not in ditem['content']) and ("template content" not in  ditem["content"])):
+            if ("template variables" not in ditem["content"]) and (
+                "template content" not in ditem["content"]
+            ):
                 std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template variables\n##\n##template content\n"
             else:
                 std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n"
@@ -287,21 +285,21 @@ class DcnmTemplate:
                 ][0]
 
                 if match_pb:
-                    if match_pb.get("description", None) == None:
+                    if match_pb.get("description", None) is None:
                         # Description is not included in config. So take it from have
                         desc = have["description"]
                         update_content = True
                     else:
                         desc = match_pb["description"]
 
-                    if match_pb.get("tags", None) == None:
+                    if match_pb.get("tags", None) is None:
                         # Tags is not included in config. So take it from have
                         tags = have["tags"]
                         update_content = True
                     else:
                         tags = match_pb["tags"]
 
-                    if update_content == True:
+                    if update_content is True:
                         template["content"] = self.dcnm_template_build_content(
                             match_pb["content"],
                             template["template_name"],
@@ -340,14 +338,17 @@ class DcnmTemplate:
 
             # resp['DATA'] may be a list in case of templates with no parameters. But for templates
             # with parameters resp['DATA'] will be a dict directly with 'status' as 'Template Validation Successful'
-            if isinstance(resp['DATA'], list):
+            if isinstance(resp["DATA"], list):
                 for d in resp["DATA"]:
-                    if d.get("reportItemType", ' ').lower() == "error":
+                    if d.get("reportItemType", " ").lower() == "error":
                         self.result["response"].append(resp)
                         return 0
                 return resp["RETURN_CODE"]
-            elif isinstance(resp['DATA'], dict):
-                if resp['DATA'].get("status",  ' ').lower() != "template validation successful":
+            elif isinstance(resp["DATA"], dict):
+                if (
+                    resp["DATA"].get("status", " ").lower()
+                    != "template validation successful"
+                ):
                     self.result["response"].append(resp)
                     return 0
                 return resp["RETURN_CODE"]
@@ -372,7 +373,7 @@ class DcnmTemplate:
         ):
             for p in resp["DATA"]:
                 if p["templateName"] in tlist:
-                    if None == policies.get(p["templateName"], None):
+                    if policies.get(p["templateName"], None) is None:
                         policies[p["templateName"]] = {}
                     policies[p["templateName"]][p["policyId"]] = {}
                     policies[p["templateName"]][p["policyId"]][
@@ -605,7 +606,6 @@ class DcnmTemplate:
     def dcnm_template_build_content(self, content, name, desc, tags):
 
         std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
-        template_payload = {}
 
         mod_cont = re.sub(" +", " ", content)
         std_cont = std_cont.replace("__TEMPLATE_NAME", name)
@@ -638,7 +638,7 @@ def main():
             default="merged",
             choices=["merged", "deleted", "query"],
         ),
-        check_mode=dict(required=False, type="bool", default=False)
+        check_mode=dict(required=False, type="bool", default=False),
     )
 
     module = AnsibleModule(
@@ -646,8 +646,6 @@ def main():
     )
 
     dcnm_template = DcnmTemplate(module)
-
-    start = datetime.datetime.now()
 
     dcnm_template.dcnm_template_copy_config()
     dcnm_template.dcnm_template_validate_input()
