@@ -472,7 +472,7 @@ class DcnmInventory:
                 auth_proto=dict(type='str',
                                 choices=['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES'],
                                 default='MD5'),
-                user_name=dict(required=True, type='str', length_max=32),
+                user_name=dict(required=True, type='str', no_log=True, length_max=32),
                 password=dict(required=True, type='str', no_log=True, length_max=32),
                 max_hops=dict(type='int', default=0),
                 role=dict(type='str',
@@ -496,7 +496,7 @@ class DcnmInventory:
                 self.module.fail_json(msg=msg)
 
             if self.config:
-                valid_inv, invalid_params = validate_list_of_dicts(self.config, inv_spec)
+                valid_inv, invalid_params = validate_list_of_dicts(self.config, inv_spec, self.module)
                 for inv in valid_inv:
                     self.validated.append(inv)
 
