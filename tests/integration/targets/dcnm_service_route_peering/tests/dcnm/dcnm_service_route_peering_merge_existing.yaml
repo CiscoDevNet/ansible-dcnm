@@ -293,9 +293,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
+    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
       wait_for:
-        timeout: 180
+        timeout: 240
 
 
 ##############################################
@@ -500,9 +500,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
+    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
       wait_for:
-        timeout: 180
+        timeout: 240
 
 
     - name: Replace service route peerings RP1 to RP3 - Idempotence
@@ -714,9 +714,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
+    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
       wait_for:
-        timeout: 180
+        timeout: 240
 
 
     - name: Replace service route peerings RP4 to RP7  - Idempotence
@@ -828,9 +828,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
+    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
       wait_for:
-        timeout: 180
+        timeout: 240
       when: IT_CONTEXT is not defined
 
 ##############################################
