@@ -164,16 +164,16 @@ Examples
     Deleted:
       Templates defined in the playbook will be deleted from the target.
 
-      Deletes the list of templates specified in the playbook. 
+      Deletes the list of templates specified in the playbook.
 
     Query:
       Returns the current DCNM state for the templates listed in the playbook.
 
 
-    # To create or modify templates 
+    # To create or modify templates
 
     - name: Create or modify templates
-        cisco.dcnm.dcnm_template: 
+        cisco.dcnm.dcnm_template:
           state: merged        # only choose form [merged, deleted, query]
           config:
             - name: template_101
@@ -210,7 +210,7 @@ Examples
                     dst-grp 102
                     snsr-grp 102 sample-interval 10102
 
-    # To delete templates 
+    # To delete templates
 
     - name: Delete templates
         cisco.dcnm.dcnm_template:
@@ -224,7 +224,7 @@ Examples
 
             - name: template_104
 
-    # To query templates 
+    # To query templates
 
     - name: Query templates
         cisco.dcnm.dcnm_template:

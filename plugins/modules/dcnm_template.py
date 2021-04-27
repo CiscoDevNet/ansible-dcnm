@@ -22,7 +22,7 @@ module: dcnm_template
 short_description: DCNM Ansible Module for managing templates.
 version_added: "1.1.0"
 description:
-    - DCNM Ansible Module for creating, deleting and modifying template service 
+    - DCNM Ansible Module for creating, deleting and modifying template service
     - operations
 author: Mallik Mudigonda
 options:
@@ -36,7 +36,7 @@ options:
       - query
     default: merged
 
-  config:   
+  config:
     description: A dictionary of template operations
     type: list
     elements: dict
@@ -84,16 +84,16 @@ Merged:
 Deleted:
   Templates defined in the playbook will be deleted from the target.
 
-  Deletes the list of templates specified in the playbook. 
+  Deletes the list of templates specified in the playbook.
 
 Query:
   Returns the current DCNM state for the templates listed in the playbook.
 
 
-# To create or modify templates 
+# To create or modify templates
 
 - name: Create or modify templates
-    cisco.dcnm.dcnm_template: 
+    cisco.dcnm.dcnm_template:
       state: merged        # only choose form [merged, deleted, query]
       config:
         - name: template_101
@@ -130,7 +130,7 @@ Query:
                 dst-grp 102
                 snsr-grp 102 sample-interval 10102
 
-# To delete templates 
+# To delete templates
 
 - name: Delete templates
     cisco.dcnm.dcnm_template:
@@ -144,7 +144,7 @@ Query:
 
         - name: template_104
 
-# To query templates 
+# To query templates
 
 - name: Query templates
     cisco.dcnm.dcnm_template:
@@ -202,6 +202,9 @@ class DcnmTemplate:
             self.fd.write(msg)
 
     def dcnm_template_validate_input(self):
+
+        if self.config is None:
+            self.module.fail_json(msg="config: parameter is required and cannot be empty")
 
         if self.module.params["state"] == "merged":
             template_spec = dict(
@@ -599,6 +602,8 @@ class DcnmTemplate:
                 resp = resp[0]
             if resp and resp["RETURN_CODE"] == 200:
                 create_flag = True
+            if resp and resp['RETURN_CODE'] >= 400:
+                self.module.fail_json(msg=resp)
 
         self.result["changed"] = delete_flag or create_flag
 
@@ -632,7 +637,7 @@ def main():
     """ main entry point for module execution
     """
     element_spec = dict(
-        config=dict(required=False, type="list"),
+        config=dict(required=True, type="list"),
         state=dict(
             type="str",
             default="merged",

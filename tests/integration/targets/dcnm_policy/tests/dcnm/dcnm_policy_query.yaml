@@ -4,9 +4,9 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_policy:
-    fabric: "{{ ansible_it_fabric }}" 
+    fabric: "{{ ansible_it_fabric }}"
     state: deleted                     # only choose form [merged, deleted, query]
-    config: 
+    config:
       - name: template_101  # name is mandatory
       - name: template_102  # name is mandatory
       - name: template_103  # name is mandatory
@@ -14,11 +14,11 @@
       - name: template_105  # name is mandatory
       - switch:
           - ip: "{{ ansible_switch1 }}"
-  register: result  
+  register: result
 
 - assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 
@@ -28,13 +28,15 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Create different non-existing policies 
-      cisco.dcnm.dcnm_policy: 
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+    - name: Create different non-existing policies
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: true
+        state: merged
+        config:
           - name: template_101  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
-            priority: 101 
+            priority: 101
 
           - name: template_102  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
@@ -54,8 +56,6 @@
                   - name: template_105  # This must be a valid template name
                     create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch1 }}"
-        deploy: true
-        state: merged
       register: result
 
     - assert:
@@ -71,7 +71,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
-      when: (my_idx < (result["diff"][0]["merged"] | length))   
+      when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
@@ -81,7 +81,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
-      when: (my_idx == (result["diff"][0]["merged"] | length))   
+      when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
@@ -89,29 +89,29 @@
     - name: Setting fact
       set_fact:
         query_policy_list: "{{ (query_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
-      when: (my_idx < (result["diff"][0]["merged"] | length))   
+      when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
-    
+
     - name: Show the policy_list information
       debug:
-        var: query_policy_list 
+        var: query_policy_list
 
     - name: Setting fact
       set_fact:
-        list_len: "{{ query_policy_list | length }}" 
+        list_len: "{{ query_policy_list | length }}"
 
 ##############################################
 ##                QUERY                     ##
 ##############################################
     - name: Query all policies from the specified switches
       cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
           - switch:
               - ip: "{{ ansible_switch1 }}"
-        state: query
       register: result
 
     - assert:
@@ -125,14 +125,14 @@
 
     - name: Query specific policies
       cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
           - name: template_101
           - name: template_102
           - name: template_103
           - switch:
               - ip: "{{ ansible_switch1 }}"
-        state: query
       register: result
 
     - assert:
@@ -145,16 +145,17 @@
           - '(result["response"] | length) == 3'
 
     - name: Create additional policies same as  existing policies
-      cisco.dcnm.dcnm_policy: 
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: merged
+        config:
           - name: template_101  # This must be a valid template name
             create_additional_policy: true  # Create a policy if it already exists
-            priority: 101 
+            priority: 101
 
           - name: template_101  # This must be a valid template name
             create_additional_policy: true  # Create a policy if it already exists
-            priority: 101 
+            priority: 101
 
           - name: template_102  # This must be a valid template name
             create_additional_policy: true  # Create a policy if it already exists
@@ -166,7 +167,6 @@
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
-        state: merged
       register: result
 
     - assert:
@@ -182,7 +182,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
-      when: (my_idx < (result["diff"][0]["merged"] | length))   
+      when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
@@ -192,15 +192,15 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 4'
-      when: (my_idx == (result["diff"][0]["merged"] | length))   
+      when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
     - name: Query with template names matching multiple policies
       cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        config:
           - name: template_101
           - name: template_102
           - name: template_103
@@ -220,13 +220,13 @@
 
     - name: Query policies with policy ID
       cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
           - name: "{{ item }}"  # Pick the policy Ids from the facts
           - switch:
               - ip: "{{ ansible_switch1 }}"
-        state: query
-      loop: '{{ query_policy_list }}'      
+      loop: '{{ query_policy_list }}'
       register: result
 
     - assert:
@@ -247,9 +247,9 @@
 
     - name: Delete all created policies
       cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}" 
+        fabric: "{{ ansible_it_fabric }}"
         state: deleted                     # only choose form [merged, deleted, query]
-        config: 
+        config:
           - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_102  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_103  # This can either be a policy name like POLICY-xxxxx or template name
@@ -257,7 +257,7 @@
           - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
              - ip: "{{ ansible_switch1 }}"
-      register: result  
+      register: result
 
     - assert:
         that:
