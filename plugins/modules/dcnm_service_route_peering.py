@@ -1134,7 +1134,7 @@ class DcnmServiceRoutePeering:
         net_name2,
     ):
 
-        '''
+        """
         Routine to validate the playbook input and fill up default values for objects not included. It takes specific profiles
         to validate the input against. In this csase we validate the playbook against srp_spec which inlcudes common information
         srp_network_spec which inlcudes network specific information and profile_specX which inlciudes network profile information.
@@ -1152,7 +1152,7 @@ class DcnmServiceRoutePeering:
       
         Returns:
             None
-        '''
+        """
 
         srp_static_route_spec = dict(
             subnet=dict(required=True, type="ipv4"),
@@ -1298,9 +1298,9 @@ class DcnmServiceRoutePeering:
                         out_list.remove(rt)
                         rt.update(out_net_route[0])
 
-    def dcnm_srp_translate_deploy_mode (self, item):
+    def dcnm_srp_translate_deploy_mode(self, item):
 
-        '''
+        """
         Routine to translate the deploy_mode string from the playbook format to the payload format. The translated
         value is updated in the 'item' object directly
         
@@ -1309,19 +1309,26 @@ class DcnmServiceRoutePeering:
         
         Returns:
             None
-        '''
+        """
 
-        trans_dict = {'intra_tenant_fw': 'IntraTenantFW', 'inter_tenant_fw': 'InterTenantFW', 'one_arm_adc': 'OneArmADC', 'two_arm_adc': 'TwoArmADC'}
-       
+        trans_dict = {
+            "intra_tenant_fw": "IntraTenantFW",
+            "inter_tenant_fw": "InterTenantFW",
+            "one_arm_adc": "OneArmADC",
+            "two_arm_adc": "TwoArmADC",
+        }
+
         if item["deploy_mode"] not in trans_dict.keys():
-            mesg = "Invalid 'deploy_mode' = {}, in playbook, Expected values = {}".format(item["deploy_mode"], trans_dict.keys())
+            mesg = "Invalid 'deploy_mode' = {}, in playbook, Expected values = {}".format(
+                item["deploy_mode"], trans_dict.keys()
+            )
             self.module.fail_json(msg=mesg)
 
         return trans_dict[item["deploy_mode"]]
-         
+
     def dcnm_srp_validate_input(self):
 
-        '''
+        """
         Routine to validate the given playbook input based on the type of peering.
         This routine updates self.srp_info with validated playbook information by defaulting values 
         not included. Since each state has a different config structure, this routine handles the 
@@ -1332,7 +1339,7 @@ class DcnmServiceRoutePeering:
         
         Returns:
             None
-        '''
+        """
 
         if None is self.config:
             return
@@ -1370,7 +1377,7 @@ class DcnmServiceRoutePeering:
                     self.module.fail_json(msg=mesg)
 
                 # Translate the deploy_mode from playbook format to a format that DCNM expects
-                item["deploy_mode"] = self.dcnm_srp_translate_deploy_mode (item)
+                item["deploy_mode"] = self.dcnm_srp_translate_deploy_mode(item)
                 citem["deploy_mode"] = item["deploy_mode"]
 
                 if (item["deploy_mode"].lower() == "intratenantfw") or (
@@ -1387,7 +1394,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_validate_intra_tenant_firewall_input(self, cfg):
 
-        '''
+        """
         Routine to validate the playbook input based on Firewall perring type intra-tenant.
         This routine updates self.srp_info with validated intra-tenant firewall related playbook 
         information by defaulting values not included
@@ -1397,7 +1404,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         srp_spec = dict(
             name=dict(required=True, type="str"),
@@ -1436,7 +1443,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_validate_inter_tenant_firewall_input(self, cfg):
 
-        '''
+        """
         Routine to validate the playbook input based on Firewall perring type inter-tenant.
         This routine updates self.srp_info with validated inter-tenant firewall related playbook 
         information by defaulting values not included
@@ -1446,7 +1453,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         srp_spec = dict(
             name=dict(required=True, type="str"),
@@ -1516,7 +1523,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_validate_adc_input(self, cfg, deploy_mode):
 
-        '''
+        """
         Routine to validate the playbook input based on Loadbalance perring type one-arm and two-arm.
         This routine updates self.srp_info with validated adc related playbook information by defaulting 
         values not included
@@ -1527,7 +1534,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         srp_spec = dict(
             name=dict(required=True, type="str"),
@@ -1613,7 +1620,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_validate_delete_state_input(self, cfg):
 
-        '''
+        """
         Playbook input will be different for differnt states. This routine validates the delete state
         input. This routine updates self.srp_info with validated playbook information related to delete 
         state.
@@ -1623,7 +1630,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         srp_delete_spec = dict(
             name=dict(required=True, type="str"),
@@ -1650,7 +1657,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_validate_query_state_input(self, cfg):
 
-        '''
+        """
         Playbook input will be different for differnt states. This routine validates the query state
         input. This routine updates self.srp_info with validated playbook information related to query 
         state.
@@ -1660,7 +1667,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
            None
-        '''
+        """
 
         srp_query_spec = dict(
             name=dict(type="str", default="None"),
@@ -1681,7 +1688,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_validate_overridden_state_input(self, cfg):
 
-        '''
+        """
         Playbook input will be different for differnt states. This routine validates the overridden state
         input. This routine updates self.srp_info with validated playbook information related to overridden 
         state.
@@ -1691,7 +1698,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         srp_overridden_spec = dict(
             name=dict(required=False, type="str", default=""),
@@ -1712,7 +1719,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_payload_route_info(self, srp, srp_payload):
 
-        '''
+        """
         This routine builds the route peering payload information from the playbook input
         that is related to static of ebgp route information.
        
@@ -1722,7 +1729,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         in_route_info = {"nvPairs": {}}
 
@@ -1826,7 +1833,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_common_payload(self, srp, deploy_mode):
 
-        '''
+        """
         This routine builds the common part of the route peering payload. By common we mean information that is common
         to both inside and outside networks or one-arm and two-arm adc.
        
@@ -1836,7 +1843,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             srp_payload (dict): Route peering common payload information populated from playbook configuration
-        '''
+        """
 
         in_network_defaults = {
             "templateName": "Service_Network_Universal",
@@ -1947,7 +1954,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_get_srp_payload(self, srp):
 
-        '''
+        """
         This routine builds the complete payload step-by-step first by building common part, then other
         parts based on the deploy_mode and peering_option.
        
@@ -1956,7 +1963,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             self.srp_payuload (dict): SRP payload information populated with appropriate data from playbook config
-        '''
+        """
 
         deploy_mode = srp["deploy_mode"].lower()
         srp_payload = self.dcnm_srp_get_common_payload(srp, deploy_mode)
@@ -1996,7 +2003,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_update_route_info(self, want, have, cfg):
 
-        '''
+        """
         This routine is invoked after self.want is populated based on playbook info. For merging route peerings
         all the information that is not included in the playbook must be left as is and the information which 
         is included must be updated. This routine checks for playbook info and updates self.want as required
@@ -2010,7 +2017,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         if (want["deploymentMode"].lower() == "intratenantfw") or (
             want["deploymentMode"].lower() == "intertenantfw"
@@ -2143,7 +2150,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_update_common_info(self, want, have, cfg):
 
-        '''
+        """
         Routine to update the common part of the route peering information in self.want
         This routine updates self.want with common information from playbook and self.have based on objects
         included in the playbook.
@@ -2155,7 +2162,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             None
-        '''
+        """
 
         if (want["deploymentMode"].lower() == "intratenantfw") or (
             want["deploymentMode"].lower() == "intertenantfw"
@@ -2273,7 +2280,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_update_want(self):
 
-        '''
+        """
         Routine to compare want and have and make approriate changes to want. This routine checks the existing 
         informationm with the config from playbook and populates the payloads in self.want apropriately.
         This routine updates self.want with final paylload information after comparing self.want and self.have and
@@ -2284,7 +2291,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         # only for 'merged' state we need to update the objects that are not included in playbook with
         # values from self.have.
@@ -2330,7 +2337,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_want(self):
 
-        '''
+        """
         This routine updates self.want with the payload information based on the playbook configuration.
         
         Parameters:
@@ -2338,7 +2345,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         if None is self.config:
             return
@@ -2358,7 +2365,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_srp_info_with_service_node(self, node_name):
 
-        '''
+        """
         Routine to get all route peerings based on the Service Node information included in the playbook.
        
         Parameters:
@@ -2366,7 +2373,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp["DATA"] (dict): All route peerings present on the specified service node 
-        '''
+        """
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
@@ -2378,7 +2385,7 @@ class DcnmServiceRoutePeering:
         )
 
         retries = 0
-        while (retries < 5):
+        while retries < 5:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
@@ -2396,7 +2403,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_service_nodes_from_dcnm(self):
 
-        '''
+        """
         Routine to get list of all service nodes from DCNM.
        
         Parameters:
@@ -2404,7 +2411,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp["DATA"] (dict): All service nodes on the specified fabric
-        '''
+        """
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric="
@@ -2412,7 +2419,7 @@ class DcnmServiceRoutePeering:
         )
 
         retries = 0
-        while (retries < 5):
+        while retries < 5:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
@@ -2430,7 +2437,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_srp_info_from_dcnm(self, srp, srp_type):
 
-        '''
+        """
         Routine to get existing Route peering information from DCNM which matches the given SRP.
        
         Parameters:
@@ -2440,7 +2447,7 @@ class DcnmServiceRoutePeering:
         Returns:
             resp["DATA"] (dict): SRP informatikon obtained from the DCNM server if it exists
             [] otherwise
-        '''
+        """
 
         if srp_type == "PAYLOAD":
             path = (
@@ -2466,7 +2473,7 @@ class DcnmServiceRoutePeering:
             )
 
         retries = 0
-        while (retries < 5):
+        while retries < 5:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
@@ -2489,7 +2496,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_have(self):
 
-        '''
+        """
         Routine to get exisitng roue peering information from DCNM that matches information in self.want.
         This routine updates self.have with all the route peerings that match the given playbook configuration
        
@@ -2498,7 +2505,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         if self.want == []:
             return
@@ -2510,7 +2517,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_compare_common_info(self, want, have):
 
-        '''
+        """
         Routine to compare common information from want and have to decide if the information from self.want is to
         be added to the create list/replace list or not.
        
@@ -2522,7 +2529,7 @@ class DcnmServiceRoutePeering:
             DCNM_SRP_NO_MATCH (string): if information in want and have don't match
             DCNM_SRP_MATCH (string): if want and have match
             mismatch_reasons (list): A list containing strings identifying which objects did not match or []
-        '''
+        """
 
         mismatch_reasons = []
 
@@ -2680,7 +2687,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_compare_multi_routes(self, wmr, hmr):
 
-        '''
+        """
         Routine to compare MULTIROUTE object of route peerings from self.want and self.have.
        
         Parameters:
@@ -2690,7 +2697,7 @@ class DcnmServiceRoutePeering:
         Returns:
             DCNM_MR_NO_MATCH (string): if multi-route objects do not match
             DCNM_MR_MATCH (string): if multi-route objects match
-        '''
+        """
 
         wmrl = wmr.split("\n")
         hmrl = hmr.split("\n")
@@ -2705,7 +2712,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_compare_route_info(self, want, have):
 
-        '''
+        """
         Routine to compare route objects of route peerings from self.want and self.have.
        
         Parameters:
@@ -2716,7 +2723,7 @@ class DcnmServiceRoutePeering:
             DCNM_SRP_MATCH (string): if route information in want and have match
             DCNM_SRP_NO_MATCH (string): if route information in want and have do not match
             mismatch_reasons (list): A list containing strings indicating which objects did not match
-        '''
+        """
 
         mismatch_reasons = []
         if (want["deploymentMode"].lower() == "intratenantfw") or (
@@ -2864,7 +2871,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_compare_route_peerings(self, srp):
 
-        '''
+        """
         Routine to compare route peerings from self.want and self.have. Used during merge and replace.
        
         Parameters:
@@ -2874,7 +2881,7 @@ class DcnmServiceRoutePeering:
             DCNM_SRP_ADD_NEW (string): if the given SRP does not exist
             DCNM_SRP_DONT_ADD (string): if given SRP already exist and is exactly the same
             DCNM_SRP_MERGE (string): if given SRP already exists but not exactly the same
-        '''
+        """
 
         found = False
         match_srp = []
@@ -2913,7 +2920,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_srp_attachment_status(self, srp):
 
-        '''
+        """
         Routine to get the attachment/deployment information for a given route peering. This information
         is used to implement idempotent operations. Change is deployment state will be treated as a change
         in route peering during merge and replace operations.
@@ -2924,7 +2931,7 @@ class DcnmServiceRoutePeering:
         Returns:
             attached (bool): a flag indicating is the given SRP is attached
             deployed (bool): a flag indicating is the given SRP is deployed
-        '''
+        """
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
@@ -2939,7 +2946,7 @@ class DcnmServiceRoutePeering:
         )
 
         retries = 0
-        while (retries < 5):
+        while retries < 5:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
@@ -2951,7 +2958,7 @@ class DcnmServiceRoutePeering:
 
         if resp:
             resp["RETRIES"] = retries
-            self.result["response"].append (resp)
+            self.result["response"].append(resp)
 
         attached = True
         deployed = True
@@ -2981,7 +2988,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_diff_merge(self):
 
-        '''
+        """
         Routine to get a list of payload information, self.diff_create/self.diff_modify to create new or modify
         existing peerings. This routine updates self.diff_merge/self.diff_modify	with route peering payloads 
         that are to created or modified.
@@ -2991,7 +2998,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         if not self.want:
             return
@@ -3043,7 +3050,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_diff_deleted(self):
 
-        '''
+        """
         Routine to get a list of payload information that will be used to delete route peerings.
         This routine updates self.diff_delete	with payloads that are used to delete route peerings 
         from the server.
@@ -3053,7 +3060,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         for srp in self.srp_info:
 
@@ -3067,7 +3074,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_diff_query(self):
 
-        '''
+        """
         Routine to get route peering information based on the playbook configuration.
         This routine updates self.result with SRPs requested for in the playbook if they exist on
         the DCNM server.
@@ -3077,7 +3084,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         for srp in self.srp_info:
 
@@ -3101,7 +3108,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_get_diff_overridden(self):
 
-        '''
+        """
         Routine to build payload information for overridden state. This routine will build delete list, 
         merge list, replace list etc. based on what is required and what is already existing on the DCNM server.
         This routine updates self.diff_merge that contains all route peerings that are to be created afresh and 
@@ -3112,7 +3119,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         # There are 3 cases with overridden state:
         #   1. Peering Name and Service Node Name are given
@@ -3160,7 +3167,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_create_srp(self, srp, command):
 
-        '''
+        """
         Routine to send create payload to DCNM.
        
         Parameters:
@@ -3169,7 +3176,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp (dict): Response from DCNM server
-        '''
+        """
 
         if command == "POST":
             path = (
@@ -3198,7 +3205,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_detach_srp(self, srp):
 
-        '''
+        """
         Routine to detach SRP from service node.
        
         Parameters:
@@ -3206,7 +3213,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp (dict): Response from DCNM server
-        '''
+        """
 
         resp = None
 
@@ -3228,7 +3235,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_delete_srp(self, srp):
 
-        '''
+        """
         Routine to delete an SRP from service node.
        
         Parameters:
@@ -3236,7 +3243,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp (dict): Response from DCNM server
-        '''
+        """
 
         # Delete the route peering
         path = (
@@ -3254,7 +3261,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_config_save_and_deploy(self):
 
-        '''
+        """
         Routine to save and deploy configuration for the entire box. 
        
         Parameters:
@@ -3262,7 +3269,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp (dict): Response from DCNM server
-        '''
+        """
 
         path = (
             "/rest/control/fabrics/" + self.module.params["fabric"] + "/config-deploy"
@@ -3273,7 +3280,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_deploy_srp(self, srp, command):
 
-        '''
+        """
         Routine to deploy SRP on the service node.
        
         Parameters:
@@ -3282,7 +3289,7 @@ class DcnmServiceRoutePeering:
        
         Returns:
             resp (dict): Response from DCNM server
-        '''
+        """
 
         path = (
             "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
@@ -3301,7 +3308,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_check_unauthorized_error_in_resp(self, resp):
 
-        '''
+        """
         Routine to check for "unauthorized" errors in which case the conncetion must be reset by logging out and
         logging in again.
        
@@ -3311,7 +3318,7 @@ class DcnmServiceRoutePeering:
         Returns:
             rc (string): unauthorized_error, if resp["DATA"]["error"]["code"] is UserUnauthorized
                          other_error, otherwise
-        '''
+        """
 
         rc = "other_error"
         if resp.get("DATA"):
@@ -3326,7 +3333,7 @@ class DcnmServiceRoutePeering:
 
     def dcnm_srp_send_message_to_dcnm(self):
 
-        '''
+        """
         Routine to push payloads to DCNM server. This routine implements reqquired error checks and retry mechanisms to handle
         transient errors. This routine checks self.diff_create, self.diff_modify, self.diff_delete and self.diff_deploy lists
         and push appropriate requests to DCNM.
@@ -3336,7 +3343,7 @@ class DcnmServiceRoutePeering:
 
         Returns:
             None
-        '''
+        """
 
         resp = None
         create_flag = False
