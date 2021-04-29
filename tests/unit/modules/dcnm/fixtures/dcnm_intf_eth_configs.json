@@ -253,7 +253,7 @@
 				"192.168.1.108"
 			],
 			"profile": {
-				"ipv6_addr": "fe80:01",
+				"ipv6_addr": "fe80::01",
 				"int_vrf": "default",
 				"ipv4_mask_len": 16,
 				"ipv6_mask_len": 72,
