@@ -106,28 +106,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-      when: (my_idx < (result["diff"][0]["deleted"] | length))
       loop: '{{ result.response }}'
-      loop_control:
-        index_var: my_idx
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
-      when: (my_idx == (result["diff"][0]["deleted"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-        index_var: my_idx
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Deleted successfully" in item["DATA"]["message"]'
-      when: (my_idx > (result["diff"][0]["deleted"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-        index_var: my_idx
 
     - name: Delete policies - Idempotence
       cisco.dcnm.dcnm_policy: *del_pol
@@ -305,28 +284,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-      when: (my_idx < (result["diff"][0]["deleted"] | length))
       loop: '{{ result.response }}'
-      loop_control:
-        index_var: my_idx
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
-      when: (my_idx == (result["diff"][0]["deleted"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-        index_var: my_idx
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Deleted successfully" in item["DATA"]["message"]'
-      when: (my_idx > (result["diff"][0]["deleted"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-        index_var: my_idx
 
 ##############################################
 ##                CLEANUP                   ##

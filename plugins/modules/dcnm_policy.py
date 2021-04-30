@@ -390,9 +390,10 @@ class DcnmPolicy:
     def log_msg(self, msg):
 
         if self.fd == None:
-            self.fd = open("policy.log", "w+")
+            self.fd = open("policy.log", "a+")
         if self.fd != None:
             self.fd.write(msg)
+            self.fd.flush()
 
     # Flatten the incoming config database and have the required fileds updated.
     # This modified config DB will be used while creating payloads. To avoid
@@ -606,8 +607,8 @@ class DcnmPolicy:
             return "DCNM_POLICY_MATCH"
 
         for k in pnv.keys():
-            pv = pnv.get(k, None)
-            hv = hnv.get(k, None)
+            pv = str(pnv.get(k, None))
+            hv = str(hnv.get(k, None))
             if pv != hv:
                 return "DCNM_POLICY_DONT_MATCH"
         return "DCNM_POLICY_MATCH"
@@ -629,26 +630,24 @@ class DcnmPolicy:
             key = "templateName"
 
         for have in self.have:
-            if have[key] == policy[key]:
+            if (have[key] == policy[key]) and (
+                have.get("serialNumber", None) == policy["serialNumber"]
+            ):
                 found = True
                 # Have a policy with matching template name. Check for other objects
                 if have.get("description", None) == policy["description"]:
                     if have.get("priority", None) == policy["priority"]:
                         if (
-                            have.get("serialNumber", None)
-                            == policy["serialNumber"]
+                            self.dcnm_policy_compare_nvpairs(
+                                policy.get("nvPairs", None),
+                                have.get("nvPairs", None),
+                            )
+                            == "DCNM_POLICY_MATCH"
                         ):
-                            if (
-                                self.dcnm_policy_compare_nvpairs(
-                                    policy.get("nvPairs", None),
-                                    have.get("nvPairs", None),
-                                )
-                                == "DCNM_POLICY_MATCH"
-                            ):
-                                return (
-                                    "DCNM_POLICY_DONT_ADD",
-                                    have["policyId"],
-                                )
+                            return (
+                                "DCNM_POLICY_DONT_ADD",
+                                have["policyId"],
+                            )
         if found == True:
             # Found a matching policy with the given template name, but other objects don't match.
             # Go ahead and merge the objects into the existing policy
@@ -695,14 +694,12 @@ class DcnmPolicy:
                         self.changed_dict[0]["merged"].append(policy)
                         self.diff_modify.append(policy)
                 else:
-                    self.changed_dict[0]["skipped"].append(
-                        {
-                            "Template": policy["templateName"],
-                            "Reason": "Trying to modify Policy using Template Name, use policy ID",
-                        }
-                    )
-                    policy_id = None
-                    continue
+                    # User has provided a template name and a policy with such a template already exists. Since
+                    # the user has provided a template name, we assume he is trying to create additional policies
+                    # with the same template and hence create the policy
+                    if policy not in self.diff_create:
+                        self.changed_dict[0]["merged"].append(policy)
+                        self.diff_create.append(policy)
             elif rc == "DCNM_POLICY_DONT_ADD":
                 # A policy exists and there is no difference between the one that exists and the one that is
                 # is requested to be creted. Check the 'create_additional_policy' flag and crete it if it is
@@ -893,8 +890,8 @@ class DcnmPolicy:
     def dcnm_policy_delete_policy(self, policy, mark_del):
 
         if mark_del == True:
-            path = "/rest/control/policies/" + policy["policyId"]
-            json_payload = json.dumps(policy)
+            path = "/rest/control/policies/" + policy["policyId"] + "/mark-delete"
+            json_payload = ""
             command = "PUT"
         else:
             path = "/rest/control/policies/" + policy
@@ -902,7 +899,6 @@ class DcnmPolicy:
             command = "DELETE"
 
         resp = dcnm_send(self.module, command, path, json_payload)
-        self.result["response"].append(resp)
 
         return resp
 
@@ -919,25 +915,20 @@ class DcnmPolicy:
 
     def dcnm_policy_save_and_deploy(self, snos):
 
-        path = "/rest/control/fabrics/" + self.fabric + "/config-deploy/"
+        deploy_path = "/rest/control/fabrics/" + self.fabric + "/config-deploy/"
 
-        for sn in snos:
-            path = path + sn
-            resp = dcnm_send(self.module, "POST", path, "")
-            self.result["response"].append(resp)
-            # "status": "Config deployment has been triggered"
-            # POST /rest/control/fabrics/mmudigon/config-save
-            # Status 200 - Took 1817ms
-            # {"status":"Config save is completed"}
+        resp = dcnm_send(self.module, "POST", deploy_path, "")
+        self.result["response"].append(resp)
+        
+        return resp
 
     def dcnm_policy_send_message_to_dcnm(self):
 
         resp = None
-        delete_flag = False
         mark_delete_flag = False
+        delete_flag = False
         create_flag = False
         deploy_flag = False
-        saved_flag = False
         snos = []
         delete = []
 
@@ -960,20 +951,20 @@ class DcnmPolicy:
             ):
                 delete.append(policy["policyId"])
                 mark_delete_flag = True
+                self.result["response"].append(resp)
+            else:
+                self.result["response"].append(resp)
+                self.module.fail_json(msg=resp)
 
         # Once all policies are deleted, do a save & deploy so that the deleted policies are removed from the
         # switch
         if (snos != []) and (mark_delete_flag == True):
             resp = self.dcnm_policy_save_and_deploy(snos)
-            if isinstance(resp, list):
-                resp = resp[0]
             if (
                 resp
-                and (resp.get("DATA", None) != None)
-                and (resp["RETURN_CODE"] == 200)
-                and resp["MESSAGE"] == "OK"
+                and (resp["RETURN_CODE"] != 200)
             ):
-                saved_flag = True
+                self.module.fail_json(msg=resp)
 
         # Now use 'DELETE' command to delete the policies on the DCNM server
         for ditem in delete:
@@ -1001,6 +992,17 @@ class DcnmPolicy:
                 ):
                     if "Deleted successfully" in resp["DATA"]["message"]:
                         delete_flag = True
+                        self.result["response"].append(resp)
+
+        # Once all policies are deleted, do a save & deploy so that the deleted policies are removed from the
+        # switch
+        if (snos != []) and (delete_flag == True):
+            self.dcnm_policy_save_and_deploy(snos)
+            if (
+                resp
+                and (resp["RETURN_CODE"] != 200)
+            ):
+                self.module.fail_json(msg=resp)
 
         for policy in self.diff_create:
             # POP the 'create_additional_policy' object before sending create
@@ -1027,6 +1029,8 @@ class DcnmPolicy:
                         ):
                             self.deploy_payload.append(policy_id[0])
                         create_flag = True
+            else:
+                self.module.fail_json(msg=resp)
 
         for policy in self.diff_modify:
             # POP the 'create_additional_policy' object before sending create
@@ -1045,6 +1049,8 @@ class DcnmPolicy:
                         "successList"
                     ][0].get("message"):
                         create_flag = True
+            else:
+                self.module.fail_json(msg=resp)
 
         if self.deploy_payload:
             resp = self.dcnm_policy_deploy_policy(self.deploy_payload)
@@ -1057,10 +1063,11 @@ class DcnmPolicy:
                 and (resp.get("DATA", None) != None)
             ):
                 deploy_flag = True
+            else:
+                self.module.fail_json(msg=resp)
 
         self.result["changed"] = (
             mark_delete_flag
-            or saved_flag
             or delete_flag
             or create_flag
             or deploy_flag
@@ -1180,6 +1187,7 @@ def main():
         )
 
     state = module.params["state"]
+
     if not dcnm_policy.config:
         if state == "merged" or state == "deleted" or state == "query":
             module.fail_json(
