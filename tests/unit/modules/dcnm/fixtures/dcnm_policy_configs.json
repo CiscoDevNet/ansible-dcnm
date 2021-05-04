@@ -79,6 +79,65 @@
     ]
   }],
 
+  "create_policy_101_101_5": [
+  {
+    "create_additional_policy": false,
+    "name": "template_101",
+    "priority": 101,
+    "description": "Create again even if it exists"
+  },
+  {
+    "create_additional_policy": false,
+    "description": "101 - No piority given",
+    "name": "template_101"
+  },
+  {
+    "create_additional_policy": false,
+    "description": "Both description and priority given",
+    "name": "template_101",
+    "priority": 500
+  },
+  {
+    "switch": [
+    {
+      "ip": "10.10.10.224",
+      "policies": [
+      {
+        "create_additional_policy": false,
+        "name": "template_101",
+        "description": "description changed"
+      },
+      {
+        "create_additional_policy": false,
+        "name": "template_101",
+        "description": "description changed to verify merge"
+      }
+      ]
+    },
+    {
+      "ip": "10.10.10.224"
+    }
+    ]
+  }],
+
+  "modify_policy_125_with_vars" : [
+  {
+    "create_additional_policy": false,
+    "name": "POLICY-125125",
+    "priority": 125,
+    "policy_vars": {
+      "OSPF_TAG": 2000,
+      "LOOPBACK_IP": "11.11.11.108"
+    }
+  },
+  {
+    "switch": [
+    {
+      "ip": "10.10.10.224"
+    }
+    ]
+  }],
+
   "create_policy_101_105": [
   {
     "create_additional_policy": false,
@@ -151,24 +210,6 @@
     "description": "create template_104",
     "name": "template_104",
     "priority": 104
-  },
-  {
-    "switch": [
-    {
-      "ip": "10.10.10.224"
-    }
-    ]
-  }],
-
-  "modify_policy_125_with_vars" : [
-  {
-    "create_additional_policy": false,
-    "name": "POLICY-125125",
-    "priority": 125,
-    "policy_vars": {
-      "OSPF_TAG": 2000,
-      "LOOPBACK_IP": "11.11.11.108"
-    }
   },
   {
     "switch": [
