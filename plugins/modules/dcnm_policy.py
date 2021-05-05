@@ -452,6 +452,8 @@ class DcnmPolicy:
             "create_additional_policy"
         ]
 
+        policy_payload["policy_id_given"] = False
+
         if pelem.get("policy_vars", None) != None:
             # Given policy has arguments. Add these to the payload
             for var in pelem["policy_vars"]:
@@ -489,6 +491,8 @@ class DcnmPolicy:
             "create_additional_policy"
         ]
         policy_payload["nvPairs"] = policy["nvPairs"]
+
+        policy_payload["policy_id_given"] = True
 
         if pelem.get("policy_vars", None) != None:
             # Given policy has arguments. Add these to the payload
@@ -596,7 +600,6 @@ class DcnmPolicy:
         ]
 
         # match_pol can be a list of dicts, containing duplicates. Remove the duplicate entries
-
         for pol in match_pol:
             if pol not in self.have:
                 self.have.append(pol)
@@ -762,8 +765,8 @@ class DcnmPolicy:
             for pl in plist
             for wp in self.want
             if (
-                (pl["templateName"] == wp["templateName"])
-                or (pl["policyId"] == wp["templateName"])
+                (wp["policy_id_given"] is False) and (pl["templateName"] == wp["templateName"]) or (
+                 wp["policy_id_given"] is True) and (pl["policyId"] == wp["policyId"])
             )
         ]
 
@@ -771,6 +774,7 @@ class DcnmPolicy:
         # Build the delete payloads
 
         for pol in match_pol:
+
             del_payload = self.dcnm_policy_get_delete_payload(pol)
             self.diff_delete.append(del_payload)
             self.changed_dict[0]["deleted"].append(
@@ -1007,6 +1011,7 @@ class DcnmPolicy:
         for policy in self.diff_create:
             # POP the 'create_additional_policy' object before sending create
             policy.pop("create_additional_policy")
+            policy.pop("policy_id_given")
             resp = self.dcnm_policy_create_policy(policy, "POST")
             if isinstance(resp, list):
                 resp = resp[0]
