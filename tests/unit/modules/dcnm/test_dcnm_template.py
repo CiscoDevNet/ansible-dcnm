@@ -34,13 +34,17 @@ class TestDcnmTemplateModule(TestDcnmModule):
 
     module = dcnm_template
 
-    fd = open("template-ut.log", "w")
+    fd = None
 
     def init_data(self):
         pass
 
     def log_msg (self, msg):
+
+        if fd is None:
+            fd = open("template-ut.log", "w")
         self.fd.write (msg)
+        self.fd.flush()
 
     def setUp(self):
 
