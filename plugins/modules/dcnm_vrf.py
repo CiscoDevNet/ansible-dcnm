@@ -1518,7 +1518,7 @@ class DcnmVrf:
                                     else:
                                         vrflite_con['VRF_LITE_CONN'][0]['IPV6_NEIGHBOR'] = ext_values['IPV6_NEIGHBOR']
 
-                                    vrflite_con['VRF_LITE_CONN'][0]['AUTO_VRF_LITE_FLAG'] = 'false'
+                                    vrflite_con['VRF_LITE_CONN'][0]['AUTO_VRF_LITE_FLAG'] = ext_values['AUTO_VRF_LITE_FLAG']
                                     vrflite_con['VRF_LITE_CONN'][0]['PEER_VRF_NAME'] = ad_l['peer_vrf']
                                     vrflite_con['VRF_LITE_CONN'][0]['VRF_LITE_JYTHON_TEMPLATE'] = 'Ext_VRF_Lite_Jython'
                                     extension_values['VRF_LITE_CONN'] = json.dumps(vrflite_con)
