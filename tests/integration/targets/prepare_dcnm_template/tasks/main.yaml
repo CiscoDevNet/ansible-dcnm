@@ -23,6 +23,11 @@
   cisco.dcnm.dcnm_template: 
     state: deleted       # only choose form [merged, deleted, query]
     config:
+      - name: template_101
+      - name: template_102
+      - name: template_103
+      - name: template_104
+      - name: template_105
       - name: template_inuse_1
       - name: template_inuse_2
       - name: my_feature_telemetry

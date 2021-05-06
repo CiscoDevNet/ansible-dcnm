@@ -253,12 +253,11 @@ class DcnmTemplate:
 
             template_payload = {}
 
-            mod_cont = re.sub(" +", " ", ditem["content"])
             std_cont = std_cont.replace("__TEMPLATE_NAME", ditem["name"])
             std_cont = std_cont.replace("__DESCRIPTION", ditem["description"])
             std_cont = std_cont.replace("__TAGS", ditem["tags"])
 
-            final_cont = std_cont + mod_cont + "##"
+            final_cont = std_cont + ditem["content"] + "##"
 
             template_payload["template_name"] = ditem["name"]
             template_payload["content"] = final_cont
@@ -477,6 +476,8 @@ class DcnmTemplate:
                 self.result["changed"] = False
             else:
                 self.result["changed"] = True
+        else:
+            self.module.fail_json(msg=resp)
 
         if policies:
             self.result["template-policy-map"] = policies
@@ -612,12 +613,11 @@ class DcnmTemplate:
         std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
         template_payload = {}
 
-        mod_cont = re.sub(" +", " ", content)
         std_cont = std_cont.replace("__TEMPLATE_NAME", name)
         std_cont = std_cont.replace("__DESCRIPTION", desc)
         std_cont = std_cont.replace("__TAGS", tags)
 
-        final_cont = std_cont + mod_cont + "##"
+        final_cont = std_cont + content + "##"
         return final_cont
 
     # Flatten the incoming config database and have the required fileds updated.
