@@ -29,13 +29,17 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
     module = dcnm_policy
 
-    fd = open("policy-ut.log", "w+")
+    fd = None
 
     def init_data(self):
         pass
 
     def log_msg (self, msg):
+
+        if fd is None:
+            fd = open("policy-ut.log", "w+")
         self.fd.write (msg)
+        self.fd.flush()
 
     def setUp(self):
 
@@ -73,6 +77,18 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               create_succ_resp1, create_succ_resp2,
                                               create_succ_resp3, create_succ_resp4,
                                               create_succ_resp5,
+                                              deploy_succ_resp]
+
+        if ('test_dcnm_policy_merged_same_template' == self._testMethodName):
+
+            have_101_105_resp  = self.payloads_data.get('have_response_101_105')
+            create_succ_resp1  = self.payloads_data.get('success_create_response_101')
+            deploy_succ_resp   = self.payloads_data.get('success_deploy_response_101_101_5')
+
+            self.run_dcnm_send.side_effect = [have_101_105_resp,
+                                              create_succ_resp1, create_succ_resp1,
+                                              create_succ_resp1, create_succ_resp1,
+                                              create_succ_resp1,
                                               deploy_succ_resp]
 
         if ('test_dcnm_policy_merged_new_check_mode' == self._testMethodName):
@@ -195,8 +211,10 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
             deploy_succ_resp   = self.payloads_data.get('success_deploy_response_104')
             have_all_resp      = self.payloads_data.get('have_response_101_105')
+            create_succ_resp1  = self.payloads_data.get('success_create_response_101')
 
             self.run_dcnm_send.side_effect = [have_all_resp,
+                                              create_succ_resp1, 
                                               deploy_succ_resp]
 
         if ('test_dcnm_policy_modify_with_policy_id' == self._testMethodName):
@@ -311,6 +329,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               get_response_103, delete_resp_103,
                                               get_response_104, delete_resp_104,
                                               get_response_105, delete_resp_105,
+                                              delete_config_save_resp
                                               ]
 
         if ('test_dcnm_policy_query_with_switch_info' == self._testMethodName):
@@ -391,6 +410,42 @@ class TestDcnmPolicyModule(TestDcnmModule):
               self.assertEqual((len(resp["DATA"][0]["successPTIList"].split(",")) == 5), True)
           count = count + 1
             
+    def test_dcnm_policy_merged_same_template (self):
+
+        # load the json from playbooks
+        self.config_data    = loadPlaybookData('dcnm_policy_configs')
+        self.payloads_data  = loadPlaybookData('dcnm_policy_payloads')
+
+        # get mock ip_sn and fabric_inventory_details
+        self.mock_fab_inv     = []
+        self.mock_ip_sn       = self.payloads_data.get('mock_ip_sn')
+
+        # load required config data
+        self.playbook_config  = self.config_data.get('create_policy_101_101_5')
+
+        set_module_args(dict(state='merged',
+                             deploy=True,
+                             fabric='mmudigon',
+                             config=self.playbook_config))
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]) , 5)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 0)
+        self.assertEqual(len(result["diff"][0]["query"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 5)
+
+        # Validate create and deploy responses
+        count = 0
+        max_count = len(result["diff"][0]["merged"])
+        for resp in result["response"]:
+          if (count < max_count):
+              self.assertEqual(resp["RETURN_CODE"], 200)
+              self.assertEqual(("is created successfully" in resp["DATA"]["successList"][0]["message"]), True)
+          elif (count == max_count):
+              self.assertEqual(resp["RETURN_CODE"], 200)
+              self.assertEqual((len(resp["DATA"][0]["successPTIList"].split(",")) == 5), True)
+          count = count + 1
+
     def test_dcnm_policy_merged_new_check_mode (self):
 
         # load the json from playbooks
@@ -759,15 +814,12 @@ class TestDcnmPolicyModule(TestDcnmModule):
                              deploy=True,
                              fabric='mmudigon',
                              config=self.playbook_config))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=True, failed=False)
 
-        self.assertEqual(len(result["diff"][0]["merged"]) , 0)
+        self.assertEqual(len(result["diff"][0]["merged"]) , 1)
         self.assertEqual(len(result["diff"][0]["deleted"]) , 0)
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
-        self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
-        self.assertEqual(len(result["diff"][0]["skipped"]) , 1)
-        self.assertEqual((result["diff"][0]["skipped"][0]["Template"] == "template_104") , True)
-        self.assertEqual(("Trying to modify Policy using Template Name" in result["diff"][0]["skipped"][0]["Reason"]) , True)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 1)
 
         # Validate create and deploy responses 
         count = 0
@@ -777,7 +829,8 @@ class TestDcnmPolicyModule(TestDcnmModule):
               self.assertEqual(resp["RETURN_CODE"], 200)
               self.assertEqual(("is created successfully" in resp["DATA"]["successList"][0]["message"]), True)
           elif (count == max_count):
-              self.assertEqual((count < max_count), True)
+              self.assertEqual(resp["RETURN_CODE"], 200)
+              self.assertEqual((len(resp["DATA"][0]["successPTIList"].split(",")) == 1), True)
           count = count + 1
             
     def test_dcnm_policy_modify_with_policy_id (self):
@@ -1001,19 +1054,9 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["skipped"]) , 0)
 
         # Validate create and deploy responses 
-        count = 0
         max_count = len(result["diff"][0]["deleted"])
         for resp in result["response"]:
-          if (count < max_count):
-              self.assertEqual(resp["RETURN_CODE"], 200)
-              self.assertEqual((resp["DATA"]["deleted"] == True), True)
-          elif (count == max_count):
-              self.assertEqual(resp["RETURN_CODE"], 200)
-              self.assertEqual(("Config deployment has been triggered" in resp["DATA"]["status"]), True)
-          else:
-              self.assertEqual(resp["RETURN_CODE"], 200)
-              self.assertEqual(("Deleted successfully" in resp["DATA"]["message"]), True)
-          count = count + 1
+            self.assertEqual(resp["RETURN_CODE"], 200)
 
     def test_dcnm_policy_query_with_switch_info (self):
 

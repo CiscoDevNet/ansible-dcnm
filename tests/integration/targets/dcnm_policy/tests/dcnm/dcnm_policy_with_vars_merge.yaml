@@ -39,29 +39,28 @@
       register: result
       ignore_errors: yes
 
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
-
     # Assert for Create responses
     - assert:
         that:
-          - 'result["response"][0]["RETURN_CODE"] != 200'
-          - '"OSPF_TAG" in result["response"][0]["DATA"]["failureList"][0]["message"]'
-          - '"LOOPBACK_IP" in result["response"][0]["DATA"]["failureList"][0]["message"]'
+          - 'result["msg"]["RETURN_CODE"] != 200'
+          - '"OSPF_TAG" in result["msg"]["DATA"]["failureList"][0]["message"]'
+          - '"LOOPBACK_IP" in result["msg"]["DATA"]["failureList"][0]["message"]'
 
-    - name: Create policy including required variables
+    - name: Create multiple policies including required variables with the same template
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: my_base_ospf  # This must be a valid template name
-            create_additional_policy: true  # Do not create a policy if it already exists
+            create_additional_policy: true
+            priority: 101
+            policy_vars:
+              OSPF_TAG: 2000
+              LOOPBACK_IP: 10.122.84.108
+
+          - name: my_base_ospf  # This must be a valid template name
+            create_additional_policy: true
             priority: 101
             policy_vars:
               OSPF_TAG: 2000
@@ -74,10 +73,10 @@
     - assert:
         that:
           - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
     - assert:
@@ -93,7 +92,61 @@
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
+      when: (my_idx == (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    - name: Create additional policies including required variables with the same template but different priority and description
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: true
+        state: merged
+        config:
+          - name: my_base_ospf  # This must be a valid template name
+            create_additional_policy: false
+            priority: 111
+            description: "Changed description - 1"
+            policy_vars:
+              OSPF_TAG: 2000
+              LOOPBACK_IP: 10.122.84.108
+
+          - name: my_base_ospf  # This must be a valid template name
+            create_additional_policy: false
+            priority: 121
+            description: "Changed description - 2"
+            policy_vars:
+              OSPF_TAG: 2000
+              LOOPBACK_IP: 10.122.84.108
+
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
+
+    # Assert for Create responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+      when: (my_idx < (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    # Assert for deploy responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) >= 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
