@@ -23,19 +23,28 @@ from ansible_collections.ansible.netcommon.tests.unit.compat.mock import patch
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_template
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
+    AnsibleFailJson,
+)
+
 import json, copy
+import pytest
 
 class TestDcnmTemplateModule(TestDcnmModule):
 
     module = dcnm_template
 
-    fd = open("template-ut.log", "w")
+    fd = None
 
     def init_data(self):
         pass
 
     def log_msg (self, msg):
+
+        if fd is None:
+            fd = open("template-ut.log", "w")
         self.fd.write (msg)
+        self.fd.flush()
 
     def setUp(self):
 
@@ -172,7 +181,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
             template1  = self.payloads_data.get('template_101_have_resp')
 
             self.run_dcnm_send.side_effect = [
-                                              template1, 
+                                              template1,
                                               self.validate_resp,
                                               self.create_succ_resp]
 
@@ -183,7 +192,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
             template1  = self.payloads_data.get('template_101_have_resp')
 
             self.run_dcnm_send.side_effect = [
-                                              template1, 
+                                              template1,
                                               self.validate_resp,
                                               self.create_succ_resp]
 
@@ -194,7 +203,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
             template1  = self.payloads_data.get('template_101_have_resp')
 
             self.run_dcnm_send.side_effect = [
-                                              template1, 
+                                              template1,
                                               self.validate_resp,
                                               self.create_succ_resp]
 
@@ -208,7 +217,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
             template4  = self.payloads_data.get('template_104_have_resp')
 
             self.run_dcnm_send.side_effect = [
-                                              template1, template2, template3, template4, 
+                                              template1, template2, template3, template4,
                                               self.validate_resp, self.validate_resp,
                                               self.validate_resp, self.validate_resp,
                                               self.create_succ_resp, self.create_succ_resp,
@@ -226,7 +235,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
             policies  = []
 
             self.run_dcnm_send.side_effect = [
-                                              template1, template2, template3, template4, 
+                                              template1, template2, template3, template4,
                                               switches, policies
                                               ]
 
@@ -269,7 +278,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
         set_module_args(dict(state='replaced',
                              config=self.playbook_config))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=False, failed=False)
         except:
             self.assertEqual (result, None)
@@ -293,7 +302,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
         for d in result['diff'][0]['merged']:
             self.assertEqual ((d['template_name'] in ['template_101', 'template_102',
                                                       'template_103', 'template_104']), True)
-        
+
         for r in result['response']:
             self.assertEqual (('Template Created' in r['DATA']['status']), True)
 
@@ -318,7 +327,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
         for d in result['diff'][0]['merged']:
             self.assertEqual ((d['template_name'] in ['template_101', 'template_102',
                                                       'template_103', 'template_104']), True)
-        
+
     def test_dcnm_template_merged_in_use(self):
 
         # load the json from playbooks
@@ -332,14 +341,15 @@ class TestDcnmTemplateModule(TestDcnmModule):
 
         set_module_args(dict(state='merged',
                              config=self.playbook_config))
-        result = self.execute_module(changed=False, failed=False)
 
-        self.assertEqual(len(result['diff'][0]['merged']), 2)
-        for d in result['diff'][0]['merged']:
-            self.assertEqual ((d['template_name'] in ['template_110_inuse', 'template_111_inuse']), True)
+        with pytest.raises(AnsibleFailJson) as failure_msg:
+            self.execute_module(changed=False, failed=False)
 
-        for r in result['response']:
-            self.assertEqual (('Template is already in use.Cannot be overwritten' in r[0]['DATA']), True)
+        fail_data = failure_msg.value.args[0]['msg']
+        print(fail_data)
+        self.assertEqual(fail_data['RETURN_CODE'], 500)
+        self.assertEqual(fail_data['MESSAGE'], 'Internal Server Error')
+        self.assertRegex(fail_data['DATA'], 'Template is already in use.Cannot be overwritten')
 
     def test_dcnm_template_merged_existing(self):
 
@@ -462,7 +472,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
             self.assertEqual (('internal policy 101 after replacement' in d['content']), True)
         for r in result['response']:
             self.assertEqual (('Template Created' in r['DATA']['status']), True)
-        
+
     def test_dcnm_template_replace_one_existing(self):
 
         # load the json from playbooks

@@ -674,7 +674,7 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
                 if role['ipAddress'] == create["switches"][0]['ipaddr']:
                     method = 'PUT'
-                    assign_path = '/fm/fmrest/topology/role/{}?newRole={}'.format(role['switchDbID'], create['role'])
+                    assign_path = '/fm/fmrest/topology/role/{}?newRole={}'.format(role['switchDbID'], create['role'].replace("_", "%20"))
                     response = dcnm_send(self.module, method, assign_path)
                     self.result['response'].append(response)
                     fail, self.result['changed'] = self.handle_response(response, "create")

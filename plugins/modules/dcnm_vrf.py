@@ -1256,6 +1256,7 @@ class DcnmVrf:
                         if want_c.get('vlanId', None) is not None:
                             if str(want_vlanId) != vrf_vlanId:
                                 continue
+
                     if (want_c['vrfName'] == vrf['vrfName'] and want_c['vrfId'] == vrf['vrfId'] and \
                             str(want_vlanId) == vrf_vlanId):
 
@@ -1505,7 +1506,7 @@ class DcnmVrf:
                                     else:
                                         vrflite_con['VRF_LITE_CONN'][0]['NEIGHBOR_IP'] = ext_values['NEIGHBOR_IP']
 
-                                    vrflite_con['VRF_LITE_CONN'][0]['NEIGHBOR_ASN'] = '65535'
+                                    vrflite_con['VRF_LITE_CONN'][0]['NEIGHBOR_ASN'] = ext_values['NEIGHBOR_ASN']
 
                                     if ad_l['ipv6_addr']:
                                         vrflite_con['VRF_LITE_CONN'][0]['IPV6_MASK'] = ad_l['ipv6_addr']
@@ -1517,7 +1518,7 @@ class DcnmVrf:
                                     else:
                                         vrflite_con['VRF_LITE_CONN'][0]['IPV6_NEIGHBOR'] = ext_values['IPV6_NEIGHBOR']
 
-                                    vrflite_con['VRF_LITE_CONN'][0]['AUTO_VRF_LITE_FLAG'] = 'false'
+                                    vrflite_con['VRF_LITE_CONN'][0]['AUTO_VRF_LITE_FLAG'] = ext_values['AUTO_VRF_LITE_FLAG']
                                     vrflite_con['VRF_LITE_CONN'][0]['PEER_VRF_NAME'] = ad_l['peer_vrf']
                                     vrflite_con['VRF_LITE_CONN'][0]['VRF_LITE_JYTHON_TEMPLATE'] = 'Ext_VRF_Lite_Jython'
                                     extension_values['VRF_LITE_CONN'] = json.dumps(vrflite_con)

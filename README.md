@@ -54,8 +54,9 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 1.1.0
+    version: 1.1.1   
 ```
+
 ## Using this collection
 
 
