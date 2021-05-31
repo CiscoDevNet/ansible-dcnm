@@ -1157,7 +1157,6 @@ class DcnmIntf:
                         if ('type' not in cfg):
                             self.module.fail_json(msg='<type> element, which is mandatory is missing in config')
 
-                        self.log_msg("cfg = {} \n".format(cfg))
                         pol_ind_str = cfg['type'] + '_' + cfg['profile']['mode']
 
                         c[ck]['fabric'] = self.dcnm_intf_facts['fabric']
@@ -1851,7 +1850,6 @@ class DcnmIntf:
         path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifName
         resp = dcnm_send(self.module, 'GET', path)
 
-        # self.log_msg("resp = {} \n".format(resp))
         if ('DATA' in resp and resp['DATA']):
             return resp['DATA'][0]
         else:
