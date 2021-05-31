@@ -15,9 +15,7 @@
 # limitations under the License.
 
 import json
-import time
 import copy
-import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
     dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
 from ansible.module_utils.basic import AnsibleModule
@@ -444,7 +442,7 @@ class DcnmServiceNode:
         found = False
         for replace_c in self.diff_replace:
             for have_c in self.have_create:
-                if have_c['name'] == replace_c['name'] :
+                if have_c['name'] == replace_c['name']:
                     found = True
 
         if not found:
@@ -689,6 +687,7 @@ class DcnmServiceNode:
 
         self.module.fail_json(msg=res)
 
+
 def main():
     """ main entry point for module execution
     """
@@ -743,6 +742,7 @@ def main():
     dcnm_snode.push_to_remote()
 
     module.exit_json(**dcnm_snode.result)
+
 
 if __name__ == '__main__':
     main()

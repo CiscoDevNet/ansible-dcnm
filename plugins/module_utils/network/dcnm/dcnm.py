@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import socket
 import json
 import time
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
+
 
 def validate_ip_address_format(type, item, invalid_params):
 
@@ -45,6 +45,7 @@ def validate_ip_address_format(type, item, invalid_params):
             socket.inet_pton(addr_family, address)
         except socket.error:
             invalid_params.append('{} : Invalid {} address syntax'.format(item, addr_type))
+
 
 def validate_list_of_dicts(param_list, spec, module=None):
     """ Validate/Normalize playbook params. Will raise when invalid parameters found.
@@ -330,9 +331,10 @@ def dcnm_send(module, method, path, data=None, data_type='json'):
     elif (data_type == 'text'):
         return conn.send_txt_request(method, path, data)
 
+
 def dcnm_reset_connection(module):
 
     conn = Connection(module._socket_path)
 
     conn.logout()
-    return conn.login (conn.get_option("remote_user"), conn.get_option("password"))
+    return conn.login(conn.get_option("remote_user"), conn.get_option("password"))

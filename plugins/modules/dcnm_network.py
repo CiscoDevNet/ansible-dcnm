@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import json
-import socket
 import time
 import copy
 import re
@@ -336,7 +335,7 @@ class DcnmNetwork:
         self.have_attach = []
         self.want_attach = []
         self.diff_attach = []
-        self.validated   = []
+        self.validated = []
         # diff_detach is to list all attachments of a network being deleted, especially for state: OVERRIDDEN
         # The diff_detach and delete operations have to happen before create+attach+deploy for networks being created.
         # This is specifically to address cases where VLAN from a network which is being deleted is used for another
@@ -773,7 +772,6 @@ class DcnmNetwork:
             networks = []
 
             net_deploy = net.get('deploy', True)
-            vlan_id = net.get('vlan_id', "")
 
             want_create.append(self.update_create_params(net))
 
@@ -1032,10 +1030,6 @@ class DcnmNetwork:
                     # Need to query DCNM to fetch next available networkId and use it here.
 
                     method = 'POST'
-                    result = dict(
-                        changed=False,
-                        response=''
-                    )
 
                     attempt = 0
                     while True or attempt < 10:
@@ -1302,7 +1296,7 @@ class DcnmNetwork:
                     # append the parent network details
                     item['parent'] = net
 
-                    #fetch the attachment for the network
+                    # fetch the attachment for the network
                     path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
                                 format(self.fabric, net['networkName'])
                     net_attach_objects = dcnm_send(self.module, method, path)
@@ -1316,7 +1310,7 @@ class DcnmNetwork:
                         attach_list = net_attach['lanAttachList']
 
                         for attach in attach_list:
-                            #append the attach network details
+                            # append the attach network details
                             item['attach'].append(attach)
                         query.append(item)
 
@@ -1347,7 +1341,6 @@ class DcnmNetwork:
 
             return True
 
-
     def update_ms_fabric(self, diff):
         if not self.is_ms_fabric:
             return
@@ -1356,11 +1349,9 @@ class DcnmNetwork:
             for node in list_elem['lanAttachList']:
                 node['fabric'] = self.sn_fab[node['serialNumber']]
 
-
     def push_to_remote(self, is_rollback=False):
 
         path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
-        bulk_create_path = '/rest/top-down/bulk-create/networks'
 
         method = 'PUT'
         if self.diff_create_update:
@@ -1385,7 +1376,7 @@ class DcnmNetwork:
         if self.diff_detach:
             detach_path = path + '/attachments'
 
-            #Update the fabric name to specific fabric which the switches are part of.
+            # Update the fabric name to specific fabric which the switches are part of.
             self.update_ms_fabric(self.diff_detach)
 
             resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
@@ -1470,7 +1461,7 @@ class DcnmNetwork:
         if self.diff_attach:
             attach_path = path + '/attachments'
 
-            #Update the fabric name to specific fabric which the switches are part of.
+            # Update the fabric name to specific fabric which the switches are part of.
             self.update_ms_fabric(self.diff_attach)
 
             for attempt in range(0, 50):
@@ -1677,7 +1668,7 @@ def main():
         config=dict(required=False, type='list'),
         state=dict(default='merged',
                    choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
-        check_mode = dict(required=False, type="bool", default=False)
+        check_mode=dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -1730,6 +1721,7 @@ def main():
     dcnm_net.push_to_remote()
 
     module.exit_json(**dcnm_net.result)
+
 
 if __name__ == '__main__':
     main()
