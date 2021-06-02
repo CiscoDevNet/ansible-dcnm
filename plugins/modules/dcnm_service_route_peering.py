@@ -84,7 +84,7 @@ options:
       peering_option:
         description:
           - Specifies the type of peering
-            NOTE: This object is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
+          - NOTE: This object is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
                   or 'one_arm_adc' or 'two_arm_adc'
         type: str
         required: False
@@ -93,13 +93,13 @@ options:
       next_hop:
         description:
           - Nexthop IPV4 information, e.g., 192.168.1.100
-            NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+          - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
         type: int
         required: true
       rev_next_hop:
         description:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
-            NOTE: This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
+          - NOTE: This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
                   or 'one_arm_adc' or 'two_arm_adc'
         type: int
         required: false
@@ -189,11 +189,13 @@ options:
                 type: ipv4
                 required: True
               ipv4_lo:
+                description:
                   - IPv4 loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv4
                 required: True
               ipv4_vpc_peer_lo:
+                description:
                   - IPv4 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. This
                           object will be mandatory if the service node switch is part of VPC
@@ -201,19 +203,22 @@ options:
                 type: ipv4
                 required: False
                 default: ''
-              ipv6_neighobor:
+              ipv6_neighbor:
+                description:
                   - IPv6 neighbor address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               ipv6_lo:
+                description:
                   - IPv6 loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: ipv6
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
+                description:
                   - IPv6 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. This
                           object will be mandatory if the service node switch is part of VPC
@@ -222,24 +227,28 @@ options:
                 required: False
                 default: ''
               route_map_tag:
+                description:
                   - Route Tag
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
+                description:
                   - Description of the interface
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
+                description:
                   - Local ASN number
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
+                description:
                   - Flag indicating if the host is to be advertised
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: bool
@@ -343,7 +352,7 @@ options:
                 type: ipv4
                 required: False
                 default: ''
-              ipv6_neighobor:
+              ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
@@ -489,7 +498,7 @@ options:
                 type: ipv4
                 required: False
                 default: ''
-              ipv6_neighobor:
+              ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
@@ -517,21 +526,21 @@ options:
                 type: int
                 required: True
                 default: 12345
-              neigh_int_descr: lb-two-arm
+              neigh_int_descr:
                 description:
                   - Description of the interface
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
-              local_asn: 65101
+              local_asn:
                 description:
                   - Local ASN number
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
-              adv_host: true
+              adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
