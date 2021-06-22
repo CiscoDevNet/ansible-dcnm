@@ -802,9 +802,6 @@ class DcnmNetwork:
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
 
-        #if not vrf_objects['DATA']:
-        #    return
-
         if not state == 'deleted':
             if self.config:
                 for net in self.config:
@@ -814,10 +811,11 @@ class DcnmNetwork:
                         vrf_found = True
                         l2only_configured = True
                         continue
-                    for vrf in vrf_objects['DATA']:
-                        if vrf_missing == vrf['vrfName']:
-                            vrf_found = True
-                            break
+                    if vrf_objects['DATA']:
+                        for vrf in vrf_objects['DATA']:
+                            if vrf_missing == vrf['vrfName']:
+                                vrf_found = True
+                                break
                     if not vrf_found:
                         self.module.fail_json(msg="VRF: {} is missing in fabric: {}".format(vrf_missing, self.fabric))
 
