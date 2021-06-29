@@ -219,6 +219,192 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
+- name: QUERY - Create a L2 only and L3 networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_network: &conf3
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: NA
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3504
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: True
+      int_desc: 'test interface'
+      is_l2only: True
+      vlan_name: testvlan
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        deploy: True
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7010
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3505
+      gw_ip_subnet: '162.168.30.1/24'
+      mtu_l3intf: 7600
+      int_desc: 'test interface 1'
+      vlan_name: testvlan1
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+      attach:
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+        deploy: True
+      deploy: True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7009'
+    - 'result.diff[0].vrf_name == "NA"'
+    - 'result.diff[0].arp_suppress == true'
+    - 'result.diff[0].int_desc == "test interface"'
+    - 'result.diff[0].is_l2only == true'
+    - 'result.diff[0].mtu_l3intf == 7600'
+    - 'result.diff[0].vlan_name == "testvlan"'
+    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
+    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
+    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
+    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
+    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
+    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[1].net_name == "ansible-net12"'
+    - 'result.diff[1].net_id == 7010'
+    - 'result.diff[1].vrf_name == "Tenant-2"'
+    - 'result.diff[1].int_desc == "test interface 1"'
+    - 'result.diff[1].mtu_l3intf == 7600'
+    - 'result.diff[1].vlan_name == "testvlan1"'
+    - 'result.diff[1].dhcp_srvr1_ip == "1.1.1.1"'
+    - 'result.diff[1].dhcp_srvr1_vrf == "one"'
+    - 'result.diff[1].dhcp_srvr2_ip == "2.2.2.2"'
+    - 'result.diff[1].dhcp_srvr2_vrf == "two"'
+    - 'result.diff[1].dhcp_srvr3_ip == "3.3.3.3"'
+    - 'result.diff[1].dhcp_srvr3_vrf == "three"'
+
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: QUERY - Query the L2 and L3 Network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+    - net_name: ansible-net13
+      vrf_name: NA
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3504
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: True
+      int_desc: 'test interface'
+      is_l2only: True
+      vlan_name: testvlan
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7010
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3505
+      gw_ip_subnet: '162.168.30.1/24'
+      mtu_l3intf: 7600
+      int_desc: 'test interface 1'
+      vlan_name: testvlan1
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+  register: result
+
+- set_fact:
+    ntConfig: "{{ result.response[0].parent.networkTemplateConfig }}"
+    
+- set_fact:
+    ntConfig1: "{{ result.response[1].parent.networkTemplateConfig }}"
+    
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].parent.networkName == "ansible-net13"'
+    - 'result.response[0].parent.networkId == 7009'
+    - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].parent.vrf == "NA"'
+    - 'ntConfig["suppressArp"] == "true"'
+    - 'ntConfig["isLayer2Only"] == "true"'
+    - 'ntConfig["intfDescription"] == "test interface"'
+    - 'ntConfig["vlanName"] == "testvlan"'
+    - 'ntConfig["vrfDhcp3"] == "three"'
+    - 'ntConfig["dhcpServerAddr3"] == "3.3.3.3"'
+    - 'ntConfig["vrfDhcp2"] == "two"'
+    - 'ntConfig["dhcpServerAddr2"] == "2.2.2.2"'
+    - 'ntConfig["vrfDhcp"] == "one"'
+    - 'ntConfig["dhcpServerAddr1"] == "1.1.1.1"'
+    - 'ntConfig["vrfName"] == "NA"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName== "ansible-net13"'
+    - 'result.response[1].parent.networkName == "ansible-net12"'
+    - 'result.response[1].parent.networkId == 7010'
+    - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].parent.vrf == "Tenant-2"'
+    - 'ntConfig1["suppressArp"] == "false"'
+    - 'ntConfig1["isLayer2Only"] == "false"'
+    - 'ntConfig1["intfDescription"] == "test interface 1"'
+    - 'ntConfig1["vlanName"] == "testvlan1"'
+    - 'ntConfig1["vrfDhcp3"] == "three"'
+    - 'ntConfig1["dhcpServerAddr3"] == "3.3.3.3"'
+    - 'ntConfig1["vrfDhcp2"] == "two"'
+    - 'ntConfig1["dhcpServerAddr2"] == "2.2.2.2"'
+    - 'ntConfig1["vrfDhcp"] == "one"'
+    - 'ntConfig1["dhcpServerAddr1"] == "1.1.1.1"'
+    - 'ntConfig1["vrfName"] == "Tenant-2"'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName== "ansible-net12"'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName== "ansible-net12"'
+
 ###############################################
 ###                 CLEAN-UP                 ##
 ###############################################

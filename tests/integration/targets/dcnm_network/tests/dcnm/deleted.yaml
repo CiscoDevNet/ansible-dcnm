@@ -184,7 +184,7 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
-    -  'result.response[2].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
     - 'result.response[0].MESSAGE == "OK"'
     - 'result.response[1].MESSAGE == "OK"'
     - 'result.response[2].MESSAGE == "OK"'
@@ -327,8 +327,248 @@
     - 'result.diff[0].net_name == "ansible-net13"'
     - 'result.diff[1].net_name == "ansible-net12"'
 
-- name: DELETED - conf - Idempotence
+- name: DELETED - conf3 - Idempotence
   cisco.dcnm.dcnm_network: *conf3
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+    - 'result.diff|length == 0'
+
+- name: DELETED - Create L2 only networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: NA
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3504
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: True
+      int_desc: 'test interface'
+      is_l2only: True
+      vlan_name: testvlan
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        deploy: True
+      deploy: True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7009'
+    - 'result.diff[0].vrf_name == "NA"'
+    - 'result.diff[0].arp_suppress == true'
+    - 'result.diff[0].int_desc == "test interface"'
+    - 'result.diff[0].is_l2only == true'
+    - 'result.diff[0].mtu_l3intf == 7600'
+    - 'result.diff[0].vlan_name == "testvlan"'
+    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
+    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
+    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
+    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
+    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
+    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: DELETED - setup - Clean up l2_only existing network
+  cisco.dcnm.dcnm_network: &conf4
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+    config:
+    - net_name: ansible-net13
+      vrf_name: NA
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3504
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: True
+      int_desc: 'test interface'
+      is_l2only: True
+      vlan_name: testvlan
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    -  'result.response[2].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[1].MESSAGE == "OK"'
+    - 'result.response[2].MESSAGE == "OK"'
+    - 'result.response[2].METHOD == "DELETE"'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+
+- name: DELETED - conf4 - Idempotence
+  cisco.dcnm.dcnm_network: *conf4
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+    - 'result.diff|length == 0'
+
+- name: DELETED - Create a L2 only and L3 networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: NA
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3504
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: True
+      int_desc: 'test interface'
+      is_l2only: True
+      vlan_name: testvlan
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        deploy: True
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7010
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3505
+      gw_ip_subnet: '162.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: True
+      int_desc: 'test interface 1'
+      vlan_name: testvlan1
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+      attach:
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+        deploy: True
+      deploy: True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7009'
+    - 'result.diff[0].vrf_name == "NA"'
+    - 'result.diff[0].arp_suppress == true'
+    - 'result.diff[0].int_desc == "test interface"'
+    - 'result.diff[0].is_l2only == true'
+    - 'result.diff[0].mtu_l3intf == 7600'
+    - 'result.diff[0].vlan_name == "testvlan"'
+    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
+    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
+    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
+    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
+    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
+    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[1].net_name == "ansible-net12"'
+    - 'result.diff[1].net_id == 7010'
+    - 'result.diff[1].vrf_name == "Tenant-2"'
+    - 'result.diff[1].arp_suppress == true'
+    - 'result.diff[1].int_desc == "test interface 1"'
+    - 'result.diff[1].mtu_l3intf == 7600'
+    - 'result.diff[1].vlan_name == "testvlan1"'
+    - 'result.diff[1].dhcp_srvr1_ip == "1.1.1.1"'
+    - 'result.diff[1].dhcp_srvr1_vrf == "one"'
+    - 'result.diff[1].dhcp_srvr2_ip == "2.2.2.2"'
+    - 'result.diff[1].dhcp_srvr2_vrf == "two"'
+    - 'result.diff[1].dhcp_srvr3_ip == "3.3.3.3"'
+    - 'result.diff[1].dhcp_srvr3_vrf == "three"'
+
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: DELETED - Delete all the networks
+  cisco.dcnm.dcnm_network: &conf5
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[1].MESSAGE == "OK"'
+    - 'result.response[2].MESSAGE == "OK"'
+    - 'result.response[3].MESSAGE == "OK"'
+    - 'result.response[3].METHOD == "DELETE"'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - 'result.diff[1].attach[0].deploy == false'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch1 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net12"'
+    - 'result.diff[1].net_name == "ansible-net13"'
+
+- name: DELETED - conf5 - Idempotence
+  cisco.dcnm.dcnm_network: *conf5
   register: result
 
 - assert:
