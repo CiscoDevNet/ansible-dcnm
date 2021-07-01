@@ -1523,6 +1523,7 @@ class DcnmNetwork:
                     net = network['DATA']
                     if (want_c['networkId'] == net['networkId']) and want_c['vrf'] == net['vrf']:
                         item['parent'] = net
+                        item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
 
                         # Query the Attachment for the found Networks
                         path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
@@ -1555,6 +1556,7 @@ class DcnmNetwork:
                 item = {'parent': {}, 'attach': []}
                 # append the parent network details
                 item['parent'] = net
+                item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
 
                 # fetch the attachment for the network
                 path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \

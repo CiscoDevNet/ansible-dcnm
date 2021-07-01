@@ -347,12 +347,6 @@
       dhcp_srvr3_vrf: three
   register: result
 
-- set_fact:
-    ntConfig: "{{ result.response[0].parent.networkTemplateConfig }}"
-
-- set_fact:
-    ntConfig1: "{{ result.response[1].parent.networkTemplateConfig }}"
-
 - assert:
     that:
     - 'result.changed == false'
@@ -360,17 +354,17 @@
     - 'result.response[0].parent.networkId == 7009'
     - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
     - 'result.response[0].parent.vrf == "NA"'
-    - 'ntConfig["suppressArp"] == "true"'
-    - 'ntConfig["isLayer2Only"] == "true"'
-    - 'ntConfig["intfDescription"] == "test interface"'
-    - 'ntConfig["vlanName"] == "testvlan"'
-    - 'ntConfig["vrfDhcp3"] == "three"'
-    - 'ntConfig["dhcpServerAddr3"] == "3.3.3.3"'
-    - 'ntConfig["vrfDhcp2"] == "two"'
-    - 'ntConfig["dhcpServerAddr2"] == "2.2.2.2"'
-    - 'ntConfig["vrfDhcp"] == "one"'
-    - 'ntConfig["dhcpServerAddr1"] == "1.1.1.1"'
-    - 'ntConfig["vrfName"] == "NA"'
+    - 'result.response[0].parent.networkTemplateConfig.suppressArp == "true"'
+    - 'result.response[0].parent.networkTemplateConfig.isLayer2Only == "true"'
+    - 'result.response[0].parent.networkTemplateConfig.intfDescription == "test interface"'
+    - 'result.response[0].parent.networkTemplateConfig.vlanName == "testvlan"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp3 == "three"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp2 == "two"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp == "one"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfName == "NA"'
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[0].attach[0].networkName== "ansible-net13"'
@@ -381,17 +375,17 @@
     - 'result.response[1].parent.networkId == 7010'
     - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
     - 'result.response[1].parent.vrf == "Tenant-2"'
-    - 'ntConfig1["suppressArp"] == "false"'
-    - 'ntConfig1["isLayer2Only"] == "false"'
-    - 'ntConfig1["intfDescription"] == "test interface 1"'
-    - 'ntConfig1["vlanName"] == "testvlan1"'
-    - 'ntConfig1["vrfDhcp3"] == "three"'
-    - 'ntConfig1["dhcpServerAddr3"] == "3.3.3.3"'
-    - 'ntConfig1["vrfDhcp2"] == "two"'
-    - 'ntConfig1["dhcpServerAddr2"] == "2.2.2.2"'
-    - 'ntConfig1["vrfDhcp"] == "one"'
-    - 'ntConfig1["dhcpServerAddr1"] == "1.1.1.1"'
-    - 'ntConfig1["vrfName"] == "Tenant-2"'
+    - 'result.response[1].parent.networkTemplateConfig.suppressArp == "false"'
+    - 'result.response[1].parent.networkTemplateConfig.isLayer2Only == "false"'
+    - 'result.response[1].parent.networkTemplateConfig.intfDescription == "test interface 1"'
+    - 'result.response[1].parent.networkTemplateConfig.vlanName == "testvlan1"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfDhcp3 == "three"'
+    - 'result.response[1].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfDhcp2 == "two"'
+    - 'result.response[1].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfDhcp == "one"'
+    - 'result.response[1].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfName == "Tenant-2"'
     - 'result.response[1].attach[0].isLanAttached== true'
     - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[1].attach[0].networkName== "ansible-net12"'
@@ -405,12 +399,6 @@
     state: query
   register: result
 
-- set_fact:
-    ntConfig: "{{ result.response[0].parent.networkTemplateConfig }}"
-
-- set_fact:
-    ntConfig1: "{{ result.response[1].parent.networkTemplateConfig }}"
-
 - assert:
     that:
     - 'result.changed == false'
@@ -418,17 +406,17 @@
     - 'result.response[1].parent.networkId == 7009'
     - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
     - 'result.response[1].parent.vrf == "NA"'
-    - 'ntConfig1["suppressArp"] == "true"'
-    - 'ntConfig1["isLayer2Only"] == "true"'
-    - 'ntConfig1["intfDescription"] == "test interface"'
-    - 'ntConfig1["vlanName"] == "testvlan"'
-    - 'ntConfig1["vrfDhcp3"] == "three"'
-    - 'ntConfig1["dhcpServerAddr3"] == "3.3.3.3"'
-    - 'ntConfig1["vrfDhcp2"] == "two"'
-    - 'ntConfig1["dhcpServerAddr2"] == "2.2.2.2"'
-    - 'ntConfig1["vrfDhcp"] == "one"'
-    - 'ntConfig1["dhcpServerAddr1"] == "1.1.1.1"'
-    - 'ntConfig1["vrfName"] == "NA"'
+    - 'result.response[1].parent.networkTemplateConfig.suppressArp == "true"'
+    - 'result.response[1].parent.networkTemplateConfig.isLayer2Only == "true"'
+    - 'result.response[1].parent.networkTemplateConfig.intfDescription == "test interface"'
+    - 'result.response[1].parent.networkTemplateConfig.vlanName == "testvlan"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfDhcp3 == "three"'
+    - 'result.response[1].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfDhcp2 == "two"'
+    - 'result.response[1].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfDhcp == "one"'
+    - 'result.response[1].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"'
+    - 'result.response[1].parent.networkTemplateConfig.vrfName == "NA"'
     - 'result.response[1].attach[0].isLanAttached== true'
     - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[1].attach[0].networkName== "ansible-net13"'
@@ -439,17 +427,17 @@
     - 'result.response[0].parent.networkId == 7010'
     - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
     - 'result.response[0].parent.vrf == "Tenant-2"'
-    - 'ntConfig["suppressArp"] == "false"'
-    - 'ntConfig["isLayer2Only"] == "false"'
-    - 'ntConfig["intfDescription"] == "test interface 1"'
-    - 'ntConfig["vlanName"] == "testvlan1"'
-    - 'ntConfig["vrfDhcp3"] == "three"'
-    - 'ntConfig["dhcpServerAddr3"] == "3.3.3.3"'
-    - 'ntConfig["vrfDhcp2"] == "two"'
-    - 'ntConfig["dhcpServerAddr2"] == "2.2.2.2"'
-    - 'ntConfig["vrfDhcp"] == "one"'
-    - 'ntConfig["dhcpServerAddr1"] == "1.1.1.1"'
-    - 'ntConfig["vrfName"] == "Tenant-2"'
+    - 'result.response[0].parent.networkTemplateConfig.suppressArp == "false"'
+    - 'result.response[0].parent.networkTemplateConfig.isLayer2Only == "false"'
+    - 'result.response[0].parent.networkTemplateConfig.intfDescription == "test interface 1"'
+    - 'result.response[0].parent.networkTemplateConfig.vlanName == "testvlan1"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp3 == "three"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp2 == "two"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp == "one"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfName == "Tenant-2"'
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[0].attach[0].networkName== "ansible-net12"'
