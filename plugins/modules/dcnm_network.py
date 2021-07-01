@@ -65,7 +65,7 @@ options:
       vrf_name:
         description: 'Name of the VRF to which the network belongs to'
         type: str
-        required: true
+        note: This field is required for L3 Networks
       net_id:
         description: 'ID of the network being managed'
         type: int
@@ -96,7 +96,7 @@ options:
         description: 'Layer 2 only network'
         type: bool
         required: false
-        note: If specified as true, VRF Name(vrf_name) should be specified as "NA"
+        note: If specified as true, VRF Name(vrf_name) should not be specified
         default: false
       vlan_name:
         description: 'Name of the vlan configured'
@@ -110,6 +110,7 @@ options:
       mtu_l3intf:
         description: 'MTU for Layer 3 interfaces'
         type: int
+        note: Configured MTU value should be in range 68-9216
         required: false
       arp_suppress:
         description: 'ARP suppression'
@@ -806,7 +807,7 @@ class DcnmNetwork:
             if self.config:
                 for net in self.config:
                     vrf_found = False
-                    vrf_missing = net['vrf_name']
+                    vrf_missing = net.get('vrf_name', 'NA')
                     if vrf_missing == 'NA' and net['is_l2only'] is True:
                         vrf_found = True
                         l2only_configured = True
@@ -1400,7 +1401,6 @@ class DcnmNetwork:
             json_to_dict = json.loads(found_c['networkTemplateConfig'])
 
             found_c.update({'net_name': found_c['networkName']})
-            #found_c.update({'vrf_name': found_c['vrf']})
             found_c.update({'vrf_name': found_c.get('vrf', "NA")})
             found_c.update({'net_id': found_c['networkId']})
             found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
@@ -1556,7 +1556,7 @@ class DcnmNetwork:
                 # append the parent network details
                 item['parent'] = net
 
-                #fetch the attachment for the network
+                # fetch the attachment for the network
                 path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
                             format(self.fabric, net['networkName'])
                 net_attach_objects = dcnm_send(self.module, method, path)
@@ -1570,7 +1570,7 @@ class DcnmNetwork:
                     attach_list = net_attach['lanAttachList']
 
                     for attach in attach_list:
-                        #append the attach network details
+                        # append the attach network details
                         item['attach'].append(attach)
                     query.append(item)
 
@@ -1814,14 +1814,12 @@ class DcnmNetwork:
                         valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
                         net['attach'] = valid_att
                         invalid_params.extend(invalid_att)
+
+                    if net.get('is_l2only', False) is True:
+                        if net.get('vrf_name', "") is None:
+                            net['vrf_name'] = 'NA'
+
                     self.validated.append(net)
-
-                for net_entry in self.config:
-                    if net_entry.get('is_l2only', False) is True and net_entry['vrf_name'] != 'NA':
-                            invalid_params.append("For L2 Only networks vrf_name should be 'NA'")
-
-                    if net_entry.get('vrf_name') == 'NA' and net_entry.get('is_l2only', False) is False:
-                            invalid_params.append("vrf_name can be 'NA' for L2 Only networks")
 
                 if invalid_params:
                     msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
@@ -1867,22 +1865,26 @@ class DcnmNetwork:
                         valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
                         net['attach'] = valid_att
                         invalid_params.extend(invalid_att)
+
+                    if state != 'deleted':
+                        if net.get('is_l2only', False) is True:
+                            if net.get('vrf_name', "") is not None:
+                                invalid_params.append("vrf_name should not be specified for L2 Networks")
+                            else:
+                                net['vrf_name'] = 'NA'
+                        else:
+                            if net.get('vrf_name', "") is None:
+                                invalid_params.append("vrf_name is required for L3 Networks")
+
+                        if (net.get('dhcp_srvr1_ip') and not net.get('dhcp_srvr1_vrf')) or \
+                                (net.get('dhcp_srvr1_vrf') and not net.get('dhcp_srvr1_ip')) or \
+                                (net.get('dhcp_srvr2_ip') and not net.get('dhcp_srvr2_vrf')) or \
+                                (net.get('dhcp_srvr2_vrf') and not net.get('dhcp_srvr2_ip')) or \
+                                (net.get('dhcp_srvr3_ip') and not net.get('dhcp_srvr3_vrf')) or \
+                                (net.get('dhcp_srvr3_vrf') and not net.get('dhcp_srvr3_ip')):
+                                invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+
                     self.validated.append(net)
-
-                for net_entry in self.config:
-                    if net_entry.get('is_l2only', False) is True and net_entry['vrf_name'] != 'NA':
-                            invalid_params.append("For L2 Only networks vrf_name should be 'NA'")
-
-                    if net_entry.get('vrf_name') == 'NA' and net_entry.get('is_l2only', False) is False:
-                            invalid_params.append("vrf_name can be 'NA' for L2 Only networks")
-
-                    if (net_entry.get('dhcp_srvr1_ip') and not net_entry.get('dhcp_srvr1_vrf')) or \
-                            (net_entry.get('dhcp_srvr1_vrf') and not net_entry.get('dhcp_srvr1_ip')) or \
-                            (net_entry.get('dhcp_srvr2_ip') and not net_entry.get('dhcp_srvr2_vrf')) or \
-                            (net_entry.get('dhcp_srvr2_vrf') and not net_entry.get('dhcp_srvr2_ip')) or \
-                            (net_entry.get('dhcp_srvr3_ip') and not net_entry.get('dhcp_srvr3_vrf')) or \
-                            (net_entry.get('dhcp_srvr3_vrf') and not net_entry.get('dhcp_srvr3_ip')):
-                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                 if invalid_params:
                     msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))

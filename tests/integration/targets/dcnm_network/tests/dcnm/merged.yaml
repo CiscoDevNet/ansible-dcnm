@@ -49,10 +49,18 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
 
 - name: MERGED - Create New Network with Deploy
   cisco.dcnm.dcnm_network:
@@ -78,10 +86,18 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
 
 - name: MERGED - Create New Network with Attach and global deploy
   cisco.dcnm.dcnm_network:
@@ -114,14 +130,18 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 - name: MERGED - Create New Network with Attach specific deploy and no global deploy
   cisco.dcnm.dcnm_network: &conf
@@ -155,9 +175,9 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf
@@ -173,9 +193,9 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 - name: MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network: &conf1
@@ -227,6 +247,10 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
 - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_network: *conf1
   register: result
@@ -235,10 +259,6 @@
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
-
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -336,6 +356,10 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
 - name: MERGED - conf2 - Idempotence
   cisco.dcnm.dcnm_network: *conf2
   register: result
@@ -344,10 +368,6 @@
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
-
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -415,6 +435,10 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
+- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
 - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_network: *conf3
   register: result
@@ -423,10 +447,6 @@
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -490,12 +510,11 @@
     timeout: 40
 
 - name: MERGED - Create L2 only networks along with all dhcp, arp options
-  cisco.dcnm.dcnm_network: &conf3
+  cisco.dcnm.dcnm_network: &conf4
     fabric: "{{ ansible_it_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
-      vrf_name: NA
       net_id: 7009
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -547,8 +566,8 @@
   wait_for:
     timeout: 40
 
-- name: MERGED - conf - Idempotence
-  cisco.dcnm.dcnm_network: *conf3
+- name: MERGED - conf4 - Idempotence
+  cisco.dcnm.dcnm_network: *conf4
   register: result
 
 - name: MERGED - setup - Clean up any existing network
@@ -561,7 +580,7 @@
     timeout: 40
 
 - name: MERGED - Create L3 networks along with all dhcp, arp options
-  cisco.dcnm.dcnm_network: &conf4
+  cisco.dcnm.dcnm_network: &conf5
     fabric: "{{ ansible_it_fabric }}"
     state: merged
     config:
@@ -617,13 +636,14 @@
   wait_for:
     timeout: 40
 
-- name: MERGED - conf - Idempotence
-  cisco.dcnm.dcnm_network: *conf3
+- name: MERGED - conf5 - Idempotence
+  cisco.dcnm.dcnm_network: *conf5
   register: result
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
+    state: deleted
 
 - name: MERGED - Create Network with invalid network name
   cisco.dcnm.dcnm_network:
@@ -652,7 +672,7 @@
     state: merged
     config:
     - net_name: ansible-net13
-      vrf_name: Tenant-1000
+      vrf_name: Tenant-10000
       net_id: 7005
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -665,7 +685,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"VRF: Tenant-10000 is missing in fabric: Fabric1" in result.msg'
+    - '"VRF: Tenant-10000 is missing in fabric: test_net" in result.msg'
 
 - name: MERGED - Create Network with invalid vlan id
   cisco.dcnm.dcnm_network:
@@ -760,7 +780,7 @@
     - 'result.changed == false'
     - '"routing_tag:4294967296 : The item exceeds the allowed range of max 4294967295" in result.msg'
 
-- name: MERGED - Create L2 only Network with a vrf name other than "NA"
+- name: MERGED - Create L2 only Network with a vrf name
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
@@ -780,15 +800,14 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"Invalid parameters in playbook: For L2 Only networks vrf_name should be" in result.msg'
+    - '"Invalid parameters in playbook: vrf_name should not be specified for L2 Networks" in result.msg'
 
-- name: MERGED - Create L3 Network with a vrf name "NA"
+- name: MERGED - Create L3 Network without a vrf name
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
-      vrf_name: NA
       net_id: 7005
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -801,7 +820,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"Invalid parameters in playbook: vrf_name can be" in result.msg'
+    - '"Invalid parameters in playbook: vrf_name is required for L3 Networks" in result.msg'
 
 - name: MERGED - Create L3 Network with DHCP server IP alone
   cisco.dcnm.dcnm_network:
@@ -809,7 +828,7 @@
     state: merged
     config:
     - net_name: ansible-net13
-      vrf_name: NA
+      vrf_name: Tenant-1
       net_id: 7005
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal

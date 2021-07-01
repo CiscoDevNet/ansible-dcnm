@@ -343,7 +343,6 @@
     state: merged
     config:
     - net_name: ansible-net13
-      vrf_name: NA
       net_id: 7009
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -401,7 +400,6 @@
     state: deleted
     config:
     - net_name: ansible-net13
-      vrf_name: NA
       net_id: 7009
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -451,7 +449,6 @@
     state: merged
     config:
     - net_name: ansible-net13
-      vrf_name: NA
       net_id: 7009
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
