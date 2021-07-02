@@ -87,11 +87,11 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
                                               create_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
-                                              deploy_rp4_resp_unauth_err, deploy_rp4_resp, 
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp_unauth_err, deploy_rp4_resp,
                                               deploy_rp5_resp, deploy_rp6_resp,
                                               deploy_rp7_resp]
 
@@ -104,6 +104,13 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             have_rp5_resp    = []
             have_rp6_resp    = []
             have_rp7_resp    = []
+            vlan_id_alloc_resp1 = self.payloads_data.get('vlan_id_alloc_resp_rp1')
+            vlan_id_alloc_resp2 = self.payloads_data.get('vlan_id_alloc_resp_rp2')
+            vlan_id_alloc_resp3 = self.payloads_data.get('vlan_id_alloc_resp_rp3')
+            vlan_id_alloc_resp4 = self.payloads_data.get('vlan_id_alloc_resp_rp4')
+            vlan_id_alloc_resp5 = self.payloads_data.get('vlan_id_alloc_resp_rp5')
+            vlan_id_alloc_resp6 = self.payloads_data.get('vlan_id_alloc_resp_rp6')
+            vlan_id_alloc_resp7 = self.payloads_data.get('vlan_id_alloc_resp_rp7')
             create_rp1_resp  = self.payloads_data.get('create_rp1_resp')
             create_rp2_resp  = self.payloads_data.get('create_rp2_resp')
             create_rp3_resp  = self.payloads_data.get('create_rp3_resp')
@@ -122,10 +129,21 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
-                                              create_rp7_resp, 
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
+                                              vlan_id_alloc_resp1,
+                                              create_rp1_resp,
+                                              vlan_id_alloc_resp2,
+                                              create_rp2_resp,
+                                              vlan_id_alloc_resp3,
+                                              create_rp3_resp,
+                                              vlan_id_alloc_resp4,
+                                              create_rp4_resp,
+                                              vlan_id_alloc_resp5,
+                                              create_rp5_resp,
+                                              vlan_id_alloc_resp6,
+                                              create_rp6_resp,
+                                              vlan_id_alloc_resp7,
+                                              create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
                                               deploy_rp7_resp]
 
@@ -165,11 +183,11 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                               have_rp7_resp,
                                               att_rp1_status, att_rp2_status, att_rp3_status,
                                               att_rp4_status, att_rp5_status, att_rp6_status,
-                                              att_rp7_status, 
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
-                                              create_rp7_resp, 
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
+                                              att_rp7_status,
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
+                                              create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
                                               deploy_rp7_resp]
 
@@ -187,6 +205,80 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp]
 
+
+        if ('test_dcnm_srp_merged_new_invalid_request_error' == self._testMethodName):
+
+            have_rp1_resp    = []
+            have_rp2_resp    = []
+            have_rp3_resp    = []
+            have_rp4_resp    = []
+            have_rp5_resp    = []
+            have_rp6_resp    = []
+            have_rp7_resp    = []
+            create_rp1_resp  = self.payloads_data.get('create_rp1_resp')
+            create_rp2_resp  = self.payloads_data.get('create_rp2_resp')
+            create_rp3_resp  = self.payloads_data.get('create_rp3_resp')
+            create_rp4_resp  = self.payloads_data.get('create_rp4_resp')
+            create_rp5_resp  = self.payloads_data.get('create_rp5_resp')
+            create_rp6_resp  = self.payloads_data.get('create_rp6_resp')
+            create_rp7_resp  = self.payloads_data.get('create_rp7_resp')
+            deploy_rp1_resp  = self.payloads_data.get('deploy_rp1_resp')
+            deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
+            deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
+            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
+            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
+            deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
+            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
+
+            create_rp7_resp_inv_req_err = self.payloads_data.get('create_rp7_resp_inv_req_err')
+
+            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
+                                              have_rp4_resp, have_rp5_resp, have_rp6_resp,
+                                              have_rp7_resp,
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
+                                              create_rp7_resp_inv_req_err, have_rp7_resp,
+                                              create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp]
+
+        if ('test_dcnm_srp_merged_new_invalid_fabric_error' == self._testMethodName):
+
+            have_rp1_resp    = []
+            have_rp2_resp    = []
+            have_rp3_resp    = []
+            have_rp4_resp    = []
+            have_rp5_resp    = []
+            have_rp6_resp    = []
+            have_rp7_resp    = []
+            create_rp1_resp  = self.payloads_data.get('create_rp1_resp')
+            create_rp2_resp  = self.payloads_data.get('create_rp2_resp')
+            create_rp3_resp  = self.payloads_data.get('create_rp3_resp')
+            create_rp4_resp  = self.payloads_data.get('create_rp4_resp')
+            create_rp5_resp  = self.payloads_data.get('create_rp5_resp')
+            create_rp6_resp  = self.payloads_data.get('create_rp6_resp')
+            create_rp7_resp  = self.payloads_data.get('create_rp7_resp')
+            deploy_rp1_resp  = self.payloads_data.get('deploy_rp1_resp')
+            deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
+            deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
+            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
+            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
+            deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
+            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
+
+            create_rp7_resp_inv_fab_err = self.payloads_data.get('create_rp7_resp_inv_fab_err')
+
+            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
+                                              have_rp4_resp, have_rp5_resp, have_rp6_resp,
+                                              have_rp7_resp,
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
+                                              create_rp7_resp_inv_fab_err, have_rp7_resp,
+                                              create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp]
 
         if ('test_dcnm_srp_merged_new_unauth_error' == self._testMethodName):
 
@@ -217,10 +309,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
-                                              create_rp7_resp_unauth_err, have_rp7_resp, create_rp7_resp, 
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
+                                              create_rp7_resp_unauth_err, have_rp7_resp, create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
                                               deploy_rp7_resp]
 
@@ -251,10 +343,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
-                                              create_rp7_resp, 
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
+                                              create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
 
                                               deploy_rp7_resp]
@@ -285,10 +377,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
-                                              create_rp7_resp, 
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
+                                              create_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
                                               deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
                                               deploy_rp7_resp]
 
@@ -312,8 +404,8 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              create_rp1_resp, create_rp2_resp, create_rp3_resp, 
-                                              create_rp4_resp, create_rp5_resp, create_rp6_resp, 
+                                              create_rp1_resp, create_rp2_resp, create_rp3_resp,
+                                              create_rp4_resp, create_rp5_resp, create_rp6_resp,
                                               create_rp7_resp]
 
 
@@ -359,7 +451,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
 
             self.run_dcnm_send.side_effect = [have_rp1_resp, [], have_rp3_resp,
-                                              [], have_rp5_resp, [], [], 
+                                              [], have_rp5_resp, [], [],
                                               att_rp1_status, att_rp3_status,
                                               att_rp5_status,
                                               create_rp2_resp, create_rp4_resp, create_rp6_resp,
@@ -398,7 +490,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [have_rp2_resp, have_rp4_resp,
                                               att_rp2_status, att_rp4_status,
-                                              create_rp2_resp, 
+                                              create_rp2_resp,
                                               create_rp4_resp_unauth_err,
                                               create_rp4_resp,
                                               deploy_rp2_resp, deploy_rp4_resp]
@@ -436,19 +528,104 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
 
 
-            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp, 
+            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              det_rp1_resp, det_rp2_resp, 
-                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp, det_rp4_resp,
                                               det_rp5_resp, det_rp6_resp,
                                               det_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
-                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
-                                              deploy_rp7_resp, 
-                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp, 
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp,
+                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
                                               delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
                                               delete_rp7_resp]
+
+        if ('test_dcnm_srp_delete_existing_no_config' == self._testMethodName):
+
+
+            serv_nodes_resp  = self.payloads_data.get('serv_nodes_resp')
+            have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
+            have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
+            det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
+            det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
+            det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
+            det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
+            det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
+            det_rp6_resp     = self.payloads_data.get('detach_rp6_resp')
+            det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
+            delete_rp1_resp  = self.payloads_data.get('delete_rp1_resp')
+            delete_rp2_resp  = self.payloads_data.get('delete_rp2_resp')
+            delete_rp3_resp  = self.payloads_data.get('delete_rp3_resp')
+            delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
+            delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
+            delete_rp6_resp  = self.payloads_data.get('delete_rp6_resp')
+            delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
+            deploy_rp1_resp  = self.payloads_data.get('deploy_rp1_resp')
+            deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
+            deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
+            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
+            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
+            deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
+            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
+
+
+            self.run_dcnm_send.side_effect = [
+                                              serv_nodes_resp,
+                                              have_it_sn1_resp, have_it_sn2_resp,
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp, det_rp4_resp,
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp,
+                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
+                                              delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
+                                              delete_rp7_resp]
+
+        if ('test_dcnm_srp_delete_existing_with_node_name' == self._testMethodName):
+
+
+            have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
+            have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
+            det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
+            det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
+            det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
+            det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
+            det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
+            det_rp6_resp     = self.payloads_data.get('detach_rp6_resp')
+            det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
+            delete_rp1_resp  = self.payloads_data.get('delete_rp1_resp')
+            delete_rp2_resp  = self.payloads_data.get('delete_rp2_resp')
+            delete_rp3_resp  = self.payloads_data.get('delete_rp3_resp')
+            delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
+            delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
+            delete_rp6_resp  = self.payloads_data.get('delete_rp6_resp')
+            delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
+            deploy_rp1_resp  = self.payloads_data.get('deploy_rp1_resp')
+            deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
+            deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
+            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
+            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
+            deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
+            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
+
+
+            self.run_dcnm_send.side_effect = [
+                                              have_it_sn1_resp, have_it_sn2_resp,
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp, det_rp4_resp,
+                                              det_rp5_resp, det_rp6_resp,
+                                              det_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp,
+                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
+                                              delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
+                                              delete_rp7_resp]
+
 
         if ('test_dcnm_srp_delete_existing_unauth_err' == self._testMethodName):
 
@@ -486,19 +663,19 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp4_resp_unauth_err  = self.payloads_data.get('deploy_rp4_resp_unauth_err')
             delete_rp7_resp_unauth_err  = self.payloads_data.get('delete_rp7_resp_unauth_err')
 
-            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp, 
+            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               have_rp4_resp, have_rp5_resp, have_rp6_resp,
                                               have_rp7_resp,
-                                              det_rp1_resp_unauth_err, 
-                                              det_rp1_resp, det_rp2_resp, 
-                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp1_resp_unauth_err,
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp, det_rp4_resp,
                                               det_rp5_resp, det_rp6_resp,
                                               det_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
-                                              deploy_rp4_resp_unauth_err, deploy_rp4_resp, 
-                                              deploy_rp5_resp, deploy_rp6_resp, 
-                                              deploy_rp7_resp, 
-                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp, 
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp_unauth_err, deploy_rp4_resp,
+                                              deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp,
+                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
                                               delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
                                               delete_rp7_resp_unauth_err, deploy_rp7_resp, delete_rp7_resp]
 
@@ -522,14 +699,14 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
 
 
-            self.run_dcnm_send.side_effect = [have_rp1_resp, [], have_rp3_resp, 
+            self.run_dcnm_send.side_effect = [have_rp1_resp, [], have_rp3_resp,
                                               [], [], have_rp6_resp,
                                               have_rp7_resp,
                                               det_rp1_resp, det_rp3_resp,
                                               det_rp6_resp, det_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp3_resp, 
-                                              deploy_rp6_resp, deploy_rp7_resp, 
-                                              delete_rp1_resp, delete_rp3_resp, 
+                                              deploy_rp1_resp, deploy_rp3_resp,
+                                              deploy_rp6_resp, deploy_rp7_resp,
+                                              delete_rp1_resp, delete_rp3_resp,
                                               delete_rp6_resp, delete_rp7_resp]
 
         if ('test_dcnm_srp_delete_non_existing' == self._testMethodName):
@@ -545,7 +722,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
             deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
 
-            self.run_dcnm_send.side_effect = [[], [], [], 
+            self.run_dcnm_send.side_effect = [[], [], [],
                                               create_rp1_resp, create_rp2_resp, create_rp3_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp]
 
@@ -565,7 +742,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
 
 
-            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp, 
+            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               att_rp1_status, att_rp2_status, att_rp3_status,
                                               create_rp1_resp, create_rp2_resp, create_rp3_resp,
                                               deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp]
@@ -579,11 +756,12 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             att_rp2_status   = self.payloads_data.get('attach_rp2_resp')
             att_rp3_status   = self.payloads_data.get('attach_rp3_resp')
 
-            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp, 
+            self.run_dcnm_send.side_effect = [have_rp1_resp, have_rp2_resp, have_rp3_resp,
                                               att_rp1_status, att_rp2_status, att_rp3_status]
 
         if ('test_dcnm_srp_override_rp1_rp7_with_new_peerings' == self._testMethodName):
 
+            serv_nodes_resp  = self.payloads_data.get('serv_nodes_resp')
             have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
@@ -611,79 +789,30 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
             deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
             deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
+            deploy_rp_ovr1_resp  = self.payloads_data.get('deploy_rp_ovr1_resp')
+            deploy_rp_ovr4_resp  = self.payloads_data.get('deploy_rp_ovr4_resp')
 
 
-            self.run_dcnm_send.side_effect = [[], [], 
-                                              have_it_sn1_resp, have_it_sn2_resp, 
+            self.run_dcnm_send.side_effect = [[], [],
+                                              serv_nodes_resp,
+                                              have_it_sn1_resp, have_it_sn2_resp,
                                               create_rp1_resp, create_rp2_resp,
-                                              det_rp1_resp, det_rp2_resp, 
-                                              det_rp3_resp, det_rp4_resp, 
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp, det_rp4_resp,
                                               det_rp5_resp, det_rp6_resp,
                                               det_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
-                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
-                                              deploy_rp7_resp, 
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp,
                                               delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
                                               delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
-                                              delete_rp7_resp, deploy_rp1_resp, deploy_rp2_resp
+                                              delete_rp7_resp, deploy_rp_ovr1_resp, deploy_rp_ovr4_resp
                                              ]
 
         if ('test_dcnm_srp_override_with_existing_peering' == self._testMethodName):
 
+            serv_nodes_resp  = self.payloads_data.get('serv_nodes_resp')
             have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
-            have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
-            det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
-            det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
-            det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
-            delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
-            delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
-            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
-            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
-            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
-
-
-            self.run_dcnm_send.side_effect = [have_rp6_resp,
-                                              have_it_sn2_resp, att_rp6_status,
-                                              det_rp4_resp, det_rp5_resp,
-                                              det_rp7_resp,
-                                              deploy_rp4_resp, deploy_rp5_resp,
-                                              deploy_rp7_resp, 
-                                              delete_rp4_resp, delete_rp5_resp, delete_rp7_resp
-                                             ]
-
-        if ('test_dcnm_srp_override_with_existing_peering_updated' == self._testMethodName):
-
-            have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
-            have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
-            create_rp6_resp  = self.payloads_data.get('create_rp6_resp')
-            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
-            det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
-            det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
-            det_rp6_resp     = self.payloads_data.get('detach_rp6_resp')
-            det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
-            delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
-            delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
-            delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
-            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
-            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
-            deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
-            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
-
-            self.run_dcnm_send.side_effect = [have_rp6_resp,
-                                              have_it_sn2_resp, att_rp6_status,
-                                              create_rp6_resp,
-                                              det_rp4_resp, det_rp5_resp,
-                                              det_rp7_resp,
-                                              deploy_rp4_resp, deploy_rp5_resp,
-                                              deploy_rp7_resp, 
-                                              delete_rp4_resp, delete_rp5_resp, delete_rp7_resp,
-                                              deploy_rp6_resp
-                                             ]
-
-        if ('test_dcnm_srp_override_with_service_nodes_alone' == self._testMethodName):
-
             have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
             have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
             det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
@@ -691,14 +820,57 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
             det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
             det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
-            det_rp6_resp     = self.payloads_data.get('detach_rp6_resp')
+            det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
+            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
+            delete_rp1_resp  = self.payloads_data.get('delete_rp1_resp')
+            delete_rp2_resp  = self.payloads_data.get('delete_rp2_resp')
+            delete_rp3_resp  = self.payloads_data.get('delete_rp3_resp')
+            delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
+            delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
+            delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
+            deploy_rp1_resp  = self.payloads_data.get('deploy_rp1_resp')
+            deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
+            deploy_rp3_resp  = self.payloads_data.get('deploy_rp3_resp')
+            deploy_rp4_resp  = self.payloads_data.get('deploy_rp4_resp')
+            deploy_rp5_resp  = self.payloads_data.get('deploy_rp5_resp')
+            deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
+
+
+            self.run_dcnm_send.side_effect = [have_rp6_resp,
+                                              serv_nodes_resp,
+                                              have_it_sn1_resp,
+                                              have_it_sn2_resp,
+                                              att_rp6_status,
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp,
+                                              det_rp4_resp, det_rp5_resp,
+                                              det_rp7_resp,
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp,
+                                              deploy_rp7_resp,
+                                              delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
+                                              delete_rp4_resp, delete_rp5_resp, delete_rp7_resp
+                                             ]
+
+        if ('test_dcnm_srp_override_with_existing_peering_updated' == self._testMethodName):
+
+            serv_nodes_resp  = self.payloads_data.get('serv_nodes_resp')
+            have_rp6_resp    = self.payloads_data.get('have_rp6_resp')
+            have_it_sn1_resp = self.payloads_data.get('have_it_sn1_resp')
+            have_it_sn2_resp = self.payloads_data.get('have_it_sn2_resp')
+            create_rp6_resp  = self.payloads_data.get('create_rp6_resp')
+            att_rp6_status   = self.payloads_data.get('attach_rp6_resp')
+            det_rp1_resp     = self.payloads_data.get('detach_rp1_resp')
+            det_rp2_resp     = self.payloads_data.get('detach_rp2_resp')
+            det_rp3_resp     = self.payloads_data.get('detach_rp3_resp')
+            det_rp4_resp     = self.payloads_data.get('detach_rp4_resp')
+            det_rp5_resp     = self.payloads_data.get('detach_rp5_resp')
             det_rp7_resp     = self.payloads_data.get('detach_rp7_resp')
             delete_rp1_resp  = self.payloads_data.get('delete_rp1_resp')
             delete_rp2_resp  = self.payloads_data.get('delete_rp2_resp')
             delete_rp3_resp  = self.payloads_data.get('delete_rp3_resp')
             delete_rp4_resp  = self.payloads_data.get('delete_rp4_resp')
             delete_rp5_resp  = self.payloads_data.get('delete_rp5_resp')
-            delete_rp6_resp  = self.payloads_data.get('delete_rp6_resp')
             delete_rp7_resp  = self.payloads_data.get('delete_rp7_resp')
             deploy_rp1_resp  = self.payloads_data.get('deploy_rp1_resp')
             deploy_rp2_resp  = self.payloads_data.get('deploy_rp2_resp')
@@ -708,18 +880,23 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
             deploy_rp6_resp  = self.payloads_data.get('deploy_rp6_resp')
             deploy_rp7_resp  = self.payloads_data.get('deploy_rp7_resp')
 
-
-            self.run_dcnm_send.side_effect = [have_it_sn1_resp, have_it_sn2_resp, 
-                                              det_rp1_resp, det_rp2_resp, 
-                                              det_rp3_resp, det_rp4_resp, 
-                                              det_rp5_resp, det_rp6_resp,
+            self.run_dcnm_send.side_effect = [have_rp6_resp,
+                                              serv_nodes_resp,
+                                              have_it_sn1_resp,
+                                              have_it_sn2_resp,
+                                              att_rp6_status,
+                                              create_rp6_resp,
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp,
+                                              det_rp4_resp, det_rp5_resp,
                                               det_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
-                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
-                                              deploy_rp7_resp, 
+                                              deploy_rp1_resp, deploy_rp2_resp,
+                                              deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp,
+                                              deploy_rp7_resp,
                                               delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
-                                              delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
-                                              delete_rp7_resp
+                                              delete_rp4_resp, delete_rp5_resp, delete_rp7_resp,
+                                              deploy_rp6_resp
                                              ]
 
         if ('test_dcnm_srp_override_with_no_config' == self._testMethodName):
@@ -751,14 +928,14 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
 
             self.run_dcnm_send.side_effect = [serv_nodes_resp,
-                                              have_it_sn1_resp, have_it_sn2_resp, 
-                                              det_rp1_resp, det_rp2_resp, 
-                                              det_rp3_resp, det_rp4_resp, 
+                                              have_it_sn1_resp, have_it_sn2_resp,
+                                              det_rp1_resp, det_rp2_resp,
+                                              det_rp3_resp, det_rp4_resp,
                                               det_rp5_resp, det_rp6_resp,
                                               det_rp7_resp,
-                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp, 
-                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp, 
-                                              deploy_rp7_resp, 
+                                              deploy_rp1_resp, deploy_rp2_resp, deploy_rp3_resp,
+                                              deploy_rp4_resp, deploy_rp5_resp, deploy_rp6_resp,
+                                              deploy_rp7_resp,
                                               delete_rp1_resp, delete_rp2_resp, delete_rp3_resp,
                                               delete_rp4_resp, delete_rp5_resp, delete_rp6_resp,
                                               delete_rp7_resp
@@ -821,10 +998,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merged_new_no_opt_elems (self):
 
         # load the json from playbooks
@@ -848,10 +1025,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merged_existing_no_opt_elems (self):
 
         # load the json from playbooks
@@ -875,10 +1052,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merged_new_no_intra_fw_mand_elems (self):
 
         # load the json from playbooks
@@ -901,7 +1078,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('deploy_mode - Required parameter not found' in (str(e))), True)
@@ -917,7 +1094,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('name : Required parameter not found' in (str(e))), True)
@@ -933,7 +1110,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('next_hop : Required parameter not found' in (str(e))), True)
@@ -949,7 +1126,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('node_name : Required parameter not found' in (str(e))), True)
@@ -968,7 +1145,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                  service_fabric='external',
                                  config=cfg_no_dm))
             result = None
-            try: 
+            try:
                 result = self.execute_module(changed=True, failed=False)
             except Exception as e:
                 self.assertEqual(('name : Required parameter not found' in (str(e))), True)
@@ -984,26 +1161,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                  service_fabric='external',
                                  config=cfg_no_dm))
             result = None
-            try: 
+            try:
                 result = self.execute_module(changed=True, failed=False)
             except Exception as e:
                 self.assertEqual(('ipv4_gw : Required parameter not found' in (str(e))), True)
-                self.assertEqual (result, None)
-
-            ## No Inside vlan_id object
-            cfg_no_dm = copy.deepcopy(self.playbook_config)
-            cfg_no_dm[0][net].pop("vlan_id")
-            set_module_args(dict(state='merged',
-                                 attach=True,
-                                 deploy=True,
-                                 fabric='mmudigon',
-                                 service_fabric='external',
-                                 config=cfg_no_dm))
-            result = None
-            try: 
-                result = self.execute_module(changed=True, failed=False)
-            except Exception as e:
-                self.assertEqual(('vlan_id : Required parameter not found' in (str(e))), True)
                 self.assertEqual (result, None)
 
             ## No Inside vrf object
@@ -1016,7 +1177,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                  service_fabric='external',
                                  config=cfg_no_dm))
             result = None
-            try: 
+            try:
                 result = self.execute_module(changed=True, failed=False)
             except Exception as e:
                 self.assertEqual(('vrf : Required parameter not found' in (str(e))), True)
@@ -1048,7 +1209,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                  service_fabric='external',
                                  config=cfg_no_dm))
             result = None
-            try: 
+            try:
                 result = self.execute_module(changed=True, failed=False)
             except Exception as e:
                 self.assertEqual(('ipv4_lo : Required parameter not found' in (str(e))), True)
@@ -1064,7 +1225,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                                  service_fabric='external',
                                  config=cfg_no_dm))
             result = None
-            try: 
+            try:
                 result = self.execute_module(changed=True, failed=False)
             except Exception as e:
                 self.assertEqual(('ipv4_neighbor : Required parameter not found' in (str(e))), True)
@@ -1092,7 +1253,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('rev_next_hop : Required parameter not found' in (str(e))), True)
@@ -1123,6 +1284,60 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
 
+    def test_dcnm_srp_merged_new_invalid_request_error (self):
+
+        # load the json from playbooks
+        self.config_data    = loadPlaybookData('dcnm_srp_configs')
+        self.payloads_data  = loadPlaybookData('dcnm_srp_payloads')
+
+        # load required config data
+        self.playbook_config  = self.config_data.get('create_rp1_rp7_config')
+
+        set_module_args(dict(state='merged',
+                             attach=True,
+                             deploy=True,
+                             fabric='mmudigon',
+                             service_fabric='external',
+                             config=self.playbook_config))
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]) , 7)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 0)
+        self.assertEqual(len(result["diff"][0]["modified"]) , 0)
+        self.assertEqual(len(result["diff"][0]["query"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
+
+        # Validate create and deploy responses
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+
+    def test_dcnm_srp_merged_new_invalid_fabric_error (self):
+
+        # load the json from playbooks
+        self.config_data    = loadPlaybookData('dcnm_srp_configs')
+        self.payloads_data  = loadPlaybookData('dcnm_srp_payloads')
+
+        # load required config data
+        self.playbook_config  = self.config_data.get('create_rp1_rp7_config')
+
+        set_module_args(dict(state='merged',
+                             attach=True,
+                             deploy=True,
+                             fabric='mmudigon',
+                             service_fabric='external',
+                             config=self.playbook_config))
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]) , 7)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 0)
+        self.assertEqual(len(result["diff"][0]["modified"]) , 0)
+        self.assertEqual(len(result["diff"][0]["query"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
+
+        # Validate create and deploy responses
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+
     def test_dcnm_srp_merged_new_unauth_error (self):
 
         # load the json from playbooks
@@ -1146,10 +1361,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_config_without_state (self):
 
         # load the json from playbooks
@@ -1172,10 +1387,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merge_no_deploy (self):
 
         # load the json from playbooks
@@ -1199,10 +1414,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 7)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merge_deploy_false (self):
 
         # load the json from playbooks
@@ -1226,10 +1441,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_wrong_state(self):
 
         # load the json from playbooks
@@ -1246,7 +1461,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=self.playbook_config))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=False, failed=False)
         except:
             self.assertEqual (result, None)
@@ -1274,10 +1489,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merged_existing_and_non_existing (self):
 
         # load the json from playbooks
@@ -1301,10 +1516,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 4)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merged_update_existing (self):
 
         # load the json from playbooks
@@ -1328,10 +1543,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 2)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_merged_update_existing_unauth_err (self):
 
         # load the json from playbooks
@@ -1355,10 +1570,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 2)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_delete_existing (self):
 
         # load the json from playbooks
@@ -1382,10 +1597,64 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
+    def test_dcnm_srp_delete_existing_no_config (self):
+
+        # load the json from playbooks
+        self.config_data    = loadPlaybookData('dcnm_srp_configs')
+        self.payloads_data  = loadPlaybookData('dcnm_srp_payloads')
+
+        # load required config data
+        self.playbook_config  = self.config_data.get('delete_rp1_rp7_with_no_cfg')
+
+        set_module_args(dict(state='deleted',
+                             attach=True,
+                             deploy=True,
+                             fabric='mmudigon',
+                             service_fabric='external',
+                             config=self.playbook_config))
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 7)
+        self.assertEqual(len(result["diff"][0]["modified"]) , 0)
+        self.assertEqual(len(result["diff"][0]["query"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
+
+        # Validate create and deploy responses
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+
+    def test_dcnm_srp_delete_existing_with_node_name (self):
+
+        # load the json from playbooks
+        self.config_data    = loadPlaybookData('dcnm_srp_configs')
+        self.payloads_data  = loadPlaybookData('dcnm_srp_payloads')
+
+        # load required config data
+        self.playbook_config  = self.config_data.get('delete_rp1_rp7_with_node_name')
+
+        set_module_args(dict(state='deleted',
+                             attach=True,
+                             deploy=True,
+                             fabric='mmudigon',
+                             service_fabric='external',
+                             config=self.playbook_config))
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 7)
+        self.assertEqual(len(result["diff"][0]["modified"]) , 0)
+        self.assertEqual(len(result["diff"][0]["query"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
+
+        # Validate create and deploy responses
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+
     def test_dcnm_srp_delete_existing_unauth_err (self):
 
         # load the json from playbooks
@@ -1409,10 +1678,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_delete_existing_and_non_existing (self):
 
         # load the json from playbooks
@@ -1436,10 +1705,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_delete_non_existing (self):
 
         # load the json from playbooks
@@ -1463,10 +1732,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_delete_no_mand_elems (self):
 
         # load the json from playbooks
@@ -1479,23 +1748,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         # From here we will remove one mandatory element from the config and check if that
         # is detected and errored out
 
-        ## No rev_next_hop object
-        cfg_no_dm = copy.deepcopy(self.playbook_config)
-        cfg_no_dm[0].pop("name")
-        set_module_args(dict(state='deleted',
-                             attach=True,
-                             deploy=True,
-                             fabric='mmudigon',
-                             service_fabric='external',
-                             config=cfg_no_dm))
-        result = None
-        try: 
-            result = self.execute_module(changed=True, failed=False)
-        except Exception as e:
-            self.assertEqual(('name : Required parameter not found' in (str(e))), True)
-            self.assertEqual (result, None)
-
-        ## No rev_next_hop object
+        ## No node_name object
         cfg_no_dm = copy.deepcopy(self.playbook_config)
         cfg_no_dm[0].pop("node_name")
         set_module_args(dict(state='deleted',
@@ -1505,7 +1758,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('node_name : Required parameter not found' in (str(e))), True)
@@ -1534,10 +1787,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 3)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_replace_rp1_to_rp3_existing (self):
 
         # load the json from playbooks
@@ -1561,10 +1814,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 3)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_replace_rp1_to_rp3_existing_no_change (self):
 
         # load the json from playbooks
@@ -1588,10 +1841,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_override_rp1_rp7_with_new_peerings (self):
 
         # load the json from playbooks
@@ -1615,10 +1868,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 2)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_override_with_existing_peering (self):
 
         # load the json from playbooks
@@ -1637,15 +1890,15 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result["diff"][0]["merged"]) , 0)
-        self.assertEqual(len(result["diff"][0]["deleted"]) , 3)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 6)
         self.assertEqual(len(result["diff"][0]["modified"]) , 0)
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
 
     def test_dcnm_srp_override_with_existing_peering_updated (self):
 
@@ -1665,42 +1918,15 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result["diff"][0]["merged"]) , 0)
-        self.assertEqual(len(result["diff"][0]["deleted"]) , 3)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 6)
         self.assertEqual(len(result["diff"][0]["modified"]) , 1)
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 1)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
-    def test_dcnm_srp_override_with_service_nodes_alone (self):
 
-        # load the json from playbooks
-        self.config_data    = loadPlaybookData('dcnm_srp_configs')
-        self.payloads_data  = loadPlaybookData('dcnm_srp_payloads')
-
-        # load required config data
-        self.playbook_config  = self.config_data.get('override_with_snodes')
-
-        set_module_args(dict(state='overridden',
-                             attach=True,
-                             deploy=True,
-                             fabric='mmudigon',
-                             service_fabric='external',
-                             config=self.playbook_config))
-        result = self.execute_module(changed=True, failed=False)
-
-        self.assertEqual(len(result["diff"][0]["merged"]) , 0)
-        self.assertEqual(len(result["diff"][0]["deleted"]) , 7)
-        self.assertEqual(len(result["diff"][0]["modified"]) , 0)
-        self.assertEqual(len(result["diff"][0]["query"]) , 0)
-        self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
-
-        # Validate create and deploy responses 
-        for resp in result["response"]:
-            self.assertEqual(resp["RETURN_CODE"], 200)
-            
     def test_dcnm_srp_override_with_no_config (self):
 
         # load the json from playbooks
@@ -1724,10 +1950,10 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)
 
-        # Validate create and deploy responses 
+        # Validate create and deploy responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-            
+
     def test_dcnm_srp_query_non_existing (self):
 
         # load the json from playbooks
@@ -1831,7 +2057,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
                              service_fabric='external',
                              config=cfg_no_dm))
         result = None
-        try: 
+        try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
             self.assertEqual(('node_name : Required parameter not found' in (str(e))), True)

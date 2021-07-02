@@ -1,10 +1,10 @@
 {
-  "create_rp7_resp_unauth_err":
+  "create_rp7_resp_inv_req_err":
   {
     "DATA": {
       "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        "code": "InvalidRequest",
+          "detail": "Invalid request is supplied. Cannot find the requested route peering for attachment retrieval"
       }
     },
       "MESSAGE": "",
@@ -13,66 +13,108 @@
       "RETURN_CODE": 400
   },
 
-  "create_rp4_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
-    },
+    "create_rp7_resp_inv_fab_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "InvalidFabric",
+          "detail": "The specified standalone, or MSD member, easy fabric does not exist. Cannot find the specified attached fabric mmudigon-2"
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
       "RETURN_CODE": 400
-  },
-
-  "det_rp1_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
     },
+
+    "create_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp4_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "det_rp1_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
       "RETURN_CODE": 400
-  },
-
-  "deploy_rp4_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
     },
+
+    "deploy_rp4_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/deployments",
       "RETURN_CODE": 400
-  },
-
-  "delete_rp7_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
     },
+
+    "delete_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7",
       "RETURN_CODE": 400
-  },
+    },
 
-  "create_rp1_resp" : 
-  {
-    "DATA": {
-      "attachedFabricName": "mmudigon",
+    "create_rp1_resp" :
+    {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
         "deploymentMode": "IntraTenantFW",
         "enabled": true,
         "fabricName": "external",
@@ -138,12 +180,12 @@
         ],
         "serviceNodeName": "IT-SN-1",
         "serviceNodeType": "Firewall"
-    },
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings",
       "RETURN_CODE": 200
-  },
+    },
     "create_rp2_resp" : {
       "DATA": {
         "attachedFabricName": "mmudigon",
@@ -706,6 +748,22 @@
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/deployments",
+      "RETURN_CODE": 200
+    },
+
+    "deploy_rp_ovr1_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP-OVR1/deployments",
+      "RETURN_CODE": 200
+    },
+
+    "deploy_rp_ovr4_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP-OVR4/deployments",
       "RETURN_CODE": 200
     },
 
@@ -3068,7 +3126,7 @@
 
     "serv_nodes_resp" : {
       "MESSAGE": "",
-      "METHOD": "PUT",
+      "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/?atached-fabric=mmudigon",
       "RETURN_CODE": 200,
       "DATA" :[
@@ -3079,6 +3137,61 @@
         "name" : "IT-SN-2"
       }
       ]
+    },
+
+    "vlan_id_alloc_resp_rp1" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3000
+    },
+
+    "vlan_id_alloc_resp_rp2" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3002
+    },
+
+    "vlan_id_alloc_resp_rp3" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3004
+    },
+
+    "vlan_id_alloc_resp_rp4" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3006
+    },
+
+    "vlan_id_alloc_resp_rp5" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3008
+    },
+
+    "vlan_id_alloc_resp_rp6" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3010
+    },
+
+    "vlan_id_alloc_resp_rp7" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 3012
     }
 }
-

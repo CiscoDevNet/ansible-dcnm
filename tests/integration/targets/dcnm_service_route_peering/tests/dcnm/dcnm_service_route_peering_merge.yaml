@@ -9,28 +9,6 @@
   cisco.dcnm.dcnm_service_route_peering: 
     fabric: "{{ ansible_it_fabric }}" 
     service_fabric: "{{ ansible_it_service_fabric }}" 
-    config: 
-      - name: IT-FW-RP1                                   # mandatory
-        node_name: "{{ ansible_snode_1 }}"                # mandatory
-
-      - name: IT-FW-RP2                                   # mandatory
-        node_name: "{{ ansible_snode_1 }}"                # mandatory
-
-      - name: IT-FW-RP3                                   # mandatory
-        node_name: "{{ ansible_snode_1 }}"                # mandatory
-
-      - name: IT-ADC-RP4                                  # mandatory
-        node_name: "{{ ansible_snode_2 }}"                # mandatory
-
-      - name: IT-ADC-RP5                                  # mandatory
-        node_name: "{{ ansible_snode_2 }}"                # mandatory
-
-      - name: IT-ADC-RP6                                  # mandatory
-        node_name: "{{ ansible_snode_2 }}"                # mandatory
-
-      - name: IT-ADC-RP7                                  # mandatory
-        node_name: "{{ ansible_snode_2 }}"                # mandatory
-
     state: deleted
   register: result
 
@@ -293,9 +271,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 40 seconds for DCNM to completely update the state
+    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
       wait_for:
-        timeout: 40
+        timeout: 240
 
 
     - name: Create service route peerings  - Idempotence
