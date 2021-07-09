@@ -16,14 +16,14 @@
 
 __author__ = "Mallik Mudigonda"
 
-documentation = """
+DOCUMENTATION = """
 ---
 module: dcnm_service_policy
 short_description: dcnm ansible module for managing service policies.
 version_added: "1.1.0"
 description:
     - dcnm ansible module for creating, deleting, querying and modifying service policies
-author: mallik mudigonda
+author: Mallik Mudigonda
 options:
   fabric:
     description:
@@ -92,13 +92,17 @@ options:
         required: true
       next_hop:
         description:
-          - next hop ip address ot be used in source to network direction
+          - next hop ip address to be used in source to network direction
+          - NOTE: This must exactly match the next hop IP configured for the route
+                  peering associated with this policy
         type: ipv4
         required: false
         default: ''
       rev_next_hop:
         description:
-          - reverse next hop ip address ot be used in network to source direction
+          - reverse next hop ip address to be used in network to source direction
+          - NOTE: This must exactly match the reverse next hop IP configured for the route
+                  peering associated with this policy
         type: ipv4
         required: false
         default: ''
@@ -211,33 +215,33 @@ CREATING SERVICE POLICIES
 =========================
 
 - name: Create service policy including all optional objects
-      cisco.dcnm.dcnm_service_policy:
-        fabric: test_fabric        
-        attached_fabric: external 
-        attach: true             
-        deploy: true            
-        state: merged          
-        config:
-          - name: service_policy_1                        
-            node_name: it-sn-1                           
-            rp_name: it-fw-rp1                          
-            src_vrf: vrf_11                            
-            dest_vrf: vrf_11                          
-            src_network: net_11                      
-            dest_network: net_12                    
-            next_hop: 192.161.1.100                
-            rev_next_hop: 192.161.2.100           
-            reverse: false                       
-            policy
-              proto: tcp                
-              src_port: any                               
-              dest_port: 22                              
-              action: permit                            
-              next_hop_option:  none                   
-              acl_name: fwd_acl_10                    
-              rev_acl_name: rev_acl_10               
-              route_map_num: 101                    
-              rev_route_map_num: 102               
+  cisco.dcnm.dcnm_service_policy:
+    fabric: test_fabric
+    attached_fabric: external
+    attach: true
+    deploy: true
+    state: merged
+    config:
+      - name: service_policy_1
+        node_name: it-sn-1
+        rp_name: it-fw-rp1
+        src_vrf: vrf_11
+        dest_vrf: vrf_11
+        src_network: net_11
+        dest_network: net_12
+        next_hop: 192.161.1.100
+        rev_next_hop: 192.161.2.100
+        reverse: true
+        policy:
+          proto: tcp
+          src_port: any
+          dest_port: 22
+          action: permit
+          next_hop_option:  none
+          acl_name: fwd_acl_10
+          rev_acl_name: rev_acl_10
+          route_map_num: 101
+          rev_route_map_num: 102
 
 DELETE SERVICE POLICIES
 =======================
@@ -247,25 +251,25 @@ DELETE SERVICE POLICIES
 Deletes the specific service policy specified from the given node
 
 - name: Delete service policies with policy name and node name
-  cisco.dcnm.dcnm_service_policy:                             
-    fabric: test_fabric                                
-    attached_fabric: external                         
-    state: deleted                                   
+  cisco.dcnm.dcnm_service_policy:
+    fabric: test_fabric
+    attached_fabric: external
+    state: deleted
     config:
-      - name: service_policy_1                      
-        node_name: it-sn-1                         
+      - name: service_policy_1
+        node_name: it-sn-1
             
-      - name: service_policy_2                    
-        node_name: it-sn-2                       
+      - name: service_policy_2
+        node_name: it-sn-2
             
-      - name: service_policy_3                  
-        node_name: it-sn-2                     
+      - name: service_policy_3
+        node_name: it-sn-2
             
-      - name: service_policy_4                
-        node_name: it-sn-2                   
+      - name: service_policy_4
+        node_name: it-sn-2
               
-      - name: service_policy_5              
-        node_name: it-sn-2                 
+      - name: service_policy_5
+        node_name: it-sn-2
 
 2. With Node name alone
 
@@ -275,9 +279,9 @@ Deletes all service policies from the specified nodes
   cisco.dcnm.dcnm_service_policy:
     fabric: test_fabric
     attached_fabric: external
-    state: deleted                                    
+    state: deleted
     config:
-      - node_name: it-sn-1 
+      - node_name: it-sn-1
       - node_name: it-sn-2
 
 3. With Node name and RP name
@@ -286,9 +290,9 @@ Deletes all service policies from the specified nodes
 
 - name: Delete service policies with Node name and RP name
   cisco.dcnm.dcnm_service_policy:
-    fabric: test_fabric               
+    fabric: test_fabric
     attached_fabric: external
-    state: deleted          
+    state: deleted
     config:
       - node_name: it-sn-1
         rp_name: it-fw-rp1
@@ -304,71 +308,71 @@ Deletes all service policies from the specified nodes
   cisco.dcnm.dcnm_service_policy:
     fabric: test_fabirc
     attached_fabric: external
-    state: deleted  
+    state: deleted
 
 OVERRIDE SERVICE POLICIES
 =========================
 
 - name: Override and delete all service policies
-  cisco.dcnm.dcnm_service_policy: 
+  cisco.dcnm.dcnm_service_policy:
     fabric: test_fabric
     attached_fabric: external
-    state: overridden 
+    state: overridden
 
 - name: Override all existing service policies with a new one
   cisco.dcnm.dcnm_service_policy:
     fabric: test_fabric
     attached_fabric: external
-    attach: true            
-    deploy: true           
-    state: overridden     
+    attach: true
+    deploy: true
+    state: overridden
     config:
-      - name: service_policy_1 
+      - name: service_policy_1
         node_name: it-sn-1
         rp_name: it-fw-rp1
         src_vrf: vrf_11
         dest_vrf: vrf_11
         src_network: net_11
         dest_network: net_12
-        next_hop: 192.161.1.100 
-        rev_next_hop: 192.161.2.100 
+        next_hop: 192.161.1.100
+        rev_next_hop: 192.161.2.100
         policy:
-          proto: icmp              
-          src_port: 555           
-          dest_port: 22          
-          action: permit        
-          next_hop_option:  none 
-          acl_name: fwd_acl_555  
-          rev_acl_name: rev_acl_555  
-          route_map_num: 555        
+          proto: icmp
+          src_port: 555
+          dest_port: 22
+          action: permit
+          next_hop_option:  none
+          acl_name: fwd_acl_555
+          rev_acl_name: rev_acl_555
+          route_map_num: 555
           rev_route_map_num: 556
 
 REPLACE SERVICE POLICIES
 ========================
 
 - name: Replace some of the objects in already created service policy
-  cisco.dcnm.dcnm_service_policy: 
+  cisco.dcnm.dcnm_service_policy:
     fabric: test_fabric
     attached_fabric: external
-    attach: true           
-    deploy: true          
-    state: replaced      
+    attach: true
+    deploy: true
+    state: replaced
     config:
-      - name: service_policy_1  
+      - name: service_policy_1
         node_name: it-sn-1
         rp_name: it-fw-rp1
         src_vrf: vrf_11
         dest_vrf: vrf_11
         src_network: net_11
         dest_network: net_12
-        next_hop: 192.161.1.100   
-        rev_next_hop: 192.161.2.100  
+        next_hop: 192.161.1.100
+        rev_next_hop: 192.161.2.100
         policy:
-          proto: udp                 
-          src_port: 501             
-          dest_port: 502           
-          action: deny              
-          next_hop_option:  drop_on_fail   
+          proto: udp
+          src_port: 501
+          dest_port: 502
+          action: deny
+          next_hop_option: drop_on_fail
 
 QUERY SERVICE POLICIES
 ======================
@@ -377,16 +381,16 @@ QUERY SERVICE POLICIES
   cisco.dcnm.dcnm_service_policy:
     fabric: test_fabric
     attached_fabric: external
-    state: query         
+    state: query
     config:
-      - name: service_policy_1 
+      - name: service_policy_1
         node_name: it-sn-1
 
 - name: Query service policies based on service node
   cisco.dcnm.dcnm_service_policy:
   fabric: test_fabric
   attached_fabric: external
-  state: query         
+  state: query
   config:
     - node_name: it-sn-1
 
