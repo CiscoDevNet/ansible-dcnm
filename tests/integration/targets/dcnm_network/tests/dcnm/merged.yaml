@@ -645,6 +645,121 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
+- name: MERGED - Create L3 networks along with all dhcp, arp options without attach
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 3504
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      int_desc: 'test interface'
+      vlan_name: testvlan
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7009'
+    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - 'result.diff[0].int_desc == "test interface"'
+    - 'result.diff[0].is_l2only == false'
+    - 'result.diff[0].mtu_l3intf == 7600'
+    - 'result.diff[0].vlan_name == "testvlan"'
+    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
+    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
+    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
+    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
+    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
+    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: MERGED -  attach networks to already created network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.diff[0].attach[0].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: MERGED - Query the Network to check for configs
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].parent.networkName == "ansible-net13"'
+    - 'result.response[0].parent.networkId == 7009'
+    - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].parent.vrf == "Tenant-1"'
+    - 'result.response[0].parent.networkTemplateConfig.suppressArp == "false"'
+    - 'result.response[0].parent.networkTemplateConfig.isLayer2Only == "false"'
+    - 'result.response[0].parent.networkTemplateConfig.intfDescription == "test interface"'
+    - 'result.response[0].parent.networkTemplateConfig.vlanName == "testvlan"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp3 == "three"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp2 == "two"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp == "one"'
+    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"'
+    - 'result.response[0].parent.networkTemplateConfig.vrfName == "Tenant-1"'
+    - 'result.response[0].parent.networkTemplateConfig.mtu == "7600"'
+    - 'result.response[0].parent.networkTemplateConfig.vlanId == "3504"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - '"{{ ansible_switch2 }}" in result.response[0].attach[0].ipAddress'
+    - 'result.response[0].attach[1].isLanAttached== true'
+    - 'result.response[0].attach[1].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[1].networkName== "ansible-net13"'
+    - '"{{ ansible_switch1 }}" in result.response[0].attach[1].ipAddress'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
 - name: MERGED - Create Network with invalid network name
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
@@ -685,7 +800,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"VRF: Tenant-10000 is missing in fabric: test_net" in result.msg'
+    - '"VRF: Tenant-10000 is missing in fabric:" in result.msg'
 
 - name: MERGED - Create Network with invalid vlan id
   cisco.dcnm.dcnm_network:
