@@ -1248,8 +1248,8 @@ class DcnmNetwork:
 
                     found = True
                     diff, gw_chg, tg_chg, warn_msg, l2only_chg, vn_chg, idesc_chg, mtu_chg, \
-                    arpsup_chg, dhcp1_ip_chg, dhcp2_ip_chg, dhcp3_ip_chg, dhcp1_vrf_chg, \
-                    dhcp2_vrf_chg, dhcp3_vrf_chg = self.diff_for_create(want_c, have_c)
+                        arpsup_chg, dhcp1_ip_chg, dhcp2_ip_chg, dhcp3_ip_chg, dhcp1_vrf_chg, \
+                        dhcp2_vrf_chg, dhcp3_vrf_chg = self.diff_for_create(want_c, have_c)
                     gw_changed.update({want_c['networkName']: gw_chg})
                     tg_changed.update({want_c['networkName']: tg_chg})
                     l2only_changed.update({want_c['networkName']: l2only_chg})
@@ -1884,7 +1884,7 @@ class DcnmNetwork:
                                 (net.get('dhcp_srvr2_vrf') and not net.get('dhcp_srvr2_ip')) or \
                                 (net.get('dhcp_srvr3_ip') and not net.get('dhcp_srvr3_vrf')) or \
                                 (net.get('dhcp_srvr3_vrf') and not net.get('dhcp_srvr3_ip')):
-                                invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                     self.validated.append(net)
 
@@ -1975,6 +1975,133 @@ class DcnmNetwork:
 
         self.module.fail_json(msg=res)
 
+    def dcnm_update_network_information(self, want, have, cfg):
+
+        if cfg.get("vrf_name", None) is None:
+            want["vrf"] = have["vrf"]
+
+        if cfg.get("net_id", None) is None:
+            want["networkId"] = have["networkId"]
+
+        if cfg.get("net_template", None) is None:
+            want["networkTemplate"] = have["networkTemplate"]
+
+        if cfg.get("net_extension_template", None) is None:
+            want["networkExtensionTemplate"] = have["networkExtensionTemplate"]
+
+        json_to_dict_want = json.loads(want['networkTemplateConfig'])
+        json_to_dict_have = json.loads(have['networkTemplateConfig'])
+
+        if cfg.get("vlan_id", None) is None:
+            json_to_dict_want["vlanId"] = json_to_dict_have["vlanId"]
+            if json_to_dict_want["vlanId"] != "":
+                json_to_dict_want["vlanId"] = int(json_to_dict_want["vlanId"])
+
+        if cfg.get("routing_tag", None) is None:
+            json_to_dict_want["tag"] = json_to_dict_have["tag"]
+            if json_to_dict_want["tag"] != "":
+                json_to_dict_want["tag"] = int(json_to_dict_want["tag"])
+
+        if cfg.get("gw_ip_subnet", None) is None:
+            json_to_dict_want["gatewayIpAddress"] = json_to_dict_have["gatewayIpAddress"]
+
+        if cfg.get("is_l2only", None) is None:
+            json_to_dict_want["isLayer2Only"] = json_to_dict_have["isLayer2Only"]
+            if json_to_dict_want["isLayer2Only"] == "true":
+                json_to_dict_want["isLayer2Only"] = True
+            elif json_to_dict_want["isLayer2Only"] == "false":
+                json_to_dict_want["isLayer2Only"] = False
+
+        if cfg.get("vlan_name", None) is None:
+            json_to_dict_want["vlanName"] = json_to_dict_have["vlanName"]
+
+        if cfg.get("int_desc", None) is None:
+            json_to_dict_want["intfDescription"] = json_to_dict_have["intfDescription"]
+
+        if cfg.get("mtu_l3intf", None) is None:
+            json_to_dict_want["mtu"] = json_to_dict_have["mtu"]
+            if json_to_dict_want["mtu"] != "":
+                json_to_dict_want["mtu"] = int(json_to_dict_want["mtu"])
+
+        if cfg.get("arp_suppress", None) is None:
+            json_to_dict_want["suppressArp"] = json_to_dict_have["suppressArp"]
+            if json_to_dict_want["suppressArp"] == "true":
+                json_to_dict_want["suppressArp"] = True
+            elif json_to_dict_want["suppressArp"] == "false":
+                json_to_dict_want["suppressArp"] = False
+
+        if cfg.get("dhcp_srvr1_ip", None) is None:
+            json_to_dict_want["dhcpServerAddr1"] = json_to_dict_have["dhcpServerAddr1"]
+
+        if cfg.get("dhcp_srvr2_ip", None) is None:
+            json_to_dict_want["dhcpServerAddr2"] = json_to_dict_have["dhcpServerAddr2"]
+
+        if cfg.get("dhcp_srvr3_ip", None) is None:
+            json_to_dict_want["dhcpServerAddr3"] = json_to_dict_have["dhcpServerAddr3"]
+
+        if cfg.get("dhcp_srvr1_vrf", None) is None:
+            json_to_dict_want["vrfDhcp"] = json_to_dict_have["vrfDhcp"]
+
+        if cfg.get("dhcp_srvr2_vrf", None) is None:
+            json_to_dict_want["vrfDhcp2"] = json_to_dict_have["vrfDhcp2"]
+
+        if cfg.get("dhcp_srvr3_vrf", None) is None:
+            json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
+
+        want.update({'networkTemplateConfig': json.dumps(json_to_dict_want)})
+
+    def update_want(self):
+
+        """
+        Routine to compare want and have and make approriate changes to want. This routine checks the existing
+        information with the config from playbook and populates the payloads in self.want apropriately.
+        This routine updates self.want with final paylload information after comparing self.want and self.have and
+        the playbook information.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        # only for 'merged' state we need to update the objects that are not included in playbook with
+        # values from self.have.
+
+        if self.module.params["state"] != "merged":
+            return
+
+        if self.want_create == []:
+            return
+
+        for net in self.want_create:
+
+            # Get the matching have to copy values if required
+            match_have = [
+                have
+                for have in self.have_create
+                if (
+                    (net["networkName"] == have["networkName"])
+                )
+            ]
+            if match_have == []:
+                continue
+
+            # Get the network from self.config to check if a particular object is included or not
+            match_cfg = [
+                cfg
+                for cfg in self.config
+                if (
+                    (net["networkName"] == cfg["net_name"])
+                )
+            ]
+            if match_cfg == []:
+                continue
+
+            self.dcnm_update_network_information(
+                net, match_have[0], match_cfg[0]
+            )
+
 
 def main():
 
@@ -2003,6 +2130,12 @@ def main():
     dcnm_net.get_have()
 
     warn_msg = None
+
+    # self.want would have defaulted all optional objects not included in playbook. But the way
+    # these objects are handled is different between 'merged' and 'replaced' states. For 'merged'
+    # state, objects not included in the playbook must be left as they are and for state 'replaced'
+    # they must be purged or defaulted.
+    dcnm_net.update_want()
 
     if module.params['state'] == 'merged':
         warn_msg = dcnm_net.get_diff_merge()
