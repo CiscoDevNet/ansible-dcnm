@@ -2007,9 +2007,9 @@ class DcnmNetwork:
 
         if cfg.get("is_l2only", None) is None:
             json_to_dict_want["isLayer2Only"] = json_to_dict_have["isLayer2Only"]
-            if json_to_dict_want["isLayer2Only"] == "true":
+            if json_to_dict_want["isLayer2Only"].lower() == "true":
                 json_to_dict_want["isLayer2Only"] = True
-            elif json_to_dict_want["isLayer2Only"] == "false":
+            elif json_to_dict_want["isLayer2Only"].lower() == "false":
                 json_to_dict_want["isLayer2Only"] = False
 
         if cfg.get("vlan_name", None) is None:
@@ -2025,9 +2025,9 @@ class DcnmNetwork:
 
         if cfg.get("arp_suppress", None) is None:
             json_to_dict_want["suppressArp"] = json_to_dict_have["suppressArp"]
-            if json_to_dict_want["suppressArp"] == "true":
+            if json_to_dict_want["suppressArp"].lower() == "true":
                 json_to_dict_want["suppressArp"] = True
-            elif json_to_dict_want["suppressArp"] == "false":
+            elif json_to_dict_want["suppressArp"].lower() == "false":
                 json_to_dict_want["suppressArp"] = False
 
         if cfg.get("dhcp_srvr1_ip", None) is None:
