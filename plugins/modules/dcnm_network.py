@@ -65,7 +65,8 @@ options:
       vrf_name:
         description: 'Name of the VRF to which the network belongs to'
         type: str
-        note: This field is required for L3 Networks
+        note: This field is required for L3 Networks. VRF name should not be specified
+              or may be specified as "" for L2 networks
       net_id:
         description: 'ID of the network being managed'
         type: int
@@ -96,7 +97,8 @@ options:
         description: 'Layer 2 only network'
         type: bool
         required: false
-        note: If specified as true, VRF Name(vrf_name) should not be specified
+        note: If specified as true, VRF Name(vrf_name) should not be specified or can be
+              specified as ""
         default: false
       vlan_name:
         description: 'Name of the vlan configured'
@@ -403,7 +405,7 @@ class DcnmNetwork:
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         self.fabric_det = get_fabric_details(module, self.fabric)
-        self.is_ms_fabric = True if self.fabric_det['fabricType'] == 'MFD' else False
+        self.is_ms_fabric = True if self.fabric_det.get('fabricType') == 'MFD' else False
 
         self.result = dict(
             changed=False,
@@ -808,7 +810,9 @@ class DcnmNetwork:
                 for net in self.config:
                     vrf_found = False
                     vrf_missing = net.get('vrf_name', 'NA')
-                    if vrf_missing == 'NA' and net['is_l2only'] is True:
+                    if (vrf_missing == 'NA' or vrf_missing == "") and net.get('is_l2only', False) is True:
+                        # set vrf_missing to NA again as it can be ""
+                        vrf_missing = "NA"
                         vrf_found = True
                         l2only_configured = True
                         continue
@@ -1818,7 +1822,7 @@ class DcnmNetwork:
                         invalid_params.extend(invalid_att)
 
                     if net.get('is_l2only', False) is True:
-                        if net.get('vrf_name', "") is None:
+                        if net.get('vrf_name', "") is None or net.get('vrf_name', "") == "":
                             net['vrf_name'] = 'NA'
 
                     self.validated.append(net)
@@ -1870,7 +1874,7 @@ class DcnmNetwork:
 
                     if state != 'deleted':
                         if net.get('is_l2only', False) is True:
-                            if net.get('vrf_name', "") is not None:
+                            if net.get('vrf_name', "") is not None and net.get('vrf_name', "") != "":
                                 invalid_params.append("vrf_name should not be specified for L2 Networks")
                             else:
                                 net['vrf_name'] = 'NA'
