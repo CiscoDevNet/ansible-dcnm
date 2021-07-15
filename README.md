@@ -56,6 +56,7 @@ collections:
   - name: cisco.dcnm
     version: 1.2.0
 ```
+
 ## Using this collection
 
 
