@@ -16,19 +16,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
-import re
-import sys
-
 from ansible_collections.ansible.netcommon.plugins.action.network import (
     ActionModule as ActionNetworkModule,
 )
-from ansible.module_utils.connection import Connection
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
-    load_provider,
-)
-from ansible.utils.display import Display
-from pprint import pprint
+
 
 class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
@@ -51,21 +42,21 @@ class ActionModule(ActionNetworkModule):
                         msg = " !!! Switches included in playbook profiles must be individual items, but given switch element = {} is a list ".format(sw)
                         warnings.append(msg)
                         flattened = True
-                    flat_sw_list.extend (sw)
+                    flat_sw_list.extend(sw)
                 if (flattened is True):
-                    cfg['switch'] = flat_sw_list            
-            
+                    cfg['switch'] = flat_sw_list
+
             keys = cfg.keys()
 
             for k in keys:
-                
+
                 if (('profile' in k) and (k != 'profile')):
                     msg = " !!! Profile name included in playbook tasks must be 'profile', but given profile name = '{}' ".format(k)
                     warnings.append(msg)
-                    pop_key = k 
+                    pop_key = k
 
             if (pop_key != ''):
-                cfg['profile'] = cfg[pop_key] 
+                cfg['profile'] = cfg[pop_key]
                 cfg.pop(pop_key)
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)

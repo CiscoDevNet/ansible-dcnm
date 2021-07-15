@@ -2,6 +2,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2021-07
+
+### Added
+
+* cisco.dcnm.dcnm_network:
+  * New parameter `is_l2only:`
+  * New parameter `vlan_name:`
+  * New parameter `int_desc:`
+  * New parameter `mtu_l3intf:`
+  * New parameter `arp_suppress:`
+  * New parameter `dhcp_srvr1_ip:`
+  * New parameter `dhcp_srvr1_vrf:`
+  * New parameter `dhcp_srvr2_ip:`
+  * New parameter `dhcp_srvr2_vrf:`
+  * New parameter `dhcp_srvr3_ip:`
+  * New parameter `dhcp_srvr3_vrf:`
+
 ## [1.1.1] - 2021-05
 
 ### Fixed
@@ -78,6 +95,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 * cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 * cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+[1.2.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/0.9.0...1.0.0

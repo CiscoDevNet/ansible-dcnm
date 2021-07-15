@@ -16,20 +16,13 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
-import re
-import sys
-
 from ansible_collections.ansible.netcommon.plugins.action.network import (
     ActionModule as ActionNetworkModule,
-)
-from ansible.module_utils.connection import Connection
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
-    load_provider,
 )
 from ansible.utils.display import Display
 
 display = Display()
+
 
 class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
@@ -45,5 +38,3 @@ class ActionModule(ActionNetworkModule):
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)
         return self.result
-
-
