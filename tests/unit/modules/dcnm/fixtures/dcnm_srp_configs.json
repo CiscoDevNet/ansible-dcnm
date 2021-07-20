@@ -73,7 +73,7 @@
       "vlan_id": 102,
       "vrf": "IT_VRF_11"
     },
-    "rev_next_hop": "192.161.2.100"
+    "reverse_next_hop": "192.161.2.100"
   },
   {
     "deploy_mode": "inter_tenant_fw",
@@ -190,7 +190,7 @@
     "name": "IT-ADC-RP4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.1.100"
+    "reverse_next_hop": "192.164.1.100"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -217,7 +217,7 @@
     "name": "IT-ADC-RP5",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.165.1.100",
+    "reverse_next_hop": "192.165.1.100",
     "second_arm": {
       "name": "rp5-sn2-second-arm",
       "profile": {
@@ -260,7 +260,7 @@
     "name": "IT-ADC-RP6",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.166.1.100"
+    "reverse_next_hop": "192.166.1.100"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -286,7 +286,7 @@
     "name": "IT-ADC-RP7",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.167.1.100",
+    "reverse_next_hop": "192.167.1.100",
     "second_arm": {
       "name": "rp7-sn2-second-arm",
       "profile": {
@@ -329,7 +329,7 @@
       "vlan_id": 102,
       "vrf": "IT_VRF_11"
     },
-    "rev_next_hop": "192.161.2.100"
+    "reverse_next_hop": "192.161.2.100"
   },
   {
     "deploy_mode": "inter_tenant_fw",
@@ -408,7 +408,7 @@
     "name": "IT-ADC-RP5",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.165.1.100",
+    "reverse_next_hop": "192.165.1.100",
     "second_arm": {
       "name": "rp5-sn2-second-arm",
       "profile": {
@@ -499,7 +499,7 @@
     "name": "IT-ADC-RP4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.1.100"
+    "reverse_next_hop": "192.164.1.100"
   }
   ],
   "replace_rp1_to_rp3_no_change" :  [
@@ -532,7 +532,7 @@
       "vlan_id": 102,
       "vrf": "IT_VRF_11"
     },
-    "rev_next_hop": "192.161.2.100"
+    "reverse_next_hop": "192.161.2.100"
   },
   {
     "deploy_mode": "inter_tenant_fw",
@@ -663,7 +663,7 @@
       "vlan_id": 102,
       "vrf": "IT_VRF_11"
     },
-    "rev_next_hop": "192.161.2.100"
+    "reverse_next_hop": "192.161.2.100"
   },
   {
     "deploy_mode": "inter_tenant_fw",
@@ -790,7 +790,7 @@
     "name": "IT-ADC-RP4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.1.100"
+    "reverse_next_hop": "192.164.1.100"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -819,7 +819,7 @@
     "name": "IT-ADC-RP5",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.165.1.100",
+    "reverse_next_hop": "192.165.1.100",
     "second_arm": {
       "name": "rp5-sn2-second-arm",
       "profile": {
@@ -866,7 +866,7 @@
     "name": "IT-ADC-RP6",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.166.1.100"
+    "reverse_next_hop": "192.166.1.100"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -894,7 +894,7 @@
     "name": "IT-ADC-RP7",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.167.1.100",
+    "reverse_next_hop": "192.167.1.100",
     "second_arm": {
       "name": "rp7-sn2-second-arm",
       "profile": {
@@ -976,7 +976,7 @@
     "name": "IT-ADC-RP4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.1.100"
+    "reverse_next_hop": "192.164.1.100"
   }],
 
   "create_rp1_rp7_config_no_opt_elems" :  [
@@ -1057,7 +1057,7 @@
     "name": "IT-ADC-RP4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.1.100"
+    "reverse_next_hop": "192.164.1.100"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -1073,7 +1073,7 @@
     "name": "IT-ADC-RP5",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.165.1.100",
+    "reverse_next_hop": "192.165.1.100",
     "second_arm": {
       "name": "rp5-sn2-second-arm",
       "profile": {
@@ -1093,7 +1093,7 @@
     },
     "name": "IT-ADC-RP6",
     "node_name": "IT-SN-2",
-    "rev_next_hop": "192.166.1.100"
+    "reverse_next_hop": "192.166.1.100"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -1106,7 +1106,7 @@
     },
     "name": "IT-ADC-RP7",
     "node_name": "IT-SN-2",
-    "rev_next_hop": "192.167.1.100",
+    "reverse_next_hop": "192.167.1.100",
     "second_arm": {
       "name": "rp7-sn2-second-arm",
       "profile": {
@@ -1275,7 +1275,7 @@
       "vlan_id": 102,
       "vrf": "IT_VRF_11"
     },
-    "rev_next_hop": "192.161.2.100"
+    "reverse_next_hop": "192.161.2.100"
   },
   {
     "deploy_mode": "inter_tenant_fw",
@@ -1405,7 +1405,7 @@
       "vlan_id": 192,
       "vrf": "IT_VRF_11"
     },
-    "rev_next_hop": "192.161.2.200"
+    "reverse_next_hop": "192.161.2.200"
   },
   {
     "deploy_mode": "inter_tenant_fw",
@@ -1535,7 +1535,7 @@
     "name": "IT-ADC-RP4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.1.200"
+    "reverse_next_hop": "192.164.1.200"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -1564,7 +1564,7 @@
     "name": "IT-ADC-RP5",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.165.1.200",
+    "reverse_next_hop": "192.165.1.200",
     "second_arm": {
       "name": "rp5-sn2-second-arm",
       "profile": {
@@ -1611,7 +1611,7 @@
     "name": "IT-ADC-RP6",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.166.1.200"
+    "reverse_next_hop": "192.166.1.200"
   },
   {
     "deploy_mode": "two_arm_adc",
@@ -1639,7 +1639,7 @@
     "name": "IT-ADC-RP7",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.167.1.200",
+    "reverse_next_hop": "192.167.1.200",
     "second_arm": {
       "name": "rp7-sn2-second-arm",
       "profile": {
@@ -1697,7 +1697,7 @@
     "name": "IT-ADC-RP6",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.166.1.100"
+    "reverse_next_hop": "192.166.1.100"
   }
   ],
   "override_with_existing_peering_updated": [
@@ -1734,7 +1734,7 @@
     "name": "IT-ADC-RP6",
     "node_name": "IT-SN-2",
     "peering_option": "static",
-    "rev_next_hop": "192.166.9.100"
+    "reverse_next_hop": "192.166.9.100"
   }
   ],
   "override_with_new_peerings": [
@@ -1767,7 +1767,7 @@
       "vlan_id": 192,
       "vrf": "IT_VRF_12"
     },
-    "rev_next_hop": "192.161.92.100"
+    "reverse_next_hop": "192.161.92.100"
   },
   {
     "deploy_mode": "one_arm_adc",
@@ -1796,7 +1796,7 @@
     "name": "IT-ADC-RP-OVR4",
     "node_name": "IT-SN-2",
     "peering_option": "ebgp",
-    "rev_next_hop": "192.164.91.100"
+    "reverse_next_hop": "192.164.91.100"
   }
   ]
 }

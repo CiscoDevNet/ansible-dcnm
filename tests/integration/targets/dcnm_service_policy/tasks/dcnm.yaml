@@ -35,6 +35,20 @@
         - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
+- name: Delete feature_pbr policy
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # only choose form [merged, deleted, query]
+    config:
+      - name: feature_pbr  # name is mandatory
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
 - name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
   wait_for:
     timeout: 180

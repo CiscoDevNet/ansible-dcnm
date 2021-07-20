@@ -95,7 +95,7 @@
                 ipv4_lo: 41.41.41.2                          # mandatory
                 ipv4_vpc_peer_lo: 41.41.41.3                 # optional, default is ''
                 ipv6_vpc_peer_lo: 2004:4143::1               # optional, default is ''
-            rev_next_hop: 192.164.1.100                      # mandatory
+            reverse_next_hop: 192.164.1.100                  # mandatory
 
           - name: IT-ADC-RP5
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -115,7 +115,7 @@
               name: rp5-sn2-second-arm                       # mandatory
               profile: 
                 ipv4_gw: 192.165.2.1/24                      # mandatory
-            rev_next_hop: 192.165.1.100                      # mandatory
+            reverse_next_hop: 192.165.1.100                  # mandatory
 
           - name: IT-ADC-RP6
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -125,7 +125,7 @@
               name: rp6-sn2-first-arm                        # mandatory
               profile: 
                 ipv4_gw: 192.166.1.1/24                      # mandatory
-            rev_next_hop: 192.166.1.100                      # mandatory
+            reverse_next_hop: 192.166.1.100                  # mandatory
 
           - name: IT-ADC-RP7
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -140,7 +140,7 @@
               name: rp7-sn2-second-arm                       # mandatory
               profile: 
                 ipv4_gw: 192.167.2.1/24                      # mandatory
-            rev_next_hop: 192.167.1.100                      # mandatory
+            reverse_next_hop: 192.167.1.100                  # mandatory
         attach: true
         deploy: true
         state: merged

@@ -61,15 +61,24 @@ class HttpApi(HttpApiBase):
         timeout = self.connection.get_option("persistent_connect_timeout") * 1000
         data = "{'expirationTime': %s}" % timeout
 
-        response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
-        response_value = self._get_response_value(response_data)
-        self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
+        try:
+            response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
+            response_value = self._get_response_value(response_data)
+            self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
+
+        except Exception as e:
+            msg = 'Error on attempt to connect and authenticate with DCNM controller: {}'.format(e)
+            raise ConnectionError(self._return_info(None, method, path, msg))
 
     def logout(self):
         method = 'POST'
         path = '/rest/logout'
 
-        response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
+        try:
+            response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
+        except Exception as e:
+            msg = 'Error on attempt to logout from DCNM controller: {}'.format(e)
+            raise ConnectionError(self._return_info(None, method, path, msg))
 
         self._verify_response(response, method, path, response_data)
 

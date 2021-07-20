@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2021-07
+
+### Added
+
+* The following new modules are included in this release
+    * `dcnm_service_policy` - Module for managing L4-L7 service policies
+    * `dcnm_service_route_peering` - Module for managing L4-L7 service route peerings
+
 ## [1.1.1] - 2021-05
 
 ### Fixed

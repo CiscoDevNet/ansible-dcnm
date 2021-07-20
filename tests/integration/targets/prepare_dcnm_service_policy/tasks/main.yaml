@@ -3,6 +3,25 @@
 ##############################################
 
 ##############################################
+##       DELETE FEATURE PBR POLICIY         ##
+##############################################
+
+- name: Delete feature_pbr policy
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # only choose form [merged, deleted, query]
+    config:
+      - name: feature_pbr  # name is mandatory
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+##############################################
 ##       DELETE SERVICE POLICIES            ##
 ##############################################
 
@@ -393,6 +412,29 @@
           profile: 
             ipv4_gw: 192.166.2.1/24                      # mandatory
         rev_next_hop: 192.166.2.100                      # mandatory
+
+- assert:
+    that:
+    - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+###############################################
+###      MERGE FEATURE_PBR POLICY            ##
+###############################################
+
+- name: Create feature_pbr policy
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    config:
+      - name: feature_pbr  # This must be a valid template name
+        create_additional_policy: false  # Do not create a policy if it already exists
+        priority: 101
+
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+    deploy: true
+    state: merged
+  register: result
 
 - assert:
     that:

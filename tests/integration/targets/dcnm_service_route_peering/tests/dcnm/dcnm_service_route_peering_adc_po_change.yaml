@@ -53,7 +53,7 @@
                 neigh_int_descr: "RP4 SN2 first arm"         # optional, default is '' 
                 local_asn: 65401                             # optional, default is ''
                 adv_host: true                               # optional, default is false
-            rev_next_hop: 192.164.1.100                      # mandatory
+            reverse_next_hop: 192.164.1.100                  # mandatory
 
           - name: IT-ADC-RP6
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -78,7 +78,7 @@
                     next_hop:
                       - 163.163.163.1
                       - 164.164.164.1
-            rev_next_hop: 192.166.1.100                      # mandatory
+            reverse_next_hop: 192.166.1.100                  # mandatory
 
         attach: true
         deploy: true
@@ -137,7 +137,7 @@
                 neigh_int_descr: "RP6 SN2 first arm"         # optional, default is '' 
                 local_asn: 65601                             # optional, default is ''
                 adv_host: true                               # optional, default is false
-            rev_next_hop: 192.166.1.100                      # mandatory
+            reverse_next_hop: 192.166.1.100                  # mandatory
 
           - name: IT-ADC-RP4
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -162,7 +162,7 @@
                     next_hop:
                       - 143.143.143.1
                       - 144.144.144.1
-            rev_next_hop: 192.164.1.100                      # mandatory
+            reverse_next_hop: 192.164.1.100                  # mandatory
 
         attach: true
         deploy: true
@@ -231,7 +231,7 @@
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
                 int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
                 tag: 51112                                   # optional, default is 12345
-            rev_next_hop: 192.165.1.100                      # mandatory
+            reverse_next_hop: 192.165.1.100                  # mandatory
 
           - name: IT-ADC-RP7
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -262,7 +262,7 @@
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
                 int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
                 tag: 71112                                   # optional, default is 12345
-            rev_next_hop: 192.167.1.100                      # mandatory
+            reverse_next_hop: 192.167.1.100                  # mandatory
         attach: true
         deploy: true
         state: merged
@@ -330,7 +330,7 @@
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
                 int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
                 tag: 71112                                   # optional, default is 12345
-            rev_next_hop: 192.167.1.100                      # mandatory
+            reverse_next_hop: 192.167.1.100                  # mandatory
 
           - name: IT-ADC-RP5
             node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -361,7 +361,7 @@
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
                 int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
                 tag: 51112                                   # optional, default is 12345
-            rev_next_hop: 192.165.1.100                      # mandatory
+            reverse_next_hop: 192.165.1.100                  # mandatory
         attach: true
         deploy: true
         state: merged
@@ -384,7 +384,6 @@
     - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
       wait_for:
         timeout: 180
-      when: IT_CONTEXT is not defined
 
 ##############################################
 ##                CLEANUP                   ##

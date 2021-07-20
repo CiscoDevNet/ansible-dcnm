@@ -19,10 +19,10 @@ __author__ = "Mallik Mudigonda"
 DOCUMENTATION = """
 ---
 module: dcnm_service_policy
-short_description: dcnm ansible module for managing service policies.
-version_added: "1.1.0"
+short_description: DCNM ansible module for managing service policies.
+version_added: "1.2.0"
 description:
-    - dcnm ansible module for creating, deleting, querying and modifying service policies
+    - DCNM ansible module for creating, deleting, querying and modifying service policies
 author: Mallik Mudigonda
 options:
   fabric:
@@ -72,22 +72,22 @@ options:
         required: true
       src_vrf:
         description:
-          - name of the source vrf for which the service policy is applicable
+          - name of the source vrf for this service policy
         type: str
         required: true
       dest_vrf:
         description:
-          - name of the destination vrf for which the service policy is applicable
+          - name of the destination vrf for this service policy
         type: str
         required: true
       src_network:
         description:
-          - name of the source network for which the service policy is applicable
+          - name of the source network for this service policy
         type: str
         required: true
       dest_network:
         description:
-          - name of the destination network for which the service policy is applicable
+          - name of the destination network for this service policy
         type: str
         required: true
       next_hop:
@@ -98,7 +98,7 @@ options:
         type: ipv4
         required: false
         default: ''
-      rev_next_hop:
+      reverse_next_hop:
         description:
           - reverse next hop ip address to be used in network to source direction
           - NOTE: This must exactly match the reverse next hop IP configured for the route
@@ -177,39 +177,82 @@ options:
 
 EXAMPLES = """
 
-States:
+L4-L7 Service Insertion:
+
+Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+Service Node, Service Route Peering and Service Policy to enable this.
+
+Service Node:
+
+You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+Service policies are created on the service node to determine the actions to be applied to the traffic
+
+Route Peerings:
+
+Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that is used to
+carry traffic towards the service node.
+
+Service Policy:
+
+Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+The service policies define the actions to be taken for matching traffic.
+
+Dependency Tree:
+
+Service Node
+|
+|---- Route Peering 1
+|     |
+.     |---- Service Policy 1
+.     |
+.     .
+.     .
+.     .
+.     |---- Service Policy N
+.
+|---- Route Peering N
+      |
+      |---- Service Policy 1
+      |
+      .
+      .
+      .
+      |---- Service Policy N
+
 This module supports the following states:
 
 Merged:
-  Service Peerings defined in the playbook will be merged into the target fabric.
-    - If the Service Peerings does not exist it will be added.
-    - If the Service Peerings exists but properties managed by the playbook are different
+  Service Policies defined in the playbook will be merged into the target fabric.
+    - If the Service Policies does not exist it will be added.
+    - If the Service Policies exists but properties managed by the playbook are different
       they will be updated if possible.
-    - Service Peerings that are not specified in the playbook will be untouched.
+    - Service Policies that are not specified in the playbook will be untouched.
 
 Replaced:
-  Service Peerings defined in the playbook will be replaced in the target fabric.
-    - If the Service Peerings does not exist it will be added.
-    - If the Service Peerings exists but properties managed by the playbook are different
+  Service Policies defined in the playbook will be replaced in the target fabric.
+    - If the Service Policies does not exist it will be added.
+    - If the Service Policies exists but properties managed by the playbook are different
       they will be updated if possible.
     - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
-    - Service Peerings that are not specified in the playbook will be untouched.
+    - Service Policies that are not specified in the playbook will be untouched.
 
 Overridden:
-  Service Peerings defined in the playbook will be overridden in the target fabric.
-    - If the Service Peerings does not exist it will be added.
-    - If the Service Peerings exists but properties managed by the playbook are different
+  Service Policies defined in the playbook will be overridden in the target fabric.
+    - If the Service Policies does not exist it will be added.
+    - If the Service Policies exists but properties managed by the playbook are different
       they will be updated if possible.
     - Properties that can be managed by the module but are not specified
       in the playbook will be deleted or defaulted if possible.
-    - Service Peerings that are not specified in the playbook will be deleted.
+    - Service Policies that are not specified in the playbook will be deleted.
 
 Deleted:
-  Service Peerings defined in the playbook will be deleted.
+  Service Policies defined in the playbook will be deleted.
 
 Query:
-  Returns the current DCNM state for the Service Peerings listed in the playbook.
+  Returns the current DCNM state for the Service Policies listed in the playbook.
 
 CREATING SERVICE POLICIES
 =========================
@@ -230,7 +273,7 @@ CREATING SERVICE POLICIES
         src_network: net_11
         dest_network: net_12
         next_hop: 192.161.1.100
-        rev_next_hop: 192.161.2.100
+        reverse_next_hop: 192.161.2.100
         reverse: true
         policy:
           proto: tcp
@@ -302,22 +345,19 @@ Deletes all service policies from the specified nodes
 
 4. Without config
 
-   Deletes all service policies on the given fabric and attached fabirc
+   Deletes all service policies on the given fabric and attached fabric
 
 - name: Delete service policies without config
   cisco.dcnm.dcnm_service_policy:
-    fabric: test_fabirc
+    fabric: test_fabric
     attached_fabric: external
     state: deleted
 
 OVERRIDE SERVICE POLICIES
 =========================
 
-- name: Override and delete all service policies
-  cisco.dcnm.dcnm_service_policy:
-    fabric: test_fabric
-    attached_fabric: external
-    state: overridden
+When this playbook is executed, service policy service_policy_1 will be created or replaced and all
+other service policies in test_fabric and external will be deleted
 
 - name: Override all existing service policies with a new one
   cisco.dcnm.dcnm_service_policy:
@@ -335,7 +375,7 @@ OVERRIDE SERVICE POLICIES
         src_network: net_11
         dest_network: net_12
         next_hop: 192.161.1.100
-        rev_next_hop: 192.161.2.100
+        reverse_next_hop: 192.161.2.100
         policy:
           proto: icmp
           src_port: 555
@@ -350,7 +390,7 @@ OVERRIDE SERVICE POLICIES
 REPLACE SERVICE POLICIES
 ========================
 
-- name: Replace some of the objects in already created service policy
+- name: Replace service policy_1 with the one specified below
   cisco.dcnm.dcnm_service_policy:
     fabric: test_fabric
     attached_fabric: external
@@ -366,7 +406,7 @@ REPLACE SERVICE POLICIES
         src_network: net_11
         dest_network: net_12
         next_hop: 192.161.1.100
-        rev_next_hop: 192.161.2.100
+        reverse_next_hop: 192.161.2.100
         policy:
           proto: udp
           src_port: 501
@@ -410,7 +450,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 from datetime import datetime
 
 
-# Service Policy Class object which includes all the required methods and data to configure and maintain Roue peering objects
+# Service Policy Class object which includes all the required methods and data to configure and maintain service policy objects
 class DcnmServicePolicy:
     def __init__(self, module):
         self.debug = False
@@ -537,7 +577,7 @@ class DcnmServicePolicy:
             elif self.module.params["state"] == "query":
                 # config for query state is different. So validate query state differently
                 self.dcnm_sp_validate_query_state_input(cfg)
-            # For 'overridden' state, we can have full config for a peering or just service node name alone.
+            # For 'overridden' state, we can have full config for a policy or just service node name alone.
             # In the formar case go down to 'else' block to validate the full config
             elif (self.module.params["state"] == "overridden") and (
                 item.get("name", None) is None
@@ -569,7 +609,7 @@ class DcnmServicePolicy:
             src_network=dict(required=True, type="str"),
             dest_network=dict(required=True, type="str"),
             next_hop=dict(required=True, type="ipv4"),
-            rev_next_hop=dict(required=True, type="ipv4"),
+            reverse_next_hop=dict(type="ipv4", default=''),
             reverse=dict(required=False, type=bool, default=True),
             policy=dict(required=True, type="dict"),
         )
@@ -691,7 +731,6 @@ class DcnmServicePolicy:
                 time.sleep(10)
                 continue
         self.changed_dict[0]["debugs"].append({"GET_SNODE_TYPE": resp})
-        return "Firewall"
 
     def dcnm_sp_get_sp_payload(self, sp):
 
@@ -699,7 +738,7 @@ class DcnmServicePolicy:
         This routine builds the complete service policy payload based on the information in self.want
 
         Parameters:
-            sp (dict): Route peering information
+            sp (dict): Service Policy information
 
         Returns:
             sp_payload (dict): SP payload information populated with appropriate data from playbook config
@@ -727,7 +766,7 @@ class DcnmServicePolicy:
         sp_payload["policyTemplateName"] = "service_pbr"
         sp_payload["nextHopIp"] = sp["next_hop"]
         if sp["reverse"]:
-            sp_payload["reverseNextHopIp"] = sp["rev_next_hop"]
+            sp_payload["reverseNextHopIp"] = sp["reverse_next_hop"]
 
         # Populate the policy information
         sp_payload["nvPairs"] = {}
@@ -738,7 +777,7 @@ class DcnmServicePolicy:
         sp_payload["nvPairs"]["NEXT_HOP_IP"] = sp["next_hop"]
         sp_payload["nvPairs"]["REVERSE"] = sp["reverse"]
         if sp["reverse"]:
-            sp_payload["nvPairs"]["REVERSE_NEXT_HOP_IP"] = sp["rev_next_hop"]
+            sp_payload["nvPairs"]["REVERSE_NEXT_HOP_IP"] = sp["reverse_next_hop"]
         sp_payload["nvPairs"]["FWD_DIRECTION"] = "true"
         sp_payload["nvPairs"]["ROUTE_MAP_ACTION"] = sp["policy"][0]["action"]
         sp_payload["nvPairs"]["NEXT_HOP_OPTION"] = sp["policy"][0][
@@ -953,10 +992,10 @@ class DcnmServicePolicy:
     def dcnm_sp_get_sp_info_from_dcnm(self, sp, sp_type):
 
         """
-        Routine to get existing Route peering information from DCNM which matches the given SRP.
+        Routine to get existing Service Policy information from DCNM which matches the given SRP.
 
         Parameters:
-            srp  (dict): Route peering information
+            sp  (dict): Service policy information
             sp_type (string): String indicating whether the 'srp' passed is in 'PLAYBOOK' format
                             or 'PAYLOAD' format
         Returns:
@@ -1023,7 +1062,7 @@ class DcnmServicePolicy:
     def dcnm_sp_get_have(self):
 
         """
-        Routine to get exisitng roue peering information from DCNM that matches information in self.want.
+        Routine to get exisitng service policy information from DCNM that matches information in self.want.
         This routine updates self.have with all the service policies that match the given playbook configuration
 
         Parameters:
@@ -1049,12 +1088,13 @@ class DcnmServicePolicy:
         in service policies during merge and replace operations.
 
         Parameters:
-            srp (dict): Route peering information
+            sp (dict): Service policy information
 
         Returns:
             deployed (bool): a flag indicating is the given SRP is deployed
         """
 
+        resp = None
         key = (
             sp["fabricName"]
             + "-"
@@ -1093,9 +1133,7 @@ class DcnmServicePolicy:
                 self.changed_dict[0]["debugs"].append(
                     {"GET_SP_ATT_STATUS": resp}
                 )
-
-        deployed = True
-        retry = False
+                self.module.fail_json(msg=resp)
 
         # Filter out the required policy
         match_pol = [
@@ -1113,6 +1151,12 @@ class DcnmServicePolicy:
         deployed = False
         retry = False
         if match_pol:
+            att_status = {"GET_SP_ATT_STATUS": match_pol[0]["status"],
+                          "PolicyName": match_pol[0]["policyName"]
+                         }
+            if att_status not in self.changed_dict[0]["debugs"]:
+                self.changed_dict[0]["debugs"].append(att_status)
+
             if (match_pol[0]["status"] == "NA") or (
                 match_pol[0]["status"] == "PENDING"
             ):
@@ -1124,6 +1168,9 @@ class DcnmServicePolicy:
             else:
                 return False, True
         else:
+            self.changed_dict[0]["debugs"].append(
+                {"GET_SP_ATT_STATUS": "No Matching Policy", "PolicyName": match_pol[0]["policyName"]}
+            )
             return False, False
 
         return (retry, deployed)
@@ -1177,14 +1224,13 @@ class DcnmServicePolicy:
             # in 'want'. Convert the value in 'have' to bool before comparing
 
             if key == "REVERSE":
+
                 if (
-                    have["nvPairs"]["REVERSE"] == "True"
-                    or have["nvPairs"]["REVERSE"] == "true"
+                    str(have["nvPairs"]["REVERSE"]).lower() == "true"
                 ):
                     have["nvPairs"]["REVERSE"] = True
                 if (
-                    have["nvPairs"]["REVERSE"] == "False"
-                    or have["nvPairs"]["REVERSE"] == "false"
+                    str(have["nvPairs"]["REVERSE"]).lower() == "false"
                 ):
                     have["nvPairs"]["REVERSE"] = False
             if want["nvPairs"][key] != have["nvPairs"].get(key, None):
@@ -1212,7 +1258,7 @@ class DcnmServicePolicy:
         found = False
 
         if self.have == []:
-            return ("DCNM_SRP_ADD_NEW", None)
+            return ("DCNM_SRP_ADD_NEW", None, [])
 
         match_have = [
             have
@@ -1232,14 +1278,14 @@ class DcnmServicePolicy:
             rc, reasons = self.dcnm_sp_compare_policy_info(sp, have)
 
             if rc == "DCNM_SRP_MATCH":
-                return ("DCNM_SRP_DONT_ADD", have)
+                return ("DCNM_SRP_DONT_ADD", have, [])
 
         if found is True:
             # Found a matching service policy, but some of the objects don't match.
             # Go ahead and merge the objects into the existing srp
-            return ("DCNM_SRP_MERGE", have)
+            return ("DCNM_SRP_MERGE", have, reasons)
         else:
-            return ("DCNM_SRP_ADD_NEW", None)
+            return ("DCNM_SRP_ADD_NEW", None, [])
 
     def dcnm_sp_get_diff_merge(self):
 
@@ -1260,7 +1306,7 @@ class DcnmServicePolicy:
 
         for sp in self.want:
 
-            rc, have = self.dcnm_sp_compare_service_policies(sp)
+            rc, have, reasons = self.dcnm_sp_compare_service_policies(sp)
 
             if rc == "DCNM_SRP_ADD_NEW":
                 # A sp does not exists, create a new one.
@@ -1270,6 +1316,7 @@ class DcnmServicePolicy:
             elif rc == "DCNM_SRP_MERGE":
                 # A sp exists and it needs to be updated
                 self.changed_dict[0]["modified"].append(sp)
+                self.changed_dict[0]["debugs"].append({"Policy": sp["policyName"], "REASONS":  reasons})
                 self.diff_modify.append(sp)
 
             # Check the 'deploy' flag and decide if this sp is to be deployed
@@ -1696,12 +1743,12 @@ class DcnmServicePolicy:
                 self.dcnm_sp_check_unauthorized_error_in_resp(resp)
 
                 # There may be a temporary issue on the server. so we should try again. In case
-                # of create or modify, the peering may have been created/updated, but the error may
-                # be due to the attach. So check if the peering is created and if attach flag is set.
-                # If so then try attaching the peering and do not try to recreate
+                # of create or modify, the policy may have been created/updated, but the error may
+                # be due to the attach. So check if the policy is created and if attach flag is set.
+                # If so then try attaching the policy and do not try to recreate
                 get_resp = self.dcnm_sp_get_sp_info_from_dcnm(srp, "PAYLOAD")
                 if get_resp != []:
-                    # Since the peering is already created, use PUT to update the peering again with
+                    # Since the policy is already created, use PUT to update the policy again with
                     # the same payload
                     command = "PUT"
                 time.sleep(10)

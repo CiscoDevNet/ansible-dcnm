@@ -1243,9 +1243,9 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         # From here we will remove one mandatory element from the config and check if that
         # is detected and errored out
 
-        ## No rev_next_hop object
+        ## No reverse_next_hop object
         cfg_no_dm = copy.deepcopy(self.playbook_config)
-        cfg_no_dm[0].pop("rev_next_hop")
+        cfg_no_dm[0].pop("reverse_next_hop")
         set_module_args(dict(state='merged',
                              attach=True,
                              deploy=True,
@@ -1256,7 +1256,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         try:
             result = self.execute_module(changed=True, failed=False)
         except Exception as e:
-            self.assertEqual(('rev_next_hop : Required parameter not found' in (str(e))), True)
+            self.assertEqual(('reverse_next_hop : Required parameter not found' in (str(e))), True)
             self.assertEqual (result, None)
 
 
@@ -2047,7 +2047,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         # From here we will remove one mandatory element from the config and check if that
         # is detected and errored out
 
-        ## No rev_next_hop object
+        ## No node_name object
         cfg_no_dm = copy.deepcopy(self.playbook_config)
         cfg_no_dm[0].pop("node_name")
         set_module_args(dict(state='deleted',

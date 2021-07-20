@@ -20,7 +20,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_service_route_peering
 short_description: DCNM Ansible Module for managing Service Route Peerings.
-version_added: "1.1.0"
+version_added: "1.2.0"
 description:
     - DCNM Ansible Module for Creating, Deleting, Querying and Modifying Route Peerings
 author: Mallik Mudigonda
@@ -96,7 +96,7 @@ options:
           - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
         type: int
         required: true
-      rev_next_hop:
+      reverse_next_hop:
         description:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
           - NOTE: This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
@@ -613,6 +613,49 @@ options:
 
 EXAMPLES = """
 
+L4-L7 Service Insertion:
+
+Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+Service Node, Service Route Peering and Service Policy to enable this.
+
+Service Node:
+
+You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+
+Route Peerings:
+
+Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that are used to
+redirect traffic towards the service node.
+
+Service Policy:
+
+Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+The service policies define the actions to be taken for matching traffic redirected towards the service node.
+
+Dependency Tree:
+
+Service Node
+|
+|---- Route Peering 1
+|     |
+.     |---- Service Policy 1
+.     |
+.     .
+.     .
+.     .
+.     |---- Service Policy N
+.
+|---- Route Peering N
+      |
+      |---- Service Policy 1
+      |
+      .
+      .
+      .
+      |---- Service Policy N
+
 States:
 This module supports the following states:
 
@@ -684,7 +727,7 @@ INTRA-TENANT FIREWALL
             vlan_name: rp1-sn1-outside                   # optional, default is ''
             int_descr: "RP1 SN1 outside interface"       # optionL, default is ''
             tag: 11112                                   # optional, default is 12345
-        rev_next_hop: 192.161.2.100                      # optional, default is ''
+        reverse_next_hop: 192.161.2.100                  # optional, default is ''
 
 INTER-TENANT FIREWALL with STATIC peering
 
@@ -820,7 +863,7 @@ ONEARM ADC with EBGP peering
             neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
             local_asn: 65401                             # optional, default is ''
             adv_host: true                               # optional, default is false
-        rev_next_hop: 192.164.1.100                      # mandatory
+        reverse_next_hop: 192.164.1.100                  # mandatory
 
 TWOARM ADC with EBGP peering
 
@@ -866,7 +909,7 @@ TWOARM ADC with EBGP peering
             vlan_name: rp5-sn2-second-arm                # optional, default is ''
             int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
             tag: 51112                                   # optional, default is 12345
-        rev_next_hop: 192.165.1.100                      # mandatory
+        reverse_next_hop: 192.165.1.100                  # mandatory
 
 ONEARM ADC with STATIC peering
 
@@ -901,7 +944,7 @@ ONEARM ADC with STATIC peering
                 next_hop:
                   - 163.163.163.1
                   - 164.164.164.1
-        rev_next_hop: 192.166.1.100                      # mandatory
+        reverse_next_hop: 192.166.1.100                  # mandatory
 
 TWOARM ADC with STATIC peering
 
@@ -942,7 +985,7 @@ TWOARM ADC with STATIC peering
             vlan_name: rp7-sn2-second-arm                # optional, default is ''
             int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
             tag: 71112                                   # optional, default is 12345
-        rev_next_hop: 192.167.1.100                      # mandatory
+        reverse_next_hop: 192.167.1.100                  # mandatory
 
 DELETE ROUTE PEERINGS
 =====================
@@ -1005,7 +1048,7 @@ OVERRIDE ROUTE PEERINGS
             vlan_name: rp1-sn1-outside-ovr               # optional, default is ''
             int_descr: "RP1 SN1 outside interface ovr"   # optionL, default is ''
             tag: 11192                                   # optional, default is 12345
-        rev_next_hop: 192.161.92.100                     # optional, default is ''
+        reverse_next_hop: 192.161.92.100                 # optional, default is ''
 
 - name: Override existing route peerings with no new peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -1050,7 +1093,7 @@ REPLACE ROUTE PEERINGS
             vlan_name: rp1-sn1-outside-rep               # optional, default is ''
             int_descr: "RP1 SN1 outside interface- REP"  # optionL, default is ''
             tag: 11102                                   # optional, default is 12345
-        rev_next_hop: 192.161.2.200                      # optional, default is ''
+        reverse_next_hop: 192.161.2.200                  # optional, default is ''
 
 QUERY ROUTE PEERINGS
 ====================
@@ -1438,7 +1481,7 @@ class DcnmServiceRoutePeering:
             inside_network=dict(required=True, type="dict"),
             outside_network=dict(required=True, type="dict"),
             next_hop=dict(required=True, type="ipv4"),
-            rev_next_hop=dict(type="ipv4", default=""),
+            reverse_next_hop=dict(type="ipv4", default=""),
         )
 
         srp_network_spec = dict(
@@ -1568,7 +1611,7 @@ class DcnmServiceRoutePeering:
             peering_option=dict(type="str", default="static"),
             first_arm=dict(required=True, type="dict"),
             second_arm=dict(type="dict", default=""),
-            rev_next_hop=dict(required=True, type="ipv4"),
+            reverse_next_hop=dict(required=True, type="ipv4"),
         )
 
         srp_network_spec = dict(
@@ -2034,7 +2077,7 @@ class DcnmServiceRoutePeering:
             srp_payload["peeringOption"] = "None"
             # Add NextHop and Reverse NextHop
             srp_payload["nextHopIp"] = srp["next_hop"]
-            srp_payload["reverseNextHopIp"] = srp["rev_next_hop"]
+            srp_payload["reverseNextHopIp"] = srp["reverse_next_hop"]
         elif deploy_mode == "intertenantfw":
 
             if srp["peering_option"] == "static":
@@ -2048,7 +2091,7 @@ class DcnmServiceRoutePeering:
                 srp_payload["peeringOption"] = "StaticPeering"
             else:
                 srp_payload["peeringOption"] = "EBGPDynamicPeering"
-            srp_payload["reverseNextHopIp"] = srp["rev_next_hop"]
+            srp_payload["reverseNextHopIp"] = srp["reverse_next_hop"]
             self.dcnm_srp_get_payload_route_info(srp, srp_payload)
         elif deploy_mode == "twoarmadc":
 
@@ -2056,7 +2099,7 @@ class DcnmServiceRoutePeering:
                 srp_payload["peeringOption"] = "StaticPeering"
             else:
                 srp_payload["peeringOption"] = "EBGPDynamicPeering"
-            srp_payload["reverseNextHopIp"] = srp["rev_next_hop"]
+            srp_payload["reverseNextHopIp"] = srp["reverse_next_hop"]
             self.dcnm_srp_get_payload_route_info(srp, srp_payload)
 
         return srp_payload
@@ -2636,54 +2679,83 @@ class DcnmServiceRoutePeering:
 
         mismatch_reasons = []
 
-        if want["deploymentMode"] != have["deploymentMode"]:
-            mismatch_reasons.append("DCNM_SRP_DM_NO_MATCH")
-
         # Global
+        if want.get("deploymentMode") != have.get("deploymentMode"):
+            mismatch_reasons.append(
+                {"DCNM_SRP_DM_NO_MATCH": [want.get("deploymentMode"), have.get("deploymentMode")]}
+            )
+
         if want["serviceNodeType"] != have["serviceNodeType"]:
-            mismatch_reasons.append("DCNM_SRP_SNT_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_SNT_NO_MATCH": [want["serviceNodeType"], have["serviceNodeType"]]}
+            )
+
+        if want.get("nextHopIp", '') != have.get("nextHopIp",''):
+            mismatch_reasons.append(
+                {"DCNM_SRP_NHIP_NO_MATCH": [want.get("nextHopIp", ''), have.get("nextHopIp", '')]}
+            )
+
+        if want.get("reverseNextHopIp", '') != have.get("reverseNextHopIp", ''):
+            mismatch_reasons.append(
+                {"DCNM_SRP_REV_NHIP_NO_MATCH": [want.get("reverseNextHopIp", ''), have.get("reverseNextHopIp", '')]}
+            )
 
         # Inside Network
         if (
             want["serviceNetworks"][0]["vrfName"]
             != have["serviceNetworks"][0]["vrfName"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_VRF_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_VRF_NO_MATCH": [want["serviceNetworks"][0]["vrfName"], have["serviceNetworks"][0]["vrfName"]]}
+            )
 
         if (
             want["serviceNetworks"][0]["networkType"]
             != have["serviceNetworks"][0]["networkType"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_NT_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_NT_NO_MATCH": [want["serviceNetworks"][0]["networkType"], have["serviceNetworks"][0]["networkType"]]}
+            )
 
         if (
             want["serviceNetworks"][0]["networkName"]
             != have["serviceNetworks"][0]["networkName"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_NN_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_NN_NO_MATCH": [want["serviceNetworks"][0]["networkName"], have["serviceNetworks"][0]["networkName"]]}
+            )
 
         if (
             want["serviceNetworks"][0].get("vlanId")
             != have["serviceNetworks"][0]["vlanId"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_VID_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_VID_NO_MATCH": [want["serviceNetworks"][0].get("vlanId"), have["serviceNetworks"][0]["vlanId"]]}
+            )
 
         # Inside Network Profile
         if (
             want["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]
             != have["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_IPV4GW_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_IPV4GW_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"], have["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]]}
+            )
+            
         if (
             want["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]
             != have["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_IPV6GW_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_IPV6GW_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"], have["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]]}
+            )
         if (
             want["serviceNetworks"][0]["nvPairs"]["vlanName"]
             != have["serviceNetworks"][0]["nvPairs"]["vlanName"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_VNAME_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_VNAME_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["vlanName"], have["serviceNetworks"][0]["nvPairs"]["vlanName"]]}
+            )
 
         # When we get the SRP inmformation from have, the intfDescription would have been modified and some meta data added. so ignore the meta data
         # when comparing the interface descriptions
@@ -2697,17 +2769,23 @@ class DcnmServiceRoutePeering:
             "intfDescription"
         ].split(" ")[:-1]
         if wif_desc != hif_desc:
-            mismatch_reasons.append("DCNM_SRP_IN_DESCR_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_DESCR_NO_MATCH": [" ".join(wif_desc), " ".join(hif_desc)]}
+            )
         if (
             str(want["serviceNetworks"][0]["nvPairs"]["tag"])
             != have["serviceNetworks"][0]["nvPairs"]["tag"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_TAG_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_TAG_NO_MATCH": [str(want["serviceNetworks"][0]["nvPairs"]["tag"]), have["serviceNetworks"][0]["nvPairs"]["tag"]]}
+            )
         if (
             str(want["serviceNetworks"][0]["nvPairs"]["vlanId"])
             != have["serviceNetworks"][0]["nvPairs"]["vlanId"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_PROF_VID_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_PROF_VID_NO_MATCH": [str(want["serviceNetworks"][0]["nvPairs"]["vlanId"]), have["serviceNetworks"][0]["nvPairs"]["vlanId"]]}
+            )
 
         if want["deploymentMode"].lower() != "onearmadc":
 
@@ -2716,39 +2794,53 @@ class DcnmServiceRoutePeering:
                 want["serviceNetworks"][1]["vrfName"]
                 != have["serviceNetworks"][1]["vrfName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_VRF_NO_MATCH": [want["serviceNetworks"][1]["vrfName"], have["serviceNetworks"][1]["vrfName"]]}
+                )
             if (
                 want["serviceNetworks"][1]["networkType"]
                 != have["serviceNetworks"][1]["networkType"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_NT_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_NT_NO_MATCH": [want["serviceNetworks"][1]["networkType"], have["serviceNetworks"][1]["networkType"]]}
+                )
             if (
                 want["serviceNetworks"][1]["networkName"]
                 != have["serviceNetworks"][1]["networkName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_NN_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_NN_NO_MATCH": [want["serviceNetworks"][1]["networkName"], have["serviceNetworks"][1]["networkName"]]}
+                )
             if (
                 want["serviceNetworks"][1]["vlanId"]
                 != have["serviceNetworks"][1]["vlanId"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_VID_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_VID_NO_MATCH": [want["serviceNetworks"][1]["vlanId"], have["serviceNetworks"][1]["vlanId"]]}
+                )
 
             # Outside Network Profile
             if (
                 want["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]
                 != have["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_IPV4GW_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_IPV4GW_NO_MATCH": [want["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"], have["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]]}
+                )
             if (
                 want["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]
                 != have["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_IPV6GW_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_IPV6GW_NO_MATCH": [want["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"], have["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]]}
+                )
             if (
                 want["serviceNetworks"][1]["nvPairs"]["vlanName"]
                 != have["serviceNetworks"][1]["nvPairs"]["vlanName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_VNAME_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_VNAME_NO_MATCH": [want["serviceNetworks"][1]["nvPairs"]["vlanName"], have["serviceNetworks"][1]["nvPairs"]["vlanName"]]}
+                )
 
             # When we get the SRP inmformation from have, the intfDescription would have been modified and some meta data added. so ignore the meta data
             # when comparing the interface descriptions
@@ -2762,20 +2854,30 @@ class DcnmServiceRoutePeering:
                 "intfDescription"
             ].split(" ")[:-1]
             if wif_desc != hif_desc:
-                mismatch_reasons.append("DCNM_SRP_OUT_DESCR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_DESCR_NO_MATCH": [" ".join(wif_desc), " ".join(hif_desc)]}
+                )
             if (
                 str(want["serviceNetworks"][1]["nvPairs"]["tag"])
                 != have["serviceNetworks"][1]["nvPairs"]["tag"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_TAG_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_TAG_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["tag"]), 
+                                                   have["serviceNetworks"][1]["nvPairs"]["tag"]]}
+                )
             if (
                 str(want["serviceNetworks"][1]["nvPairs"]["vlanId"])
                 != have["serviceNetworks"][1]["nvPairs"]["vlanId"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_PROF_VID_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_PROF_VID_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["vlanId"]), 
+                                                        have["serviceNetworks"][1]["nvPairs"]["vlanId"]]}
+                )
 
         if str(want["enabled"]).lower() != str(have["enabled"]).lower():
-            mismatch_reasons.append("DCNM_SRP_ATT_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_ATT_NO_MATCH": [str(want["enabled"]).lower(), str(have["enabled"]).lower()]}
+            )
 
         if mismatch_reasons == []:
             return "DCNM_SRP_MATCH", mismatch_reasons
@@ -2827,7 +2929,9 @@ class DcnmServiceRoutePeering:
         if want["peeringOption"] != have["peeringOption"]:
             # If peeringOption doesn't match, we cannot compare rest of the fields because they will be
             # entirely different.
-            mismatch_reasons.append("DCNM_SRP_PO_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_PO_NO_MATCH": [want["peeringOption"], have["peeringOption"]]}
+            )
             return "DCNM_SRP_NO_MATCH", mismatch_reasons
 
         if want["peeringOption"] == "StaticPeering":
@@ -2836,23 +2940,31 @@ class DcnmServiceRoutePeering:
                 want["routes"][0]["templateName"]
                 != have["routes"][0]["templateName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_SP_IN_TN_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_TN_NO_MATCH": [want["routes"][0]["templateName"], have["routes"][0]["templateName"]]}
+                )
 
             if want["routes"][0]["vrfName"] != have["routes"][0]["vrfName"]:
-                mismatch_reasons.append("DCNM_SRP_SP_IN_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_VRF_NO_MATCH": [want["routes"][0]["vrfName"], have["routes"][0]["vrfName"]]}
+                )
 
             wnv = want["routes"][0]["nvPairs"]
             hnv = have["routes"][0]["nvPairs"]
 
             if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
-                mismatch_reasons.append("DCNM_SRP_SP_IN_PROF_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
+                )
 
             rc = self.dcnm_srp_compare_multi_routes(
                 wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]
             )
 
             if rc == "DCNM_MR_NO_MATCH":
-                mismatch_reasons.append("DCNM_SRP_SP_IN_MR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_MR_NO_MATCH": [wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]]}
+                )
 
             if want["deploymentMode"] == "InterTenantFW":
 
@@ -2860,20 +2972,24 @@ class DcnmServiceRoutePeering:
                     want["routes"][1]["templateName"]
                     != have["routes"][1]["templateName"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_TN_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_TN_NO_MATCH": [want["routes"][1]["templateName"], have["routes"][1]["templateName"]]}
+                    )
 
                 if (
                     want["routes"][1]["vrfName"]
                     != have["routes"][1]["vrfName"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_VRF_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_VRF_NO_MATCH": [want["routes"][1]["vrfName"], have["routes"][1]["vrfName"]]}
+                    )
 
                 wnv = want["routes"][1]["nvPairs"]
                 hnv = have["routes"][1]["nvPairs"]
 
                 if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
                     mismatch_reasons.append(
-                        "DCNM_SRP_SP_OUT_PROF_VRF_NO_MATCH"
+                        {"DCNM_SRP_SP_OUT_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
                     )
 
                 rc = self.dcnm_srp_compare_multi_routes(
@@ -2881,7 +2997,9 @@ class DcnmServiceRoutePeering:
                 )
 
                 if rc == "DCNM_MR_NO_MATCH":
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_MR_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_MR_NO_MATCH": [wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]]}
+                    )
 
         elif want["peeringOption"] == "EBGPDynamicPeering":
 
@@ -2889,41 +3007,69 @@ class DcnmServiceRoutePeering:
                 want["routes"][0]["templateName"]
                 != have["routes"][0]["templateName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_TN_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_TN_NO_MATCH": [want["routes"][0]["templateName"], have["routes"][0]["templateName"]]}
+                )
 
             wnv = want["routes"][0]["nvPairs"]
             hnv = have["routes"][0]["nvPairs"]
 
             if wnv["NEIGHBOR_IP"] != hnv["NEIGHBOR_IP"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_NIP4_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_NIP4_NO_MATCH": [wnv["NEIGHBOR_IP"], hnv["NEIGHBOR_IP"]]}
+                )
             if wnv["LOOPBACK_IP"] != hnv["LOOPBACK_IP"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_LIP4_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_LIP4_NO_MATCH": [wnv["LOOPBACK_IP"], hnv["LOOPBACK_IP"]]}
+                )
             if wnv["PEER_LOOPBACK_IP"] != hnv["PEER_LOOPBACK_IP"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_PLIP4_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_PLIP4_NO_MATCH": [wnv["PEER_LOOPBACK_IP"], hnv["PEER_LOOPBACK_IP"]]}
+                )
             if wnv["NEIGHBOR_IPV6"] != hnv["NEIGHBOR_IPV6"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_NIP6_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_NIP6_NO_MATCH": [wnv["NEIGHBOR_IPV6"], hnv["NEIGHBOR_IPV6"]]}
+                )
             if wnv["LOOPBACK_IPV6"] != hnv["LOOPBACK_IPV6"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_LIP6_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_LIP6_NO_MATCH": [wnv["LOOPBACK_IPV6"], hnv["LOOPBACK_IPV6"]]}
+                )
             if wnv["PEER_LOOPBACK_IPV6"] != hnv["PEER_LOOPBACK_IPV6"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_PLIP6_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_PLIP6_NO_MATCH": [wnv["PEER_LOOPBACK_IPV6"], hnv["PEER_LOOPBACK_IPV6"]]}
+                )
             if str(wnv["ROUTE_MAP_TAG"]) != hnv["ROUTE_MAP_TAG"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_RMT_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_RMT_NO_MATCH": [str(wnv["ROUTE_MAP_TAG"]), hnv["ROUTE_MAP_TAG"]]}
+                )
             if wnv["DESC"] != hnv["DESC"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_DESCR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_DESCR_NO_MATCH": [ wnv["DESC"], hnv["DESC"]]}
+                )
             if str(wnv["LOCAL_ASN"]) != hnv["LOCAL_ASN"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_ASN_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_ASN_NO_MATCH": [str(wnv["LOCAL_ASN"]), hnv["LOCAL_ASN"]]}
+                )
             if (
                 str(wnv["ADVERTISE_HOST_ROUTE"]).lower()
                 != hnv["ADVERTISE_HOST_ROUTE"]
             ):
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_ADV_HR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_ADV_HR_NO_MATCH": [str(wnv["ADVERTISE_HOST_ROUTE"]).lower(), hnv["ADVERTISE_HOST_ROUTE"]]}
+                )
             if str(wnv["ADMIN_STATE"]).lower() != hnv["ADMIN_STATE"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_AS_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_AS_NO_MATCH": [str(wnv["ADMIN_STATE"]).lower(), hnv["ADMIN_STATE"]]}
+                )
             if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_PROF_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
+                )
 
             if want["routes"][0]["vrfName"] != have["routes"][0]["vrfName"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_VRF_NO_MATCH": [want["routes"][0]["vrfName"], have["routes"][0]["vrfName"]]}
+                )
 
             if want["deploymentMode"] == "InterTenantFW":
 
@@ -2931,48 +3077,72 @@ class DcnmServiceRoutePeering:
                     want["routes"][1]["templateName"]
                     != have["routes"][1]["templateName"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_TN_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_TN_NO_MATCH": [want["routes"][1]["templateName"], have["routes"][1]["templateName"]]}
+                    )
 
                 wnv = want["routes"][1]["nvPairs"]
                 hnv = have["routes"][1]["nvPairs"]
 
                 if wnv["NEIGHBOR_IP"] != hnv["NEIGHBOR_IP"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_NIP4_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_NIP4_NO_MATCH": [wnv["NEIGHBOR_IP"], hnv["NEIGHBOR_IP"]]}
+                    )
                 if wnv["LOOPBACK_IP"] != hnv["LOOPBACK_IP"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_LIP4_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_LIP4_NO_MATCH": [wnv["LOOPBACK_IP"], hnv["LOOPBACK_IP"]]}
+                    )
                 if wnv["PEER_LOOPBACK_IP"] != hnv["PEER_LOOPBACK_IP"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_PLIP4_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_PLIP4_NO_MATCH": [wnv["PEER_LOOPBACK_IP"], hnv["PEER_LOOPBACK_IP"]]}
+                    )
                 if wnv["NEIGHBOR_IPV6"] != hnv["NEIGHBOR_IPV6"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_NIP6_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_NIP6_NO_MATCH": [wnv["NEIGHBOR_IPV6"], hnv["NEIGHBOR_IPV6"]]}
+                    )
                 if wnv["LOOPBACK_IPV6"] != hnv["LOOPBACK_IPV6"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_LIP6_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_LIP6_NO_MATCH": [wnv["LOOPBACK_IPV6"], hnv["LOOPBACK_IPV6"]]}
+                    )
                 if wnv["PEER_LOOPBACK_IPV6"] != hnv["PEER_LOOPBACK_IPV6"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_PLIP6_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_PLIP6_NO_MATCH": [wnv["PEER_LOOPBACK_IPV6"], hnv["PEER_LOOPBACK_IPV6"]]}
+                    )
                 if str(wnv["ROUTE_MAP_TAG"]) != hnv["ROUTE_MAP_TAG"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_RMT_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_RMT_NO_MATCH": [str(wnv["ROUTE_MAP_TAG"]), hnv["ROUTE_MAP_TAG"]]}
+                    )
                 if wnv["DESC"] != hnv["DESC"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_DESCR_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_DESCR_NO_MATCH": [wnv["DESC"], hnv["DESC"]]}
+                    )
                 if str(wnv["LOCAL_ASN"]) != hnv["LOCAL_ASN"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_ASN_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_ASN_NO_MATCH": [str(wnv["LOCAL_ASN"]), hnv["LOCAL_ASN"]]}
+                    )
                 if (
                     str(wnv["ADVERTISE_HOST_ROUTE"]).lower()
                     != hnv["ADVERTISE_HOST_ROUTE"]
                 ):
                     mismatch_reasons.append(
-                        "DCNM_SRP_EBGP_OUT_ADV_HR_NO_MATCH"
+                        {"DCNM_SRP_EBGP_OUT_ADV_HR_NO_MATCH": [str(wnv["ADVERTISE_HOST_ROUTE"]).lower(), hnv["ADVERTISE_HOST_ROUTE"]]}
                     )
                 if str(wnv["ADMIN_STATE"]).lower() != hnv["ADMIN_STATE"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_AS_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_AS_NO_MATCH": [str(wnv["ADMIN_STATE"]).lower(), hnv["ADMIN_STATE"]]}
+                    )
                 if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
                     mismatch_reasons.append(
-                        "DCNM_SRP_EBGP_OUT_PROF_VRF_NO_MATCH"
+                        {"DCNM_SRP_EBGP_OUT_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
                     )
 
                 if (
                     want["routes"][1]["vrfName"]
                     != have["routes"][1]["vrfName"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_VRF_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_VRF_NO_MATCH": [want["routes"][1]["vrfName"], have["routes"][1]["vrfName"]]}
+                    )
 
         if mismatch_reasons == []:
             return "DCNM_SRP_MATCH", mismatch_reasons
@@ -2996,7 +3166,7 @@ class DcnmServiceRoutePeering:
         found = False
 
         if self.have == []:
-            return ("DCNM_SRP_ADD_NEW", None)
+            return ("DCNM_SRP_ADD_NEW", None, [])
 
         match_have = [
             have
@@ -3018,14 +3188,14 @@ class DcnmServiceRoutePeering:
                 rc, reasons = self.dcnm_srp_compare_route_info(srp, have)
 
                 if rc == "DCNM_SRP_MATCH":
-                    return ("DCNM_SRP_DONT_ADD", have)
+                    return ("DCNM_SRP_DONT_ADD", have, [])
 
         if found is True:
             # Found a matching route peering, but some of the objects don't match.
             # Go ahead and merge the objects into the existing srp
-            return ("DCNM_SRP_MERGE", have)
+            return ("DCNM_SRP_MERGE", have, reasons)
         else:
-            return ("DCNM_SRP_ADD_NEW", None)
+            return ("DCNM_SRP_ADD_NEW", None, [])
 
     def dcnm_srp_get_srp_attachment_status(self, srp):
 
@@ -3072,6 +3242,7 @@ class DcnmServiceRoutePeering:
 
         deployed = False
         retry = False
+        processed = False
         if (
             resp
             and (resp["RETURN_CODE"] == 200)
@@ -3088,6 +3259,7 @@ class DcnmServiceRoutePeering:
                         attach.get("vlanId", 0) == 0
                     ):
                         continue
+                    processed = True
                     if (attach["attachState"] == "NA") or (
                         attach["attachState"] == "PENDING"
                     ):
@@ -3096,10 +3268,9 @@ class DcnmServiceRoutePeering:
                         return True, False
                     elif attach["attachState"] == "IN PROGRESS":
                         return True, True
-                    else:
-                        return False, True
+            if processed is True:
+                return False, True
         else:
-            self.changed_dict[0]["debugs"].append({"GET_SP_ATT_STATUS": resp})
             return False, False
 
         return (retry, deployed)
@@ -3123,7 +3294,7 @@ class DcnmServiceRoutePeering:
 
         for srp in self.want:
 
-            rc, have = self.dcnm_srp_compare_route_peerings(srp)
+            rc, have, reasons = self.dcnm_srp_compare_route_peerings(srp)
 
             if rc == "DCNM_SRP_ADD_NEW":
                 # A srp does not exists, create a new one.
@@ -3133,6 +3304,7 @@ class DcnmServiceRoutePeering:
             elif rc == "DCNM_SRP_MERGE":
                 # A srp exists and it needs to be updated
                 self.changed_dict[0]["modified"].append(srp)
+                self.changed_dict[0]["debugs"].append({"PeeringName": srp["peeringName"], "REASONS":  reasons})
                 self.diff_modify.append(srp)
 
             # Check the 'deploy' flag and decide if this srp is to be deployed
@@ -3763,6 +3935,11 @@ def main():
 
         dcnm_srp.dcnm_srp_update_want()
 
+    dcnm_srp.log_msg ("################### START #######################\n")
+    dcnm_srp.log_msg (f"STATE = {module.params['state']}\n")
+    dcnm_srp.log_msg (f"WANT = {dcnm_srp.want}\n")
+    dcnm_srp.log_msg (f"HAVE = {dcnm_srp.have}\n")
+
     if (module.params["state"] == "merged") or (
         module.params["state"] == "replaced"
     ):
@@ -3790,6 +3967,7 @@ def main():
     dcnm_srp.dcnm_srp_send_message_to_dcnm()
 
     dcnm_srp.result["EndTime"] = datetime.now().strftime("%H:%M:%S")
+    dcnm_srp.log_msg ("################### END #######################\n")
     module.exit_json(**dcnm_srp.result)
 
 

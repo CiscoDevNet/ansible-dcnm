@@ -912,21 +912,6 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             self.assertEqual(('proto : Required parameter not found' in (str(e))), True)
             self.assertEqual (result, None)
 
-        ## No rev_next hop
-        cfg = copy.deepcopy(self.playbook_config)
-        cfg[0].pop("rev_next_hop")
-        set_module_args(dict(state='merged',
-                             attach=True,
-                             deploy=True,
-                             fabric='mmudigon',
-                             attached_fabric='external',
-                             config=cfg))
-        result = None
-        try: 
-            result = self.execute_module(changed=True, failed=False)
-        except Exception as e:
-            self.assertEqual(('rev_next_hop : Required parameter not found' in (str(e))), True)
-            self.assertEqual (result, None)
 
         ## No next hop
         cfg = copy.deepcopy(self.playbook_config)

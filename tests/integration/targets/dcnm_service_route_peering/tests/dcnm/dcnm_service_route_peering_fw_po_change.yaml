@@ -233,7 +233,6 @@
     - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
       wait_for:
         timeout: 180
-      when: IT_CONTEXT is not defined
 
 ##############################################
 ##                CLEANUP                   ##

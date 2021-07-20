@@ -54,17 +54,17 @@
             src_network: "{{ ansible_net_11 }}"               # mandatory
             dest_network: "{{ ansible_net_12 }}"              # mandatory
             next_hop: 192.161.1.100                           # mandatory
-            rev_next_hop: 192.161.2.100                       # mandatory
+            reverse_next_hop: 192.161.2.100                   # mandatory
             policy:
               proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)] 
               action: permit                                  # optional, default=permit, choices=[permit, deny]
               next_hop_option:  none                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_10                             # optional, default value will be auto-generated
-              rev_acl_name: rev_acl_10                    # optional, default value will be auto-generated
+              acl_name: fwd_acl_10                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
               route_map_num: 101                              # optional, default value will be auto-generated
-              rev_route_map_num: 102                          # optional, default value will be auto-generated
+              reverse_route_map_num: 102                      # optional, default value will be auto-generated
 
           - name: service_policy_2                            # mandatory
             node_name: "{{ ansible_snode_2 }}"                # mandatory
@@ -74,7 +74,7 @@
             src_network: "{{ ansible_net_21 }}"               # mandatory
             dest_network: "{{ ansible_net_22 }}"              # mandatory
             next_hop: ""                                      # mandatory
-            rev_next_hop: 192.164.1.100                       # mandatory
+            reverse_next_hop: 192.164.1.100                   # mandatory
             policy:
               proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
@@ -122,7 +122,7 @@
             src_network: "{{ ansible_net_11 }}"               # mandatory
             dest_network: "{{ ansible_net_12 }}"              # mandatory
             next_hop: 192.161.1.100                           # mandatory
-            rev_next_hop: 192.161.2.100                       # mandatory
+            reverse_next_hop: 192.161.2.100                   # mandatory
             policy:
               proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: 501                                   # mandatory, choices=[any, Min:1, Max:65535)]
@@ -138,7 +138,7 @@
             src_network: "{{ ansible_net_21 }}"               # mandatory
             dest_network: "{{ ansible_net_22 }}"              # mandatory
             next_hop: ""                                      # mandatory
-            rev_next_hop: 192.164.1.100                       # mandatory
+            reverse_next_hop: 192.164.1.100                   # mandatory
             policy:
               proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
@@ -146,9 +146,9 @@
               action: permit                                  # optional, default=permit, choices=[permit, deny]
               next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_21                            # optional, default value will be auto-generated
-              rev_acl_name: rev_acl_22                    # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_22                    # optional, default value will be auto-generated
               route_map_num: 2201                             # optional, default value will be auto-generated
-              rev_route_map_num: 2202                         # optional, default value will be auto-generated
+              reverse_route_map_num: 2202                     # optional, default value will be auto-generated
       register: result
 
     - assert:
