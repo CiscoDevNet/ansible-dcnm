@@ -2294,6 +2294,11 @@ class DcnmServiceRoutePeering:
             net_name1 = "first_arm"
             net_name2 = "second_arm"
 
+
+        if want["deploymentMode"].lower() != "intertenantfw":
+            if cfg.get("reverse_next_hop", None) is None:
+                want["reverseNextHopIp"] = have.get("reverseNextHopIp")
+
         # All objects that are not included in the playbook will be copied from have to leave them undisturbed
         # Inside Network
         if cfg[net_name1].get("vrf", None) is None:

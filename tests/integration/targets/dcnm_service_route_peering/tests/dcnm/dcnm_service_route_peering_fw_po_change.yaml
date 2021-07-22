@@ -24,6 +24,10 @@
 ##                MERGE                     ##
 ##############################################
 
+    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
+      wait_for:
+        timeout: 240
+
     - name: Create Intertenant Firewall SRP with Static Peering
       cisco.dcnm.dcnm_service_route_peering: 
         fabric: "{{ ansible_it_fabric }}" 
