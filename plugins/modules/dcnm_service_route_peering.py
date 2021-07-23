@@ -3940,11 +3940,6 @@ def main():
 
         dcnm_srp.dcnm_srp_update_want()
 
-    dcnm_srp.log_msg ("################### START #######################\n")
-    dcnm_srp.log_msg (f"STATE = {module.params['state']}\n")
-    dcnm_srp.log_msg (f"WANT = {dcnm_srp.want}\n")
-    dcnm_srp.log_msg (f"HAVE = {dcnm_srp.have}\n")
-
     if (module.params["state"] == "merged") or (
         module.params["state"] == "replaced"
     ):
@@ -3972,7 +3967,6 @@ def main():
     dcnm_srp.dcnm_srp_send_message_to_dcnm()
 
     dcnm_srp.result["EndTime"] = datetime.now().strftime("%H:%M:%S")
-    dcnm_srp.log_msg ("################### END #######################\n")
     module.exit_json(**dcnm_srp.result)
 
 
