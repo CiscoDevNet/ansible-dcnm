@@ -365,7 +365,7 @@
           vlan_id: 102                                   # mandatory
           profile:
             ipv4_gw: 192.161.2.1/24                      # mandatory
-        rev_next_hop: 192.161.2.100                      # optional, default is ''
+        reverse_next_hop: 192.161.2.100                  # optional, default is ''
 
       - name: IT-ADC-RP4
         node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -379,7 +379,7 @@
             ipv4_gw: 192.164.1.1/24                      # mandatory
             ipv4_neighbor: 41.41.41.1                    # mandatory
             ipv4_lo: 41.41.41.2                          # mandatory
-        rev_next_hop: 192.164.1.100                      # mandatory
+        reverse_next_hop: 192.164.1.100                  # mandatory
 
       - name: IT-ADC-RP5
         node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -399,7 +399,7 @@
           vlan_id: 502                                   # mandatory
           profile: 
             ipv4_gw: 192.165.2.1/24                      # mandatory
-        rev_next_hop: 192.165.2.100                      # mandatory
+        reverse_next_hop: 192.165.2.100                  # mandatory
 
       - name: IT-ADC-RP6
         node_name: "{{ ansible_snode_2 }}"               # mandatory
@@ -411,7 +411,7 @@
           vlan_id: 601                                   # mandatory
           profile: 
             ipv4_gw: 192.166.2.1/24                      # mandatory
-        rev_next_hop: 192.166.2.100                      # mandatory
+        reverse_next_hop: 192.166.2.100                  # mandatory
 
 - assert:
     that:
