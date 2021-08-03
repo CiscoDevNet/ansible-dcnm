@@ -78,21 +78,6 @@ class TestDcnmTemplateModule(TestDcnmModule):
                                               self.create_succ_resp, self.create_succ_resp,
                                               self.create_succ_resp, self.create_succ_resp]
 
-        if ('_template_merged_new_check_mode' in self._testMethodName):
-
-            # No templates exists
-
-            template1  = []
-            template2  = []
-            template3  = []
-            template4  = []
-
-            self.run_dcnm_send.side_effect = [
-                                              template1, template2, template3, template4,
-                                              self.validate_resp, self.validate_resp,
-                                              self.validate_resp, self.validate_resp
-                                              ]
-
         if ('_template_merged_in_use' in self._testMethodName):
 
             inuse_template1  = self.payloads_data.get('template_110_inuse_have_resp')
@@ -305,28 +290,6 @@ class TestDcnmTemplateModule(TestDcnmModule):
 
         for r in result['response']:
             self.assertEqual (('Template Created' in r['DATA']['status']), True)
-
-    def test_dcnm_template_merged_new_check_mode(self):
-
-        # load the json from playbooks
-        self.config_data     = loadPlaybookData('dcnm_template_configs')
-        self.payloads_data   = loadPlaybookData('dcnm_template_payloads')
-
-        # load required config data
-        self.playbook_config  = self.config_data.get('template_merge_new_config')
-        self.validate_resp    = self.payloads_data.get('template_validate_resp')
-        self.create_succ_resp = self.payloads_data.get('template_create_succ_resp')
-
-        set_module_args(dict(state='merged',
-                             config=self.playbook_config,
-                             check_mode=True))
-        result = self.execute_module(changed=False, failed=False)
-
-        self.assertEqual(len(result['diff'][0]['merged']), 4)
-        self.assertEqual(len(result['response']), 0)
-        for d in result['diff'][0]['merged']:
-            self.assertEqual ((d['template_name'] in ['template_101', 'template_102',
-                                                      'template_103', 'template_104']), True)
 
     def test_dcnm_template_merged_in_use(self):
 

@@ -28,25 +28,28 @@ options:
     description:
     - 'REST API Method'
     required: yes
+    type: str
     choices: ['GET', 'POST', 'PUT', 'DELETE']
   path:
     description:
     - 'REST API Path Endpoint'
     required: yes
+    type: str
   json_data:
     description:
     - 'Additional JSON data to include with the REST API call'
     required: no
+    type: raw
 author:
     - Mike Wiebe (@mikewiebe)
 '''
 
 EXAMPLES = '''
-This module can be used to send any REST API requests that are supported by
-the DCNM controller.
-
-This module is not idempotent but can be used as a stop gap until a feature
-module can be developed for the target DCNM functionality.
+# This module can be used to send any REST API requests that are supported by
+# the DCNM controller.
+#
+# This module is not idempotent but can be used as a stop gap until a feature
+# module can be developed for the target DCNM functionality.
 
 - name: Gather List of Fabrics from DCNM
   dcnm_rest:
@@ -56,7 +59,9 @@ module can be developed for the target DCNM functionality.
 
 RETURN = '''
 response:
-    description: Success or Error Data retrieved from DCNM
+    description:
+    - Success or Error Data retrieved from DCNM
+    returned: always
     type: list
     elements: dict
 '''

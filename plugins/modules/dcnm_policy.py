@@ -23,17 +23,17 @@ short_description: DCNM Ansible Module for managing policies.
 version_added: "1.1.0"
 description:
     - DCNM Ansible Module for Creating, Deleting, Querying and Modifying policies
-author: Mallik Mudigonda
+author: Mallik Mudigonda(@mmudigon)
 options:
   fabric:
     description:
-      - 'Name of the target fabric for policy operations'
+    - Name of the target fabric for policy operations
     type: str
     required: true
 
   state:
     description:
-      - The required state of the configuration after module completion.
+    - The required state of the configuration after module completion.
     type: str
     required: false
     choices:
@@ -44,74 +44,75 @@ options:
 
   deploy:
     description:
-      - A flag specifying if a policy is to be deployed on the switches
-    type: boolean
+    - A flag specifying if a policy is to be deployed on the switches
+    type: bool
     required: false
     default: true
 
   config:
-    description: A list of dictionaries containing policy and switch information
+    description:
+    - A list of dictionaries containing policy and switch information
     type: list
     elements: dict
     suboptions:
       name:
         description:
-          - This can be one of the following
-            a) Template Name - A unique name identifying the template. Please note that a template name can be used by
-               multiple policies and hence a template name does not identify a policy uniquely.
-            b) Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
-               template names cannot uniquely identify a policy
+        - This can be one of the following
+          a) Template Name - A unique name identifying the template. Please note that a template name can be used by
+             multiple policies and hence a template name does not identify a policy uniquely.
+          b) Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
+             template names cannot uniquely identify a policy
         type: str
         required: true
 
       description:
         description:
-          - Description of the policy. The description may include the details regarding the policy i.e. the arguments if
-            any etc.
+        - Description of the policy. The description may include the details regarding the policy i.e. the arguments if
+          any etc.
         type: str
         required: false
         default: ''
 
       priority:
         description:
-          - Priority associated with the policy
+        - Priority associated with the policy
         type: str
         required: false
         default: 500
 
       create_additional_policy:
         description:
-          - A flag indicating if a policy is to be created even if an identical policy already exists
-        type: boolean
+        - A flag indicating if a policy is to be created even if an identical policy already exists
+        type: bool
         required: false
         default: true
 
       policy_vars:
         description:
-          - A set of arguments required for creating and deploying policies. The arguments are specific to each policy and depends
-            on the tmeplate that is used by the policy.
+        - A set of arguments required for creating and deploying policies. The arguments are specific to each policy and depends
+          on the tmeplate that is used by the policy.
         type: dict
         required: false
         default: {}
 
       switch:
         description:
-          - A dictionary of switches and associated policy information. All switches in this list will be deployed with only those policies
-            that are included under "policies" object i.e. 'policies' object will override the list of policies for this particular switch.
-            If 'policies' object is not included, then other policies specified in the configurstion will be deployed to these switches.
+        - A dictionary of switches and associated policy information. All switches in this list will be deployed with only those policies
+          that are included under "policies" object i.e. 'policies' object will override the list of policies for this particular switch.
+          If 'policies' object is not included, then other policies specified in the configurstion will be deployed to these switches.
         type: list
         elements: dict
         suboptions:
           ip:
             description:
-              - IP address of the switch where the policy is to be deployed. This can be IPV4 address, IPV6 address or hostname
+            - IP address of the switch where the policy is to be deployed. This can be IPV4 address, IPV6 address or hostname
             type: str
             required: true
 
           policies:
             description:
-              - A list of policies to be deployed on the switch. Note only policies included here will be deployed on the switch irrespective of
-                other polcies included in the configuration.
+            - A list of policies to be deployed on the switch. Note only policies included here will be deployed on the switch irrespective of
+              other polcies included in the configuration.
             type: list
             elements: dict
             required: false
@@ -119,39 +120,39 @@ options:
             suboptions:
               name:
                 description:
-                  - This can be one of the following
-                    a) Template Name - A unique name identifying the template. Please note that a template name can be used by
-                       multiple policies and hence a template name does not identify a policy uniquely.
-                    b) Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
-                       template names cannot uniquely identify a policy
+                - This can be one of the following
+                  a) Template Name - A unique name identifying the template. Please note that a template name can be used by
+                     multiple policies and hence a template name does not identify a policy uniquely.
+                  b) Policy ID     - A unique ID identifying a policy. Policy ID MUST be used for modifying policies since
+                     template names cannot uniquely identify a policy
                 type: str
                 required: true
 
               description:
                 description:
-                  - Description of the policy. The description may include the details regarding the policy
+                - Description of the policy. The description may include the details regarding the policy
                 type: str
                 required: false
                 default: ''
 
               priority:
                 description:
-                  - Priority associated with the policy
+                - Priority associated with the policy
                 type: str
                 required: false
                 default: 500
 
               create_additional_policy:
                 description:
-                  - A flag indicating if a policy is to be created even if an identical policy already exists
-                type: boolean
+                - A flag indicating if a policy is to be created even if an identical policy already exists
+                type: bool
                 required: false
                 default: true
 
               policy_vars:
                 description:
-                  - A set of arguments required for creating and deploying policies. The arguments are specific to each policy and that depends
-                    on the tmeplate that is used by the policy.
+                - A set of arguments required for creating and deploying policies. The arguments are specific to each policy and that depends
+                  on the tmeplate that is used by the policy.
                 type: dict
                 required: false
                 default: {}
@@ -159,30 +160,30 @@ options:
 
 EXAMPLES = """
 
-States:
-This module supports the following states:
+# States:
+# This module supports the following states:
+#
+# Merged:
+#   Policies defined in the playbook will be merged into the target fabric.
+#
+#   The policies listed in the playbook will be created if not already present on the DCNM
+#   server. If the policy is already present and the configuration information included
+#   in the playbook is either different or not present in DCNM, then the corresponding
+#   information is added to the policy on DCNM. If an policy mentioned in playbook
+#   is already present on DCNM and there is no difference in configuration, no operation
+#   will be performed for such policy.
+#
+# Deleted:
+#   Policies defined in the playbook will be deleted in the target fabric.
+#
+# Query:
+#   Returns the current DCNM state for the policies listed in the playbook.
 
-Merged:
-  Policies defined in the playbook will be merged into the target fabric.
+# CREATE POLICY
 
-  The policies listed in the playbook will be created if not already present on the DCNM
-  server. If the policy is already present and the configuration information included
-  in the playbook is either different or not present in DCNM, then the corresponding
-  information is added to the policy on DCNM. If an policy mentioned in playbook
-  is already present on DCNM and there is no difference in configuration, no operation
-  will be performed for such policy.
-
-Deleted:
-  Policies defined in the playbook will be deleted in the target fabric.
-
-Query:
-  Returns the current DCNM state for the policies listed in the playbook.
-
-CREATE POLICY
-
-NOTE: In the following create task, policies identified by template names template_101,
-      template_102, and template_103 are deployed on ansible_switch2 where as policies
-      template_104 and template_105 are the only policies installed on ansible_switch1.
+# NOTE: In the following create task, policies identified by template names template_101,
+#       template_102, and template_103 are deployed on ansible_switch2 where as policies
+#       template_104 and template_105 are the only policies installed on ansible_switch1.
 
 - name: Create different policies
   cisco.dcnm.dcnm_policy:
@@ -213,9 +214,9 @@ NOTE: In the following create task, policies identified by template names templa
                 create_additional_policy: false  # Do not create a policy if it already exists
           - ip: "{{ ansible_switch2 }}"
 
-CREATE POLICY (including arguments)
+# CREATE POLICY (including arguments)
 
-NOTE: The actual arguments to be included depends on the template used to create the policy
+# NOTE: The actual arguments to be included depends on the template used to create the policy
 
 - name: Create policy including required variables
   cisco.dcnm.dcnm_policy:
@@ -231,10 +232,10 @@ NOTE: The actual arguments to be included depends on the template used to create
       - switch:
           - ip: "{{ ansible_switch1 }}"
 
-MODIFY POLICY
+# MODIFY POLICY
 
-NOTE: Since there can be multiple policies with the same template name, policy-id MUST be used
-      to modify a particular policy.
+# NOTE: Since there can be multiple policies with the same template name, policy-id MUST be used
+#       to modify a particular policy.
 
 - name: Modify different policies
   cisco.dcnm.dcnm_policy:
@@ -265,10 +266,10 @@ NOTE: Since there can be multiple policies with the same template name, policy-i
                 create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch2 }}"
 
-DELETE POLICY
+# DELETE POLICY
 
-NOTE: In the case of deleting policies using template names, all policies using the template name
-      will be deleted. To delete specific policy, policy-ids must be used
+# NOTE: In the case of deleting policies using template names, all policies using the template name
+#       will be deleted. To delete specific policy, policy-ids must be used
 
 - name: Delete policies using template name
   cisco.dcnm.dcnm_policy:
@@ -298,10 +299,10 @@ NOTE: In the case of deleting policies using template names, all policies using 
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
 
-QUERY
+# QUERY
 
-NOTE: In the case of Query using template names, all policies that have a matching template name will be
-      returned
+# NOTE: In the case of Query using template names, all policies that have a matching template name will be
+#       returned
 
 - name: Query all policies from the specified switches
   cisco.dcnm.dcnm_policy:
@@ -1154,14 +1155,13 @@ def main():
     """
     element_spec = dict(
         fabric=dict(required=True, type="str"),
-        config=dict(required=False, type="list"),
+        config=dict(required=False, type="list", elements='dict'),
         state=dict(
             type="str",
             default="merged",
             choices=["merged", "deleted", "query"],
         ),
         deploy=dict(required=False, type="bool", default=True),
-        check_mode=dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(
@@ -1236,7 +1236,7 @@ def main():
     else:
         module.exit_json(**dcnm_policy.result)
 
-    if module.params["check_mode"]:
+    if module.check_mode:
         dcnm_policy.result["changed"] = False
         module.exit_json(**dcnm_policy.result)
 

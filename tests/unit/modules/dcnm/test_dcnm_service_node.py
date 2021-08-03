@@ -103,10 +103,6 @@ class TestDcnmServiceNodeModule(TestDcnmModule):
         if 'get_have_failure' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.get_have_failure]
 
-        elif '_check_mode' in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_send.side_effect = [self.blank_get_data]
-
         elif '_merged_one' in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [self.blank_data, self.mock_sn_merge_1_success]
@@ -226,14 +222,6 @@ class TestDcnmServiceNodeModule(TestDcnmModule):
                              service_fabric='external', config=self.playbook_config))
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(result.get('msg'), 'Fabric test_fabric not present on DCNM')
-
-    def test_dcnm_sn_check_mode(self):
-        set_module_args(dict(check_mode=True, state='merged',
-                             fabric='test_fabric',
-                             service_fabric='external', config=self.playbook_config))
-        result = self.execute_module(changed=False, failed=False)
-        self.assertFalse(result.get('diff'))
-        self.assertFalse(result.get('response'))
 
     def test_dcnm_sn_merged_one(self):
         set_module_args(dict(state='merged',
