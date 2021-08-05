@@ -41,13 +41,12 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
                          / <span style="color: purple">elements=dictionary</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
-                        <div>List of details of service nodes being managed</div>
+                        <div>List of details of service nodes being managed. Not required for state deleted</div>
                 </td>
             </tr>
                                 <tr>
@@ -218,41 +217,41 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
-    This module supports the following states:
-
-    Merged:
-      Service Nodes defined in the playbook will be merged into the service fabric.
-        - If the service node does not exist it will be added.
-        - If the service node exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Service Nodes that are not specified in the playbook will be untouched.
-
-    Replaced:
-      Service Nodes defined in the playbook will be replaced in the service fabric.
-        - If the service node does not exist it will be added.
-        - If the service node exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - Service Nodes that are not specified in the playbook will be untouched.
-
-    Overridden:
-      Service Node defined in the playbook will be overridden in the service fabric.
-        - If the service node does not exist it will be added.
-        - If the service node exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - Service Nodes that are not specified in the playbook will be deleted.
-
-    Deleted:
-      Service Node defined in the playbook will be deleted.
-      If no Service Nodes are provided in the playbook, all service node present on that DCNM fabric will be deleted.
-
-    Query:
-      Returns the current DCNM state for the service node listed in the playbook.
+    # This module supports the following states:
+    #
+    # Merged:
+    #   Service Nodes defined in the playbook will be merged into the service fabric.
+    #     - If the service node does not exist it will be added.
+    #     - If the service node exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Service Nodes that are not specified in the playbook will be untouched.
+    #
+    # Replaced:
+    #   Service Nodes defined in the playbook will be replaced in the service fabric.
+    #     - If the service node does not exist it will be added.
+    #     - If the service node exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - Service Nodes that are not specified in the playbook will be untouched.
+    #
+    # Overridden:
+    #   Service Node defined in the playbook will be overridden in the service fabric.
+    #     - If the service node does not exist it will be added.
+    #     - If the service node exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - Service Nodes that are not specified in the playbook will be deleted.
+    #
+    # Deleted:
+    #   Service Node defined in the playbook will be deleted.
+    #   If no Service Nodes are provided in the playbook, all service node present on that DCNM fabric will be deleted.
+    #
+    # Query:
+    #   Returns the current DCNM state for the service node listed in the playbook.
 
     - name: Merge Service Nodes
       cisco.dcnm.dcnm_service_node:
@@ -309,7 +308,7 @@ Examples
         state: overridden
         config:
        # Create this service node
-         - name: SN-13
+        - name: SN-13
           type: firewall
           form_factor: virtual
           svc_int_name: svc1
@@ -335,7 +334,7 @@ Examples
        #   - 192.168.1.225
 
     - name: Delete selected Service Nodes
-       cisco.dcnm.dcnm_service_node:
+      cisco.dcnm.dcnm_service_node:
         fabric: Fabric1
         service_fabric: external
         state: deleted
@@ -400,4 +399,4 @@ Status
 Authors
 ~~~~~~~
 
-- Karthik Babu Harichandra Babu
+- Karthik Babu Harichandra Babu(@kharicha)
