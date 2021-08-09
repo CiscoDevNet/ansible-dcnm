@@ -91,6 +91,13 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               create_succ_resp1,
                                               deploy_succ_resp]
 
+        if ('test_dcnm_policy_merged_new_check_mode' == self._testMethodName):
+
+            have_all_resp      = self.payloads_data.get('policy_have_all_resp')
+
+            self.run_dcnm_send.side_effect = [have_all_resp]
+
+
         if ('test_dcnm_policy_merged_existing' == self._testMethodName):
 
             create_succ_resp1  = self.payloads_data.get('success_create_response_101')
@@ -438,6 +445,32 @@ class TestDcnmPolicyModule(TestDcnmModule):
               self.assertEqual(resp["RETURN_CODE"], 200)
               self.assertEqual((len(resp["DATA"][0]["successPTIList"].split(",")) == 5), True)
           count = count + 1
+
+    def test_dcnm_policy_merged_new_check_mode (self):
+
+        # load the json from playbooks
+        self.config_data    = loadPlaybookData('dcnm_policy_configs')
+        self.payloads_data  = loadPlaybookData('dcnm_policy_payloads')
+
+        # get mock ip_sn and fabric_inventory_details
+        self.mock_fab_inv     = []
+        self.mock_ip_sn       = self.payloads_data.get('mock_ip_sn')
+
+        # load required config data
+        self.playbook_config  = self.config_data.get('create_policy_101_105')
+
+        set_module_args(dict(state='merged',
+                             deploy=True,
+                             fabric='mmudigon',
+                             _ansible_check_mode=True,
+                             config=self.playbook_config))
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]) , 5)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 0)
+        self.assertEqual(len(result["diff"][0]["query"]) , 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]) , 5)
+        self.assertEqual(len(result["response"]) , 0)
 
     def test_dcnm_policy_merged_existing (self):
 

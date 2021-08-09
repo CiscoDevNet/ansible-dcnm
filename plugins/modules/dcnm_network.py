@@ -2186,10 +2186,6 @@ def main():
 
     dcnm_net.result['warnings'].append(warn_msg) if warn_msg else []
 
-    if module.check_mode:
-        dcnm_net.result['changed'] = False
-        module.exit_json(**dcnm_net.result)
-
     if dcnm_net.diff_create or dcnm_net.diff_create_quick or dcnm_net.diff_attach \
             or dcnm_net.diff_deploy or dcnm_net.diff_delete or dcnm_net.diff_create_update \
             or dcnm_net.diff_detach or dcnm_net.diff_undeploy:
@@ -2199,6 +2195,10 @@ def main():
 
     dcnm_net.format_diff()
     dcnm_net.result['diff'] = dcnm_net.diff_input_format
+
+    if module.check_mode:
+        dcnm_net.result['changed'] = False
+        module.exit_json(**dcnm_net.result)
 
     dcnm_net.push_to_remote()
 

@@ -2890,6 +2890,7 @@ def main():
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
+        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()

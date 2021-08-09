@@ -904,6 +904,7 @@ def main():
         module.exit_json(**dcnm_inv.result)
 
     if module.check_mode:
+        dcnm_inv.result['changed'] = False
         module.exit_json(**dcnm_inv.result)
 
     # Delete Switch
