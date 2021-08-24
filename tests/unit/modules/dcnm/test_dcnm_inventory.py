@@ -26,7 +26,7 @@ from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 import json, copy
 
 __copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
-__author__ = "Karthik Babu Harichandra Babu"
+__author__ = "Karthik Babu Harichandra Babu, Praveen Ramoorthy"
 
 class TestDcnmInvModule(TestDcnmModule):
 
@@ -39,6 +39,7 @@ class TestDcnmInvModule(TestDcnmModule):
     SUCCESS_RETURN_CODE = 200
 
     playbook_merge_switch_config = test_data.get('playbook_merge_switch_config')
+    playbook_merge_role_switch_config = test_data.get('playbook_merge_role_switch_config')
     playbook_merge_bf_switch_config = test_data.get('playbook_merge_bf_switch_config')
     playbook_merge_multiple_switch_config = test_data.get('playbook_merge_multiple_switch_config')
     playbook_merge_bf_multiple_switch_config = test_data.get('playbook_merge_bf_multiple_switch_config')
@@ -76,6 +77,7 @@ class TestDcnmInvModule(TestDcnmModule):
     get_lan_switch_override_cred_success = test_data.get('get_lan_switch_override_cred_success')
     set_lan_switch_cred_success = test_data.get('set_lan_switch_cred_success')
     set_assign_role_success = test_data.get('set_assign_role_success')
+    set_assign_bg_role_success = test_data.get('set_assign_bg_role_success')
     get_fabric_id_success = test_data.get('get_fabric_id_success')
     config_save_switch_success = test_data.get('config_save_switch_success')
     config_deploy_switch_success = test_data.get('config_deploy_switch_success')
@@ -135,6 +137,16 @@ class TestDcnmInvModule(TestDcnmModule):
                                               self.get_inventory_initial_switch_success, self.get_lan_switch_cred_success,
                                               self.set_lan_switch_cred_success, self.get_inventory_initial_switch_success,
                                               self.set_assign_role_success, self.get_fabric_id_success,
+                                              self.config_save_switch_success, self.config_deploy_switch_success]
+
+        elif 'merge_role_switch' in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+                                              self.import_switch_discover_success, self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success, self.get_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_success, self.get_inventory_initial_switch_success,
+                                              self.set_assign_bg_role_success, self.get_fabric_id_success,
                                               self.config_save_switch_success, self.config_deploy_switch_success]
 
         elif 'merge_brownfield_switch' in self._testMethodName:
@@ -344,6 +356,16 @@ class TestDcnmInvModule(TestDcnmModule):
 
         result = self.execute_module(changed=True, failed=False)
 
+        for resp in result['response']:
+            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['MESSAGE'], 'OK')
+
+    def test_dcnm_inv_merge_role_switch_fabric(self):
+        set_module_args(dict(state='merged',
+                             fabric='kharicha-fabric', config=self.playbook_merge_role_switch_config))
+
+        result = self.execute_module(changed=True, failed=False)
+        
         for resp in result['response']:
             self.assertEqual(resp['RETURN_CODE'],200)
             self.assertEqual(resp['MESSAGE'], 'OK')

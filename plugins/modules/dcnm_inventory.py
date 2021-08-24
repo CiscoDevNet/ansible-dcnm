@@ -265,7 +265,7 @@ class DcnmInventory:
         elif state == 'query':
             inv_upd = {
                 "seedIP": s_ip,
-                "role": inv['role'].replace(" ", "")
+                "role": inv['role'].replace(" ", "_")
             }
         else:
             if inv['auth_proto'] == 'MD5':
@@ -290,7 +290,7 @@ class DcnmInventory:
                 "password": inv['password'],
                 "maxHops": inv['max_hops'],
                 "cdpSecondTimeout": "5",
-                "role": inv['role'].replace(" ", ""),
+                "role": inv['role'].replace(" ", "_"),
                 "preserveConfig": inv['preserve_config']
             }
 
@@ -329,7 +329,7 @@ class DcnmInventory:
             get_switch.update({'platform': inv['nonMdsModel']})
             get_switch.update({'version': inv['release']})
             get_switch.update({'deviceIndex': inv['logicalName'] + '(' + inv['serialNumber'] + ')'})
-            get_switch.update({'role': inv['switchRole'].replace(" ", "")})
+            get_switch.update({'role': inv['switchRole'].replace(" ", "_")})
             get_switch.update({'mode': inv['mode']})
             get_switch.update({'serialNumber': inv['serialNumber']})
             switchdict = {}
@@ -795,12 +795,12 @@ class DcnmInventory:
                             query.append(inv)
                             continue
                     elif want_c['role'] != 'None' and want_c["seedIP"] == 'None':
-                        if want_c['role'] == inv['switchRole'].replace(" ", ""):
+                        if want_c['role'] == inv['switchRole'].replace(" ", "_"):
                             query.append(inv)
                             continue
                     else:
                         if want_c["seedIP"] == inv['ipAddress'] and \
-                                want_c['role'] == inv['switchRole'].replace(" ", ""):
+                                want_c['role'] == inv['switchRole'].replace(" ", "_"):
                             query.append(inv)
                             continue
         else:
