@@ -365,7 +365,18 @@ class TestDcnmInvModule(TestDcnmModule):
                              fabric='kharicha-fabric', config=self.playbook_merge_role_switch_config))
 
         result = self.execute_module(changed=True, failed=False)
+        
+        for resp in result['response']:
+            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['MESSAGE'], 'OK')
 
+    def test_dcnm_check_inv_merge_switch_fabric(self):
+        set_module_args(dict(state='merged', _ansible_check_mode=True,
+                             fabric='kharicha-fabric', config=self.playbook_merge_switch_config))
+
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertFalse(result.get('diff'))
         for resp in result['response']:
             self.assertEqual(resp['RETURN_CODE'],200)
             self.assertEqual(resp['MESSAGE'], 'OK')

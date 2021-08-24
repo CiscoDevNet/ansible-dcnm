@@ -101,7 +101,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>{&#x27;NOTE&#x27;: &quot;Though the key shown here is &#x27;profile_eth&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_eth&#x27; is used here to logically segregate the interface objects applicable for this profile&quot;}</div>
+                        <div>Though the key shown here is &#x27;profile_eth&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_eth&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
                         <div>Object profile which must be included for ethernet interface configurations.</div>
                 </td>
             </tr>
@@ -251,7 +251,7 @@ Parameters
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -291,7 +291,7 @@ Parameters
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -448,7 +448,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>{&#x27;NOTE&#x27;: &quot;Though the key shown here is &#x27;profile_lo&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_lo&#x27; is used here to logically segregate the interface objects applicable for this profile&quot;}</div>
+                        <div>Though the key shown here is &#x27;profile_lo&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_lo&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
                         <div>Object profile which must be included for loopback interface configurations.</div>
                 </td>
             </tr>
@@ -535,7 +535,7 @@ Parameters
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -553,7 +553,7 @@ Parameters
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -616,7 +616,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>{&#x27;NOTE&#x27;: &quot;Though the key shown here is &#x27;profile_pc&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_pc&#x27; is used here to logically segregate the interface objects applicable for this profile&quot;}</div>
+                        <div>Though the key shown here is &#x27;profile_pc&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_pc&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
                         <div>Object profile which must be included for port channel interface configurations.</div>
                 </td>
             </tr>
@@ -635,8 +635,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27;</div>
-                        <div>is &#x27;access&#x27;</div>
+                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -722,7 +721,7 @@ Parameters
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -829,7 +828,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>{&#x27;NOTE&#x27;: &quot;Though the key shown here is &#x27;profile_subint&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_subint&#x27; is used here to logically segregate the interface objects applicable for this profile&quot;}</div>
+                        <div>Though the key shown here is &#x27;profile_subint&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_subint&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
                         <div>Object profile which must be included for sub-interface configurations.</div>
                 </td>
             </tr>
@@ -916,7 +915,7 @@ Parameters
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -956,7 +955,7 @@ Parameters
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1067,7 +1066,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>{&#x27;NOTE&#x27;: &quot;Though the key shown here is &#x27;profile_vpc&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_vpc&#x27; is used here to logically segregate the interface objects applicable for this profile&quot;}</div>
+                        <div>Though the key shown here is &#x27;profile_vpc&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_vpc&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
                         <div>Object profile which must be included for virtual port channel inetrface configurations.</div>
                 </td>
             </tr>
@@ -1177,6 +1176,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
+                        <div>Port channel mode</div>
                 </td>
             </tr>
             <tr>
@@ -1524,52 +1524,52 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
-    States:
-    This module supports the following states:
+    # States:
+    # This module supports the following states:
+    #
+    # Merged:
+    #   Interfaces defined in the playbook will be merged into the target fabric.
+    #
+    #   The interfaces listed in the playbook will be created if not already present on the DCNM
+    #   server. If the interface is already present and the configuration information included
+    #   in the playbook is either different or not present in DCNM, then the corresponding
+    #   information is added to the interface on DCNM. If an interface mentioned in playbook
+    #   is already present on DCNM and there is no difference in configuration, no operation
+    #   will be performed for such interface.
+    #
+    # Replaced:
+    #   Interfaces defined in the playbook will be replaced in the target fabric.
+    #
+    #   The state of the interfaces listed in the playbook will serve as source of truth for the
+    #   same interfaces present on the DCNM under the fabric mentioned. Additions and updations
+    #   will be done to bring the DCNM interfaces to the state listed in the playbook.
+    #   Note: Replace will only work on the interfaces mentioned in the playbook.
+    #
+    # Overridden:
+    #   Interfaces defined in the playbook will be overridden in the target fabric.
+    #
+    #   The state of the interfaces listed in the playbook will serve as source of truth for all
+    #   the interfaces under the fabric mentioned. Additions and deletions will be done to bring
+    #   the DCNM interfaces to the state listed in the playbook. All interfaces other than the
+    #   ones mentioned in the playbook will either be deleted or reset to default state.
+    #   Note: Override will work on the all the interfaces present in the DCNM Fabric.
+    #
+    # Deleted:
+    #   Interfaces defined in the playbook will be deleted in the target fabric.
+    #
+    #   Deletes the list of interfaces specified in the playbook.  If the playbook does not include
+    #   any switches or interface information, then all interfaces from all switches in the
+    #   fabric will either be deleted or put to default state. If configuuration includes information
+    #   pertaining to any particular switch, then interfaces belonging to that switch will either be
+    #   deleted or put to default. If configuration includes both interface and switch information,
+    #   then the specified interfaces will either be deleted or reset on all the seitches specified
+    #
+    # Query:
+    #   Returns the current DCNM state for the interfaces listed in the playbook.
 
-    Merged:
-      Interfaces defined in the playbook will be merged into the target fabric.
-
-      The interfaces listed in the playbook will be created if not already present on the DCNM
-      server. If the interface is already present and the configuration information included
-      in the playbook is either different or not present in DCNM, then the corresponding
-      information is added to the interface on DCNM. If an interface mentioned in playbook
-      is already present on DCNM and there is no difference in configuration, no operation
-      will be performed for such interface.
-
-    Replaced:
-      Interfaces defined in the playbook will be replaced in the target fabric.
-
-      The state of the interfaces listed in the playbook will serve as source of truth for the
-      same interfaces present on the DCNM under the fabric mentioned. Additions and updations
-      will be done to bring the DCNM interfaces to the state listed in the playbook.
-      Note: Replace will only work on the interfaces mentioned in the playbook.
-
-    Overridden:
-      Interfaces defined in the playbook will be overridden in the target fabric.
-
-      The state of the interfaces listed in the playbook will serve as source of truth for all
-      the interfaces under the fabric mentioned. Additions and deletions will be done to bring
-      the DCNM interfaces to the state listed in the playbook. All interfaces other than the
-      ones mentioned in the playbook will either be deleted or reset to default state.
-      Note: Override will work on the all the interfaces present in the DCNM Fabric.
-
-    Deleted:
-      Interfaces defined in the playbook will be deleted in the target fabric.
-
-      Deletes the list of interfaces specified in the playbook.  If the playbook does not include
-      any switches or interface information, then all interfaces from all switches in the
-      fabric will either be deleted or put to default state. If configuuration includes information
-      pertaining to any particular switch, then interfaces belonging to that switch will either be
-      deleted or put to default. If configuration includes both interface and switch information,
-      then the specified interfaces will either be deleted or reset on all the seitches specified
-
-    Query:
-      Returns the current DCNM state for the interfaces listed in the playbook.
-
-    LOOPBACK INTERFACE
+    # LOOPBACK INTERFACE
 
     - name: Create loopback interfaces
       cisco.dcnm.dcnm_interface: &lo_merge
@@ -1683,7 +1683,7 @@ Examples
           - switch:
               - "192.172.1.1"                 # provide the switch where to deploy the config
 
-    PORTCHANNEL INTERFACE
+    # PORTCHANNEL INTERFACE
 
     - name: Create port channel interfaces
       cisco.dcnm.dcnm_interface: &pc_merge
@@ -1809,7 +1809,7 @@ Examples
                 - no shutdown
               description: "port channel acting as trunk"
 
-    SUB-INTERFACE
+    # SUB-INTERFACE
 
     - name: Create sub-interfaces
       cisco.dcnm.dcnm_interface: &sub_merge
@@ -1897,7 +1897,7 @@ Examples
                 - no shutdown
               description: "sub interface eth1/1.3 configuration - override"
 
-    VPC INTERFACE
+    # VPC INTERFACE
 
     - name: Create vPC interfaces
       cisco.dcnm.dcnm_interface: &vpc_merge
@@ -2008,30 +2008,30 @@ Examples
                   - no shutdown
                   - no shutdown
 
-    QUERY
+    # QUERY
 
-     - name: Query interface details
-          cisco.dcnm.dcnm_interface:
-            fabric: mmudigon-fabric
-            state: query            # only choose from [merged, replaced, deleted, overridden, query]
-            config:
-              - switch:
-                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
-              - name: po350
-                switch:
-                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
-              - name: lo450
-                switch:
-                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
-              - name: eth1/1
-                switch:
-                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
-              - name: eth1/15.2
-                switch:
-                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
-              - name: vpc750
-                switch:
-                  - "192.172.1.1"   # provide the switch information where the config is to be deployed
+    - name: Query interface details
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: query            # only choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - switch:
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - name: po350
+            switch:
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - name: lo450
+            switch:
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - name: eth1/1
+            switch:
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - name: eth1/15.2
+            switch:
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - name: vpc750
+            switch:
+              - "192.172.1.1"   # provide the switch information where the config is to be deployed
 
 
 
@@ -2043,4 +2043,4 @@ Status
 Authors
 ~~~~~~~
 
-- Mallik Mudigonda
+- Mallik Mudigonda(@mmudigon)

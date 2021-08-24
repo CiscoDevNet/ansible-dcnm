@@ -899,6 +899,36 @@ class TestDcnmIntfModule(TestDcnmModule):
                                                       'Ethernet1/32',
                                                       'vPC751']), True)
 
+    def test_dcnm_intf_check_multi_intf_merged_new(self):
+
+        # load the json from playbooks
+        self.config_data     = loadPlaybookData('dcnm_intf_multi_intf_configs')
+        self.have_all_payloads_data  = loadPlaybookData('dcnm_intf_have_all_payloads')
+        self.payloads_data   = []
+
+        # load required config data
+        self.playbook_config         = self.config_data.get('multi_intf_merged_config')
+        self.playbook_mock_succ_resp = self.config_data.get('mock_succ_resp')
+        self.playbook_mock_vpc_resp  = self.config_data.get('mock_vpc_resp')
+        self.mock_ip_sn              = self.config_data.get('mock_ip_sn')
+        self.mock_fab_inv            = self.config_data.get('mock_fab_inv_data')
+
+        set_module_args(dict(state='merged',
+                             _ansible_check_mode=True,
+                             fabric='test_fabric',
+                             config=self.playbook_config))
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result['diff'][0]['merged']), 5)
+        self.assertFalse(result.get('response'))
+        for d in result['diff'][0]['merged']:
+            for intf in d['interfaces']:
+                self.assertEqual ((intf['ifName'] in ['Port-channel300',
+                                                      'vPC301',
+                                                      'Ethernet1/1.1',
+                                                      'Ethernet1/10',
+                                                      'Loopback303']), True)
+
 #################################### PC ############################
 
     def test_dcnm_intf_pc_merged_new(self):
