@@ -60,7 +60,10 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">"yes"</div>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
                 </td>
                 <td>
                         <div>A flag indicating if a policy is to be created even if an identical policy already exists</div>
@@ -201,7 +204,10 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">"yes"</div>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
                 </td>
                 <td>
                         <div>A flag indicating if a policy is to be created even if an identical policy already exists</div>
@@ -296,7 +302,10 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">"yes"</div>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
                 </td>
                 <td>
                         <div>A flag specifying if a policy is to be deployed on the switches</div>
@@ -347,32 +356,32 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
-    States:
-    This module supports the following states:
+    # States:
+    # This module supports the following states:
+    #
+    # Merged:
+    #   Policies defined in the playbook will be merged into the target fabric.
+    #
+    #   The policies listed in the playbook will be created if not already present on the DCNM
+    #   server. If the policy is already present and the configuration information included
+    #   in the playbook is either different or not present in DCNM, then the corresponding
+    #   information is added to the policy on DCNM. If an policy mentioned in playbook
+    #   is already present on DCNM and there is no difference in configuration, no operation
+    #   will be performed for such policy.
+    #
+    # Deleted:
+    #   Policies defined in the playbook will be deleted in the target fabric.
+    #
+    # Query:
+    #   Returns the current DCNM state for the policies listed in the playbook.
 
-    Merged:
-      Policies defined in the playbook will be merged into the target fabric.
+    # CREATE POLICY
 
-      The policies listed in the playbook will be created if not already present on the DCNM
-      server. If the policy is already present and the configuration information included
-      in the playbook is either different or not present in DCNM, then the corresponding
-      information is added to the policy on DCNM. If an policy mentioned in playbook
-      is already present on DCNM and there is no difference in configuration, no operation
-      will be performed for such policy.
-
-    Deleted:
-      Policies defined in the playbook will be deleted in the target fabric.
-
-    Query:
-      Returns the current DCNM state for the policies listed in the playbook.
-
-    CREATE POLICY
-
-    NOTE: In the following create task, policies identified by template names template_101,
-          template_102, and template_103 are deployed on ansible_switch2 where as policies
-          template_104 and template_105 are the only policies installed on ansible_switch1.
+    # NOTE: In the following create task, policies identified by template names template_101,
+    #       template_102, and template_103 are deployed on ansible_switch2 where as policies
+    #       template_104 and template_105 are the only policies installed on ansible_switch1.
 
     - name: Create different policies
       cisco.dcnm.dcnm_policy:
@@ -403,9 +412,9 @@ Examples
                     create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch2 }}"
 
-    CREATE POLICY (including arguments)
+    # CREATE POLICY (including arguments)
 
-    NOTE: The actual arguments to be included depends on the template used to create the policy
+    # NOTE: The actual arguments to be included depends on the template used to create the policy
 
     - name: Create policy including required variables
       cisco.dcnm.dcnm_policy:
@@ -421,10 +430,10 @@ Examples
           - switch:
               - ip: "{{ ansible_switch1 }}"
 
-    MODIFY POLICY
+    # MODIFY POLICY
 
-    NOTE: Since there can be multiple policies with the same template name, policy-id MUST be used
-          to modify a particular policy.
+    # NOTE: Since there can be multiple policies with the same template name, policy-id MUST be used
+    #       to modify a particular policy.
 
     - name: Modify different policies
       cisco.dcnm.dcnm_policy:
@@ -455,10 +464,10 @@ Examples
                     create_additional_policy: false  # Do not create a policy if it already exists
                   - ip: "{{ ansible_switch2 }}"
 
-    DELETE POLICY
+    # DELETE POLICY
 
-    NOTE: In the case of deleting policies using template names, all policies using the template name
-          will be deleted. To delete specific policy, policy-ids must be used
+    # NOTE: In the case of deleting policies using template names, all policies using the template name
+    #       will be deleted. To delete specific policy, policy-ids must be used
 
     - name: Delete policies using template name
       cisco.dcnm.dcnm_policy:
@@ -488,10 +497,10 @@ Examples
               - ip: "{{ ansible_switch1 }}"
               - ip: "{{ ansible_switch2 }}"
 
-    QUERY
+    # QUERY
 
-    NOTE: In the case of Query using template names, all policies that have a matching template name will be
-          returned
+    # NOTE: In the case of Query using template names, all policies that have a matching template name will be
+    #       returned
 
     - name: Query all policies from the specified switches
       cisco.dcnm.dcnm_policy:
@@ -534,4 +543,4 @@ Status
 Authors
 ~~~~~~~
 
-- Mallik Mudigonda
+- Mallik Mudigonda(@mmudigon)

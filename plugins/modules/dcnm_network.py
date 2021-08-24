@@ -14,15 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import time
-import copy
-import re
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
-from ansible.module_utils.connection import Connection
-from ansible.module_utils.basic import AnsibleModule
-
 __author__ = "Chris Van Heuveln, Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy"
 
 DOCUMENTATION = '''
@@ -33,16 +24,16 @@ version_added: "0.9.0"
 description:
     - "Add and remove Networks from a DCNM managed VXLAN fabric."
     - "In Multisite fabrics, Networks can be created only on Multisite fabric"
-author: Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail)
+author: Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail) Praveen Ramoorthy(@praveenramoorthy)
 options:
   fabric:
     description:
-    - 'Name of the target fabric for network operations'
+    - Name of the target fabric for network operations
     type: str
     required: yes
   state:
     description:
-      - The state of DCNM after module completion.
+    - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -52,155 +43,179 @@ options:
       - query
     default: merged
   config:
-    description: 'List of details of networks being managed'
+    description:
+    - List of details of networks being managed. Not required for state deleted
     type: list
     elements: dict
-    required: true
-    note: Not required for state deleted
     suboptions:
       net_name:
-        description: 'Name of the network being managed'
+        description:
+        - Name of the network being managed
         type: str
         required: true
       vrf_name:
-        description: 'Name of the VRF to which the network belongs to'
+        description:
+        - Name of the VRF to which the network belongs to
+        - This field is required for L3 Networks. VRF name should not be specified
+          or may be specified as "" for L2 networks
         type: str
-        note: This field is required for L3 Networks. VRF name should not be specified
-              or may be specified as "" for L2 networks
       net_id:
-        description: 'ID of the network being managed'
+        description:
+        - ID of the network being managed
+        - If not specified in the playbook, DCNM will auto-select an available net_id
         type: int
         required: false
       net_template:
-        description: 'Name of the config template to be used'
+        description:
+        - Name of the config template to be used
         type: str
         default: 'Default_Network_Universal'
       net_extension_template:
-        description: 'Name of the extension config template to be used'
+        description:
+        - Name of the extension config template to be used
         type: str
         default: 'Default_Network_Extension_Universal'
       vlan_id:
-        description: 'VLAN ID for the network'
+        description:
+        - VLAN ID for the network.
+        - If not specified in the playbook, DCNM will auto-select an available vlan_id
         type: int
         required: false
-        note: If not specified in the playbook, DCNM will auto-select an available vlan_id
       routing_tag:
-        description: 'Routing Tag for the network profile'
+        description:
+        - Routing Tag for the network profile
         type: int
         required: false
         default: 12345
       gw_ip_subnet:
-        description: 'Gateway with subnet for the network'
-        type: ipv4
+        description:
+        - Gateway with subnet for the network
+        type: str
         required: false
       is_l2only:
-        description: 'Layer 2 only network'
+        description:
+        - Layer 2 only network
+        - If specified as true, VRF Name(vrf_name) should not be specified or can be
+          specified as ""
         type: bool
         required: false
-        note: If specified as true, VRF Name(vrf_name) should not be specified or can be
-              specified as ""
         default: false
       vlan_name:
-        description: 'Name of the vlan configured'
+        description:
+        - Name of the vlan configured
+        - if > 32 chars enable, system vlan long-name on switch
         type: str
-        note: if > 32 chars enable, system vlan long-name on switch
         required: false
       int_desc:
-        description: 'Description for the interface'
+        description:
+        - Description for the interface
         type: str
         required: false
       mtu_l3intf:
-        description: 'MTU for Layer 3 interfaces'
+        description:
+        - MTU for Layer 3 interfaces
+        - Configured MTU value should be in range 68-9216
         type: int
-        note: Configured MTU value should be in range 68-9216
         required: false
       arp_suppress:
-        description: 'ARP suppression'
+        description:
+        - ARP suppression
+        - ARP suppression is only supported if SVI is present when Layer-2-Only is not enabled
         type: bool
         required: false
-        note: ARP suppression is only supported if SVI is present when Layer-2-Only is not enabled
         default: false
       dhcp_srvr1_ip:
-        description: 'DHCP relay IP address of the first DHCP server'
-        type: ipv4
+        description:
+        - DHCP relay IP address of the first DHCP server
+        type: str
         required: false
       dhcp_srvr1_vrf:
-        description: 'VRF ID of first DHCP server'
+        description:
+        - VRF ID of first DHCP server
         type: str
         required: false
       dhcp_srvr2_ip:
-        description: 'DHCP relay IP address of the second DHCP server'
-        type: ipv4
+        description:
+        - DHCP relay IP address of the second DHCP server
+        type: str
         required: false
       dhcp_srvr2_vrf:
-        description: 'VRF ID of second DHCP server'
+        description:
+        - VRF ID of second DHCP server
         type: str
         required: false
       dhcp_srvr3_ip:
-        description: 'DHCP relay IP address of the third DHCP server'
-        type: ipv4
+        description:
+        - DHCP relay IP address of the third DHCP server
+        type: str
         required: false
       dhcp_srvr3_vrf:
-        description: 'VRF ID of third DHCP server'
+        description:
+        - VRF ID of third DHCP server
         type: str
         required: false
       attach:
-        description: 'List of network attachment details'
+        description:
+        - List of network attachment details
         type: list
         elements: dict
         suboptions:
           ip_address:
-            description: 'IP address of the switch where the network will be attached or detached'
-            type: ipv4
+            description:
+            - IP address of the switch where the network will be attached or detached
+            type: str
             required: true
           ports:
-            description: 'List of switch interfaces where the network will be attached'
+            description:
+            - List of switch interfaces where the network will be attached
             type: str
             required: true
           deploy:
-            description: 'Per switch knob to control whether to deploy the attachment'
+            description:
+            - Per switch knob to control whether to deploy the attachment
             type: bool
             default: true
       deploy:
-        description: 'Global knob to control whether to deploy the attachment'
+        description:
+        - Global knob to control whether to deploy the attachment
         type: bool
         default: true
 '''
 
 EXAMPLES = '''
-This module supports the following states:
-
-Merged:
-  Networks defined in the playbook will be merged into the target fabric.
-    - If the network does not exist it will be added.
-    - If the network exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Networks that are not specified in the playbook will be untouched.
-
-Replaced:
-  Networks defined in the playbook will be replaced in the target fabric.
-    - If the Networks does not exist it will be added.
-    - If the Networks exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - Networks that are not specified in the playbook will be untouched.
-
-Overridden:
-  Networks defined in the playbook will be overridden in the target fabric.
-    - If the Networks does not exist it will be added.
-    - If the Networks exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - Networks that are not specified in the playbook will be deleted.
-
-Deleted:
-  Networks defined in the playbook will be deleted.
-  If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
-
-Query:
-  Returns the current DCNM state for the Networks listed in the playbook.
+# This module supports the following states:
+#
+# Merged:
+#   Networks defined in the playbook will be merged into the target fabric.
+#     - If the network does not exist it will be added.
+#     - If the network exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Networks that are not specified in the playbook will be untouched.
+#
+# Replaced:
+#   Networks defined in the playbook will be replaced in the target fabric.
+#     - If the Networks does not exist it will be added.
+#     - If the Networks exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - Networks that are not specified in the playbook will be untouched.
+#
+# Overridden:
+#   Networks defined in the playbook will be overridden in the target fabric.
+#     - If the Networks does not exist it will be added.
+#     - If the Networks exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - Networks that are not specified in the playbook will be deleted.
+#
+# Deleted:
+#   Networks defined in the playbook will be deleted.
+#   If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the Networks listed in the playbook.
 
 - name: Merge networks
   cisco.dcnm.dcnm_network:
@@ -221,7 +236,7 @@ Query:
       - ip_address: 192.168.1.225
         ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
-        deploy: true
+      deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -300,7 +315,7 @@ Query:
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         #   deploy: true
-        deploy: true
+      deploy: true
       # Delete this network
       # - net_name: ansible-net12
       #   vrf_name: Tenant-2
@@ -348,6 +363,7 @@ Query:
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: query
+    config:
     - net_name: ansible-net13
       vrf_name: Tenant-1
       net_id: 7005
@@ -364,6 +380,15 @@ Query:
       gw_ip_subnet: '192.168.40.1/24'
       deploy: false
 '''
+
+import json
+import time
+import copy
+import re
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
+from ansible.module_utils.connection import Connection
+from ansible.module_utils.basic import AnsibleModule
 
 
 class DcnmNetwork:
@@ -1310,6 +1335,9 @@ class DcnmNetwork:
                     create_path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
                     diff_create_quick.append(want_c)
 
+                    if self.module.check_mode:
+                        continue
+
                     resp = dcnm_send(self.module, method, create_path, json.dumps(want_c))
                     self.result['response'].append(resp)
                     fail, self.result['changed'] = self.handle_response(resp, "create")
@@ -2114,10 +2142,9 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(default='merged',
                    choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
-        check_mode=dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -2159,10 +2186,6 @@ def main():
 
     dcnm_net.result['warnings'].append(warn_msg) if warn_msg else []
 
-    if module.params['check_mode']:
-        dcnm_net.result['changed'] = False
-        module.exit_json(**dcnm_net.result)
-
     if dcnm_net.diff_create or dcnm_net.diff_create_quick or dcnm_net.diff_attach \
             or dcnm_net.diff_deploy or dcnm_net.diff_delete or dcnm_net.diff_create_update \
             or dcnm_net.diff_detach or dcnm_net.diff_undeploy:
@@ -2172,6 +2195,10 @@ def main():
 
     dcnm_net.format_diff()
     dcnm_net.result['diff'] = dcnm_net.diff_input_format
+
+    if module.check_mode:
+        dcnm_net.result['changed'] = False
+        module.exit_json(**dcnm_net.result)
 
     dcnm_net.push_to_remote()
 

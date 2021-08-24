@@ -41,13 +41,12 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
                          / <span style="color: purple">elements=dictionary</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
-                        <div>List of switches being managed</div>
+                        <div>List of switches being managed. Not required for state deleted</div>
                 </td>
             </tr>
                                 <tr>
@@ -161,7 +160,7 @@ Parameters
                     <b>seed_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -235,115 +234,115 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
-    This module supports the following states:
-
-    Merged:
-      Switches defined in the playbook will be merged into the target fabric.
-        - If the switch does not exist it will be added.
-        - Switches that are not specified in the playbook will be untouched.
-
-    Overridden:
-      The playbook will serve as source of truth for the target fabric.
-        - If the switch does not exist it will be added.
-        - If the switch is not defined in the playbook but exists in DCNM it will be removed.
-        - If the switch exists, properties that need to be modified and can be modified will be modified.
-
-    Deleted:
-      Deletes the list of switches specified in the playbook.
-      If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
-
-    Query:
-      Returns the current DCNM state for the switches listed in the playbook.
+    # This module supports the following states:
+    #
+    # Merged:
+    #   Switches defined in the playbook will be merged into the target fabric.
+    #     - If the switch does not exist it will be added.
+    #     - Switches that are not specified in the playbook will be untouched.
+    #
+    # Overridden:
+    #   The playbook will serve as source of truth for the target fabric.
+    #     - If the switch does not exist it will be added.
+    #     - If the switch is not defined in the playbook but exists in DCNM it will be removed.
+    #     - If the switch exists, properties that need to be modified and can be modified will be modified.
+    #
+    # Deleted:
+    #   Deletes the list of switches specified in the playbook.
+    #   If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
+    #
+    # Query:
+    #   Returns the current DCNM state for the switches listed in the playbook.
 
 
     # The following two switches will be merged into the existing fabric
-    -name: Merge switch into fabric
-        cisco.dcnm.dcnm_inventory:
-          fabric: vxlan-fabric
-          state: merged # merged / deleted / overridden / query
-          config:
-           - seed_ip: 192.168.0.1
-             auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-             user_name: switch_username
-             password: switch_password
-             max_hops: 0
-             role: spine
-             preserve_config: False # boolean, default is  true
-           - seed_ip: 192.168.0.2
-             auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-             user_name: switch_username
-             password: switch_password
-             max_hops: 0
-             role: leaf
-             preserve_config: False # boolean, default is  true
+    - name: Merge switch into fabric
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: merged # merged / deleted / overridden / query
+        config:
+        - seed_ip: 192.168.0.1
+          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+          user_name: switch_username
+          password: switch_password
+          max_hops: 0
+          role: spine
+          preserve_config: False # boolean, default is  true
+        - seed_ip: 192.168.0.2
+          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+          user_name: switch_username
+          password: switch_password
+          max_hops: 0
+          role: leaf
+          preserve_config: False # boolean, default is true
 
     # The following two switches will be added or updated in the existing fabric and all other
     # switches will be removed from the fabric
     - name: Override Switch
-        cisco.dcnm.dcnm_inventory:
-          fabric: vxlan-fabric
-          state: overridden # merged / deleted / overridden / query
-          config:
-           - seed_ip: 192.168.0.1
-             auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-             user_name: switch_username
-             password: switch_password
-             max_hops: 0
-             role: spine
-             preserve_config: False # boolean, default is  true
-           - seed_ip: 192.168.0.2
-             auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-             user_name: switch_username
-             password: switch_password
-             max_hops: 0
-             role: leaf
-             preserve_config: False # boolean, default is  true
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: overridden # merged / deleted / overridden / query
+        config:
+        - seed_ip: 192.168.0.1
+          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+          user_name: switch_username
+          password: switch_password
+          max_hops: 0
+          role: spine
+          preserve_config: False # boolean, default is  true
+        - seed_ip: 192.168.0.2
+          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+          user_name: switch_username
+          password: switch_password
+          max_hops: 0
+          role: leaf
+          preserve_config: False # boolean, default is true
 
     # The following two switches will be deleted in the existing fabric
     - name: Delete selected switches
-        cisco.dcnm.dcnm_inventory:
-          fabric: vxlan-fabric
-          state: deleted # merged / deleted / overridden / query
-          config:
-           - seed_ip: 192.168.0.1
-             auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-             user_name: switch_username
-             password: switch_password
-             max_hops: 0
-             role: spine
-             preserve_config: False # boolean, default is  true
-           - seed_ip: 192.168.0.2
-             auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-             user_name: switch_username
-             password: switch_password
-             max_hops: 0
-             role: leaf
-             preserve_config: False # boolean, default is  true
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: deleted # merged / deleted / overridden / query
+        config:
+        - seed_ip: 192.168.0.1
+          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+          user_name: switch_username
+          password: switch_password
+          max_hops: 0
+          role: spine
+          preserve_config: False # boolean, default is  true
+        - seed_ip: 192.168.0.2
+          auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+          user_name: switch_username
+          password: switch_password
+          max_hops: 0
+          role: leaf
+          preserve_config: False # boolean, default is  true
 
     # All the switches will be deleted in the existing fabric
     - name: Delete all the switches
-        cisco.dcnm.dcnm_inventory:
-          fabric: vxlan-fabric
-          state: deleted # merged / deleted / overridden / query
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: deleted # merged / deleted / overridden / query
 
     # The following two switches information will be queried in the existing fabric
-    -name: Query switch into fabric
-        cisco.dcnm.dcnm_inventory:
-          fabric: vxlan-fabric
-          state: query # merged / deleted / overridden / query
-          config:
-           - seed_ip: 192.168.0.1
-             role: spine
-           - seed_ip: 192.168.0.2
-             role: leaf
+    - name: Query switch into fabric
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: query # merged / deleted / overridden / query
+        config:
+        - seed_ip: 192.168.0.1
+          role: spine
+        - seed_ip: 192.168.0.2
+          role: leaf
 
     # All the existing switches will be queried in the existing fabric
     - name: Query all the switches in the fabric
-        cisco.dcnm.dcnm_inventory:
-          fabric: vxlan-fabric
-          state: query # merged / deleted / overridden / query
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: query # merged / deleted / overridden / query
 
 
 
@@ -355,4 +354,4 @@ Status
 Authors
 ~~~~~~~
 
-- Karthik Babu Harichandra Babu(kharicha@cisco.com)
+- Karthik Babu Harichandra Babu(@kharicha)
