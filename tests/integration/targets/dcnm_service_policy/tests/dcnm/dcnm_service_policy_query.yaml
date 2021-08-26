@@ -156,10 +156,6 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 5'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
     - name: Query service policies based on service node and policy name
       cisco.dcnm.dcnm_service_policy: 
         fabric: "{{ ansible_it_fabric }}"                     # mandatory

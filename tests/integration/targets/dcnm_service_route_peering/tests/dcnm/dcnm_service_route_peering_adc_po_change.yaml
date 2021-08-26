@@ -6,9 +6,9 @@
   local_action: command rm -f srp.log
 
 - name: Delete route peerings
-  cisco.dcnm.dcnm_service_route_peering: 
-    fabric: "{{ ansible_it_fabric }}" 
-    service_fabric: "{{ ansible_it_service_fabric }}" 
+  cisco.dcnm.dcnm_service_route_peering:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_it_service_fabric }}"
     state: deleted
   register: result
 
@@ -24,37 +24,33 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Timeout - sleep for 240 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 240
-
     - name: Create Loadbalancer One ARM Static and eBGP peerings
       cisco.dcnm.dcnm_service_route_peering:
-        fabric: "{{ ansible_it_fabric }}" 
-        service_fabric: "{{ ansible_it_service_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config:
           - name: IT-ADC-RP4
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
               name: rp4-sn2-first-arm                        # mandatory
               vlan_id: 401                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
                 ipv6_gw: 2004:db01::1/64                     # optional, default is ''
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
                 tag: 41111                                   # optional, default is 12345
                 ipv4_neighbor: 41.41.41.1                    # mandatory
-                ipv4_lo: 41.41.41.2                          # mandatory
-                ipv4_vpc_peer_lo: 41.41.41.3                 # optional, default is ''
+                ipv4_lo: 41.1.1.2                            # mandatory
+                ipv4_vpc_peer_lo: 41.1.1.3                   # optional, default is ''
                 ipv6_neighbor: 2004:4141::1                  # optional, default is ''
-                ipv6_lo: 2004:4142::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2004:4143::1               # optional, default is ''
-                route_map_tag: 41112                         # optional, default is 12345 
-                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is '' 
+                ipv6_lo: 2004:0102::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2004:0103::1               # optional, default is ''
+                route_map_tag: 41112                         # optional, default is 12345
+                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
                 local_asn: 65401                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             reverse_next_hop: 192.164.1.100                  # mandatory
@@ -63,11 +59,11 @@
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
               name: rp6-sn2-first-arm                        # mandatory
               vlan_id: 601                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
                 ipv6_gw: 2006:db01::1/64                     # optional, default is ''
                 vlan_name: rp6-sn2-first-arm                 # optional, default is ''
@@ -103,42 +99,37 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
-
 ##############################################
 ##                CONVERT                   ##
 ##############################################
 
     - name: Convert Loadbalancer One ARM Static to eBGP and eBGP to Static peerings
       cisco.dcnm.dcnm_service_route_peering:
-        fabric: "{{ ansible_it_fabric }}" 
-        service_fabric: "{{ ansible_it_service_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config:
           - name: IT-ADC-RP6
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
               name: rp6-sn2-first-arm                        # mandatory
               vlan_id: 601                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
                 ipv6_gw: 2006:db01::1/64                     # optional, default is ''
                 vlan_name: rp6-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
                 tag: 61111                                   # optional, default is 12345
                 ipv4_neighbor: 61.61.61.1                    # mandatory
-                ipv4_lo: 61.61.61.2                          # mandatory
-                ipv4_vpc_peer_lo: 61.61.61.3                 # optional, default is ''
+                ipv4_lo: 61.1.1.2                            # mandatory
+                ipv4_vpc_peer_lo: 61.1.1.3                   # optional, default is ''
                 ipv6_neighbor: 2006:6161::1                  # optional, default is ''
-                ipv6_lo: 2006:6162::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2006:6163::1               # optional, default is ''
-                route_map_tag: 61112                         # optional, default is 12345 
-                neigh_int_descr: "RP6 SN2 first arm"         # optional, default is '' 
+                ipv6_lo: 2006:0102::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2006:0103::1               # optional, default is ''
+                route_map_tag: 61112                         # optional, default is 12345
+                neigh_int_descr: "RP6 SN2 first arm"         # optional, default is ''
                 local_asn: 65601                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             reverse_next_hop: 192.166.1.100                  # mandatory
@@ -147,11 +138,11 @@
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
               name: rp4-sn2-first-arm                        # mandatory
               vlan_id: 401                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
                 ipv6_gw: 2004:db01::1/64                     # optional, default is ''
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
@@ -187,49 +178,44 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
-
 ##############################################
 ##                MERGE                     ##
 ##############################################
 
     - name: Create Loadbalancer Two ARM Static and eBGP peerings
       cisco.dcnm.dcnm_service_route_peering:
-        fabric: "{{ ansible_it_fabric }}" 
-        service_fabric: "{{ ansible_it_service_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config:
           - name: IT-ADC-RP5
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
               name: rp5-sn2-first-arm                        # mandatory
               vlan_id: 501                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
                 ipv6_gw: 2005:db01::1/64                     # optional, default is ''
                 vlan_name: rp5-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP5 SN2 first arm intf"          # optional, default is ''
                 tag: 51111                                   # optional, default is 12345
                 ipv4_neighbor: 51.51.51.1                    # mandatory
-                ipv4_lo: 51.51.51.2                          # mandatory
-                ipv4_vpc_peer_lo: 51.51.51.3                 # optional, default is ''
+                ipv4_lo: 51.1.1.2                            # mandatory
+                ipv4_vpc_peer_lo: 51.1.1.3                   # optional, default is ''
                 ipv6_neighbor: 2005:5151::1                  # optional, default is ''
-                ipv6_lo: 2005:5152::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2005:5153::1               # optional, default is ''
-                route_map_tag: 51115                         # optional, default is 12345 
-                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is '' 
+                ipv6_lo: 2005:0102::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2005:0103::1               # optional, default is ''
+                route_map_tag: 51115                         # optional, default is 12345
+                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is ''
                 local_asn: 65501                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             second_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
               name: rp5-sn2-second-arm                       # mandatory
               vlan_id: 502                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
                 ipv6_gw: 2005:db02::1/64                     # optional, default is ''
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
@@ -241,11 +227,11 @@
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
               name: rp7-sn2-first-arm                        # mandatory
               vlan_id: 701                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
                 ipv6_gw: 2007:db01::1/64                     # optional, default is ''
                 vlan_name: rp7-sn2-first-arm                 # optional, default is ''
@@ -260,7 +246,7 @@
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
               name: rp7-sn2-second-arm                       # mandatory
               vlan_id: 702                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
                 ipv6_gw: 2007:db02::1/64                     # optional, default is ''
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
@@ -286,49 +272,44 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
-
 ##############################################
 ##                CONVERT                   ##
 ##############################################
 
     - name: Convert Loadbalancer Two ARM Static to eBGP and eBGP to Static peerings
       cisco.dcnm.dcnm_service_route_peering:
-        fabric: "{{ ansible_it_fabric }}" 
-        service_fabric: "{{ ansible_it_service_fabric }}" 
-        config: 
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config:
           - name: IT-ADC-RP7
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
               name: rp7-sn2-first-arm                        # mandatory
               vlan_id: 701                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
                 ipv6_gw: 2007:db01::1/64                     # optional, default is ''
                 vlan_name: rp7-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP7 SN2 first arm intf"          # optional, default is ''
                 tag: 51111                                   # optional, default is 12345
                 ipv4_neighbor: 71.71.71.1                    # mandatory
-                ipv4_lo: 71.71.71.2                          # mandatory
-                ipv4_vpc_peer_lo: 71.71.71.3                 # optional, default is ''
+                ipv4_lo: 71.1.1.2                            # mandatory
+                ipv4_vpc_peer_lo: 71.1.1.3                   # optional, default is ''
                 ipv6_neighbor: 2007:7171::1                  # optional, default is ''
-                ipv6_lo: 2007:7172::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2007:7173::1               # optional, default is ''
-                route_map_tag: 71115                         # optional, default is 12345 
-                neigh_int_descr: "RP7 SN2 first arm"         # optional, default is '' 
+                ipv6_lo: 2007:0102::1                        # optional, default is ''
+                ipv6_vpc_peer_lo: 2007:0103::1               # optional, default is ''
+                route_map_tag: 71115                         # optional, default is 12345
+                neigh_int_descr: "RP7 SN2 first arm"         # optional, default is ''
                 local_asn: 65701                             # optional, default is ''
                 adv_host: true                               # optional, default is false
             second_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
               name: rp7-sn2-second-arm                       # mandatory
               vlan_id: 702                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
                 ipv6_gw: 2007:db02::1/64                     # optional, default is ''
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
@@ -340,11 +321,11 @@
             node_name: "{{ ansible_snode_2 }}"               # mandatory
             deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            first_arm: 
+            first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
               name: rp5-sn2-first-arm                        # mandatory
               vlan_id: 501                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
                 ipv6_gw: 2005:db01::1/64                     # optional, default is ''
                 vlan_name: rp5-sn2-first-arm                 # optional, default is ''
@@ -359,7 +340,7 @@
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
               name: rp5-sn2-second-arm                       # mandatory
               vlan_id: 502                                   # mandatory
-              profile: 
+              profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
                 ipv6_gw: 2005:db02::1/64                     # optional, default is ''
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
@@ -385,10 +366,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
 ##############################################
 ##                CLEANUP                   ##
 ##############################################
@@ -397,10 +374,10 @@
 
 
     - name: Delete all created route peerings
-      cisco.dcnm.dcnm_service_route_peering: 
-        fabric: "{{ ansible_it_fabric }}" 
-        service_fabric: "{{ ansible_it_service_fabric }}" 
-        config: 
+      cisco.dcnm.dcnm_service_route_peering:
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config:
           - name: IT-FW-RP1                                   # mandatory
             node_name: "{{ ansible_snode_1 }}"                # mandatory
 

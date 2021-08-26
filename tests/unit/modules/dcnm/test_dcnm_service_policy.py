@@ -71,12 +71,17 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             create_sp3_resp  = self.payloads_data.get('create_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2, get_snt_resp2,
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               create_sp1_resp, create_sp2_resp, create_sp3_resp, 
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_sn1_att_status,
+                                              get_sn2_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_merged_new_no_opt_elems' == self._testMethodName):
@@ -89,12 +94,16 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             create_sp2_resp  = self.payloads_data.get('create_sp2_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2,
                                               have_sp1_resp, have_sp2_resp,
                                               create_sp1_resp, create_sp2_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_sn1_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_merged_existing_no_opt_elems' == self._testMethodName):
@@ -109,6 +118,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             create_sp2_resp  = self.payloads_data.get('create_sp2_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2,
@@ -116,6 +127,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               get_sn1_att_status, get_sn2_att_status,
                                               create_sp1_resp, create_sp2_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_sn1_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_merged_new_check_mode' == self._testMethodName):
@@ -132,6 +145,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
             resp_unauth_err  = self.payloads_data.get('resp_unauth_err')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2,
@@ -139,6 +154,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               resp_unauth_err, [],
                                               create_sp1_resp, create_sp2_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_sn1_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_config_without_state' == self._testMethodName):
@@ -154,12 +171,16 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             create_sp3_resp  = self.payloads_data.get('create_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2, get_snt_resp3,
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               create_sp1_resp, create_sp2_resp, create_sp3_resp, 
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_sn1_att_status, get_sn2_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_merge_no_deploy' == self._testMethodName):
@@ -175,12 +196,17 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             create_sp3_resp  = self.payloads_data.get('create_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2, get_snt_resp3,
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               create_sp1_resp, create_sp2_resp, create_sp3_resp, 
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_sn1_att_status,
+                                              get_sn2_att_status,
+                                              get_sn2_att_status
                                               ]
 
             pass
@@ -209,12 +235,15 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             have_sp2_resp    =  []
             have_sp3_resp    =  []
             get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
             get_snt_resp1    = self.payloads_data.get('get_snt1_response')
             get_snt_resp2    = self.payloads_data.get('get_snt2_response')
             get_snt_resp3    = self.payloads_data.get('get_snt2_response')
             create_sp2_resp  = self.payloads_data.get('create_sp2_resp')
             create_sp3_resp  = self.payloads_data.get('create_sp3_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2, get_snt_resp3,
@@ -222,6 +251,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               get_sn1_att_status,
                                               create_sp2_resp, create_sp3_resp, 
                                               deploy_sp2_sp3_resp, 
+                                              get_sn2_att_status,
+                                              get_sn2_att_status
                                               ]
 
             pass
@@ -241,13 +272,17 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snodes_resp, 
                                               get_policy_with_sn1, get_policy_with_sn2,
                                               det_sp1_resp, det_sp2_sp3_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp1_resp, delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -263,12 +298,16 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_policy_with_sn1, get_policy_with_sn2,
                                               det_sp1_resp, det_sp2_sp3_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp1_resp, delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -283,6 +322,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp1_resp  = self.payloads_data.get('delete_sp1_resp')
             delete_sp2_resp  = self.payloads_data.get('delete_sp2_resp')
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
 
@@ -290,7 +331,9 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               det_sp1_resp, det_sp2_sp3_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp1_resp, delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -306,14 +349,16 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_policy_with_sn1, get_policy_with_sn2,
                                               det_sp1_resp, det_sp2_sp3_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              delete_sp1_resp, delete_sp2_resp,
-                                              delete_sp3_resp
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              delete_sp1_resp, delete_sp2_resp
                                               ]
 
         if ('test_dcnm_sp_delete_existing_detach_unauth_err' == self._testMethodName):
@@ -329,12 +374,16 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
             resp_unauth_err  = self.payloads_data.get('resp_unauth_err')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               resp_unauth_err, det_sp1_resp, det_sp2_sp3_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp1_resp, delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -351,13 +400,17 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
             resp_unauth_err  = self.payloads_data.get('resp_unauth_err')
 
             self.run_dcnm_send.side_effect = [
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               det_sp1_resp, det_sp2_sp3_resp,
                                               resp_unauth_err, deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp1_resp, delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -375,12 +428,16 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
             resp_unauth_err  = self.payloads_data.get('resp_unauth_err')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               det_sp1_resp, det_sp2_sp3_resp,
                                               deploy_sp1_resp, deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               resp_unauth_err, delete_sp1_resp, delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -394,12 +451,14 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp2_resp  = self.payloads_data.get('delete_sp2_resp')
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               det_sp2_sp3_resp,
                                               deploy_sp2_sp3_resp, 
-                                              deploy_sp2_sp3_resp, 
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp2_resp,
                                               delete_sp3_resp
                                               ]
@@ -423,6 +482,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
             resp_unauth_err  = self.payloads_data.get('resp_unauth_err')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2, get_snt_resp3,
@@ -430,7 +491,10 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               resp_unauth_err, get_sp1_resp,
                                               create_sp1_resp, create_sp2_resp, create_sp3_resp, 
                                               resp_unauth_err,
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp 
+                                              deploy_sp1_resp, deploy_sp2_sp3_resp ,
+                                              get_sn1_att_status,
+                                              get_sn2_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_replace_sp1_to_sp3_existing' == self._testMethodName):
@@ -448,13 +512,18 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             create_sp3_resp  = self.payloads_data.get('create_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1, get_snt_resp2, get_snt_resp3,
                                               have_sp1_resp, have_sp2_resp, have_sp3_resp,
                                               get_sn1_att_status, get_sn2_att_status,
                                               create_sp1_resp, create_sp2_resp, create_sp3_resp, 
-                                              deploy_sp1_resp, deploy_sp2_sp3_resp 
+                                              deploy_sp1_resp, deploy_sp2_sp3_resp,
+                                              get_sn1_att_status,
+                                              get_sn2_att_status,
+                                              get_sn2_att_status
                                               ]
 
         if ('test_dcnm_sp_replace_sp1_to_sp3_existing_no_change' == self._testMethodName):
@@ -487,6 +556,10 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp1_resp  = self.payloads_data.get('deploy_sp1_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1,
@@ -496,9 +569,11 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               create_sp1_resp,
                                               det_sp2_sp3_resp,
                                               deploy_sp2_sp3_resp,
-                                              deploy_sp2_sp3_resp,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp2_resp, delete_sp3_resp,
-                                              deploy_sp1_resp
+                                              deploy_sp1_resp,
+                                              get_sn1_att_status,
                                               ]
 
         if ('test_dcnm_sp_override_with_existing_peering' == self._testMethodName):
@@ -515,6 +590,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp2_resp  = self.payloads_data.get('delete_sp2_resp')
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1,
@@ -524,8 +601,9 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               get_sn1_att_status,
                                               det_sp2_sp3_resp,
                                               deploy_sp2_sp3_resp,
-                                              deploy_sp2_sp3_resp,
-                                              delete_sp2_resp, delete_sp3_resp,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
+                                              delete_sp2_resp, delete_sp3_resp
                                               ]
 
         if ('test_dcnm_sp_override_with_existing_peering_updated' == self._testMethodName):
@@ -542,6 +620,10 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             deploy_sp2_sp3_resp  = self.payloads_data.get('deploy_sp2_sp3_resp')
             delete_sp2_resp  = self.payloads_data.get('delete_sp2_resp')
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
+            get_sn1_att_status = self.payloads_data.get('get_sn1_att_status')
+            get_sn2_att_status = self.payloads_data.get('get_sn2_att_status')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snt_resp1,
@@ -552,9 +634,11 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               create_sp1_resp,
                                               det_sp2_sp3_resp,
                                               deploy_sp2_sp3_resp, 
-                                              deploy_sp2_sp3_resp, 
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp2_resp, delete_sp3_resp,
                                               deploy_sp1_resp, 
+                                              get_sn1_att_status
                                               ]
 
         if ('test_dcnm_sp_override_with_no_config' == self._testMethodName):
@@ -569,6 +653,8 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
             delete_sp1_resp  = self.payloads_data.get('delete_sp1_resp')
             delete_sp2_resp  = self.payloads_data.get('delete_sp2_resp')
             delete_sp3_resp  = self.payloads_data.get('delete_sp3_resp')
+            get_dd_sn1_att_status = self.payloads_data.get('get_dd_sn1_att_status')
+            get_dd_sn2_att_status = self.payloads_data.get('get_dd_sn2_att_status')
 
             self.run_dcnm_send.side_effect = [
                                               get_snodes_resp,
@@ -577,8 +663,9 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                                               det_sp2_sp3_resp,
                                               deploy_sp1_resp, 
                                               deploy_sp2_sp3_resp, 
-                                              deploy_sp1_resp, 
-                                              deploy_sp2_sp3_resp, 
+                                              get_dd_sn1_att_status,
+                                              get_dd_sn2_att_status,
+                                              get_dd_sn2_att_status,
                                               delete_sp1_resp, delete_sp2_resp, delete_sp3_resp,
                                               ]
 
@@ -1167,7 +1254,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result["diff"][0]["merged"]) , 0)
-        self.assertEqual(len(result["diff"][0]["deleted"]) , 3)
+        self.assertEqual(len(result["diff"][0]["deleted"]) , 2)
         self.assertEqual(len(result["diff"][0]["modified"]) , 0)
         self.assertEqual(len(result["diff"][0]["query"]) , 0)
         self.assertEqual(len(result["diff"][0]["deploy"]) , 0)

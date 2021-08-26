@@ -347,7 +347,7 @@
         "fabricName": "external",
         "attachedFabricName": "mmudigon",
         "policyName": "service_policy_3",
-        "peeringName": "IT-ADC-RP4",
+        "peeringName": "IT-ADC-RP5",
         "sourceVrfName": "MY_IT_VRF_21",
         "destinationVrfName": "MY_IT_VRF_21",
         "sourceNetwork": "MY_IT_NET_21",
@@ -637,7 +637,7 @@
           "SRC_NETWORK_NAME": "MY_IT_NET_21",
           "SRC_PORT": "3000"
         },
-        "peeringName": "IT-ADC-RP4",
+        "peeringName": "IT-ADC-RP5",
         "policyName": "service_policy_3",
         "policyTemplateName": "service_pbr",
         "reverseEnabled": true,
@@ -1545,6 +1545,337 @@
         "ACL_NAME_REVERSE": "rev_pbr_acl_3",
         "ROUTE_MAP_MATCH_SEQUENCE_NUMBER": "301",
         "ROUTE_MAP_MATCH_SEQUENCE_NUMBER_REVERSE": "302"
+      }
+    }
+    ]
+  },
+
+  "get_dd_sn2_att_status": {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.122.197.6/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/policies/mmudigon",
+    "MESSAGE": "",
+    "DATA": [
+    {
+      "fabricName": "external",
+      "attachedFabricName": "mmudigon",
+      "policyName": "service_policy_2",
+      "peeringName": "IT-ADC-RP4",
+      "sourceVrfName": "MY_IT_VRF_21",
+      "destinationVrfName": "MY_IT_VRF_21",
+      "sourceNetwork": "MY_IT_NET_21",
+      "destinationNetwork": "MY_IT_NET_22",
+      "sourceNetworkName": "MY_IT_NET_21",
+      "destinationNetworkName": "MY_IT_NET_22",
+      "nextHopIp": "",
+      "reverseEnabled": true,
+      "reverseNextHopIp": "192.164.1.100",
+      "serviceNodeName": "IT-SN-2",
+      "serviceNodeType": "ADC",
+      "routeMapName": "rm_MY_IT_VRF_21_MY_IT_NET_21",
+      "enabled": false,
+      "status": "NA",
+      "statusDetails": [
+      {
+        "resourceType": "Policy",
+        "resourceName": "MY_IT_VRF_21~rev_pbr_acl_20",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "switchSerialNumber": "SAL1820SDPP",
+          "status": "NA",
+          "updatedBy": "config-compliance",
+          "updatedTime": 1623043158793
+        }
+        ]
+      },
+      {
+        "resourceType": "Network",
+        "resourceName": "MY_IT_NET_22",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "status": "NA",
+          "updatedTime": 1623050176823
+        }
+        ]
+      }
+      ],
+      "lastUpdated": 1623043092715,
+      "policyTemplateName": "service_pbr",
+      "nvPairs": {
+        "PROTOCOL": "udp",
+        "SRC_PORT": "2000",
+        "DEST_PORT": "2001",
+        "NEXT_HOP_IP": "",
+        "REVERSE": "true",
+        "REVERSE_NEXT_HOP_IP": "192.164.1.100",
+        "FWD_DIRECTION": "true",
+        "ROUTE_MAP_ACTION": "permit",
+        "NEXT_HOP_OPTION": "drop-on-fail",
+        "ACL_NAME": "pbr_acl_2",
+        "ACL_NAME_REVERSE": "rev_pbr_acl_20",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER": "201",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER_REVERSE": "202"
+      }
+    },
+    {
+      "fabricName": "external",
+      "attachedFabricName": "mmudigon",
+      "policyName": "service_policy_4",
+      "peeringName": "IT-ADC-RP6",
+      "sourceVrfName": "MY_IT_VRF_41",
+      "destinationVrfName": "MY_IT_VRF_41",
+      "sourceNetwork": "MY_IT_NET_41",
+      "destinationNetwork": "MY_IT_NET_42",
+      "sourceNetworkName": "MY_IT_NET_41",
+      "destinationNetworkName": "MY_IT_NET_42",
+      "nextHopIp": "",
+      "reverseEnabled": true,
+      "reverseNextHopIp": "192.166.2.100",
+      "serviceNodeName": "IT-SN-2",
+      "serviceNodeType": "ADC",
+      "routeMapName": "rm_MY_IT_VRF_41_MY_IT_NET_41",
+      "enabled": false,
+      "status": "NA",
+      "statusDetails": [
+      {
+        "resourceType": "Policy",
+        "resourceName": "MY_IT_VRF_41~rev_pbr_acl_40",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "switchSerialNumber": "SAL1820SDPP",
+          "status": "NA",
+          "updatedBy": "config-compliance",
+          "updatedTime": 1623043146190
+        }
+        ]
+      },
+      {
+        "resourceType": "Network",
+        "resourceName": "MY_IT_NET_42",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "status": "NA",
+          "updatedTime": 1623050176870
+        }
+        ]
+      }
+      ],
+      "lastUpdated": 1623043104510,
+      "policyTemplateName": "service_pbr",
+      "nvPairs": {
+        "PROTOCOL": "tcp",
+        "SRC_PORT": "4000",
+        "DEST_PORT": "4001",
+        "NEXT_HOP_IP": "",
+        "REVERSE": "true",
+        "REVERSE_NEXT_HOP_IP": "192.166.2.100",
+        "FWD_DIRECTION": "true",
+        "ROUTE_MAP_ACTION": "permit",
+        "NEXT_HOP_OPTION": "drop",
+        "ACL_NAME": "pbr_acl_4",
+        "ACL_NAME_REVERSE": "rev_pbr_acl_40",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER": "401",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER_REVERSE": "402"
+      }
+    },
+    {
+      "fabricName": "external",
+      "attachedFabricName": "mmudigon",
+      "policyName": "service_policy_5",
+      "peeringName": "IT-ADC-RP6",
+      "sourceVrfName": "MY_IT_VRF_41",
+      "destinationVrfName": "MY_IT_VRF_41",
+      "sourceNetwork": "MY_IT_NET_41",
+      "destinationNetwork": "MY_IT_NET_42",
+      "sourceNetworkName": "MY_IT_NET_41",
+      "destinationNetworkName": "MY_IT_NET_42",
+      "nextHopIp": "",
+      "reverseEnabled": true,
+      "reverseNextHopIp": "192.166.2.100",
+      "serviceNodeName": "IT-SN-2",
+      "serviceNodeType": "ADC",
+      "routeMapName": "rm_MY_IT_VRF_41_MY_IT_NET_41",
+      "enabled": false,
+      "status": "NA",
+      "statusDetails": [
+      {
+        "resourceType": "Policy",
+        "resourceName": "MY_IT_VRF_41~rev_pbr_acl_50",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "switchSerialNumber": "SAL1820SDPP",
+          "status": "NA",
+          "updatedBy": "config-compliance",
+          "updatedTime": 1623043146190
+        }
+        ]
+      },
+      {
+        "resourceType": "Network",
+        "resourceName": "MY_IT_NET_42",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "status": "NA",
+          "updatedTime": 1623050176917
+        }
+        ]
+      }
+      ],
+      "lastUpdated": 1623043109582,
+      "policyTemplateName": "service_pbr",
+      "nvPairs": {
+        "PROTOCOL": "icmp",
+        "SRC_PORT": "5000",
+        "DEST_PORT": "5001",
+        "NEXT_HOP_IP": "",
+        "REVERSE": "true",
+        "REVERSE_NEXT_HOP_IP": "192.166.2.100",
+        "FWD_DIRECTION": "true",
+        "ROUTE_MAP_ACTION": "permit",
+        "NEXT_HOP_OPTION": "drop",
+        "ACL_NAME": "pbr_acl_5",
+        "ACL_NAME_REVERSE": "rev_pbr_acl_50",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER": "501",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER_REVERSE": "502"
+      }
+    },
+    {
+      "fabricName": "external",
+      "attachedFabricName": "mmudigon",
+      "policyName": "service_policy_3",
+      "peeringName": "IT-ADC-RP5",
+      "sourceVrfName": "MY_IT_VRF_31",
+      "destinationVrfName": "MY_IT_VRF_31",
+      "sourceNetwork": "MY_IT_NET_31",
+      "destinationNetwork": "MY_IT_NET_32",
+      "sourceNetworkName": "MY_IT_NET_31",
+      "destinationNetworkName": "MY_IT_NET_32",
+      "nextHopIp": "",
+      "reverseEnabled": true,
+      "reverseNextHopIp": "192.165.2.100",
+      "serviceNodeName": "IT-SN-2",
+      "serviceNodeType": "ADC",
+      "routeMapName": "rm_MY_IT_VRF_31_MY_IT_NET_31",
+      "enabled": false,
+      "status": "NA",
+      "statusDetails": [
+      {
+        "resourceType": "Policy",
+        "resourceName": "MY_IT_VRF_31~rev_pbr_acl_30",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "switchSerialNumber": "SAL1820SDPP",
+          "status": "NA",
+          "updatedBy": "config-compliance",
+          "updatedTime": 1623043171387
+        }
+        ]
+      },
+      {
+        "resourceType": "Network",
+        "resourceName": "MY_IT_NET_32",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "status": "NA",
+          "updatedTime": 1623050176963
+        }
+        ]
+      }
+      ],
+      "lastUpdated": 1623043098863,
+      "policyTemplateName": "service_pbr",
+      "nvPairs": {
+        "PROTOCOL": "ip",
+        "SRC_PORT": "3000",
+        "DEST_PORT": "3001",
+        "NEXT_HOP_IP": "",
+        "REVERSE": "true",
+        "REVERSE_NEXT_HOP_IP": "192.165.2.100",
+        "FWD_DIRECTION": "true",
+        "ROUTE_MAP_ACTION": "permit",
+        "NEXT_HOP_OPTION": "drop",
+        "ACL_NAME": "pbr_acl_30",
+        "ACL_NAME_REVERSE": "rev_pbr_acl_30",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER": "301",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER_REVERSE": "302"
+      }
+    }
+    ]
+  },
+
+  "get_dd_sn1_att_status": {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.122.197.6/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/policies/mmudigon",
+    "MESSAGE": "",
+    "DATA": [
+    {
+      "fabricName": "external",
+      "attachedFabricName": "mmudigon",
+      "policyName": "service_policy_1",
+      "peeringName": "IT-FW-RP1",
+      "sourceVrfName": "MY_IT_VRF_11",
+      "destinationVrfName": "MY_IT_VRF_11",
+      "sourceNetwork": "MY_IT_NET_11",
+      "destinationNetwork": "MY_IT_NET_12",
+      "sourceNetworkName": "MY_IT_NET_11",
+      "destinationNetworkName": "MY_IT_NET_12",
+      "nextHopIp": "192.161.1.100",
+      "reverseEnabled": false,
+      "reverseNextHopIp": "192.161.2.100",
+      "serviceNodeName": "IT-SN-1",
+      "serviceNodeType": "Firewall",
+      "routeMapName": "rm_MY_IT_VRF_11_MY_IT_NET_11",
+      "enabled": false,
+      "status": "NA",
+      "statusDetails": [
+      {
+        "resourceType": "Policy",
+        "resourceName": "MY_IT_VRF_11~pbr_acl_10",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "switchSerialNumber": "SAL1820SDPP",
+          "status": "NA",
+          "updatedBy": "config-compliance",
+          "updatedTime": 1623043132512
+        }
+        ]
+      },
+      {
+        "resourceType": "Network",
+        "resourceName": "MY_IT_NET_11",
+        "fabricName": "mmudigon",
+        "switchStatuses": [
+        {
+          "status": "NA",
+          "updatedTime": 1623050413898
+        }
+        ]
+      }
+      ],
+      "lastUpdated": 1623043087358,
+      "policyTemplateName": "service_pbr",
+      "nvPairs": {
+        "PROTOCOL": "tcp",
+        "SRC_PORT": "any",
+        "DEST_PORT": "22",
+        "NEXT_HOP_IP": "192.161.1.100",
+        "REVERSE": "false",
+        "REVERSE_NEXT_HOP_IP": "192.161.2.100",
+        "FWD_DIRECTION": "true",
+        "ROUTE_MAP_ACTION": "permit",
+        "NEXT_HOP_OPTION": "none",
+        "ACL_NAME": "pbr_acl_10",
+        "ROUTE_MAP_MATCH_SEQUENCE_NUMBER": "101"
       }
     }
     ]

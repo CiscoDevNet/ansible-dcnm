@@ -701,72 +701,347 @@
       "RETURN_CODE": 200
     },
 
-    "deploy_rp1_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp2_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp3_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp4_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp5_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp6_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp7_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/deployments",
-      "RETURN_CODE": 200
-    },
+    "detach_rp1_rp3_resp":
+      {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP1",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP3",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP2",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-1/peerings/mmudigon-2/attachments?peering-names=IT-FW-RP2,IT-FW-RP3,IT-FW-RP1",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+     "detach_rp4_rp7_resp":
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP7",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP6",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP5",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/attachments?peering-names=IT-ADC-RP5,IT-ADC-RP4,IT-ADC-RP6,IT-ADC-RP7",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
 
-    "deploy_rp_ovr1_resp" : {
-      "DATA": {},
+    "deploy_rp1_rp3_resp": 
+      {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP1",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP3",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP2",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-1/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp4_rp7_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP7",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP6",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP5",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp_ovr1_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP-OVR1",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp_ovr4_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP-OVR4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "del_deploy_rp1_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
       "MESSAGE": "",
       "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP-OVR1/deployments",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
       "RETURN_CODE": 200
     },
-
-    "deploy_rp_ovr4_resp" : {
-      "DATA": {},
+    "del_deploy_rp2_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
       "MESSAGE": "",
       "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP-OVR4/deployments",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/attachments",
       "RETURN_CODE": 200
     },
-
+    "del_deploy_rp3_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp4_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp5_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp6_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp7_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1819S6K3",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 3000,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
+      "RETURN_CODE": 200
+    },
     "attach_rp1_resp" : {
       "DATA": [{
         "switchAttaches": [
@@ -970,55 +1245,6 @@
       "MESSAGE": "OK",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/control/fabrics/mmudigon/config-deploy",
-      "RETURN_CODE": 200
-    },
-    "detach_rp1_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp2_resp" :       {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp3_resp" :       {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp4_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp5_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp6_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp7_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
       "RETURN_CODE": 200
     },
     "config_deploy_resp" :     {

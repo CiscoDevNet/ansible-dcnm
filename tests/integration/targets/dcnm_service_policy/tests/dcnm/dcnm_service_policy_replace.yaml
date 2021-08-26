@@ -98,10 +98,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
 ##############################################
 ##               REPLACE                    ##
 ##############################################
@@ -165,10 +161,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
     - name: Replace service policies  - Idempotence
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_replace_all
       register: result
@@ -181,11 +173,6 @@
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-      when: IT_CONTEXT is not defined
 
 ##############################################
 ##                CLEANUP                   ##

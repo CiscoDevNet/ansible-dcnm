@@ -101,10 +101,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
 ##############################################
 ##               DELETE                     ##
 ##############################################
@@ -135,10 +131,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
 
     - name: Delete service policies  - Idempotence
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_del
@@ -280,10 +272,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
 ##############################################
 ##               DELETE                     ##
 ##############################################
@@ -311,10 +299,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
 
 ##############################################
 ##                MERGE                     ##
@@ -443,10 +427,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
 ##############################################
 ##               DELETE                     ##
 ##############################################
@@ -477,10 +457,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
 
 ##############################################
 ##                MERGE                     ##
@@ -568,10 +544,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
 
 ##############################################
 ##               DELETE                     ##

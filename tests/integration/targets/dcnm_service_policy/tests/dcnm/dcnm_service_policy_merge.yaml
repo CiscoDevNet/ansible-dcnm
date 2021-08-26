@@ -163,10 +163,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
     - name: Create service policies  - Idempotence
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_create_all
       register: result
@@ -209,10 +205,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
 
     - name: Create service policies without optional elements
       cisco.dcnm.dcnm_service_policy:
@@ -310,10 +302,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
     - name: Create service policies with deploy
       cisco.dcnm.dcnm_service_policy:
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
@@ -357,10 +345,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
     - name: Merge with existing service policy
       cisco.dcnm.dcnm_service_policy:
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
@@ -397,11 +381,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-      when: IT_CONTEXT is not defined
 
 ##############################################
 ##                CLEANUP                   ##

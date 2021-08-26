@@ -1080,7 +1080,7 @@ class DcnmServicePolicy:
             if (have != []) and (have not in self.have):
                 self.have.append(have)
 
-    def dcnm_sp_get_sp_attachment_status(self, sp, refresh):
+    def dcnm_sp_get_sp_deployment_status(self, sp, refresh):
 
         """
         Routine to get the attachment/deployment information for a given service policies. This information
@@ -1135,6 +1135,7 @@ class DcnmServicePolicy:
                 )
                 self.module.fail_json(msg=resp)
 
+
         # Filter out the required policy
         match_pol = [
             pol
@@ -1157,23 +1158,30 @@ class DcnmServicePolicy:
             if att_status not in self.changed_dict[0]["debugs"]:
                 self.changed_dict[0]["debugs"].append(att_status)
 
-            if (match_pol[0]["status"] == "NA") or (
-                match_pol[0]["status"] == "PENDING"
+            if (match_pol[0]["status"].lower() == "na") or (
+                match_pol[0]["status"].lower() == "pending"
             ):
-                return False, False
-            elif match_pol[0]["status"] == "Out-of-Sync":
-                return True, False
-            elif match_pol[0]["status"] == "IN PROGRESS":
-                return True, True
+                return resp, False, False, match_pol[0]["status"].lower()
+            elif match_pol[0]["status"].lower() == "out-of-sync":
+                pol_info = {}
+                pol_info = self.dcnm_sp_combine_policies(
+                    sp, pol_info
+                )
+
+                for path in pol_info:
+                    self.dcnm_sp_deploy_sp(path, pol_info[path])
+                return resp, True, False, "out-of-sync"
+            elif match_pol[0]["status"].lower() == "in progress":
+                return resp, True, True, match_pol[0]["status"].lower()
             else:
-                return False, True
+                return resp, False, True, match_pol[0]["status"].lower()
         else:
             self.changed_dict[0]["debugs"].append(
-                {"GET_SP_ATT_STATUS": "No Matching Policy", "PolicyName": match_pol[0]["policyName"]}
+                {"GET_SP_ATT_STATUS": "No Matching Policy", "PolicyName": sp["policyName"]}
             )
-            return False, False
+            return resp, False, False, None
 
-        return (retry, deployed)
+        return (resp, retry, deployed, None)
 
     def dcnm_sp_compare_policy_info(self, want, have):
 
@@ -1335,7 +1343,7 @@ class DcnmServicePolicy:
                 refresh = False
                 while retries < 30:
                     retries += 1
-                    retry, deployed = self.dcnm_sp_get_sp_attachment_status(
+                    resp, retry, deployed, status = self.dcnm_sp_get_sp_deployment_status(
                         have, refresh
                     )
 
@@ -1424,6 +1432,7 @@ class DcnmServicePolicy:
                         ]
                     else:
                         match_sps = sps
+
                     processed_nodes.append(snode["node_name"])
                 if match_sps != []:
                     if isinstance(match_sps, list):
@@ -1567,7 +1576,8 @@ class DcnmServicePolicy:
         Routine to detach SP from service node.
 
         Parameters:
-            sp (dict): Service Policy to be detached
+            fixed_path: Path identifying the policy
+            policy_list (dict): Service Poilicy information to be deployed
 
         Returns:
             resp (dict): Response from DCNM server
@@ -1616,8 +1626,8 @@ class DcnmServicePolicy:
         Routine to deploy SP on the service node.
 
         Parameters:
-            sp (dict): Service Policy information to be deployed
-            command (string): REST API command which is POST
+            fixed_path: Path identifying the peering
+            policy_list (dict): Service Policy information to be deployed
 
         Returns:
             resp (dict): Response from DCNM server
@@ -1628,6 +1638,60 @@ class DcnmServicePolicy:
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
         return resp
+
+    def dcnm_sp_config_save_and_deploy(self):
+
+        """
+        Routine to save and deploy configuration for the entire box.
+
+        Parameters:
+            None
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        path = (
+            "/rest/control/fabrics/"
+            + self.module.params["fabric"]
+            + "/config-deploy"
+        )
+
+        resp = dcnm_send(self.module, "POST", path, "")
+        return resp
+
+    def dcnm_sp_check_deployment_status(self, sp_list, final_state):
+
+        """
+        Routine to check deployment status of SPs on the service node. This routine is used for CREATE
+        MODIFY and DELETE deploy status check. The 'final_state' argument will be based on what status
+        to check for.
+
+        Parameters:
+            sp_list (dict): Service Policies information to be checked for deployment status
+
+        Returns:
+            None
+        """
+
+        # Scan each SP for its deployment status. If all are deployed, then we are done. Otherwise
+        # the create or modify operation is a failure
+        for sp in sp_list:
+
+            retries = 0
+            att_state = "Unknown"
+            while retries < 10:
+                retries += 1
+                resp, retry, deployed, att_state = self.dcnm_sp_get_sp_deployment_status(sp, True)
+
+                if att_state == final_state:
+                    break;
+                if att_state == "out-of-sync":
+                    self.dcnm_sp_config_save_and_deploy()
+                time.sleep(30)
+            # After all retries, if the SP did not move to 'final_state' it is an error
+            if att_state != final_state:
+                self.module.fail_json(msg=resp)
 
     def dcnm_sp_combine_policies(self, sp, pol_info):
 
@@ -1850,6 +1914,10 @@ class DcnmServicePolicy:
             if (resp and resp.get("RETURN_CODE") != 200) or del_deploy_failed:
                 self.module.fail_json(msg=resp)
 
+        if delete_flag:
+            time.sleep(180)
+            self.dcnm_sp_check_deployment_status (self.diff_delete, "na")
+
         # All policies are detached and deployed. Now go ahead and delete the same from the server
         for sp in self.diff_delete:
             retries = 0
@@ -1908,6 +1976,12 @@ class DcnmServicePolicy:
             self.result["response"].append(resp)
             if (resp and resp.get("RETURN_CODE") != 200) or deploy_failed:
                 self.module.fail_json(msg=resp)
+
+        if deploy_flag:
+            # Wait for a while for the DCNM to deploy the config
+            time.sleep(180)
+            # Ensure all the route peerings are properly deployed before returning.
+            self.dcnm_sp_check_deployment_status (self.diff_deploy, "in-sync")
 
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag or deploy_flag

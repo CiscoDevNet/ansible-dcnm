@@ -157,10 +157,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-
 ##############################################
 ##               OVERRRIDE                  ##
 ##############################################
@@ -185,10 +181,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
 
 ##############################################
 ##                MERGE                     ##
@@ -313,10 +305,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-      
 ##############################################
 ##               OVERRRIDE                  ##
 ##############################################
@@ -364,11 +352,6 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-    - name: Timeout - sleep for 180 seconds for DCNM to completely update the state
-      wait_for:
-        timeout: 180
-      when: IT_CONTEXT is not defined
-      
 ##############################################
 ##                CLEANUP                   ##
 ##############################################

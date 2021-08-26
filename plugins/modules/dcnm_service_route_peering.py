@@ -198,8 +198,8 @@ options:
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. This
-                          object will be mandatory if the service node switch is part of VPC
+                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. 
+                          This object is mandatory if the service node is part of VPC switch
                           pair
                 type: ipv4
                 required: False
@@ -350,7 +350,9 @@ options:
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'.
+                          This object is mandatory if the service node is part of VPC switch
+                          pair
                 type: ipv4
                 required: False
                 default: ''
@@ -498,6 +500,8 @@ options:
                 description:
                   - IPv4 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                          This object is mandatory if the service node is part of VPC switch
+                          pair
                 type: ipv4
                 required: False
                 default: ''
@@ -3202,7 +3206,7 @@ class DcnmServiceRoutePeering:
         else:
             return ("DCNM_SRP_ADD_NEW", None, [])
 
-    def dcnm_srp_get_srp_attachment_status(self, srp):
+    def dcnm_srp_get_srp_deployment_status(self, srp, check_meta):
 
         """
         Routine to get the attachment/deployment information for a given route peering. This information
@@ -3211,6 +3215,7 @@ class DcnmServiceRoutePeering:
 
         Parameters:
             srp (dict): Route peering information
+            check_meta (bool): Flag specifying whether to check for portnames and vlan info
 
         Returns:
             attached (bool): a flag indicating is the given SRP is attached
@@ -3243,7 +3248,6 @@ class DcnmServiceRoutePeering:
 
         if resp:
             resp["RETRIES"] = retries
-            self.result["response"].append(resp)
 
         deployed = False
         retry = False
@@ -3260,25 +3264,33 @@ class DcnmServiceRoutePeering:
                     # Hence check only entries that are relevant. We can find this by checking for 'portNames' and
                     # vlanID which will be updated only for those switches to which the service node is attached. We
                     # can  ignore the rest.
-                    if (attach.get("portNames", None) is None) or (
-                        attach.get("vlanId", 0) == 0
-                    ):
-                        continue
+                    if check_meta:
+                        if (attach.get("portNames", None) is None) or (
+                            attach.get("vlanId", 0) == 0
+                        ):
+                            continue
                     processed = True
-                    if (attach["attachState"] == "NA") or (
-                        attach["attachState"] == "PENDING"
+                    if (attach["attachState"].lower() == "na") or (
+                        attach["attachState"].lower() == "pending"
                     ):
-                        return False, False
-                    elif attach["attachState"] == "Out-of-Sync":
-                        return True, False
-                    elif attach["attachState"] == "IN PROGRESS":
-                        return True, True
-            if processed is True:
-                return False, True
-        else:
-            return False, False
+                        return resp, False, False, attach["attachState"].lower()
+                    elif attach["attachState"].lower() == "out-of-sync":
+                        srp_info = {}
+                        self.dcnm_srp_combine_route_peerings(
+                            srp, srp_info
+                        )
 
-        return (retry, deployed)
+                        for path in srp_info:
+                            self.dcnm_srp_deploy_srp(path, srp_info[path])
+                        return resp, True, False, "out-of-sync"
+                    elif attach["attachState"].lower() == "in progress":
+                        return resp, True, True, attach["attachState"].lower()
+            if processed is True:
+                return resp, False, True, attach["attachState"].lower()
+        else:
+            return resp, False, False, None
+
+        return (resp, retry, deployed, None)
 
     def dcnm_srp_get_diff_merge(self):
 
@@ -3321,21 +3333,34 @@ class DcnmServiceRoutePeering:
                     ditem["attachedFabricName"] = srp["attachedFabricName"]
                     ditem["fabricName"] = srp["fabricName"]
                     ditem["peeringName"] = srp["peeringName"]
+                    ditem["enabled"] = srp["enabled"]
                     self.diff_deploy.append(ditem)
             else:
 
                 retries = 0
                 while retries < 30:
                     retries += 1
-                    retry, deployed = self.dcnm_srp_get_srp_attachment_status(
-                        srp
+                    resp, retry, deployed, att_state = self.dcnm_srp_get_srp_deployment_status(
+                        srp, True
                     )
+
+                    if retries == 20:
+                        # There are some timing issues in DCNM and the final deployed state of a RP depends on the order of
+                        # deploying VRFs sand Networks on the switch. Sometimes due to timing issues an RP may get stuck in
+                        # out-of-sync state. This normally gets corrected with a deploy, which is already tried in the 
+                        # dcnm_srp_get_srp_deployment_status(). If it still remains in 'out-of-sync' state after so many retries,
+                        # config save and deploy is one option to recover.
+
+                        self.dcnm_srp_config_save_and_deploy()
 
                     if retry:
                         time.sleep(10)
                         continue
                     else:
                         break
+
+                if resp not in self.changed_dict[0]["debugs"]:
+                    self.changed_dict[0]["debugs"].append(resp)
 
                 if self.deploy is True:
                     # We deploy when self.deploy is True and:
@@ -3349,6 +3374,7 @@ class DcnmServiceRoutePeering:
                         ditem["attachedFabricName"] = srp["attachedFabricName"]
                         ditem["fabricName"] = srp["fabricName"]
                         ditem["peeringName"] = srp["peeringName"]
+                        ditem["enabled"] = srp["enabled"]
                         self.diff_deploy.append(ditem)
 
         if self.diff_deploy != []:
@@ -3539,13 +3565,14 @@ class DcnmServiceRoutePeering:
         resp = dcnm_send(self.module, command, path, json_payload)
         return resp
 
-    def dcnm_srp_detach_srp(self, srp):
+    def dcnm_srp_detach_srp(self, fixed_path, srp_list):
 
         """
         Routine to detach SRP from service node.
 
         Parameters:
-            srp (dict): Route peering to be detached
+            fixed_path: Path identifying the peering
+            srp_list (dict): Service Route Peering information to be deployed
 
         Returns:
             resp (dict): Response from DCNM server
@@ -3553,18 +3580,8 @@ class DcnmServiceRoutePeering:
 
         resp = None
 
-        # First detach the route peerings
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-            + "/attachments"
-        )
+        path = fixed_path + "/attachments?peering-names="
+        path = path + ",".join(srp_list)
 
         resp = dcnm_send(self.module, "DELETE", path, "")
         return resp
@@ -3592,8 +3609,153 @@ class DcnmServiceRoutePeering:
             + "/"
             + srp["peeringName"]
         )
-        resp = dcnm_send(self.module, "DELETE", path, "")
+
+        srp["enabled"] = False
+        srp["status"] = "NA"
+        json_payload = json.dumps(srp)
+
+        resp = dcnm_send(self.module, "DELETE", path, json_payload)
         return resp
+
+    def dcnm_srp_attach_srp(self, srp):
+
+        """
+        Routine to attach an SRP on the service node.
+
+        Parameters:
+            srp (dict): Service Route Peering information to be attached
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+            + "/attachments"
+        )
+
+        attach_payload = {"peeringNames" : [srp["peeringName"]]}
+        json_payload = json.dumps(attach_payload)
+
+        resp = dcnm_send(self.module, "POST", path, json_payload)
+        return resp
+
+    def dcnm_srp_deploy_srp(self, fixed_path, srp_list):
+
+        """
+        Routine to deploy SRP on the service node.
+
+        Parameters:
+            fixed_path: Path identifying the peering
+            srp_list (dict): Service Route Peering information to be deployed
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        path = fixed_path + "/deployments"
+        json_payload = json.dumps(srp_list)
+
+        resp = dcnm_send(self.module, "POST", path, json_payload)
+        return resp
+
+    def dcnm_srp_attach_and_deploy_srp(self, srp):
+
+        """
+        Routine to attach and deploy an SRP on the service node.
+
+        Parameters:
+            srp (dict): Service Route Peering information to be attahced and deployed
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        fixed_path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+        )
+
+        self.dcnm_srp_attach_srp (srp)
+        time.sleep(10)
+        self.dcnm_srp_deploy_srp(fixed_path, {"peeringNames": [srp["peeringName"]]})
+
+    def dcnm_srp_check_deployment_status(self, srp_list, final_state):
+
+        """
+        Routine to check deployment status of SRPs on the service node. This routine is used for CREATE
+        MODIFY and DELETE deploy status check. The 'final_state' argument will be based on what status
+        to check for.
+
+        Parameters:
+            srp_list (dict): Service Route Peering information to be checked for deployment status
+
+        Returns:
+            None
+        """
+
+        # Scan each SRP for its deployment status. If all are deployed, then we are done. Otherwise
+        # the create or modify operation is a failure
+        for srp in srp_list:
+            retries = 0
+            att_state = "Unknown"
+            while retries < 10:
+                retries += 1
+                resp, retry, deployed, att_state = self.dcnm_srp_get_srp_deployment_status(srp, (final_state == "deployed"))
+
+                if att_state == final_state:
+                    break;
+                if att_state == "out-of-sync":
+                    self.dcnm_srp_config_save_and_deploy()
+                if att_state == "na":
+                    # Sometimes the "enabled" flag is not properly applied during creation. Since
+                    # att_state is "na", try to attach and deploy the SRP again
+                    if srp["enabled"]:
+                        self.dcnm_srp_attach_and_deploy_srp(srp)
+                time.sleep(30)
+            self.changed_dict[0]["debugs"].append({"PeeringName": srp["peeringName"], "State": att_state})
+            # After all retries, if the SRP did not move to 'final_state' it is an error
+            if att_state != final_state:
+                self.module.fail_json(msg=resp)
+
+    def dcnm_srp_combine_route_peerings(self, srp, srp_info):
+
+        """
+        This routine will combine route peerings based on fabric, external fabric, service node so that deploy
+        can be performed for all the peerings together. If not, when multiple peerings are configured under
+        a single RP, a separate deploy operation may result in errors.
+
+        Parameters:
+            srp(dict): Service Route Peering information to be combined
+            srp_info(dict): Dict containing the current list of combined peerings
+
+        Returns:
+            srp_info(dict): A dict containing a list of combined peerings including the current one
+        """
+
+        path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+        )
+
+        if srp_info.get(path) is None:
+            srp_info[path] = {"peeringNames": []}
+        srp_info.get(path)["peeringNames"].append(srp["peeringName"])
+
+        return srp_info
 
     def dcnm_srp_config_save_and_deploy(self):
 
@@ -3614,34 +3776,6 @@ class DcnmServiceRoutePeering:
         )
 
         resp = dcnm_send(self.module, "POST", path, "")
-        return resp
-
-    def dcnm_srp_deploy_srp(self, srp, command):
-
-        """
-        Routine to deploy SRP on the service node.
-
-        Parameters:
-            srp (dict): Route peering information to be deployed
-            command (string): REST API command which is POST
-
-        Returns:
-            resp (dict): Response from DCNM server
-        """
-
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-            + "/deployments"
-        )
-
-        resp = dcnm_send(self.module, command, path, "")
         return resp
 
     def dcnm_srp_check_unauthorized_error_in_resp(self, resp):
@@ -3691,6 +3825,16 @@ class DcnmServiceRoutePeering:
                 ):
                     dcnm_reset_connection(self.module)
                     rc = "unauthorized_error"
+                if resp["METHOD"] != "DELETE":
+                    if (
+                        isinstance(resp["DATA"]["error"], dict)
+                        and resp["DATA"]["error"].get("code") == "ProcessingError"
+                    ):
+                        if (
+                            "is in use already"
+                            in resp["DATA"]["error"].get("detail", "")
+                        ):
+                            rc = "in_use_error"
         return rc
 
     def dcnm_srp_send_message_to_dcnm(self):
@@ -3727,7 +3871,13 @@ class DcnmServiceRoutePeering:
                     # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                     # logout and login again. We will do the logout from here and expect the login to happen again after this
                     # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                    rc = self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+
+                    if rc == "in_use_error":
+                        # We may see this if SRPs use a vlan id already in use. In that case delete the SRP, because
+                        # the SRP would have been created already and only the attach failed 
+                        self.dcnm_srp_delete_srp (srp)
+                        break
 
                     # There may be a temporary issue on the server. so we should try again. In case
                     # of create or modify, the peering may have been created/updated, but the error may
@@ -3767,51 +3917,81 @@ class DcnmServiceRoutePeering:
             if resp and resp.get("RETURN_CODE") != 200:
                 self.module.fail_json(msg=resp)
 
-        for srp in self.diff_delete:
+        if self.diff_delete:
+            delete_srp_info = {}
+
+            for srp in self.diff_delete:
+                delete_srp_info = self.dcnm_srp_combine_route_peerings(
+                    srp, delete_srp_info
+                )
+        else:
+            delete_srp_info = {}
+
+        for path in delete_srp_info:
+            detach_failed = False
             retries = 0
             while retries < 30:
                 retries += 1
-                resp = self.dcnm_srp_detach_srp(srp)
+                detach_failed = False
+                resp = self.dcnm_srp_detach_srp(
+                    path, delete_srp_info[path]["peeringNames"]
+                )
                 if (resp is not None) and (resp.get("RETURN_CODE") == 200):
-                    delete_flag = True
-                    break
-                else:
-                    # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
-                    # logout and login again. We will do the logout from here and expect the login to happen again after this
-                    # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
-                    time.sleep(10)
-                    continue
+                    # We may see a '200' return code,  but the transaction may have failed. Check for
+                    # the status
+                    if resp.get("DATA"):
+                        for d in resp["DATA"]:
+                            if d.get("status") == "Success":
+                                detach_flag = True
+                            else:
+                                detach_failed = True
+                        if detach_failed is False:
+                            break
+                # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
+                # logout and login again. We will do the logout from here and expect the login to happen again after this
+                # from the connection module
+                self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                time.sleep(10)
+                continue
             if resp is not None:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)
-            if resp and resp.get("RETURN_CODE") != 200:
+            if (resp and resp.get("RETURN_CODE") != 200) or detach_failed:
                 self.module.fail_json(msg=resp)
 
         # For delete case we have done a detach. do a deploy before actual delete
-        for srp in self.diff_delete:
+        for path in delete_srp_info:
+            del_deploy_failed = False
             retries = 0
             while retries < 30:
                 retries += 1
-                resp = self.dcnm_srp_deploy_srp(srp, "POST")
+                resp = self.dcnm_srp_deploy_srp(path, delete_srp_info[path])
 
                 if (resp is not None) and (resp.get("RETURN_CODE") == 200):
-                    delete_flag = True
-                    break
-                else:
-                    # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
-                    # logout and login again. We will do the logout from here and expect the login to happen again after this
-                    # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
-                    time.sleep(10)
-                    continue
+                    # We may see a '200' return code,  but the transaction may have failed. Check for
+                    # the status
+                    if resp.get("DATA"):
+                        for d in resp["DATA"]:
+                            if d.get("status") == "Success":
+                                delete_flag = True
+                            else:
+                                del_deploy_failed = True
+                        if del_deploy_failed is False:
+                            break
+                # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
+                # logout and login again. We will do the logout from here and expect the login to happen again after this
+                # from the connection module
+                self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                time.sleep(10)
+                continue
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
-            if resp and resp.get("RETURN_CODE") != 200:
+            if resp and resp.get("RETURN_CODE") != 200 or del_deploy_failed:
                 self.module.fail_json(msg=resp)
 
         if delete_flag is True:
-            time.sleep(40)
+            time.sleep(180)
+            self.dcnm_srp_check_deployment_status (self.diff_delete, "na")
 
         for srp in self.diff_delete:
             retries = 0
@@ -3837,13 +4017,18 @@ class DcnmServiceRoutePeering:
                     elif deploy_in_prog is False:
                         # We will require a deploy here. Otherwise we may see delete errors in some cases
                         # indicating that a deploy operation is still in progress and peering cannot be deleted
-                        resp = self.dcnm_srp_deploy_srp(srp, "POST")
-                        if resp.get("RETURN_CODE") == 200:
-                            deploy_in_prog = True
-                        else:
-                            self.dcnm_srp_check_unauthorized_error_in_resp(
-                                resp
-                            )
+                        srp_info = {}
+                        srp_info = self.dcnm_srp_combine_route_peerings(
+                            srp, srp_info
+                        )
+                        for path in srp_info:
+                            resp = self.dcnm_srp_deploy_srp(path, srp_info[path])
+                            if resp.get("RETURN_CODE") == 200:
+                                deploy_in_prog = True
+                            else:
+                                self.dcnm_srp_check_unauthorized_error_in_resp(
+                                    resp
+                                )
                     time.sleep(10)
                     continue
             if resp is not None:
@@ -3852,30 +4037,53 @@ class DcnmServiceRoutePeering:
             if resp and resp.get("RETURN_CODE") != 200:
                 self.module.fail_json(msg=resp)
 
-        for srp in self.diff_deploy:
+        if self.diff_deploy:
+            deploy_srp_info = {}
+            for srp in self.diff_deploy:
+                deploy_srp_info = self.dcnm_srp_combine_route_peerings(
+                    srp, deploy_srp_info
+                )
+        else:
+            deploy_srp_info = {}
+
+        for path in deploy_srp_info:
+            deploy_failed = False
             retries = 0
             while retries < 30:
                 retries += 1
-                resp = self.dcnm_srp_deploy_srp(srp, "POST")
+                resp = self.dcnm_srp_deploy_srp(path, deploy_srp_info[path])
                 if resp.get("RETURN_CODE") == 200:
-                    deploy_flag = True
-                    break
-                else:
-                    # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
-                    # logout and login again. We will do the logout from here and expect the login to happen again after this
-                    # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
-                    time.sleep(10)
-                    continue
+                    # We may see a '200' return code,  but the transaction may have failed. Check for
+                    # the status
+                    if resp.get("DATA"):
+                        for d in resp["DATA"]:
+                            if d.get("status") == "Success":
+                                deploy_flag = True
+                            else:
+                                deploy_failed = True
+                        if deploy_failed is False:
+                            time.sleep(10)
+                            break
+                # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
+                # logout and login again. We will do the logout from here and expect the login to happen again after this
+                # from the connection module
+                self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                time.sleep(10)
+                continue
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
-            if resp and resp.get("RETURN_CODE") != 200:
+            if (resp and resp.get("RETURN_CODE") != 200) or deploy_failed:
                 self.module.fail_json(msg=resp)
+
+        if deploy_flag:
+            # Wait for a while for the DCNM to deploy the config
+            time.sleep(180)
+            # Ensure all the route peerings are properly deployed before returning.
+            self.dcnm_srp_check_deployment_status (self.diff_deploy, "deployed")
 
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag or deploy_flag
         )
-
 
 def main():
 
