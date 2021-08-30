@@ -35,6 +35,10 @@
         - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
+- name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 180
+
 - name: Delete feature_pbr policy
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
