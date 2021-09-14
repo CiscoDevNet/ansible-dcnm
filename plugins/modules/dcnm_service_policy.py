@@ -727,7 +727,7 @@ class DcnmServicePolicy:
             if resp and (resp["RETURN_CODE"] == 200) and resp["DATA"]:
                 return resp["DATA"].get("type", None)
             else:
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
         self.changed_dict[0]["debugs"].append({"GET_SNODE_TYPE": resp})
@@ -940,7 +940,7 @@ class DcnmServicePolicy:
             resp = dcnm_send(self.module, "GET", path)
 
             if resp and resp["RETURN_CODE"] != 200:
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             else:
@@ -976,7 +976,7 @@ class DcnmServicePolicy:
             resp = dcnm_send(self.module, "GET", path)
 
             if resp and resp["RETURN_CODE"] != 200:
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             else:
@@ -1045,7 +1045,7 @@ class DcnmServicePolicy:
                             ):
                                 resource_not_found = True
                                 break
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             else:
@@ -1089,6 +1089,7 @@ class DcnmServicePolicy:
 
         Parameters:
             sp (dict): Service policy information
+            refresh (bool): A flag indicating if the required SP information is to be obtained from DCNM
 
         Returns:
             deployed (bool): a flag indicating is the given SRP is deployed
@@ -1121,7 +1122,10 @@ class DcnmServicePolicy:
                 resp = dcnm_send(self.module, "GET", path, "")
 
                 if resp and resp["RETURN_CODE"] != 200:
-                    self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                    self.dcnm_sp_check_for_errors_in_resp(resp)
+                    time.sleep(10)
+                    continue
+                elif resp["RETURN_CODE"] == 200 and resp.get("DATA") == []:
                     time.sleep(10)
                     continue
                 else:
@@ -1173,6 +1177,8 @@ class DcnmServicePolicy:
                 return resp, True, False, "out-of-sync"
             elif match_pol[0]["status"].lower() == "in progress":
                 return resp, True, True, match_pol[0]["status"].lower()
+            elif match_pol[0]["status"].lower() == "failure":
+                return resp, True, False, match_pol[0]["status"].lower()
             else:
                 return resp, False, True, match_pol[0]["status"].lower()
         else:
@@ -1669,6 +1675,7 @@ class DcnmServicePolicy:
 
         Parameters:
             sp_list (dict): Service Policies information to be checked for deployment status
+            final_state (string): A flag indicating what the required final state is
 
         Returns:
             None
@@ -1723,7 +1730,7 @@ class DcnmServicePolicy:
 
         return pol_info
 
-    def dcnm_sp_check_unauthorized_error_in_resp(self, resp):
+    def dcnm_sp_check_for_errors_in_resp(self, resp):
 
         """
         Routine to check for "unauthorized" errors in which case the conncetion must be reset by logging out and
@@ -1733,7 +1740,7 @@ class DcnmServicePolicy:
             resp (dict): Response which has to be checked for "unauthorized error"
 
         Returns:
-            rc (string): unauthorized_error, if resp["DATA"]["error"]["code"] is UserUnauthorized
+            rc (string): unauthorized_error, if error code results in a connection reset
                          other_error, otherwise
         """
 
@@ -1804,7 +1811,7 @@ class DcnmServicePolicy:
                 # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                 # logout and login again. We will do the logout from here and expect the login to happen again after this
                 # from the connection module
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
 
                 # There may be a temporary issue on the server. so we should try again. In case
                 # of create or modify, the policy may have been created/updated, but the error may
@@ -1833,7 +1840,7 @@ class DcnmServicePolicy:
                 # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                 # logout and login again. We will do the logout from here and expect the login to happen again after this
                 # from the connection module
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             resp["RETRIES"] = retries
@@ -1873,7 +1880,7 @@ class DcnmServicePolicy:
                 # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                 # logout and login again. We will do the logout from here and expect the login to happen again after this
                 # from the connection module
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             if resp is not None:
@@ -1906,7 +1913,7 @@ class DcnmServicePolicy:
                 # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                 # logout and login again. We will do the logout from here and expect the login to happen again after this
                 # from the connection module
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             resp["RETRIES"] = retries
@@ -1931,7 +1938,7 @@ class DcnmServicePolicy:
                 # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                 # logout and login again. We will do the logout from here and expect the login to happen again after this
                 # from the connection module
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             resp["RETRIES"] = retries
@@ -1969,7 +1976,7 @@ class DcnmServicePolicy:
                 # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                 # logout and login again. We will do the logout from here and expect the login to happen again after this
                 # from the connection module
-                self.dcnm_sp_check_unauthorized_error_in_resp(resp)
+                self.dcnm_sp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             resp["RETRIES"] = retries

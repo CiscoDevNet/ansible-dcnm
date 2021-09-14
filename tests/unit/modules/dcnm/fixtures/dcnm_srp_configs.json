@@ -444,7 +444,7 @@
         "tag": 21111,
         "vlan_name": "rp2-sn1-inside"
       },
-      "vlan_id": 209,
+      "vlan_id": 201,
       "vrf": "IT_VRF_21"
     },
     "name": "IT-FW-RP2",
@@ -1387,7 +1387,7 @@
         "tag": 11101,
         "vlan_name": "rp1-sn1-inside-rep"
       },
-      "vlan_id": 191,
+      "vlan_id": 101,
       "vrf": "IT_VRF_11"
     },
     "name": "IT-FW-RP1",
@@ -1402,7 +1402,7 @@
         "tag": 11102,
         "vlan_name": "rp1-sn1-outside-rep"
       },
-      "vlan_id": 192,
+      "vlan_id": 102,
       "vrf": "IT_VRF_11"
     },
     "reverse_next_hop": "192.161.2.200"
@@ -1427,7 +1427,7 @@
         "tag": 21101,
         "vlan_name": "rp2-sn1-inside-rep"
       },
-      "vlan_id": 291,
+      "vlan_id": 201,
       "vrf": "IT_VRF_21"
     },
     "name": "IT-FW-RP2",
@@ -1450,7 +1450,7 @@
         "tag": 22202,
         "vlan_name": "rp2-sn1-outside-rep"
       },
-      "vlan_id": 292,
+      "vlan_id": 202,
       "vrf": "IT_VRF_22"
     },
     "peering_option": "static"
@@ -1476,7 +1476,7 @@
         "tag": 31101,
         "vlan_name": "rp3-sn1-inside-rep"
       },
-      "vlan_id": 391,
+      "vlan_id": 301,
       "vrf": "IT_VRF_31"
     },
     "name": "IT-FW-RP3",
@@ -1529,7 +1529,7 @@
         "tag": 41101,
         "vlan_name": "rp4-sn2-first-arm-rep"
       },
-      "vlan_id": 491,
+      "vlan_id": 401,
       "vrf": "IT_VRF_41"
     },
     "name": "IT-ADC-RP4",
@@ -1558,7 +1558,7 @@
         "tag": 51101,
         "vlan_name": "rp5-sn2-first-arm-rep"
       },
-      "vlan_id": 591,
+      "vlan_id": 501,
       "vrf": "IT_VRF_51"
     },
     "name": "IT-ADC-RP5",
@@ -1574,7 +1574,7 @@
         "tag": 51102,
         "vlan_name": "rp5-sn2-second-arm-rep"
       },
-      "vlan_id": 592,
+      "vlan_id": 502,
       "vrf": "IT_VRF_51"
     }
   },
@@ -1605,7 +1605,7 @@
         "tag": 61101,
         "vlan_name": "rp6-sn2-first-arm-rep"
       },
-      "vlan_id": 691,
+      "vlan_id": 601,
       "vrf": "IT_VRF_61"
     },
     "name": "IT-ADC-RP6",
@@ -1633,7 +1633,7 @@
         "tag": 71101,
         "vlan_name": "rp7-sn2-first-arm-rep"
       },
-      "vlan_id": 791,
+      "vlan_id": 701,
       "vrf": "IT_VRF_71"
     },
     "name": "IT-ADC-RP7",
@@ -1649,7 +1649,7 @@
         "tag": 71102,
         "vlan_name": "rp7-sn2-second-arm-rep"
       },
-      "vlan_id": 792,
+      "vlan_id": 702,
       "vrf": "IT_VRF_71"
     }
   }
@@ -1728,7 +1728,7 @@
         "tag": 61111,
         "vlan_name": "rp6-sn2-first-arm"
       },
-      "vlan_id": 609,
+      "vlan_id": 601,
       "vrf": "IT_VRF_61"
     },
     "name": "IT-ADC-RP6",
@@ -1749,7 +1749,7 @@
         "tag": 11191,
         "vlan_name": "rp1-sn1-inside-ovr"
       },
-      "vlan_id": 191,
+      "vlan_id": 101,
       "vrf": "IT_VRF_12"
     },
     "name": "IT-FW-RP-OVR1",
@@ -1764,7 +1764,7 @@
         "tag": 11192,
         "vlan_name": "rp1-sn1-outside-ovr"
       },
-      "vlan_id": 192,
+      "vlan_id": 102,
       "vrf": "IT_VRF_12"
     },
     "reverse_next_hop": "192.161.92.100"
@@ -1790,7 +1790,7 @@
         "tag": 41191,
         "vlan_name": "rp3-sn1-first-arm-ovr"
       },
-      "vlan_id": 491,
+      "vlan_id": 401,
       "vrf": "IT_VRF_42"
     },
     "name": "IT-ADC-RP-OVR4",

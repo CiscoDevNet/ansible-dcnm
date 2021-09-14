@@ -200,7 +200,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_21"
           },
           "templateName": "service_static_route",
@@ -210,7 +210,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_22"
           },
           "templateName": "service_static_route",
@@ -303,7 +303,7 @@
             "PEER_LOOPBACK_IP": "31.31.31.3",
             "PEER_LOOPBACK_IPV6": "2003:3133::01",
             "ROUTE_MAP_TAG": "33111",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_31"
           },
           "templateName": "service_ebgp_route",
@@ -323,7 +323,7 @@
             "PEER_LOOPBACK_IP": "131.131.131.3",
             "PEER_LOOPBACK_IPV6": "2003:8385::1",
             "ROUTE_MAP_TAG": "31113",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_32"
           },
           "templateName": "service_ebgp_route",
@@ -418,7 +418,7 @@
             "PEER_LOOPBACK_IP": "41.41.41.3",
             "PEER_LOOPBACK_IPV6": "2004:4143::1",
             "ROUTE_MAP_TAG": "41112",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_41"
           },
           "templateName": "service_ebgp_route",
@@ -487,7 +487,7 @@
             "PEER_LOOPBACK_IP": "51.51.51.3",
             "PEER_LOOPBACK_IPV6": "2005:5153::1",
             "ROUTE_MAP_TAG": "51115",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_51"
           },
           "templateName": "service_ebgp_route",
@@ -572,7 +572,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_61"
           },
           "templateName": "service_static_route",
@@ -631,7 +631,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_71"
           },
           "templateName": "service_static_route",
@@ -851,10 +851,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 101,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -863,7 +863,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 101,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -879,10 +879,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 201,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -891,7 +891,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 201,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -907,10 +907,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 301,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -919,7 +919,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 301,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -935,10 +935,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 401,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -947,7 +947,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 401,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -963,10 +963,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 501,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -975,7 +975,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 501,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -991,10 +991,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 601,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -1003,7 +1003,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 601,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -1019,10 +1019,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 701,
           "attachState": "NA",
           "lanAttached": false
         },
@@ -1031,7 +1031,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 701,
           "attachState": "NA",
           "lanAttached": false
         }
@@ -1047,10 +1047,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 101,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1059,7 +1059,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 101,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1075,10 +1075,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 201,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1087,7 +1087,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 201,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1103,10 +1103,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 301,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1115,7 +1115,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 301,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1131,10 +1131,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 401,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1143,7 +1143,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 401,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1159,10 +1159,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 501,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1171,7 +1171,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 501,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1187,10 +1187,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 601,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1199,7 +1199,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 601,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1215,10 +1215,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 701,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -1227,7 +1227,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 701,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -1236,15 +1236,6 @@
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
-      "RETURN_CODE": 200
-    },
-    "config_deploy_resp" :     {
-      "DATA": {
-        "status": "Config deployment has been triggered"
-      },
-      "MESSAGE": "OK",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/rest/control/fabrics/mmudigon/config-deploy",
       "RETURN_CODE": 200
     },
     "config_deploy_resp" :     {
@@ -1394,7 +1385,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1407,7 +1398,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1491,7 +1482,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_21",
             "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -1501,7 +1492,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_22",
             "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1516,7 +1507,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1529,7 +1520,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1542,7 +1533,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1555,7 +1546,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1649,7 +1640,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_31",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -1669,7 +1660,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_32",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1684,7 +1675,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1697,7 +1688,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1710,7 +1701,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1723,7 +1714,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1797,7 +1788,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_41",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1814,7 +1805,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1827,7 +1818,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1919,7 +1910,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_51",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1936,7 +1927,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1949,7 +1940,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1962,7 +1953,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2017,7 +2008,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_61",
             "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2034,7 +2025,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2047,7 +2038,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2131,7 +2122,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_71",
             "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2148,7 +2139,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2161,7 +2152,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2174,7 +2165,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2274,7 +2265,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2287,7 +2278,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2377,7 +2368,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_21",
             "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -2387,7 +2378,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_22",
             "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2402,7 +2393,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2415,7 +2406,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2428,7 +2419,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2441,7 +2432,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2541,7 +2532,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_31",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -2561,7 +2552,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_32",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2576,7 +2567,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2589,7 +2580,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2602,7 +2593,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2615,7 +2606,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2686,7 +2677,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_41",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2703,7 +2694,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2716,7 +2707,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2814,7 +2805,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_51",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2831,7 +2822,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2844,7 +2835,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2857,7 +2848,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2918,7 +2909,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_61",
             "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2935,7 +2926,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2948,7 +2939,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -3038,7 +3029,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_71",
             "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -3055,7 +3046,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -3068,7 +3059,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -3081,7 +3072,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -3172,7 +3163,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "20.20.90.0/24,120.120.190.100\n20.20.90.0/24,121.121.191.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_21"
           },
           "templateName": "service_static_route",
@@ -3182,7 +3173,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "21.21.29.0/24,122.122.129.100\n21.21.29.0/24,123.123.129.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_22"
           },
           "templateName": "service_static_route",
@@ -3268,7 +3259,7 @@
             "PEER_LOOPBACK_IP": "31.31.39.3",
             "PEER_LOOPBACK_IPV6": "2103:3133::01",
             "ROUTE_MAP_TAG": "33101",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_31"
           },
           "templateName": "service_ebgp_route",
@@ -3288,7 +3279,7 @@
             "PEER_LOOPBACK_IP": "131.131.139.3",
             "PEER_LOOPBACK_IPV6": "2103:8385::1",
             "ROUTE_MAP_TAG": "31103",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_32"
           },
           "templateName": "service_ebgp_route",
@@ -3370,7 +3361,7 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3000
+      "DATA": 101
     },
 
     "vlan_id_alloc_resp_rp2" : {
@@ -3378,7 +3369,7 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3002
+      "DATA": 201
     },
 
     "vlan_id_alloc_resp_rp3" : {
@@ -3386,7 +3377,7 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3004
+      "DATA": 301
     },
 
     "vlan_id_alloc_resp_rp4" : {
@@ -3394,7 +3385,7 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3006
+      "DATA": 401
     },
 
     "vlan_id_alloc_resp_rp5" : {
@@ -3402,7 +3393,7 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3008
+      "DATA": 501
     },
 
     "vlan_id_alloc_resp_rp6" : {
@@ -3410,7 +3401,7 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3010
+      "DATA": 601
     },
 
     "vlan_id_alloc_resp_rp7" : {
@@ -3418,6 +3409,6 @@
       "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
       "MESSAGE": "OK",
-      "DATA": 3012
+      "DATA": 701
     }
 }
