@@ -8,6 +8,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+* The following new modules are included in this release
+    * `dcnm_service_node` - Module for managing service nodes
+    * `dcnm_service_policy` - Module for managing L4-L7 service policies
+    * `dcnm_service_route_peering` - Module for managing L4-L7 service route peerings
+
 * cisco.dcnm.dcnm_network:
   * New parameter `is_l2only:`
   * New parameter `vlan_name:`

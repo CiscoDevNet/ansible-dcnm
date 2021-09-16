@@ -1,10 +1,10 @@
 {
-  "create_rp7_resp_unauth_err":
+  "create_rp7_resp_inv_req_err":
   {
     "DATA": {
       "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        "code": "InvalidRequest",
+          "detail": "Invalid request is supplied. Cannot find the requested route peering for attachment retrieval"
       }
     },
       "MESSAGE": "",
@@ -13,66 +13,108 @@
       "RETURN_CODE": 400
   },
 
-  "create_rp4_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
-    },
+    "create_rp7_resp_inv_fab_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "InvalidFabric",
+          "detail": "The specified standalone, or MSD member, easy fabric does not exist. Cannot find the specified attached fabric mmudigon-2"
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
       "RETURN_CODE": 400
-  },
-
-  "det_rp1_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
     },
+
+    "create_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp4_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "det_rp1_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
       "RETURN_CODE": 400
-  },
-
-  "deploy_rp4_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
     },
+
+    "deploy_rp4_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/deployments",
       "RETURN_CODE": 400
-  },
-
-  "delete_rp7_resp_unauth_err":
-  {
-    "DATA": {
-      "error": {
-        "code": "UserUnauthorized",
-          "detail": "User is not authenticated, or not authorized to access the requested resources. "
-      }
     },
+
+    "delete_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7",
       "RETURN_CODE": 400
-  },
+    },
 
-  "create_rp1_resp" : 
-  {
-    "DATA": {
-      "attachedFabricName": "mmudigon",
+    "create_rp1_resp" :
+    {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
         "deploymentMode": "IntraTenantFW",
         "enabled": true,
         "fabricName": "external",
@@ -138,12 +180,12 @@
         ],
         "serviceNodeName": "IT-SN-1",
         "serviceNodeType": "Firewall"
-    },
+      },
       "MESSAGE": "",
       "METHOD": "POST",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings",
       "RETURN_CODE": 200
-  },
+    },
     "create_rp2_resp" : {
       "DATA": {
         "attachedFabricName": "mmudigon",
@@ -158,7 +200,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_21"
           },
           "templateName": "service_static_route",
@@ -168,7 +210,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_22"
           },
           "templateName": "service_static_route",
@@ -261,7 +303,7 @@
             "PEER_LOOPBACK_IP": "31.31.31.3",
             "PEER_LOOPBACK_IPV6": "2003:3133::01",
             "ROUTE_MAP_TAG": "33111",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_31"
           },
           "templateName": "service_ebgp_route",
@@ -281,7 +323,7 @@
             "PEER_LOOPBACK_IP": "131.131.131.3",
             "PEER_LOOPBACK_IPV6": "2003:8385::1",
             "ROUTE_MAP_TAG": "31113",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_32"
           },
           "templateName": "service_ebgp_route",
@@ -376,7 +418,7 @@
             "PEER_LOOPBACK_IP": "41.41.41.3",
             "PEER_LOOPBACK_IPV6": "2004:4143::1",
             "ROUTE_MAP_TAG": "41112",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_41"
           },
           "templateName": "service_ebgp_route",
@@ -445,7 +487,7 @@
             "PEER_LOOPBACK_IP": "51.51.51.3",
             "PEER_LOOPBACK_IPV6": "2005:5153::1",
             "ROUTE_MAP_TAG": "51115",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_51"
           },
           "templateName": "service_ebgp_route",
@@ -530,7 +572,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_61"
           },
           "templateName": "service_static_route",
@@ -589,7 +631,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_71"
           },
           "templateName": "service_static_route",
@@ -659,65 +701,356 @@
       "RETURN_CODE": 200
     },
 
-    "deploy_rp1_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp2_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp3_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp4_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp5_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp6_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/deployments",
-      "RETURN_CODE": 200
-    },
-    "deploy_rp7_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/deployments",
-      "RETURN_CODE": 200
-    },
+    "detach_rp1_rp3_resp":
+      {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP1",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP3",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP2",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-1/peerings/mmudigon-2/attachments?peering-names=IT-FW-RP2,IT-FW-RP3,IT-FW-RP1",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+     "detach_rp4_rp7_resp":
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP7",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP6",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP5",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/attachments?peering-names=IT-ADC-RP5,IT-ADC-RP4,IT-ADC-RP6,IT-ADC-RP7",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
 
+    "deploy_rp1_rp3_resp": 
+      {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP1",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP3",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP2",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-1/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp4_rp7_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP7",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP6",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP5",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp_ovr1_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP-OVR1",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp_ovr4_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP-OVR4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "del_deploy_rp1_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 101,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 101,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp2_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 201,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 201,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp3_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 301,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 301,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp4_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 401,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 401,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp5_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 501,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 501,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp6_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 601,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 601,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp7_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 701,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 701,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
+      "RETURN_CODE": 200
+    },
     "attach_rp1_resp" : {
       "DATA": [{
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 101,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -726,7 +1059,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 101,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -742,10 +1075,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 201,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -754,7 +1087,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 201,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -770,10 +1103,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 301,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -782,7 +1115,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 301,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -798,10 +1131,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 401,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -810,7 +1143,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 401,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -826,10 +1159,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 501,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -838,7 +1171,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 501,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -854,10 +1187,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 601,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -866,7 +1199,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 601,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -882,10 +1215,10 @@
         "switchAttaches": [
         {
           "switchName": "dt-n9k2-1",
-          "switchSerialNumber": "SAL1819S6K3",
+          "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.175",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 701,
           "attachState": "DEPLOYED",
           "lanAttached": true
         },
@@ -894,7 +1227,7 @@
           "switchSerialNumber": "SAL1820SDPP",
           "switchIp": "10.122.84.174",
           "portNames": "Ethernet1/1",
-          "vlanId": 3000,
+          "vlanId": 701,
           "attachState": "DEPLOYED",
           "lanAttached": true
         }
@@ -902,64 +1235,6 @@
       }],
       "MESSAGE": "",
       "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
-      "RETURN_CODE": 200
-    },
-    "config_deploy_resp" :     {
-      "DATA": {
-        "status": "Config deployment has been triggered"
-      },
-      "MESSAGE": "OK",
-      "METHOD": "POST",
-      "REQUEST_PATH": "https://10.122.197.6:443/rest/control/fabrics/mmudigon/config-deploy",
-      "RETURN_CODE": 200
-    },
-    "detach_rp1_resp" : {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp2_resp" :       {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp3_resp" :       {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp4_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp5_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp6_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
-      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/attachments",
-      "RETURN_CODE": 200
-    },
-    "detach_rp7_resp" :     {
-      "DATA": {},
-      "MESSAGE": "",
-      "METHOD": "DELETE",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
       "RETURN_CODE": 200
     },
@@ -1110,7 +1385,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1123,7 +1398,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1207,7 +1482,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_21",
             "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -1217,7 +1492,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_22",
             "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1232,7 +1507,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1245,7 +1520,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1258,7 +1533,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1271,7 +1546,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1365,7 +1640,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_31",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -1385,7 +1660,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_32",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1400,7 +1675,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1413,7 +1688,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1426,7 +1701,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1439,7 +1714,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1513,7 +1788,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_41",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1530,7 +1805,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1543,7 +1818,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1635,7 +1910,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_51",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1652,7 +1927,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1665,7 +1940,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1678,7 +1953,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1733,7 +2008,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_61",
             "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1750,7 +2025,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1763,7 +2038,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1847,7 +2122,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_71",
             "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -1864,7 +2139,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1877,7 +2152,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1890,7 +2165,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -1990,7 +2265,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2003,7 +2278,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2093,7 +2368,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_21",
             "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -2103,7 +2378,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_22",
             "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2118,7 +2393,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2131,7 +2406,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2144,7 +2419,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2157,7 +2432,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2257,7 +2532,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_31",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         },
@@ -2277,7 +2552,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_32",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2292,7 +2567,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2305,7 +2580,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2318,7 +2593,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2331,7 +2606,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2402,7 +2677,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_41",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2419,7 +2694,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2432,7 +2707,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2530,7 +2805,7 @@
             "ADVERTISE_HOST_ROUTE": "true",
             "ADMIN_STATE": "true",
             "VRF_NAME": "IT_VRF_51",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2547,7 +2822,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2560,7 +2835,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2573,7 +2848,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2634,7 +2909,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_61",
             "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2651,7 +2926,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2664,7 +2939,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2754,7 +3029,7 @@
           "nvPairs": {
             "VRF_NAME": "IT_VRF_71",
             "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "NEIGHBOR_ASN": "1500"
           }
         }
@@ -2771,7 +3046,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2784,7 +3059,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2797,7 +3072,7 @@
           "fabricName": "mmudigon",
           "switchStatuses": [
           {
-            "switchSerialNumber": "SAL1819S6K3",
+            "switchSerialNumber": "SAL1820SDPP",
             "status": "In-Sync",
             "updatedBy": "config-compliance",
             "updatedTime": 1612868242683
@@ -2888,7 +3163,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "20.20.90.0/24,120.120.190.100\n20.20.90.0/24,121.121.191.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_21"
           },
           "templateName": "service_static_route",
@@ -2898,7 +3173,7 @@
           "nvPairs": {
             "MULTI_ROUTES": "21.21.29.0/24,122.122.129.100\n21.21.29.0/24,123.123.129.100",
             "NEIGHBOR_ASN": "1500",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_22"
           },
           "templateName": "service_static_route",
@@ -2984,7 +3259,7 @@
             "PEER_LOOPBACK_IP": "31.31.39.3",
             "PEER_LOOPBACK_IPV6": "2103:3133::01",
             "ROUTE_MAP_TAG": "33101",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_31"
           },
           "templateName": "service_ebgp_route",
@@ -3004,7 +3279,7 @@
             "PEER_LOOPBACK_IP": "131.131.139.3",
             "PEER_LOOPBACK_IPV6": "2103:8385::1",
             "ROUTE_MAP_TAG": "31103",
-            "SERVICE_LEAF_SWITCH": "SAL1819S6K3",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
             "VRF_NAME": "IT_VRF_32"
           },
           "templateName": "service_ebgp_route",
@@ -3068,7 +3343,7 @@
 
     "serv_nodes_resp" : {
       "MESSAGE": "",
-      "METHOD": "PUT",
+      "METHOD": "GET",
       "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/?atached-fabric=mmudigon",
       "RETURN_CODE": 200,
       "DATA" :[
@@ -3079,6 +3354,61 @@
         "name" : "IT-SN-2"
       }
       ]
+    },
+
+    "vlan_id_alloc_resp_rp1" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 101
+    },
+
+    "vlan_id_alloc_resp_rp2" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 201
+    },
+
+    "vlan_id_alloc_resp_rp3" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 301
+    },
+
+    "vlan_id_alloc_resp_rp4" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 401
+    },
+
+    "vlan_id_alloc_resp_rp5" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 501
+    },
+
+    "vlan_id_alloc_resp_rp6" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 601
+    },
+
+    "vlan_id_alloc_resp_rp7" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 701
     }
 }
-

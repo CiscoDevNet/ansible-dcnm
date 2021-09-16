@@ -20,7 +20,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_service_route_peering
 short_description: DCNM Ansible Module for managing Service Route Peerings.
-version_added: "1.1.0"
+version_added: "1.2.0"
 description:
     - DCNM Ansible Module for Creating, Deleting, Querying and Modifying Route Peerings
 author: Mallik Mudigonda
@@ -96,7 +96,7 @@ options:
           - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
         type: int
         required: true
-      rev_next_hop:
+      reverse_next_hop:
         description:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
           - NOTE: This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
@@ -125,8 +125,11 @@ options:
           vlan_id:
             description:
               - Vlan Id for the inside network
+              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
+                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
-            required: true
+            required: false
+            default: 0
           profile:
             description:
               - Profile information for the inside network
@@ -197,8 +200,8 @@ options:
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. This
-                          object will be mandatory if the service node switch is part of VPC
+                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. 
+                          This object is mandatory if the service node is part of VPC switch
                           pair
                 type: ipv4
                 required: False
@@ -275,8 +278,11 @@ options:
           vlan_id:
             description:
               - Vlan Id for the outside network
+              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
+                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
-            required: true
+            required: false
+            default: 0
           profile:
             description:
               - Profile information for the outside network
@@ -348,7 +354,9 @@ options:
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'.
+                          This object is mandatory if the service node is part of VPC switch
+                          pair
                 type: ipv4
                 required: False
                 default: ''
@@ -422,8 +430,11 @@ options:
           vlan_id:
             description:
               - Vlan Id for the  first arm
+              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
+                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
-            required: true
+            required: false
+            default: 0
           profile:
             description:
               - Profile information for the first arm
@@ -495,6 +506,8 @@ options:
                 description:
                   - IPv4 vpc peer loopback address
                   - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                          This object is mandatory if the service node is part of VPC switch
+                          pair
                 type: ipv4
                 required: False
                 default: ''
@@ -568,8 +581,11 @@ options:
           vlan_id:
             description:
               - Vlan Id for the second arm
+              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
+                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
-            required: true
+            required: false
+            default: 0
           profile:
             description:
               - Profile information for the second arm
@@ -608,6 +624,49 @@ options:
 """
 
 EXAMPLES = """
+
+L4-L7 Service Insertion:
+
+Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+Service Node, Service Route Peering and Service Policy to enable this.
+
+Service Node:
+
+You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+
+Route Peerings:
+
+Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that are used to
+redirect traffic towards the service node.
+
+Service Policy:
+
+Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+The service policies define the actions to be taken for matching traffic redirected towards the service node.
+
+Dependency Tree:
+
+Service Node
+|
+|---- Route Peering 1
+|     |
+.     |---- Service Policy 1
+.     |
+.     .
+.     .
+.     .
+.     |---- Service Policy N
+.
+|---- Route Peering N
+      |
+      |---- Service Policy 1
+      |
+      .
+      .
+      .
+      |---- Service Policy N
 
 States:
 This module supports the following states:
@@ -653,6 +712,8 @@ INTRA-TENANT FIREWALL
     state: merged
     fabric: test-fabric
     service_fabric: external
+    attach: true
+    deploy: true
     config:
       - name: IT-FW-RP1                                  # mandatory
         node_name: IT-SN-1                               # mandatory
@@ -660,7 +721,7 @@ INTRA-TENANT FIREWALL
         inside_network:                                  #
           vrf: IT-VRF-11                                 # mandatory
           name: rp1-sn1-inside-net                       # mandatory
-          vlan_id: 101                                   # mandatory
+          vlan_id: 101                                   # optional
           profile:
             ipv4_gw: 192.161.1.1/24                      # mandatory
             ipv6_gw: 2001:db01::1/64                     # optional, default is ''
@@ -671,16 +732,14 @@ INTRA-TENANT FIREWALL
         outside_network:                                 #
           vrf: IT-VRF-11                                 # mandatory
           name: rp1-sn1-outside-net                      # mandatory
-          vlan_id: 102                                   # mandatory
+          vlan_id: 102                                   # optional
           profile:
             ipv4_gw: 192.161.2.1/24                      # mandatory
             ipv6_gw: 2001:db02::1/64                     # optional, default is ''
             vlan_name: rp1-sn1-outside                   # optional, default is ''
             int_descr: "RP1 SN1 outside interface"       # optionL, default is ''
             tag: 11112                                   # optional, default is 12345
-        rev_next_hop: 192.161.2.100                      # optional, default is ''
-    attach: true
-    deploy: true
+        reverse_next_hop: 192.161.2.100                  # optional, default is ''
 
 INTER-TENANT FIREWALL with STATIC peering
 
@@ -689,6 +748,8 @@ INTER-TENANT FIREWALL with STATIC peering
     state: merged
     fabric: test-fabric
     service_fabric: external
+    attach: true
+    deploy: true
     config:
       - name: IT-FW-RP2                                  # mandatory
         node_name: IT-SN-1                               # mandatory
@@ -697,7 +758,7 @@ INTER-TENANT FIREWALL with STATIC peering
         inside_network:                                  #
           vrf: IT-VRF-21                                 # mandatory
           name: rp2-sn1-inside-net                       # mandatory
-          vlan_id: 201                                   # mandatory
+          vlan_id: 201                                   # optional
           profile:
             ipv4_gw: 192.162.1.1/24                      # mandatory
             ipv6_gw: 2002:db01::1/64                     # optional, default is ''
@@ -712,7 +773,7 @@ INTER-TENANT FIREWALL with STATIC peering
         outside_network:                                 #
           vrf: IT-VRF-22                                 # mandatory
           name: rp2-sn1-outside-net                      # mandatory
-          vlan_id: 202                                   # mandatory
+          vlan_id: 202                                   # optional
           profile:
             ipv4_gw: 192.162.2.1/24                      # mandatory
             ipv6_gw: 2002:db02::1/64                     # optional, default is ''
@@ -724,8 +785,6 @@ INTER-TENANT FIREWALL with STATIC peering
                   - 122.122.122.100
                   - 123.123.123.100
             tag: 22222                                   # optional, default is 12345
-    attach: true
-    deploy: true
 
 INTER-TENANT FIREWALL with EBGP peering
 
@@ -734,53 +793,53 @@ INTER-TENANT FIREWALL with EBGP peering
     state: merged
     fabric: test-fabric
     service_fabric: external
-    config:
-      - name: IT-FW-RP3                                      # mandatory
-            node_name: IT-SN-1                               # mandatory
-            deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
-            peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            inside_network:
-              vrf: IT-VRF-31                                 # mandatory
-              name: rp3-sn1-inside-net                       # mandatory
-              vlan_id: 301                                   # mandatory
-              profile:
-                ipv4_gw: 192.163.1.1/24                      # mandatory
-                ipv6_gw: 2003:db01::1/64                     # optional, default is ''
-                vlan_name: rp3-sn1-inside                    # optional, default is ''
-                int_descr: "RP3 SN1 inside interface"        # optional, default is ''
-                tag: 31111                                   # optional, default is 12345
-                ipv4_neighbor: 31.31.31.1                    # mandatory
-                ipv4_lo: 31.31.31.2                          # mandatory
-                ipv4_vpc_peer_lo: 31.31.31.3                 # optional, default is ''
-                ipv6_neighbor: 2003:3131::1                  # optional, default is ''
-                ipv6_lo: 2003:3132::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2003:3133::1               # optional, default is ''
-                route_map_tag: 33111                         # optional, default is 12345 ????
-                neigh_int_descr: "RP3 SN1 inside interface"  # optional, default is '' ????
-                local_asn: 65301                             # optional, default is ''
-                adv_host: true                               # optional, default is false
-            outside_network:
-              vrf: IT-VRF-32                                 # mandatory
-              name: rp3-sn1-outside-net                      # mandatory
-              vlan_id: 302                                   # mandatory
-              profile:
-                ipv4_gw: 192.163.2.1/24                      # mandatory
-                ipv6_gw: 2003:db02::1/64                     # optional, default is ''
-                vlan_name: rp3-sn1-outside                   # optional, default is ''
-                int_descr: "RP3 SN1 outside interface"       # optional, default is ''
-                tag: 31112                                   # optional, default is 12345
-                ipv4_neighbor: 131.131.131.1                 # mandatory
-                ipv4_lo: 131.131.131.2                       # mandatory
-                ipv4_vpc_peer_lo: 131.131.131.3              # optional, default is ''
-                ipv6_neighbor: 2003:8383::1                  # optional, default is ''
-                ipv6_lo: 2003:8384::1:100:1                  # optional, default is ''
-                ipv6_vpc_peer_lo: 2003:8385::1               # optional, default is ''
-                route_map_tag: 31113                         # optional, default is 12345 ????
-                neigh_int_descr: "RP3 SN1 outside interface" # optional, default is '' ????
-                local_asn: 65302                             # optional, default is ''
-                adv_host: true                               # optional, default is false
     attach: true
     deploy: true
+    config:
+      - name: IT-FW-RP3                                      # mandatory
+        node_name: IT-SN-1                               # mandatory
+        deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
+        peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
+        inside_network:
+          vrf: IT-VRF-31                                 # mandatory
+          name: rp3-sn1-inside-net                       # mandatory
+          vlan_id: 301                                   # optional
+          profile:
+            ipv4_gw: 192.163.1.1/24                      # mandatory
+            ipv6_gw: 2003:db01::1/64                     # optional, default is ''
+            vlan_name: rp3-sn1-inside                    # optional, default is ''
+            int_descr: "RP3 SN1 inside interface"        # optional, default is ''
+            tag: 31111                                   # optional, default is 12345
+            ipv4_neighbor: 31.31.31.1                    # mandatory
+            ipv4_lo: 31.31.31.2                          # mandatory
+            ipv4_vpc_peer_lo: 31.31.31.3                 # optional, default is ''
+            ipv6_neighbor: 2003:3131::1                  # optional, default is ''
+            ipv6_lo: 2003:3132::1                        # optional, default is ''
+            ipv6_vpc_peer_lo: 2003:3133::1               # optional, default is ''
+            route_map_tag: 33111                         # optional, default is 12345 ????
+            neigh_int_descr: "RP3 SN1 inside interface"  # optional, default is '' ????
+            local_asn: 65301                             # optional, default is ''
+            adv_host: true                               # optional, default is false
+        outside_network:
+          vrf: IT-VRF-32                                 # mandatory
+          name: rp3-sn1-outside-net                      # mandatory
+          vlan_id: 302                                   # optional
+          profile:
+            ipv4_gw: 192.163.2.1/24                      # mandatory
+            ipv6_gw: 2003:db02::1/64                     # optional, default is ''
+            vlan_name: rp3-sn1-outside                   # optional, default is ''
+            int_descr: "RP3 SN1 outside interface"       # optional, default is ''
+            tag: 31112                                   # optional, default is 12345
+            ipv4_neighbor: 131.131.131.1                 # mandatory
+            ipv4_lo: 131.131.131.2                       # mandatory
+            ipv4_vpc_peer_lo: 131.131.131.3              # optional, default is ''
+            ipv6_neighbor: 2003:8383::1                  # optional, default is ''
+            ipv6_lo: 2003:8384::1:100:1                  # optional, default is ''
+            ipv6_vpc_peer_lo: 2003:8385::1               # optional, default is ''
+            route_map_tag: 31113                         # optional, default is 12345 ????
+            neigh_int_descr: "RP3 SN1 outside interface" # optional, default is '' ????
+            local_asn: 65302                             # optional, default is ''
+            adv_host: true                               # optional, default is false
 
 ONEARM ADC with EBGP peering
 
@@ -789,34 +848,34 @@ ONEARM ADC with EBGP peering
     state: merged
     fabric: test-fabric
     service_fabric: external
-    config:
-      - name: IT-ADC-RP4
-            node_name: IT-SN-2                               # mandatory
-            deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
-            peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            first_arm:
-              vrf: IT-VRF-41                                 # mandatory
-              name: rp4-sn2-first-arm                        # mandatory
-              vlan_id: 401                                   # mandatory
-              profile:
-                ipv4_gw: 192.164.1.1/24                      # mandatory
-                ipv6_gw: 2004:db01::1/64                     # optional, default is ''
-                vlan_name: rp4-sn2-first-arm                 # optional, default is ''
-                int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
-                tag: 41111                                   # optional, default is 12345
-                ipv4_neighbor: 41.41.41.1                    # mandatory
-                ipv4_lo: 41.41.41.2                          # mandatory
-                ipv4_vpc_peer_lo: 41.41.41.3                 # optional, default is ''
-                ipv6_neighbor: 2004:4141::1                  # optional, default is ''
-                ipv6_lo: 2004:4142::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2004:4143::1               # optional, default is ''
-                route_map_tag: 41112                         # optional, default is 12345
-                neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
-                local_asn: 65401                             # optional, default is ''
-                adv_host: true                               # optional, default is false
-            rev_next_hop: 192.164.1.100                      # mandatory
     attach: true
     deploy: true
+    config:
+      - name: IT-ADC-RP4
+        node_name: IT-SN-2                               # mandatory
+        deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
+        peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
+        first_arm:
+          vrf: IT-VRF-41                                 # mandatory
+          name: rp4-sn2-first-arm                        # mandatory
+          vlan_id: 401                                   # optional
+          profile:
+            ipv4_gw: 192.164.1.1/24                      # mandatory
+            ipv6_gw: 2004:db01::1/64                     # optional, default is ''
+            vlan_name: rp4-sn2-first-arm                 # optional, default is ''
+            int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
+            tag: 41111                                   # optional, default is 12345
+            ipv4_neighbor: 41.41.41.1                    # mandatory
+            ipv4_lo: 41.41.41.2                          # mandatory
+            ipv4_vpc_peer_lo: 41.41.41.3                 # optional, default is ''
+            ipv6_neighbor: 2004:4141::1                  # optional, default is ''
+            ipv6_lo: 2004:4142::1                        # optional, default is ''
+            ipv6_vpc_peer_lo: 2004:4143::1               # optional, default is ''
+            route_map_tag: 41112                         # optional, default is 12345
+            neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
+            local_asn: 65401                             # optional, default is ''
+            adv_host: true                               # optional, default is false
+        reverse_next_hop: 192.164.1.100                  # mandatory
 
 TWOARM ADC with EBGP peering
 
@@ -825,44 +884,44 @@ TWOARM ADC with EBGP peering
     state: merged
     fabric: test-fabric
     service_fabric: external
-    config:
-      - name: IT-ADC-RP5
-            node_name: IT-SN-2                               # mandatory
-            deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
-            peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
-            first_arm:
-              vrf: IT-VRF-51            "                    # mandatory
-              name: rp5-sn2-first-arm                        # mandatory
-              vlan_id: 501                                   # mandatory
-              profile:
-                ipv4_gw: 192.165.1.1/24                      # mandatory
-                ipv6_gw: 2005:db01::1/64                     # optional, default is ''
-                vlan_name: rp5-sn2-first-arm                 # optional, default is ''
-                int_descr: "RP5 SN2 first arm intf"          # optional, default is ''
-                tag: 51111                                   # optional, default is 12345
-                ipv4_neighbor: 51.51.51.1                    # mandatory
-                ipv4_lo: 51.51.51.2                          # mandatory
-                ipv4_vpc_peer_lo: 51.51.51.3                 # optional, default is ''
-                ipv6_neighbor: 2005:5151::1                  # optional, default is ''
-                ipv6_lo: 2005:5152::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2005:5153::1               # optional, default is ''
-                route_map_tag: 51115                         # optional, default is 12345
-                neigh_int_descr: "RP5 SN2 first arm"         # optional, default is ''
-                local_asn: 65501                             # optional, default is ''
-                adv_host: true                               # optional, default is false
-            second_arm:
-              vrf: IT-VRF-52            "                    # mandatory
-              name: rp5-sn2-second-arm                       # mandatory
-              vlan_id: 502                                   # mandatory
-              profile:
-                ipv4_gw: 192.165.2.1/24                      # mandatory
-                ipv6_gw: 2005:db02::1/64                     # optional, default is ''
-                vlan_name: rp5-sn2-second-arm                # optional, default is ''
-                int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
-                tag: 51112                                   # optional, default is 12345
-            rev_next_hop: 192.165.1.100                      # mandatory
     attach: true
     deploy: true
+    config:
+      - name: IT-ADC-RP5
+        node_name: IT-SN-2                               # mandatory
+        deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
+        peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
+        first_arm:
+          vrf: IT-VRF-51            "                    # mandatory
+          name: rp5-sn2-first-arm                        # mandatory
+          vlan_id: 501                                   # optional
+          profile:
+            ipv4_gw: 192.165.1.1/24                      # mandatory
+            ipv6_gw: 2005:db01::1/64                     # optional, default is ''
+            vlan_name: rp5-sn2-first-arm                 # optional, default is ''
+            int_descr: "RP5 SN2 first arm intf"          # optional, default is ''
+            tag: 51111                                   # optional, default is 12345
+            ipv4_neighbor: 51.51.51.1                    # mandatory
+            ipv4_lo: 51.51.51.2                          # mandatory
+            ipv4_vpc_peer_lo: 51.51.51.3                 # optional, default is ''
+            ipv6_neighbor: 2005:5151::1                  # optional, default is ''
+            ipv6_lo: 2005:5152::1                        # optional, default is ''
+            ipv6_vpc_peer_lo: 2005:5153::1               # optional, default is ''
+            route_map_tag: 51115                         # optional, default is 12345
+            neigh_int_descr: "RP5 SN2 first arm"         # optional, default is ''
+            local_asn: 65501                             # optional, default is ''
+            adv_host: true                               # optional, default is false
+        second_arm:
+          vrf: IT-VRF-52            "                    # mandatory
+          name: rp5-sn2-second-arm                       # mandatory
+          vlan_id: 502                                   # optional
+          profile:
+            ipv4_gw: 192.165.2.1/24                      # mandatory
+            ipv6_gw: 2005:db02::1/64                     # optional, default is ''
+            vlan_name: rp5-sn2-second-arm                # optional, default is ''
+            int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
+            tag: 51112                                   # optional, default is 12345
+        reverse_next_hop: 192.165.1.100                  # mandatory
 
 ONEARM ADC with STATIC peering
 
@@ -871,33 +930,33 @@ ONEARM ADC with STATIC peering
     state: merged
     fabric: test-fabric
     service_fabric: external
-    config:
-      - name: IT-ADC-RP6
-            node_name: IT-SN-2                               # mandatory
-            deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
-            peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            first_arm:
-              vrf: IT-VRF-61                                 # mandatory
-              name: rp6-sn2-first-arm                        # mandatory
-              vlan_id: 601                                   # mandatory
-              profile:
-                ipv4_gw: 192.166.1.1/24                      # mandatory
-                ipv6_gw: 2006:db01::1/64                     # optional, default is ''
-                vlan_name: rp6-sn2-first-arm                 # optional, default is ''
-                int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
-                tag: 61111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
-                  - subnet: 61.61.61.1/24
-                    next_hop:
-                      - 161.161.161.1
-                      - 162.162.162.1
-                  - subnet: 22.0.0.0/24
-                    next_hop:
-                      - 163.163.163.1
-                      - 164.164.164.1
-            rev_next_hop: 192.166.1.100                      # mandatory
     attach: true
     deploy: true
+    config:
+      - name: IT-ADC-RP6
+        node_name: IT-SN-2                               # mandatory
+        deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
+        peering_option: static                           # optional, default is static, choices=[static, ebgp]
+        first_arm:
+          vrf: IT-VRF-61                                 # mandatory
+          name: rp6-sn2-first-arm                        # mandatory
+          vlan_id: 601                                   # optional
+          profile:
+            ipv4_gw: 192.166.1.1/24                      # mandatory
+            ipv6_gw: 2006:db01::1/64                     # optional, default is ''
+            vlan_name: rp6-sn2-first-arm                 # optional, default is ''
+            int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
+            tag: 61111                                   # optional, default is 12345
+            static_route:                                # optional, default is ''
+              - subnet: 61.61.61.1/24
+                next_hop:
+                  - 161.161.161.1
+                  - 162.162.162.1
+              - subnet: 22.0.0.0/24
+                next_hop:
+                  - 163.163.163.1
+                  - 164.164.164.1
+        reverse_next_hop: 192.166.1.100                  # mandatory
 
 TWOARM ADC with STATIC peering
 
@@ -906,44 +965,44 @@ TWOARM ADC with STATIC peering
     state: merged
     fabric: test-fabric
     service_fabric: external
-    config:
-      - name: IT-ADC-RP7
-            node_name: IT-SN-2                               # mandatory
-            deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
-            peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            first_arm:
-              vrf: IT-VRF-71                                 # mandatory
-              name: rp7-sn2-first-arm                        # mandatory
-              vlan_id: 701                                   # mandatory
-              profile:
-                ipv4_gw: 192.167.1.1/24                      # mandatory
-                ipv6_gw: 2007:db01::1/64                     # optional, default is ''
-                vlan_name: rp7-sn2-first-arm                 # optional, default is ''
-                int_descr: "RP6 SN2 first arm  intf"         # optional, default is ''
-                tag: 71111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
-                  - subnet: 71.71.71.1/24
-                    next_hop:
-                      - 171.171.171.1
-                      - 172.172.172.1
-            second_arm:
-              vrf: IT-VRF-72                                 # mandatory
-              name: rp7-sn2-second-arm                       # mandatory
-              vlan_id: 702                                   # mandatory
-              profile:
-                ipv4_gw: 192.167.2.1/24                      # mandatory
-                ipv6_gw: 2007:db02::1/64                     # optional, default is ''
-                vlan_name: rp7-sn2-second-arm                # optional, default is ''
-                int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
-                tag: 71112                                   # optional, default is 12345
-            rev_next_hop: 192.167.1.100                      # mandatory
     attach: true
     deploy: true
+    config:
+      - name: IT-ADC-RP7
+        node_name: IT-SN-2                               # mandatory
+        deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
+        peering_option: static                           # optional, default is static, choices=[static, ebgp]
+        first_arm:
+          vrf: IT-VRF-71                                 # mandatory
+          name: rp7-sn2-first-arm                        # mandatory
+          vlan_id: 701                                   # optional
+          profile:
+            ipv4_gw: 192.167.1.1/24                      # mandatory
+            ipv6_gw: 2007:db01::1/64                     # optional, default is ''
+            vlan_name: rp7-sn2-first-arm                 # optional, default is ''
+            int_descr: "RP6 SN2 first arm  intf"         # optional, default is ''
+            tag: 71111                                   # optional, default is 12345
+            static_route:                                # optional, default is ''
+              - subnet: 71.71.71.1/24
+                next_hop:
+                  - 171.171.171.1
+                  - 172.172.172.1
+        second_arm:
+          vrf: IT-VRF-72                                 # mandatory
+          name: rp7-sn2-second-arm                       # mandatory
+          vlan_id: 702                                   # optional
+          profile:
+            ipv4_gw: 192.167.2.1/24                      # mandatory
+            ipv6_gw: 2007:db02::1/64                     # optional, default is ''
+            vlan_name: rp7-sn2-second-arm                # optional, default is ''
+            int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
+            tag: 71112                                   # optional, default is 12345
+        reverse_next_hop: 192.167.1.100                  # mandatory
 
 DELETE ROUTE PEERINGS
 =====================
 
-- name: Delete route peerings
+- name: Delete specific route peerings
   cisco.dcnm.dcnm_service_route_peering:
     state: deleted
     fabric: test-fabric
@@ -951,6 +1010,20 @@ DELETE ROUTE PEERINGS
     config:
       - name: IT-FW-RP1                                   # mandatory
         node_name: IT-SN-1                                # mandatory
+
+- name: Delete all route peerings
+  cisco.dcnm.dcnm_service_route_peering:
+    state: deleted
+    fabric: test-fabric
+    service_fabric: external
+
+- name: Delete route peerings with node name
+  cisco.dcnm.dcnm_service_route_peering:
+    fabric: test-fabric
+    service_fabric: external
+    state: deleted
+    config:
+      - node_name: IT-SN-1
 
 OVERRIDE ROUTE PEERINGS
 =======================
@@ -960,6 +1033,8 @@ OVERRIDE ROUTE PEERINGS
     state: overridden
     fabric: test-fabric
     service_fabric: external
+    attach: true
+    deploy: true
     config:
       - name: IT-FW-RP-OVR1                              # mandatory
         node_name: IT-SN-1                               # mandatory
@@ -967,7 +1042,7 @@ OVERRIDE ROUTE PEERINGS
         inside_network:                                  #
           vrf: IT-VRF-12                                 # mandatory
           name: rp1-sn1-inside-net-ovr                   # mandatory
-          vlan_id: 191                                   # mandatory
+          vlan_id: 191                                   # optional
           profile:
             ipv4_gw: 192.161.91.1/24                     # mandatory
             ipv6_gw: 2001:db11::1/64                     # optional, default is ''
@@ -978,33 +1053,20 @@ OVERRIDE ROUTE PEERINGS
         outside_network:                                 #
           vrf: IT-VRF-12                                 # mandatory
           name: rp1-sn1-outside-net-ovr                  # mandatory
-          vlan_id: 192                                   # mandatory
+          vlan_id: 192                                   # optional
           profile:
             ipv4_gw: 192.161.92.1/24                     # mandatory
             ipv6_gw: 2001:db12::1/64                     # optional, default is ''
             vlan_name: rp1-sn1-outside-ovr               # optional, default is ''
             int_descr: "RP1 SN1 outside interface ovr"   # optionL, default is ''
             tag: 11192                                   # optional, default is 12345
-        rev_next_hop: 192.161.92.100                     # optional, default is ''
-    attach: true
-    deploy: true
+        reverse_next_hop: 192.161.92.100                 # optional, default is ''
 
 - name: Override existing route peerings with no new peerings
   cisco.dcnm.dcnm_service_route_peering:
     state: overridden
     fabric: test-fabric
     service_fabric: external
-    attach: true
-    deploy: true
-
-- name: Override existing route peerings with just service node names
-  cisco.dcnm.dcnm_service_route_peering:
-    state: overridden
-    fabric: test-fabric
-    service_fabric: external
-    config:
-      - node_name: IT-SN-1                                # optional
-      - node_name: IT-SN-2                                # optional
     attach: true
     deploy: true
 
@@ -1016,6 +1078,8 @@ REPLACE ROUTE PEERINGS
     state: replaced
     fabric: test-fabric
     service_fabric: external
+    attach: true
+    deploy: true
     config:
       - name: IT-FW-RP1                                  # mandatory
         node_name: IT-SN-1                               # mandatory
@@ -1023,7 +1087,7 @@ REPLACE ROUTE PEERINGS
         inside_network:                                  #
           vrf: IT-VRF-11                                 # mandatory
           name: rp1-sn1-inside-net                       # mandatory
-          vlan_id: 191                                   # mandatory
+          vlan_id: 191                                   # optional
           profile:
             ipv4_gw: 192.161.1.1/24                      # mandatory
             ipv6_gw: 2101:db01::01/64                    # optional, default is ''
@@ -1034,16 +1098,14 @@ REPLACE ROUTE PEERINGS
         outside_network:                                 #
           vrf: IT-VRF-11                                 # mandatory
           name: rp1-sn1-outside-net                      # mandatory
-          vlan_id: 192                                   # mandatory
+          vlan_id: 192                                   # optional
           profile:
             ipv4_gw: 192.161.2.1/24                      # mandatory
             ipv6_gw: 2101:db02::1/64                     # optional, default is ''
             vlan_name: rp1-sn1-outside-rep               # optional, default is ''
             int_descr: "RP1 SN1 outside interface- REP"  # optionL, default is ''
             tag: 11102                                   # optional, default is 12345
-        rev_next_hop: 192.161.2.200                      # optional, default is ''
-    attach: true
-    deploy: true
+        reverse_next_hop: 192.161.2.200                  # optional, default is ''
 
 QUERY ROUTE PEERINGS
 ====================
@@ -1086,6 +1148,7 @@ QUERY ROUTE PEERINGS
 
 """
 
+import re
 import time
 import json
 import copy
@@ -1116,9 +1179,17 @@ class DcnmServiceRoutePeering:
         self.diff_modify = []
         self.diff_delete = []
         self.diff_deploy = []
+        self.deployed_srps = []
         self.fd = None
         self.changed_dict = [
-            {"merged": [], "modified": [], "deleted": [], "deploy": [], "query": []}
+            {
+                "merged": [],
+                "modified": [],
+                "deleted": [],
+                "deploy": [],
+                "query": [],
+                "debugs": [],
+            }
         ]
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -1128,6 +1199,7 @@ class DcnmServiceRoutePeering:
             self.fd = open("srp.log", "a+")
         if self.fd is not None:
             self.fd.write(msg)
+            self.fd.write("\n")
             self.fd.flush()
 
     def dcnm_srp_validate_and_build_srp_info(
@@ -1190,7 +1262,9 @@ class DcnmServiceRoutePeering:
 
             in_list.append(item[net_name1])
             # Validate inside and outside network dicts from route peering info
-            in_net, invalid_params = validate_list_of_dicts(in_list, srp_network_spec)
+            in_net, invalid_params = validate_list_of_dicts(
+                in_list, srp_network_spec
+            )
             if invalid_params:
                 mesg = "Invalid parameters in playbook: {}".format(
                     "while processing Network/Arm - "
@@ -1372,8 +1446,7 @@ class DcnmServiceRoutePeering:
             elif (self.module.params["state"] == "overridden") and (
                 item.get("name", None) is None
             ):
-                # config for overridden state is different. So validate overridden state differently
-                self.dcnm_srp_validate_overridden_state_input(cfg)
+                pass
             else:
                 if "deploy_mode" not in item:
                     mesg = "Invalid parameters in playbook: {}".format(
@@ -1396,7 +1469,9 @@ class DcnmServiceRoutePeering:
                 if (item["deploy_mode"].lower() == "onearmadc") or (
                     item["deploy_mode"].lower() == "twoarmadc"
                 ):
-                    self.dcnm_srp_validate_adc_input(cfg, item["deploy_mode"].lower())
+                    self.dcnm_srp_validate_adc_input(
+                        cfg, item["deploy_mode"].lower()
+                    )
             cfg.remove(citem)
 
     def dcnm_srp_validate_intra_tenant_firewall_input(self, cfg):
@@ -1420,13 +1495,13 @@ class DcnmServiceRoutePeering:
             inside_network=dict(required=True, type="dict"),
             outside_network=dict(required=True, type="dict"),
             next_hop=dict(required=True, type="ipv4"),
-            rev_next_hop=dict(type="ipv4", default=""),
+            reverse_next_hop=dict(type="ipv4", default=""),
         )
 
         srp_network_spec = dict(
             vrf=dict(required=True, type="str"),
             name=dict(required=True, type="str"),
-            vlan_id=dict(required=True, type="int"),
+            vlan_id=dict(type="int", default=0),
             profile=dict(required=True, type="dict"),
         )
 
@@ -1474,7 +1549,7 @@ class DcnmServiceRoutePeering:
         srp_network_spec = dict(
             vrf=dict(required=True, type="str"),
             name=dict(required=True, type="str"),
-            vlan_id=dict(required=True, type="int"),
+            vlan_id=dict(type="int", default=0),
             profile=dict(required=True, type="dict"),
         )
 
@@ -1550,13 +1625,13 @@ class DcnmServiceRoutePeering:
             peering_option=dict(type="str", default="static"),
             first_arm=dict(required=True, type="dict"),
             second_arm=dict(type="dict", default=""),
-            rev_next_hop=dict(required=True, type="ipv4"),
+            reverse_next_hop=dict(required=True, type="ipv4"),
         )
 
         srp_network_spec = dict(
             vrf=dict(required=True, type="str"),
             name=dict(required=True, type="str"),
-            vlan_id=dict(required=True, type="int"),
+            vlan_id=dict(type="int", default=0),
             profile=dict(required=True, type="dict"),
         )
 
@@ -1640,8 +1715,8 @@ class DcnmServiceRoutePeering:
         """
 
         srp_delete_spec = dict(
-            name=dict(required=True, type="str"),
             node_name=dict(required=True, type="str"),
+            name=dict(required=False, type="str", default=""),
         )
 
         srp_info, invalid_params = validate_list_of_dicts(cfg, srp_delete_spec)
@@ -1682,37 +1757,6 @@ class DcnmServiceRoutePeering:
         )
 
         srp_info, invalid_params = validate_list_of_dicts(cfg, srp_query_spec)
-        if invalid_params:
-            mesg = "Invalid parameters in playbook: {}".format(
-                "while processing Route Peering -  "
-                + cfg[0]["name"]
-                + ", "
-                + "\n".join(invalid_params)
-            )
-            self.module.fail_json(msg=mesg)
-
-        self.srp_info.extend(srp_info)
-
-    def dcnm_srp_validate_overridden_state_input(self, cfg):
-
-        """
-        Playbook input will be different for differnt states. This routine validates the overridden state
-        input. This routine updates self.srp_info with validated playbook information related to overridden
-        state.
-
-        Parameters:
-            cfg	(dict): The config from playbook
-
-        Returns:
-            None
-        """
-
-        srp_overridden_spec = dict(
-            name=dict(required=False, type="str", default=""),
-            node_name=dict(required=False, type="str", default=""),
-        )
-
-        srp_info, invalid_params = validate_list_of_dicts(cfg, srp_overridden_spec)
         if invalid_params:
             mesg = "Invalid parameters in playbook: {}".format(
                 "while processing Route Peering -  "
@@ -1776,7 +1820,9 @@ class DcnmServiceRoutePeering:
             if srp_payload["deploymentMode"] == "InterTenantFW":
 
                 srp_payload["routes"].append(out_route_info)
-                srp_payload["routes"][1]["templateName"] = "service_static_route"
+                srp_payload["routes"][1][
+                    "templateName"
+                ] = "service_static_route"
 
                 nv = srp_payload["routes"][1]["nvPairs"]
 
@@ -1803,10 +1849,14 @@ class DcnmServiceRoutePeering:
 
             nv["NEIGHBOR_IP"] = srp[net_name1]["profile"]["ipv4_neighbor"]
             nv["LOOPBACK_IP"] = srp[net_name1]["profile"]["ipv4_lo"]
-            nv["PEER_LOOPBACK_IP"] = srp[net_name1]["profile"]["ipv4_vpc_peer_lo"]
+            nv["PEER_LOOPBACK_IP"] = srp[net_name1]["profile"][
+                "ipv4_vpc_peer_lo"
+            ]
             nv["NEIGHBOR_IPV6"] = srp[net_name1]["profile"]["ipv6_neighbor"]
             nv["LOOPBACK_IPV6"] = srp[net_name1]["profile"]["ipv6_lo"]
-            nv["PEER_LOOPBACK_IPV6"] = srp[net_name1]["profile"]["ipv6_vpc_peer_lo"]
+            nv["PEER_LOOPBACK_IPV6"] = srp[net_name1]["profile"][
+                "ipv6_vpc_peer_lo"
+            ]
             nv["ROUTE_MAP_TAG"] = srp[net_name1]["profile"]["route_map_tag"]
             nv["DESC"] = srp[net_name1]["profile"]["neigh_int_descr"]
             nv["LOCAL_ASN"] = srp[net_name1]["profile"]["local_asn"]
@@ -1825,18 +1875,71 @@ class DcnmServiceRoutePeering:
 
                 nv["NEIGHBOR_IP"] = srp[net_name2]["profile"]["ipv4_neighbor"]
                 nv["LOOPBACK_IP"] = srp[net_name2]["profile"]["ipv4_lo"]
-                nv["PEER_LOOPBACK_IP"] = srp[net_name2]["profile"]["ipv4_vpc_peer_lo"]
-                nv["NEIGHBOR_IPV6"] = srp[net_name2]["profile"]["ipv6_neighbor"]
+                nv["PEER_LOOPBACK_IP"] = srp[net_name2]["profile"][
+                    "ipv4_vpc_peer_lo"
+                ]
+                nv["NEIGHBOR_IPV6"] = srp[net_name2]["profile"][
+                    "ipv6_neighbor"
+                ]
                 nv["LOOPBACK_IPV6"] = srp[net_name2]["profile"]["ipv6_lo"]
-                nv["PEER_LOOPBACK_IPV6"] = srp[net_name2]["profile"]["ipv6_vpc_peer_lo"]
-                nv["ROUTE_MAP_TAG"] = srp[net_name2]["profile"]["route_map_tag"]
+                nv["PEER_LOOPBACK_IPV6"] = srp[net_name2]["profile"][
+                    "ipv6_vpc_peer_lo"
+                ]
+                nv["ROUTE_MAP_TAG"] = srp[net_name2]["profile"][
+                    "route_map_tag"
+                ]
                 nv["DESC"] = srp[net_name2]["profile"]["neigh_int_descr"]
                 nv["LOCAL_ASN"] = srp[net_name2]["profile"]["local_asn"]
-                nv["ADVERTISE_HOST_ROUTE"] = srp[net_name2]["profile"]["adv_host"]
+                nv["ADVERTISE_HOST_ROUTE"] = srp[net_name2]["profile"][
+                    "adv_host"
+                ]
                 nv["ADMIN_STATE"] = True
                 nv["VRF_NAME"] = srp[net_name2]["vrf"]
 
                 srp_payload["routes"][1]["vrfName"] = srp[net_name2]["vrf"]
+
+    def dcnm_srp_allocate_vlan_id(self, fabric, srp):
+
+        user_vlans = []
+        vlan_id_alloc = False
+        for net in srp["serviceNetworks"]:
+            if not net["vlanId"]:
+                vlan_id_alloc = True
+            else:
+                user_vlans.append(net["vlanId"])
+
+        if not vlan_id_alloc:
+            return user_vlans
+
+        path = (
+            "/rest/resource-manager/vlan/"
+            + fabric
+            + "?vlanUsageType=SERVICE_NETWORK_VLAN"
+        )
+
+        retries = 0
+        while retries < 30:
+
+            retries += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp["RETURN_CODE"] == 200:
+                break
+            else:
+                self.dcnm_srp_check_for_errors_in_resp(resp)
+                time.sleep(1)
+                continue
+
+        if resp["RETURN_CODE"] != 200:
+            self.module.fail_json(msg=resp)
+
+        net_index = 0
+        for net in srp["serviceNetworks"]:
+            if not net["vlanId"]:
+                net["vlanId"] = resp["DATA"] + net_index
+                net["nvPairs"]["vlanId"] = resp["DATA"] + net_index
+                net_index += 1
+        return user_vlans
 
     def dcnm_srp_get_common_payload(self, srp, deploy_mode):
 
@@ -1876,7 +1979,9 @@ class DcnmServiceRoutePeering:
 
         srp_payload = {"serviceNetworks": [], "enabled": self.attach}
 
-        if (deploy_mode == "intratenantfw") or (deploy_mode == "intertenantfw"):
+        if (deploy_mode == "intratenantfw") or (
+            deploy_mode == "intertenantfw"
+        ):
             net_name1 = "inside_network"
             net_name2 = "outside_network"
             networkType1 = "InsideNetworkFW"
@@ -1899,58 +2004,66 @@ class DcnmServiceRoutePeering:
 
         srp_payload["serviceNetworks"][0]["vrfName"] = srp[net_name1]["vrf"]
         srp_payload["serviceNetworks"][0]["networkType"] = networkType1
-        srp_payload["serviceNetworks"][0]["networkName"] = srp[net_name1]["name"]
+        srp_payload["serviceNetworks"][0]["networkName"] = srp[net_name1][
+            "name"
+        ]
         srp_payload["serviceNetworks"][0]["vlanId"] = srp[net_name1]["vlan_id"]
 
         # Inside Network Profile
         srp_payload["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"] = srp[
             net_name1
         ]["profile"]["ipv4_gw"]
-        srp_payload["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"] = srp[
+        srp_payload["serviceNetworks"][0]["nvPairs"][
+            "gatewayIpV6Address"
+        ] = srp[net_name1]["profile"]["ipv6_gw"]
+        srp_payload["serviceNetworks"][0]["nvPairs"]["vlanName"] = srp[
             net_name1
-        ]["profile"]["ipv6_gw"]
-        srp_payload["serviceNetworks"][0]["nvPairs"]["vlanName"] = srp[net_name1][
-            "profile"
-        ]["vlan_name"]
+        ]["profile"]["vlan_name"]
         srp_payload["serviceNetworks"][0]["nvPairs"]["intfDescription"] = srp[
             net_name1
         ]["profile"]["int_descr"]
-        srp_payload["serviceNetworks"][0]["nvPairs"]["tag"] = srp[net_name1]["profile"][
-            "tag"
-        ]
-        srp_payload["serviceNetworks"][0]["nvPairs"]["vlanId"] = srp[net_name1][
-            "vlan_id"
-        ]
+        srp_payload["serviceNetworks"][0]["nvPairs"]["tag"] = srp[net_name1][
+            "profile"
+        ]["tag"]
+        srp_payload["serviceNetworks"][0]["nvPairs"]["vlanId"] = srp[
+            net_name1
+        ]["vlan_id"]
 
         if deploy_mode != "onearmadc":
 
             # Outside Network
             srp_payload["serviceNetworks"].append(out_network_defaults)
 
-            srp_payload["serviceNetworks"][1]["vrfName"] = srp[net_name2]["vrf"]
+            srp_payload["serviceNetworks"][1]["vrfName"] = srp[net_name2][
+                "vrf"
+            ]
             srp_payload["serviceNetworks"][1]["networkType"] = networkType2
-            srp_payload["serviceNetworks"][1]["networkName"] = srp[net_name2]["name"]
-            srp_payload["serviceNetworks"][1]["vlanId"] = srp[net_name2]["vlan_id"]
-
-            # Outside Network Profile
-            srp_payload["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"] = srp[
-                net_name2
-            ]["profile"]["ipv4_gw"]
-            srp_payload["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"] = srp[
-                net_name2
-            ]["profile"]["ipv6_gw"]
-            srp_payload["serviceNetworks"][1]["nvPairs"]["vlanName"] = srp[net_name2][
-                "profile"
-            ]["vlan_name"]
-            srp_payload["serviceNetworks"][1]["nvPairs"]["intfDescription"] = srp[
-                net_name2
-            ]["profile"]["int_descr"]
-            srp_payload["serviceNetworks"][1]["nvPairs"]["tag"] = srp[net_name2][
-                "profile"
-            ]["tag"]
-            srp_payload["serviceNetworks"][1]["nvPairs"]["vlanId"] = srp[net_name2][
+            srp_payload["serviceNetworks"][1]["networkName"] = srp[net_name2][
+                "name"
+            ]
+            srp_payload["serviceNetworks"][1]["vlanId"] = srp[net_name2][
                 "vlan_id"
             ]
+
+            # Outside Network Profile
+            srp_payload["serviceNetworks"][1]["nvPairs"][
+                "gatewayIpAddress"
+            ] = srp[net_name2]["profile"]["ipv4_gw"]
+            srp_payload["serviceNetworks"][1]["nvPairs"][
+                "gatewayIpV6Address"
+            ] = srp[net_name2]["profile"]["ipv6_gw"]
+            srp_payload["serviceNetworks"][1]["nvPairs"]["vlanName"] = srp[
+                net_name2
+            ]["profile"]["vlan_name"]
+            srp_payload["serviceNetworks"][1]["nvPairs"][
+                "intfDescription"
+            ] = srp[net_name2]["profile"]["int_descr"]
+            srp_payload["serviceNetworks"][1]["nvPairs"]["tag"] = srp[
+                net_name2
+            ]["profile"]["tag"]
+            srp_payload["serviceNetworks"][1]["nvPairs"]["vlanId"] = srp[
+                net_name2
+            ]["vlan_id"]
 
         # Service Node and Fabric details
         srp_payload["serviceNodeName"] = srp["node_name"]
@@ -1981,7 +2094,7 @@ class DcnmServiceRoutePeering:
             srp_payload["peeringOption"] = "None"
             # Add NextHop and Reverse NextHop
             srp_payload["nextHopIp"] = srp["next_hop"]
-            srp_payload["reverseNextHopIp"] = srp["rev_next_hop"]
+            srp_payload["reverseNextHopIp"] = srp["reverse_next_hop"]
         elif deploy_mode == "intertenantfw":
 
             if srp["peering_option"] == "static":
@@ -1995,7 +2108,7 @@ class DcnmServiceRoutePeering:
                 srp_payload["peeringOption"] = "StaticPeering"
             else:
                 srp_payload["peeringOption"] = "EBGPDynamicPeering"
-            srp_payload["reverseNextHopIp"] = srp["rev_next_hop"]
+            srp_payload["reverseNextHopIp"] = srp["reverse_next_hop"]
             self.dcnm_srp_get_payload_route_info(srp, srp_payload)
         elif deploy_mode == "twoarmadc":
 
@@ -2003,7 +2116,7 @@ class DcnmServiceRoutePeering:
                 srp_payload["peeringOption"] = "StaticPeering"
             else:
                 srp_payload["peeringOption"] = "EBGPDynamicPeering"
-            srp_payload["reverseNextHopIp"] = srp["rev_next_hop"]
+            srp_payload["reverseNextHopIp"] = srp["reverse_next_hop"]
             self.dcnm_srp_get_payload_route_info(srp, srp_payload)
 
         return srp_payload
@@ -2119,28 +2232,46 @@ class DcnmServiceRoutePeering:
                 wnv = want["routes"][1]["nvPairs"]
                 hnv = have["routes"][1]["nvPairs"]
 
-                if cfg[net_name2]["profile"].get("ipv4_neighbor", None) is None:
+                if (
+                    cfg[net_name2]["profile"].get("ipv4_neighbor", None)
+                    is None
+                ):
                     wnv["NEIGHBOR_IP"] = hnv["NEIGHBOR_IP"]
 
                 if cfg[net_name2]["profile"].get("ipv4_lo", None) is None:
                     wnv["LOOPBACK_IP"] = hnv["LOOPBACK_IP"]
 
-                if cfg[net_name2]["profile"].get("ipv4_vpc_peer_lo", None) is None:
+                if (
+                    cfg[net_name2]["profile"].get("ipv4_vpc_peer_lo", None)
+                    is None
+                ):
                     wnv["PEER_LOOPBACK_IP"] = hnv["PEER_LOOPBACK_IP"]
 
-                if cfg[net_name2]["profile"].get("ipv6_neighbor", None) is None:
+                if (
+                    cfg[net_name2]["profile"].get("ipv6_neighbor", None)
+                    is None
+                ):
                     wnv["NEIGHBOR_IPV6"] = hnv["NEIGHBOR_IPV6"]
 
                 if cfg[net_name2]["profile"].get("ipv6_lo", None) is None:
                     wnv["LOOPBACK_IPV6"] = hnv["LOOPBACK_IPV6"]
 
-                if cfg[net_name2]["profile"].get("ipv6_vpc_peer_lo", None) is None:
+                if (
+                    cfg[net_name2]["profile"].get("ipv6_vpc_peer_lo", None)
+                    is None
+                ):
                     wnv["PEER_LOOPBACK_IPV6"] = hnv["PEER_LOOPBACK_IPV6"]
 
-                if cfg[net_name2]["profile"].get("route_map_tag", None) is None:
+                if (
+                    cfg[net_name2]["profile"].get("route_map_tag", None)
+                    is None
+                ):
                     wnv["ROUTE_MAP_TAG"] = hnv["ROUTE_MAP_TAG"]
 
-                if cfg[net_name2]["profile"].get("neigh_int_descr", None) is None:
+                if (
+                    cfg[net_name2]["profile"].get("neigh_int_descr", None)
+                    is None
+                ):
                     wnv["DESC"] = hnv["DESC"]
 
                 if cfg[net_name2]["profile"].get("loacl_asn", None) is None:
@@ -2180,6 +2311,11 @@ class DcnmServiceRoutePeering:
             net_name1 = "first_arm"
             net_name2 = "second_arm"
 
+
+        if want["deploymentMode"].lower() != "intertenantfw":
+            if cfg.get("reverse_next_hop", None) is None:
+                want["reverseNextHopIp"] = have.get("reverseNextHopIp")
+
         # All objects that are not included in the playbook will be copied from have to leave them undisturbed
         # Inside Network
         if cfg[net_name1].get("vrf", None) is None:
@@ -2188,12 +2324,14 @@ class DcnmServiceRoutePeering:
             ]
 
         if cfg[net_name1].get("name", None) is None:
-            want["serviceNetworks"][0]["networkName"] = have["serviceNetworks"][0][
-                "networkName"
-            ]
+            want["serviceNetworks"][0]["networkName"] = have[
+                "serviceNetworks"
+            ][0]["networkName"]
 
         if cfg[net_name1].get("vlan_id", None) is None:
-            want["serviceNetworks"][0]["vlanId"] = have["serviceNetworks"][0]["vlanId"]
+            want["serviceNetworks"][0]["vlanId"] = have["serviceNetworks"][0][
+                "vlanId"
+            ]
 
         # Inside Network Profile
         if cfg[net_name1]["profile"].get("ipv4_gw", None) is None:
@@ -2207,56 +2345,56 @@ class DcnmServiceRoutePeering:
             ][0]["nvPairs"]["gatewayIpV6Address"]
 
         if cfg[net_name1]["profile"].get("vlan_name", None) is None:
-            want["serviceNetworks"][0]["nvPairs"]["vlanName"] = have["serviceNetworks"][
-                0
-            ]["nvPairs"]["vlanName"]
+            want["serviceNetworks"][0]["nvPairs"]["vlanName"] = have[
+                "serviceNetworks"
+            ][0]["nvPairs"]["vlanName"]
 
         if cfg[net_name1]["profile"].get("int_descr", None) is None:
-            hif_desc = have["serviceNetworks"][0]["nvPairs"]["intfDescription"].split(
-                " "
-            )[:-1]
-            want["serviceNetworks"][0]["nvPairs"]["intfDescription"] = " ".join(
-                hif_desc
-            )
+            hif_desc = have["serviceNetworks"][0]["nvPairs"][
+                "intfDescription"
+            ].split(" ")[:-1]
+            want["serviceNetworks"][0]["nvPairs"][
+                "intfDescription"
+            ] = " ".join(hif_desc)
 
         if cfg[net_name1]["profile"].get("tag", None) is None:
-            want["serviceNetworks"][0]["nvPairs"]["tag"] = have["serviceNetworks"][0][
-                "nvPairs"
-            ]["tag"]
+            want["serviceNetworks"][0]["nvPairs"]["tag"] = have[
+                "serviceNetworks"
+            ][0]["nvPairs"]["tag"]
 
-        if cfg[net_name1]["profile"].get("vlan_id", None) is None:
-            want["serviceNetworks"][0]["nvPairs"]["vlanId"] = have["serviceNetworks"][
-                0
-            ]["nvPairs"]["vlanId"]
+        if cfg[net_name1].get("vlan_id", None) is None:
+            want["serviceNetworks"][0]["nvPairs"]["vlanId"] = have[
+                "serviceNetworks"
+            ][0]["nvPairs"]["vlanId"]
 
         if want["deploymentMode"].lower() != "onearmadc":
 
             # Outside Network
             if cfg[net_name2].get("vrf", None) is None:
-                want["serviceNetworks"][1]["vrfName"] = have["serviceNetworks"][1][
-                    "vrfName"
-                ]
+                want["serviceNetworks"][1]["vrfName"] = have[
+                    "serviceNetworks"
+                ][1]["vrfName"]
 
             if cfg[net_name2].get("name", None) is None:
-                want["serviceNetworks"][1]["networkName"] = have["serviceNetworks"][1][
-                    "networkName"
-                ]
+                want["serviceNetworks"][1]["networkName"] = have[
+                    "serviceNetworks"
+                ][1]["networkName"]
 
             if cfg[net_name2].get("vlan_id", None) is None:
-                want["serviceNetworks"][1]["vlanId"] = have["serviceNetworks"][1][
-                    "vlanId"
-                ]
+                want["serviceNetworks"][1]["vlanId"] = have["serviceNetworks"][
+                    1
+                ]["vlanId"]
 
             # Outside Network Profile
             if cfg[net_name2]["profile"].get("ipv4_gw", None) is None:
-                want["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"] = have[
-                    "serviceNetworks"
-                ][1]["nvPairs"]["gatewayIpAddress"]
+                want["serviceNetworks"][1]["nvPairs"][
+                    "gatewayIpAddress"
+                ] = have["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]
 
             if cfg[net_name2]["profile"].get("ipv6_gw", None) is None:
-                want["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"] = have[
-                    "serviceNetworks"
-                ][1]["nvPairs"]["gatewayIpV6Address"]
+                want["serviceNetworks"][1]["nvPairs"][
+                    "gatewayIpV6Address"
+                ] = have["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]
 
             if cfg[net_name2]["profile"].get("vlan_name", None) is None:
                 want["serviceNetworks"][1]["nvPairs"]["vlanName"] = have[
@@ -2267,16 +2405,16 @@ class DcnmServiceRoutePeering:
                 hif_desc = have["serviceNetworks"][1]["nvPairs"][
                     "intfDescription"
                 ].split(" ")[:-1]
-                want["serviceNetworks"][1]["nvPairs"]["intfDescription"] = " ".join(
-                    hif_desc
-                )
+                want["serviceNetworks"][1]["nvPairs"][
+                    "intfDescription"
+                ] = " ".join(hif_desc)
 
             if cfg[net_name2]["profile"].get("tag", None) is None:
-                want["serviceNetworks"][1]["nvPairs"]["tag"] = have["serviceNetworks"][
-                    1
-                ]["nvPairs"]["tag"]
+                want["serviceNetworks"][1]["nvPairs"]["tag"] = have[
+                    "serviceNetworks"
+                ][1]["nvPairs"]["tag"]
 
-            if cfg[net_name2]["profile"].get("vlan_id", None) is None:
+            if cfg[net_name2].get("vlan_id", None) is None:
                 want["serviceNetworks"][1]["nvPairs"]["vlanId"] = have[
                     "serviceNetworks"
                 ][1]["nvPairs"]["vlanId"]
@@ -2319,7 +2457,9 @@ class DcnmServiceRoutePeering:
                     (srp["peeringName"] == have["peeringName"])
                     and (srp["fabricName"] == have["fabricName"])
                     and (srp["serviceNodeName"] == have["serviceNodeName"])
-                    and (srp["attachedFabricName"] == have["attachedFabricName"])
+                    and (
+                        srp["attachedFabricName"] == have["attachedFabricName"]
+                    )
                 )
             ]
             if match_have == []:
@@ -2331,9 +2471,15 @@ class DcnmServiceRoutePeering:
                 for cfg in self.config
                 if (
                     (srp["peeringName"] == cfg["name"])
-                    and (srp["fabricName"] == self.module.params["service_fabric"])
+                    and (
+                        srp["fabricName"]
+                        == self.module.params["service_fabric"]
+                    )
                     and (srp["serviceNodeName"] == cfg["node_name"])
-                    and (srp["attachedFabricName"] == self.module.params["fabric"])
+                    and (
+                        srp["attachedFabricName"]
+                        == self.module.params["fabric"]
+                    )
                 )
             ]
             if match_cfg == []:
@@ -2392,11 +2538,12 @@ class DcnmServiceRoutePeering:
         )
 
         retries = 0
-        while retries < 5:
+        while retries < 30:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
             if resp and resp["RETURN_CODE"] != 200:
+                self.dcnm_srp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             else:
@@ -2406,6 +2553,7 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             return resp["DATA"]
         else:
+            self.changed_dict[0]["debugs"].append({"GET_SRP_WITH_SNODE": resp})
             return []
 
     def dcnm_srp_get_service_nodes_from_dcnm(self):
@@ -2426,11 +2574,12 @@ class DcnmServiceRoutePeering:
         )
 
         retries = 0
-        while retries < 5:
+        while retries < 30:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
             if resp and resp["RETURN_CODE"] != 200:
+                self.dcnm_srp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             else:
@@ -2440,6 +2589,7 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             return resp["DATA"]
         else:
+            self.changed_dict[0]["debugs"].append({"GET_SNODES": resp})
             return []
 
     def dcnm_srp_get_srp_info_from_dcnm(self, srp, srp_type):
@@ -2479,17 +2629,26 @@ class DcnmServiceRoutePeering:
                 + srp["name"]
             )
 
+        resource_not_found = False
         retries = 0
-        while retries < 5:
+        while retries < 30:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
             if resp and resp["RETURN_CODE"] != 200:
-                # Check if the error is "ResourceNotFound". In that case we can return without
-                # retrying.
-                if resp.get("error", None) is not None:
-                    if resp["error"].get("code") == "ResourceNotFound":
-                        break
+                if resp.get("DATA", None) is not None:
+                    # Check if the error is "ResourceNotFound". In that case we can return without
+                    # retrying.
+                    if isinstance(resp["DATA"], dict):
+                        if resp["DATA"].get("error", None) is not None:
+                            if (
+                                isinstance(resp["DATA"]["error"], dict)
+                                and resp["DATA"]["error"].get("code")
+                                == "ResourceNotFound"
+                            ):
+                                resource_not_found = True
+                                break
+                self.dcnm_srp_check_for_errors_in_resp(resp)
                 time.sleep(10)
                 continue
             else:
@@ -2499,6 +2658,8 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             return resp["DATA"]
         else:
+            if resource_not_found is False:
+                self.changed_dict[0]["debugs"].append({"GET_SRP_INFO": resp})
             return []
 
     def dcnm_srp_get_have(self):
@@ -2540,75 +2701,113 @@ class DcnmServiceRoutePeering:
 
         mismatch_reasons = []
 
-        if want["deploymentMode"] != have["deploymentMode"]:
-            mismatch_reasons.append("DCNM_SRP_DM_NO_MATCH")
-
         # Global
+        if want.get("deploymentMode") != have.get("deploymentMode"):
+            mismatch_reasons.append(
+                {"DCNM_SRP_DM_NO_MATCH": [want.get("deploymentMode"), have.get("deploymentMode")]}
+            )
+
         if want["serviceNodeType"] != have["serviceNodeType"]:
-            mismatch_reasons.append("DCNM_SRP_SNT_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_SNT_NO_MATCH": [want["serviceNodeType"], have["serviceNodeType"]]}
+            )
+
+        if want.get("nextHopIp", '') != have.get("nextHopIp",''):
+            mismatch_reasons.append(
+                {"DCNM_SRP_NHIP_NO_MATCH": [want.get("nextHopIp", ''), have.get("nextHopIp", '')]}
+            )
+
+        if want.get("reverseNextHopIp", '') != have.get("reverseNextHopIp", ''):
+            mismatch_reasons.append(
+                {"DCNM_SRP_REV_NHIP_NO_MATCH": [want.get("reverseNextHopIp", ''), have.get("reverseNextHopIp", '')]}
+            )
 
         # Inside Network
         if (
             want["serviceNetworks"][0]["vrfName"]
             != have["serviceNetworks"][0]["vrfName"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_VRF_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_VRF_NO_MATCH": [want["serviceNetworks"][0]["vrfName"], have["serviceNetworks"][0]["vrfName"]]}
+            )
 
         if (
             want["serviceNetworks"][0]["networkType"]
             != have["serviceNetworks"][0]["networkType"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_NT_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_NT_NO_MATCH": [want["serviceNetworks"][0]["networkType"], have["serviceNetworks"][0]["networkType"]]}
+            )
 
         if (
             want["serviceNetworks"][0]["networkName"]
             != have["serviceNetworks"][0]["networkName"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_NN_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_NN_NO_MATCH": [want["serviceNetworks"][0]["networkName"], have["serviceNetworks"][0]["networkName"]]}
+            )
 
-        if want["serviceNetworks"][0]["vlanId"] != have["serviceNetworks"][0]["vlanId"]:
-            mismatch_reasons.append("DCNM_SRP_IN_VID_NO_MATCH")
+        if (
+            want["serviceNetworks"][0].get("vlanId")
+            != have["serviceNetworks"][0]["vlanId"]
+        ):
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_VID_NO_MATCH": [want["serviceNetworks"][0].get("vlanId"), have["serviceNetworks"][0]["vlanId"]]}
+            )
 
         # Inside Network Profile
         if (
             want["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]
             != have["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_IPV4GW_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_IPV4GW_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"], have["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]]}
+            )
+            
         if (
             want["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]
             != have["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_IPV6GW_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_IPV6GW_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"], have["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]]}
+            )
         if (
             want["serviceNetworks"][0]["nvPairs"]["vlanName"]
             != have["serviceNetworks"][0]["nvPairs"]["vlanName"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_VNAME_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_VNAME_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["vlanName"], have["serviceNetworks"][0]["nvPairs"]["vlanName"]]}
+            )
 
         # When we get the SRP inmformation from have, the intfDescription would have been modified and some meta data added. so ignore the meta data
         # when comparing the interface descriptions
         if want["serviceNetworks"][0]["nvPairs"]["intfDescription"] != "":
-            wif_desc = want["serviceNetworks"][0]["nvPairs"]["intfDescription"].split(
-                " "
-            )
+            wif_desc = want["serviceNetworks"][0]["nvPairs"][
+                "intfDescription"
+            ].split(" ")
         else:
             wif_desc = []
-        hif_desc = have["serviceNetworks"][0]["nvPairs"]["intfDescription"].split(" ")[
-            :-1
-        ]
+        hif_desc = have["serviceNetworks"][0]["nvPairs"][
+            "intfDescription"
+        ].split(" ")[:-1]
         if wif_desc != hif_desc:
-            mismatch_reasons.append("DCNM_SRP_IN_DESCR_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_DESCR_NO_MATCH": [" ".join(wif_desc), " ".join(hif_desc)]}
+            )
         if (
             str(want["serviceNetworks"][0]["nvPairs"]["tag"])
             != have["serviceNetworks"][0]["nvPairs"]["tag"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_TAG_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_TAG_NO_MATCH": [str(want["serviceNetworks"][0]["nvPairs"]["tag"]), have["serviceNetworks"][0]["nvPairs"]["tag"]]}
+            )
         if (
             str(want["serviceNetworks"][0]["nvPairs"]["vlanId"])
             != have["serviceNetworks"][0]["nvPairs"]["vlanId"]
         ):
-            mismatch_reasons.append("DCNM_SRP_IN_PROF_VID_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_IN_PROF_VID_NO_MATCH": [str(want["serviceNetworks"][0]["nvPairs"]["vlanId"]), have["serviceNetworks"][0]["nvPairs"]["vlanId"]]}
+            )
 
         if want["deploymentMode"].lower() != "onearmadc":
 
@@ -2617,39 +2816,53 @@ class DcnmServiceRoutePeering:
                 want["serviceNetworks"][1]["vrfName"]
                 != have["serviceNetworks"][1]["vrfName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_VRF_NO_MATCH": [want["serviceNetworks"][1]["vrfName"], have["serviceNetworks"][1]["vrfName"]]}
+                )
             if (
                 want["serviceNetworks"][1]["networkType"]
                 != have["serviceNetworks"][1]["networkType"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_NT_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_NT_NO_MATCH": [want["serviceNetworks"][1]["networkType"], have["serviceNetworks"][1]["networkType"]]}
+                )
             if (
                 want["serviceNetworks"][1]["networkName"]
                 != have["serviceNetworks"][1]["networkName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_NN_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_NN_NO_MATCH": [want["serviceNetworks"][1]["networkName"], have["serviceNetworks"][1]["networkName"]]}
+                )
             if (
                 want["serviceNetworks"][1]["vlanId"]
                 != have["serviceNetworks"][1]["vlanId"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_VID_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_VID_NO_MATCH": [want["serviceNetworks"][1]["vlanId"], have["serviceNetworks"][1]["vlanId"]]}
+                )
 
             # Outside Network Profile
             if (
                 want["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]
                 != have["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_IPV4GW_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_IPV4GW_NO_MATCH": [want["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"], have["serviceNetworks"][1]["nvPairs"]["gatewayIpAddress"]]}
+                )
             if (
                 want["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]
                 != have["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_IPV6GW_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_IPV6GW_NO_MATCH": [want["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"], have["serviceNetworks"][1]["nvPairs"]["gatewayIpV6Address"]]}
+                )
             if (
                 want["serviceNetworks"][1]["nvPairs"]["vlanName"]
                 != have["serviceNetworks"][1]["nvPairs"]["vlanName"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_VNAME_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_VNAME_NO_MATCH": [want["serviceNetworks"][1]["nvPairs"]["vlanName"], have["serviceNetworks"][1]["nvPairs"]["vlanName"]]}
+                )
 
             # When we get the SRP inmformation from have, the intfDescription would have been modified and some meta data added. so ignore the meta data
             # when comparing the interface descriptions
@@ -2659,24 +2872,34 @@ class DcnmServiceRoutePeering:
                 ].split(" ")
             else:
                 wif_desc = []
-            hif_desc = have["serviceNetworks"][1]["nvPairs"]["intfDescription"].split(
-                " "
-            )[:-1]
+            hif_desc = have["serviceNetworks"][1]["nvPairs"][
+                "intfDescription"
+            ].split(" ")[:-1]
             if wif_desc != hif_desc:
-                mismatch_reasons.append("DCNM_SRP_OUT_DESCR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_DESCR_NO_MATCH": [" ".join(wif_desc), " ".join(hif_desc)]}
+                )
             if (
                 str(want["serviceNetworks"][1]["nvPairs"]["tag"])
                 != have["serviceNetworks"][1]["nvPairs"]["tag"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_TAG_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_TAG_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["tag"]), 
+                                                   have["serviceNetworks"][1]["nvPairs"]["tag"]]}
+                )
             if (
                 str(want["serviceNetworks"][1]["nvPairs"]["vlanId"])
                 != have["serviceNetworks"][1]["nvPairs"]["vlanId"]
             ):
-                mismatch_reasons.append("DCNM_SRP_OUT_PROF_VID_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_OUT_PROF_VID_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["vlanId"]), 
+                                                        have["serviceNetworks"][1]["nvPairs"]["vlanId"]]}
+                )
 
         if str(want["enabled"]).lower() != str(have["enabled"]).lower():
-            mismatch_reasons.append("DCNM_SRP_ATT_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_ATT_NO_MATCH": [str(want["enabled"]).lower(), str(have["enabled"]).lower()]}
+            )
 
         if mismatch_reasons == []:
             return "DCNM_SRP_MATCH", mismatch_reasons
@@ -2728,29 +2951,42 @@ class DcnmServiceRoutePeering:
         if want["peeringOption"] != have["peeringOption"]:
             # If peeringOption doesn't match, we cannot compare rest of the fields because they will be
             # entirely different.
-            mismatch_reasons.append("DCNM_SRP_PO_NO_MATCH")
+            mismatch_reasons.append(
+                {"DCNM_SRP_PO_NO_MATCH": [want["peeringOption"], have["peeringOption"]]}
+            )
             return "DCNM_SRP_NO_MATCH", mismatch_reasons
 
         if want["peeringOption"] == "StaticPeering":
 
-            if want["routes"][0]["templateName"] != have["routes"][0]["templateName"]:
-                mismatch_reasons.append("DCNM_SRP_SP_IN_TN_NO_MATCH")
+            if (
+                want["routes"][0]["templateName"]
+                != have["routes"][0]["templateName"]
+            ):
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_TN_NO_MATCH": [want["routes"][0]["templateName"], have["routes"][0]["templateName"]]}
+                )
 
             if want["routes"][0]["vrfName"] != have["routes"][0]["vrfName"]:
-                mismatch_reasons.append("DCNM_SRP_SP_IN_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_VRF_NO_MATCH": [want["routes"][0]["vrfName"], have["routes"][0]["vrfName"]]}
+                )
 
             wnv = want["routes"][0]["nvPairs"]
             hnv = have["routes"][0]["nvPairs"]
 
             if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
-                mismatch_reasons.append("DCNM_SRP_SP_IN_PROF_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
+                )
 
             rc = self.dcnm_srp_compare_multi_routes(
                 wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]
             )
 
             if rc == "DCNM_MR_NO_MATCH":
-                mismatch_reasons.append("DCNM_SRP_SP_IN_MR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_SP_IN_MR_NO_MATCH": [wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]]}
+                )
 
             if want["deploymentMode"] == "InterTenantFW":
 
@@ -2758,59 +2994,104 @@ class DcnmServiceRoutePeering:
                     want["routes"][1]["templateName"]
                     != have["routes"][1]["templateName"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_TN_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_TN_NO_MATCH": [want["routes"][1]["templateName"], have["routes"][1]["templateName"]]}
+                    )
 
-                if want["routes"][1]["vrfName"] != have["routes"][1]["vrfName"]:
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_VRF_NO_MATCH")
+                if (
+                    want["routes"][1]["vrfName"]
+                    != have["routes"][1]["vrfName"]
+                ):
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_VRF_NO_MATCH": [want["routes"][1]["vrfName"], have["routes"][1]["vrfName"]]}
+                    )
 
                 wnv = want["routes"][1]["nvPairs"]
                 hnv = have["routes"][1]["nvPairs"]
 
                 if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_PROF_VRF_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
+                    )
 
                 rc = self.dcnm_srp_compare_multi_routes(
                     wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]
                 )
 
                 if rc == "DCNM_MR_NO_MATCH":
-                    mismatch_reasons.append("DCNM_SRP_SP_OUT_MR_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_SP_OUT_MR_NO_MATCH": [wnv["MULTI_ROUTES"], hnv["MULTI_ROUTES"]]}
+                    )
 
         elif want["peeringOption"] == "EBGPDynamicPeering":
 
-            if want["routes"][0]["templateName"] != have["routes"][0]["templateName"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_TN_NO_MATCH")
+            if (
+                want["routes"][0]["templateName"]
+                != have["routes"][0]["templateName"]
+            ):
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_TN_NO_MATCH": [want["routes"][0]["templateName"], have["routes"][0]["templateName"]]}
+                )
 
             wnv = want["routes"][0]["nvPairs"]
             hnv = have["routes"][0]["nvPairs"]
 
             if wnv["NEIGHBOR_IP"] != hnv["NEIGHBOR_IP"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_NIP4_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_NIP4_NO_MATCH": [wnv["NEIGHBOR_IP"], hnv["NEIGHBOR_IP"]]}
+                )
             if wnv["LOOPBACK_IP"] != hnv["LOOPBACK_IP"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_LIP4_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_LIP4_NO_MATCH": [wnv["LOOPBACK_IP"], hnv["LOOPBACK_IP"]]}
+                )
             if wnv["PEER_LOOPBACK_IP"] != hnv["PEER_LOOPBACK_IP"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_PLIP4_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_PLIP4_NO_MATCH": [wnv["PEER_LOOPBACK_IP"], hnv["PEER_LOOPBACK_IP"]]}
+                )
             if wnv["NEIGHBOR_IPV6"] != hnv["NEIGHBOR_IPV6"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_NIP6_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_NIP6_NO_MATCH": [wnv["NEIGHBOR_IPV6"], hnv["NEIGHBOR_IPV6"]]}
+                )
             if wnv["LOOPBACK_IPV6"] != hnv["LOOPBACK_IPV6"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_LIP6_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_LIP6_NO_MATCH": [wnv["LOOPBACK_IPV6"], hnv["LOOPBACK_IPV6"]]}
+                )
             if wnv["PEER_LOOPBACK_IPV6"] != hnv["PEER_LOOPBACK_IPV6"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_PLIP6_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_PLIP6_NO_MATCH": [wnv["PEER_LOOPBACK_IPV6"], hnv["PEER_LOOPBACK_IPV6"]]}
+                )
             if str(wnv["ROUTE_MAP_TAG"]) != hnv["ROUTE_MAP_TAG"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_RMT_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_RMT_NO_MATCH": [str(wnv["ROUTE_MAP_TAG"]), hnv["ROUTE_MAP_TAG"]]}
+                )
             if wnv["DESC"] != hnv["DESC"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_DESCR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_DESCR_NO_MATCH": [ wnv["DESC"], hnv["DESC"]]}
+                )
             if str(wnv["LOCAL_ASN"]) != hnv["LOCAL_ASN"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_ASN_NO_MATCH")
-            if str(wnv["ADVERTISE_HOST_ROUTE"]).lower() != hnv["ADVERTISE_HOST_ROUTE"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_ADV_HR_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_ASN_NO_MATCH": [str(wnv["LOCAL_ASN"]), hnv["LOCAL_ASN"]]}
+                )
+            if (
+                str(wnv["ADVERTISE_HOST_ROUTE"]).lower()
+                != hnv["ADVERTISE_HOST_ROUTE"]
+            ):
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_ADV_HR_NO_MATCH": [str(wnv["ADVERTISE_HOST_ROUTE"]).lower(), hnv["ADVERTISE_HOST_ROUTE"]]}
+                )
             if str(wnv["ADMIN_STATE"]).lower() != hnv["ADMIN_STATE"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_AS_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_AS_NO_MATCH": [str(wnv["ADMIN_STATE"]).lower(), hnv["ADMIN_STATE"]]}
+                )
             if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_PROF_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
+                )
 
             if want["routes"][0]["vrfName"] != have["routes"][0]["vrfName"]:
-                mismatch_reasons.append("DCNM_SRP_EBGP_IN_VRF_NO_MATCH")
+                mismatch_reasons.append(
+                    {"DCNM_SRP_EBGP_IN_VRF_NO_MATCH": [want["routes"][0]["vrfName"], have["routes"][0]["vrfName"]]}
+                )
 
             if want["deploymentMode"] == "InterTenantFW":
 
@@ -2818,41 +3099,72 @@ class DcnmServiceRoutePeering:
                     want["routes"][1]["templateName"]
                     != have["routes"][1]["templateName"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_TN_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_TN_NO_MATCH": [want["routes"][1]["templateName"], have["routes"][1]["templateName"]]}
+                    )
 
                 wnv = want["routes"][1]["nvPairs"]
                 hnv = have["routes"][1]["nvPairs"]
 
                 if wnv["NEIGHBOR_IP"] != hnv["NEIGHBOR_IP"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_NIP4_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_NIP4_NO_MATCH": [wnv["NEIGHBOR_IP"], hnv["NEIGHBOR_IP"]]}
+                    )
                 if wnv["LOOPBACK_IP"] != hnv["LOOPBACK_IP"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_LIP4_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_LIP4_NO_MATCH": [wnv["LOOPBACK_IP"], hnv["LOOPBACK_IP"]]}
+                    )
                 if wnv["PEER_LOOPBACK_IP"] != hnv["PEER_LOOPBACK_IP"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_PLIP4_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_PLIP4_NO_MATCH": [wnv["PEER_LOOPBACK_IP"], hnv["PEER_LOOPBACK_IP"]]}
+                    )
                 if wnv["NEIGHBOR_IPV6"] != hnv["NEIGHBOR_IPV6"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_NIP6_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_NIP6_NO_MATCH": [wnv["NEIGHBOR_IPV6"], hnv["NEIGHBOR_IPV6"]]}
+                    )
                 if wnv["LOOPBACK_IPV6"] != hnv["LOOPBACK_IPV6"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_LIP6_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_LIP6_NO_MATCH": [wnv["LOOPBACK_IPV6"], hnv["LOOPBACK_IPV6"]]}
+                    )
                 if wnv["PEER_LOOPBACK_IPV6"] != hnv["PEER_LOOPBACK_IPV6"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_PLIP6_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_PLIP6_NO_MATCH": [wnv["PEER_LOOPBACK_IPV6"], hnv["PEER_LOOPBACK_IPV6"]]}
+                    )
                 if str(wnv["ROUTE_MAP_TAG"]) != hnv["ROUTE_MAP_TAG"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_RMT_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_RMT_NO_MATCH": [str(wnv["ROUTE_MAP_TAG"]), hnv["ROUTE_MAP_TAG"]]}
+                    )
                 if wnv["DESC"] != hnv["DESC"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_DESCR_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_DESCR_NO_MATCH": [wnv["DESC"], hnv["DESC"]]}
+                    )
                 if str(wnv["LOCAL_ASN"]) != hnv["LOCAL_ASN"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_ASN_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_ASN_NO_MATCH": [str(wnv["LOCAL_ASN"]), hnv["LOCAL_ASN"]]}
+                    )
                 if (
                     str(wnv["ADVERTISE_HOST_ROUTE"]).lower()
                     != hnv["ADVERTISE_HOST_ROUTE"]
                 ):
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_ADV_HR_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_ADV_HR_NO_MATCH": [str(wnv["ADVERTISE_HOST_ROUTE"]).lower(), hnv["ADVERTISE_HOST_ROUTE"]]}
+                    )
                 if str(wnv["ADMIN_STATE"]).lower() != hnv["ADMIN_STATE"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_AS_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_AS_NO_MATCH": [str(wnv["ADMIN_STATE"]).lower(), hnv["ADMIN_STATE"]]}
+                    )
                 if wnv["VRF_NAME"] != hnv["VRF_NAME"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_PROF_VRF_NO_MATCH")
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_PROF_VRF_NO_MATCH": [wnv["VRF_NAME"], hnv["VRF_NAME"]]}
+                    )
 
-                if want["routes"][1]["vrfName"] != have["routes"][1]["vrfName"]:
-                    mismatch_reasons.append("DCNM_SRP_EBGP_OUT_VRF_NO_MATCH")
+                if (
+                    want["routes"][1]["vrfName"]
+                    != have["routes"][1]["vrfName"]
+                ):
+                    mismatch_reasons.append(
+                        {"DCNM_SRP_EBGP_OUT_VRF_NO_MATCH": [want["routes"][1]["vrfName"], have["routes"][1]["vrfName"]]}
+                    )
 
         if mismatch_reasons == []:
             return "DCNM_SRP_MATCH", mismatch_reasons
@@ -2876,7 +3188,7 @@ class DcnmServiceRoutePeering:
         found = False
 
         if self.have == []:
-            return ("DCNM_SRP_ADD_NEW", None)
+            return ("DCNM_SRP_ADD_NEW", None, [])
 
         match_have = [
             have
@@ -2898,16 +3210,57 @@ class DcnmServiceRoutePeering:
                 rc, reasons = self.dcnm_srp_compare_route_info(srp, have)
 
                 if rc == "DCNM_SRP_MATCH":
-                    return ("DCNM_SRP_DONT_ADD", have)
+                    return ("DCNM_SRP_DONT_ADD", have, [])
 
         if found is True:
             # Found a matching route peering, but some of the objects don't match.
             # Go ahead and merge the objects into the existing srp
-            return ("DCNM_SRP_MERGE", have)
+            return ("DCNM_SRP_MERGE", have, reasons)
         else:
-            return ("DCNM_SRP_ADD_NEW", None)
+            return ("DCNM_SRP_ADD_NEW", None, [])
 
-    def dcnm_srp_get_srp_attachment_status(self, srp):
+    def dcnm_srp_get_sno_list (self, have):
+
+        """
+        Routine to get the list of serial numbers from the given SRP
+
+        Parameters:
+            have (dict): Route peering information
+
+        Returns:
+            sno_list (list): A list of serial numbers included in the given SRP
+        """
+
+        sno_list = []
+
+        if have.get("statusDetails", None) is not None:
+            for item in have["statusDetails"]:
+                for sw_status in item["switchStatuses"]:
+                    if sw_status["switchSerialNumber"] not in sno_list:
+                        sno_list.append(sw_status["switchSerialNumber"])
+        else:
+            self.changed_dict[0]["debugs"].append({"HAVE W/O ATTACHS": have })
+        return sno_list
+
+    def dcnm_srp_get_vlan_list (self, have):
+
+        """
+        Routine to get the list of vlans from the given SRP
+
+        Parameters:
+            have (dict): Route peering information
+
+        Returns:
+            vlan_list (list): A list of vlans included in the given SRP
+        """
+
+        vlan_list = []
+
+        for net in have["serviceNetworks"]:
+            vlan_list.append(net["vlanId"])
+        return vlan_list
+
+    def dcnm_srp_get_srp_deployment_status(self, srp, have, chk_deployed):
 
         """
         Routine to get the attachment/deployment information for a given route peering. This information
@@ -2916,6 +3269,9 @@ class DcnmServiceRoutePeering:
 
         Parameters:
             srp (dict): Route peering information
+            have (dict): Existing route peering information
+            chk_deployed (string): A string indicating whether to check vlans or serial numbers
+                                   from the deploy status response
 
         Returns:
             attached (bool): a flag indicating is the given SRP is attached
@@ -2935,11 +3291,17 @@ class DcnmServiceRoutePeering:
         )
 
         retries = 0
-        while retries < 5:
+        while retries < 30:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
+            self.log_msg(f"GET DEPLOY STATUS RESP = {resp}\n")
+
             if resp and resp["RETURN_CODE"] != 200:
+                self.dcnm_srp_check_for_errors_in_resp(resp)
+                time.sleep(10)
+                continue
+            elif resp["RETURN_CODE"] == 200 and resp.get("DATA") == []:
                 time.sleep(10)
                 continue
             else:
@@ -2947,15 +3309,19 @@ class DcnmServiceRoutePeering:
 
         if resp:
             resp["RETRIES"] = retries
-            self.result["response"].append(resp)
 
-        attached = True
-        deployed = True
+        deployed = False
+        retry = False
+        processed = False
         if (
             resp
             and (resp["RETURN_CODE"] == 200)
             and (resp.get("DATA", None) is not None)
         ):
+            if chk_deployed:
+                check_list = self.dcnm_srp_get_vlan_list (have)
+            else:
+                check_list = self.dcnm_srp_get_sno_list (have)
 
             for item in resp["DATA"]:
                 for attach in item["switchAttaches"]:
@@ -2963,17 +3329,39 @@ class DcnmServiceRoutePeering:
                     # Hence check only entries that are relevant. We can find this by checking for 'portNames' and
                     # vlanID which will be updated only for those switches to which the service node is attached. We
                     # can  ignore the rest.
-                    if (attach.get("portNames", None) is None) or (
-                        attach.get("vlanId", 0) == 0
+
+                    if chk_deployed:
+                        self.log_msg(f"Checking VLAN ID {attach.get('vlanId')} in check list = {check_list}\n")
+                        if attach.get("vlanId", 0) not in check_list:
+                            continue
+                    else:
+                        self.log_msg(f"Checking SNO {attach['switchSerialNumber']} in check list = {check_list}\n")
+                        if attach["switchSerialNumber"] not in check_list:
+                            continue
+                    processed = True
+                    if (attach["attachState"].lower() == "na") or (
+                        attach["attachState"].lower() == "pending"
                     ):
-                        continue
-                    if attach["lanAttached"] is False:
-                        attached = False
-                    if (attach["attachState"] == "NA") or (
-                        attach["attachState"] == "PENDING"
-                    ):
-                        deployed = False
-        return (attached, deployed)
+                        return resp, False, False, attach["attachState"].lower()
+                    elif attach["attachState"].lower() == "out-of-sync":
+                        srp_info = {}
+                        self.dcnm_srp_combine_route_peerings(
+                            srp, srp_info
+                        )
+
+                        for path in srp_info:
+                            self.dcnm_srp_deploy_srp(path, srp_info[path])
+                        return resp, True, False, "out-of-sync"
+                    elif attach["attachState"].lower() == "in progress":
+                        return resp, True, True, attach["attachState"].lower()
+                    elif attach["attachState"].lower() == "failed":
+                        return resp, True, False, attach["attachState"].lower()
+            if processed is True:
+                return resp, False, True, "deployed"
+        else:
+            return resp, False, False, None
+
+        return (resp, retry, deployed, None)
 
     def dcnm_srp_get_diff_merge(self):
 
@@ -2994,7 +3382,7 @@ class DcnmServiceRoutePeering:
 
         for srp in self.want:
 
-            rc, have = self.dcnm_srp_compare_route_peerings(srp)
+            rc, have, reasons = self.dcnm_srp_compare_route_peerings(srp)
 
             if rc == "DCNM_SRP_ADD_NEW":
                 # A srp does not exists, create a new one.
@@ -3004,35 +3392,63 @@ class DcnmServiceRoutePeering:
             elif rc == "DCNM_SRP_MERGE":
                 # A srp exists and it needs to be updated
                 self.changed_dict[0]["modified"].append(srp)
+                self.changed_dict[0]["debugs"].append({"PeeringName": srp["peeringName"], "REASONS":  reasons})
                 self.diff_modify.append(srp)
 
             # Check the 'deploy' flag and decide if this srp is to be deployed
             if have is None:
                 # A new route peering. If attach and deploy are set, attach and deploy
                 if self.deploy is True:
-                    ditem = {}
-                    ditem["serviceNodeName"] = srp["serviceNodeName"]
-                    ditem["attachedFabricName"] = srp["attachedFabricName"]
-                    ditem["fabricName"] = srp["fabricName"]
-                    ditem["peeringName"] = srp["peeringName"]
-                    self.diff_deploy.append(ditem)
-            else:
-
-                attached, deployed = self.dcnm_srp_get_srp_attachment_status(srp)
-
-                if self.deploy is True:
-                    # We deploy when self.deploy is True and:
-                    #   1. there are no changes due to this request(rc is DCNM_SRP_DONT_ADD), but the SRP is not deployed
-                    #   2. there are changes due to this request (rc is DCNM_SRP_MERGE)
-                    if ((rc == "DCNM_SRP_DONT_ADD") and (deployed is False)) or (
-                        rc == "DCNM_SRP_MERGE"
-                    ):
+                    if srp["enabled"]:
                         ditem = {}
                         ditem["serviceNodeName"] = srp["serviceNodeName"]
                         ditem["attachedFabricName"] = srp["attachedFabricName"]
                         ditem["fabricName"] = srp["fabricName"]
                         ditem["peeringName"] = srp["peeringName"]
+                        ditem["enabled"] = srp["enabled"]
                         self.diff_deploy.append(ditem)
+            else:
+
+                retries = 0
+                while retries < 30:
+                    retries += 1
+                    resp, retry, deployed, att_state = self.dcnm_srp_get_srp_deployment_status(
+                        srp, have, True
+                    )
+
+                    if att_state == 'out-of-sync':
+                        if retries == 20:
+                            # There are some timing issues in DCNM and the final deployed state of a RP depends on the order of
+                            # deploying VRFs sand Networks on the switch. Sometimes due to timing issues an RP may get stuck in
+                            # out-of-sync state. This normally gets corrected with a deploy, which is already tried in the
+                            # dcnm_srp_get_srp_deployment_status(). If it still remains in 'out-of-sync' state after so many retries,
+                            # config save and deploy is one option to recover.
+                            self.dcnm_srp_config_save_and_deploy()
+                    if retry:
+                        time.sleep(10)
+                        continue
+                    else:
+                        break
+
+                if resp not in self.changed_dict[0]["debugs"]:
+                    resp["RETRIES"] = retries
+                    self.changed_dict[0]["debugs"].append(resp)
+
+                if self.deploy is True:
+                    # We deploy when self.deploy is True and:
+                    #   1. there are no changes due to this request(rc is DCNM_SRP_DONT_ADD), but the SRP is not deployed
+                    #   2. there are changes due to this request (rc is DCNM_SRP_MERGE)
+                    if (
+                        (rc == "DCNM_SRP_DONT_ADD") and (deployed is False)
+                    ) or (rc == "DCNM_SRP_MERGE"):
+                        if srp["enabled"]:
+                            ditem = {}
+                            ditem["serviceNodeName"] = srp["serviceNodeName"]
+                            ditem["attachedFabricName"] = srp["attachedFabricName"]
+                            ditem["fabricName"] = srp["fabricName"]
+                            ditem["peeringName"] = srp["peeringName"]
+                            ditem["enabled"] = srp["enabled"]
+                            self.diff_deploy.append(ditem)
 
         if self.diff_deploy != []:
             self.changed_dict[0]["deploy"].extend(self.diff_deploy)
@@ -3051,15 +3467,50 @@ class DcnmServiceRoutePeering:
             None
         """
 
-        for srp in self.srp_info:
-
-            # Get the route peering that is to be deleted.
-            resp = self.dcnm_srp_get_srp_info_from_dcnm(srp, "PLAYBOOK")
-
-            # For deleting route peerings, it must first be detached and then deployed.
-            if resp != [] and resp not in self.diff_delete:
-                self.diff_delete.append(resp)
-                self.changed_dict[0]["deleted"].append(srp)
+        processed_nodes = []
+        if self.srp_info == []:
+            # In this case we need to get all service nodes and all peerings from those nodes
+            # and delete them
+            serv_nodes = self.dcnm_srp_get_service_nodes_from_dcnm()
+            for snode in serv_nodes:
+                if snode["name"] in processed_nodes:
+                    continue
+                srps = self.dcnm_srp_get_srp_info_with_service_node(
+                    snode["name"]
+                )
+                if srps:
+                    self.diff_delete.extend(srps)
+                    self.changed_dict[0]["deleted"].extend(srps)
+                    processed_nodes.append(snode["name"])
+        else:
+            serv_nodes = [
+                {"node_name": d["node_name"], "name": d.get("name", "")}
+                for d in self.srp_info
+            ]
+            for snode in serv_nodes:
+                match_srps = []
+                # If peering name is given, get the specific route peering
+                if snode.get("name") != "":
+                    srps = self.dcnm_srp_get_srp_info_from_dcnm(
+                        snode, "PLAYBOOK"
+                    )
+                    if srps != [] and srps not in self.diff_delete:
+                        match_srps = srps
+                else:
+                    if snode["node_name"] in processed_nodes:
+                        continue
+                    # Peering name is not given. Get all peerings based on Service Node.
+                    match_srps = self.dcnm_srp_get_srp_info_with_service_node(
+                        snode["node_name"]
+                    )
+                    processed_nodes.append(snode["node_name"])
+                if match_srps != []:
+                    if isinstance(match_srps, list):
+                        self.diff_delete.extend(match_srps)
+                        self.changed_dict[0]["deleted"].extend(match_srps)
+                    else:
+                        self.diff_delete.append(match_srps)
+                        self.changed_dict[0]["deleted"].append(match_srps)
 
     def dcnm_srp_get_diff_query(self):
 
@@ -3089,7 +3540,9 @@ class DcnmServiceRoutePeering:
                     self.result["response"].append(resp)
             else:
                 # peeringName not included
-                resp = self.dcnm_srp_get_srp_info_with_service_node(srp["node_name"])
+                resp = self.dcnm_srp_get_srp_info_with_service_node(
+                    srp["node_name"]
+                )
 
                 if resp != []:
                     self.result["response"].extend(resp)
@@ -3110,16 +3563,7 @@ class DcnmServiceRoutePeering:
             None
         """
 
-        # There are 3 cases with overridden state:
-        #   1. Peering Name and Service Node Name are given
-        #   2. Only Service Node Name is given
-        #   3. Neither given
-
-        if self.srp_info == []:
-            # In this case we need to get all service nodes and all route peerings from those nodes and delete them
-            serv_nodes = self.dcnm_srp_get_service_nodes_from_dcnm()
-        else:
-            serv_nodes = [{"name": d["node_name"]} for d in self.srp_info]
+        serv_nodes = self.dcnm_srp_get_service_nodes_from_dcnm()
 
         srp_list = []
         # From each of the service nodes get the list of all route peerings.
@@ -3141,7 +3585,9 @@ class DcnmServiceRoutePeering:
                     (srp["peeringName"] == want["peeringName"])
                     and (srp["fabricName"] == want["fabricName"])
                     and (srp["serviceNodeName"] == want["serviceNodeName"])
-                    and (srp["attachedFabricName"] == want["attachedFabricName"])
+                    and (
+                        srp["attachedFabricName"] == want["attachedFabricName"]
+                    )
                 )
             ]
             if match_want == []:
@@ -3190,15 +3636,19 @@ class DcnmServiceRoutePeering:
         json_payload = json.dumps(srp)
 
         resp = dcnm_send(self.module, command, path, json_payload)
+
+        self.log_msg(f"CREATE RESP = {resp}\n")
+
         return resp
 
-    def dcnm_srp_detach_srp(self, srp):
+    def dcnm_srp_detach_srp(self, fixed_path, srp_list):
 
         """
         Routine to detach SRP from service node.
 
         Parameters:
-            srp (dict): Route peering to be detached
+            fixed_path: Path identifying the peering
+            srp_list (dict): Service Route Peering information to be deployed
 
         Returns:
             resp (dict): Response from DCNM server
@@ -3206,20 +3656,13 @@ class DcnmServiceRoutePeering:
 
         resp = None
 
-        # First detach the route peerings
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-            + "/attachments"
-        )
+        path = fixed_path + "/attachments?peering-names="
+        path = path + ",".join(srp_list)
 
         resp = dcnm_send(self.module, "DELETE", path, "")
+
+        self.log_msg(f"DETACH RESP = {resp}\n");
+
         return resp
 
     def dcnm_srp_delete_srp(self, srp):
@@ -3245,8 +3688,161 @@ class DcnmServiceRoutePeering:
             + "/"
             + srp["peeringName"]
         )
-        resp = dcnm_send(self.module, "DELETE", path, "")
+
+        srp["enabled"] = False
+        srp["status"] = "NA"
+        json_payload = json.dumps(srp)
+
+        resp = dcnm_send(self.module, "DELETE", path, json_payload)
         return resp
+
+    def dcnm_srp_attach_srp(self, srp):
+
+        """
+        Routine to attach an SRP on the service node.
+
+        Parameters:
+            srp (dict): Service Route Peering information to be attached
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+            + "/attachments"
+        )
+
+        attach_payload = {"peeringNames" : [srp["peeringName"]]}
+        json_payload = json.dumps(attach_payload)
+
+        resp = dcnm_send(self.module, "POST", path, json_payload)
+        self.log_msg (f"ATTACH RESP = {resp}\n")
+        return resp
+
+    def dcnm_srp_deploy_srp(self, fixed_path, srp_list):
+
+        """
+        Routine to deploy SRP on the service node.
+
+        Parameters:
+            fixed_path: Path identifying the peering
+            srp_list (dict): Service Route Peering information to be deployed
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        path = fixed_path + "/deployments"
+        json_payload = json.dumps(srp_list)
+
+        resp = dcnm_send(self.module, "POST", path, json_payload)
+
+        self.log_msg(f"DEPLOY RESP = {resp}\n");
+
+        return resp
+
+    def dcnm_srp_attach_and_deploy_srp(self, srp):
+
+        """
+        Routine to attach and deploy an SRP on the service node.
+
+        Parameters:
+            srp (dict): Service Route Peering information to be attahced and deployed
+
+        Returns:
+            resp (dict): Response from DCNM server
+        """
+
+        fixed_path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+        )
+
+        self.dcnm_srp_attach_srp (srp)
+        time.sleep(10)
+        self.dcnm_srp_deploy_srp(fixed_path, {"peeringNames": [srp["peeringName"]]})
+
+    def dcnm_srp_check_deployment_status(self, srp_list, final_state):
+
+        """
+        Routine to check deployment status of SRPs on the service node. This routine is used for CREATE
+        MODIFY and DELETE deploy status check. The 'final_state' argument will be based on what status
+        to check for.
+
+        Parameters:
+            srp_list (dict): Service Route Peering information to be checked for deployment status
+            final_state (string): A flag specifying what the required final state is
+
+        Returns:
+            None
+        """
+
+        # Scan each SRP for its deployment status. If all are deployed, then we are done. Otherwise
+        # the create or modify operation is a failure
+        for srp in srp_list:
+            retries = 0
+            att_state = "Unknown"
+            while retries < 20:
+                retries += 1
+                resp, retry, deployed, att_state = self.dcnm_srp_get_srp_deployment_status(srp, srp, (final_state == "deployed"))
+
+                self.log_msg (f"Check Deploy Status, final state = {final_state}, ATT STATE = {att_state}\n")
+
+                if att_state == final_state:
+                    break;
+                if att_state == "out-of-sync":
+                    if retries == 15:
+                        self.dcnm_srp_config_save_and_deploy()
+                if att_state == "na":
+                    # Sometimes the "enabled" flag is not properly applied during creation. Since
+                    # att_state is "na", try to attach and deploy the SRP again
+                    if srp["enabled"]:
+                        self.dcnm_srp_attach_and_deploy_srp(srp)
+                time.sleep(30)
+            self.changed_dict[0]["debugs"].append({"PeeringName": srp["peeringName"], "State": att_state})
+            # After all retries, if the SRP did not move to 'final_state' it is an error
+            if att_state != final_state:
+                self.module.fail_json(msg=resp)
+
+    def dcnm_srp_combine_route_peerings(self, srp, srp_info):
+
+        """
+        This routine will combine route peerings based on fabric, external fabric, service node so that deploy
+        can be performed for all the peerings together. If not, when multiple peerings are configured under
+        a single RP, a separate deploy operation may result in errors.
+
+        Parameters:
+            srp(dict): Service Route Peering information to be combined
+            srp_info(dict): Dict containing the current list of combined peerings
+
+        Returns:
+            srp_info(dict): A dict containing a list of combined peerings including the current one
+        """
+
+        path = (
+            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
+            + srp["fabricName"]
+            + "/service-nodes/"
+            + srp["serviceNodeName"]
+            + "/peerings/"
+            + srp["attachedFabricName"]
+        )
+
+        if srp_info.get(path) is None:
+            srp_info[path] = {"peeringNames": []}
+        srp_info.get(path)["peeringNames"].append(srp["peeringName"])
+
+        return srp_info
 
     def dcnm_srp_config_save_and_deploy(self):
 
@@ -3261,41 +3857,15 @@ class DcnmServiceRoutePeering:
         """
 
         path = (
-            "/rest/control/fabrics/" + self.module.params["fabric"] + "/config-deploy"
+            "/rest/control/fabrics/"
+            + self.module.params["fabric"]
+            + "/config-deploy"
         )
 
         resp = dcnm_send(self.module, "POST", path, "")
         return resp
 
-    def dcnm_srp_deploy_srp(self, srp, command):
-
-        """
-        Routine to deploy SRP on the service node.
-
-        Parameters:
-            srp (dict): Route peering information to be deployed
-            command (string): REST API command which is POST
-
-        Returns:
-            resp (dict): Response from DCNM server
-        """
-
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-            + "/deployments"
-        )
-
-        resp = dcnm_send(self.module, command, path, "")
-        return resp
-
-    def dcnm_srp_check_unauthorized_error_in_resp(self, resp):
+    def dcnm_srp_check_for_errors_in_resp(self, resp):
 
         """
         Routine to check for "unauthorized" errors in which case the conncetion must be reset by logging out and
@@ -3305,20 +3875,129 @@ class DcnmServiceRoutePeering:
             resp (dict): Response which has to be checked for "unauthorized error"
 
         Returns:
-            rc (string): unauthorized_error, if resp["DATA"]["error"]["code"] is UserUnauthorized
+            rc (string): unauthorized_error, if error code results in a connection reset
+                         in_use_error, if resp["DATA"]["error"]["code"] is "is in use already"
                          other_error, otherwise
         """
 
         rc = "other_error"
         if resp.get("DATA"):
-            if resp["DATA"].get("error"):
-                if resp["DATA"]["error"].get("code") == "UserUnauthorized":
+            if isinstance(resp["DATA"], dict) and resp["DATA"].get("error"):
+                if (
+                    isinstance(resp["DATA"]["error"], dict)
+                    and resp["DATA"]["error"].get("code") == "UserUnauthorized"
+                ):
                     # We have seen "unauthorized error" from DCNM even though the token has been allocated and the connection timeout
                     # has not happened. As per suggestions from L4-L7 services team we will reset token by logging out and logging in
                     # again so that a new token is obtained
                     dcnm_reset_connection(self.module)
                     rc = "unauthorized_error"
+                if (
+                    isinstance(resp["DATA"]["error"], dict)
+                    and resp["DATA"]["error"].get("code") == "InvalidRequest"
+                ):
+                    if (
+                        "not allowed"
+                        not in resp["DATA"]["error"].get("detail", "")
+                    ) and (
+                        "Deployment"
+                        not in resp["DATA"]["error"].get("detail", "")
+                    ):
+                        # For the case of "InvalidRequest", check if it is because of deployment operation. If not, we should
+                        # reset the connection because the token may have expired in the middle of transaction.
+                        dcnm_reset_connection(self.module)
+                        rc = "unauthorized_error"
+                if (
+                    isinstance(resp["DATA"]["error"], dict)
+                    and resp["DATA"]["error"].get("code") == "InvalidFabric"
+                ):
+                    dcnm_reset_connection(self.module)
+                    rc = "unauthorized_error"
+                if resp["METHOD"] != "DELETE":
+                    if (
+                        isinstance(resp["DATA"]["error"], dict)
+                        and resp["DATA"]["error"].get("code") == "ProcessingError"
+                    ):
+                        if (
+                            "is in use already"
+                            in resp["DATA"]["error"].get("detail", "")
+                        ):
+                            rc = "in_use_error"
+                            resp["VLANS"] = re.findall(r'\d+', resp["DATA"]["error"].get("detail", ""))
         return rc
+
+    def dcnm_srp_get_deployed_srp_list (self, diff_deploy):
+
+        """
+        Routine to match SRPs fromself.diff_create and self.diff_modify and return a list of all matching SRPs
+
+        Parameters:
+            diff_deploy (list): A list of deployed SRPs
+
+        Returns:
+            self.deployed_srps (list): A list created by mathing the SRPs from diff_deploy with self.diff_create and
+                                       self.diff_modify lists.
+        """
+
+        for item in diff_deploy:
+
+            matched = False
+
+            # Get the matching SRP from the Create list
+            match_srp = [
+                srp
+                for srp in self.diff_create
+                if (
+                    (srp["peeringName"] == item["peeringName"])
+                    and (srp["fabricName"] == item["fabricName"])
+                    and (srp["serviceNodeName"] == item["serviceNodeName"])
+                    and (
+                        srp["attachedFabricName"] == item["attachedFabricName"]
+                    )
+                )
+            ]
+            if match_srp != []:
+                matched = True
+                self.deployed_srps.append(match_srp[0])
+
+            # Get the matching SRP from the Modify list
+            match_srp = [
+                srp
+                for srp in self.diff_modify
+                if (
+                    (srp["peeringName"] == item["peeringName"])
+                    and (srp["fabricName"] == item["fabricName"])
+                    and (srp["serviceNodeName"] == item["serviceNodeName"])
+                    and (
+                        srp["attachedFabricName"] == item["attachedFabricName"]
+                    )
+                )
+            ]
+            if match_srp != []:
+                matched = True
+                self.deployed_srps.append(match_srp[0])
+
+            # If the SRP is already matched in Create or Modify, then no need to look into self.have.
+            # self.have case is significant when there is no change to SRPs and only change is in
+            # deploy. In this case self.create and self.modify will be empty, but since deploy flag
+            # is changing, we will have to monitor the SRP
+            if not matched:
+                # Get the matching SRP from the Have list
+                match_srp = [
+                    srp
+                    for srp in self.have
+                    if (
+                        (srp["peeringName"] == item["peeringName"])
+                        and (srp["fabricName"] == item["fabricName"])
+                        and (srp["serviceNodeName"] == item["serviceNodeName"])
+                        and (
+                            srp["attachedFabricName"] == item["attachedFabricName"]
+                        )
+                    )
+                ]
+                if match_srp != []:
+                    self.deployed_srps.append(match_srp[0])
+        return self.deployed_srps
 
     def dcnm_srp_send_message_to_dcnm(self):
 
@@ -3339,27 +4018,47 @@ class DcnmServiceRoutePeering:
         modify_flag = False
         delete_flag = False
         deploy_flag = False
+        err_srps = []
 
         for srp in self.diff_create:
+            attach_flag = False
             retries = 0
             command = "POST"
-            while retries < 10:
+            user_vlans = self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
+            while retries < 30:
                 retries += 1
                 resp = self.dcnm_srp_create_srp(srp, command)
                 if resp.get("RETURN_CODE") == 200:
                     create_flag = True
+                    # If attach_flag is set, try to attach the SRP. This is required in case of in_use_error, because DCNM
+                    # would have detached it explicitly. So we need to attach it explicitly again
+                    if attach_flag:
+                        attach_flag = False
+                        self.dcnm_srp_attach_srp (srp)
                     break
                 else:
                     # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                     # logout and login again. We will do the logout from here and expect the login to happen again after this
                     # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                    rc = self.dcnm_srp_check_for_errors_in_resp(resp)
+                    if rc == "in_use_error":
+                        # We may see this if SRPs use a vlan id already in use. In that case update the SRP with a new
+                        # allocated VLAN id. 
+                        for net in srp["serviceNetworks"]:
+                            if str(net["vlanId"]) in resp["VLANS"]:
+                                net["vlanId"] = 0
+                        # Since we have zeroed out the vlans which errored, allocate new IDs
+                        user_vlans = self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
+                        if srp["enabled"]:
+                           attach_flag = True
 
                     # There may be a temporary issue on the server. so we should try again. In case
                     # of create or modify, the peering may have been created/updated, but the error may
                     # be due to the attach. So check if the peering is created and if attach flag is set.
                     # If so then try attaching the peering and do not try to recreate
-                    get_resp = self.dcnm_srp_get_srp_info_from_dcnm(srp, "PAYLOAD")
+                    get_resp = self.dcnm_srp_get_srp_info_from_dcnm(
+                        srp, "PAYLOAD"
+                    )
                     if get_resp != []:
                         # Since the peering is already created, use PUT to update the peering again with
                         # the same payload
@@ -3368,71 +4067,150 @@ class DcnmServiceRoutePeering:
                     continue
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
+            if resp and resp.get("RETURN_CODE") != 200:
+                self.module.fail_json(msg=resp)
 
         for srp in self.diff_modify:
             retries = 0
-            while retries < 10:
+            while retries < 30:
+                att_resp = None
                 retries += 1
                 resp = self.dcnm_srp_create_srp(srp, "PUT")
                 if resp.get("RETURN_CODE") == 200:
                     modify_flag = True
-                    break
-                else:
+                    # If attach_flag is set, try to attach the SRP. This is required in case of in_use_error, because DCNM
+                    # would have detached it explicitly. So we need to attach it explicitly again
+                    if srp["enabled"]:
+                        att_resp = self.dcnm_srp_attach_srp (srp)
+                        if att_resp["RETURN_CODE"] == 200:
+                            break
+                if (resp and resp.get("RETURN_CODE") != 200) or (att_resp and att_resp["RETURN_CODE"] != 200):
                     # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                     # logout and login again. We will do the logout from here and expect the login to happen again after this
                     # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                    if resp:
+                        rc1 = self.dcnm_srp_check_for_errors_in_resp(resp)
+                    else:
+                        rc1 = ' '
+                    if att_resp:
+                        rc2 = self.dcnm_srp_check_for_errors_in_resp(att_resp)
+                    else:
+                        rc2 = ' '
+
+                    if rc1 == "in_use_error":
+                        chk_resp = resp
+                    if rc2 == "in_use_error":
+                        chk_resp = att_resp
+
+                    if rc1 == "in_use_error" or rc2 == "in_use_error":
+                        # We may see this if SRPs use a vlan id already in use. In that case update the SRP with a new
+                        # allocated VLAN id. 
+                        for net in srp["serviceNetworks"]:
+                            if str(net["vlanId"]) in chk_resp["VLANS"]:
+                                net["vlanId"] = 0
+                        # Since we have zeroed out the vlans which errored, allocate new IDs
+                        user_vlans = self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
                     time.sleep(10)
                     continue
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
+            if resp and resp.get("RETURN_CODE") != 200:
+                self.module.fail_json(msg=resp)
 
-        for srp in self.diff_delete:
+        if self.diff_delete:
+            delete_srp_info = {}
+
+            for srp in self.diff_delete:
+                delete_srp_info = self.dcnm_srp_combine_route_peerings(
+                    srp, delete_srp_info
+                )
+        else:
+            delete_srp_info = {}
+
+        for path in delete_srp_info:
+            detach_failed = False
             retries = 0
-            while retries < 10:
+            while retries < 30:
                 retries += 1
-                resp = self.dcnm_srp_detach_srp(srp)
+                detach_failed = False
+                resp = self.dcnm_srp_detach_srp(
+                    path, delete_srp_info[path]["peeringNames"]
+                )
                 if (resp is not None) and (resp.get("RETURN_CODE") == 200):
-                    delete_flag = True
+                    # We may see a '200' return code,  but the transaction may have failed. Check for
+                    # the status
+                    if resp.get("DATA"):
+                        for d in resp["DATA"]:
+                            if d.get("status") == "Success":
+                                detach_flag = True
+                            else:
+                                detach_failed = True
+                        if detach_failed is False:
+                            break
+                # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
+                # logout and login again. We will do the logout from here and expect the login to happen again after this
+                # from the connection module
+                resp["METHOD"] = ''
+                rc = self.dcnm_srp_check_for_errors_in_resp(resp)
+                resp["METHOD"] = 'DELETE'
+
+                if rc == "in_use_error":
+                    # We may see this if SRPs use a vlan id already in use. In such a case delete the SRP directly
+                    # Mark this element for "no deploy" so that it is deleted directly without deploy
+                    delete_srp_info[path]["deploy"] = False
+                    resp = None
                     break
-                else:
-                    # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
-                    # logout and login again. We will do the logout from here and expect the login to happen again after this
-                    # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
-                    time.sleep(10)
-                    continue
+                time.sleep(10)
+                continue
             if resp is not None:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)
+            if (resp and resp.get("RETURN_CODE") != 200) or detach_failed:
+                self.module.fail_json(msg=resp)
 
         # For delete case we have done a detach. do a deploy before actual delete
-        for srp in self.diff_delete:
+        for path in delete_srp_info:
+            del_deploy_failed = False
             retries = 0
-            while retries < 10:
+
+            # Check if we have marked the SRP for no deploy. If yes skip it
+            if delete_srp_info[path].get("deploy", ' ') is False:
+                continue
+
+            while retries < 30:
                 retries += 1
-                resp = self.dcnm_srp_deploy_srp(srp, "POST")
+                resp = self.dcnm_srp_deploy_srp(path, delete_srp_info[path])
 
                 if (resp is not None) and (resp.get("RETURN_CODE") == 200):
-                    delete_flag = True
-                    break
-                else:
-                    # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
-                    # logout and login again. We will do the logout from here and expect the login to happen again after this
-                    # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
-                    time.sleep(10)
-                    continue
+                    # We may see a '200' return code,  but the transaction may have failed. Check for
+                    # the status
+                    if resp.get("DATA"):
+                        for d in resp["DATA"]:
+                            if d.get("status") == "Success":
+                                delete_flag = True
+                            else:
+                                del_deploy_failed = True
+                        if del_deploy_failed is False:
+                            break
+                # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
+                # logout and login again. We will do the logout from here and expect the login to happen again after this
+                # from the connection module
+                self.dcnm_srp_check_for_errors_in_resp(resp)
+                time.sleep(10)
+                continue
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
+            if resp and resp.get("RETURN_CODE") != 200 or del_deploy_failed:
+                self.module.fail_json(msg=resp)
 
         if delete_flag is True:
-            time.sleep(40)
+            time.sleep(180)
+            self.dcnm_srp_check_deployment_status (self.diff_delete, "na")
 
         for srp in self.diff_delete:
             retries = 0
             deploy_in_prog = False
-            while retries < 25:
+            while retries < 30:
                 retries += 1
                 resp = self.dcnm_srp_delete_srp(srp)
                 if (resp is not None) and (resp.get("RETURN_CODE") == 200):
@@ -3442,9 +4220,9 @@ class DcnmServiceRoutePeering:
                     # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
                     # logout and login again. We will do the logout from here and expect the login to happen again after this
                     # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                    self.dcnm_srp_check_for_errors_in_resp(resp)
 
-                    if retries == 15:
+                    if retries == 20:
                         # We failed to delete even after all retries. Try a config save and deploy which
                         # may pull out of the situation
 
@@ -3453,39 +4231,76 @@ class DcnmServiceRoutePeering:
                     elif deploy_in_prog is False:
                         # We will require a deploy here. Otherwise we may see delete errors in some cases
                         # indicating that a deploy operation is still in progress and peering cannot be deleted
-                        resp = self.dcnm_srp_deploy_srp(srp, "POST")
-                        if resp.get("RETURN_CODE") == 200:
-                            deploy_in_prog = True
-                        else:
-                            self.dcnm_srp_check_unauthorized_error_in_resp(resp)
+                        srp_info = {}
+                        srp_info = self.dcnm_srp_combine_route_peerings(
+                            srp, srp_info
+                        )
+                        for path in srp_info:
+                            resp = self.dcnm_srp_deploy_srp(path, srp_info[path])
+                            if resp.get("RETURN_CODE") == 200:
+                                deploy_in_prog = True
+                            else:
+                                self.dcnm_srp_check_for_errors_in_resp(
+                                    resp
+                                )
                     time.sleep(10)
                     continue
             if resp is not None:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)
+            if resp and resp.get("RETURN_CODE") != 200:
+                self.module.fail_json(msg=resp)
 
-        for srp in self.diff_deploy:
+        if self.diff_deploy:
+            deploy_srp_info = {}
+            for srp in self.diff_deploy:
+                deploy_srp_info = self.dcnm_srp_combine_route_peerings(
+                    srp, deploy_srp_info
+                )
+        else:
+            deploy_srp_info = {}
+
+        for path in deploy_srp_info:
+            deploy_failed = False
             retries = 0
-            while retries < 10:
+            while retries < 30:
                 retries += 1
-                resp = self.dcnm_srp_deploy_srp(srp, "POST")
+                resp = self.dcnm_srp_deploy_srp(path, deploy_srp_info[path])
                 if resp.get("RETURN_CODE") == 200:
-                    deploy_flag = True
-                    break
-                else:
-                    # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
-                    # logout and login again. We will do the logout from here and expect the login to happen again after this
-                    # from the connection module
-                    self.dcnm_srp_check_unauthorized_error_in_resp(resp)
-                    time.sleep(10)
-                    continue
+                    # We may see a '200' return code,  but the transaction may have failed. Check for
+                    # the status
+                    if resp.get("DATA"):
+                        for d in resp["DATA"]:
+                            if d.get("status") == "Success":
+                                deploy_flag = True
+                            else:
+                                deploy_failed = True
+                        if deploy_failed is False:
+                            time.sleep(10)
+                            break
+                # We sometimes see "UserUnauthorized" errors while transacting with DCNM server. Suggested remedy is to
+                # logout and login again. We will do the logout from here and expect the login to happen again after this
+                # from the connection module
+                self.dcnm_srp_check_for_errors_in_resp(resp)
+                time.sleep(10)
+                continue
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
+            if (resp and resp.get("RETURN_CODE") != 200) or deploy_failed:
+                self.module.fail_json(msg=resp)
+
+        if deploy_flag:
+            # We need the SRPs from create and modify list to check for deployment status. Collect them into new list
+            self.deployed_srps = self.dcnm_srp_get_deployed_srp_list (self.diff_deploy)
+
+            # Wait for a while for the DCNM to deploy the config
+            time.sleep(180)
+            # Ensure all the route peerings are properly deployed before returning.
+            self.dcnm_srp_check_deployment_status (self.deployed_srps, "deployed")
 
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag or deploy_flag
         )
-
 
 def main():
 
@@ -3506,7 +4321,9 @@ def main():
         debug=dict(required=False, type="bool", default=False),
     )
 
-    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+    module = AnsibleModule(
+        argument_spec=element_spec, supports_check_mode=True
+    )
 
     dcnm_srp = DcnmServiceRoutePeering(module)
 
@@ -3525,7 +4342,7 @@ def main():
     state = module.params["state"]
 
     if not dcnm_srp.config:
-        if state == "merged" or state == "deleted" or state == "query":
+        if state == "merged" or state == "replaced" or state == "query":
             module.fail_json(
                 msg="'config' element is mandatory for state '{}', given = '{}'".format(
                     state, dcnm_srp.config
@@ -3534,8 +4351,9 @@ def main():
 
     dcnm_srp.dcnm_srp_validate_input()
 
-    if (module.params["state"] != "query") and (module.params["state"] != "deleted"):
-
+    if (module.params["state"] != "query") and (
+        module.params["state"] != "deleted"
+    ):
         dcnm_srp.dcnm_srp_get_want()
         dcnm_srp.dcnm_srp_get_have()
 
@@ -3546,7 +4364,9 @@ def main():
 
         dcnm_srp.dcnm_srp_update_want()
 
-    if (module.params["state"] == "merged") or (module.params["state"] == "replaced"):
+    if (module.params["state"] == "merged") or (
+        module.params["state"] == "replaced"
+    ):
         dcnm_srp.dcnm_srp_get_diff_merge()
 
     if module.params["state"] == "deleted":
@@ -3559,6 +4379,11 @@ def main():
         dcnm_srp.dcnm_srp_get_diff_overridden()
 
     dcnm_srp.result["diff"] = dcnm_srp.changed_dict
+
+    dcnm_srp.log_msg(f"CREATE = {dcnm_srp.diff_create}\n")
+    dcnm_srp.log_msg(f"MODIFY = {dcnm_srp.diff_modify}\n")
+    dcnm_srp.log_msg(f"DELETE = {dcnm_srp.diff_delete}\n")
+    dcnm_srp.log_msg(f"DEPLOY = {dcnm_srp.diff_deploy}\n")
 
     if dcnm_srp.diff_create or dcnm_srp.diff_modify or dcnm_srp.diff_delete:
         dcnm_srp.result["changed"] = True

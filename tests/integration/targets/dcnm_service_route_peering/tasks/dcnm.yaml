@@ -19,6 +19,18 @@
   loop_control:
     loop_var: test_case_to_run
 
+- name: Cleanup - Delete route peerings
+  cisco.dcnm.dcnm_service_route_peering: 
+    fabric: "{{ ansible_it_fabric }}" 
+    service_fabric: "{{ ansible_it_service_fabric }}" 
+    state: deleted
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
 - name: Cleanup - Delete Service Nodes
   cisco.dcnm.dcnm_service_node: &conf
     fabric: "{{ ansible_it_fabric }}"

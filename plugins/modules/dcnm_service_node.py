@@ -20,7 +20,7 @@ DOCUMENTATION = '''
 ---
 module: dcnm_service_node
 short_description: Create/Modify/Delete service node based on type and attached interfaces from a DCNM managed VXLAN fabric.
-version_added: "0.9.0"
+version_added: "1.2.0"
 description:
     - "Create/Modify/Delete service node based on type and attached interfaces from a DCNM managed VXLAN fabric."
 author: Karthik Babu Harichandra Babu(@kharicha)
@@ -88,6 +88,50 @@ options:
 '''
 
 EXAMPLES = '''
+# L4-L7 Service Insertion:
+# 
+# Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+# redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+# service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+# Service Node, Service Route Peering and Service Policy to enable this.
+# 
+# Service Node:
+# 
+# You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+# Service policies are created on the service node to determine the actions to be applied to the traffic
+# 
+# Route Peerings:
+# 
+# Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that is used to
+# carry traffic towards the service node.
+# 
+# Service Policy:
+# 
+# Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+# The service policies define the actions to be taken for matching traffic.
+# 
+# Dependency Tree:
+# 
+# Service Node
+# |
+# |---- Route Peering 1
+# |     |
+# .     |---- Service Policy 1
+# .     |
+# .     .
+# .     .
+# .     .
+# .     |---- Service Policy N
+# .
+# |---- Route Peering N
+#       |
+#       |---- Service Policy 1
+#       |
+#       .
+#       .
+#       .
+#       |---- Service Policy N
+# 
 # This module supports the following states:
 #
 # Merged:

@@ -2,6 +2,18 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Initialize - Delete route peerings
+  cisco.dcnm.dcnm_service_route_peering:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_it_service_fabric }}"
+    state: deleted
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
 - name: Initialize the setup - Delete Service Nodes
   cisco.dcnm.dcnm_service_node: &conf
     fabric: "{{ ansible_it_fabric }}"
@@ -31,56 +43,56 @@
 
 - name: Initialize the setup - Delete VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}" 
+    fabric: "{{ ansible_it_fabric }}"
     state: deleted
     config:
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_12 }}" 
+      - vrf_name: "{{ ansible_vrf_12 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_21 }}" 
+      - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_22 }}" 
+      - vrf_name: "{{ ansible_vrf_22 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_31 }}" 
+      - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_32 }}" 
+      - vrf_name: "{{ ansible_vrf_32 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_41 }}" 
+      - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_42 }}" 
+      - vrf_name: "{{ ansible_vrf_42 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_51 }}" 
+      - vrf_name: "{{ ansible_vrf_51 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_52 }}" 
+      - vrf_name: "{{ ansible_vrf_52 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_61 }}" 
+      - vrf_name: "{{ ansible_vrf_61 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_62 }}" 
+      - vrf_name: "{{ ansible_vrf_62 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_71 }}" 
+      - vrf_name: "{{ ansible_vrf_71 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-      - vrf_name: "{{ ansible_vrf_72 }}" 
+      - vrf_name: "{{ ansible_vrf_72 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
-  register: result  
+  register: result
 
 - assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 10 seconds for DCNM to completely update the state
@@ -95,56 +107,56 @@
 
     - name: Initialize the setup - Create all VRFs
       cisco.dcnm.dcnm_vrf:
-        fabric: "{{ ansible_it_fabric }}" 
+        fabric: "{{ ansible_it_fabric }}"
         state: merged
         config:
           - vrf_name: "{{ ansible_vrf_11 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_12 }}" 
+          - vrf_name: "{{ ansible_vrf_12 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_21 }}" 
+          - vrf_name: "{{ ansible_vrf_21 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_22 }}" 
+          - vrf_name: "{{ ansible_vrf_22 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_31 }}" 
+          - vrf_name: "{{ ansible_vrf_31 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_32 }}" 
+          - vrf_name: "{{ ansible_vrf_32 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_41 }}" 
+          - vrf_name: "{{ ansible_vrf_41 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_42 }}" 
+          - vrf_name: "{{ ansible_vrf_42 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_51 }}" 
+          - vrf_name: "{{ ansible_vrf_51 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_52 }}" 
+          - vrf_name: "{{ ansible_vrf_52 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_61 }}" 
+          - vrf_name: "{{ ansible_vrf_61 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_62 }}" 
+          - vrf_name: "{{ ansible_vrf_62 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_71 }}" 
+          - vrf_name: "{{ ansible_vrf_71 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-          - vrf_name: "{{ ansible_vrf_72 }}" 
+          - vrf_name: "{{ ansible_vrf_72 }}"
             attach:
                 - ip_address: "{{ ansible_switch1 }}"
-      register: result  
-    
+      register: result
+
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -152,7 +164,7 @@
 ##############################################
 
     - name: Initialize the setup - Create all Service Nodes
-      cisco.dcnm.dcnm_service_node: 
+      cisco.dcnm.dcnm_service_node:
         fabric: "{{ ansible_it_fabric }}"
         service_fabric: "{{ ansible_it_service_fabric }}"
         state: merged
@@ -172,7 +184,7 @@
             switches:
               - "{{ ansible_switch1 }}"
       register: result
-    
+
     - assert:
         that:
         - 'item["RETURN_CODE"] == 200'
