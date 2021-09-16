@@ -11,6 +11,18 @@
       }
     ],
 
+    "playbook_merge_role_switch_config" : [
+      {
+        "auth_proto": "MD5",
+        "max_hops": 0,
+        "password": "password",
+        "preserve_config": false,
+        "role": "border_gateway",
+        "seed_ip": "192.168.1.110",
+        "user_name": "username"
+      }
+    ],
+
     "playbook_merge_bf_switch_config" : [
       {
         "auth_proto": "MD5",
@@ -1589,6 +1601,17 @@
   "set_assign_role_success": {
     "DATA": {
         "newRole": "leaf",
+        "tierLevel": 3
+    },
+    "MESSAGE": "OK",
+    "METHOD": "PUT",
+    "REQUEST_PATH": "https://192.168.10.8:443/fm/fmrest/topology/role/321430?newRole=leaf",
+    "RETURN_CODE": 200
+  },
+
+  "set_assign_bg_role_success": {
+    "DATA": {
+        "newRole": "border gateway",
         "tierLevel": 3
     },
     "MESSAGE": "OK",

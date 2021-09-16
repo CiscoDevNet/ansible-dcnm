@@ -14,15 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-import copy
-import json
-import re
-from ansible.module_utils.six.moves.urllib.parse import urlencode
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info
-
 __author__ = "Karthik Babu Harichandra Babu"
 
 DOCUMENTATION = '''
@@ -32,16 +23,16 @@ short_description: Add and remove Switches from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
     - "Add and remove Switches from a DCNM managed VXLAN fabric."
-author: Karthik Babu Harichandra Babu(kharicha@cisco.com)
+author: Karthik Babu Harichandra Babu(@kharicha)
 options:
   fabric:
     description:
-      - 'Name of the target fabric for Inventory operations'
+    - Name of the target fabric for Inventory operations
     type: str
     required: yes
   state:
     description:
-      - The state of DCNM after module completion.
+    - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -50,155 +41,171 @@ options:
       - query
     default: merged
   config:
-    description: 'List of switches being managed'
+    description:
+    - List of switches being managed. Not required for state deleted
     type: list
     elements: dict
-    required: true
-    note: Not required for state deleted
     suboptions:
       seed_ip:
-        description: 'Seed Name(support both IP address and dns_name) of the switch which needs to be added to the DCNM Fabric'
-        type: ipv4
+        description:
+        - Seed Name(support both IP address and dns_name) of the switch
+          which needs to be added to the DCNM Fabric
+        type: str
         required: true
       auth_proto:
-        description: 'Name of the authentication protocol to be used'
+        description:
+        - Name of the authentication protocol to be used
         choices: ['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES']
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       user_name:
-        description: 'Login username to the switch'
+        description:
+        - Login username to the switch
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       password:
-        description: 'Login password to the switch'
+        description:
+        - Login password to the switch
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       max_hops:
-        description: 'Maximum Hops to reach the switch'
+        description:
+        - Maximum Hops to reach the switch
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       role:
-        description: 'Role which needs to be assigned to the switch'
+        description:
+        - Role which needs to be assigned to the switch
         choices: ['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
                  'super_spine', 'border_super_spine', 'border_gateway_super_spine']
         type: str
         required: true
         default: leaf
       preserve_configs:
-        description: 'Set this to false for greenfield deployment and true for brownfield deployment'
+        description:
+        - Set this to false for greenfield deployment and true for brownfield deployment
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
 '''
 
 EXAMPLES = '''
-This module supports the following states:
-
-Merged:
-  Switches defined in the playbook will be merged into the target fabric.
-    - If the switch does not exist it will be added.
-    - Switches that are not specified in the playbook will be untouched.
-
-Overridden:
-  The playbook will serve as source of truth for the target fabric.
-    - If the switch does not exist it will be added.
-    - If the switch is not defined in the playbook but exists in DCNM it will be removed.
-    - If the switch exists, properties that need to be modified and can be modified will be modified.
-
-Deleted:
-  Deletes the list of switches specified in the playbook.
-  If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
-
-Query:
-  Returns the current DCNM state for the switches listed in the playbook.
+# This module supports the following states:
+#
+# Merged:
+#   Switches defined in the playbook will be merged into the target fabric.
+#     - If the switch does not exist it will be added.
+#     - Switches that are not specified in the playbook will be untouched.
+#
+# Overridden:
+#   The playbook will serve as source of truth for the target fabric.
+#     - If the switch does not exist it will be added.
+#     - If the switch is not defined in the playbook but exists in DCNM it will be removed.
+#     - If the switch exists, properties that need to be modified and can be modified will be modified.
+#
+# Deleted:
+#   Deletes the list of switches specified in the playbook.
+#   If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the switches listed in the playbook.
 
 
 # The following two switches will be merged into the existing fabric
--name: Merge switch into fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: merged # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: spine
-         preserve_config: False # boolean, default is  true
-       - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: leaf
-         preserve_config: False # boolean, default is  true
+- name: Merge switch into fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: spine
+      preserve_config: False # boolean, default is  true
+    - seed_ip: 192.168.0.2
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: leaf
+      preserve_config: False # boolean, default is true
 
 # The following two switches will be added or updated in the existing fabric and all other
 # switches will be removed from the fabric
 - name: Override Switch
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: overridden # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: spine
-         preserve_config: False # boolean, default is  true
-       - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: leaf
-         preserve_config: False # boolean, default is  true
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: overridden # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: spine
+      preserve_config: False # boolean, default is  true
+    - seed_ip: 192.168.0.2
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: leaf
+      preserve_config: False # boolean, default is true
 
 # The following two switches will be deleted in the existing fabric
 - name: Delete selected switches
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: deleted # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: spine
-         preserve_config: False # boolean, default is  true
-       - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: leaf
-         preserve_config: False # boolean, default is  true
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: deleted # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: spine
+      preserve_config: False # boolean, default is  true
+    - seed_ip: 192.168.0.2
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: leaf
+      preserve_config: False # boolean, default is  true
 
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: deleted # merged / deleted / overridden / query
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: deleted # merged / deleted / overridden / query
 
 # The following two switches information will be queried in the existing fabric
--name: Query switch into fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: query # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         role: spine
-       - seed_ip: 192.168.0.2
-         role: leaf
+- name: Query switch into fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      role: spine
+    - seed_ip: 192.168.0.2
+      role: leaf
 
 # All the existing switches will be queried in the existing fabric
 - name: Query all the switches in the fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: query # merged / deleted / overridden / query
-      '''
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / deleted / overridden / query
+'''
+
+import time
+import copy
+import json
+import re
+from ansible.module_utils.six.moves.urllib.parse import urlencode
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info
 
 
 class DcnmInventory:
@@ -258,7 +265,7 @@ class DcnmInventory:
         elif state == 'query':
             inv_upd = {
                 "seedIP": s_ip,
-                "role": inv['role'].replace(" ", "")
+                "role": inv['role'].replace(" ", "_")
             }
         else:
             if inv['auth_proto'] == 'MD5':
@@ -283,7 +290,7 @@ class DcnmInventory:
                 "password": inv['password'],
                 "maxHops": inv['max_hops'],
                 "cdpSecondTimeout": "5",
-                "role": inv['role'].replace(" ", ""),
+                "role": inv['role'].replace(" ", "_"),
                 "preserveConfig": inv['preserve_config']
             }
 
@@ -322,7 +329,7 @@ class DcnmInventory:
             get_switch.update({'platform': inv['nonMdsModel']})
             get_switch.update({'version': inv['release']})
             get_switch.update({'deviceIndex': inv['logicalName'] + '(' + inv['serialNumber'] + ')'})
-            get_switch.update({'role': inv['switchRole'].replace(" ", "")})
+            get_switch.update({'role': inv['switchRole'].replace(" ", "_")})
             get_switch.update({'mode': inv['mode']})
             get_switch.update({'serialNumber': inv['serialNumber']})
             switchdict = {}
@@ -788,12 +795,12 @@ class DcnmInventory:
                             query.append(inv)
                             continue
                     elif want_c['role'] != 'None' and want_c["seedIP"] == 'None':
-                        if want_c['role'] == inv['switchRole'].replace(" ", ""):
+                        if want_c['role'] == inv['switchRole'].replace(" ", "_"):
                             query.append(inv)
                             continue
                     else:
                         if want_c["seedIP"] == inv['ipAddress'] and \
-                                want_c['role'] == inv['switchRole'].replace(" ", ""):
+                                want_c['role'] == inv['switchRole'].replace(" ", "_"):
                             query.append(inv)
                             continue
         else:
@@ -846,7 +853,7 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(default='merged',
                    choices=['merged', 'overridden', 'deleted', 'query'])
     )
@@ -897,6 +904,7 @@ def main():
         module.exit_json(**dcnm_inv.result)
 
     if module.check_mode:
+        dcnm_inv.result['changed'] = False
         module.exit_json(**dcnm_inv.result)
 
     # Delete Switch

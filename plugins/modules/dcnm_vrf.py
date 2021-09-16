@@ -14,17 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import time
-import copy
-import ast
-import re
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, \
-    dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
-from ansible.module_utils.basic import AnsibleModule
-
-__author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu"
+__author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy"
 
 DOCUMENTATION = '''
 ---
@@ -35,16 +25,16 @@ description:
     - "Add and remove VRFs and VRF Lite Extension from a DCNM managed VXLAN fabric."
     - "In Multisite fabrics, VRFs can be created only on Multisite fabric"
     - "In Multisite fabrics, VRFs cannot be created on member fabric"
-author: Shrishail Kariyappanavar, Karthik Babu Harichandra Babu (kharicha)
+author: Shrishail Kariyappanavar(@nkshrishail), Karthik Babu Harichandra Babu (@kharicha), Praveen Ramoorthy(@praveenramoorthy)
 options:
   fabric:
     description:
-    - 'Name of the target fabric for vrf operations'
+    - Name of the target fabric for vrf operations
     type: str
     required: yes
   state:
     description:
-      - The state of DCNM after module completion.
+    - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -54,136 +44,153 @@ options:
       - query
     default: merged
   config:
-    description: 'List of details of vrfs being managed'
+    description:
+    - List of details of vrfs being managed. Not required for state deleted
     type: list
     elements: dict
-    required: true
-    note: Not required for state deleted
     suboptions:
       vrf_name:
-        description: 'Name of the vrf being managed'
+        description:
+        - Name of the vrf being managed
         type: str
         required: true
       vrf_id:
-        description: 'ID of the vrf being managed'
+        description:
+        - ID of the vrf being managed
         type: int
         required: true
       vlan_id:
-        description: 'vlan ID for the vrf attachment'
+        description:
+        - vlan ID for the vrf attachment
+        - If not specified in the playbook, DCNM will auto-select an available vlan_id
         type: int
         required: false
-        note: If not specified in the playbook, DCNM will auto-select an available vlan_id
       vrf_template:
-        description: 'Name of the config template to be used'
+        description:
+        - Name of the config template to be used
         type: str
         default: 'Default_VRF_Universal'
       vrf_extension_template:
-        description: 'Name of the extension config template to be used'
+        description:
+        - Name of the extension config template to be used
         type: str
         default: 'Default_VRF_Extension_Universal'
       service_vrf_template:
-        description: 'Service vrf template'
+        description:
+        - Service vrf template
         type: str
         default: None
       attach:
-        description: 'List of vrf attachment details'
+        description:
+        - List of vrf attachment details
         type: list
         elements: dict
         suboptions:
           ip_address:
-            description: 'IP address of the switch where vrf will be attached or detached'
-            type: ipv4
+            description:
+            - IP address of the switch where vrf will be attached or detached
+            type: str
             required: true
             suboptions:
               vrf_lite:
                 type: list
-                description: 'VRF Lite Extensions options'
+                description:
+                - VRF Lite Extensions options
                 elements: dict
                 required: false
                 suboptions:
                   peer_vrf:
-                    description: 'VRF Name to which this extension is attached'
+                    description:
+                    - VRF Name to which this extension is attached
                     type: str
-                    requited: mandatory
+                    required: true
                   interface:
-                    description: 'Interface of the switch which is connected to the edge router'
+                    description:
+                    - Interface of the switch which is connected to the edge router
                     type: str
-                    requited: optional
+                    required: false
                   ipv4_addr:
-                    description: 'IP address of the interface which is connected to the edge router'
-                    type: ipv4
-                    requited: optional
-                  neighbor_ipv4:
-                    description: 'Neighbor IP address of the edge router'
-                    type: ipv4
-                    requited: optional
-                  ipv6_addr:
-                    description: 'IPv6 address of the interface which is connected to the edge router'
-                    type: ipv6
-                    requited: optional
-                  neighbor_ipv6:
-                    description: 'Neighbor IPv6 address of the edge router'
-                    type: ipv6
-                    requited: optional
-                  dot1q:
-                    description: 'DOT1Q Id'
+                    description:
+                    - IP address of the interface which is connected to the edge router
                     type: str
-                    requited: optional
+                    required: false
+                  neighbor_ipv4:
+                    description:
+                    - Neighbor IP address of the edge router
+                    type: str
+                    required: false
+                  ipv6_addr:
+                    description:
+                    - IPv6 address of the interface which is connected to the edge router
+                    type: str
+                    required: false
+                  neighbor_ipv6:
+                    description:
+                    - Neighbor IPv6 address of the edge router
+                    type: str
+                    required: false
+                  dot1q:
+                    description:
+                    - DOT1Q Id
+                    type: str
+                    required: false
           deploy:
-            description: 'Per switch knob to control whether to deploy the attachment'
+            description:
+            - Per switch knob to control whether to deploy the attachment
             type: bool
             default: true
       deploy:
-        description: 'Global knob to control whether to deploy the attachment'
+        description:
+        - Global knob to control whether to deploy the attachment
         type: bool
         default: true
 '''
 
 EXAMPLES = '''
-This module supports the following states:
-
-Merged:
-  VRFs defined in the playbook will be merged into the target fabric.
-    - If the VRF does not exist it will be added.
-    - If the VRF exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - VRFs that are not specified in the playbook will be untouched.
-
-Replaced:
-  VRFs defined in the playbook will be replaced in the target fabric.
-    - If the VRF does not exist it will be added.
-    - If the VRF exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are  not specified
-      in the playbook will be deleted or defaulted if possible.
-    - VRFs that are not specified in the playbook will be untouched.
-
-Overridden:
-  VRFs defined in the playbook will be overridden in the target fabric.
-    - If the VRF does not exist it will be added.
-    - If the VRF exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - VRFs that are not specified in the playbook will be deleted.
-
-Deleted:
-  VRFs defined in the playbook will be deleted.
-  If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
-
-Query:
-  Returns the current DCNM state for the VRFs listed in the playbook.
-
-rollback functionality:
-This module supports task level rollback functionality. If any task runs into failures, as part of failure
-handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
-beginning of the task execution. Following few lines provide a logical description of how this works,
-if (failure)
-    want data = have data
-    have data = get state of DCNM
-    Run the module in override state with above set of data to produce the required set of diffs
-    and push the diff payloads to DCNM.
-If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
+# This module supports the following states:
+#
+# Merged:
+#   VRFs defined in the playbook will be merged into the target fabric.
+#     - If the VRF does not exist it will be added.
+#     - If the VRF exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - VRFs that are not specified in the playbook will be untouched.
+#
+# Replaced:
+#   VRFs defined in the playbook will be replaced in the target fabric.
+#     - If the VRF does not exist it will be added.
+#     - If the VRF exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are  not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - VRFs that are not specified in the playbook will be untouched.
+#
+# Overridden:
+#   VRFs defined in the playbook will be overridden in the target fabric.
+#     - If the VRF does not exist it will be added.
+#     - If the VRF exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - VRFs that are not specified in the playbook will be deleted.
+#
+# Deleted:
+#   VRFs defined in the playbook will be deleted.
+#   If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the VRFs listed in the playbook.
+#
+# rollback functionality:
+# This module supports task level rollback functionality. If any task runs into failures, as part of failure
+# handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+# beginning of the task execution. Following few lines provide a logical description of how this works,
+# if (failure)
+#     want data = have data
+#     have data = get state of DCNM
+#     Run the module in override state with above set of data to produce the required set of diffs
+#     and push the diff payloads to DCNM.
+# If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
 
 # The two VRFs below will be merged into the target fabric.
 - name: Merge vrfs
@@ -339,6 +346,16 @@ If rollback fails, the module does not attempt to rollback again, it just quits 
       vrf_extension_template: Default_VRF_Extension_Universal
       service_vrf_template: null
 '''
+
+import json
+import time
+import copy
+import ast
+import re
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, \
+    dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
+from ansible.module_utils.basic import AnsibleModule
 
 
 class DcnmVrf:
@@ -1805,10 +1822,9 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(default='merged',
                    choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
-        check_mode=dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -1850,7 +1866,7 @@ def main():
     else:
         module.exit_json(**dcnm_vrf.result)
 
-    if module.params['check_mode']:
+    if module.check_mode:
         dcnm_vrf.result['changed'] = False
         module.exit_json(**dcnm_vrf.result)
 

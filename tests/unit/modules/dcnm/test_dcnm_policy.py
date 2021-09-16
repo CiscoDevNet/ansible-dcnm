@@ -452,9 +452,9 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.config_data    = loadPlaybookData('dcnm_policy_configs')
         self.payloads_data  = loadPlaybookData('dcnm_policy_payloads')
 
-        # get mock ip_sn and fabric_inventory_details 
+        # get mock ip_sn and fabric_inventory_details
         self.mock_fab_inv     = []
-        self.mock_ip_sn       = self.payloads_data.get('mock_ip_sn') 
+        self.mock_ip_sn       = self.payloads_data.get('mock_ip_sn')
 
         # load required config data
         self.playbook_config  = self.config_data.get('create_policy_101_105')
@@ -462,7 +462,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         set_module_args(dict(state='merged',
                              deploy=True,
                              fabric='mmudigon',
-                             check_mode=True,
+                             _ansible_check_mode=True,
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 

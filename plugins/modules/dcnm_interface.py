@@ -25,16 +25,16 @@ description:
     - "DCNM Ansible Module for the following interface service operations"
     - "Create, Delete, Modify PortChannel, VPC, Loopback and Sub-Interfaces"
     - "Modify Ethernet Interfaces"
-author: Mallik Mudigonda
+author: Mallik Mudigonda(@mmudigon)
 options:
   fabric:
     description:
-      - 'Name of the target fabric for interface operations'
+    - Name of the target fabric for interface operations
     type: str
     required: true
   state:
     description:
-      - The required state of the configuration after module completion.
+    - The required state of the configuration after module completion.
     type: str
     choices:
       - merged
@@ -44,462 +44,472 @@ options:
       - query
     default: merged
   config:
-    description: A dictionary of interface operations
+    description:
+    - A dictionary of interface operations
     type: list
     elements: dict
     suboptions:
       name:
         description:
-          - Name of the interface. Example, po55, eth2/1, lo100, vpc25, eth1/1.1.
+        - Name of the interface. Example, po55, eth2/1, lo100, vpc25, eth1/1.1.
         type: str
         required: true
       switch:
         description:
-          - IP address or DNS name of the management interface. All switches mentioned in this list
-            will be deployed with the included configuration. For vPC interfaces
-            this list object will contain elements each of which is a list of
-            pair of switches
+        - IP address or DNS name of the management interface. All switches mentioned in this list
+          will be deployed with the included configuration. For vPC interfaces
+          this list object will contain elements each of which is a list of
+          pair of switches
         type: list
         required: true
       type:
         description:
-          - Interface type. Example, pc, vpc, sub_int, lo, eth
+        - Interface type. Example, pc, vpc, sub_int, lo, eth
         type: str
         required: true
         choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth']
       deploy:
         description:
-            - Flag indicating if the configuration must be pushed to the switch. If not included
-              it is considered true by default
+        - Flag indicating if the configuration must be pushed to the switch. If not included
+          it is considered true by default
         type: bool
         default: true
       profile_pc:
         description:
-          - NOTE: Though the key shown here is 'profile_pc' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_pc' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for port channel interface configurations.
+        - Though the key shown here is 'profile_pc' the actual key to be used in playbook
+          is 'profile'. The key 'profile_pc' is used here to logically segregate the interface objects applicable for this profile
+        - Object profile which must be included for port channel interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['trunk', 'access', 'l3', 'monitor']
             type: str
             required: true
           members:
             description:
-              - Member interfaces that are part of this port channel
+            - Member interfaces that are part of this port channel
             type: list
             elements: str
             required: true
           access_vlan:
             description:
-              - Vlan for the interface. This option is applicable only for interfaces whose 'mode'
-              - is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode'
+              is 'access'
             type: str
             default: ""
           int_vrf:
             description:
-              - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
+            - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface. This object is applicable only if the 'mode' is 'l3'
-            type: ipv4
+            - IPV4 address of the interface. This object is applicable only if the 'mode' is 'l3'
+            type: str
             default: ""
           ipv4_mask_len:
             description:
-              - IPV4 address mask length. This object is applicable only if the 'mode' is 'l3'
+            - IPV4 address mask length. This object is applicable only if the 'mode' is 'l3'
             type: int
             choices : [Min:1, Max:31]
             default: 8
           route_tag:
             description:
-              - Route tag associated with the interface IP. This object is applicable only if the 'mode' is 'l3'
+            - Route tag associated with the interface IP. This object is applicable only if the 'mode' is 'l3'
             type: str
             default: ""
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_vpc:
         description:
-          - NOTE: Though the key shown here is 'profile_vpc' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_vpc' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for virtual port channel inetrface configurations.
+        - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
+          is 'profile'. The key 'profile_vpc' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for virtual port channel inetrface configurations.
         suboptions:
           mode:
             description:
-              Interface mode
+            -  Interface mode
             choices: ['trunk', 'access']
             type: str
             required: true
           peer1_pcid:
             description:
-              - Port channel identifier of first peer. If this object is not included, then the value defaults to the
-                vPC identifier. This value cannot be changed once vPC is created
+            - Port channel identifier of first peer. If this object is not included, then the value defaults to the
+              vPC identifier. This value cannot be changed once vPC is created
             type: int
             choices: [Min:1, Max:4096]
             default: Default value is the vPC port identifier
           peer2_pcid:
             description:
-              - Port channel identifier of second peer. If this object is not included, then the value defaults to the
-                vPC identifier. This value cannot be changed once vPC is created
+            - Port channel identifier of second peer. If this object is not included, then the value defaults to the
+              vPC identifier. This value cannot be changed once vPC is created
             type: int
             choices: [Min:1, Max:4096]
             default: Default value is the vPC port identifier
           peer1_members:
             description:
-              - Member interfaces that are part of this port channel on first peer
+            - Member interfaces that are part of this port channel on first peer
             type: list
             elements: str
             required: true
           peer2_members:
             description:
-              - Member interfaces that are part of this port channel on second peer
+            - Member interfaces that are part of this port channel on second peer
             type: list
             elements: str
             required: true
           pc_mode:
-            descrption:
-              - Port channel mode
+            description:
+            - Port channel mode
             type: str
             choices: ['active', 'passive', 'on']
             default: active
           bpdu_guard:
             description:
-              - Spanning-tree bpduguard
+            - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
             default: true
           port_type_fast:
             description:
-              - Spanning-tree edge port behavior
+            - Spanning-tree edge port behavior
             type: bool
             choices: [true, false]
             default: true
           mtu:
             description:
-              - Interface MTU
+            - Interface MTU
             type: str
             choices: ['default', 'jumbo']
             default: jumbo
           peer1_allowed_vlans:
             description:
-              - Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose 'mode' is 'trunk'
+            - Vlans that are allowed on this interface of first peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           peer2_allowed_vlans:
             description:
-              - Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose 'mode' is 'trunk'
+            - Vlans that are allowed on this interface of second peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           peer1_access_vlan:
             description:
-              - Vlan for the interface of first peer. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface of first peer.
+              This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ''
           peer2_access_vlan:
             description:
-              - Vlan for the interface of second peer. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface of second peer.
+              This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ''
           peer1_cmds:
             description:
-              - Commands to be included in the configuration under this interface of first peer
+            - Commands to be included in the configuration under this interface of first peer
             type: list
             default: []
           peer2_cmds:
             description:
-              - Commands to be included in the configuration under this interface of second peer
+            - Commands to be included in the configuration under this interface of second peer
             type: list
             default: []
           peer1_description:
             description:
-              - Description of the interface of first peer
+            - Description of the interface of first peer
             type: str
             default: ""
           peer2_description:
             description:
-              - Description of the interface of second peer
+            - Description of the interface of second peer
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_subint:
         description:
-          - NOTE: Though the key shown here is 'profile_subint' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_subint' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for sub-interface configurations.
+        - Though the key shown here is 'profile_subint' the actual key to be used in playbook
+          is 'profile'. The key 'profile_subint' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for sub-interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['subint']
             type: str
             required: true
           int_vrf:
             description:
-              - Interface VRF name.
+            - Interface VRF name.
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface.
-            type: ipv4
+            - IPV4 address of the interface.
+            type: str
             default: ""
           ipv4_mask_len:
             description:
-              - IPV4 address mask length.
+            - IPV4 address mask length.
             type: int
             choices : [Min:8, Max:31]
             default: 8
           ipv6_addr:
             description:
-              - IPV6 address of the interface.
-            type: ipv6
+            - IPV6 address of the interface.
+            type: str
             default: ""
           ipv6_mask_len:
             description:
-              - IPV6 address mask length.
+            - IPV6 address mask length.
             type: int
             choices : [Min:1, Max:31]
             default: 8
           mtu:
             description:
-              - Interface MTU
+            - Interface MTU
             type: int
             choices: [Min: 576, Max: 9216]
             default: 9216
           vlan:
             description:
-              - DOT1Q vlan id for this interface
+            - DOT1Q vlan id for this interface
             type: int
             choices: [Min: 2, Max: 3967]
             default: 0
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_lo:
         description:
-          - NOTE: Though the key shown here is 'profile_lo' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_lo' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for loopback interface configurations.
+        - Though the key shown here is 'profile_lo' the actual key to be used in playbook
+          is 'profile'. The key 'profile_lo' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for loopback interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['lo']
             type: str
             required: true
           int_vrf:
             description:
-              - Interface VRF name.
+            - Interface VRF name.
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface.
-            type: ipv4
+            - IPV4 address of the interface.
+            type: str
             default: ""
           ipv6_addr:
             description:
-              - IPV6 address of the interface.
-            type: ipv6
+            - IPV6 address of the interface.
+            type: str
             default: ""
           route_tag:
             description:
-              - Route tag associated with the interface IP.
+            - Route tag associated with the interface IP.
             type: str
             default: ""
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_eth:
         description:
-          - NOTE: Though the key shown here is 'profile_eth' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_eth' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for ethernet interface configurations.
+        - Though the key shown here is 'profile_eth' the actual key to be used in playbook
+          is 'profile'. The key 'profile_eth' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for ethernet interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
             type: str
             required: true
           bpdu_guard:
             description:
-              - Spanning-tree bpduguard
+            - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
             default: true
           port_type_fast:
             description:
-              - Spanning-tree edge port behavior
+            - Spanning-tree edge port behavior
             type: bool
             choices: [true, false]
             default: true
           mtu:
             description:
-              - Interface MTU
+            - Interface MTU
             type: str
             choices: ['default', 'jumbo']
             default: jumbo
           allowed_vlans:
             description:
-              - Vlans that are allowed on this interface. This option is applicable only for interfaces whose 'mode' is 'trunk'
+            - Vlans that are allowed on this interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           access_vlan:
             description:
-              - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ""
           speed:
             description:
-              - Speed of the interface.
+            - Speed of the interface.
             type: str
             choices: ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
             default: Auto
           int_vrf:
             description:
-              - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
+            - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface. This object is applicable only if the 'mode' is 'routed' or 'epl_routed'
-            type: ipv4
+            - IPV4 address of the interface. This object is applicable only if the 'mode' is
+              'routed' or 'epl_routed'
+            type: str
             default: ""
           ipv4_mask_len:
             description:
-              - IPV4 address mask length. This object is applicable only if the 'mode' is 'routed' or
-                'epl_routed'
+            - IPV4 address mask length. This object is applicable only if the 'mode' is 'routed' or
+              'epl_routed'
             type: int
             choices : [Min:1, Max:31]
             default: 8
           ipv6_addr:
             description:
-              - IPV6 address of the interface. This object is applicable only if the 'mode' is 'epl_routed'
-            type: ipv6
+            - IPV6 address of the interface. This object is applicable only if the 'mode' is 'epl_routed'
+            type: str
             default: ""
           ipv6_mask_len:
             description:
-              - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
+            - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
             type: int
             choices : [Min:1, Max:31]
             default: 8
           route_tag:
             description:
-              - Route tag associated with the interface IP. This object is applicable only if the 'mode' is
-                'routed' or 'epl_routed'
+            - Route tag associated with the interface IP. This object is applicable only if the 'mode' is
+              'routed' or 'epl_routed'
             type: str
             default: ""
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
 '''
 
 EXAMPLES = '''
 
-States:
-This module supports the following states:
+# States:
+# This module supports the following states:
+#
+# Merged:
+#   Interfaces defined in the playbook will be merged into the target fabric.
+#
+#   The interfaces listed in the playbook will be created if not already present on the DCNM
+#   server. If the interface is already present and the configuration information included
+#   in the playbook is either different or not present in DCNM, then the corresponding
+#   information is added to the interface on DCNM. If an interface mentioned in playbook
+#   is already present on DCNM and there is no difference in configuration, no operation
+#   will be performed for such interface.
+#
+# Replaced:
+#   Interfaces defined in the playbook will be replaced in the target fabric.
+#
+#   The state of the interfaces listed in the playbook will serve as source of truth for the
+#   same interfaces present on the DCNM under the fabric mentioned. Additions and updations
+#   will be done to bring the DCNM interfaces to the state listed in the playbook.
+#   Note: Replace will only work on the interfaces mentioned in the playbook.
+#
+# Overridden:
+#   Interfaces defined in the playbook will be overridden in the target fabric.
+#
+#   The state of the interfaces listed in the playbook will serve as source of truth for all
+#   the interfaces under the fabric mentioned. Additions and deletions will be done to bring
+#   the DCNM interfaces to the state listed in the playbook. All interfaces other than the
+#   ones mentioned in the playbook will either be deleted or reset to default state.
+#   Note: Override will work on the all the interfaces present in the DCNM Fabric.
+#
+# Deleted:
+#   Interfaces defined in the playbook will be deleted in the target fabric.
+#
+#   Deletes the list of interfaces specified in the playbook.  If the playbook does not include
+#   any switches or interface information, then all interfaces from all switches in the
+#   fabric will either be deleted or put to default state. If configuuration includes information
+#   pertaining to any particular switch, then interfaces belonging to that switch will either be
+#   deleted or put to default. If configuration includes both interface and switch information,
+#   then the specified interfaces will either be deleted or reset on all the seitches specified
+#
+# Query:
+#   Returns the current DCNM state for the interfaces listed in the playbook.
 
-Merged:
-  Interfaces defined in the playbook will be merged into the target fabric.
-
-  The interfaces listed in the playbook will be created if not already present on the DCNM
-  server. If the interface is already present and the configuration information included
-  in the playbook is either different or not present in DCNM, then the corresponding
-  information is added to the interface on DCNM. If an interface mentioned in playbook
-  is already present on DCNM and there is no difference in configuration, no operation
-  will be performed for such interface.
-
-Replaced:
-  Interfaces defined in the playbook will be replaced in the target fabric.
-
-  The state of the interfaces listed in the playbook will serve as source of truth for the
-  same interfaces present on the DCNM under the fabric mentioned. Additions and updations
-  will be done to bring the DCNM interfaces to the state listed in the playbook.
-  Note: Replace will only work on the interfaces mentioned in the playbook.
-
-Overridden:
-  Interfaces defined in the playbook will be overridden in the target fabric.
-
-  The state of the interfaces listed in the playbook will serve as source of truth for all
-  the interfaces under the fabric mentioned. Additions and deletions will be done to bring
-  the DCNM interfaces to the state listed in the playbook. All interfaces other than the
-  ones mentioned in the playbook will either be deleted or reset to default state.
-  Note: Override will work on the all the interfaces present in the DCNM Fabric.
-
-Deleted:
-  Interfaces defined in the playbook will be deleted in the target fabric.
-
-  Deletes the list of interfaces specified in the playbook.  If the playbook does not include
-  any switches or interface information, then all interfaces from all switches in the
-  fabric will either be deleted or put to default state. If configuuration includes information
-  pertaining to any particular switch, then interfaces belonging to that switch will either be
-  deleted or put to default. If configuration includes both interface and switch information,
-  then the specified interfaces will either be deleted or reset on all the seitches specified
-
-Query:
-  Returns the current DCNM state for the interfaces listed in the playbook.
-
-LOOPBACK INTERFACE
+# LOOPBACK INTERFACE
 
 - name: Create loopback interfaces
   cisco.dcnm.dcnm_interface: &lo_merge
@@ -613,7 +623,7 @@ LOOPBACK INTERFACE
       - switch:
           - "192.172.1.1"                 # provide the switch where to deploy the config
 
-PORTCHANNEL INTERFACE
+# PORTCHANNEL INTERFACE
 
 - name: Create port channel interfaces
   cisco.dcnm.dcnm_interface: &pc_merge
@@ -739,7 +749,7 @@ PORTCHANNEL INTERFACE
             - no shutdown
           description: "port channel acting as trunk"
 
-SUB-INTERFACE
+# SUB-INTERFACE
 
 - name: Create sub-interfaces
   cisco.dcnm.dcnm_interface: &sub_merge
@@ -827,7 +837,7 @@ SUB-INTERFACE
             - no shutdown
           description: "sub interface eth1/1.3 configuration - override"
 
-VPC INTERFACE
+# VPC INTERFACE
 
 - name: Create vPC interfaces
   cisco.dcnm.dcnm_interface: &vpc_merge
@@ -938,30 +948,30 @@ VPC INTERFACE
               - no shutdown
               - no shutdown
 
-QUERY
+# QUERY
 
- - name: Query interface details
-      cisco.dcnm.dcnm_interface:
-        fabric: mmudigon-fabric
-        state: query            # only choose from [merged, replaced, deleted, overridden, query]
-        config:
-          - switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: po350
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: lo450
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: eth1/1
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: eth1/15.2
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: vpc750
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+- name: Query interface details
+  cisco.dcnm.dcnm_interface:
+    fabric: mmudigon-fabric
+    state: query            # only choose from [merged, replaced, deleted, overridden, query]
+    config:
+      - switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: po350
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: lo450
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: eth1/1
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: eth1/15.2
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: vpc750
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
 
 '''
 
@@ -2817,7 +2827,7 @@ def main():
     """
     element_spec = dict(
         fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(type='str', default='merged',
                    choices=['merged', 'replaced', 'overridden', 'deleted',
                               'query']),
@@ -2880,6 +2890,7 @@ def main():
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
+        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()

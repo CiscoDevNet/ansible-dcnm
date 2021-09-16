@@ -319,7 +319,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
 
         set_module_args(dict(state='merged',
                              config=self.playbook_config,
-                             check_mode=True))
+                             _ansible_check_mode=True))
         result = self.execute_module(changed=False, failed=False)
 
         self.assertEqual(len(result['diff'][0]['merged']), 4)

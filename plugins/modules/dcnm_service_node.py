@@ -14,12 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import copy
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
-from ansible.module_utils.basic import AnsibleModule
-
 __author__ = "Karthik Babu Harichandra Babu"
 
 DOCUMENTATION = '''
@@ -29,21 +23,21 @@ short_description: Create/Modify/Delete service node based on type and attached 
 version_added: "1.2.0"
 description:
     - "Create/Modify/Delete service node based on type and attached interfaces from a DCNM managed VXLAN fabric."
-author: Karthik Babu Harichandra Babu
+author: Karthik Babu Harichandra Babu(@kharicha)
 options:
   fabric:
     description:
-    - 'Name of attached easy fabric to which service node is attached'
+    - Name of attached easy fabric to which service node is attached
     type: str
     required: yes
   service_fabric:
     description:
-    - 'Name of external fabric where the service node is located'
+    - Name of external fabric where the service node is located
     type: str
     required: yes
   state:
     description:
-      - The state of DCNM after module completion.
+    - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -54,119 +48,123 @@ options:
     default: merged
 
   config:
-    description: 'List of details of service nodes being managed'
+    description:
+    - List of details of service nodes being managed. Not required for state deleted
     type: list
     elements: dict
-    required: true
-    note: Not required for state deleted
     suboptions:
       name:
-        description: 'Name of service node'
+        description:
+        - Name of service node
         type: str
         required: true
       type:
-        description: 'Name of the service node type'
+        description:
+        - Name of the service node type
         type: str
         required: true
         default: 'firewall'
       form_factor:
-        description: 'Name of the form factor of the service node'
+        description:
+        - Name of the form factor of the service node
         type: str
         required: true
         default: 'physical'
       svc_int_name:
-        description: 'Name of the service interface'
+        description:
+        - Name of the service interface
         type: str
         required: true
       switches:
-        description: 'IP address of the switch where service node will be added/deleted'
+        description:
+        - IP address of the switch where service node will be added/deleted
         type: list
         required: true
       attach_interface:
-        description: 'List of switch interfaces where the service node will be attached'
+        description:
+        - List of switch interfaces where the service node will be attached
         type: str
         required: true
 '''
 
 EXAMPLES = '''
-
-L4-L7 Service Insertion:
-
-Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
-redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
-service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
-Service Node, Service Route Peering and Service Policy to enable this.
-
-Service Node:
-
-You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
-Service policies are created on the service node to determine the actions to be applied to the traffic
-
-Route Peerings:
-
-Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that is used to
-carry traffic towards the service node.
-
-Service Policy:
-
-Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
-The service policies define the actions to be taken for matching traffic.
-
-Dependency Tree:
-
-Service Node
-|
-|---- Route Peering 1
-|     |
-.     |---- Service Policy 1
-.     |
-.     .
-.     .
-.     .
-.     |---- Service Policy N
-.
-|---- Route Peering N
-      |
-      |---- Service Policy 1
-      |
-      .
-      .
-      .
-      |---- Service Policy N
-
-This module supports the following states:
-
-Merged:
-  Service Nodes defined in the playbook will be merged into the service fabric.
-    - If the service node does not exist it will be added.
-    - If the service node exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Service Nodes that are not specified in the playbook will be untouched.
-
-Replaced:
-  Service Nodes defined in the playbook will be replaced in the service fabric.
-    - If the service node does not exist it will be added.
-    - If the service node exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - Service Nodes that are not specified in the playbook will be untouched.
-
-Overridden:
-  Service Node defined in the playbook will be overridden in the service fabric.
-    - If the service node does not exist it will be added.
-    - If the service node exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - Service Nodes that are not specified in the playbook will be deleted.
-
-Deleted:
-  Service Node defined in the playbook will be deleted.
-  If no Service Nodes are provided in the playbook, all service node present on that DCNM fabric will be deleted.
-
-Query:
-  Returns the current DCNM state for the service node listed in the playbook.
+# L4-L7 Service Insertion:
+# 
+# Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+# redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+# service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+# Service Node, Service Route Peering and Service Policy to enable this.
+# 
+# Service Node:
+# 
+# You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+# Service policies are created on the service node to determine the actions to be applied to the traffic
+# 
+# Route Peerings:
+# 
+# Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that is used to
+# carry traffic towards the service node.
+# 
+# Service Policy:
+# 
+# Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+# The service policies define the actions to be taken for matching traffic.
+# 
+# Dependency Tree:
+# 
+# Service Node
+# |
+# |---- Route Peering 1
+# |     |
+# .     |---- Service Policy 1
+# .     |
+# .     .
+# .     .
+# .     .
+# .     |---- Service Policy N
+# .
+# |---- Route Peering N
+#       |
+#       |---- Service Policy 1
+#       |
+#       .
+#       .
+#       .
+#       |---- Service Policy N
+# 
+# This module supports the following states:
+#
+# Merged:
+#   Service Nodes defined in the playbook will be merged into the service fabric.
+#     - If the service node does not exist it will be added.
+#     - If the service node exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Service Nodes that are not specified in the playbook will be untouched.
+#
+# Replaced:
+#   Service Nodes defined in the playbook will be replaced in the service fabric.
+#     - If the service node does not exist it will be added.
+#     - If the service node exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - Service Nodes that are not specified in the playbook will be untouched.
+#
+# Overridden:
+#   Service Node defined in the playbook will be overridden in the service fabric.
+#     - If the service node does not exist it will be added.
+#     - If the service node exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - Service Nodes that are not specified in the playbook will be deleted.
+#
+# Deleted:
+#   Service Node defined in the playbook will be deleted.
+#   If no Service Nodes are provided in the playbook, all service node present on that DCNM fabric will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the service node listed in the playbook.
 
 - name: Merge Service Nodes
   cisco.dcnm.dcnm_service_node:
@@ -223,7 +221,7 @@ Query:
     state: overridden
     config:
    # Create this service node
-     - name: SN-13
+    - name: SN-13
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
@@ -249,7 +247,7 @@ Query:
    #   - 192.168.1.225
 
 - name: Delete selected Service Nodes
-   cisco.dcnm.dcnm_service_node:
+  cisco.dcnm.dcnm_service_node:
     fabric: Fabric1
     service_fabric: external
     state: deleted
@@ -304,6 +302,12 @@ Query:
     service_fabric: external
     state: query
 '''
+
+import json
+import copy
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
+from ansible.module_utils.basic import AnsibleModule
 
 
 class DcnmServiceNode:
@@ -740,10 +744,9 @@ def main():
     element_spec = dict(
         fabric=dict(required=True, type='str'),
         service_fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(default='merged',
                    choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
-        check_mode=dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -775,7 +778,7 @@ def main():
         dcnm_snode.get_diff_query()
         dcnm_snode.result['response'] = dcnm_snode.query
 
-    if module.params['check_mode']:
+    if module.check_mode:
         dcnm_snode.result['changed'] = False
         module.exit_json(**dcnm_snode.result)
 

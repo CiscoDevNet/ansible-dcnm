@@ -74,6 +74,8 @@ def validate_list_of_dicts(param_list, spec, module=None):
                     if spec[param].get('length_max'):
                         if 1 <= len(item) <= spec[param].get('length_max'):
                             pass
+                        elif param == "vrf_name" and (len(item) <= spec[param].get('length_max')):
+                            pass
                         else:
                             invalid_params.append('{}:{} : The string exceeds the allowed '
                                                   'range of max {} char'.format(param, item,

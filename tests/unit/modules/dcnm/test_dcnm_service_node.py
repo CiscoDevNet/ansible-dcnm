@@ -228,7 +228,7 @@ class TestDcnmServiceNodeModule(TestDcnmModule):
         self.assertEqual(result.get('msg'), 'Fabric test_fabric not present on DCNM')
 
     def test_dcnm_sn_check_mode(self):
-        set_module_args(dict(check_mode=True, state='merged',
+        set_module_args(dict(_ansible_check_mode=True, state='merged',
                              fabric='test_fabric',
                              service_fabric='external', config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)

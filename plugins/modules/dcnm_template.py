@@ -24,11 +24,11 @@ version_added: "1.1.0"
 description:
     - DCNM Ansible Module for creating, deleting and modifying template service
     - operations
-author: Mallik Mudigonda
+author: Mallik Mudigonda(@mmudigon)
 options:
   state:
     description:
-      - The required state of the configuration after module completion.
+    - The required state of the configuration after module completion.
     type: str
     choices:
       - merged
@@ -37,126 +37,128 @@ options:
     default: merged
 
   config:
-    description: A dictionary of template operations
+    description:
+    - A dictionary of template operations
     type: list
     elements: dict
+    required: true
     suboptions:
       name:
         description:
-          - Name of the template.
+        - Name of the template.
         type: str
 
       description:
         description:
-          - Description of the template. The description may include the details
-            regarding the content
+        - Description of the template. The description may include the details
+          regarding the content
         type: str
         default: ''
 
       tags:
         description:
-          - User defined labels for identifying the templates
+        - User defined labels for identifying the templates
         type: str
         default: ''
 
       content:
         description:
-          - Multiple line configuration snip that can be used to associate to
-            devices as policy
+        - Multiple line configuration snip that can be used to associate to
+          devices as policy
         type: str
 """
 
 EXAMPLES = """
 
-States:
-This module supports the following states:
-
-Merged:
-  Templates defined in the playbook will be merged into the target.
-
-  The templates listed in the playbook will be created if not already present on the DCNM
-  server. If the template is already present and the configuration information included
-  in the playbook is either different or not present in DCNM, then the corresponding
-  information is added to the template on DCNM. If a template mentioned in playbook
-  is already present on DCNM and there is no difference in configuration, no operation
-  will be performed for such a template.
-
-Deleted:
-  Templates defined in the playbook will be deleted from the target.
-
-  Deletes the list of templates specified in the playbook.
-
-Query:
-  Returns the current DCNM state for the templates listed in the playbook.
+# States:
+# This module supports the following states:
+#
+# Merged:
+#   Templates defined in the playbook will be merged into the target.
+#
+#   The templates listed in the playbook will be created if not already present on the DCNM
+#   server. If the template is already present and the configuration information included
+#   in the playbook is either different or not present in DCNM, then the corresponding
+#   information is added to the template on DCNM. If a template mentioned in playbook
+#   is already present on DCNM and there is no difference in configuration, no operation
+#   will be performed for such a template.
+#
+# Deleted:
+#   Templates defined in the playbook will be deleted from the target.
+#
+#   Deletes the list of templates specified in the playbook.
+#
+# Query:
+#   Returns the current DCNM state for the templates listed in the playbook.
 
 
 # To create or modify templates
 
 - name: Create or modify templates
-    cisco.dcnm.dcnm_template:
-      state: merged        # only choose form [merged, deleted, query]
-      config:
-        - name: template_101
-          description: "Template_101"
-          tags: "internal policy 101"
-          content: |
-            telemetry
-              certificate /bootflash/telegraf.crt telegraf
-              destination-profile
-                use-vrf management
-              destination-group 101
-                ip address 10.195.225.176 port 57101 protocol gRPC encoding GPB
-              sensor-group 101
-                data-source DME
-                path sys/ch depth unbounded
-              subscription 101
-                dst-grp 101
-                snsr-grp 101 sample-interval 10101
+  cisco.dcnm.dcnm_template:
+    state: merged        # only choose form [merged, deleted, query]
+    config:
+      - name: template_101
+        description: "Template_101"
+        tags: "internal policy 101"
+        content: |
+          telemetry
+            certificate /bootflash/telegraf.crt telegraf
+            destination-profile
+              use-vrf management
+            destination-group 101
+              ip address 10.195.225.176 port 57101 protocol gRPC encoding GPB
+            sensor-group 101
+              data-source DME
+              path sys/ch depth unbounded
+            subscription 101
+              dst-grp 101
+              snsr-grp 101 sample-interval 10101
 
-        - name: template_102
-          description: "Template_102"
-          tags: "internal policy 102"
-          content: |
-            telemetry
-              certificate /bootflash/telegraf.crt telegraf
-              destination-profile
-                use-vrf management
-              destination-group 1
-                ip address 10.195.225.102 port 57102 protocol gRPC encoding GPB
-              sensor-group 102
-                data-source DME
-                path sys/ch depth unbounded
-              subscription 102
-                dst-grp 102
-                snsr-grp 102 sample-interval 10102
+      - name: template_102
+        description: "Template_102"
+        tags: "internal policy 102"
+        content: |
+          telemetry
+            certificate /bootflash/telegraf.crt telegraf
+            destination-profile
+              use-vrf management
+            destination-group 1
+              ip address 10.195.225.102 port 57102 protocol gRPC encoding GPB
+            sensor-group 102
+              data-source DME
+              path sys/ch depth unbounded
+            subscription 102
+              dst-grp 102
+              snsr-grp 102 sample-interval 10102
 
 # To delete templates
 
 - name: Delete templates
-    cisco.dcnm.dcnm_template:
-      state: deleted       # only choose form [merged, deleted, query]
-      config:
-        - name: template_101
+  cisco.dcnm.dcnm_template:
+    state: deleted       # only choose form [merged, deleted, query]
+    config:
+      - name: template_101
 
-        - name: template_102
+      - name: template_102
 
-        - name: template_103
+      - name: template_103
 
-        - name: template_104
+      - name: template_104
 
 # To query templates
 
 - name: Query templates
-    cisco.dcnm.dcnm_template:
-      state: query       # only choose form [merged, deleted, query]
-      config:
-        - name: template_101
+  cisco.dcnm.dcnm_template:
+    state: query       # only choose form [merged, deleted, query]
+    config:
+      - name: template_101
 
-        - name: template_102
+      - name: template_102
 
-        - name: template_103
+      - name: template_103
 
-        - name: template_104
+      - name: template_104
 """
 
 import json
@@ -632,13 +634,12 @@ def main():
     """ main entry point for module execution
     """
     element_spec = dict(
-        config=dict(required=True, type="list"),
+        config=dict(required=True, type="list", elements='dict'),
         state=dict(
             type="str",
             default="merged",
             choices=["merged", "deleted", "query"],
         ),
-        check_mode=dict(required=False, type="bool", default=False)
     )
 
     module = AnsibleModule(
@@ -670,7 +671,7 @@ def main():
     else:
         module.exit_json(**dcnm_template.result)
 
-    if module.params["check_mode"]:
+    if module.check_mode:
         dcnm_template.result["changed"] = False
         module.exit_json(**dcnm_template.result)
 

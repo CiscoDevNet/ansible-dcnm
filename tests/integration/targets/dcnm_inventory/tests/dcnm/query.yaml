@@ -158,6 +158,70 @@
     that:
     - '"The queried switch is not part of the fabric configured" in result.response'
 
+- name: Add Switch with Border Gateways and MD5 to fabric
+  cisco.dcnm.dcnm_inventory: &conf_role
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1  }}"
+      max_hops: 0
+      preserve_config: false
+      role: border_gateway
+      auth_proto: MD5
+      user_name: "{{ ansible_username }}"
+      password: "{{ ansible_pwd }}"
+    - seed_ip: "{{ ansible_switch2 }}"
+      max_hops: 0
+      preserve_config: false
+      role: border_gateway
+      auth_proto: MD5
+      user_name: "{{ ansible_username }}"
+      password: "{{ ansible_pwd }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - 'result.response[6].RETURN_CODE == 200'
+    - 'result.response[7].RETURN_CODE == 200'
+    - 'result.response[8].RETURN_CODE == 200'
+    - 'result.response[9].RETURN_CODE == 200'
+    - 'result.response[10].RETURN_CODE == 200'
+    - 'result.response[11].RETURN_CODE == 200'
+    - 'result.response[2].DATA.status == "Success"'
+    - 'result.response[3].DATA.status == "Success"'
+    - 'result.response[4].DATA.status == "Success"'
+    - 'result.response[5].DATA.status == "Success"'
+    - '"Operation is successful" in result.response[6].DATA'
+    - '"Operation is successful" in result.response[7].DATA'
+    - 'result.response[8].DATA.newRole == "border gateway"'
+    - 'result.response[9].DATA.newRole == "border gateway"'
+    - 'result.response[10].DATA.status == "Config save is completed"'
+    - 'result.response[11].DATA.status == "Config deployment has been triggered"'
+
+- name: Wait for 40 secs
+  wait_for:
+    timeout: 40
+
+- name: QUERY - Query a Switch without a config element
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.response[0].ipAddress == "{{ ansible_switch1 }}"'
+    - 'result.response[0].switchRole == "border gateway"'
+    - 'result.response[1].ipAddress == "{{ ansible_switch2 }}"'
+    - 'result.response[1].switchRole == "border gateway"'
+
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################

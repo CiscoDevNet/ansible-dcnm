@@ -39,7 +39,7 @@ Parameters
                     <b>json_data</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">-</span>
+                        <span style="color: purple">raw</span>
                     </div>
                 </td>
                 <td>
@@ -54,7 +54,7 @@ Parameters
                     <b>method</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">-</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -76,7 +76,7 @@ Parameters
                     <b>path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">-</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -95,13 +95,13 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
-    This module can be used to send any REST API requests that are supported by
-    the DCNM controller.
-
-    This module is not idempotent but can be used as a stop gap until a feature
-    module can be developed for the target DCNM functionality.
+    # This module can be used to send any REST API requests that are supported by
+    # the DCNM controller.
+    #
+    # This module is not idempotent but can be used as a stop gap until a feature
+    # module can be developed for the target DCNM functionality.
 
     - name: Gather List of Fabrics from DCNM
       dcnm_rest:
@@ -132,7 +132,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                        / <span style="color: purple">elements=dictionary</span>
                     </div>
                 </td>
-                <td></td>
+                <td>always</td>
                 <td>
                             <div>Success or Error Data retrieved from DCNM</div>
                     <br/>
