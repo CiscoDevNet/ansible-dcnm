@@ -8,7 +8,7 @@
 - name: Delete service policies
   cisco.dcnm.dcnm_service_policy: &dcnm_sp_del_all
     fabric: "{{ ansible_it_fabric }}"                     # mandatory
-    attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+    service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
     state: deleted                                        # optional, default merged
     config:
       - name: service_policy_1                            # mandatory
@@ -41,7 +41,7 @@
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         attach: true                                          # optional, default true
         deploy: true                                          # optional, default true
         state: merged                                         # optional, default merged
@@ -164,7 +164,7 @@
     - name: Override and delete all service policies without any new one
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_create_all
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         state: overridden                                     # optional, default merged
       register: result
 
@@ -189,7 +189,7 @@
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         attach: true                                          # optional, default true
         deploy: true                                          # optional, default true
         state: merged                                         # optional, default merged
@@ -312,7 +312,7 @@
     - name: Override all policies with a new one modifying existing one
       cisco.dcnm.dcnm_service_policy:
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         attach: true                                          # optional, default true
         deploy: true                                          # optional, default true
         state: overridden                                     # optional, default merged

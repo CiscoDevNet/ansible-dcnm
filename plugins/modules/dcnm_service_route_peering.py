@@ -16,14 +16,14 @@
 
 __author__ = "Mallik Mudigonda"
 
-DOCUMENTATION = """
+DOCUMENTATION = '''
 ---
 module: dcnm_service_route_peering
 short_description: DCNM Ansible Module for managing Service Route Peerings.
 version_added: "1.2.0"
 description:
     - DCNM Ansible Module for Creating, Deleting, Querying and Modifying Route Peerings
-author: Mallik Mudigonda
+author: Mallik Mudigonda (@mmudigon)
 options:
   fabric:
     description:
@@ -84,8 +84,8 @@ options:
       peering_option:
         description:
           - Specifies the type of peering
-          - NOTE: This object is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
-                  or 'one_arm_adc' or 'two_arm_adc'
+          - This object is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
+            or 'one_arm_adc' or 'two_arm_adc'
         type: str
         required: False
         default: 'static'
@@ -93,22 +93,22 @@ options:
       next_hop:
         description:
           - Nexthop IPV4 information, e.g., 192.168.1.100
-          - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+          - This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
         type: int
         required: true
       reverse_next_hop:
         description:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
-          - NOTE: This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
-                  or 'one_arm_adc' or 'two_arm_adc'
+          - This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
+            or 'one_arm_adc' or 'two_arm_adc'
         type: int
         required: false
         default: ""
       inside_network:
         description:
           - Details regarding inside network of the route peering
-          - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
-                  or 'inter_tenant_fw'
+          - This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+            or 'inter_tenant_fw'
         type: dict
         required: true
         suboptions:
@@ -125,8 +125,8 @@ options:
           vlan_id:
             description:
               - Vlan Id for the inside network
-              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
-                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
+              - If this object is included and if it is already in use, then the module will allocate a new
+                VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
             required: false
             default: 0
@@ -139,12 +139,12 @@ options:
               ipv4_gw:
                 description:
                   - IPV4 gateway information including the mask e.g. 192.168.1.1/24
-                type: ipv4
+                type: str
                 required: true
               ipv6_gw:
                 description:
                   - IPV6 gateway information including the mask e.g., 2000:01:01::01/64
-                type: ipv6
+                type: str
                 required: false
                 default: ""
               vlan_name:
@@ -168,7 +168,7 @@ options:
               static_route:
                 description:
                   - Static route information
-                  - NOTE: This object is applicable only when 'peering_option' is 'static'
+                  - This object is applicable only when 'peering_option' is 'static'
                 type: list
                 elements: dict
                 required: false
@@ -177,91 +177,91 @@ options:
                   subnet:
                     description:
                       - Subnet information, for e.g., 11.0.0.0/24
-                    type: ipv4
+                    type: str
                     required: True
                   next_hop:
                     description:
                       - Gateway IP addresses, for e.g., 192.168.1.1
                     type: list
-                    elements: ipv4
+                    elements: str
                     required: True
               ipv4_neighobor:
                 description:
                   - IPv4 neighbor address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: True
               ipv4_lo:
                 description:
                   - IPv4 loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: True
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. 
-                          This object is mandatory if the service node is part of VPC switch
-                          pair
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'.
+                    This object is mandatory if the service node is part of VPC switch
+                    pair
+                type: str
                 required: False
                 default: ''
               ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               ipv6_lo:
                 description:
                   - IPv6 loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
                 description:
                   - IPv6 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'. This
-                          object will be mandatory if the service node switch is part of VPC
-                          pair
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'. This
+                    object will be mandatory if the service node switch is part of VPC
+                    pair
+                type: str
                 required: False
                 default: ''
               route_map_tag:
                 description:
                   - Route Tag
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
                 description:
                   - Description of the interface
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
                 description:
                   - Local ASN number
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: bool
                 required: False
                 default: True
       outside_network:
         description:
           - Details regarding outside network of the route peering
-          - NOTE: This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
-                  or 'inter_tenant_fw'
+          - This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+            or 'inter_tenant_fw'
         type: dict
         required: true
         suboptions:
@@ -278,8 +278,8 @@ options:
           vlan_id:
             description:
               - Vlan Id for the outside network
-              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
-                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
+              - If this object is included and if it is already in use, then the module will allocate a new
+                VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
             required: false
             default: 0
@@ -292,12 +292,12 @@ options:
               ipv4_gw:
                 description:
                   - IPV4 gateway information including the mask e.g. 192.168.1.1/24
-                type: ipv4
+                type: str
                 required: true
               ipv6_gw:
                 description:
                   - IPV6 gateway information including the mask e.g., 2000:01:01::01/64
-                type: ipv6
+                type: str
                 required: false
                 default: ""
               vlan_name:
@@ -321,8 +321,8 @@ options:
               static_route:
                 description:
                   - Static route information
-                  - NOTE: This object is applicable only when 'peering_option' is 'static' and
-                          'deploy_mode' is 'intra_tenant_fw'
+                  - This object is applicable only when 'peering_option' is 'static' and
+                    'deploy_mode' is 'intra_tenant_fw'
                 type: list
                 elements: dict
                 required: false
@@ -331,89 +331,89 @@ options:
                   subnet:
                     description:
                       - Subnet information, for e.g., 11.0.0.0/24
-                    type: ipv4
+                    type: str
                     required: True
                   next_hop:
                     description:
                       - Gateway IP addresses, for e.g., 192.168.1.1
                     type: list
-                    elements: ipv4
+                    elements: str
                     required: True
               ipv4_neighobor:
                 description:
                   - IPv4 neighbor address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: True
               ipv4_lo:
                 description:
                   - IPv4 loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: True
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'.
-                          This object is mandatory if the service node is part of VPC switch
-                          pair
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'.
+                    This object is mandatory if the service node is part of VPC switch
+                    pair
+                type: str
                 required: False
                 default: ''
               ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               ipv6_lo:
                 description:
                   - IPv6 loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
                 description:
                   - IPv6 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               route_map_tag:
                 description:
                   - Route Tag
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
                 description:
                   - Description of the interface
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
                 description:
                   - Local ASN number
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: bool
                 required: False
                 default: true
       first_arm:
         description:
-          - Details regarding firast arm of the route peering
-          - NOTE: This object is applicable only when 'deploy_mode' is either
-                  'one_arm_adc' or 'two_arm_adc'
+          - Details regarding first arm of the route peering
+          - This object is applicable only when 'deploy_mode' is either
+            'one_arm_adc' or 'two_arm_adc'
         type: dict
         required: true
         suboptions:
@@ -430,8 +430,8 @@ options:
           vlan_id:
             description:
               - Vlan Id for the  first arm
-              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
-                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
+              - If this object is included and if it is already in use, then the module will allocate a new
+                VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
             required: false
             default: 0
@@ -444,12 +444,12 @@ options:
               ipv4_gw:
                 description:
                   - IPV4 gateway information including the mask e.g. 192.168.1.1/24
-                type: ipv4
+                type: str
                 required: true
               ipv6_gw:
                 description:
                   - IPV6 gateway information including the mask e.g., 2000:01:01::01/64
-                type: ipv6
+                type: str
                 required: false
                 default: ""
               vlan_name:
@@ -473,7 +473,7 @@ options:
               static_route:
                 description:
                   - Static route information
-                  - NOTE: This object is applicable only when 'peering_option' is 'static'
+                  - This object is applicable only when 'peering_option' is 'static'
                 type: list
                 elements: dict
                 required: false
@@ -482,89 +482,89 @@ options:
                   subnet:
                     description:
                       - Subnet information, for e.g., 11.0.0.0/24
-                    type: ipv4
+                    type: str
                     required: True
                   next_hop:
                     description:
                       - Gateway IP addresses, for e.g., 192.168.1.1
                     type: list
-                    elements: ipv4
+                    elements: str
                     required: True
               ipv4_neighobor:
                 description:
                   - IPv4 neighbor address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: True
               ipv4_lo:
                 description:
                   - IPv4 loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: True
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                          This object is mandatory if the service node is part of VPC switch
-                          pair
-                type: ipv4
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                    This object is mandatory if the service node is part of VPC switch
+                    pair
+                type: str
                 required: False
                 default: ''
               ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               ipv6_lo:
                 description:
                   - IPv6 loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
                 description:
                   - IPv6 vpc peer loopback address
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
-                type: ipv6
+                  - This object is applicable only when 'peering_option' is 'ebgp'
+                type: str
                 required: False
                 default: ''
               route_map_tag:
                 description:
                   - Route Tag
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
                 description:
                   - Description of the interface
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
                 description:
                   - Local ASN number
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
-                  - NOTE: This object is applicable only when 'peering_option' is 'ebgp'
+                  - This object is applicable only when 'peering_option' is 'ebgp'
                 type: bool
                 required: False
                 default: True
       second_arm:
         description:
           - Details regarding second arm of the route peering
-          - NOTE: This object is applicable only when 'deploy_mode' is either
-                  'one_arm_adc' or 'two_arm_adc'
+          - This object is applicable only when 'deploy_mode' is either
+            'one_arm_adc' or 'two_arm_adc'
         type: dict
         required: true
         suboptions:
@@ -581,8 +581,8 @@ options:
           vlan_id:
             description:
               - Vlan Id for the second arm
-              - NOTE: If this object is included and if it is already in use, then the module will allocate a new
-                      VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
+              - If this object is included and if it is already in use, then the module will allocate a new
+                VLAN ID and create the Route Peering. The user provided 'vlan_id' will be ignored.
             type: int
             required: false
             default: 0
@@ -595,12 +595,12 @@ options:
               ipv4_gw:
                 description:
                   - IPV4 gateway information including the mask e.g. 192.168.1.1/24
-                type: ipv4
+                type: str
                 required: true
               ipv6_gw:
                 description:
                   - IPV6 gateway information including the mask e.g., 2000:01:01::01/64
-                type: ipv6
+                type: str
                 required: false
                 default: ""
               vlan_name:
@@ -621,91 +621,93 @@ options:
                 type: int
                 required: false
                 default: 12345
-"""
+'''
 
-EXAMPLES = """
+EXAMPLES = '''
+# L4-L7 Service Insertion:
+# =======================
+#
+# Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+# redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+# service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+# Service Node, Service Route Peering and Service Policy to enable this.
+#
+# Service Node:
+#
+# You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+# Service policies are created on the service node to determine the actions to be applied to the traffic
+#
+# Route Peerings:
+#
+# Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that is used to
+# carry traffic towards the service node.
+#
+# Service Policy:
+#
+# Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+# The service policies define the actions to be taken for matching traffic.
+#
+# Dependency Tree:
+#
+# Service Node
+# |
+# |---- Route Peering 1
+# |     |
+# .     |---- Service Policy 1
+# .     |
+# .     .
+# .     .
+# .     .
+# .     |---- Service Policy N
+# .
+# |---- Route Peering N
+#       |
+#       |---- Service Policy 1
+#       |
+#       .
+#       .
+#       .
+#       |---- Service Policy N
+#
+#
+# This module supports the following states:
 
-L4-L7 Service Insertion:
-
-Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
-redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
-service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
-Service Node, Service Route Peering and Service Policy to enable this.
-
-Service Node:
-
-You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
-
-Route Peerings:
-
-Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that are used to
-redirect traffic towards the service node.
-
-Service Policy:
-
-Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
-The service policies define the actions to be taken for matching traffic redirected towards the service node.
-
-Dependency Tree:
-
-Service Node
-|
-|---- Route Peering 1
-|     |
-.     |---- Service Policy 1
-.     |
-.     .
-.     .
-.     .
-.     |---- Service Policy N
-.
-|---- Route Peering N
-      |
-      |---- Service Policy 1
-      |
-      .
-      .
-      .
-      |---- Service Policy N
-
-States:
-This module supports the following states:
-
-Merged:
-  Route Peerings defined in the playbook will be merged into the target fabric.
-    - If the Route Peerings does not exist it will be added.
-    - If the Route Peerings exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Route peerings that are not specified in the playbook will be untouched.
-
-Replaced:
-  Route Peerings defined in the playbook will be replaced in the target fabric.
-    - If the Route Peerings does not exist it will be added.
-    - If the Route Peerings exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - Route Peerings that are not specified in the playbook will be untouched.
-
-Overridden:
-  Route Peerings defined in the playbook will be overridden in the target fabric.
-    - If the Route Peerings does not exist it will be added.
-    - If the Route Peerings exists but properties managed by the playbook are different
-      they will be updated if possible.
-    - Properties that can be managed by the module but are not specified
-      in the playbook will be deleted or defaulted if possible.
-    - Roue Peerings that are not specified in the playbook will be deleted.
-
-Deleted:
-  Route Peerings defined in the playbook will be deleted.
-
-Query:
-  Returns the current DCNM state for the route peerings listed in the playbook.
-
-CREATING ROUTE PEERINGS
-=======================
-
-INTRA-TENANT FIREWALL
+# Merged:
+#   Route Peerings defined in the playbook will be merged into the target fabric.
+#     - If the Route Peerings does not exist it will be added.
+#     - If the Route Peerings exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Route peerings that are not specified in the playbook will be untouched.
+#
+# Replaced:
+#   Route Peerings defined in the playbook will be replaced in the target fabric.
+#     - If the Route Peerings does not exist it will be added.
+#     - If the Route Peerings exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - Route Peerings that are not specified in the playbook will be untouched.
+#
+# Overridden:
+#   Route Peerings defined in the playbook will be overridden in the target fabric.
+#     - If the Route Peerings does not exist it will be added.
+#     - If the Route Peerings exists but properties managed by the playbook are different
+#       they will be updated if possible.
+#     - Properties that can be managed by the module but are not specified
+#       in the playbook will be deleted or defaulted if possible.
+#     - Roue Peerings that are not specified in the playbook will be deleted.
+#
+# Deleted:
+#   Route Peerings defined in the playbook will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the route peerings listed in the playbook.
+#
+# CREATING ROUTE PEERINGS
+# =======================
+#
+# INTRA-TENANT FIREWALL
+# =======================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -741,7 +743,8 @@ INTRA-TENANT FIREWALL
             tag: 11112                                   # optional, default is 12345
         reverse_next_hop: 192.161.2.100                  # optional, default is ''
 
-INTER-TENANT FIREWALL with STATIC peering
+# INTER-TENANT FIREWALL with STATIC peering
+# =========================================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -786,7 +789,8 @@ INTER-TENANT FIREWALL with STATIC peering
                   - 123.123.123.100
             tag: 22222                                   # optional, default is 12345
 
-INTER-TENANT FIREWALL with EBGP peering
+# INTER-TENANT FIREWALL with EBGP peering
+# =======================================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -841,7 +845,8 @@ INTER-TENANT FIREWALL with EBGP peering
             local_asn: 65302                             # optional, default is ''
             adv_host: true                               # optional, default is false
 
-ONEARM ADC with EBGP peering
+# ONEARM ADC with EBGP peering
+# ============================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -877,7 +882,8 @@ ONEARM ADC with EBGP peering
             adv_host: true                               # optional, default is false
         reverse_next_hop: 192.164.1.100                  # mandatory
 
-TWOARM ADC with EBGP peering
+# TWOARM ADC with EBGP peering
+# ============================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -923,7 +929,8 @@ TWOARM ADC with EBGP peering
             tag: 51112                                   # optional, default is 12345
         reverse_next_hop: 192.165.1.100                  # mandatory
 
-ONEARM ADC with STATIC peering
+# ONEARM ADC with STATIC peering
+# ==============================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -958,7 +965,8 @@ ONEARM ADC with STATIC peering
                   - 164.164.164.1
         reverse_next_hop: 192.166.1.100                  # mandatory
 
-TWOARM ADC with STATIC peering
+# TWOARM ADC with STATIC peering
+# ==============================
 
 - name: Create different new service route peerings including all objects
   cisco.dcnm.dcnm_service_route_peering:
@@ -999,8 +1007,8 @@ TWOARM ADC with STATIC peering
             tag: 71112                                   # optional, default is 12345
         reverse_next_hop: 192.167.1.100                  # mandatory
 
-DELETE ROUTE PEERINGS
-=====================
+# DELETE ROUTE PEERINGS
+# =====================
 
 - name: Delete specific route peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -1025,8 +1033,8 @@ DELETE ROUTE PEERINGS
     config:
       - node_name: IT-SN-1
 
-OVERRIDE ROUTE PEERINGS
-=======================
+# OVERRIDE ROUTE PEERINGS
+# =======================
 
 - name: Override existing route peerings with new peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -1070,8 +1078,8 @@ OVERRIDE ROUTE PEERINGS
     attach: true
     deploy: true
 
-REPLACE ROUTE PEERINGS
-======================
+# REPLACE ROUTE PEERINGS
+# ======================
 
 - name: Replace service route peerings RP1
   cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_rep_13
@@ -1107,8 +1115,8 @@ REPLACE ROUTE PEERINGS
             tag: 11102                                   # optional, default is 12345
         reverse_next_hop: 192.161.2.200                  # optional, default is ''
 
-QUERY ROUTE PEERINGS
-====================
+# QUERY ROUTE PEERINGS
+# ====================
 
 - name: Query existing route peerings with specific peering names
   cisco.dcnm.dcnm_service_route_peering:
@@ -1146,7 +1154,7 @@ QUERY ROUTE PEERINGS
         node_name: IT-SN-1                                # mandatory
         node_name: IT-SN-2                                # mandatory
 
-"""
+'''
 
 import re
 import time
@@ -1166,12 +1174,10 @@ from datetime import datetime
 # Route Peering Class object which includes all the required methods and data to configure and maintain Roue peering objects
 class DcnmServiceRoutePeering:
     def __init__(self, module):
-        self.debug = False
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
-        self.check_mode = False
         self.srp_info = []
         self.want = []
         self.have = []
@@ -2763,7 +2769,7 @@ class DcnmServiceRoutePeering:
             mismatch_reasons.append(
                 {"DCNM_SRP_IN_IPV4GW_NO_MATCH": [want["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"], have["serviceNetworks"][0]["nvPairs"]["gatewayIpAddress"]]}
             )
-            
+
         if (
             want["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]
             != have["serviceNetworks"][0]["nvPairs"]["gatewayIpV6Address"]
@@ -2884,7 +2890,7 @@ class DcnmServiceRoutePeering:
                 != have["serviceNetworks"][1]["nvPairs"]["tag"]
             ):
                 mismatch_reasons.append(
-                    {"DCNM_SRP_OUT_TAG_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["tag"]), 
+                    {"DCNM_SRP_OUT_TAG_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["tag"]),
                                                    have["serviceNetworks"][1]["nvPairs"]["tag"]]}
                 )
             if (
@@ -2892,7 +2898,7 @@ class DcnmServiceRoutePeering:
                 != have["serviceNetworks"][1]["nvPairs"]["vlanId"]
             ):
                 mismatch_reasons.append(
-                    {"DCNM_SRP_OUT_PROF_VID_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["vlanId"]), 
+                    {"DCNM_SRP_OUT_PROF_VID_NO_MATCH": [str(want["serviceNetworks"][1]["nvPairs"]["vlanId"]),
                                                         have["serviceNetworks"][1]["nvPairs"]["vlanId"]]}
                 )
 
@@ -3295,8 +3301,6 @@ class DcnmServiceRoutePeering:
             retries += 1
             resp = dcnm_send(self.module, "GET", path)
 
-            self.log_msg(f"GET DEPLOY STATUS RESP = {resp}\n")
-
             if resp and resp["RETURN_CODE"] != 200:
                 self.dcnm_srp_check_for_errors_in_resp(resp)
                 time.sleep(10)
@@ -3331,11 +3335,9 @@ class DcnmServiceRoutePeering:
                     # can  ignore the rest.
 
                     if chk_deployed:
-                        self.log_msg(f"Checking VLAN ID {attach.get('vlanId')} in check list = {check_list}\n")
                         if attach.get("vlanId", 0) not in check_list:
                             continue
                     else:
-                        self.log_msg(f"Checking SNO {attach['switchSerialNumber']} in check list = {check_list}\n")
                         if attach["switchSerialNumber"] not in check_list:
                             continue
                     processed = True
@@ -3636,9 +3638,6 @@ class DcnmServiceRoutePeering:
         json_payload = json.dumps(srp)
 
         resp = dcnm_send(self.module, command, path, json_payload)
-
-        self.log_msg(f"CREATE RESP = {resp}\n")
-
         return resp
 
     def dcnm_srp_detach_srp(self, fixed_path, srp_list):
@@ -3660,9 +3659,6 @@ class DcnmServiceRoutePeering:
         path = path + ",".join(srp_list)
 
         resp = dcnm_send(self.module, "DELETE", path, "")
-
-        self.log_msg(f"DETACH RESP = {resp}\n");
-
         return resp
 
     def dcnm_srp_delete_srp(self, srp):
@@ -3722,7 +3718,6 @@ class DcnmServiceRoutePeering:
         json_payload = json.dumps(attach_payload)
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
-        self.log_msg (f"ATTACH RESP = {resp}\n")
         return resp
 
     def dcnm_srp_deploy_srp(self, fixed_path, srp_list):
@@ -3742,9 +3737,6 @@ class DcnmServiceRoutePeering:
         json_payload = json.dumps(srp_list)
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
-
-        self.log_msg(f"DEPLOY RESP = {resp}\n");
-
         return resp
 
     def dcnm_srp_attach_and_deploy_srp(self, srp):
@@ -3795,8 +3787,6 @@ class DcnmServiceRoutePeering:
             while retries < 20:
                 retries += 1
                 resp, retry, deployed, att_state = self.dcnm_srp_get_srp_deployment_status(srp, srp, (final_state == "deployed"))
-
-                self.log_msg (f"Check Deploy Status, final state = {final_state}, ATT STATE = {att_state}\n")
 
                 if att_state == final_state:
                     break;
@@ -4018,13 +4008,12 @@ class DcnmServiceRoutePeering:
         modify_flag = False
         delete_flag = False
         deploy_flag = False
-        err_srps = []
 
         for srp in self.diff_create:
             attach_flag = False
             retries = 0
             command = "POST"
-            user_vlans = self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
+            self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
             while retries < 30:
                 retries += 1
                 resp = self.dcnm_srp_create_srp(srp, command)
@@ -4043,12 +4032,12 @@ class DcnmServiceRoutePeering:
                     rc = self.dcnm_srp_check_for_errors_in_resp(resp)
                     if rc == "in_use_error":
                         # We may see this if SRPs use a vlan id already in use. In that case update the SRP with a new
-                        # allocated VLAN id. 
+                        # allocated VLAN id.
                         for net in srp["serviceNetworks"]:
                             if str(net["vlanId"]) in resp["VLANS"]:
                                 net["vlanId"] = 0
                         # Since we have zeroed out the vlans which errored, allocate new IDs
-                        user_vlans = self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
+                        self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
                         if srp["enabled"]:
                            attach_flag = True
 
@@ -4104,12 +4093,12 @@ class DcnmServiceRoutePeering:
 
                     if rc1 == "in_use_error" or rc2 == "in_use_error":
                         # We may see this if SRPs use a vlan id already in use. In that case update the SRP with a new
-                        # allocated VLAN id. 
+                        # allocated VLAN id.
                         for net in srp["serviceNetworks"]:
                             if str(net["vlanId"]) in chk_resp["VLANS"]:
                                 net["vlanId"] = 0
                         # Since we have zeroed out the vlans which errored, allocate new IDs
-                        user_vlans = self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
+                        self.dcnm_srp_allocate_vlan_id(self.module.params["fabric"], srp)
                     time.sleep(10)
                     continue
             resp["RETRIES"] = retries
@@ -4302,6 +4291,7 @@ class DcnmServiceRoutePeering:
             create_flag or modify_flag or delete_flag or deploy_flag
         )
 
+
 def main():
 
     """ main entry point for module execution
@@ -4316,9 +4306,7 @@ def main():
             choices=["merged", "deleted", "replaced", "query", "overridden"],
         ),
         deploy=dict(required=False, type="bool", default=True),
-        attach=dict(required=False, type="str", default="default"),
-        check_mode=dict(required=False, type="bool", default=False),
-        debug=dict(required=False, type="bool", default=False),
+        attach=dict(required=False, type="bool", default=True),
     )
 
     module = AnsibleModule(
@@ -4330,14 +4318,16 @@ def main():
     dcnm_srp.result["StartTime"] = datetime.now().strftime("%H:%M:%S")
 
     dcnm_srp.deploy = module.params["deploy"]
+    dcnm_srp.attach = module.params["attach"]
+
+    '''
     if (module.params["attach"] == "default") or (
         module.params["attach"].lower() == "true"
     ):
         dcnm_srp.attach = True
     else:
         dcnm_srp.attach = False
-
-    dcnm_srp.debug = module.params["debug"]
+    '''
 
     state = module.params["state"]
 
@@ -4380,15 +4370,10 @@ def main():
 
     dcnm_srp.result["diff"] = dcnm_srp.changed_dict
 
-    dcnm_srp.log_msg(f"CREATE = {dcnm_srp.diff_create}\n")
-    dcnm_srp.log_msg(f"MODIFY = {dcnm_srp.diff_modify}\n")
-    dcnm_srp.log_msg(f"DELETE = {dcnm_srp.diff_delete}\n")
-    dcnm_srp.log_msg(f"DEPLOY = {dcnm_srp.diff_deploy}\n")
-
     if dcnm_srp.diff_create or dcnm_srp.diff_modify or dcnm_srp.diff_delete:
         dcnm_srp.result["changed"] = True
 
-    if module.params["check_mode"]:
+    if module.check_mode:
         dcnm_srp.result["changed"] = False
         dcnm_srp.result["EndTime"] = datetime.now().strftime("%H:%M:%S")
         module.exit_json(**dcnm_srp.result)
@@ -4397,7 +4382,6 @@ def main():
 
     dcnm_srp.result["EndTime"] = datetime.now().strftime("%H:%M:%S")
     module.exit_json(**dcnm_srp.result)
-
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_service_route_peering
 **DCNM Ansible Module for managing Service Route Peerings.**
 
 
-Version added: 1.1.0
+Version added: 1.2.0
 
 .. contents::
    :local:
@@ -105,8 +105,8 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Details regarding firast arm of the route peering</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;&quot;}</div>
+                        <div>Details regarding first arm of the route peering</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -165,7 +165,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag indicating if the host is to be advertised</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -196,7 +196,7 @@ Parameters
                     <b>ipv4_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -215,7 +215,7 @@ Parameters
                     <b>ipv4_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -223,7 +223,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -235,7 +235,7 @@ Parameters
                     <b>ipv4_neighobor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -243,7 +243,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 neighbor address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -255,7 +255,7 @@ Parameters
                     <b>ipv4_vpc_peer_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -263,7 +263,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 vpc peer loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27; This object is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -275,7 +275,7 @@ Parameters
                     <b>ipv6_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -294,7 +294,7 @@ Parameters
                     <b>ipv6_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -302,7 +302,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -314,7 +314,7 @@ Parameters
                     <b>ipv6_neighbor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -322,7 +322,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 neighbor address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -334,7 +334,7 @@ Parameters
                     <b>ipv6_vpc_peer_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -342,7 +342,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 vpc peer loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -362,7 +362,7 @@ Parameters
                 </td>
                 <td>
                         <div>Local ASN number</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -382,7 +382,7 @@ Parameters
                 </td>
                 <td>
                         <div>Description of the interface</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -403,7 +403,7 @@ Parameters
                 </td>
                 <td>
                         <div>Route Tag</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -424,7 +424,7 @@ Parameters
                 </td>
                 <td>
                         <div>Static route information</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -438,7 +438,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=ipv4</span>
+                         / <span style="color: purple">elements=string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -458,7 +458,7 @@ Parameters
                     <b>subnet</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -524,6 +524,7 @@ Parameters
                 </td>
                 <td>
                         <div>Vlan Id for the  first arm</div>
+                        <div>If this object is included and if it is already in use, then the module will allocate a new VLAN ID and create the Route Peering. The user provided &#x27;vlan_id&#x27; will be ignored.</div>
                 </td>
             </tr>
             <tr>
@@ -560,7 +561,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding inside network of the route peering</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -619,7 +620,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag indicating if the host is to be advertised</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -650,7 +651,7 @@ Parameters
                     <b>ipv4_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -669,7 +670,7 @@ Parameters
                     <b>ipv4_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -677,7 +678,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -689,7 +690,7 @@ Parameters
                     <b>ipv4_neighobor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -697,7 +698,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 neighbor address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -709,7 +710,7 @@ Parameters
                     <b>ipv4_vpc_peer_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -717,7 +718,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 vpc peer loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object will be mandatory if the service node switch is part of VPC pair&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -729,7 +730,7 @@ Parameters
                     <b>ipv6_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -748,7 +749,7 @@ Parameters
                     <b>ipv6_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -756,7 +757,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -768,7 +769,7 @@ Parameters
                     <b>ipv6_neighbor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -776,7 +777,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 neighbor address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -788,7 +789,7 @@ Parameters
                     <b>ipv6_vpc_peer_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -796,7 +797,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 vpc peer loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object will be mandatory if the service node switch is part of VPC pair&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object will be mandatory if the service node switch is part of VPC pair</div>
                 </td>
             </tr>
             <tr>
@@ -816,7 +817,7 @@ Parameters
                 </td>
                 <td>
                         <div>Local ASN number</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -836,7 +837,7 @@ Parameters
                 </td>
                 <td>
                         <div>Description of the interface</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -857,7 +858,7 @@ Parameters
                 </td>
                 <td>
                         <div>Route Tag</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -878,7 +879,7 @@ Parameters
                 </td>
                 <td>
                         <div>Static route information</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -892,7 +893,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=ipv4</span>
+                         / <span style="color: purple">elements=string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -912,7 +913,7 @@ Parameters
                     <b>subnet</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -978,6 +979,7 @@ Parameters
                 </td>
                 <td>
                         <div>Vlan Id for the inside network</div>
+                        <div>If this object is included and if it is already in use, then the module will allocate a new VLAN ID and create the Route Peering. The user provided &#x27;vlan_id&#x27; will be ignored.</div>
                 </td>
             </tr>
             <tr>
@@ -1031,7 +1033,7 @@ Parameters
                 </td>
                 <td>
                         <div>Nexthop IPV4 information, e.g., 192.168.1.100</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1066,7 +1068,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding outside network of the route peering</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -1125,7 +1127,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag indicating if the host is to be advertised</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1156,7 +1158,7 @@ Parameters
                     <b>ipv4_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -1175,7 +1177,7 @@ Parameters
                     <b>ipv4_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -1183,7 +1185,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1195,7 +1197,7 @@ Parameters
                     <b>ipv4_neighobor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -1203,7 +1205,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 neighbor address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1215,7 +1217,7 @@ Parameters
                     <b>ipv4_vpc_peer_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1223,7 +1225,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 vpc peer loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -1235,7 +1237,7 @@ Parameters
                     <b>ipv6_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1254,7 +1256,7 @@ Parameters
                     <b>ipv6_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1262,7 +1264,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1274,7 +1276,7 @@ Parameters
                     <b>ipv6_neighbor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1282,7 +1284,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 neighbor address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1294,7 +1296,7 @@ Parameters
                     <b>ipv6_vpc_peer_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1302,7 +1304,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 vpc peer loopback address</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1322,7 +1324,7 @@ Parameters
                 </td>
                 <td>
                         <div>Local ASN number</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1342,7 +1344,7 @@ Parameters
                 </td>
                 <td>
                         <div>Description of the interface</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1363,7 +1365,7 @@ Parameters
                 </td>
                 <td>
                         <div>Route Tag</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1384,7 +1386,7 @@ Parameters
                 </td>
                 <td>
                         <div>Static route information</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27; and &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27; and &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -1398,7 +1400,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=ipv4</span>
+                         / <span style="color: purple">elements=string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -1418,7 +1420,7 @@ Parameters
                     <b>subnet</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -1484,6 +1486,7 @@ Parameters
                 </td>
                 <td>
                         <div>Vlan Id for the outside network</div>
+                        <div>If this object is included and if it is already in use, then the module will allocate a new VLAN ID and create the Route Peering. The user provided &#x27;vlan_id&#x27; will be ignored.</div>
                 </td>
             </tr>
             <tr>
@@ -1523,14 +1526,14 @@ Parameters
                 </td>
                 <td>
                         <div>Specifies the type of peering</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;inter_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;inter_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>rev_next_hop</b>
+                    <b>reverse_next_hop</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
@@ -1541,7 +1544,7 @@ Parameters
                 </td>
                 <td>
                         <div>Reverse Nexthop IPV4 information, e.g., 192.169.1.100</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;intra_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;intra_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1559,7 +1562,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding second arm of the route peering</div>
-                        <div>{&#x27;NOTE&#x27;: &quot;This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;&quot;}</div>
+                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -1626,7 +1629,7 @@ Parameters
                     <b>ipv4_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -1645,7 +1648,7 @@ Parameters
                     <b>ipv6_gw</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -1710,6 +1713,7 @@ Parameters
                 </td>
                 <td>
                         <div>Vlan Id for the second arm</div>
+                        <div>If this object is included and if it is already in use, then the module will allocate a new VLAN ID and create the Route Peering. The user provided &#x27;vlan_id&#x27; will be ignored.</div>
                 </td>
             </tr>
             <tr>
@@ -1816,44 +1820,90 @@ Examples
 
 .. code-block:: yaml
 
-    States:
-    This module supports the following states:
+    # L4-L7 Service Insertion:
+    # =======================
+    #
+    # Cisco DCNM has the ability to insert Layer 4-Layer 7 (L4-L7) service devices in a data center fabric, and also enables selectively
+    # redirecting traffic to these service devices. You can add a service node, create route peering between the service node and the
+    # service leaf switch, and then selectively redirect traffic to these service nodes. Ansible collections support 3 modules viz.
+    # Service Node, Service Route Peering and Service Policy to enable this.
+    #
+    # Service Node:
+    #
+    # You have to create an external fabric and specify that a service node resides in that external fabric during service node creation.
+    # Service policies are created on the service node to determine the actions to be applied to the traffic
+    #
+    # Route Peerings:
+    #
+    # Multiple Service Route Peerings can be created under service node. Each Route Peering creates required service networks that is used to
+    # carry traffic towards the service node.
+    #
+    # Service Policy:
+    #
+    # Each route peering can have multiple service policies. Service policies can only be created for networks created through route peerings.
+    # The service policies define the actions to be taken for matching traffic.
+    #
+    # Dependency Tree:
+    #
+    # Service Node
+    # |
+    # |---- Route Peering 1
+    # |     |
+    # .     |---- Service Policy 1
+    # .     |
+    # .     .
+    # .     .
+    # .     .
+    # .     |---- Service Policy N
+    # .
+    # |---- Route Peering N
+    #       |
+    #       |---- Service Policy 1
+    #       |
+    #       .
+    #       .
+    #       .
+    #       |---- Service Policy N
+    #
+    #
+    # This module supports the following states:
 
-    Merged:
-      Route Peerings defined in the playbook will be merged into the target fabric.
-        - If the Route Peerings does not exist it will be added.
-        - If the Route Peerings exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Route peerings that are not specified in the playbook will be untouched.
-
-    Replaced:
-      Route Peerings defined in the playbook will be replaced in the target fabric.
-        - If the Route Peerings does not exist it will be added.
-        - If the Route Peerings exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - Route Peerings that are not specified in the playbook will be untouched.
-
-    Overridden:
-      Route Peerings defined in the playbook will be overridden in the target fabric.
-        - If the Route Peerings does not exist it will be added.
-        - If the Route Peerings exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - Roue Peerings that are not specified in the playbook will be deleted.
-
-    Deleted:
-      Route Peerings defined in the playbook will be deleted.
-
-    Query:
-      Returns the current DCNM state for the route peerings listed in the playbook.
-
-    CREATING ROUTE PEERINGS
-    =======================
-
-    INTRA-TENANT FIREWALL
+    # Merged:
+    #   Route Peerings defined in the playbook will be merged into the target fabric.
+    #     - If the Route Peerings does not exist it will be added.
+    #     - If the Route Peerings exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Route peerings that are not specified in the playbook will be untouched.
+    #
+    # Replaced:
+    #   Route Peerings defined in the playbook will be replaced in the target fabric.
+    #     - If the Route Peerings does not exist it will be added.
+    #     - If the Route Peerings exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - Route Peerings that are not specified in the playbook will be untouched.
+    #
+    # Overridden:
+    #   Route Peerings defined in the playbook will be overridden in the target fabric.
+    #     - If the Route Peerings does not exist it will be added.
+    #     - If the Route Peerings exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - Roue Peerings that are not specified in the playbook will be deleted.
+    #
+    # Deleted:
+    #   Route Peerings defined in the playbook will be deleted.
+    #
+    # Query:
+    #   Returns the current DCNM state for the route peerings listed in the playbook.
+    #
+    # CREATING ROUTE PEERINGS
+    # =======================
+    #
+    # INTRA-TENANT FIREWALL
+    # =======================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -1887,9 +1937,10 @@ Examples
                 vlan_name: rp1-sn1-outside                   # optional, default is ''
                 int_descr: "RP1 SN1 outside interface"       # optionL, default is ''
                 tag: 11112                                   # optional, default is 12345
-            rev_next_hop: 192.161.2.100                      # optional, default is ''
+            reverse_next_hop: 192.161.2.100                  # optional, default is ''
 
-    INTER-TENANT FIREWALL with STATIC peering
+    # INTER-TENANT FIREWALL with STATIC peering
+    # =========================================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -1934,7 +1985,8 @@ Examples
                       - 123.123.123.100
                 tag: 22222                                   # optional, default is 12345
 
-    INTER-TENANT FIREWALL with EBGP peering
+    # INTER-TENANT FIREWALL with EBGP peering
+    # =======================================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -1989,7 +2041,8 @@ Examples
                 local_asn: 65302                             # optional, default is ''
                 adv_host: true                               # optional, default is false
 
-    ONEARM ADC with EBGP peering
+    # ONEARM ADC with EBGP peering
+    # ============================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -2023,9 +2076,10 @@ Examples
                 neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
                 local_asn: 65401                             # optional, default is ''
                 adv_host: true                               # optional, default is false
-            rev_next_hop: 192.164.1.100                      # mandatory
+            reverse_next_hop: 192.164.1.100                  # mandatory
 
-    TWOARM ADC with EBGP peering
+    # TWOARM ADC with EBGP peering
+    # ============================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -2069,9 +2123,10 @@ Examples
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
                 int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
                 tag: 51112                                   # optional, default is 12345
-            rev_next_hop: 192.165.1.100                      # mandatory
+            reverse_next_hop: 192.165.1.100                  # mandatory
 
-    ONEARM ADC with STATIC peering
+    # ONEARM ADC with STATIC peering
+    # ==============================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -2104,9 +2159,10 @@ Examples
                     next_hop:
                       - 163.163.163.1
                       - 164.164.164.1
-            rev_next_hop: 192.166.1.100                      # mandatory
+            reverse_next_hop: 192.166.1.100                  # mandatory
 
-    TWOARM ADC with STATIC peering
+    # TWOARM ADC with STATIC peering
+    # ==============================
 
     - name: Create different new service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -2145,10 +2201,10 @@ Examples
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
                 int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
                 tag: 71112                                   # optional, default is 12345
-            rev_next_hop: 192.167.1.100                      # mandatory
+            reverse_next_hop: 192.167.1.100                  # mandatory
 
-    DELETE ROUTE PEERINGS
-    =====================
+    # DELETE ROUTE PEERINGS
+    # =====================
 
     - name: Delete specific route peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -2173,8 +2229,8 @@ Examples
         config:
           - node_name: IT-SN-1
 
-    OVERRIDE ROUTE PEERINGS
-    =======================
+    # OVERRIDE ROUTE PEERINGS
+    # =======================
 
     - name: Override existing route peerings with new peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -2208,7 +2264,7 @@ Examples
                 vlan_name: rp1-sn1-outside-ovr               # optional, default is ''
                 int_descr: "RP1 SN1 outside interface ovr"   # optionL, default is ''
                 tag: 11192                                   # optional, default is 12345
-            rev_next_hop: 192.161.92.100                     # optional, default is ''
+            reverse_next_hop: 192.161.92.100                 # optional, default is ''
 
     - name: Override existing route peerings with no new peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -2218,8 +2274,8 @@ Examples
         attach: true
         deploy: true
 
-    REPLACE ROUTE PEERINGS
-    ======================
+    # REPLACE ROUTE PEERINGS
+    # ======================
 
     - name: Replace service route peerings RP1
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_rep_13
@@ -2253,10 +2309,10 @@ Examples
                 vlan_name: rp1-sn1-outside-rep               # optional, default is ''
                 int_descr: "RP1 SN1 outside interface- REP"  # optionL, default is ''
                 tag: 11102                                   # optional, default is 12345
-            rev_next_hop: 192.161.2.200                      # optional, default is ''
+            reverse_next_hop: 192.161.2.200                  # optional, default is ''
 
-    QUERY ROUTE PEERINGS
-    ====================
+    # QUERY ROUTE PEERINGS
+    # ====================
 
     - name: Query existing route peerings with specific peering names
       cisco.dcnm.dcnm_service_route_peering:
@@ -2304,4 +2360,4 @@ Status
 Authors
 ~~~~~~~
 
-- Mallik Mudigonda
+- Mallik Mudigonda (@mmudigon)
