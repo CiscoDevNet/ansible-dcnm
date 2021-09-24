@@ -96,7 +96,7 @@ def validate_list_of_dicts(param_list, spec, module=None):
                 elif type == 'dict':
                     item = v.check_type_dict(item)
                 elif ((type == 'ipv4_subnet') or (type == 'ipv4')
-                     or (type == 'ipv6_subnet') or (type == 'ipv6')):
+                      or (type == 'ipv6_subnet') or (type == 'ipv6')):
                     validate_ip_address_format(type, item, invalid_params)
 
                 choice = spec[param].get('choices')
@@ -340,3 +340,22 @@ def dcnm_reset_connection(module):
 
     conn.logout()
     return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
+
+
+def dcnm_nd_supported(module, fabric):
+    supported = {'dcnm': False, 'nd': False}
+    method = 'GET'
+
+    # Check for DCNM Support
+    path = "/rest/control/fabrics/{}".format(fabric)
+    response = dcnm_send(module, method, path)
+    if response['RETURN_CODE'] == 200:
+        supported['dcnm'] = True
+
+    # Check for ND Support
+    path = "/appcenter/cisco/ndfc/api/v1/lan-fabric{}".format(path)
+    response = dcnm_send(module, method, path)
+    if response['RETURN_CODE'] == 200:
+        supported['nd'] = True
+
+    return supported
