@@ -334,7 +334,6 @@
 
         attach: true
         deploy: true
-        debug: True
         state: overridden
       register: result
 
@@ -388,7 +387,6 @@
 
         attach: true
         deploy: true
-        debug: True
         state: merged
       register: result
 
@@ -441,7 +439,6 @@
             reverse_next_hop: 192.166.1.100                  # mandatory
         attach: true
         deploy: true
-        debug: True
         state: overridden
       register: result
 
@@ -495,7 +492,6 @@
 
         attach: true
         deploy: true
-        debug: True
         state: overridden
       register: result
 
@@ -524,7 +520,6 @@
 
         attach: true
         deploy: true
-        debug: True
         state: overridden
       register: result
 

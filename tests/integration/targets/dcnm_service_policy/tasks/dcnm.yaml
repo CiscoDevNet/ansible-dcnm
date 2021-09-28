@@ -26,7 +26,7 @@
 - name: Cleanup - Delete service policies
   cisco.dcnm.dcnm_service_policy:
     fabric: "{{ ansible_it_fabric }}"                    
-    attached_fabric: "{{ ansible_it_service_fabric }}" 
+    service_fabric: "{{ ansible_it_service_fabric }}" 
     state: deleted                                    
   register: result
 

@@ -722,7 +722,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -749,7 +749,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -776,7 +776,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -803,7 +803,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -829,9 +829,9 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
         set_module_args(dict(state='merged',
                              attach=True,
                              deploy=True,
-                             check_mode=True,
+                             _ansible_check_mode=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -853,7 +853,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
         set_module_args(dict(attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -880,7 +880,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -907,7 +907,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=False,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -934,7 +934,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=False,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = None
         try: 
@@ -958,7 +958,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -974,7 +974,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -990,7 +990,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1007,7 +1007,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1023,7 +1023,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1039,7 +1039,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1055,7 +1055,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1071,7 +1071,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1087,7 +1087,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1103,7 +1103,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1119,7 +1119,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=cfg))
         result = None
         try: 
@@ -1141,7 +1141,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1168,7 +1168,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1195,7 +1195,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1222,7 +1222,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1249,7 +1249,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1276,7 +1276,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1303,7 +1303,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1330,7 +1330,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1357,7 +1357,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1384,7 +1384,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -1411,7 +1411,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = None
         try: 
@@ -1433,7 +1433,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1460,7 +1460,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1488,7 +1488,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -1515,7 +1515,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1542,7 +1542,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1569,7 +1569,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1596,7 +1596,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=True, failed=False)
 
@@ -1623,7 +1623,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -1647,7 +1647,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -1671,7 +1671,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -1696,7 +1696,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = self.execute_module(changed=False, failed=False)
 
@@ -1721,7 +1721,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
                              attach=True,
                              deploy=True,
                              fabric='mmudigon',
-                             attached_fabric='external',
+                             service_fabric='external',
                              config=self.playbook_config))
         result = None
         try: 

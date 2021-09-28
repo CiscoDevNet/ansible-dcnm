@@ -456,7 +456,6 @@
         attach: true
         deploy: true
         state: merged
-        debug: True
       register: result
 
     - assert:

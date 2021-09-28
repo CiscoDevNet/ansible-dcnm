@@ -1272,7 +1272,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         set_module_args(dict(state='merged',
                              attach=True,
                              deploy=True,
-                             check_mode=True,
+                             _ansible_check_mode=True,
                              fabric='mmudigon',
                              service_fabric='external',
                              config=self.playbook_config))
