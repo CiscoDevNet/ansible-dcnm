@@ -127,6 +127,10 @@ def get_fabric_inventory_details(module, fabric):
     method = 'GET'
     path = '/rest/control/fabrics/{}/inventory'.format(fabric)
 
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
+
     count = 1
     while (rc is False):
 
@@ -290,6 +294,10 @@ def get_fabric_details(module, fabric):
     method = 'GET'
     path = '/rest/control/fabrics/{}'.format(fabric)
 
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
+
     count = 1
     while (rc is False):
 
@@ -342,20 +350,24 @@ def dcnm_reset_connection(module):
     return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
 
 
-def dcnm_nd_supported(module, fabric):
-    supported = {'dcnm': False, 'nd': False}
+def dcnm_version_supported(module, fabric):
     method = 'GET'
+    supported = None
 
     # Check for DCNM Support
     path = "/rest/control/fabrics/{}".format(fabric)
     response = dcnm_send(module, method, path)
     if response['RETURN_CODE'] == 200:
-        supported['dcnm'] = True
+        supported = 11
 
     # Check for ND Support
     path = "/appcenter/cisco/ndfc/api/v1/lan-fabric{}".format(path)
     response = dcnm_send(module, method, path)
     if response['RETURN_CODE'] == 200:
-        supported['nd'] = True
+        supported = 12
 
-    return supported
+    if supported is None:
+        msg = 'Unsupported DCNM version'
+        self.module.fail_json(msg=msg)
+    else:
+        return supported

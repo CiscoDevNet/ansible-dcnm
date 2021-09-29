@@ -60,6 +60,15 @@ class HttpApi(HttpApiBase):
         self.txt_headers = {
             'Content-Type': "text/plain"
         }
+        self.version = None
+
+    def get_version(self):
+        logit("getting version as " + str(self.version))
+        return self.version
+
+    def set_version(self, version):
+        logit("setting version to " + str(version))
+        self.version = version
 
     def _login_old(self, username, password, method, path):
         logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
@@ -76,6 +85,7 @@ class HttpApi(HttpApiBase):
             response_value = self._get_response_value(response_data)
             self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
             self.login_succeeded = True
+            self.set_version(11)
             logit('Old Auth: {}'.format(self.connection._auth))
             logit('Login Succeeded: {}'.format(self.login_succeeded))
 
@@ -96,6 +106,7 @@ class HttpApi(HttpApiBase):
             response, response_data = self.connection.send(path, data, method=method, headers=self.headers)
             self.connection._auth = {'Authorization': 'Bearer {0}'.format(self._response_to_json12(response_data).get('token'))}
             self.login_succeeded = True
+            self.set_version(12)
             logit('New Auth: {}'.format(self.connection._auth))
             logit('Login Succeeded: {}'.format(self.login_succeeded))
 
