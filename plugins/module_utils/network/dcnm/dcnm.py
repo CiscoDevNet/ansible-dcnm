@@ -17,6 +17,7 @@
 import socket
 import json
 import time
+import re
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
@@ -351,23 +352,40 @@ def dcnm_reset_connection(module):
 
 
 def dcnm_version_supported(module, fabric):
+    """
+    Query DCNM/NDFC and return the major software version
+
+    Parameters:
+        fabric: String representing the fabric name
+
+    Returns:
+        int: Major software version for DCNM/NDFC
+    """
+
     method = 'GET'
     supported = None
+    data = None
 
-    # Check for DCNM Support
-    path = "/rest/control/fabrics/{}".format(fabric)
-    response = dcnm_send(module, method, path)
-    if response['RETURN_CODE'] == 200:
-        supported = 11
+    paths = ["/fm/fmrest/about/version", "/appcenter/cisco/ndfc/api/about/version"]
+    for path in paths:
+        response = dcnm_send(module, method, path)
+        if response['RETURN_CODE'] == 200:
+            data = response.get('DATA')
+            break
 
-    # Check for ND Support
-    path = "/appcenter/cisco/ndfc/api/v1/lan-fabric{}".format(path)
-    response = dcnm_send(module, method, path)
-    if response['RETURN_CODE'] == 200:
-        supported = 12
+    if data:
+        # Parse version information
+        # Examples:
+        #   11.5(1), 12.0.1a'
+        # For these examples 11 or 12 would be returned
+        raw_version = data['version']
+        regex = r"^(\d+)\.\d+"
+        mo = re.search(regex, raw_version)
+        if mo:
+            supported = int(mo.group(1))
 
     if supported is None:
-        msg = 'Unsupported DCNM version'
+        msg = 'Unable to determine the DCNM/NDFC Software Version'
         module.fail_json(msg=msg)
 
     return supported
