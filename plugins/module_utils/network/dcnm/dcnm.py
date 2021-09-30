@@ -368,6 +368,6 @@ def dcnm_version_supported(module, fabric):
 
     if supported is None:
         msg = 'Unsupported DCNM version'
-        self.module.fail_json(msg=msg)
-    else:
-        return supported
+        module.fail_json(msg=msg)
+
+    return supported
