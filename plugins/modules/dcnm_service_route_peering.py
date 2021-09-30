@@ -2426,7 +2426,7 @@ class DcnmServiceRoutePeering:
                 ][1]["nvPairs"]["vlanId"]
 
         # if self.module.params["attach"] is "default, then attach is not given in Playbook
-        if self.module.params["attach"] == "default":
+        if self.module.params["attach"] is None:
             want["enabled"] = have["enabled"]
 
     def dcnm_srp_update_want(self):
@@ -3327,6 +3327,8 @@ class DcnmServiceRoutePeering:
             else:
                 check_list = self.dcnm_srp_get_sno_list (have)
 
+            resp["check_list"] = check_list
+
             for item in resp["DATA"]:
                 for attach in item["switchAttaches"]:
                     # The API will return status for all switches whether the service node is attached to it or not.
@@ -3802,6 +3804,8 @@ class DcnmServiceRoutePeering:
             self.changed_dict[0]["debugs"].append({"PeeringName": srp["peeringName"], "State": att_state})
             # After all retries, if the SRP did not move to 'final_state' it is an error
             if att_state != final_state:
+                # Note down the SRP to aid in debugging
+                resp["SRP"] = srp
                 self.module.fail_json(msg=resp)
 
     def dcnm_srp_combine_route_peerings(self, srp, srp_info):
@@ -4306,7 +4310,7 @@ def main():
             choices=["merged", "deleted", "replaced", "query", "overridden"],
         ),
         deploy=dict(required=False, type="bool", default=True),
-        attach=dict(required=False, type="bool", default=True),
+        attach=dict(required=False, type="bool"),
     )
 
     module = AnsibleModule(
@@ -4318,16 +4322,13 @@ def main():
     dcnm_srp.result["StartTime"] = datetime.now().strftime("%H:%M:%S")
 
     dcnm_srp.deploy = module.params["deploy"]
-    dcnm_srp.attach = module.params["attach"]
 
-    '''
-    if (module.params["attach"] == "default") or (
-        module.params["attach"].lower() == "true"
+    if (module.params["attach"] is None) or (
+        str(module.params["attach"]).lower() == "true"
     ):
         dcnm_srp.attach = True
     else:
         dcnm_srp.attach = False
-    '''
 
     state = module.params["state"]
 
