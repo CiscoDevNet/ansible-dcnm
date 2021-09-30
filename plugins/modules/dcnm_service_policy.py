@@ -2005,7 +2005,7 @@ def main():
             choices=["merged", "deleted", "replaced", "query", "overridden"],
         ),
         deploy=dict(required=False, type="bool", default=True),
-        attach=dict(required=False, type="bool", default=True),
+        attach=dict(required=False, type="bool"),
     )
 
     module = AnsibleModule(
@@ -2017,16 +2017,13 @@ def main():
     dcnm_sp.result["StartTime"] = datetime.now().strftime("%H:%M:%S")
 
     dcnm_sp.deploy = module.params["deploy"]
-    dcnm_sp.attach = module.params["attach"]
 
-    '''
-    if (module.params["attach"] == "default") or (
-        module.params["attach"].lower() == "true"
+    if (module.params["attach"] is None) or (
+        str(module.params["attach"]).lower() == "true"
     ):
         dcnm_sp.attach = True
     else:
         dcnm_sp.attach = False
-    '''
 
     state = module.params["state"]
 
