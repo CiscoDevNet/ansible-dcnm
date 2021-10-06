@@ -712,10 +712,25 @@ class DcnmInventory:
         # while importing them into the fabric.
         attempt = 1
         total_attempts = 300
-        while attempt < total_attempts:
-            logit("Wait for status change attempt: {}".format(attempt))
+        # If all switches to be added have preserve_config set to true then
+        # we don't need to loop.
+        all_brownfield_switches = True
+        for switch in self.config:
+            if not switch['preserve_config']:
+                all_brownfield_switches = False
+
+        logit('ALL BROWNFIELD SWITCHES? {}'.format(all_brownfield_switches))
+
+        while attempt < total_attempts and not all_brownfield_switches:
+
             # Don't error out.  We might miss the status change so worst case
             # scenario is that we loop 300 times and then bail out.
+            if attempt == 1:
+                if self.fabric_details['nvPairs']['GRFIELD_DEBUG_FLAG'].lower() == "enable":
+                    # It may take a few seconds for switches to enter migration mode when
+                    # this flag is set.  Give it a few seconds.
+                    time.sleep(20)
+            logit("Wait for status change attempt: {}".format(attempt))
             get_inv = dcnm_send(self.module, method, path)
             if not ready_to_continue(get_inv):
                 logit('Not ready to continue yet, sleep 5 and try again')
