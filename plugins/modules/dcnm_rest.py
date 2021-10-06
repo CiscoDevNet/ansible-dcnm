@@ -86,6 +86,8 @@ response:
     elements: dict
 '''
 
+import json
+from json.decoder import JSONDecodeError
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
@@ -118,13 +120,14 @@ def main():
         if data is not None:
             break
     if data is None:
-        data = {}
+        data = "{}"
 
-    errors = {}
-    # By default, send payload as JSON.  If that fails send as text.
-    result['response'] = dcnm_send(module, method, path, data)
-    if result['response']['RETURN_CODE'] == 415:
-        # 415 Error is unsupported media type so try again as text
+    # Determine if this is valid JSON or not
+    try:
+        json.loads(data)
+        result['response'] = dcnm_send(module, method, path, data)
+    except json.JSONDecodeError:
+        # Resend data as text since it's not valid JSON
         result['response'] = dcnm_send(module, method, path, data, "text")
 
     if result['response']['RETURN_CODE'] >= 400:
