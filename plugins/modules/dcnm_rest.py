@@ -48,7 +48,7 @@ author:
 
 EXAMPLES = '''
 # This module can be used to send any REST API requests that are supported by
-# the DCNM/NDFC controller.
+# the DCNM controller.
 #
 # This module is not idempotent but can be used as a stop gap until a feature
 # module can be developed for the target DCNM functionality.
@@ -71,7 +71,7 @@ EXAMPLES = '''
 - name: Validate a template
     cisco.dcnm.dcnm_rest:
     method: POST
-    path: /appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/validate
+    path: /fm/fmrest/config/templates/validate
     json_data: "{{ data }}"
     register: result
 
