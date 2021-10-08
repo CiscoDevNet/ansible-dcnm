@@ -208,22 +208,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, dcnm_version_supported, \
     get_fabric_details
 
-# Remove later
-import datetime
-import inspect
-
-
-def logit(msg):
-    with open('/tmp/alog.txt', 'a') as of:
-        d = datetime.datetime.now().replace(microsecond=0).isoformat()
-        of.write("---- %s ----\n%s\n\n" % (d, msg))
-# Remove later
-
 
 class DcnmInventory:
 
     def __init__(self, module):
-        logit("\n\n+++++++++++ BEGIN ++++++++++\n\n")
         self.switches = {}
         self.module = module
         self.params = module.params
@@ -252,8 +240,6 @@ class DcnmInventory:
         self.nd = True if self.controller_version >= 12 else False
 
     def update_discover_params(self, inv):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         # with the inv parameters perform the test-reachability (discover)
         method = 'POST'
@@ -274,8 +260,6 @@ class DcnmInventory:
             return 0
 
     def update_create_params(self, inv):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         s_ip = 'None'
         if inv['seed_ip']:
@@ -326,12 +310,9 @@ class DcnmInventory:
         return inv_upd
 
     def get_have(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         method = 'GET'
         path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        logit('SELF.ND: {}'.format(self.nd))
         if self.nd:
             path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
@@ -372,8 +353,6 @@ class DcnmInventory:
         self.have_create = have_switch
 
     def get_want(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         want_create = []
 
@@ -389,8 +368,6 @@ class DcnmInventory:
         self.want_create = want_create
 
     def get_diff_override(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         self.get_diff_replace()
         self.get_diff_replace_delete()
@@ -402,8 +379,6 @@ class DcnmInventory:
         self.diff_delete = diff_delete
 
     def get_diff_replace(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         self.get_diff_merge()
         diff_create = self.diff_create
@@ -411,8 +386,6 @@ class DcnmInventory:
         self.diff_create = diff_create
 
     def get_diff_replace_delete(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         diff_delete = []
 
@@ -442,8 +415,6 @@ class DcnmInventory:
         self.diff_delete = diff_delete
 
     def get_diff_delete(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         diff_delete = []
 
@@ -461,8 +432,6 @@ class DcnmInventory:
         self.diff_delete = diff_delete
 
     def get_diff_merge(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         diff_create = []
 
@@ -494,7 +463,6 @@ class DcnmInventory:
 
                         for check in range(1, 300):
                             if not self.all_switches_ok():
-                                logit("self.all_switches_ok is false, sleeping 5 seconds after assign_role")
                                 time.sleep(5)
                             else:
                                 break
@@ -512,8 +480,6 @@ class DcnmInventory:
 
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         state = self.params['state']
 
@@ -600,8 +566,6 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
 
     def import_switches(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         method = 'POST'
         path = '/rest/control/fabrics/{}'.format(self.fabric)
@@ -610,10 +574,8 @@ class DcnmInventory:
         # create_path = path + '/inventory/discover?gfBlockingCall=true'
         create_path = path + '/inventory/discover'
 
-        logit('dif_create size: {}'.format(len(self.diff_create)))
         if self.diff_create:
             for create in self.diff_create:
-                logit('create data: {}'.format(create))
                 import_response = dcnm_send(self.module, method, create_path, json.dumps(create))
                 self.result['response'].append(import_response)
                 fail, self.result['changed'] = self.handle_response(import_response, "create")
@@ -621,8 +583,6 @@ class DcnmInventory:
                     self.failure(import_response)
 
     def rediscover_switch(self, serial_num):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         method = 'POST'
         path = '/rest/control/fabrics/{}/inventory/rediscover/{}'.format(self.fabric, serial_num)
@@ -635,8 +595,6 @@ class DcnmInventory:
             self.failure(response)
 
     def rediscover_all_switches(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         # Get Fabric Inventory Details
         method = 'GET'
@@ -666,15 +624,12 @@ class DcnmInventory:
                 if switch['mode'].lower() == "migration":
                     # At least one switch is still in migration mode
                     # so not ready to continue
-                    logit('Mode: {}'.format(switch['mode'].lower()))
-                    logit('At least one switch still in migration mode...')
                     return False
 
             # Check # 2
             # The fabric has a setting to prevent reload for greenfield
             # deployments.  If this is enabled we can skip check 3 and just return True
             if self.fabric_details['nvPairs']['GRFIELD_DEBUG_FLAG'].lower() == "enable":
-                logit('GRFIELD_DEBUG_FLAG enabled')
                 return True
 
             # Check # 3
@@ -688,19 +643,14 @@ class DcnmInventory:
                     # We found our first switch that changed state to
                     # unmanageable because it's reloading.  Now we can
                     # continue
-                    logit('Managable: {}'.format(switch['managable']))
-                    logit('At least one switch still not managable...')
                     return True
 
-            logit('Still waiting for switch to reflect it is reloading')
             # We still have not detected a swich is reloading so return False
             return False
 
         def switches_managable(inv_data):
             managable = True
             for switch in inv_data['DATA']:
-                logit("switchs data {}".format(switch))
-                logit("switch ok? {}".format(switch['managable']))
                 if not switch['managable']:
                     managable = False
                     break
@@ -718,8 +668,6 @@ class DcnmInventory:
             if not switch['preserve_config']:
                 all_brownfield_switches = False
 
-        logit('ALL BROWNFIELD SWITCHES? {}'.format(all_brownfield_switches))
-
         while attempt < total_attempts and not all_brownfield_switches:
 
             # Don't error out.  We might miss the status change so worst case
@@ -729,10 +677,8 @@ class DcnmInventory:
                     # It may take a few seconds for switches to enter migration mode when
                     # this flag is set.  Give it a few seconds.
                     time.sleep(20)
-            logit("Wait for status change attempt: {}".format(attempt))
             get_inv = dcnm_send(self.module, method, path)
             if not ready_to_continue(get_inv):
-                logit('Not ready to continue yet, sleep 5 and try again')
                 time.sleep(5)
                 attempt += 1
                 continue
@@ -743,13 +689,11 @@ class DcnmInventory:
         total_attempts = 300
 
         while attempt < total_attempts:
-            logit("Rediscover attempt: {0} of {1}".format(attempt, total_attempts))
             if attempt == total_attempts:
                 msg = "Failed to rediscover switches after {} attempts".format(total_attempts)
                 self.module.fail_json(msg=msg)
             get_inv = dcnm_send(self.module, method, path)
             if not switches_managable(get_inv):
-                logit("Found at least one switch that cannot be managed.  Sleep 5 and try again...")
                 time.sleep(5)
                 attempt += 1
                 continue
@@ -760,8 +704,6 @@ class DcnmInventory:
             self.rediscover_switch(inv['serialNumber'])
 
     def all_switches_ok(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         all_ok = True
         # Get Fabric Inventory Details
@@ -785,8 +727,6 @@ class DcnmInventory:
         return all_ok
 
     def set_lancred_switch(self, set_lan):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         method = 'POST'
         path = '/fm/fmrest/lanConfig/saveSwitchCredentials'
@@ -800,8 +740,6 @@ class DcnmInventory:
             self.failure(response)
 
     def lancred_all_switches(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         # Get Fabric Inventory Details
         method = 'GET'
@@ -837,8 +775,6 @@ class DcnmInventory:
                         self.set_lancred_switch(set_lan)
 
     def assign_role(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         method = 'GET'
         path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
@@ -872,8 +808,6 @@ class DcnmInventory:
                         self.failure(response)
 
     def config_save(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         success = False
         no_of_tries = 3
@@ -924,18 +858,14 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
             else:
-                logit("Sleeping 5 seconds")
                 time.sleep(5)
                 success = True
                 break
 
             if not success and x in range(0, no_of_tries - 1):
-                logit("Sleeping 600 seconds")
                 time.sleep(600)
 
     def config_deploy(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         # config-deploy
         method = 'POST'
@@ -951,8 +881,6 @@ class DcnmInventory:
             self.failure(response)
 
     def delete_switch(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         if self.diff_delete:
             method = 'DELETE'
@@ -968,8 +896,6 @@ class DcnmInventory:
                     self.failure(response)
 
     def get_diff_query(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         query = []
 
@@ -1015,8 +941,6 @@ class DcnmInventory:
         self.query = query
 
     def handle_response(self, res, op):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         fail = False
         changed = True
@@ -1042,8 +966,6 @@ class DcnmInventory:
         return fail, changed
 
     def failure(self, resp):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
-        logit(logmsg)
 
         res = copy.deepcopy(resp)
 
@@ -1071,9 +993,6 @@ def main():
                            supports_check_mode=True)
 
     dcnm_inv = DcnmInventory(module)
-
-    logit("State: {}".format(module.params['state']))
-
     dcnm_inv.validate_input()
     dcnm_inv.get_want()
     dcnm_inv.get_have()
@@ -1141,7 +1060,6 @@ def main():
             # Check all devices are up
             for check in range(1, 300):
                 if not dcnm_inv.all_switches_ok():
-                    logit("Sleeping 5 seconds after all switches ok check before next check")
                     time.sleep(5)
                     continue
                 else:
