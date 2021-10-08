@@ -644,7 +644,6 @@ class DcnmInventory:
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
-
         missing_fabric, not_ok = self.handle_response(get_inv, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -663,7 +662,7 @@ class DcnmInventory:
             # First check migration mode.  Switches will enter migration mode
             # even if the GRFIELD_DEBUG_FLAG is enabled so this needs to be
             # checked first.
-            for switch in inv_data['DATA']:
+            for switch in inv_data.get('DATA'):
                 if switch['mode'].lower() == "migration":
                     # At least one switch is still in migration mode
                     # so not ready to continue
@@ -684,7 +683,7 @@ class DcnmInventory:
             # the switch will show up as managable for a period of time before it
             # moves to unmanagable but we need to wait for this to allow enough time
             # for the reload to completed.
-            for switch in inv_data['DATA']:
+            for switch in inv_data.get('DATA'):
                 if not switch['managable']:
                     # We found our first switch that changed state to
                     # unmanageable because it's reloading.  Now we can
@@ -742,6 +741,7 @@ class DcnmInventory:
 
         attempt = 1
         total_attempts = 300
+
         while attempt < total_attempts:
             logit("Rediscover attempt: {0} of {1}".format(attempt, total_attempts))
             if attempt == total_attempts:
@@ -1133,17 +1133,9 @@ def main():
             # Import all switches
             dcnm_inv.import_switches()
 
-            # sleep for 2mins
-            # logit("Sleeping 120 seconds after import switches")
-            # time.sleep(120)
-
             # Step 2
             # Rediscover all switches
             dcnm_inv.rediscover_all_switches()
-
-            # sleep for 10mins
-            # logit("Sleeping 600 seconds after rediscover all switches")
-            # time.sleep(600)
 
             # Step 3
             # Check all devices are up
