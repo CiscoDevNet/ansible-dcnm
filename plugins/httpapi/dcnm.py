@@ -150,11 +150,7 @@ class HttpApi(HttpApiBase):
 
         # If both login attemps fail, raise ConnectionError
         if not self.logout_succeeded:
-<<<<<<< HEAD
-=======
             self.fail_msg.append('Error on attempt to logout from DCNM controller: Unknown DCNM Version')
-            logit('NOTE: LOGOUT FAILED - {}'.format(self.fail_msg))
->>>>>>> dcnm12
             raise ConnectionError(self._return_info(None, method, path, self.fail_msg))
 
         self.connection._auth = None
