@@ -141,15 +141,20 @@ class HttpApi(HttpApiBase):
         method = 'POST'
         path = {'dcnm': '/rest/logout', 'ndfc': '/logout'}
 
-        # Attempt to logout of DCNM version 11
-        self._logout_old(method, path['dcnm'])
-
-        # If logout attempt failed then try NDFC version 12
-        if not self.logout_succeeded:
+        if self.version == 11:
+            # Logout of DCNM version 11
+            self._logout_old(method, path['dcnm'])
+        elif self.version >= 12:
+            # Logout of DCNM version 12
             self._logout_latest(method, path['ndfc'])
 
         # If both login attemps fail, raise ConnectionError
         if not self.logout_succeeded:
+<<<<<<< HEAD
+=======
+            self.fail_msg.append('Error on attempt to logout from DCNM controller: Unknown DCNM Version')
+            logit('NOTE: LOGOUT FAILED - {}'.format(self.fail_msg))
+>>>>>>> dcnm12
             raise ConnectionError(self._return_info(None, method, path, self.fail_msg))
 
         self.connection._auth = None

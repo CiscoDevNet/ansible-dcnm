@@ -351,12 +351,12 @@ def dcnm_reset_connection(module):
     return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
 
 
-def dcnm_version_supported(module, fabric):
+def dcnm_version_supported(module):
     """
     Query DCNM/NDFC and return the major software version
 
     Parameters:
-        fabric: String representing the fabric name
+        module: String representing the module
 
     Returns:
         int: Major software version for DCNM/NDFC
