@@ -181,7 +181,7 @@ class HttpApi(HttpApiBase):
         if self.version == 11:
             # Logout of DCNM version 11
             self._logout_old(method, path['dcnm'])
-        elif self.version == 12:
+        elif self.version >= 12:
             # Logout of DCNM version 12
             self._logout_latest(method, path['ndfc'])
 
