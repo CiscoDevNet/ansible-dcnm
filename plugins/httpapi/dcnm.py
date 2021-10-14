@@ -63,22 +63,29 @@ class HttpApi(HttpApiBase):
 
         try:
             response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
+            vrd = self._verify_response(response, method, path, response_data)
+            if vrd['RETURN_CODE'] != 200:
+                raise ConnectionError(vrd)
+
             response_value = self._get_response_value(response_data)
             self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
 
         except Exception as e:
             msg = 'Error on attempt to connect and authenticate with DCNM controller: {}'.format(e)
-            raise ConnectionError(self._return_info(None, method, path, msg))
+            raise ConnectionError(msg)
 
     def logout(self):
         method = 'POST'
         path = '/rest/logout'
 
         try:
-            response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
+            vrd = response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
+            if vrd['RETURN_CODE'] != 200:
+                raise ConnectionError(vrd)
+
         except Exception as e:
             msg = 'Error on attempt to logout from DCNM controller: {}'.format(e)
-            raise ConnectionError(self._return_info(None, method, path, msg))
+            raise ConnectionError(msg)
 
         self._verify_response(response, method, path, response_data)
 
@@ -152,11 +159,11 @@ class HttpApi(HttpApiBase):
         rc = response.getcode()
         path = response.geturl()
         msg = response.msg
-        if rc >= 200 and rc <= 299:
+        # This function calls self._return_info to pass the response
+        # data back in a structured dictionary format.
+        # A ConnectionError is generated if the return code is unknown.
+        if rc >= 200 and rc <= 600:
             return self._return_info(rc, method, path, msg, jrd)
-        if rc >= 400:
-            # Add future error code processing here
-            pass
         else:
             msg = 'Unknown RETURN_CODE: {}'.format(rc)
         raise ConnectionError(self._return_info(rc, method, path, msg, jrd))
