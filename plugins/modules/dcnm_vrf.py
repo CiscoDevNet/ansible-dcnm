@@ -1080,7 +1080,7 @@ class DcnmVrf:
                         elif self.dcnm_version >= 12:
                             vrf_id = vrf_id_obj['DATA'].get('l3vni')
                         else:
-                            msg = "Unsupported DCNM version"
+                            msg = "Unsupported DCNM version: version {}".format(self.dcnm_version)
                             self.module.fail_json(msg)
 
                         if vrf_id != prev_vrf_id_fetched:

@@ -1346,11 +1346,11 @@ class DcnmNetwork:
                             continue
 
                         if self.dcnm_version == 11:
-                            net_id = net_id_obj['DATA'].get('partitionSegmentId')
+                            net_id = net_id_obj['DATA'].get('segmentId')
                         elif self.dcnm_version >= 12:
                             net_id = net_id_obj['DATA'].get('l2vni')
                         else:
-                            msg = "Unsupported DCNM version"
+                            msg = "Unsupported DCNM version: version {}".format(self.dcnm_version)
                             self.module.fail_json(msg)
 
                         if net_id != prev_net_id_fetched:

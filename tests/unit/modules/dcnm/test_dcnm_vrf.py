@@ -107,13 +107,19 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_dcnm_fabric_details = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.get_fabric_details')
         self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
 
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+
     def tearDown(self):
         super(TestDcnmVrfModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
+        self.mock_dcnm_version_supported.stop()
 
     def load_fixtures(self, response=None, device=''):
+
+        self.run_dcnm_version_supported.return_value = 11
 
         if 'vrf_blank_fabric' in self._testMethodName:
             self.run_dcnm_ip_sn.side_effect = [{}]
