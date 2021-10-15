@@ -28,7 +28,7 @@
 - name: Initialize the setup - Delete service policies
   cisco.dcnm.dcnm_service_policy:
     fabric: "{{ ansible_it_fabric }}"                     # mandatory
-    attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+    service_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
     state: deleted                                        # optional, default merged
   register: result
 

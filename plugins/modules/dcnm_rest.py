@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2021 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@ options:
     - 'REST API Path Endpoint'
     required: yes
     type: str
-  json_data:
+  data:
     description:
-    - 'Additional JSON data to include with the REST API call'
+    - 'Additional data in JSON or TEXT to include with the REST API call'
+    aliases:
+    - json_data
     required: no
     type: raw
 author:
@@ -55,6 +57,24 @@ EXAMPLES = '''
   dcnm_rest:
     method: GET
     path: /rest/control/fabrics
+
+- name: Set deployment to false in lanAttachList for vrf
+    dcnm_rest:
+    method: POST
+    path: /rest/top-down/fabrics/fabric1/vrfs/attachments
+    json_data: '[{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1","serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,"extensionValues":"","instanceValues":"{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\"}"}]}]'
+
+# Read payload data from file and validate a template
+- set_fact:
+    data: "{{ lookup('file', 'validate_payload') }}"
+
+- name: Validate a template
+    cisco.dcnm.dcnm_rest:
+    method: POST
+    path: /fm/fmrest/config/templates/validate
+    json_data: "{{ data }}"
+    register: result
+
 '''
 
 RETURN = '''
@@ -66,8 +86,13 @@ response:
     elements: dict
 '''
 
+import json
+from json.decoder import JSONDecodeError
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_send,
+)
 
 
 def main():
@@ -75,7 +100,7 @@ def main():
     argument_spec = dict(
         method=dict(required=True, choices=['GET', 'POST', 'PUT', 'DELETE']),
         path=dict(required=True, type='str'),
-        json_data=dict(type='raw', required=False, default=None))
+        data=dict(type='raw', required=False, default=None, aliases=["json_data"]))
 
     # seed the result dict
     result = dict(
@@ -90,16 +115,23 @@ def main():
 
     method = module.params['method']
     path = module.params['path']
-    json_data = {}
-    if module.params['json_data'] is not None:
-        json_data = module.params['json_data']
+    for key in ['json_data', 'data']:
+        data = module.params.get(key)
+        if data is not None:
+            break
+    if data is None:
+        data = "{}"
 
-    conn = Connection(module._socket_path)
-    result['response'] = conn.send_request(method, path, json_data)
+    # Determine if this is valid JSON or not
+    try:
+        json.loads(data)
+        result['response'] = dcnm_send(module, method, path, data)
+    except json.JSONDecodeError:
+        # Resend data as text since it's not valid JSON
+        result['response'] = dcnm_send(module, method, path, data, "text")
 
-    res = result['response']
-    if res and res['RETURN_CODE'] >= 400:
-        module.fail_json(msg=res)
+    if result['response']['RETURN_CODE'] >= 400:
+        module.fail_json(msg=result['response'])
 
     module.exit_json(**result)
 

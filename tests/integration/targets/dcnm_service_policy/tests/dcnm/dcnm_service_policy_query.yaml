@@ -8,7 +8,7 @@
 - name: Delete service policies
   cisco.dcnm.dcnm_service_policy: &dcnm_sp_del_all
     fabric: "{{ ansible_it_fabric }}"                     # mandatory
-    attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+    service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
     state: deleted                                        # optional, default merged
     config:
       - name: service_policy_1                            # mandatory
@@ -41,7 +41,7 @@
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_create_all
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         attach: true                                          # optional, default true
         deploy: true                                          # optional, default true
         state: merged                                         # optional, default merged
@@ -159,7 +159,7 @@
     - name: Query service policies based on service node and policy name
       cisco.dcnm.dcnm_service_policy: 
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         state: query                                          # optional, default merged
         config:
           - name: service_policy_1                            # mandatory
@@ -191,7 +191,7 @@
     - name: Query service policies that does not exist
       cisco.dcnm.dcnm_service_policy: 
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         state: query                                          # optional, default merged
         config:
           - name: service_policy_10                           # mandatory
@@ -223,7 +223,7 @@
     - name: Query service policies based on service node
       cisco.dcnm.dcnm_service_policy: 
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         state: query                                          # optional, default merged
         config:
           - node_name: "{{ ansible_snode_1 }}"                # mandatory
@@ -242,7 +242,7 @@
     - name: Query service policies based on service node
       cisco.dcnm.dcnm_service_policy: 
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
-        attached_fabric: "{{ ansible_it_service_fabric }}"    # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         state: query                                          # optional, default merged
         config:
           - node_name: "{{ ansible_snode_2 }}"                # mandatory
