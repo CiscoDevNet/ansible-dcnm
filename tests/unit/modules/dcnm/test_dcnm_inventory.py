@@ -23,10 +23,12 @@ from ansible_collections.ansible.netcommon.tests.unit.compat.mock import patch
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_inventory
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
-import json, copy
+import json
+import copy
 
 __copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __author__ = "Karthik Babu Harichandra Babu, Praveen Ramoorthy"
+
 
 class TestDcnmInvModule(TestDcnmModule):
 
@@ -52,7 +54,7 @@ class TestDcnmInvModule(TestDcnmModule):
     playbook_invalid_discover_payload_config = test_data.get('playbook_invalid_discover_payload_config')
     playbook_query_switch_config = test_data.get('playbook_query_switch_config')
 
-    #initial merge switch success
+    # initial merge switch success
     get_have_initial_success = test_data.get('get_have_initial_success')
     get_have_two_switch_success = test_data.get('get_have_two_switch_success')
     get_have_override_switch_success = test_data.get('get_have_override_switch_success')
@@ -67,7 +69,7 @@ class TestDcnmInvModule(TestDcnmModule):
     get_inventory_multiple_bf_switch_success = test_data.get('get_inventory_multiple_bf_switch_success')
     get_inventory_multiple_bf_gf_switch_success = test_data.get('get_inventory_multiple_bf_gf_switch_success')
     get_inventory_override_switch_success = test_data.get('get_inventory_override_switch_success')
-    get_inventory_blank_success  = test_data.get('get_inventory_blank_success')
+    get_inventory_blank_success = test_data.get('get_inventory_blank_success')
     rediscover_switch_success = test_data.get('rediscover_switch_success')
     rediscover_switch107_success = test_data.get('rediscover_switch107_success')
     get_lan_switch_cred_success = test_data.get('get_lan_switch_cred_success')
@@ -82,14 +84,14 @@ class TestDcnmInvModule(TestDcnmModule):
     config_save_switch_success = test_data.get('config_save_switch_success')
     config_deploy_switch_success = test_data.get('config_deploy_switch_success')
 
-    #initial delete switch success
+    # initial delete switch success
     get_have_one_switch_success = test_data.get('get_have_one_switch_success')
-    delete_switch_success  = test_data.get('delete_switch_success')
-    get_have_multiple_switch_success  = test_data.get('get_have_multiple_switch_success')
+    delete_switch_success = test_data.get('delete_switch_success')
+    get_have_multiple_switch_success = test_data.get('get_have_multiple_switch_success')
     delete_switch109_success = test_data.get('delete_switch109_success')
     delete_switch107_success = test_data.get('delete_switch107_success')
 
-    #negative cases
+    # negative cases
     get_have_initial_failure = test_data.get('get_have_initial_failure')
     get_have_failure = test_data.get('get_have_failure')
     import_switch_discover_failure = test_data.get('import_switch_discover_failure')
@@ -119,84 +121,154 @@ class TestDcnmInvModule(TestDcnmModule):
 
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_inventory.dcnm_send')
         self.run_dcnm_send = self.mock_dcnm_send.start()
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_inventory.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+        self.mock_dcnm_fabric_details = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_inventory.get_fabric_details')
+        self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
 
     def tearDown(self):
         super(TestDcnmInvModule, self).tearDown()
         self.mock_dcnm_send.stop()
+        self.mock_dcnm_version_supported.stop()
+        self.mock_dcnm_fabric_details.stop()
 
     def load_fixtures(self, response=None, device=''):
+
+        self.run_dcnm_version_supported.return_value = 11
+        self.run_dcnm_fabric_details.return_value = {
+            'nvPairs': {
+                'GRFIELD_DEBUG_FLAG': "Enable"
+            }
+        }
 
         if 'get_have_failure' in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.get_have_initial_failure, self.get_have_failure]
 
         elif 'merge_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
-                                              self.import_switch_discover_success, self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
-                                              self.get_inventory_initial_switch_success, self.get_lan_switch_cred_success,
-                                              self.set_lan_switch_cred_success, self.get_inventory_initial_switch_success,
-                                              self.set_assign_role_success, self.get_fabric_id_success,
-                                              self.config_save_switch_success, self.config_deploy_switch_success]
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_success]
 
         elif 'merge_role_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
-                                              self.import_switch_discover_success, self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
-                                              self.get_inventory_initial_switch_success, self.get_lan_switch_cred_success,
-                                              self.set_lan_switch_cred_success, self.get_inventory_initial_switch_success,
-                                              self.set_assign_bg_role_success, self.get_fabric_id_success,
-                                              self.config_save_switch_success, self.config_deploy_switch_success]
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.set_assign_bg_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_success]
 
         elif 'merge_brownfield_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
-                                              self.import_switch_discover_success, self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
-                                              self.get_inventory_initial_switch_success, self.get_lan_switch_cred_success,
-                                              self.set_lan_switch_cred_success, self.get_inventory_initial_switch_success,
-                                              self.set_assign_role_success, self.get_fabric_id_success,
-                                              self.config_save_switch_success, self.config_deploy_switch_success]
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_success]
 
         elif 'merge_multiple_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover109_params, self.mock_inv_discover_params,
-                                              self.get_have_initial_success, self.import_switch_discover_success,
-                                              self.import_switch_discover_success, self.get_inventory_multiple_switch_success,
-                                              self.rediscover_switch_success, self.rediscover_switch_success,
-                                              self.get_inventory_multiple_switch_success, self.get_inventory_multiple_switch_success,
-                                              self.get_lan_multiple_new_switch_cred_success, self.set_lan_switch_cred_success,
-                                              self.set_lan_switch_cred_success, self.get_inventory_multiple_switch_success,
-                                              self.set_assign_role_success, self.set_assign_role_success, self.get_fabric_id_success,
-                                              self.config_save_switch_success, self.config_deploy_switch_success]
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover109_params,
+                                              self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
+                                              self.import_switch_discover_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_multiple_switch_success,
+                                              self.get_inventory_multiple_switch_success,
+                                              self.get_inventory_multiple_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_multiple_switch_success,
+                                              self.get_inventory_multiple_switch_success,
+                                              self.get_lan_multiple_new_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_multiple_switch_success,
+                                              self.set_assign_role_success,
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_success]
 
         elif 'merge_multiple_brownfield_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.mock_inv_discover107_params,
-                                              self.get_have_initial_success, self.import_switch_discover_success,
-                                              self.import_switch_discover_success, self.get_inventory_multiple_bf_switch_success,
-                                              self.rediscover_switch_success, self.rediscover_switch_success,
-                                              self.get_inventory_multiple_bf_switch_success, self.get_inventory_multiple_bf_switch_success,
-                                              self.get_lan_multiple_new_bf_switch_cred_success, self.set_lan_switch_cred_success,
-                                              self.set_lan_switch_cred_success, self.get_inventory_multiple_bf_switch_success,
-                                              self.set_assign_role_success, self.set_assign_role_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.mock_inv_discover107_params,
+                                              self.get_have_initial_success,
+                                              self.import_switch_discover_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_multiple_bf_switch_success,
+                                              self.get_inventory_multiple_bf_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_multiple_bf_switch_success,
+                                              self.get_inventory_multiple_bf_switch_success,
+                                              self.get_lan_multiple_new_bf_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_multiple_bf_switch_success,
+                                              self.set_assign_role_success,
+                                              self.set_assign_role_success,
                                               self.get_fabric_id_success,
-                                              self.config_save_switch_success, self.config_deploy_switch_success]
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_success]
 
         elif 'merge_multiple_brown_green_field_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.mock_inv_discover107_params,
-                                              self.get_have_initial_success, self.import_switch_discover_success,
-                                              self.import_switch_discover_success, self.get_inventory_multiple_bf_gf_switch_success,
-                                              self.rediscover_switch107_success, self.rediscover_switch_success,
-                                              self.get_inventory_multiple_bf_gf_switch_success, self.get_inventory_multiple_bf_gf_switch_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.mock_inv_discover107_params,
+                                              self.get_have_initial_success,
+                                              self.import_switch_discover_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_multiple_bf_gf_switch_success,
+                                              self.get_inventory_multiple_bf_gf_switch_success,
+                                              self.rediscover_switch107_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_multiple_bf_gf_switch_success,
+                                              self.get_inventory_multiple_bf_gf_switch_success,
                                               self.get_lan_multiple_new_bf_switch_cred_success,
                                               self.set_lan_switch_cred_success,
-                                              self.set_lan_switch_cred_success, self.get_inventory_multiple_bf_gf_switch_success,
-                                              self.set_assign_role_success, self.set_assign_role_success,
-                                              self.get_fabric_id_success, self.config_save_switch_success, self.config_deploy_switch_success]
-
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_multiple_bf_gf_switch_success,
+                                              self.set_assign_role_success,
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_success]
 
         elif 'delete_switch' in self._testMethodName:
             self.init_data()
@@ -222,13 +294,22 @@ class TestDcnmInvModule(TestDcnmModule):
 
         elif 'override_switch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_override_switch_success,
-                                              self.delete_switch107_success, self.import_switch_discover_success,
-                                              self.get_inventory_override_switch_success, self.rediscover_switch_success,
-                                              self.get_inventory_override_switch_success, self.get_inventory_override_switch_success,
-                                              self.get_lan_switch_override_cred_success, self.set_lan_switch_cred_success,
-                                              self.get_inventory_override_switch_success, self.set_assign_role_success,
-                                              self.get_fabric_id_success, self.config_save_switch_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_override_switch_success,
+                                              self.delete_switch107_success,
+                                              self.import_switch_discover_success,
+                                              self.get_inventory_override_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_override_switch_success,
+                                              self.get_inventory_override_switch_success,
+                                              self.get_lan_switch_override_cred_success,
+                                              self.set_lan_switch_cred_success,
+                                              self.get_inventory_override_switch_success,
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
                                               self.config_deploy_switch_success]
 
         elif 'migration_switch' in self._testMethodName:
@@ -260,37 +341,56 @@ class TestDcnmInvModule(TestDcnmModule):
 
         elif 'rediscover_switch_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
                                               self.import_switch_discover_success,
-                                              self.get_inventory_initial_switch_success, self.rediscover_switch_failure]
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_failure]
 
         elif 'get_lan_switch_cred_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
                                               self.import_switch_discover_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
-                                              self.get_inventory_initial_switch_success, self.get_lan_switch_cred_failure]
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_lan_switch_cred_failure]
 
         elif 'set_lan_switch_cred_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
                                               self.import_switch_discover_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.get_lan_switch_cred_success, self.set_lan_switch_cred_failure]
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_lan_switch_cred_success,
+                                              self.set_lan_switch_cred_failure]
 
         elif 'set_assign_role_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
                                               self.import_switch_discover_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
                                               self.get_inventory_initial_switch_success,
                                               self.get_lan_switch_cred_success,
                                               self.set_lan_switch_cred_success,
-                                              self.get_inventory_initial_switch_success, self.set_assign_role_failure]
+                                              self.get_inventory_initial_switch_success,
+                                              self.set_assign_role_failure]
 
         elif 'get_fabric_id_failure' in self._testMethodName:
             self.init_data()
@@ -306,29 +406,40 @@ class TestDcnmInvModule(TestDcnmModule):
 
         elif 'config_save_switch_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
                                               self.import_switch_discover_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
                                               self.get_inventory_initial_switch_success,
                                               self.get_lan_switch_cred_success,
                                               self.set_lan_switch_cred_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.set_assign_role_success, self.get_fabric_id_success,
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
                                               self.config_save_switch_failure]
 
         elif 'config_deploy_switch_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params, self.get_have_initial_success,
+            self.run_dcnm_send.side_effect = [self.mock_inv_discover_params,
+                                              self.get_have_initial_success,
                                               self.import_switch_discover_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.rediscover_switch_success, self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.get_inventory_initial_switch_success,
+                                              self.rediscover_switch_success,
+                                              self.get_inventory_initial_switch_success,
                                               self.get_inventory_initial_switch_success,
                                               self.get_lan_switch_cred_success,
                                               self.set_lan_switch_cred_success,
                                               self.get_inventory_initial_switch_success,
-                                              self.set_assign_role_success, self.get_fabric_id_success,
-                                              self.config_save_switch_success, self.config_deploy_switch_failure]
+                                              self.set_assign_role_success,
+                                              self.get_fabric_id_success,
+                                              self.config_save_switch_success,
+                                              self.config_deploy_switch_failure]
 
         elif 'invalid_remove_switch' in self._testMethodName:
             self.init_data()
@@ -357,7 +468,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_merge_role_switch_fabric(self):
@@ -365,9 +476,9 @@ class TestDcnmInvModule(TestDcnmModule):
                              fabric='kharicha-fabric', config=self.playbook_merge_role_switch_config))
 
         result = self.execute_module(changed=True, failed=False)
-        
+
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_check_inv_merge_switch_fabric(self):
@@ -378,7 +489,7 @@ class TestDcnmInvModule(TestDcnmModule):
 
         self.assertFalse(result.get('diff'))
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_merge_brownfield_switch_fabric(self):
@@ -388,7 +499,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_merge_multiple_switch_fabric(self):
@@ -398,7 +509,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_merge_multiple_brownfield_switch_fabric(self):
@@ -408,7 +519,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_merge_multiple_brown_green_field_switch_fabric(self):
@@ -418,7 +529,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_override_switch_fabric(self):
@@ -448,7 +559,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_delete_multiple_switch_fabric(self):
@@ -458,7 +569,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result['response']:
-            self.assertEqual(resp['RETURN_CODE'],200)
+            self.assertEqual(resp['RETURN_CODE'], 200)
             self.assertEqual(resp['MESSAGE'], 'OK')
 
     def test_dcnm_inv_delete_all_switch_fabric(self):
@@ -493,7 +604,6 @@ class TestDcnmInvModule(TestDcnmModule):
         self.assertEqual(result['msg']['DATA'], 'import switch discover failure')
         self.assertEqual(result['msg']['MESSAGE'], 'Not OK')
         self.assertEqual(result['msg']['RETURN_CODE'], 400)
-
 
     def test_dcnm_inv_get_inventory_initial_switch_failure_fabric(self):
         set_module_args(dict(state='merged',
@@ -597,6 +707,6 @@ class TestDcnmInvModule(TestDcnmModule):
 
     def test_dcnm_inv_query_no_switch_fabric(self):
         set_module_args(dict(state='query',
-                                 fabric='kharicha-fabric', config=self.playbook_query_switch_config))
+                             fabric='kharicha-fabric', config=self.playbook_query_switch_config))
         result = self.execute_module(changed=False, failed=False)
         self.assertEqual(result['response'], 'The queried switch is not part of the fabric configured')

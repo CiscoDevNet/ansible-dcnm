@@ -2,10 +2,18 @@
 ##                 SETUP                    ##
 ##############################################
 
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+
 - name: DELETED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/{{ ansible_it_fabric }}
+    path: "{{ rest_path }}"
   register: result
 
 - assert:
@@ -17,10 +25,6 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: DELETED - Merge a Switch using GreenField Deployment
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
@@ -28,8 +32,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -39,22 +43,11 @@
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[1].DATA.status == "Success"'
-    - 'result.response[2].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[3].DATA'
-    - 'result.response[5].DATA.status == "Config save is completed"'
-    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
 
 #############################################
 #                DELETED                   ##
@@ -73,10 +66,6 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: DELETED - conf1 - DEL - Idempotence
   cisco.dcnm.dcnm_inventory: *conf_del
   register: result
@@ -86,10 +75,6 @@
     - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: DELETED - Merge a Switch using BrownField Deployment
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
@@ -97,8 +82,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -108,22 +93,11 @@
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[1].DATA.status == "Success"'
-    - 'result.response[2].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[3].DATA'
-    - 'result.response[5].DATA.status == "Config save is completed"'
-    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
 
 - name: DELETED - Delete all Switch without config element
   cisco.dcnm.dcnm_inventory: &conf_del_all
@@ -135,10 +109,6 @@
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
-
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: DELETED - conf1 - DEL ALL - Idempotence
   cisco.dcnm.dcnm_inventory: *conf_del_all

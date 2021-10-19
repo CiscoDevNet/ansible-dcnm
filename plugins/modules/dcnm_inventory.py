@@ -205,7 +205,8 @@ import re
 from ansible.module_utils.six.moves.urllib.parse import urlencode
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, dcnm_version_supported, \
+    get_fabric_details
 
 
 class DcnmInventory:
@@ -225,6 +226,7 @@ class DcnmInventory:
         self.diff_delete = {}
         self.query = []
         self.node_migration = False
+        self.nd_prefix = '/appcenter/cisco/ndfc/api/v1/lan-fabric'
 
         self.result = dict(
             changed=False,
@@ -232,11 +234,18 @@ class DcnmInventory:
             response=[]
         )
 
+        self.fabric_details = get_fabric_details(self.module, self.fabric)
+
+        self.controller_version = dcnm_version_supported(self.module)
+        self.nd = True if self.controller_version >= 12 else False
+
     def update_discover_params(self, inv):
 
         # with the inv parameters perform the test-reachability (discover)
         method = 'POST'
         path = '/rest/control/fabrics/{}/inventory/test-reachability'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
         response = dcnm_send(self.module, method, path, json.dumps(inv))
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
@@ -304,7 +313,10 @@ class DcnmInventory:
 
         method = 'GET'
         path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
+
         missing_fabric, not_ok = self.handle_response(inv_objects, 'query_dcnm')
 
         if inv_objects.get('ERROR') == 'Not Found' and inv_objects.get('RETURN_CODE') == 404:
@@ -449,9 +461,9 @@ class DcnmInventory:
                         # Assign Role
                         self.assign_role()
 
-                        for x in range(1, 5):
+                        for check in range(1, 300):
                             if not self.all_switches_ok():
-                                time.sleep(300)
+                                time.sleep(5)
                             else:
                                 break
 
@@ -467,7 +479,6 @@ class DcnmInventory:
         self.diff_create = diff_create
 
     def validate_input(self):
-
         """Parse the playbook values, validate to param specs."""
 
         state = self.params['state']
@@ -558,7 +569,10 @@ class DcnmInventory:
 
         method = 'POST'
         path = '/rest/control/fabrics/{}'.format(self.fabric)
-        create_path = path + '/inventory/discover?gfBlockingCall=true'
+        if self.nd:
+            path = self.nd_prefix + path
+        # create_path = path + '/inventory/discover?gfBlockingCall=true'
+        create_path = path + '/inventory/discover'
 
         if self.diff_create:
             for create in self.diff_create:
@@ -571,8 +585,10 @@ class DcnmInventory:
     def rediscover_switch(self, serial_num):
 
         method = 'POST'
-        redisc_path = '/rest/control/fabrics/{}/inventory/rediscover/{}'.format(self.fabric, serial_num)
-        response = dcnm_send(self.module, method, redisc_path)
+        path = '/rest/control/fabrics/{}/inventory/rediscover/{}'.format(self.fabric, serial_num)
+        if self.nd:
+            path = self.nd_prefix + path
+        response = dcnm_send(self.module, method, path)
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
         if fail:
@@ -582,8 +598,10 @@ class DcnmInventory:
 
         # Get Fabric Inventory Details
         method = 'GET'
-        inv_path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        get_inv = dcnm_send(self.module, method, inv_path)
+        path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        get_inv = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_inv, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -594,6 +612,94 @@ class DcnmInventory:
         if not get_inv.get('DATA'):
             return
 
+        def ready_to_continue(inv_data):
+            # This is a helper function to wait for certain events to complete
+            # as part of the switch rediscovery step before moving on.
+
+            # Check # 1
+            # First check migration mode.  Switches will enter migration mode
+            # even if the GRFIELD_DEBUG_FLAG is enabled so this needs to be
+            # checked first.
+            for switch in inv_data.get('DATA'):
+                if switch['mode'].lower() == "migration":
+                    # At least one switch is still in migration mode
+                    # so not ready to continue
+                    return False
+
+            # Check # 2
+            # The fabric has a setting to prevent reload for greenfield
+            # deployments.  If this is enabled we can skip check 3 and just return True
+            if self.fabric_details['nvPairs']['GRFIELD_DEBUG_FLAG'].lower() == "enable":
+                return True
+
+            # Check # 3
+            # If we get to this check that means the GRFIELD_DEBUG_FLAG is disabled
+            # and each switch will go through a realod sequence.  Unfortunately
+            # the switch will show up as managable for a period of time before it
+            # moves to unmanagable but we need to wait for this to allow enough time
+            # for the reload to completed.
+            for switch in inv_data.get('DATA'):
+                if not switch['managable']:
+                    # We found our first switch that changed state to
+                    # unmanageable because it's reloading.  Now we can
+                    # continue
+                    return True
+
+            # We still have not detected a swich is reloading so return False
+            return False
+
+        def switches_managable(inv_data):
+            managable = True
+            for switch in inv_data['DATA']:
+                if not switch['managable']:
+                    managable = False
+                    break
+
+            return managable
+
+        # It can take a while to rediscover switches if they are reloading
+        # while importing them into the fabric.
+        attempt = 1
+        total_attempts = 300
+        # If all switches to be added have preserve_config set to true then
+        # we don't need to loop.
+        all_brownfield_switches = True
+        for switch in self.config:
+            if not switch['preserve_config']:
+                all_brownfield_switches = False
+
+        while attempt < total_attempts and not all_brownfield_switches:
+
+            # Don't error out.  We might miss the status change so worst case
+            # scenario is that we loop 300 times and then bail out.
+            if attempt == 1:
+                if self.fabric_details['nvPairs']['GRFIELD_DEBUG_FLAG'].lower() == "enable":
+                    # It may take a few seconds for switches to enter migration mode when
+                    # this flag is set.  Give it a few seconds.
+                    time.sleep(20)
+            get_inv = dcnm_send(self.module, method, path)
+            if not ready_to_continue(get_inv):
+                time.sleep(5)
+                attempt += 1
+                continue
+            else:
+                break
+
+        attempt = 1
+        total_attempts = 300
+
+        while attempt < total_attempts:
+            if attempt == total_attempts:
+                msg = "Failed to rediscover switches after {} attempts".format(total_attempts)
+                self.module.fail_json(msg=msg)
+            get_inv = dcnm_send(self.module, method, path)
+            if not switches_managable(get_inv):
+                time.sleep(5)
+                attempt += 1
+                continue
+            else:
+                break
+
         for inv in get_inv['DATA']:
             self.rediscover_switch(inv['serialNumber'])
 
@@ -602,8 +708,10 @@ class DcnmInventory:
         all_ok = True
         # Get Fabric Inventory Details
         method = 'GET'
-        inv_path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        get_inv = dcnm_send(self.module, method, inv_path)
+        path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        get_inv = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_inv, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -621,9 +729,11 @@ class DcnmInventory:
     def set_lancred_switch(self, set_lan):
 
         method = 'POST'
-        set_lan_path = '/fm/fmrest/lanConfig/saveSwitchCredentials'
+        path = '/fm/fmrest/lanConfig/saveSwitchCredentials'
+        if self.nd:
+            path = self.nd_prefix + '/' + path[6:]
 
-        response = dcnm_send(self.module, method, set_lan_path, urlencode(set_lan))
+        response = dcnm_send(self.module, method, path, urlencode(set_lan))
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
         if fail:
@@ -633,8 +743,11 @@ class DcnmInventory:
 
         # Get Fabric Inventory Details
         method = 'GET'
-        lan_path = '/fm/fmrest/lanConfig/getLanSwitchCredentials'
-        get_lan = dcnm_send(self.module, method, lan_path)
+        path = '/fm/fmrest/lanConfig/getLanSwitchCredentials'
+        if self.nd:
+            path = self.nd_prefix + '/' + path[6:]
+            # lan_path = '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/lanConfig/getLanSwitchCredentials'
+        get_lan = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_lan, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -657,13 +770,17 @@ class DcnmInventory:
                         "password": create['password'],
                         "v3Protocol": "0"
                     }
-                    self.set_lancred_switch(set_lan)
+                    # TODO: Remove this check later.. should work on ND but does not for some reason
+                    if not self.nd:
+                        self.set_lancred_switch(set_lan)
 
     def assign_role(self):
 
         method = 'GET'
-        inv_path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        get_role = dcnm_send(self.module, method, inv_path)
+        path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        get_role = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_role, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -681,8 +798,10 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
                 if role['ipAddress'] == create["switches"][0]['ipaddr']:
                     method = 'PUT'
-                    assign_path = '/fm/fmrest/topology/role/{}?newRole={}'.format(role['switchDbID'], create['role'].replace("_", "%20"))
-                    response = dcnm_send(self.module, method, assign_path)
+                    path = '/fm/fmrest/topology/role/{}?newRole={}'.format(role['switchDbID'], create['role'].replace("_", "%20"))
+                    if self.nd:
+                        path = self.nd_prefix + '/' + path[6:]
+                    response = dcnm_send(self.module, method, path)
                     self.result['response'].append(response)
                     fail, self.result['changed'] = self.handle_response(response, "create")
                     if fail:
@@ -696,8 +815,10 @@ class DcnmInventory:
         for x in range(0, no_of_tries):
             # Get Fabric ID
             method = 'GET'
-            fid_path = '/rest/control/fabrics/{}'.format(self.fabric)
-            get_fid = dcnm_send(self.module, method, fid_path)
+            path = '/rest/control/fabrics/{}'.format(self.fabric)
+            if self.nd:
+                path = self.nd_prefix + path
+            get_fid = dcnm_send(self.module, method, path)
             missing_fabric, not_ok = self.handle_response(get_fid, 'create_dcnm')
 
             if not get_fid.get('DATA'):
@@ -712,6 +833,8 @@ class DcnmInventory:
             # config-save
             method = 'POST'
             path = '/rest/control/fabrics/{}'.format(self.fabric)
+            if self.nd:
+                path = self.nd_prefix + path
             save_path = path + '/config-save'
             response = dcnm_send(self.module, method, save_path)
             self.result['response'].append(response)
@@ -723,8 +846,10 @@ class DcnmInventory:
 
                 # Get Fabric Errors
                 method = 'GET'
-                fiderr_path = '/rest/control/fabrics/{}/errors'.format(fabric_id)
-                get_fiderr = dcnm_send(self.module, method, fiderr_path)
+                path = '/rest/control/fabrics/{}/errors'.format(fabric_id)
+                if self.nd:
+                    path = self.nd_prefix + path
+                get_fiderr = dcnm_send(self.module, method, path)
                 missing_fabric, not_ok = self.handle_response(get_fiderr, 'query_dcnm')
 
                 if missing_fabric or not_ok:
@@ -745,8 +870,10 @@ class DcnmInventory:
         # config-deploy
         method = 'POST'
         path = '/rest/control/fabrics/{}'.format(self.fabric)
-        deploy_path = path + '/config-deploy'
-        response = dcnm_send(self.module, method, deploy_path)
+        if self.nd:
+            path = self.nd_prefix + path
+        path = path + '/config-deploy'
+        response = dcnm_send(self.module, method, path)
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
 
@@ -758,8 +885,10 @@ class DcnmInventory:
         if self.diff_delete:
             method = 'DELETE'
             for sn in self.diff_delete:
-                delete_path = '/rest/control/fabrics/{}/switches/{}'.format(self.fabric, sn)
-                response = dcnm_send(self.module, method, delete_path)
+                path = '/rest/control/fabrics/{}/switches/{}'.format(self.fabric, sn)
+                if self.nd:
+                    path = self.nd_prefix + path
+                response = dcnm_send(self.module, method, path)
                 self.result['response'].append(response)
                 fail, self.result['changed'] = self.handle_response(response, "delete")
 
@@ -772,6 +901,8 @@ class DcnmInventory:
 
         method = 'GET'
         path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(inv_objects, 'query_dcnm')
 
@@ -862,7 +993,6 @@ def main():
                            supports_check_mode=True)
 
     dcnm_inv = DcnmInventory(module)
-
     dcnm_inv.validate_input()
     dcnm_inv.get_want()
     dcnm_inv.get_have()
@@ -922,28 +1052,23 @@ def main():
             # Import all switches
             dcnm_inv.import_switches()
 
-            # sleep for 2mins
-            time.sleep(120)
-
             # Step 2
             # Rediscover all switches
             dcnm_inv.rediscover_all_switches()
 
-            # sleep for 10mins
-            time.sleep(600)
-
             # Step 3
             # Check all devices are up
-            for x in range(1, 5):
+            for check in range(1, 300):
                 if not dcnm_inv.all_switches_ok():
-                    time.sleep(300)
+                    time.sleep(5)
+                    continue
                 else:
                     break
 
             # Step 4
             # Verify all devices came up finally
             if not dcnm_inv.all_switches_ok():
-                msg = "Unable to make all the switches up after discover under fabric: {}".format(dcnm_inv.fabric)
+                msg = "Failed to import all switches into fabric: {}".format(dcnm_inv.fabric)
                 module.fail_json(msg=msg)
 
             # Step 5
