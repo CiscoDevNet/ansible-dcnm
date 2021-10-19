@@ -354,11 +354,29 @@ import ast
 import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, \
-    dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
+    dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict, \
+    dcnm_version_supported
 from ansible.module_utils.basic import AnsibleModule
 
 
 class DcnmVrf:
+
+    dcnm_vrf_paths={
+        11: {
+                "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
+                "GET_VRF_ATTACH": "/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
+                "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
+                "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
+                "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
+            },
+        12: {
+                "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+                "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
+                "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
+                "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
+                "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
+            }
+    }
 
     def __init__(self, module):
 
@@ -397,11 +415,13 @@ class DcnmVrf:
         self.vrflitevalues = {}
         self.diff_input_format = []
         self.query = []
+        self.dcnm_version = dcnm_version_supported(self.module)
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.fabric_data = get_fabric_details(self.module, self.fabric)
         self.fabric_type = self.fabric_data.get('fabricType')
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
+        self.paths = self.dcnm_vrf_paths[self.dcnm_version]
 
         self.result = dict(
             changed=False,
@@ -635,7 +655,7 @@ class DcnmVrf:
         curr_vrfs = ''
 
         method = 'GET'
-        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        path = self.paths["GET_VRF"].format(self.fabric)
 
         vrf_objects = dcnm_send(self.module, method, path)
 
@@ -653,7 +673,7 @@ class DcnmVrf:
         for vrf in vrf_objects['DATA']:
             curr_vrfs += vrf['vrfName'] + ','
 
-        path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric, curr_vrfs[:-1])
+        path = self.paths["GET_VRF_ATTACH"].format(self.fabric, curr_vrfs[:-1])
 
         vrf_attach_objects = dcnm_send(self.module, method, path)
 
@@ -730,9 +750,8 @@ class DcnmVrf:
 
                 '''Get the IP/Interface that is connected to edge router can be get from below query'''
                 method = 'GET'
-                path = '/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}'.format(self.fabric,
-                                                                                                       attach['vrfName'],
-                                                                                                       sn)
+                path = self.paths["GET_VRF_SWITCH"].format(self.fabric, attach['vrfName'], sn)
+
                 lite_objects = dcnm_send(self.module, method, path)
 
                 if not lite_objects.get('DATA'):
@@ -1041,7 +1060,7 @@ class DcnmVrf:
                     attempt = 0
                     while True or attempt < 10:
                         attempt += 1
-                        path = '/rest/managed-pool/fabrics/{}/partitions/ids'.format(self.fabric)
+                        path = self.paths["GET_VRF_ID"].format(self.fabric)
                         vrf_id_obj = dcnm_send(self.module, method, path)
 
                         missing_fabric, not_ok = self.handle_response(vrf_id_obj, 'query_dcnm')
@@ -1056,7 +1075,14 @@ class DcnmVrf:
                         if not vrf_id_obj['DATA']:
                             continue
 
-                        vrf_id = vrf_id_obj['DATA'].get('partitionSegmentId')
+                        if self.dcnm_version == 11:
+                            vrf_id = vrf_id_obj['DATA'].get('partitionSegmentId')
+                        elif self.dcnm_version >= 12:
+                            vrf_id = vrf_id_obj['DATA'].get('l3vni')
+                        else:
+                            msg = "Unsupported DCNM version: version {}".format(self.dcnm_version)
+                            self.module.fail_json(msg)
+
                         if vrf_id != prev_vrf_id_fetched:
                             want_c.update({'vrfId': vrf_id})
                             template_conf = {
@@ -1071,7 +1097,7 @@ class DcnmVrf:
                         self.module.fail_json(msg="Unable to generate vrfId for vrf: {} "
                                                   "under fabric: {}".format(want_c['vrfName'], self.fabric))
 
-                    create_path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+                    create_path = self.paths["GET_VRF"].format(self.fabric)
 
                     diff_create_quick.append(want_c)
 
@@ -1233,7 +1259,7 @@ class DcnmVrf:
     def get_diff_query(self):
 
         method = 'GET'
-        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        path = self.paths["GET_VRF"].format(self.fabric)
         vrf_objects = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
 
@@ -1278,8 +1304,7 @@ class DcnmVrf:
 
                         # Query the Attachment for the found VRF
                         method = 'GET'
-                        path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric,
-                                                                                                vrf['vrfName'])
+                        path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf['vrfName'])
 
                         vrf_attach_objects = dcnm_send(self.module, method, path)
 
@@ -1303,9 +1328,7 @@ class DcnmVrf:
                                 attach_list = vrf_attach['lanAttachList']
 
                                 for attach in attach_list:
-                                    path = '/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}'.format(
-                                        self.fabric,
-                                        attach['vrfName'],
+                                    path = self.paths["GET_VRF_SWITCH"].format(self.fabric, attach['vrfName'],
                                         attach['switchSerialNo'])
                                     lite_objects = dcnm_send(self.module, method, path)
                                     if not lite_objects.get('DATA'):
@@ -1322,8 +1345,7 @@ class DcnmVrf:
 
                 # Query the Attachment for the found VRF
                 method = 'GET'
-                path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric,
-                                                                                        vrf['vrfName'])
+                path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf['vrfName'])
 
                 vrf_attach_objects = dcnm_send(self.module, method, path)
 
@@ -1346,9 +1368,7 @@ class DcnmVrf:
                     attach_list = vrf_attach['lanAttachList']
 
                     for attach in attach_list:
-                        path = '/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}'.format(
-                            self.fabric,
-                            attach['vrfName'],
+                        path = self.paths["GET_VRF_SWITCH"].format(self.fabric, attach['vrfName'],
                             attach['switchSerialNo'])
 
                         lite_objects = dcnm_send(self.module, method, path)
@@ -1361,7 +1381,7 @@ class DcnmVrf:
 
     def push_to_remote(self, is_rollback=False):
 
-        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        path = self.paths["GET_VRF"].format(self.fabric)
 
         method = 'PUT'
         if self.diff_create_update:
@@ -1443,7 +1463,7 @@ class DcnmVrf:
                 vlanId = json_to_dict.get('vlanId', "0")
 
                 if vlanId == 0:
-                    vlan_path = '/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN'.format(self.fabric)
+                    vlan_path = self.paths["GET_VLAN"].format(self.fabric)
                     vlan_data = dcnm_send(self.module, 'GET', vlan_path)
 
                     if vlan_data['RETURN_CODE'] != 200:
@@ -1479,8 +1499,8 @@ class DcnmVrf:
 
                         '''Get the IP/Interface that is connected to edge router can be get from below query'''
                         method = 'GET'
-                        path = '/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}'.format(self.fabric,
-                                                                                        self.diff_attach[0]['vrfName'], self.serial)
+                        path = self.paths["GET_VRF_SWITCH"].format(self.fabric, self.diff_attach[0]['vrfName'], self.serial)
+
                         lite_objects = dcnm_send(self.module, method, path)
 
                         if not lite_objects.get('DATA'):
@@ -1497,7 +1517,6 @@ class DcnmVrf:
                                     vrflite_con = {}
                                     vrflite_con['VRF_LITE_CONN'] = []
                                     vrflite_con['VRF_LITE_CONN'].append({})
-
                                     if ad_l['interface']:
                                         vrflite_con['VRF_LITE_CONN'][0]['IF_NAME'] = ad_l['interface']
                                     else:
@@ -1551,7 +1570,7 @@ class DcnmVrf:
                         if ((v_a.get('vrf_lite', None) is not None)):
                             del v_a['vrf_lite']
 
-            path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+            path = self.paths["GET_VRF"].format(self.fabric)
             method = 'POST'
             attach_path = path + '/attachments'
 
@@ -1588,7 +1607,7 @@ class DcnmVrf:
         if self.diff_delete:
             for vrf in self.diff_delete:
                 state = False
-                path = '/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}'.format(self.fabric, vrf)
+                path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
                 while not state:
                     resp = dcnm_send(self.module, method, path)
                     state = True
