@@ -4,7 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.2.2] - 2021-10-21
 
-### Added
+### Fixed
 
 Fixed error code handling that was causing an error during authentication
 
