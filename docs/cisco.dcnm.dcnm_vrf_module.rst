@@ -521,8 +521,8 @@ Examples
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
             vrf_lite:
-    	  # All parameters under vrf_lite except peer_vrf are optional and
-    	  # will be supplied by DCNM when omitted in the playbook
+             # All parameters under vrf_lite except peer_vrf are optional and
+             # will be supplied by DCNM when omitted in the playbook
               - peer_vrf: test_vrf_1 # peer_vrf is mandatory
                 interface: Ethernet1/16 # optional
                 ipv4_addr: 10.33.0.2/30 # optional
