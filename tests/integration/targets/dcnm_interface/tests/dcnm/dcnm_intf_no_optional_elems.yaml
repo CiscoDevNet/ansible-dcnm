@@ -2,6 +2,9 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_it_fabric }}" 
@@ -87,7 +90,7 @@
             deploy: true                      # choose from [true, false]
             profile:
               mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
-              ipv4_addr: 193.168.100.1        # ipv4 address for the interface
+              ipv4_addr: 192.168.1.1          # ipv4 address for the interface
 
           - name: "{{ ansible_eth_intf6 }}"   # should be of the form eth<port-id>
             type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
@@ -105,7 +108,7 @@
             profile:
               mode: subint                    # choose from [subint]
               vlan: 100                       # vlan ID [min:2, max:3967]
-              ipv4_addr: 193.168.100.1        # ipv4 address for the sub-interface
+              ipv4_addr: 193.168.2.1          # ipv4 address for the sub-interface
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
@@ -115,7 +118,7 @@
             deploy: true                      # choose from [true, false]
             profile:
               mode: lo                        # choose from [lo]
-              ipv4_addr: 192.168.100.1        # ipv4 address for the loopback interface
+              ipv4_addr: 194.168.3.1          # ipv4 address for the loopback interface
       register: result
 
     - assert:
@@ -204,7 +207,7 @@
             deploy: true                      # choose from [true, false]
             profile:
               mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
-              ipv4_addr: 192.169.100.1        # ipv4 address for the interface
+              ipv4_addr: 192.168.1.1          # ipv4 address for the interface
 
           - name: "{{ ansible_eth_intf6 }}"   # should be of the form eth<port-id>
             type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
@@ -222,7 +225,7 @@
             profile:
               mode: subint                    # choose from [subint]
               vlan: 100                       # vlan ID [min:2, max:3967]
-              ipv4_addr: 192.170.100.1        # ipv4 address for the sub-interface
+              ipv4_addr: 193.168.2.1          # ipv4 address for the sub-interface
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
@@ -232,7 +235,7 @@
             deploy: true                      # choose from [true, false]
             profile:
               mode: lo                        # choose from [lo]
-              ipv4_addr: 192.171.100.1        # ipv4 address for the loopback interface
+              ipv4_addr: 194.168.3.1          # ipv4 address for the loopback interface
       register: result
 
     - assert:
@@ -260,9 +263,11 @@
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

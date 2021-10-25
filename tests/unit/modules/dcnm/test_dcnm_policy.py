@@ -51,6 +51,9 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.mock_dcnm_ip_sn = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_policy.get_ip_sn_dict')
         self.run_dcnm_ip_sn = self.mock_dcnm_ip_sn.start()
 
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_policy.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_policy.dcnm_send')
         self.run_dcnm_send  = self.mock_dcnm_send.start()
 
@@ -58,6 +61,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
         super(TestDcnmPolicyModule, self).tearDown()
         self.mock_dcnm_send.stop()
+        self.mock_dcnm_version_supported.stop()
 
 #################################### FIXTURES ############################
 
@@ -367,6 +371,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         # setup the side effects
         self.run_dcnm_fabric_details.side_effect = [self.mock_fab_inv]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, []]]
+        self.run_dcnm_version_supported.side_effect = [11]
 
         # Load policy related side-effects
         self.load_policy_fixtures ()

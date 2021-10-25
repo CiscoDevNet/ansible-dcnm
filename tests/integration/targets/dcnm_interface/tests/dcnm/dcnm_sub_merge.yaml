@@ -2,6 +2,9 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_it_fabric }}" 
@@ -36,7 +39,7 @@
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.168.30.1         # ipv4 address for the sub-interface
               ipv4_mask_len: 24               # choose between [min:8, max:31]
-              ipv6_addr: fd01::0401           # ipV6 address for the sub-interface
+              ipv6_addr: fd0d::0401           # ipV6 address for the sub-interface
               ipv6_mask_len: 64               # choose between [min:64, max:127]
               mtu: 9216                       # choose between [min:576, max:9216]
               cmds:                           # Freeform config
@@ -55,7 +58,7 @@
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.168.31.1         # ipv4 address for the sub-interface
               ipv4_mask_len: 24               # choose between [min:8, max:31]
-              ipv6_addr: fd01::0402           # ipV6 address for the sub-interface
+              ipv6_addr: fd1d::0402           # ipV6 address for the sub-interface
               ipv6_mask_len: 64               # choose between [min:64, max:127]
               mtu: 9216                       # choose between [min:576, max:9216]
               cmds:                           # Freeform config
@@ -106,9 +109,11 @@
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

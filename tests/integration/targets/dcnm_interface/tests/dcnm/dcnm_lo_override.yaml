@@ -2,6 +2,9 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_it_fabric }}" 
@@ -33,8 +36,8 @@
               admin_state: true               # choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
-              ipv4_addr: 192.169.10.1         # ipv4 address for the loopback interface
-              ipv6_addr: fd01::0201           # ipV6 address for the loopback interface
+              ipv4_addr: 192.168.1.1          # ipv4 address for the loopback interface
+              ipv6_addr: fd09::0201           # ipV6 address for the loopback interface
               route_tag: ""                   # Routing Tag for the interface
               cmds:                           # Freeform config
                 - no shutdown
@@ -49,8 +52,8 @@
               admin_state: true               # choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
-              ipv4_addr: 192.169.11.1         # ipv4 address for the loopback interface
-              ipv6_addr: fd01::0202           # ipV6 address for the loopback interface
+              ipv4_addr: 192.168.2.1         # ipv4 address for the loopback interface
+              ipv6_addr: fd19::0202           # ipV6 address for the loopback interface
               route_tag: ""                   # Routing Tag for the interface
               cmds:                           # Freeform config
                 - no shutdown
@@ -90,7 +93,7 @@
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.169.14.1         # ipv4 address for the loopback interface
-              ipv6_addr: fd01::0205           # ipV6 address for the loopback interface
+              ipv6_addr: fd29::0205           # ipV6 address for the loopback interface
               route_tag: ""                   # Routing Tag for the interface
               cmds:                           # Freeform config
                 - no shutdown
@@ -105,8 +108,8 @@
               admin_state: true               # choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
-              ipv4_addr: 192.169.11.1         # ipv4 address for the loopback interface
-              ipv6_addr: fd01::0202           # ipV6 address for the loopback interface
+              ipv4_addr: 192.168.2.1         # ipv4 address for the loopback interface
+              ipv6_addr: fd19::0202           # ipV6 address for the loopback interface
               route_tag: ""                   # Routing Tag for the interface
               cmds:                           # Freeform config
                 - no shutdown
@@ -156,9 +159,11 @@
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

@@ -6,6 +6,7 @@
       "DATA": [
       {
         "policy": "int_trunk_host_11_1",
+        "mode": "trunk",
         "ifName": "Ethernet1/30",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
@@ -14,6 +15,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -28,6 +30,7 @@
       },
       {
         "policy": "int_access_host_11_1",
+        "mode": "access",
         "ifName": "Ethernet1/31",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
@@ -36,6 +39,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -50,6 +54,7 @@
       },
       {
         "policy": "int_routed_host_11_1",
+        "mode": "routed",
         "ifName": "Ethernet1/32",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
@@ -58,6 +63,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -73,6 +79,7 @@
       },
       {
         "policy": "epl_routed_intf",
+        "mode": "routed",
         "ifName": "Ethernet1/33",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
@@ -81,6 +88,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -95,6 +103,7 @@
       },
       {
         "policy": "int_monitor_ethernet_11_1",
+        "mode": "none",
         "ifName": "Ethernet1/34",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
@@ -103,6 +112,743 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      }
+      ],
+      "RETURN_CODE": 200,
+      "METHOD": "GET"
+  },
+
+  "deployed_payloads" :  
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "DATA": [
+      {
+        "ifName": "port-channel1000",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "port-channel300",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "port-channel301",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "port-channel302",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "port-channel303",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "port-channel400",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "port-channel401",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/1.1",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "None",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/3.2",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "None",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/25.1",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "None",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/25.2",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "None",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/27.1",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "None",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/1",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/2",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/10",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/13",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/14",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/22",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/30",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/31",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/32",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet1/33",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Loopback100",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_LOOPBACK",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Loopback101",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_LOOPBACK",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Loopback200",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_LOOPBACK",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Loopback303",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_LOOPBACK",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Loopback900",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_LOOPBACK",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "vPC300",
+        "serialNo": "SAL1821T9EF~FOX1821H035",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_VPC",
+        "isPhysical": "True",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "vPC301",
+        "serialNo": "FOX1821H035~SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_VPC",
+        "isPhysical": "True",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "vPC850",
+        "serialNo": "FOX1821H035~SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_VPC",
+        "isPhysical": "True",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "vPC750",
+        "serialNo": "FOX1821H035~SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_VPC",
+        "isPhysical": "True",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "vPC751",
+        "serialNo": "FOX1821H035~SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_VPC",
+        "isPhysical": "True",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
+        "ifName": "Ethernet3/2",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_ETHERNET",
+        "isPhysical": "True",
+        "deletable": "False",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -127,6 +873,7 @@
       "DATA": [
       {
         "ifName": "port-channel1000",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_PORT_CHANNEL",
@@ -134,6 +881,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -148,6 +896,7 @@
       },
       {
         "ifName": "port-channel300",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_PORT_CHANNEL",
@@ -155,6 +904,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -169,6 +919,7 @@
       },
       {
         "ifName": "port-channel301",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_PORT_CHANNEL",
@@ -176,6 +927,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -190,6 +942,7 @@
       },
       {
         "ifName": "port-channel302",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_PORT_CHANNEL",
@@ -197,6 +950,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -211,6 +965,7 @@
       },
       {
         "ifName": "port-channel303",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_PORT_CHANNEL",
@@ -218,6 +973,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -232,6 +988,7 @@
       },
       {
         "ifName": "Ethernet1/3.2",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
@@ -239,6 +996,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -253,6 +1011,7 @@
       },
       {
         "ifName": "Ethernet1/1",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
@@ -260,6 +1019,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -274,6 +1034,7 @@
       },
       {
         "ifName": "Ethernet1/2",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
@@ -281,6 +1042,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -295,6 +1057,7 @@
       },
       {
         "ifName": "Loopback200",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_LOOPBACK",
@@ -302,6 +1065,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -316,6 +1080,7 @@
       },
       {
         "ifName": "vPC300",
+        "mode": "access",
         "serialNo": "SAL1821T9EF~FOX1821H035",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_VPC",
@@ -323,6 +1088,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
@@ -337,6 +1103,7 @@
       },
       {
         "ifName": "Ethernet3/2",
+        "mode": "access",
         "serialNo": "SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
@@ -344,6 +1111,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
           "source" : ""
