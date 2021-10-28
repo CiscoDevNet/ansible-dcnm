@@ -1177,7 +1177,6 @@ class DcnmIntf:
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
-        #path = '/rest/interface/vpcpair_serial_number?serial_number=' + self.ip_sn[sw]
         path = self.paths["VPC_SNO"].format(self.ip_sn[sw])
         resp = dcnm_send(self.module, 'GET', path)
 
@@ -1900,7 +1899,6 @@ class DcnmIntf:
         else:
             sno = serialNumber
 
-        #path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifName
         path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
         resp = dcnm_send(self.module, 'GET', path)
 
@@ -2069,6 +2067,7 @@ class DcnmIntf:
                 if ((state == 'merged') or (state == 'replaced') or (state == 'overridden')):
                     action = 'add'
             else:
+
                 wkeys = list(want.keys())
                 if ('skipResourceCheck' in wkeys):
                     wkeys.remove('skipResourceCheck')
@@ -2104,6 +2103,7 @@ class DcnmIntf:
                                 for ik in if_keys:
                                     if (ik == 'nvPairs'):
                                         nv_keys = list(want[k][0][ik].keys())
+                                        nv_keys.remove("SPEED")
                                         for nk in nv_keys:
                                             # HAVE may have an entry with a list # of interfaces. Check all the
                                             # interface entries for a match.  Even if one entry matches do not
@@ -2608,12 +2608,10 @@ class DcnmIntf:
             sno = self.ip_sn[info['switch'][0]]
             if (info['name'] == ''):
                 # GET all interfaces
-                #path = '/rest/interface/detail?serialNumber=' + sno
                 path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
             else:
                 ifname, if_type = self.dcnm_extract_if_name(info)
                 # GET a specific interface
-                #path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifname
                 path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifname)
 
             resp = dcnm_send(self.module, 'GET', path)
@@ -2734,7 +2732,7 @@ class DcnmIntf:
 
         for item in deploy_list:
             retries = 0
-            while retries < 30:
+            while retries < 50:
                 retries += 1
                 name = item['ifName']
                 sno = item['serialNumber']
@@ -2769,7 +2767,6 @@ class DcnmIntf:
         deploy = False
         replace = False
 
-        #path = '/rest/globalInterface'
         path = self.paths["GLOBAL_IF"]
 
         # First send deletes and then try create and update. This is because during override, the overriding
@@ -2818,7 +2815,6 @@ class DcnmIntf:
         # In 11.4 version of DCNM, sometimes interfaces don't get deleted
         # completely, but only marked for deletion. They get removed only after a
         # deploy. So we will do a deploy on the deleted elements
-        #path = '/rest/globalInterface/deploy'
         path = self.paths["GLOBAL_IF_DEPLOY"]
         index = -1
         for delem in self.diff_delete_deploy:
@@ -2849,7 +2845,6 @@ class DcnmIntf:
 
         resp = None
 
-        #path = '/rest/interface'
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
 
@@ -2864,7 +2859,6 @@ class DcnmIntf:
 
         resp = None
 
-        #path = '/rest/globalInterface'
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
 
@@ -2879,7 +2873,6 @@ class DcnmIntf:
 
         resp = None
 
-        #path = '/rest/globalInterface/deploy'
         path = self.paths["GLOBAL_IF_DEPLOY"]
         if (self.diff_deploy):
 
@@ -2909,7 +2902,6 @@ class DcnmIntf:
             resp = None
 
         if self.diff_deploy:     
-            time.sleep (60)
             self.dcnm_intf_check_deployment_status (self.diff_deploy)
 
         # In overridden and deleted states, if no delete or create is happening and we have
