@@ -435,7 +435,6 @@ class DcnmServiceNode:
     def get_have(self):
 
         method = 'GET'
-        #path = '/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}'.format(self.fabric)
         path = self.paths["GET_SN_ATTACHED"].format(self.fabric)
 
         snode_objects = dcnm_send(self.module, method, path)
@@ -570,7 +569,6 @@ class DcnmServiceNode:
 
         query = []
         method = 'GET'
-        #path = '/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}'.format(self.fabric)
         path = self.paths["GET_SN_ATTACHED"].format(self.fabric)
 
         snode_objects = dcnm_send(self.module, method, path)
@@ -604,8 +602,6 @@ class DcnmServiceNode:
         method = 'DELETE'
         if self.diff_delete:
             for name in self.diff_delete:
-                #delete_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}'.format(
-                #    self.service_fabric, name)
                 delete_path = self.paths["GET_SN"].format(self.service_fabric, name)
                 resp = dcnm_send(self.module, method, delete_path)
 
@@ -621,8 +617,6 @@ class DcnmServiceNode:
         method = 'POST'
         if self.diff_create:
             for create in self.diff_create:
-                #deploy_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes'.format(
-                #    self.service_fabric)
                 deploy_path = self.paths["POST_SN"].format(self.service_fabric)
                 resp = dcnm_send(self.module, method, deploy_path, json.dumps(create))
                 self.result['response'].append(resp)
@@ -637,8 +631,6 @@ class DcnmServiceNode:
         method = 'PUT'
         if self.diff_replace:
             for replace in self.diff_replace:
-                #replace_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}'.format(
-                #    self.service_fabric, replace['name'])
                 replace_path = self.paths["GET_SN"].format(self.service_fabric, replace['name'])
                 resp = dcnm_send(self.module, method, replace_path, json.dumps(replace))
 
