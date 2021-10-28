@@ -2,10 +2,20 @@
 ##                 SETUP                    ##
 ##############################################
 
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
+  when: controller_version >= "12"
+
 - name: REPLACED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/{{ ansible_it_fabric }}
+    path: "{{ rest_path }}"
   register: result
 
 - assert:
@@ -15,7 +25,7 @@
 - name: REPLACED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/{{ ansible_ext_fabric }}
+    path: "{{ rest_ext_path }}"
   register: result
 
 - assert:

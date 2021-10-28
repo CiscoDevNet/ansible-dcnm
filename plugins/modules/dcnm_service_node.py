@@ -313,11 +313,24 @@ EXAMPLES = '''
 import json
 import copy
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, dcnm_version_supported
 from ansible.module_utils.basic import AnsibleModule
 
 
 class DcnmServiceNode:
+
+    dcnm_sn_paths={
+        11: {
+                "GET_SN_ATTACHED": "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}",
+                "GET_SN": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}",
+                "POST_SN": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes"
+            },
+        12: {
+                "GET_SN_ATTACHED": "/appcenter/cisco/ndfc/api/v1/elastic-service/service-nodes/?attached-fabric={}",
+                "GET_SN": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}",
+                "POST_SN": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes"
+            }
+    }
 
     def __init__(self, module):
         self.module = module
@@ -333,8 +346,13 @@ class DcnmServiceNode:
         self.diff_delete = {}
         self.query = []
         self.validated = []
+        self.dcnm_version = dcnm_version_supported(self.module)
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        if self.dcnm_version > 12:
+            self.paths = self.dcnm_sn_paths[12]
+        else:
+            self.paths = self.dcnm_sn_paths[self.dcnm_version]
 
         self.result = dict(
             changed=False,
@@ -417,7 +435,8 @@ class DcnmServiceNode:
     def get_have(self):
 
         method = 'GET'
-        path = '/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}'.format(self.fabric)
+        #path = '/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}'.format(self.fabric)
+        path = self.paths["GET_SN_ATTACHED"].format(self.fabric)
 
         snode_objects = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(snode_objects, 'query_dcnm')
@@ -551,7 +570,8 @@ class DcnmServiceNode:
 
         query = []
         method = 'GET'
-        path = '/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}'.format(self.fabric)
+        #path = '/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}'.format(self.fabric)
+        path = self.paths["GET_SN_ATTACHED"].format(self.fabric)
 
         snode_objects = dcnm_send(self.module, method, path)
 
@@ -584,8 +604,9 @@ class DcnmServiceNode:
         method = 'DELETE'
         if self.diff_delete:
             for name in self.diff_delete:
-                delete_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}'.format(
-                    self.service_fabric, name)
+                #delete_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}'.format(
+                #    self.service_fabric, name)
+                delete_path = self.paths["GET_SN"].format(self.service_fabric, name)
                 resp = dcnm_send(self.module, method, delete_path)
 
                 self.result['response'].append(resp)
@@ -600,8 +621,9 @@ class DcnmServiceNode:
         method = 'POST'
         if self.diff_create:
             for create in self.diff_create:
-                deploy_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes'.format(
-                    self.service_fabric)
+                #deploy_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes'.format(
+                #    self.service_fabric)
+                deploy_path = self.paths["POST_SN"].format(self.service_fabric)
                 resp = dcnm_send(self.module, method, deploy_path, json.dumps(create))
                 self.result['response'].append(resp)
                 fail, self.result['changed'] = self.handle_response(resp, "create")
@@ -615,8 +637,9 @@ class DcnmServiceNode:
         method = 'PUT'
         if self.diff_replace:
             for replace in self.diff_replace:
-                replace_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}'.format(
-                    self.service_fabric, replace['name'])
+                #replace_path = '/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}'.format(
+                #    self.service_fabric, replace['name'])
+                replace_path = self.paths["GET_SN"].format(self.service_fabric, replace['name'])
                 resp = dcnm_send(self.module, method, replace_path, json.dumps(replace))
 
                 self.result['response'].append(resp)
@@ -700,12 +723,12 @@ class DcnmServiceNode:
             #
             if res.get('ERROR') == 'Not Found' and res['RETURN_CODE'] == 404:
                 return True, False
-            if res['RETURN_CODE'] != 200 or res['MESSAGE'] != "":
+            if res['RETURN_CODE'] != 200 or (res['MESSAGE'] != "" and res['MESSAGE'] != "OK"):
                 return False, True
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get('MESSAGE') != "" or res.get('RETURN_CODE') != 200:
+        if (res.get('MESSAGE') != "" or res.get('MESSAGE') != "OK") and res.get('RETURN_CODE') != 200:
             fail = True
             changed = False
             return fail, changed

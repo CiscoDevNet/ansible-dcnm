@@ -421,7 +421,10 @@ class DcnmVrf:
         self.fabric_data = get_fabric_details(self.module, self.fabric)
         self.fabric_type = self.fabric_data.get('fabricType')
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
-        self.paths = self.dcnm_vrf_paths[self.dcnm_version]
+        if self.dcnm_version > 12:
+            self.paths = self.dcnm_sn_paths[12]
+        else:
+            self.paths = self.dcnm_sn_paths[self.dcnm_version]
 
         self.result = dict(
             changed=False,
