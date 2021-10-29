@@ -1089,7 +1089,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         changed_objs = ['MEMBER_INTERFACES', 'PC_MODE', 'BPDUGUARD_ENABLED',
                         'PORTTYPE_FAST_ENABLED', 'MTU', 'ALLOWED_VLANS',
                         'DESC', 'ADMIN_STATE', 'INTF_VRF', 'IP', 'PREFIX',
-                        'ROUTING_TAG']
+                        'ROUTING_TAG', 'SPEED']
 
         for d in result['diff'][0]['replaced']:
             for intf in d['interfaces']:
@@ -1225,7 +1225,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['replaced']), 4)
 
         changed_objs = ['BPDUGUARD_ENABLED', 'PORTTYPE_FAST_ENABLED', 'MTU', 'CONF',
-                        'ALLOWED_VLANS', 'DESC', 'ADMIN_STATE', 'INTF_VRF', 'ACCESS_VLAN',
+                        'ALLOWED_VLANS', 'DESC', 'ADMIN_STATE', 'INTF_VRF', 'ACCESS_VLAN', 'SPEED',
                         'IP', 'PREFIX', 'ROUTING_TAG', 'SPEED', 'IPv6', 'IPv6_PREFIX']
 
         for d in result['diff'][0]['replaced']:
@@ -1360,7 +1360,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         self.assertEqual(len(result['diff'][0]['replaced']), 2)
 
-        changed_objs = ['MTU', 'CONF', 'VLAN', 'DESC', 'ADMIN_STATE',
+        changed_objs = ['MTU', 'CONF', 'VLAN', 'DESC', 'ADMIN_STATE', 'SPEED',
                         'INTF_VRF', 'IP', 'PREFIX', 'IPv6', 'IPv6_PREFIX']
 
         for d in result['diff'][0]['replaced']:
@@ -1563,11 +1563,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['replaced']), 2)
 
         changed_objs = ['CONF', 'DESC', 'ADMIN_STATE', 'ROUTE_MAP_TAG',
-                        'INTF_VRF', 'IP', 'V6IP']
+                       'SPEED',  'INTF_VRF', 'IP', 'V6IP']
 
         for d in result['diff'][0]['replaced']:
             for intf in d['interfaces']:
                 if_keys = list(intf['nvPairs'].keys())
+                self.log_msg(f"IF_KEYS = {if_keys}\n")
                 self.assertEqual ((set(if_keys).issubset(set(changed_objs))), True)
         # All 2 will be deployed, even though we have not changed the monitor port
         self.assertEqual(len(result['diff'][0]['deploy']), 2)
@@ -1803,7 +1804,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result['diff'][0]['replaced']), 2)
 
         changed_objs = ['PEER1_MEMBER_INTERFACES', 'PEER2_MEMBER_INTERFACES',
-                        'PC_MODE', 'BPDUGUARD_ENABLED',
+                        'PC_MODE', 'BPDUGUARD_ENABLED', 'SPEED',
                         'PORTTYPE_FAST_ENABLED', 'MTU', 'PEER1_ALLOWED_VLANS',
                         'PEER2_ALLOWED_VLANS', 'PEER1_PO_DESC','PEER2_PO_DESC', 'ADMIN_STATE',
                         'PEER1_ACCESS_VLAN', 'PEER2_ACCESS_VLAN',
