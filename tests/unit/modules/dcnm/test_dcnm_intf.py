@@ -1568,7 +1568,6 @@ class TestDcnmIntfModule(TestDcnmModule):
         for d in result['diff'][0]['replaced']:
             for intf in d['interfaces']:
                 if_keys = list(intf['nvPairs'].keys())
-                self.log_msg(f"IF_KEYS = {if_keys}\n")
                 self.assertEqual ((set(if_keys).issubset(set(changed_objs))), True)
         # All 2 will be deployed, even though we have not changed the monitor port
         self.assertEqual(len(result['diff'][0]['deploy']), 2)
