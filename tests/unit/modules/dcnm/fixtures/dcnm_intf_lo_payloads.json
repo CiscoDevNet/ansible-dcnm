@@ -16,6 +16,7 @@
 						"INTF_VRF": "",
 						"ADMIN_STATE": "True",
 						"INTF_NAME": "Loopback100",
+						"SPEED": "auto",
 						"V6IP": "",
 						"DESC": "loopback interface 100 configuration"
 					},
@@ -46,6 +47,7 @@
 						"INTF_VRF": "",
 						"ADMIN_STATE": "True",
 						"INTF_NAME": "Loopback101",
+						"SPEED": "auto",
 						"V6IP": "",
 						"DESC": "loopback interface 101 configuration"
 					},
@@ -76,6 +78,7 @@
 						"INTF_VRF": "",
 						"ADMIN_STATE": "True",
 						"INTF_NAME": "Loopback200",
+						"SPEED": "auto",
 						"V6IP": "",
 						"DESC": "loopback interface 200 configuration"
 					},

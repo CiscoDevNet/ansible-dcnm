@@ -169,10 +169,31 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
+    dcnm_version_supported
 )
 
 
 class DcnmTemplate:
+
+    dcnm_template_paths = {
+        11: {
+              "TEMP_VALIDATE": "/rest/config/templates/validate",
+              "TEMP_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
+              "TEMP_GET_SW_ROLES": "/rest/control/switches/roles",
+              "TEMPLATE": "/rest/config/templates/template",
+              "TEMP_DELETE_BULK": "/rest/config/templates/delete/bulk",
+              "TEMPLATE_WITH_NAME": "/rest/config/templates/{}"
+            },
+        12: {
+              "TEMP_VALIDATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/validate",
+              "TEMP_GET_SWITCHES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+              "TEMP_GET_SW_ROLES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/switches/roles",
+              "TEMPLATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/template",
+              "TEMP_DELETE_BULK": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/delete/bulk",
+              "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}"
+            }
+    }
+
     def __init__(self, module):
         self.module = module
         self.params = module.params
@@ -190,7 +211,10 @@ class DcnmTemplate:
             {"merged": [], "deleted": [], "query": [], "failed": []}
         ]
 
+        self.dcnm_version = dcnm_version_supported(self.module)
+
         self.result = dict(changed=False, diff=[], response=[])
+        self.paths = self.dcnm_template_paths[self.dcnm_version]
 
     def log_msg(self, msg):
 
@@ -198,6 +222,8 @@ class DcnmTemplate:
             self.fd = open("template.log", "w+")
         if self.fd is not None:
             self.fd.write(msg)
+            self.fd.write("\n")
+            self.fd.flush()
 
     def dcnm_template_validate_input(self):
 
@@ -328,7 +354,8 @@ class DcnmTemplate:
 
     def dcnm_template_validate_template(self, template):
 
-        path = "/rest/config/templates/validate"
+        #path = "/rest/config/templates/validate"
+        path = self.paths["TEMP_VALIDATE"]
 
         resp = dcnm_send(
             self.module, "POST", path, template["content"], "text"
@@ -360,7 +387,8 @@ class DcnmTemplate:
     def dcnm_template_get_policy_list(self, snos, tlist):
 
         policies = {}
-        path = "/rest/control/policies/switches?serialNumber=" + snos
+        #path = "/rest/control/policies/switches?serialNumber=" + snos
+        path = self.paths["TEMP_GET_SWITCHES"].format(snos)
 
         resp = dcnm_send(self.module, "GET", path)
 
@@ -391,7 +419,8 @@ class DcnmTemplate:
         # We need to check all switches on the Server to see if the given templates are deployed
         # on any of the switches
 
-        path = "/rest/control/switches/roles"
+        #path = "/rest/control/switches/roles"
+        path = self.paths["TEMP_GET_SW_ROLES"]
 
         resp = dcnm_send(self.module, "GET", path)
 
@@ -431,19 +460,24 @@ class DcnmTemplate:
 
         payload = {}
         payload["content"] = template["content"]
-        path = "/rest/config/templates/template"
+        #path = "/rest/config/templates/template"
+        path = self.paths["TEMPLATE"]
 
+        if self.dcnm_version == 12:
+            payload["templatename"] = template["template_name"]
         json_payload = json.dumps(payload)
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
         self.result["response"].append(resp)
+
         return resp
 
     def dcnm_template_delete_template(self, del_payload):
 
         tlist = []
         policies = {}
-        path = "/rest/config/templates/delete/bulk"
+        #path = "/rest/config/templates/delete/bulk"
+        path = self.paths["TEMP_DELETE_BULK"]
         changed = False
 
         json_payload = json.dumps(del_payload)
@@ -501,7 +535,8 @@ class DcnmTemplate:
             elif self.module.params["state"] == "deleted":
                 name = template["name"]
 
-            path = "/rest/config/templates/" + name
+            #path = "/rest/config/templates/" + name
+            path = self.paths["TEMPLATE_WITH_NAME"].format(name)
             template_payload = self.dcnm_template_get_template_info_from_dcnm(
                 path, name
             )
@@ -567,7 +602,8 @@ class DcnmTemplate:
 
         for template in self.template_info:
 
-            path = "/rest/config/templates/" + template["name"]
+            #path = "/rest/config/templates/" + template["name"]
+            path = self.paths["TEMPLATE_WITH_NAME"].format(template["name"])
             template_payload = self.dcnm_template_get_template_info_from_dcnm(
                 path, template["name"]
             )

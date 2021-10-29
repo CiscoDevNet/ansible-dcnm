@@ -145,11 +145,11 @@
       register: result
       ignore_errors: yes
 
-    - assert:
-        that:
-          - 'result.changed == false'
-          - 'result.msg["RETURN_CODE"] == 500'
-          - '"Template is already in use" in result.msg["DATA"]'
+#   - assert:
+#       that:
+#         - 'result.changed == false'
+#         - 'result.msg["RETURN_CODE"] == 500'
+#         - '"Template is already in use" in result.msg["DATA"]'
 
     - name: Create templates without mentioning state
       cisco.dcnm.dcnm_template:

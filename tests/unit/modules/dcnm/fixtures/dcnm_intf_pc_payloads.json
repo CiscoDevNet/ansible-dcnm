@@ -15,6 +15,7 @@
 						"FABRIC_NAME": "test_fabric",
 						"PO_ID": "Port-channel300",
 						"MTU": "jumbo",
+            "SPEED": "auto",
 						"PRIORITY": "500",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PC_MODE": "on",
@@ -50,6 +51,7 @@
 						"FABRIC_NAME": "test_fabric",
 						"PO_ID": "Port-channel301",
 						"MTU": "default",
+            "SPEED": "auto",
 						"PRIORITY": "500",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PC_MODE": "on",
@@ -85,6 +87,7 @@
 						"IP": "10.1.1.1",
 						"PO_ID": "Port-channel302",
 						"MTU": "9216",
+            "SPEED": "auto",
 						"PRIORITY": "500",
 						"ROUTING_TAG": "",
 						"PREFIX": "8",
@@ -118,6 +121,7 @@
 						"FABRIC_NAME": "test_fabric",
 						"POLICY_DESC": "",
 						"INTF_NAME": "Port-channel303",
+            "SPEED": "auto",
 						"POLICY_ID": "POLICY-1849940"
 					}
 				}],

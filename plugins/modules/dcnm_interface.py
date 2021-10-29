@@ -983,14 +983,33 @@ import sys
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send, get_fabric_inventory_details, dcnm_get_ip_addr_info, validate_list_of_dicts, get_ip_sn_dict
+    dcnm_send, get_fabric_inventory_details, dcnm_get_ip_addr_info, validate_list_of_dicts,\
+    get_ip_sn_dict, dcnm_version_supported
 
 LOG_ERROR = 0
 LOG_DEBUG = 4
 LOG_VERBOSE = 5
 
-
 class DcnmIntf:
+
+    dcnm_intf_paths = {
+        11: {
+              "VPC_SNO": "/rest/interface/vpcpair_serial_number?serial_number={}",
+              "IF_WITH_SNO_IFNAME": "/rest/interface?serialNumber={}&ifName={}",
+              "IF_DETAIL_WITH_SNO": "/rest/interface/detail?serialNumber={}",
+              "GLOBAL_IF": "/rest/globalInterface",
+              "GLOBAL_IF_DEPLOY":"/rest/globalInterface/deploy",
+              "INTERFACE": "/rest/interface",
+            },
+        12: {
+              "VPC_SNO": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
+              "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
+              "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface/detail?serialNumber={}",
+              "GLOBAL_IF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/globalInterface",
+              "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/globalInterface/deploy",
+              "INTERFACE": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface",
+            }
+    }
 
     def __init__(self, module):
         self.module = module
@@ -1007,15 +1026,19 @@ class DcnmIntf:
         self.diff_create = []
         self.diff_replace = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
         self.log_verbosity = 0
         self.fd = None
         self.vpc_ip_sn = {}
-        self.changed_dict = [{'merged': [], 'deleted': [], 'replaced': [], 'overridden': [], 'deploy': [], 'query': []}]
+        self.changed_dict = [{'merged': [], 'deleted': [], 'replaced': [], 'overridden': [], 'deploy': [], 'query': [], 'debugs': []}]
+
+        self.dcnm_version = dcnm_version_supported(self.module)
 
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        self.paths = self.dcnm_intf_paths[self.dcnm_version]
 
         self.dcnm_intf_facts = {
             'fabric': module.params['fabric'],
@@ -1073,19 +1096,36 @@ class DcnmIntf:
 
         # New Interfaces
         self.pol_types = {
-            "pc_monitor": "int_monitor_port_channel_11_1",
-            "pc_trunk": "int_port_channel_trunk_host_11_1",
-            "pc_access": "int_port_channel_access_host_11_1",
-            "pc_l3": "int_l3_port_channel",
-            "sub_int_subint": "int_subif_11_1",
-            "lo_lo": "int_loopback_11_1",
-            "eth_trunk": "int_trunk_host_11_1",
-            "eth_access": "int_access_host_11_1",
-            "eth_routed": "int_routed_host_11_1",
-            "eth_monitor": "int_monitor_ethernet_11_1",
-            "eth_epl_routed": "epl_routed_intf",
-            "vpc_trunk": "int_vpc_trunk_host_11_1",
-            "vpc_access": "int_vpc_access_host_11_1"
+            11: {
+                    "pc_monitor": "int_monitor_port_channel_11_1",
+                    "pc_trunk": "int_port_channel_trunk_host_11_1",
+                    "pc_access": "int_port_channel_access_host_11_1",
+                    "pc_l3": "int_l3_port_channel",
+                    "sub_int_subint": "int_subif_11_1",
+                    "lo_lo": "int_loopback_11_1",
+                    "eth_trunk": "int_trunk_host_11_1",
+                    "eth_access": "int_access_host_11_1",
+                    "eth_routed": "int_routed_host_11_1",
+                    "eth_monitor": "int_monitor_ethernet_11_1",
+                    "eth_epl_routed": "epl_routed_intf",
+                    "vpc_trunk": "int_vpc_trunk_host_11_1",
+                    "vpc_access": "int_vpc_access_host_11_1"
+                },
+            12: {
+                    "pc_monitor": "int_monitor_port_channel",
+                    "pc_trunk": "int_port_channel_trunk_host",
+                    "pc_access": "int_port_channel_access_host",
+                    "pc_l3": "int_l3_port_channel",
+                    "sub_int_subint": "int_subif",
+                    "lo_lo": "int_loopback",
+                    "eth_trunk": "int_trunk_host",
+                    "eth_access": "int_access_host",
+                    "eth_routed": "int_routed_host",
+                    "eth_monitor": "int_monitor_ethernet",
+                    "eth_epl_routed": "epl_routed_intf",
+                    "vpc_trunk": "int_vpc_trunk_host",
+                    "vpc_access": "int_vpc_access_host"
+                }
         }
 
         # New Interfaces
@@ -1109,10 +1149,12 @@ class DcnmIntf:
 
     def log_msg(self, msg):
 
-        if (self.fd is None):
-            self.fd = open("interface.log", "w+")
-        if (self.fd is not None):
+        if self.fd is None:
+            self.fd = open("interface.log", "a+")
+        if self.fd is not None:
             self.fd.write(msg)
+            self.fd.write("\n")
+            self.fd.flush()
 
     # New Interfaces
     def dcnm_intf_get_if_name(self, name, if_type):
@@ -1135,7 +1177,7 @@ class DcnmIntf:
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
-        path = '/rest/interface/vpcpair_serial_number?serial_number=' + self.ip_sn[sw]
+        path = self.paths["VPC_SNO"].format(self.ip_sn[sw])
         resp = dcnm_send(self.module, 'GET', path)
 
         if (resp and resp['RETURN_CODE'] == 200):
@@ -1176,7 +1218,7 @@ class DcnmIntf:
                             c[ck]['sno'] = self.ip_sn[sw]
                         ifname, port_id = self.dcnm_intf_get_if_name(c['name'], c['type'])
                         c[ck]['ifname'] = ifname
-                        c[ck]['policy'] = self.pol_types[pol_ind_str]
+                        c[ck]['policy'] = self.pol_types[self.dcnm_version][pol_ind_str]
                         self.pb_input.append(c[ck])
 
     def dcnm_intf_validate_interface_input(self, config, common_spec, prof_spec):
@@ -1755,10 +1797,11 @@ class DcnmIntf:
                     "ifName": "",
                     "fabricName": "",
                     "nvPairs": {
+                      "SPEED": "Auto"
                     }
                 }
             ],
-            "skipResourceCheck": str(True).lower()
+            "skipResourceCheck": str(False).lower()
         }
 
         # Each interface type will have a different profile name. Set that based on the interface type and use that
@@ -1794,8 +1837,7 @@ class DcnmIntf:
             return intf
 
         pol_ind_str = delem['type'] + '_' + delem['profile']['mode']
-        # intf.update ({"policy" : self.pol_types[delem['profile']['mode']]})
-        intf.update({"policy": self.pol_types[pol_ind_str]})
+        intf.update({"policy": self.pol_types[self.dcnm_version][pol_ind_str]})
         intf.update({"interfaceType": self.int_types[delem['type']]})
 
         # Rest of the data in the dict depends on the interface type and the template
@@ -1857,7 +1899,7 @@ class DcnmIntf:
         else:
             sno = serialNumber
 
-        path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifName
+        path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
         resp = dcnm_send(self.module, 'GET', path)
 
         if ('DATA' in resp and resp['DATA']):
@@ -1868,6 +1910,16 @@ class DcnmIntf:
     def dcnm_intf_get_intf_info_from_dcnm(self, intf):
 
         return self.dcnm_intf_get_intf_info(intf['ifName'], intf['serialNumber'], intf['interfaceType'])
+
+    def dcnm_intf_get_have_all_with_sno(self, sno):
+
+        if '~' in sno:
+            sno = sno.split('~')[0]
+        path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
+        resp = dcnm_send(self.module, 'GET', path)
+
+        if ('DATA' in resp and resp['DATA']):
+            self.have_all.extend(resp['DATA'])
 
     def dcnm_intf_get_have_all(self, sw):
 
@@ -1883,20 +1935,8 @@ class DcnmIntf:
         else:
             sno = self.ip_sn[sw]
 
-        # GET all interfaces
-        path = '/rest/interface/detail?serialNumber=' + sno
-
-        resp = dcnm_send(self.module, 'GET', path)
-
-        if ('DATA' in resp and resp['DATA']):
-            self.have_all.extend(resp['DATA'])
-            self.have_all_list.append(sw)
-        else:
-            self.have_all_list.append(sw)
-            return []
-
-        # adminStatus in all_int_raw will give the deployed status. For deployed interfaces
-        # adminStatus will be 1 and ifIndex will also be allocated and non zero
+        self.have_all_list.append(sw)
+        self.dcnm_intf_get_have_all_with_sno (sno)
 
     def dcnm_intf_get_have(self):
 
@@ -1998,10 +2038,10 @@ class DcnmIntf:
         if (match_have):
             if ((match_have[0]['complianceStatus'] != 'In-Sync') and
                 (match_have[0]['complianceStatus'] != 'Pending')):
-                return True
+                return match_have[0], True
             else:
-                return False
-        return True
+                return match_have[0], False
+        return [], True
 
     def dcnm_intf_compare_want_and_have(self, state):
 
@@ -2027,6 +2067,7 @@ class DcnmIntf:
                 if ((state == 'merged') or (state == 'replaced') or (state == 'overridden')):
                     action = 'add'
             else:
+
                 wkeys = list(want.keys())
                 if ('skipResourceCheck' in wkeys):
                     wkeys.remove('skipResourceCheck')
@@ -2062,6 +2103,7 @@ class DcnmIntf:
                                 for ik in if_keys:
                                     if (ik == 'nvPairs'):
                                         nv_keys = list(want[k][0][ik].keys())
+                                        nv_keys.remove("SPEED")
                                         for nk in nv_keys:
                                             # HAVE may have an entry with a list # of interfaces. Check all the
                                             # interface entries for a match.  Even if one entry matches do not
@@ -2135,20 +2177,25 @@ class DcnmIntf:
                 #   3. Do not add otherwise
 
                 if (False is intf_changed):
-                    rc = self.dcnm_intf_can_be_added(want)
+                    match_intf, rc = self.dcnm_intf_can_be_added(want)
                 else:
+                    match_intf = []
                     rc = True
 
                 if (True is rc):
                     delem['serialNumber'] = sno
                     delem['ifName'] = name
+                    delem['fabricName'] = self.fabric
                     self.diff_deploy.append(delem)
                     self.changed_dict[0]['deploy'].append(copy.deepcopy(delem))
+                    if match_intf != []:
+                        self.changed_dict[0]['debugs'].append({"Name": name, "SNO": sno, "DeployStatus": match_intf["complianceStatus"]})
 
     def dcnm_intf_get_diff_replaced(self):
 
         self.diff_create = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2164,7 +2211,7 @@ class DcnmIntf:
     def dcnm_intf_get_diff_merge(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2212,7 +2259,7 @@ class DcnmIntf:
 
         # default payload to be sent to DCNM for override case
         eth_payload = {
-            "policy": "int_routed_host_11_1",
+            "policy": self.pol_types[self.dcnm_version]["eth_routed"],
             "interfaces": [{
                 "interfaceType": "INTERFACE_ETHERNET",
                 "serialNumber": sno,
@@ -2283,6 +2330,7 @@ class DcnmIntf:
 
         self.diff_create = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2336,6 +2384,7 @@ class DcnmIntf:
                         self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
                         delem['serialNumber'] = sno
                         delem['ifName'] = name
+                        delem['fabricName'] = self.fabric
                         self.diff_deploy.append(delem)
                         self.changed_dict[0]['deploy'].append(copy.deepcopy(delem))
 
@@ -2386,6 +2435,8 @@ class DcnmIntf:
                         delem["fabricName"] = fabric
 
                         self.diff_delete[self.int_index[have['ifType']]].append(delem)
+                        if have["mode"] is not None:
+                            self.diff_delete_deploy[self.int_index[have['ifType']]].append(delem)
                         self.changed_dict[0]['deleted'].append(copy.deepcopy(delem))
                         del_list.append(have)
 
@@ -2409,6 +2460,7 @@ class DcnmIntf:
                 self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
                 delem['serialNumber'] = sno
                 delem['ifName'] = intf['ifName']
+                delem['fabricName'] = self.fabric
                 self.diff_deploy.append(delem)
                 self.changed_dict[0]['deploy'].append(copy.deepcopy(delem))
 
@@ -2418,6 +2470,7 @@ class DcnmIntf:
 
         self.diff_create = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2507,6 +2560,7 @@ class DcnmIntf:
                                         self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
                                         delem['serialNumber'] = intf['serialNumber']
                                         delem['ifName'] = if_name
+                                        delem['fabricName'] = self.fabric
                                         self.diff_deploy.append(delem)
                         else:
                             intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
@@ -2519,6 +2573,8 @@ class DcnmIntf:
                                 delem["fabricName"] = self.fabric
 
                                 self.diff_delete[self.int_index[if_type]].append(delem)
+                                if "monitor" not in intf_payload["policy"]:
+                                    self.diff_delete_deploy[self.int_index[if_type]].append(delem)
                                 self.changed_dict[0]['deleted'].append(copy.deepcopy(delem))
                 else:
                     self.dcnm_intf_get_diff_overridden(cfg)
@@ -2552,11 +2608,11 @@ class DcnmIntf:
             sno = self.ip_sn[info['switch'][0]]
             if (info['name'] == ''):
                 # GET all interfaces
-                path = '/rest/interface/detail?serialNumber=' + sno
+                path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
             else:
                 ifname, if_type = self.dcnm_extract_if_name(info)
                 # GET a specific interface
-                path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifname
+                path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifname)
 
             resp = dcnm_send(self.module, 'GET', path)
 
@@ -2601,16 +2657,18 @@ class DcnmIntf:
                 # Consider this case as success.
                 succ_resp['REQUEST_PATH'] = resp['REQUEST_PATH']
                 succ_resp['MESSAGE'] = 'OK'
-                succ_resp['METHOD'] = 'DEPLOY'
+                succ_resp['METHOD'] = resp['METHOD']
+                succ_resp['RETURN_CODE'] = 200
                 return succ_resp, True
-            elif ((ent_resp[ent] == 'No Commands to execute.') or
+            elif (('No Commands to execute' in ent_resp[ent]) or
                   (ent_resp[ent] == 'Failed to fetch policies') or
                   (ent_resp[ent] == 'Failed to fetch switch configuration')):
                 # Consider this case as success.
                 succ_resp['REQUEST_PATH'] = resp['REQUEST_PATH']
                 succ_resp['MESSAGE'] = 'OK'
-                succ_resp['METHOD'] = 'DEPLOY'
+                succ_resp['METHOD'] = resp['METHOD']
                 succ_resp['ORIG_MSG'] = ent_resp[ent]
+                succ_resp['RETURN_CODE'] = 200
             else:
                 failed = True
                 break
@@ -2668,6 +2726,37 @@ class DcnmIntf:
             ulist = usno
         return ulist
 
+    def dcnm_intf_check_deployment_status (self, deploy_list):
+
+        path = self.paths["GLOBAL_IF_DEPLOY"]
+
+        for item in deploy_list:
+            retries = 0
+            while retries < 50:
+                retries += 1
+                name = item['ifName']
+                sno = item['serialNumber']
+
+                match_have = [have for have in self.have_all if ((name.lower() == have['ifName'].lower()) and
+                                                       (sno == have['serialNo']) and
+                                                       (self.fabric == have['fabricName']))]
+                if match_have:
+                    if (match_have[0]['complianceStatus'] == 'In-Sync'):
+                        break
+                    else:
+                        if retries == 10 or retries == 20:
+                            json_payload = json.dumps({"ifName": name, "serialNumber": sno, "fabricName": self.fabric})
+                            dcnm_send(self.module, 'POST', path, json_payload)
+                        time.sleep (20)
+                        self.have_all = []
+                        self.dcnm_intf_get_have_all_with_sno(sno)
+                else:
+                    # For merge state, the interfaces would have been created just now. Fetch them again before checking
+                    self.have_all = []
+                    self.dcnm_intf_get_have_all_with_sno(sno)
+            if (match_have == [] or match_have[0]['complianceStatus'] != 'In-Sync'):
+                self.module.fail_json (msg={"FAILURE REASON": "Interafce "+name+" did not reach 'In-Sync' State", "Compliance Status" : match_have[0]["complianceStatus"]})
+
     def dcnm_intf_send_message_to_dcnm(self):
 
         resp = None
@@ -2678,7 +2767,7 @@ class DcnmIntf:
         deploy = False
         replace = False
 
-        path = '/rest/globalInterface'
+        path = self.paths["GLOBAL_IF"]
 
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
@@ -2687,8 +2776,18 @@ class DcnmIntf:
 
             if (delem == []):
                 continue
+
             json_payload = json.dumps(delem)
             resp = dcnm_send(self.module, 'DELETE', path, json_payload)
+
+            if resp.get("RETURN_CODE") != 200:
+                deploy_failed = False
+                for item in resp["DATA"]:
+                    if 'No Commands to execute' not in item["message"]:
+                        deploy_failed = True
+                if deploy_failed is False:
+                    resp["RETURN_CODE"] = 200
+                    resp["MESSAGE"] = "OK"
 
             if ((resp.get('MESSAGE') != 'OK') or (resp.get('RETURN_CODE') != 200)):
 
@@ -2702,7 +2801,7 @@ class DcnmIntf:
                 if (False is changed):
                     changed = rc
 
-                if (((resp.get('MESSAGE') != 'OK') and (resp.get('MESSAGE') != 'No Commands to execute.')) or
+                if (((resp.get('MESSAGE') != 'OK') and ('No Commands to execute' not in resp.get('MESSAGE'))) or
                     (resp.get('RETURN_CODE') != 200)):
                     self.module.fail_json(msg=resp)
             else:
@@ -2716,19 +2815,37 @@ class DcnmIntf:
         # In 11.4 version of DCNM, sometimes interfaces don't get deleted
         # completely, but only marked for deletion. They get removed only after a
         # deploy. So we will do a deploy on the deleted elements
-        path = '/rest/globalInterface/deploy'
-        for delem in self.diff_delete:
+        path = self.paths["GLOBAL_IF_DEPLOY"]
+        index = -1
+        for delem in self.diff_delete_deploy:
 
+            index = index + 1
             if (delem == []):
                 continue
-            # Deploy just requires ifName and serialNumber
-            [[item.pop('interfaceType'), item.pop('fabricName'), item.pop('interfaceDbId')] for item in delem]
+
+            if index != self.int_index ["INTERFACE_VPC"]: 
+                # Deploy just requires ifName and serialNumber
+                [[item.pop('interfaceType'), item.pop('fabricName'), item.pop('interfaceDbId')] for item in delem]
+            else:
+                [[item.pop('interfaceType'), item.pop('interfaceDbId')] for item in delem]
+
             json_payload = json.dumps(delem)
+
             resp = dcnm_send(self.module, 'POST', path, json_payload)
+
+            if resp.get("RETURN_CODE") != 200:
+                deploy_failed = False
+                for item in resp["DATA"]:
+                    if 'No Commands to execute' not in item["message"]:
+                        deploy_failed = True
+                if deploy_failed is False:
+                    resp["RETURN_CODE"] = 200
+                    resp["MESSAGE"] = "OK"
+            self.result['response'].append(resp)
 
         resp = None
 
-        path = '/rest/interface'
+        path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
 
             json_payload = json.dumps(payload)
@@ -2742,7 +2859,7 @@ class DcnmIntf:
 
         resp = None
 
-        path = '/rest/globalInterface'
+        path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
 
             json_payload = json.dumps(payload)
@@ -2756,7 +2873,7 @@ class DcnmIntf:
 
         resp = None
 
-        path = '/rest/globalInterface/deploy'
+        path = self.paths["GLOBAL_IF_DEPLOY"]
         if (self.diff_deploy):
 
             json_payload = json.dumps(self.diff_deploy)
@@ -2775,13 +2892,17 @@ class DcnmIntf:
 
         resp = None
 
-        # Do a second deploy. Sometimes even if interfaces are created, they are
-        # not being deployed. A second deploy solves the same. Don't worry about
-        # the return values
+        if (self.diff_deploy):
+            # Do a second deploy. Sometimes even if interfaces are created, they are
+            # not being deployed. A second deploy solves the same. Don't worry about
+            # the return values
 
-        resp = dcnm_send(self.module, 'POST', path, json_payload)
+            resp = dcnm_send(self.module, 'POST', path, json_payload)
 
-        resp = None
+            resp = None
+
+        if self.diff_deploy:     
+            self.dcnm_intf_check_deployment_status (self.diff_deploy)
 
         # In overridden and deleted states, if no delete or create is happening and we have
         # only replace, then check the return message for deploy. If it says
@@ -2894,8 +3015,6 @@ def main():
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
-    # Sleep for 10 secs to ensure that the DCNM will be set to proper state
-    # time.sleep(20)
     module.exit_json(**dcnm_intf.result)
 
 
