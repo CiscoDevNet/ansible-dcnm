@@ -715,11 +715,15 @@ class DcnmServiceNode:
             #
             if res.get('ERROR') == 'Not Found' and res['RETURN_CODE'] == 404:
                 return True, False
+            # DCNM version 11.5 returns MESSAGE as "" on success whereas version 12 returns MESSAGE
+            # as "OK" on success. Check for "" and "OK" when RETURN_CODE is 200.
             if res['RETURN_CODE'] != 200 or (res['MESSAGE'] != "" and res['MESSAGE'] != "OK"):
                 return False, True
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
+        # DCNM version 11.5 returns MESSAGE as "" on success whereas version 12 returns MESSAGE
+        # as "OK" on success. Check for "" and "OK" when RETURN_CODE is 200.
         if (res.get('MESSAGE') != "" or res.get('MESSAGE') != "OK") and res.get('RETURN_CODE') != 200:
             fail = True
             changed = False
