@@ -1,2 +1,35 @@
 ---
+
+- set_fact:
+    controller_version: "Unable to determine controller version"
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+# No need to continue if we cannot determine the DCNM/NDFC controller version
+- assert:
+    that:
+    - 'controller_version != "Unable to determine controller version"'
+
 - { include: dcnm.yaml, tags: ['dcnm'] }

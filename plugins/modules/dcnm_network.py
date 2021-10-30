@@ -394,7 +394,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 class DcnmNetwork:
 
-    dcnm_vrf_paths={
+    dcnm_network_paths={
         11: {
                 "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
                 "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
@@ -454,7 +454,10 @@ class DcnmNetwork:
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         self.fabric_det = get_fabric_details(module, self.fabric)
         self.is_ms_fabric = True if self.fabric_det.get('fabricType') == 'MFD' else False
-        self.paths = self.dcnm_vrf_paths[self.dcnm_version]
+        if self.dcnm_version > 12:
+            self.paths = self.dcnm_network_paths[12]
+        else:
+            self.paths = self.dcnm_network_paths[self.dcnm_version]
 
         self.result = dict(
             changed=False,
