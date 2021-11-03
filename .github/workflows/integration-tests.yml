@@ -2,6 +2,10 @@
 
 name: NDFC_Integration_Tests
 
+# Controls when the action will run.
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   job1:
