@@ -1,0 +1,11 @@
+# This is a basic workflow to help you get started with Actions
+
+name: NDFC_Integration_Tests
+
+
+jobs:
+  job1:
+    runs-on: self-hosted
+    steps:
+      - id: step1
+        run: echo "Mike Test"
