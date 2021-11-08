@@ -1064,7 +1064,7 @@ class DcnmVrf:
                     while True or attempt < 10:
                         attempt += 1
                         path = self.paths["GET_VRF_ID"].format(self.fabric)
-                        vrf_id_obj = dcnm_send(self.module, method, path)
+                        vrf_id_obj = dcnm_send(self.module, 'GET', path)
 
                         missing_fabric, not_ok = self.handle_response(vrf_id_obj, 'query_dcnm')
 

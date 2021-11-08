@@ -1334,7 +1334,7 @@ class DcnmNetwork:
                     while True or attempt < 10:
                         attempt += 1
                         path = self.paths["GET_NET_ID"].format(self.fabric)
-                        net_id_obj = dcnm_send(self.module, method, path)
+                        net_id_obj = dcnm_send(self.module, 'GET', path)
 
                         missing_fabric, not_ok = self.handle_response(net_id_obj, 'query_dcnm')
 
