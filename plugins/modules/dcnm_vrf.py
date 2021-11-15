@@ -1061,10 +1061,13 @@ class DcnmVrf:
                     method = 'POST'
 
                     attempt = 0
-                    while True or attempt < 10:
+                    while True and attempt < 10:
                         attempt += 1
                         path = self.paths["GET_VRF_ID"].format(self.fabric)
-                        vrf_id_obj = dcnm_send(self.module, 'GET', path)
+                        if self.dcnm_version > 11:
+                            vrf_id_obj = dcnm_send(self.module, 'GET', path)
+                        else:
+                            vrf_id_obj = dcnm_send(self.module, method, path)
 
                         missing_fabric, not_ok = self.handle_response(vrf_id_obj, 'query_dcnm')
 
