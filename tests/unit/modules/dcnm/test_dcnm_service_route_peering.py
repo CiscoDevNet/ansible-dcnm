@@ -46,12 +46,17 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_route_peering.dcnm_send')
         self.run_dcnm_send  = self.mock_dcnm_send.start()
 
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_route_peering.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+
         self.mock_dcnm_reset_connection = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_route_peering.dcnm_reset_connection')
         self.run_dcnm_reset_connection  = self.mock_dcnm_reset_connection.start()
+
     def tearDown(self):
 
         super(TestDcnmServiceRoutePeeringModule, self).tearDown()
         self.mock_dcnm_send.stop()
+        self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_reset_connection.stop()
 
 #################################### FIXTURES ############################
@@ -971,6 +976,7 @@ class TestDcnmServiceRoutePeeringModule(TestDcnmModule):
 
         # Load srp related side-effects
         self.load_srp_fixtures ()
+        self.run_dcnm_version_supported.side_effect = [11]
 
 #################################### FIXTURES END ############################
 #################################### TEST-CASES ##############################

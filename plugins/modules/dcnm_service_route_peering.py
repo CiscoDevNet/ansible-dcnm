@@ -224,7 +224,7 @@ options:
                 description:
                   - IPv6 vpc peer loopback address
                   - This object is applicable only when 'peering_option' is 'ebgp'. This
-                    object will be mandatory if the service node switch is part of VPC
+                    object is mandatory if the service node switch is part of VPC
                     pair
                 type: str
                 required: False
@@ -378,6 +378,8 @@ options:
                 description:
                   - IPv6 vpc peer loopback address
                   - This object is applicable only when 'peering_option' is 'ebgp'
+                    This object is mandatory if the service node is part of VPC switch
+                    pair
                 type: str
                 required: False
                 default: ''
@@ -529,6 +531,8 @@ options:
                 description:
                   - IPv6 vpc peer loopback address
                   - This object is applicable only when 'peering_option' is 'ebgp'
+                    This object is mandatory if the service node is part of VPC switch
+                    pair
                 type: str
                 required: False
                 default: ''
@@ -1166,13 +1170,48 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send,
     validate_list_of_dicts,
     dcnm_reset_connection,
+    dcnm_version_supported
 )
 
 from datetime import datetime
 
-
 # Route Peering Class object which includes all the required methods and data to configure and maintain Roue peering objects
 class DcnmServiceRoutePeering:
+    dcnm_srp_paths = {
+        11: {
+                "ALLOC_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=SERVICE_NETWORK_VLAN",
+                "GET_SRP_WITH_SN": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}",
+                "GET_SNODES_FROM_DCNM": "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}",
+                "GET_SRP_INFO_FROM_DCNM": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}/{}",
+                "GET_SRP_DEPLOY_STATUS": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}/{}/attachments",
+                "CREATE_SRP": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings",
+                "UPDATE_SRP": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}/{}",
+                "DELETE_SRP": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}/{}",
+                "ATTACH_SRP": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}/attachments",
+                "DETACH_SRP_SUFFIX": "/attachments?peering-names=",
+                "DEPLOY_SRP_PREFIX": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}",
+                "DEPLOY_SRP_SUFFIX": "/deployments",
+                "SRP_FIXED_PREFIX": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/peerings/{}",
+                "SRP_CFG_SAVE_AND_DEPLOY": "/rest/control/fabrics/{}/config-deploy"
+
+            },
+        12: {
+                "ALLOC_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=SERVICE_NETWORK_VLAN",
+                "GET_SRP_WITH_SN": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}",
+                "GET_SNODES_FROM_DCNM": "/appcenter/cisco/ndfc/api/v1/elastic-service/service-nodes?attached-fabric={}",
+                "GET_SRP_INFO_FROM_DCNM": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}/{}",
+                "GET_SRP_DEPLOY_STATUS": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}/{}/attachments",
+                "CREATE_SRP": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings",
+                "UPDATE_SRP": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}/{}",
+                "DELETE_SRP": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}/{}",
+                "ATTACH_SRP": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}/attachments",
+                "DETACH_SRP_SUFFIX": "/attachments?peering-names=",
+                "DEPLOY_SRP_PREFIX": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}",
+                "DEPLOY_SRP_SUFFIX": "/deployments",
+                "SRP_FIXED_PREFIX": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/peerings/{}",
+                "SRP_CFG_SAVE_AND_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy"
+            }
+    }
     def __init__(self, module):
         self.module = module
         self.params = module.params
@@ -1197,6 +1236,10 @@ class DcnmServiceRoutePeering:
                 "debugs": [],
             }
         ]
+
+        self.dcnm_version = dcnm_version_supported(self.module)
+
+        self.paths = self.dcnm_srp_paths[self.dcnm_version]
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):
@@ -1917,12 +1960,7 @@ class DcnmServiceRoutePeering:
         if not vlan_id_alloc:
             return user_vlans
 
-        path = (
-            "/rest/resource-manager/vlan/"
-            + fabric
-            + "?vlanUsageType=SERVICE_NETWORK_VLAN"
-        )
-
+        path = self.paths["ALLOC_VLAN"].format(fabric)
         retries = 0
         while retries < 30:
 
@@ -2534,15 +2572,7 @@ class DcnmServiceRoutePeering:
             resp["DATA"] (dict): All route peerings present on the specified service node
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + self.module.params["service_fabric"]
-            + "/service-nodes/"
-            + node_name
-            + "/peerings/"
-            + self.module.params["fabric"]
-        )
-
+        path = self.paths["GET_SRP_WITH_SN"].format(self.module.params["service_fabric"], node_name, self.module.params["fabric"])
         retries = 0
         while retries < 30:
             retries += 1
@@ -2574,11 +2604,7 @@ class DcnmServiceRoutePeering:
             resp["DATA"] (dict): All service nodes on the specified fabric
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric="
-            + self.module.params["fabric"]
-        )
-
+        path = self.paths["GET_SNODES_FROM_DCNM"].format(self.module.params["fabric"])
         retries = 0
         while retries < 30:
             retries += 1
@@ -2613,27 +2639,9 @@ class DcnmServiceRoutePeering:
         """
 
         if srp_type == "PAYLOAD":
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + srp["fabricName"]
-                + "/service-nodes/"
-                + srp["serviceNodeName"]
-                + "/peerings/"
-                + srp["attachedFabricName"]
-                + "/"
-                + srp["peeringName"]
-            )
+            path = self.paths["GET_SRP_INFO_FROM_DCNM"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"], srp["peeringName"])
         else:
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + self.module.params["service_fabric"]
-                + "/service-nodes/"
-                + srp["node_name"]
-                + "/peerings/"
-                + self.module.params["fabric"]
-                + "/"
-                + srp["name"]
-            )
+            path = self.paths["GET_SRP_INFO_FROM_DCNM"].format(self.module.params["service_fabric"], srp["node_name"], self.module.params["fabric"], srp["name"])
 
         resource_not_found = False
         retries = 0
@@ -3284,18 +3292,7 @@ class DcnmServiceRoutePeering:
             deployed (bool): a flag indicating is the given SRP is deployed
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-            + "/attachments"
-        )
-
+        path = self.paths["GET_SRP_DEPLOY_STATUS"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"], srp["peeringName"])
         retries = 0
         while retries < 30:
             retries += 1
@@ -3618,24 +3615,9 @@ class DcnmServiceRoutePeering:
         """
 
         if command == "POST":
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + srp["fabricName"]
-                + "/service-nodes/"
-                + srp["serviceNodeName"]
-                + "/peerings"
-            )
+            path = self.paths["CREATE_SRP"].format(srp["fabricName"], srp["serviceNodeName"])
         else:
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + srp["fabricName"]
-                + "/service-nodes/"
-                + srp["serviceNodeName"]
-                + "/peerings/"
-                + srp["attachedFabricName"]
-                + "/"
-                + srp["peeringName"]
-            )
+            path = self.paths["UPDATE_SRP"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"], srp["peeringName"])
 
         json_payload = json.dumps(srp)
 
@@ -3657,7 +3639,7 @@ class DcnmServiceRoutePeering:
 
         resp = None
 
-        path = fixed_path + "/attachments?peering-names="
+        path = fixed_path + self.paths["DETACH_SRP_SUFFIX"]
         path = path + ",".join(srp_list)
 
         resp = dcnm_send(self.module, "DELETE", path, "")
@@ -3676,16 +3658,7 @@ class DcnmServiceRoutePeering:
         """
 
         # Delete the route peering
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/"
-            + srp["peeringName"]
-        )
+        path = self.paths["DELETE_SRP"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"], srp["peeringName"])
 
         srp["enabled"] = False
         srp["status"] = "NA"
@@ -3706,15 +3679,7 @@ class DcnmServiceRoutePeering:
             resp (dict): Response from DCNM server
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-            + "/attachments"
-        )
+        path = self.paths["ATTACH_SRP"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"])
 
         attach_payload = {"peeringNames" : [srp["peeringName"]]}
         json_payload = json.dumps(attach_payload)
@@ -3735,7 +3700,7 @@ class DcnmServiceRoutePeering:
             resp (dict): Response from DCNM server
         """
 
-        path = fixed_path + "/deployments"
+        path = fixed_path + self.paths["DEPLOY_SRP_SUFFIX"]
         json_payload = json.dumps(srp_list)
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
@@ -3753,15 +3718,16 @@ class DcnmServiceRoutePeering:
             resp (dict): Response from DCNM server
         """
 
-        fixed_path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
+        fixed_path = self.paths["DEPLOY_SRP_PREFIX"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"])
+
+        detach_srp_info = {}
+        detach_srp_info = self.dcnm_srp_combine_route_peerings(
+            srp, detach_srp_info
         )
 
+        for path in detach_srp_info:
+            self.dcnm_srp_detach_srp (path, detach_srp_info[path]["peeringNames"])
+        time.sleep(10)
         self.dcnm_srp_attach_srp (srp)
         time.sleep(10)
         self.dcnm_srp_deploy_srp(fixed_path, {"peeringNames": [srp["peeringName"]]})
@@ -3786,27 +3752,30 @@ class DcnmServiceRoutePeering:
         for srp in srp_list:
             retries = 0
             att_state = "Unknown"
-            while retries < 20:
+            while retries < 50:
                 retries += 1
                 resp, retry, deployed, att_state = self.dcnm_srp_get_srp_deployment_status(srp, srp, (final_state == "deployed"))
 
                 if att_state == final_state:
                     break;
+                if att_state == "pending":
+                    if (retries % 10) == 0:
+                        self.dcnm_srp_config_save_and_deploy()
                 if att_state == "out-of-sync":
-                    if retries == 15:
+                    if retries % 10 == 0:
                         self.dcnm_srp_config_save_and_deploy()
                 if att_state == "na":
                     # Sometimes the "enabled" flag is not properly applied during creation. Since
                     # att_state is "na", try to attach and deploy the SRP again
                     if srp["enabled"]:
-                        self.dcnm_srp_attach_and_deploy_srp(srp)
+                        if (retries % 10) == 0:
+                            self.dcnm_srp_attach_and_deploy_srp(srp)
                 time.sleep(30)
             self.changed_dict[0]["debugs"].append({"PeeringName": srp["peeringName"], "State": att_state})
             # After all retries, if the SRP did not move to 'final_state' it is an error
             if att_state != final_state:
                 # Note down the SRP to aid in debugging
-                resp["SRP"] = srp
-                self.module.fail_json(msg=resp)
+                self.module.fail_json (msg={"FAILURE REASON": "SRP "+ srp["peeringName"] +" did not reach 'In-Sync' State", "Attach State" : att_state})
 
     def dcnm_srp_combine_route_peerings(self, srp, srp_info):
 
@@ -3823,14 +3792,7 @@ class DcnmServiceRoutePeering:
             srp_info(dict): A dict containing a list of combined peerings including the current one
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + srp["fabricName"]
-            + "/service-nodes/"
-            + srp["serviceNodeName"]
-            + "/peerings/"
-            + srp["attachedFabricName"]
-        )
+        path = self.paths["SRP_FIXED_PREFIX"].format(srp["fabricName"], srp["serviceNodeName"], srp["attachedFabricName"])
 
         if srp_info.get(path) is None:
             srp_info[path] = {"peeringNames": []}
@@ -3850,11 +3812,7 @@ class DcnmServiceRoutePeering:
             resp (dict): Response from DCNM server
         """
 
-        path = (
-            "/rest/control/fabrics/"
-            + self.module.params["fabric"]
-            + "/config-deploy"
-        )
+        path = self.paths["SRP_CFG_SAVE_AND_DEPLOY"].format(self.module.params["fabric"])
 
         resp = dcnm_send(self.module, "POST", path, "")
         return resp
@@ -4197,7 +4155,6 @@ class DcnmServiceRoutePeering:
                 self.module.fail_json(msg=resp)
 
         if delete_flag is True:
-            time.sleep(180)
             self.dcnm_srp_check_deployment_status (self.diff_delete, "na")
 
         for srp in self.diff_delete:

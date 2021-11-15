@@ -70,45 +70,59 @@
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_12 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_21 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_22 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_31 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_32 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_41 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_42 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_51 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_52 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_61 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_62 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_71 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_72 }}" 
         attach:
             - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
   register: result  
 
 - assert:
