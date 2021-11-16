@@ -1758,7 +1758,7 @@ class DcnmIntf:
                     }
                 }
             ],
-            "skipResourceCheck": str(True).lower()
+            "skipResourceCheck": str(False).lower()
         }
 
         # Each interface type will have a different profile name. Set that based on the interface type and use that
