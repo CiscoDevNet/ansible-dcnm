@@ -399,7 +399,7 @@ class DcnmNetwork:
                 "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
                 "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
                 "GET_NET_ATTACH": "/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
-                "GET_NET_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
+                "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
                 "GET_NET": "/rest/top-down/fabrics/{}/networks",
                 "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
                 "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
@@ -1331,10 +1331,13 @@ class DcnmNetwork:
                     method = 'POST'
 
                     attempt = 0
-                    while True or attempt < 10:
+                    while True and attempt < 10:
                         attempt += 1
                         path = self.paths["GET_NET_ID"].format(self.fabric)
-                        net_id_obj = dcnm_send(self.module, 'GET', path)
+                        if self.dcnm_version > 11:
+                            net_id_obj = dcnm_send(self.module, 'GET', path)
+                        else:
+                            net_id_obj = dcnm_send(self.module, method, path)
 
                         missing_fabric, not_ok = self.handle_response(net_id_obj, 'query_dcnm')
 
