@@ -58,7 +58,7 @@ options:
         description:
         - ID of the vrf being managed
         type: int
-        required: true
+        required: false
       vlan_id:
         description:
         - vlan ID for the vrf attachment
@@ -335,16 +335,7 @@ EXAMPLES = '''
     state: query
     config:
     - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
     - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: null
 '''
 
 import json
@@ -1286,11 +1277,6 @@ class DcnmVrf:
             for want_c in self.want_create:
                 # Query the VRF
                 for vrf in vrf_objects['DATA']:
-
-                    json_to_dict = json.loads(vrf['vrfTemplateConfig'])
-                    vrf_vlanId = json_to_dict.get('vlanId', "0")
-                    json_to_dict = json.loads(want_c['vrfTemplateConfig'])
-                    want_vlanId = json_to_dict.get('vlanId', "0")
 
                     if (want_c['vrfName'] == vrf['vrfName']):
 
