@@ -1294,17 +1294,6 @@ class DcnmVrf:
 
                     if (want_c['vrfName'] == vrf['vrfName']):
 
-                        if want_c.get('vrfId', None) is not None:
-                            if want_c['vrfId'] != vrf['vrfId']:
-                                continue
-
-                        if want_c.get('vlanId', None) is not None:
-                            if str(want_vlanId) != vrf_vlanId:
-                                continue
-
-                    if (want_c['vrfName'] == vrf['vrfName'] and want_c['vrfId'] == vrf['vrfId'] and
-                            str(want_vlanId) == vrf_vlanId):
-
                         item = {'parent': {}, 'attach': []}
                         item['parent'] = vrf
 
