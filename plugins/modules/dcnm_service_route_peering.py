@@ -84,7 +84,7 @@ options:
       peering_option:
         description:
           - Specifies the type of peering
-          - This object is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
+          - This parameter is applicable only when 'deploy_mode' is either 'inter_tenant_fw'
             or 'one_arm_adc' or 'two_arm_adc'
         type: str
         required: False
@@ -93,13 +93,13 @@ options:
       next_hop:
         description:
           - Nexthop IPV4 information, e.g., 192.168.1.100
-          - This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+          - This parameter is applicable only when 'deploy_mode' is 'intra_tenant_fw'
         type: int
         required: true
       reverse_next_hop:
         description:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
-          - This object is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
+          - This parameter is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
             or 'one_arm_adc' or 'two_arm_adc'
         type: int
         required: false
@@ -107,7 +107,7 @@ options:
       inside_network:
         description:
           - Details regarding inside network of the route peering
-          - This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+          - This parameter is applicable only when 'deploy_mode' is 'intra_tenant_fw'
             or 'inter_tenant_fw'
         type: dict
         required: true
@@ -168,7 +168,7 @@ options:
               static_route:
                 description:
                   - Static route information
-                  - This object is applicable only when 'peering_option' is 'static'
+                  - This parameter is applicable only when 'peering_option' is 'static'
                 type: list
                 elements: dict
                 required: false
@@ -188,20 +188,20 @@ options:
               ipv4_neighobor:
                 description:
                   - IPv4 neighbor address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: True
               ipv4_lo:
                 description:
                   - IPv4 loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: True
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'.
-                    This object is mandatory if the service node is part of VPC switch
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'.
+                    This parameter is mandatory if the service node is part of VPC switch
                     pair
                 type: str
                 required: False
@@ -209,21 +209,21 @@ options:
               ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               ipv6_lo:
                 description:
                   - IPv6 loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
                 description:
                   - IPv6 vpc peer loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'. This
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'. This
                     object is mandatory if the service node switch is part of VPC
                     pair
                 type: str
@@ -232,35 +232,35 @@ options:
               route_map_tag:
                 description:
                   - Route Tag
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
                 description:
                   - Description of the interface
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
                 description:
                   - Local ASN number
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: bool
                 required: False
                 default: True
       outside_network:
         description:
           - Details regarding outside network of the route peering
-          - This object is applicable only when 'deploy_mode' is 'intra_tenant_fw'
+          - This parameter is applicable only when 'deploy_mode' is 'intra_tenant_fw'
             or 'inter_tenant_fw'
         type: dict
         required: true
@@ -321,7 +321,7 @@ options:
               static_route:
                 description:
                   - Static route information
-                  - This object is applicable only when 'peering_option' is 'static' and
+                  - This parameter is applicable only when 'peering_option' is 'static' and
                     'deploy_mode' is 'intra_tenant_fw'
                 type: list
                 elements: dict
@@ -342,20 +342,20 @@ options:
               ipv4_neighobor:
                 description:
                   - IPv4 neighbor address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: True
               ipv4_lo:
                 description:
                   - IPv4 loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: True
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'.
-                    This object is mandatory if the service node is part of VPC switch
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'.
+                    This parameter is mandatory if the service node is part of VPC switch
                     pair
                 type: str
                 required: False
@@ -363,22 +363,22 @@ options:
               ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               ipv6_lo:
                 description:
                   - IPv6 loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
                 description:
                   - IPv6 vpc peer loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
-                    This object is mandatory if the service node is part of VPC switch
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
+                    This parameter is mandatory if the service node is part of VPC switch
                     pair
                 type: str
                 required: False
@@ -386,35 +386,35 @@ options:
               route_map_tag:
                 description:
                   - Route Tag
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
                 description:
                   - Description of the interface
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
                 description:
                   - Local ASN number
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: bool
                 required: False
                 default: true
       first_arm:
         description:
           - Details regarding first arm of the route peering
-          - This object is applicable only when 'deploy_mode' is either
+          - This parameter is applicable only when 'deploy_mode' is either
             'one_arm_adc' or 'two_arm_adc'
         type: dict
         required: true
@@ -475,7 +475,7 @@ options:
               static_route:
                 description:
                   - Static route information
-                  - This object is applicable only when 'peering_option' is 'static'
+                  - This parameter is applicable only when 'peering_option' is 'static'
                 type: list
                 elements: dict
                 required: false
@@ -495,20 +495,20 @@ options:
               ipv4_neighobor:
                 description:
                   - IPv4 neighbor address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: True
               ipv4_lo:
                 description:
                   - IPv4 loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: True
               ipv4_vpc_peer_lo:
                 description:
                   - IPv4 vpc peer loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
-                    This object is mandatory if the service node is part of VPC switch
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
+                    This parameter is mandatory if the service node is part of VPC switch
                     pair
                 type: str
                 required: False
@@ -516,22 +516,22 @@ options:
               ipv6_neighbor:
                 description:
                   - IPv6 neighbor address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               ipv6_lo:
                 description:
                   - IPv6 loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               ipv6_vpc_peer_lo:
                 description:
                   - IPv6 vpc peer loopback address
-                  - This object is applicable only when 'peering_option' is 'ebgp'
-                    This object is mandatory if the service node is part of VPC switch
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
+                    This parameter is mandatory if the service node is part of VPC switch
                     pair
                 type: str
                 required: False
@@ -539,35 +539,35 @@ options:
               route_map_tag:
                 description:
                   - Route Tag
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: True
                 default: 12345
               neigh_int_descr:
                 description:
                   - Description of the interface
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: str
                 required: False
                 default: ''
               local_asn:
                 description:
                   - Local ASN number
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
                 required: False
                 default: 12345
               adv_host:
                 description:
                   - Flag indicating if the host is to be advertised
-                  - This object is applicable only when 'peering_option' is 'ebgp'
+                  - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: bool
                 required: False
                 default: True
       second_arm:
         description:
           - Details regarding second arm of the route peering
-          - This object is applicable only when 'deploy_mode' is either
+          - This parameter is applicable only when 'deploy_mode' is either
             'one_arm_adc' or 'two_arm_adc'
         type: dict
         required: true
@@ -1975,6 +1975,7 @@ class DcnmServiceRoutePeering:
                 continue
 
         if resp["RETURN_CODE"] != 200:
+            resp["CHANGED"] = self.changed_dict[0]
             self.module.fail_json(msg=resp)
 
         net_index = 0
@@ -3775,7 +3776,7 @@ class DcnmServiceRoutePeering:
             # After all retries, if the SRP did not move to 'final_state' it is an error
             if att_state != final_state:
                 # Note down the SRP to aid in debugging
-                self.module.fail_json (msg={"FAILURE REASON": "SRP "+ srp["peeringName"] +" did not reach 'In-Sync' State", "Attach State" : att_state})
+                self.module.fail_json (msg={"CHANGED": self.changed_dict[0], "FAILURE REASON": "SRP "+ srp["peeringName"] +" did not reach 'In-Sync' State", "Attach State" : att_state})
 
     def dcnm_srp_combine_route_peerings(self, srp, srp_info):
 
@@ -4019,6 +4020,7 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         for srp in self.diff_modify:
@@ -4066,6 +4068,7 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if self.diff_delete:
@@ -4117,6 +4120,7 @@ class DcnmServiceRoutePeering:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)
             if (resp and resp.get("RETURN_CODE") != 200) or detach_failed:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         # For delete case we have done a detach. do a deploy before actual delete
@@ -4152,6 +4156,7 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200 or del_deploy_failed:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if delete_flag is True:
@@ -4199,6 +4204,7 @@ class DcnmServiceRoutePeering:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if self.diff_deploy:
@@ -4237,6 +4243,7 @@ class DcnmServiceRoutePeering:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if (resp and resp.get("RETURN_CODE") != 200) or deploy_failed:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if deploy_flag:
