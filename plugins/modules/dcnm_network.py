@@ -365,20 +365,7 @@ EXAMPLES = '''
     state: query
     config:
     - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
     - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      deploy: false
 '''
 
 import json
@@ -857,7 +844,7 @@ class DcnmNetwork:
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
 
-        if not state == 'deleted':
+        if not state == 'deleted' and not state == 'query':
             if self.config:
                 for net in self.config:
                     vrf_found = False
@@ -1589,7 +1576,7 @@ class DcnmNetwork:
                         continue
 
                     net = network['DATA']
-                    if (want_c['networkId'] == net['networkId']) and want_c['vrf'] == net['vrf']:
+                    if (want_c['networkName'] == net['networkName']):
                         item['parent'] = net
                         item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
 
