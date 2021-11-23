@@ -27,6 +27,16 @@ description:
     - "Modify Ethernet Interfaces"
 author: Mallik Mudigonda(@mmudigon)
 options:
+  check_deploy:
+    description:
+    - Deploy operations may take considerable time in certain cases based on the configuration included
+      in the playbook. A success response from DCNM server does not guarantee the completion of deploy
+      operation. This flag if set indicates that the module should verify if the configured state is in
+      sync with what is requested in playbook. If not set the module will return without verifying the
+      state.
+    type: bool
+    required: false
+    default: false
   fabric:
     description:
     - Name of the target fabric for interface operations
@@ -2728,6 +2738,10 @@ class DcnmIntf:
 
     def dcnm_intf_check_deployment_status (self, deploy_list):
 
+        # Check for deployment status of all the configured objects only if the check_deploy flag is set.
+        if self.module.params['check_deploy'] is False:
+            return
+
         path = self.paths["GLOBAL_IF_DEPLOY"]
 
         for item in deploy_list:
@@ -2952,6 +2966,7 @@ def main():
         state=dict(type='str', default='merged',
                    choices=['merged', 'replaced', 'overridden', 'deleted',
                               'query']),
+        check_deploy=dict(type='bool', default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,

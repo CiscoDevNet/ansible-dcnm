@@ -7,6 +7,7 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
+    check_deploy: True
     fabric: "{{ ansible_it_fabric }}" 
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
@@ -23,6 +24,7 @@
 ##############################################
     - name: Create interfaces to check various delete form 1
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -99,6 +101,7 @@
 
     - name: Delete all interfaces form 1
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
       register: result
@@ -123,6 +126,7 @@
 
     - name: Create all interfaces to check delete form 2
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -199,6 +203,7 @@
 
     - name: Delete all interfaces form 2
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config:
@@ -228,6 +233,7 @@
 
     - name: Create all interfaces to check delete form 3
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -304,6 +310,7 @@
 
     - name: Delete all interfaces form 3
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config:
@@ -344,6 +351,7 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result

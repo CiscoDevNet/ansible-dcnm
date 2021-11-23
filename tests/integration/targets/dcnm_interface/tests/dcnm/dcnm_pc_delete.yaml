@@ -7,6 +7,7 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
+    check_deploy: True
     fabric: "{{ ansible_it_fabric }}" 
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
@@ -24,6 +25,7 @@
 
     - name: Create port channel interfaces
       cisco.dcnm.dcnm_interface: &pc_merge
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -114,6 +116,7 @@
 
     - name: Delete port channel interfaces
       cisco.dcnm.dcnm_interface: &pc_del
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -225,6 +228,7 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
