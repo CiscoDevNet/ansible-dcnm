@@ -445,6 +445,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send,
     validate_list_of_dicts,
     dcnm_reset_connection,
+    dcnm_version_supported
 )
 
 from datetime import datetime
@@ -452,6 +453,36 @@ from datetime import datetime
 
 # Service Policy Class object which includes all the required methods and data to configure and maintain service policy objects
 class DcnmServicePolicy:
+    dcnm_sp_paths = {
+        11: {
+                "GET_SNODE_WITH_NAME": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}",
+                "GET_SP_INFO_WITH_SN": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies/{}",
+                "GET_SERVICE_NODES": "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric={}",
+                "GET_SP_INFO": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies/{}/{}",
+                "GET_DEPLOY_STATUS": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies/{}",
+                "CREATE_SP": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies",
+                "UPDATE_SP": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies/{}/{}",
+                "SP_DETACH_SUFFIX": "/attachments?policy-names=",
+                "SP_DELETE": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies/{}/{}",
+                "SP_DEPLOY_SUFFIX": "/deployments",
+                "SP_CFG_SAVE_DEPLOY": "/rest/control/fabrics/{}/config-deploy",
+                "SP_PREFIX": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/{}/service-nodes/{}/policies/{}"
+            },
+        12: {
+                "GET_SNODE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}",
+                "GET_SP_INFO_WITH_SN": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies/{}",
+                "GET_SERVICE_NODES": "/appcenter/cisco/ndfc/api/v1/elastic-service/service-nodes?attached-fabric={}",
+                "GET_SP_INFO": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies/{}/{}",
+                "GET_DEPLOY_STATUS": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies/{}",
+                "CREATE_SP": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies",
+                "UPDATE_SP": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies/{}/{}",
+                "SP_DETACH_SUFFIX": "/attachments?policy-names=",
+                "SP_DELETE": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies/{}/{}",
+                "SP_DEPLOY_SUFFIX": "/deployments",
+                "SP_CFG_SAVE_DEPLOY": "/rest/control/fabrics/{}/config-deploy",
+                "SP_PREFIX": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/{}/service-nodes/{}/policies/{}"
+            }
+    }
     def __init__(self, module):
         self.module = module
         self.params = module.params
@@ -476,6 +507,9 @@ class DcnmServicePolicy:
                 "debugs": [],
             }
         ]
+        self.dcnm_version = dcnm_version_supported(self.module)
+
+        self.paths = self.dcnm_sp_paths[self.dcnm_version]
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):
@@ -709,12 +743,7 @@ class DcnmServicePolicy:
 
     def dcnm_sp_get_service_node_type(self, sp):
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + self.module.params["service_fabric"]
-            + "/service-nodes/"
-            + sp["node_name"]
-        )
+        path = self.paths["GET_SNODE_WITH_NAME"].format(self.module.params["service_fabric"], sp["node_name"])
 
         retries = 0
         while retries <= 30:
@@ -923,14 +952,7 @@ class DcnmServicePolicy:
             resp["DATA"] (dict): All service policies present on the specified service node
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + self.module.params["service_fabric"]
-            + "/service-nodes/"
-            + node_name
-            + "/policies/"
-            + self.module.params["fabric"]
-        )
+        path = self.paths["GET_SP_INFO_WITH_SN"].format(self.module.params["service_fabric"], node_name, self.module.params["fabric"])
 
         retries = 0
         while retries < 30:
@@ -963,10 +985,7 @@ class DcnmServicePolicy:
             resp["DATA"] (dict): All service nodes on the specified fabric
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric="
-            + self.module.params["fabric"]
-        )
+        path = self.paths["GET_SERVICE_NODES"].format(self.module.params["fabric"])
 
         retries = 0
         while retries < 30:
@@ -1002,27 +1021,9 @@ class DcnmServicePolicy:
         """
 
         if sp_type == "PAYLOAD":
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + sp["fabricName"]
-                + "/service-nodes/"
-                + sp["serviceNodeName"]
-                + "/policies/"
-                + sp["attachedFabricName"]
-                + "/"
-                + sp["policyName"]
-            )
+            path = self.paths["GET_SP_INFO"].format(sp["fabricName"], sp["serviceNodeName"], sp["attachedFabricName"], sp["policyName"])
         else:
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + self.module.params["service_fabric"]
-                + "/service-nodes/"
-                + sp["node_name"]
-                + "/policies/"
-                + self.module.params["fabric"]
-                + "/"
-                + sp["name"]
-            )
+            path = self.paths["GET_SP_INFO"].format(self.module.params["service_fabric"], sp["node_name"], self.module.params["fabric"], sp["name"])
 
         resource_not_found = False
         retries = 0
@@ -1105,14 +1106,7 @@ class DcnmServicePolicy:
 
             self.have_all[key] = []
             # Get all policies and filter out the specific policy to check for attachment details.
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + sp["fabricName"]
-                + "/service-nodes/"
-                + sp["serviceNodeName"]
-                + "/policies/"
-                + sp["attachedFabricName"]
-            )
+            path = self.paths["GET_DEPLOY_STATUS"].format(sp["fabricName"], sp["serviceNodeName"], sp["attachedFabricName"])
 
             retries = 0
             while retries < 30:
@@ -1135,6 +1129,7 @@ class DcnmServicePolicy:
                 self.changed_dict[0]["debugs"].append(
                     {"GET_SP_ATT_STATUS": resp}
                 )
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         # Filter out the required policy
@@ -1162,6 +1157,15 @@ class DcnmServicePolicy:
                 match_pol[0]["status"].lower() == "pending"
             ):
                 return resp, False, False, match_pol[0]["status"].lower()
+            elif match_pol[0]["status"].lower() == "success":
+                pol_info = {}
+                pol_info = self.dcnm_sp_combine_policies(
+                    sp, pol_info
+                )
+
+                for path in pol_info:
+                    self.dcnm_sp_deploy_sp(path, pol_info[path])
+                return resp, True, False, "success"
             elif match_pol[0]["status"].lower() == "out-of-sync":
                 pol_info = {}
                 pol_info = self.dcnm_sp_combine_policies(
@@ -1548,24 +1552,9 @@ class DcnmServicePolicy:
         """
 
         if command == "POST":
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + sp["fabricName"]
-                + "/service-nodes/"
-                + sp["serviceNodeName"]
-                + "/policies"
-            )
+            path = self.paths["CREATE_SP"].format(sp["fabricName"], sp["serviceNodeName"])
         else:
-            path = (
-                "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-                + sp["fabricName"]
-                + "/service-nodes/"
-                + sp["serviceNodeName"]
-                + "/policies/"
-                + sp["attachedFabricName"]
-                + "/"
-                + sp["policyName"]
-            )
+            path = self.paths["UPDATE_SP"].format(sp["fabricName"], sp["serviceNodeName"], sp["attachedFabricName"], sp["policyName"])
 
         json_payload = json.dumps(sp)
 
@@ -1587,7 +1576,7 @@ class DcnmServicePolicy:
 
         resp = None
 
-        path = fixed_path + "/attachments?policy-names="
+        path = fixed_path + self.paths["SP_DETACH_SUFFIX"]
         path = path + ",".join(policy_list)
 
         resp = dcnm_send(self.module, "DELETE", path, "")
@@ -1605,17 +1594,8 @@ class DcnmServicePolicy:
             resp (dict): Response from DCNM server
         """
 
+        path = self.paths["SP_DELETE"].format(sp["fabricName"], sp["serviceNodeName"], sp["attachedFabricName"], sp["policyName"])
         # Delete the service policy
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + sp["fabricName"]
-            + "/service-nodes/"
-            + sp["serviceNodeName"]
-            + "/policies/"
-            + sp["attachedFabricName"]
-            + "/"
-            + sp["policyName"]
-        )
 
         json_payload = json.dumps(sp)
 
@@ -1635,7 +1615,7 @@ class DcnmServicePolicy:
             resp (dict): Response from DCNM server
         """
 
-        path = fixed_path + "/deployments"
+        path = fixed_path + self.paths["SP_DEPLOY_SUFFIX"]
         json_payload = json.dumps(policy_list)
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
@@ -1653,11 +1633,7 @@ class DcnmServicePolicy:
             resp (dict): Response from DCNM server
         """
 
-        path = (
-            "/rest/control/fabrics/"
-            + self.module.params["fabric"]
-            + "/config-deploy"
-        )
+        path = self.paths["SP_CFG_SAVE_DEPLOY"].format(self.module.params["fabric"])
 
         resp = dcnm_send(self.module, "POST", path, "")
         return resp
@@ -1683,18 +1659,24 @@ class DcnmServicePolicy:
 
             retries = 0
             att_state = "Unknown"
-            while retries < 10:
+            while retries < 50:
                 retries += 1
                 resp, retry, deployed, att_state = self.dcnm_sp_get_sp_deployment_status(sp, True)
 
                 if att_state == final_state:
                     break
+                # Sometimes the deploy state will remain in "success" state after detach and deploy. Go ahead and delete
+                if final_state == "na":
+                    if att_state.lower() == "success":
+                        if (retries % 10) == 0:
+                            att_state = final_state
+                            break
                 if att_state == "out-of-sync":
                     self.dcnm_sp_config_save_and_deploy()
                 time.sleep(30)
             # After all retries, if the SP did not move to 'final_state' it is an error
             if att_state != final_state:
-                self.module.fail_json(msg=resp)
+                self.module.fail_json (msg={"CHANGED": self.changed_dict[0], "FAILURE REASON": "SP "+ sp["policyName"] +" did not reach 'In-Sync' State", "Attach State" : att_state})
 
     def dcnm_sp_combine_policies(self, sp, pol_info):
 
@@ -1711,14 +1693,7 @@ class DcnmServicePolicy:
             pol_info(dict): A dict containing a list of combined policies including the current one
         """
 
-        path = (
-            "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/"
-            + sp["fabricName"]
-            + "/service-nodes/"
-            + sp["serviceNodeName"]
-            + "/policies/"
-            + sp["attachedFabricName"]
-        )
+        path = self.paths["SP_PREFIX"].format(sp["fabricName"], sp["serviceNodeName"], sp["attachedFabricName"])
 
         if pol_info.get(path) is None:
             pol_info[path] = {"policyNames": []}
@@ -1823,6 +1798,7 @@ class DcnmServicePolicy:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         for srp in self.diff_modify:
@@ -1842,6 +1818,7 @@ class DcnmServicePolicy:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if self.diff_delete:
@@ -1883,6 +1860,7 @@ class DcnmServicePolicy:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)
             if (resp and resp.get("RETURN_CODE") != 200) or detach_failed:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         # For delete case we have done a detach. do a deploy before actual delete
@@ -1915,10 +1893,10 @@ class DcnmServicePolicy:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if (resp and resp.get("RETURN_CODE") != 200) or del_deploy_failed:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if delete_flag:
-            time.sleep(180)
             self.dcnm_sp_check_deployment_status (self.diff_delete, "na")
 
         # All policies are detached and deployed. Now go ahead and delete the same from the server
@@ -1940,6 +1918,7 @@ class DcnmServicePolicy:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if resp and resp.get("RETURN_CODE") != 200:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if self.diff_deploy:
@@ -1978,11 +1957,10 @@ class DcnmServicePolicy:
             resp["RETRIES"] = retries
             self.result["response"].append(resp)
             if (resp and resp.get("RETURN_CODE") != 200) or deploy_failed:
+                resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 
         if deploy_flag:
-            # Wait for a while for the DCNM to deploy the config
-            time.sleep(180)
             # Ensure all the route peerings are properly deployed before returning.
             self.dcnm_sp_check_deployment_status (self.diff_deploy, "in-sync")
 
