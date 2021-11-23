@@ -7,6 +7,7 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
+    check_deploy: True
     fabric: "{{ ansible_it_fabric }}" 
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
@@ -24,6 +25,7 @@
 
     - name: Create PC interface with profile name wrong
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -43,6 +45,7 @@
 
     - name: Create PC interface with profile name in old format
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -62,6 +65,7 @@
 
     - name: Create ETH interface with profile name old format
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -81,6 +85,7 @@
 
     - name: Create sub-interface with profile name in old format
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -103,6 +108,7 @@
 
     - name: Create Loopback interfaces with profile name in old format
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -123,6 +129,7 @@
 
     - name: Create vPC interface with profile name in old format
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -143,6 +150,7 @@
 
     - name: Create vPC interface with switch elements in old format
       cisco.dcnm.dcnm_interface: 
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
