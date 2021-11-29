@@ -1537,5 +1537,30 @@
       "METHOD": "DELETE",
       "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-105105",
       "RETURN_CODE": 200
+    },
+
+    "config_preview": {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon/config-preview?forceShowRun=false&showBrief=true",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchId": "XYZKSJHSMK1",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "XYZKSJHSMK2",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "XYZKSJHSMK3",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "SAL1812NTBP",
+        "status": "In-Sync"
+      }
+      ]
     }
 }
