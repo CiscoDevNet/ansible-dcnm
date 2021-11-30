@@ -252,11 +252,13 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104   = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105   = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
 
             self.run_dcnm_send.side_effect = [have_resp_101_105,
                                               mark_delete_resp_101, mark_delete_resp_102,
                                               mark_delete_resp_103, mark_delete_resp_104,
                                               mark_delete_resp_105, delete_config_save_resp, 
+                                              config_preview,
                                               [], [], [], [], [],
                                               ]
 
@@ -274,6 +276,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104  = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105  = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
 
             self.run_dcnm_send.side_effect = [
                                               get_response_101, get_response_102,
@@ -282,6 +285,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               mark_delete_resp_101, mark_delete_resp_102,
                                               mark_delete_resp_103, mark_delete_resp_104,
                                               mark_delete_resp_105, delete_config_save_resp, 
+                                              config_preview,
                                               [], [], [], [], [],
                                               ]
         if ('test_dcnm_policy_delete_multiple_policies_with_template_name' == self._testMethodName):
@@ -293,6 +297,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104    = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105    = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
 
             self.run_dcnm_send.side_effect = [have_resp_101_105_multi,
                                               mark_delete_resp_101, mark_delete_resp_101,
@@ -300,6 +305,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               mark_delete_resp_102, mark_delete_resp_103,
                                               mark_delete_resp_104, mark_delete_resp_105,
                                               delete_config_save_resp, 
+                                              config_preview,
                                               [], [], [], [], [], [], [], [],
                                               ]
 
@@ -318,6 +324,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104  = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105  = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
             delete_resp_101       = self.payloads_data.get('delete_response_101')
             delete_resp_102       = self.payloads_data.get('delete_response_102')
             delete_resp_103       = self.payloads_data.get('delete_response_103')
@@ -328,6 +335,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               mark_delete_resp_101, mark_delete_resp_102,
                                               mark_delete_resp_103, mark_delete_resp_104,
                                               mark_delete_resp_105, delete_config_save_resp, 
+                                              config_preview,
                                               get_response_101, delete_resp_101,
                                               get_response_102, delete_resp_102,
                                               get_response_103, delete_resp_103,
