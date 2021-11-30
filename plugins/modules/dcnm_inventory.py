@@ -234,9 +234,9 @@ class DcnmInventory:
             response=[]
         )
 
+        self.controller_version = dcnm_version_supported(self.module)
         self.fabric_details = get_fabric_details(self.module, self.fabric)
 
-        self.controller_version = dcnm_version_supported(self.module)
         self.nd = True if self.controller_version >= 12 else False
 
     def update_discover_params(self, inv):
