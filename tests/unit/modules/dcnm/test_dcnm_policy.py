@@ -51,6 +51,9 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.mock_dcnm_ip_sn = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_policy.get_ip_sn_dict')
         self.run_dcnm_ip_sn = self.mock_dcnm_ip_sn.start()
 
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_policy.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_policy.dcnm_send')
         self.run_dcnm_send  = self.mock_dcnm_send.start()
 
@@ -58,6 +61,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
         super(TestDcnmPolicyModule, self).tearDown()
         self.mock_dcnm_send.stop()
+        self.mock_dcnm_version_supported.stop()
 
 #################################### FIXTURES ############################
 
@@ -248,11 +252,13 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104   = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105   = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
 
             self.run_dcnm_send.side_effect = [have_resp_101_105,
                                               mark_delete_resp_101, mark_delete_resp_102,
                                               mark_delete_resp_103, mark_delete_resp_104,
                                               mark_delete_resp_105, delete_config_save_resp, 
+                                              config_preview,
                                               [], [], [], [], [],
                                               ]
 
@@ -270,6 +276,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104  = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105  = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
 
             self.run_dcnm_send.side_effect = [
                                               get_response_101, get_response_102,
@@ -278,6 +285,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               mark_delete_resp_101, mark_delete_resp_102,
                                               mark_delete_resp_103, mark_delete_resp_104,
                                               mark_delete_resp_105, delete_config_save_resp, 
+                                              config_preview,
                                               [], [], [], [], [],
                                               ]
         if ('test_dcnm_policy_delete_multiple_policies_with_template_name' == self._testMethodName):
@@ -289,6 +297,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104    = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105    = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
 
             self.run_dcnm_send.side_effect = [have_resp_101_105_multi,
                                               mark_delete_resp_101, mark_delete_resp_101,
@@ -296,6 +305,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               mark_delete_resp_102, mark_delete_resp_103,
                                               mark_delete_resp_104, mark_delete_resp_105,
                                               delete_config_save_resp, 
+                                              config_preview,
                                               [], [], [], [], [], [], [], [],
                                               ]
 
@@ -314,6 +324,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             mark_delete_resp_104  = self.payloads_data.get('mark_delete_response_104')
             mark_delete_resp_105  = self.payloads_data.get('mark_delete_response_105')
             delete_config_save_resp = self.payloads_data.get('delete_config_deploy_response_101_105')
+            config_preview = self.payloads_data.get('config_preview')
             delete_resp_101       = self.payloads_data.get('delete_response_101')
             delete_resp_102       = self.payloads_data.get('delete_response_102')
             delete_resp_103       = self.payloads_data.get('delete_response_103')
@@ -324,6 +335,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
                                               mark_delete_resp_101, mark_delete_resp_102,
                                               mark_delete_resp_103, mark_delete_resp_104,
                                               mark_delete_resp_105, delete_config_save_resp, 
+                                              config_preview,
                                               get_response_101, delete_resp_101,
                                               get_response_102, delete_resp_102,
                                               get_response_103, delete_resp_103,
@@ -367,6 +379,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         # setup the side effects
         self.run_dcnm_fabric_details.side_effect = [self.mock_fab_inv]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, []]]
+        self.run_dcnm_version_supported.side_effect = [11]
 
         # Load policy related side-effects
         self.load_policy_fixtures ()

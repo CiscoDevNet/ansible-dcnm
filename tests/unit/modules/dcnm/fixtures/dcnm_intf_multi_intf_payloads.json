@@ -16,6 +16,7 @@
 						"FABRIC_NAME": "test_fabric",
 						"PO_ID": "Port-channel300",
 						"MTU": "jumbo",
+						"SPEED": "auto",
 						"PRIORITY": "500",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PC_MODE": "on",
@@ -33,5 +34,5 @@
 		],
 		"RETURN_CODE": 200,
 		"METHOD": "GET"
-	},
+	}
 }

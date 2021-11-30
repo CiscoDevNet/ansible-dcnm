@@ -88,12 +88,18 @@ class TestDcnmServiceNodeModule(TestDcnmModule):
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_node.dcnm_send')
         self.run_dcnm_send = self.mock_dcnm_send.start()
 
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_node.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+
     def tearDown(self):
         super(TestDcnmServiceNodeModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
+        self.mock_dcnm_version_supported.stop()
 
     def load_fixtures(self, response=None, device=''):
+
+        self.run_dcnm_version_supported.return_value = 11
 
         if 'sn_blank_fabric' in self._testMethodName:
             self.run_dcnm_ip_sn.side_effect = [{}]

@@ -339,6 +339,7 @@ EXAMPLES = """
 import json
 import re
 import copy
+import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
@@ -347,10 +348,34 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
     validate_list_of_dicts,
     get_ip_sn_dict,
+    dcnm_version_supported
 )
 
-
 class DcnmPolicy:
+
+    dcnm_policy_paths = {
+        11: {
+              "POLICY_WITH_ID": "/rest/control/policies/{}",
+              "POLICY_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
+              "POLICY_BULK_CREATE": "/rest/control/policies/bulk-create",
+              "POLICY_MARK_DELETE": "/rest/control/policies/{}/mark-delete",
+              "POLICY_DEPLOY": "/rest/control/policies/deploy",
+              "POLICY_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
+              "POLICY_WITH_POLICY_ID": "/rest/control/policies/{}",
+              "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview?forceShowRun=false&showBrief=true"
+            },
+        12: {
+              "POLICY_WITH_ID": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/{}",
+              "POLICY_GET_SWITCHES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+              "POLICY_BULK_CREATE": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/bulk-create",
+              "POLICY_MARK_DELETE": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/{}/mark-delete",
+              "POLICY_DEPLOY": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/deploy",
+              "POLICY_CFG_DEPLOY": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
+              "POLICY_WITH_POLICY_ID": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/{}",
+              "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview?forceShowRun=false&showBrief=true"
+            }
+    }
+
     def __init__(self, module):
         self.module = module
         self.params = module.params
@@ -379,19 +404,23 @@ class DcnmPolicy:
             }
         ]
 
+        self.dcnm_version = dcnm_version_supported(self.module)
+
         self.inventory_data = get_fabric_inventory_details(
             self.module, self.fabric
         )
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(changed=False, diff=[], response=[])
+        self.paths = self.dcnm_policy_paths[self.dcnm_version]
 
     def log_msg(self, msg):
 
         if self.fd is None:
-            self.fd = open("policy.log", "a+")
+            self.fd = open("policy.log", "w+")
         if self.fd is not None:
             self.fd.write(msg)
+            self.fd.write("\n")
             self.fd.flush()
 
     # Flatten the incoming config database and have the required fileds updated.
@@ -528,7 +557,7 @@ class DcnmPolicy:
 
     def dcnm_policy_get_policy_info_from_dcnm(self, policy_id):
 
-        path = "/rest/control/policies/" + policy_id
+        path = self.paths["POLICY_WITH_ID"].format(policy_id)
 
         resp = dcnm_send(self.module, "GET", path)
 
@@ -544,7 +573,7 @@ class DcnmPolicy:
 
     def dcnm_policy_get_all_policies(self, snos):
 
-        path = "/rest/control/policies/switches?serialNumber=" + snos
+        path = self.paths["POLICY_GET_SWITCHES"].format(snos)
 
         # Append ',' separated snos ro the path and get all policies. Then filter the list based on the
         # given template name
@@ -727,7 +756,7 @@ class DcnmPolicy:
         payload = {
             "id": int(policy["policyId"].split("-")[1]),
             "source": "",
-            "serialNumber": "SAL1812NTBP",
+            "serialNumber": policy["serialNumber"],
             "policyId": policy["policyId"],
             "entityType": "SWITCH",
             "entityName": "SWITCH",
@@ -862,7 +891,7 @@ class DcnmPolicy:
 
     def dcnm_policy_create_policy(self, policy, command):
 
-        path = "/rest/control/policies/bulk-create"
+        path = self.paths["POLICY_BULK_CREATE"]
 
         json_payload = json.dumps(policy)
 
@@ -892,11 +921,11 @@ class DcnmPolicy:
     def dcnm_policy_delete_policy(self, policy, mark_del):
 
         if mark_del is True:
-            path = "/rest/control/policies/" + policy["policyId"] + "/mark-delete"
+            path = self.paths["POLICY_MARK_DELETE"].format(policy["policyId"])
             json_payload = ""
             command = "PUT"
         else:
-            path = "/rest/control/policies/" + policy
+            path = self.paths["POLICY_WITH_POLICY_ID"].format(policy)
             json_payload = ""
             command = "DELETE"
 
@@ -906,7 +935,7 @@ class DcnmPolicy:
 
     def dcnm_policy_deploy_policy(self, policy):
 
-        path = "/rest/control/policies/deploy"
+        path = self.paths["POLICY_DEPLOY"]
 
         json_payload = json.dumps(policy)
 
@@ -917,7 +946,7 @@ class DcnmPolicy:
 
     def dcnm_policy_save_and_deploy(self, snos):
 
-        deploy_path = "/rest/control/fabrics/" + self.fabric + "/config-deploy/"
+        deploy_path = self.paths["POLICY_CFG_DEPLOY"].format(self.fabric)
 
         resp = dcnm_send(self.module, "POST", deploy_path, "")
         self.result["response"].append(resp)
@@ -961,17 +990,41 @@ class DcnmPolicy:
         # Once all policies are deleted, do a save & deploy so that the deleted policies are removed from the
         # switch
         if (snos != []) and (mark_delete_flag is True):
-            resp = self.dcnm_policy_save_and_deploy(snos)
-            if (
-                resp
-                and (resp["RETURN_CODE"] != 200)
-            ):
-                self.module.fail_json(msg=resp)
+
+            retries = 0
+            while retries < 50:
+
+                retries += 1
+                resp = self.dcnm_policy_save_and_deploy(snos)
+                if (
+                    resp
+                    and (resp["RETURN_CODE"] != 200)
+                ):
+                    self.module.fail_json(msg=resp)
+
+                # Get the SYNC status of the switch. Afte config and deploy at fabric level, the status 
+                # MUST be "In-Sync". If not keep retrying    
+                path = self.paths["CONFIG_PREVIEW"].format(self.fabric)
+                cp_resp = dcnm_send(self.module, "GET", path, "")
+
+                if cp_resp.get ("RETURN_CODE", 0) == 200:
+                    match_data = [item for item in cp_resp.get ("DATA", []) if item["switchId"] in snos]
+                else:
+                    self.module.fail_json(msg=cp_resp)
+
+                retry = False
+                for item in match_data:
+                    if item["status"].lower() != "in-sync":
+                        retry = True
+                if retry:
+                    time.sleep(1)
+                else:
+                    break
 
         # Now use 'DELETE' command to delete the policies on the DCNM server
         for ditem in delete:
             # First check if the policy to be deleted exist.
-            path = "/rest/control/policies/" + ditem
+            path = self.paths["POLICY_WITH_POLICY_ID"].format(ditem)
 
             resp = dcnm_send(self.module, "GET", path, "")
 

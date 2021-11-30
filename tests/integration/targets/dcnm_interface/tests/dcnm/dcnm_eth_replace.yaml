@@ -2,8 +2,12 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
+    check_deploy: True
     fabric: "{{ ansible_it_fabric }}" 
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
@@ -21,6 +25,7 @@
 
     - name: Create ethernet interfaces
       cisco.dcnm.dcnm_interface: &eth_merge
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -88,7 +93,7 @@
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.168.2.1          # ipv4 address for the interface
               ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
-              ipv6_addr: fd01::0102           # ipV6 address for the interface
+              ipv6_addr: fd05::0102           # ipV6 address for the interface
               ipv6_mask_len: 64               # ipv6 mask len, choose between [min:64, max:127]
               route_tag: ""                   # Routing Tag for the interface
               mtu: 9216                       # choose from [min=576, max=9216]
@@ -125,6 +130,7 @@
 
     - name: Replace ethernet interfaces
       cisco.dcnm.dcnm_interface: &eth_replace
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -192,7 +198,7 @@
               int_vrf: ""                     # VRF name
               ipv4_addr: 192.168.4.1          # ipv4 address for the interface
               ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
-              ipv6_addr: fd01::0104           # ipV6 address for the interface
+              ipv6_addr: fd05::0104           # ipV6 address for the interface
               ipv6_mask_len: 64               # ipv6 mask len, choose between [min:64, max:127]
               route_tag: ""                   # Routing Tag for the interface
               mtu: 576                        ## choose from [min=576, max=9216]
@@ -241,12 +247,15 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

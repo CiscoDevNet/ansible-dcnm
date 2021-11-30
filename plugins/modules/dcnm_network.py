@@ -365,20 +365,7 @@ EXAMPLES = '''
     state: query
     config:
     - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
     - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      deploy: false
 '''
 
 import json
@@ -386,12 +373,34 @@ import time
 import copy
 import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, \
+    get_ip_sn_fabric_dict, dcnm_version_supported
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
 
 class DcnmNetwork:
+
+    dcnm_network_paths={
+        11: {
+                "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
+                "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
+                "GET_NET_ATTACH": "/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+                "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
+                "GET_NET": "/rest/top-down/fabrics/{}/networks",
+                "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
+                "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
+            },
+        12: {
+                "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+                "GET_VRF_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
+                "GET_NET_ATTACH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+                "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
+                "GET_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
+                "GET_NET_NAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
+                "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
+            }
+    }
 
     def __init__(self, module):
         self.module = module
@@ -426,11 +435,16 @@ class DcnmNetwork:
         self.diff_delete = {}
         self.diff_input_format = []
         self.query = []
+        self.dcnm_version = dcnm_version_supported(self.module)
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         self.fabric_det = get_fabric_details(module, self.fabric)
         self.is_ms_fabric = True if self.fabric_det.get('fabricType') == 'MFD' else False
+        if self.dcnm_version > 12:
+            self.paths = self.dcnm_network_paths[12]
+        else:
+            self.paths = self.dcnm_network_paths[self.dcnm_version]
 
         self.result = dict(
             changed=False,
@@ -817,7 +831,7 @@ class DcnmNetwork:
         state = self.params['state']
 
         method = 'GET'
-        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        path = self.paths["GET_VRF"].format(self.fabric)
 
         vrf_objects = dcnm_send(self.module, method, path)
 
@@ -830,7 +844,7 @@ class DcnmNetwork:
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
 
-        if not state == 'deleted':
+        if not state == 'deleted' and not state == 'query':
             if self.config:
                 for net in self.config:
                     vrf_found = False
@@ -851,7 +865,7 @@ class DcnmNetwork:
 
         for vrf in vrf_objects['DATA']:
 
-            path = '/rest/top-down/fabrics/{}/networks?vrf-name={}'.format(self.fabric, vrf['vrfName'])
+            path = self.paths["GET_VRF_NET"].format(self.fabric, vrf['vrfName'])
 
             networks_per_vrf = dcnm_send(self.module, method, path)
 
@@ -887,7 +901,7 @@ class DcnmNetwork:
                 have_create.append(net)
 
         if l2only_configured is True or state == 'deleted':
-            path = '/rest/top-down/fabrics/{}/networks?vrf-name={}'.format(self.fabric, "NA")
+            path = self.paths["GET_VRF_NET"].format(self.fabric, "NA")
             networks_per_navrf = dcnm_send(self.module, method, path)
 
             if networks_per_navrf.get('DATA'):
@@ -922,8 +936,7 @@ class DcnmNetwork:
         if not curr_networks:
             return
 
-        path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
-            format(self.fabric, ','.join(curr_networks))
+        path = self.paths["GET_NET_ATTACH"].format(self.fabric, ','.join(curr_networks))
 
         net_attach_objects = dcnm_send(self.module, method, path)
 
@@ -1305,10 +1318,13 @@ class DcnmNetwork:
                     method = 'POST'
 
                     attempt = 0
-                    while True or attempt < 10:
+                    while True and attempt < 10:
                         attempt += 1
-                        path = '/rest/managed-pool/fabrics/{}/segments/ids'.format(self.fabric)
-                        net_id_obj = dcnm_send(self.module, method, path)
+                        path = self.paths["GET_NET_ID"].format(self.fabric)
+                        if self.dcnm_version > 11:
+                            net_id_obj = dcnm_send(self.module, 'GET', path)
+                        else:
+                            net_id_obj = dcnm_send(self.module, method, path)
 
                         missing_fabric, not_ok = self.handle_response(net_id_obj, 'query_dcnm')
 
@@ -1322,7 +1338,14 @@ class DcnmNetwork:
                         if not net_id_obj['DATA']:
                             continue
 
-                        net_id = net_id_obj['DATA'].get('segmentId')
+                        if self.dcnm_version == 11:
+                            net_id = net_id_obj['DATA'].get('segmentId')
+                        elif self.dcnm_version >= 12:
+                            net_id = net_id_obj['DATA'].get('l2vni')
+                        else:
+                            msg = "Unsupported DCNM version: version {}".format(self.dcnm_version)
+                            self.module.fail_json(msg)
+
                         if net_id != prev_net_id_fetched:
                             want_c.update({'networkId': net_id})
                             prev_net_id_fetched = net_id
@@ -1332,7 +1355,7 @@ class DcnmNetwork:
                         self.module.fail_json(msg="Unable to generate networkId for network: {} "
                                                   "under fabric: {}".format(want_c['networkName'], self.fabric))
 
-                    create_path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
+                    create_path = self.paths["GET_NET"].format(self.fabric)
                     diff_create_quick.append(want_c)
 
                     if self.module.check_mode:
@@ -1527,7 +1550,7 @@ class DcnmNetwork:
     def get_diff_query(self):
 
         method = 'GET'
-        path = '/rest/top-down/fabrics/{}/vrfs'.format(self.fabric)
+        path = self.paths["GET_VRF"].format(self.fabric)
 
         vrf_objects = dcnm_send(self.module, method, path)
 
@@ -1546,20 +1569,19 @@ class DcnmNetwork:
                 for want_c in self.want_create:
                     # Query the Network
                     item = {'parent': {}, 'attach': []}
-                    path = '/rest/top-down/fabrics/{}/networks/{}'.format(self.fabric, want_c['networkName'])
+                    path = self.paths["GET_NET_NAME"].format(self.fabric, want_c['networkName'])
                     network = dcnm_send(self.module, method, path)
 
                     if not network['DATA']:
                         continue
 
                     net = network['DATA']
-                    if (want_c['networkId'] == net['networkId']) and want_c['vrf'] == net['vrf']:
+                    if (want_c['networkName'] == net['networkName']):
                         item['parent'] = net
                         item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
 
                         # Query the Attachment for the found Networks
-                        path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
-                            format(self.fabric, want_c['networkName'])
+                        path = self.paths["GET_NET_ATTACH"].format(self.fabric, want_c['networkName'])
                         net_attach_objects = dcnm_send(self.module, method, path)
 
                         if not net_attach_objects['DATA']:
@@ -1578,7 +1600,7 @@ class DcnmNetwork:
 
         else:
             query = []
-            path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
+            path = self.paths["GET_NET"].format(self.fabric)
             networks = dcnm_send(self.module, method, path)
 
             if not networks['DATA']:
@@ -1591,8 +1613,7 @@ class DcnmNetwork:
                 item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
 
                 # fetch the attachment for the network
-                path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'. \
-                            format(self.fabric, net['networkName'])
+                path = self.paths["GET_NET_ATTACH"].format(self.fabric, net['networkName'])
                 net_attach_objects = dcnm_send(self.module, method, path)
 
                 if not net_attach_objects['DATA']:
@@ -1616,7 +1637,7 @@ class DcnmNetwork:
         if self.diff_delete:
             for net in self.diff_delete:
                 state = False
-                path = '/rest/top-down/fabrics/{}/networks/attachments?network-names={}'.format(self.fabric, net)
+                path = self.paths["GET_NET_ATTACH"].format(self.fabric, net)
                 while not state:
                     resp = dcnm_send(self.module, method, path)
                     state = True
@@ -1645,7 +1666,7 @@ class DcnmNetwork:
 
     def push_to_remote(self, is_rollback=False):
 
-        path = '/rest/top-down/fabrics/{}/networks'.format(self.fabric)
+        path = self.paths["GET_NET"].format(self.fabric)
 
         method = 'PUT'
         if self.diff_create_update:
@@ -1725,7 +1746,7 @@ class DcnmNetwork:
                 vlanId = json_to_dict.get('vlanId', "")
 
                 if not vlanId:
-                    vlan_path = '/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN'.format(self.fabric)
+                    vlan_path = self.paths["GET_VLAN"].format(self.fabric)
                     vlan_data = dcnm_send(self.module, 'GET', vlan_path)
 
                     if vlan_data['RETURN_CODE'] != 200:
@@ -1772,7 +1793,7 @@ class DcnmNetwork:
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
                 update_in_progress = False
                 for key in resp['DATA'].keys():
-                    if re.search(r'Failed.*Please try after some time', resp['DATA'][key]):
+                    if re.search(r'Failed.*Please try after some time', str(resp['DATA'][key])):
                         update_in_progress = True
                 if update_in_progress:
                     time.sleep(1)

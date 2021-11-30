@@ -12,6 +12,7 @@
 					"nvPairs": {
 						"CONF": "no shutdown",
 						"MTU": "jumbo",
+            "SPEED": "auto",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"ADMIN_STATE": "True",
 						"INTF_NAME": "Ethernet1/10",
@@ -45,6 +46,7 @@
 						"FABRIC_NAME": "test_fabric",
 						"PO_ID": "Port-channel350",
 						"MTU": "jumbo",
+            "SPEED": "auto",
 						"PRIORITY": "500",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PC_MODE": "on",
@@ -80,6 +82,7 @@
 						"INTF_VRF": "",
 						"ADMIN_STATE": "True",
 						"INTF_NAME": "Loopback450",
+            "SPEED": "auto",
 						"V6IP": "",
 						"DESC": "loopback interface 100 configuration"
 					},
@@ -105,6 +108,7 @@
 					"nvPairs": {
 						"CONF": "no shutdown",
 						"MTU": "jumbo",
+            "SPEED": "auto",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"ADMIN_STATE": "True",
 						"INTF_NAME": "Ethernet1/1",
@@ -140,6 +144,7 @@
 						"IP": "1.1.1.1",
 						"VLAN": "100",
 						"MTU": "9216",
+            "SPEED": "auto",
 						"PRIORITY": "500",
 						"PREFIX": "24",
 						"ADMIN_STATE": "True",
@@ -173,6 +178,7 @@
 						"PEER1_PO_CONF": "no shutdown",
 						"PEER1_PCID": "1",
 						"MTU": "jumbo",
+            "SPEED": "auto",
 						"PEER1_PO_DESC": "VPC acting as trunk peer1",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PEER1_MEMBER_INTERFACES": "e1/14",

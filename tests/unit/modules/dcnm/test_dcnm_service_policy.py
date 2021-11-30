@@ -46,6 +46,9 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
         self.mock_dcnm_send = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_policy.dcnm_send')
         self.run_dcnm_send  = self.mock_dcnm_send.start()
 
+        self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_policy.dcnm_version_supported')
+        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
+
         self.mock_dcnm_reset_connection = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_service_policy.dcnm_reset_connection')
         self.run_dcnm_reset_connection  = self.mock_dcnm_reset_connection.start()
 
@@ -53,6 +56,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
 
         super(TestDcnmServicePolicyModule, self).tearDown()
         self.mock_dcnm_send.stop()
+        self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_reset_connection.stop()
 
 #################################### FIXTURES ############################
@@ -703,6 +707,7 @@ class TestDcnmServicePolicyModule(TestDcnmModule):
 
     def load_fixtures(self, response=None, device=''):
 
+        self.run_dcnm_version_supported.side_effect = [11]
         # Load service policy related side-effects
         self.load_sp_fixtures ()
 

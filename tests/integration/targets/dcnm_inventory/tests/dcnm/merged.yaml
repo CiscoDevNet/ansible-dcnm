@@ -2,10 +2,18 @@
 ##                 SETUP                    ##
 ##############################################
 
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+
 - name: MERGED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/{{ ansible_it_fabric }}
+    path: "{{ rest_path }}"
   register: result
 
 - assert:
@@ -16,10 +24,6 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 ##############################################
 ##                MERGED                    ##
@@ -32,8 +36,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -43,18 +47,11 @@
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[1].DATA.status == "Success"'
-    - 'result.response[2].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[3].DATA'
-    - 'result.response[5].DATA.status == "Config save is completed"'
-    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
 
 - name: MERGED - conf1 - GF - Idempotence
   cisco.dcnm.dcnm_inventory: *conf
@@ -70,10 +67,6 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - Merge a Switch using BrownField Deployment
   cisco.dcnm.dcnm_inventory: &conf_bf
     fabric: "{{ ansible_it_fabric }}"
@@ -81,8 +74,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -92,18 +85,11 @@
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[1].DATA.status == "Success"'
-    - 'result.response[2].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[3].DATA'
-    - 'result.response[5].DATA.status == "Config save is completed"'
-    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
 
 - name: MERGED - conf2 -BF- Idempotence
   cisco.dcnm.dcnm_inventory: *conf_bf
@@ -119,18 +105,14 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - Merge a Switch using GreenField Deployment - Using default role/auth_proto
   cisco.dcnm.dcnm_inventory: &conf_def
     fabric: "{{ ansible_it_fabric }}"
     state: merged
     config:
     - seed_ip: "{{ ansible_switch1 }}"
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       preserve_config: False # boolean, default is  true
   register: result
@@ -138,18 +120,11 @@
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[1].DATA.status == "Success"'
-    - 'result.response[2].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[3].DATA'
-    - 'result.response[5].DATA.status == "Config save is completed"'
-    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
 
 - name: MERGED - conf1 - GF - Idempotence
   cisco.dcnm.dcnm_inventory: *conf_def
@@ -160,18 +135,10 @@
     - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - setup - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: Add Switch with Border Gateways and MD5 to fabric
   cisco.dcnm.dcnm_inventory: &conf_role
@@ -183,42 +150,25 @@
       preserve_config: false
       role: border_gateway
       auth_proto: MD5
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
     - seed_ip: "{{ ansible_switch2 }}"
       max_hops: 0
       preserve_config: false
       role: border_gateway
       auth_proto: MD5
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
   register: result
 
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[7].RETURN_CODE == 200'
-    - 'result.response[8].RETURN_CODE == 200'
-    - 'result.response[9].RETURN_CODE == 200'
-    - 'result.response[10].RETURN_CODE == 200'
-    - 'result.response[11].RETURN_CODE == 200'
-    - 'result.response[2].DATA.status == "Success"'
-    - 'result.response[3].DATA.status == "Success"'
-    - 'result.response[4].DATA.status == "Success"'
-    - 'result.response[5].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[6].DATA'
-    - '"Operation is successful" in result.response[7].DATA'
-    - 'result.response[8].DATA.newRole == "border gateway"'
-    - 'result.response[9].DATA.newRole == "border gateway"'
-    - 'result.response[10].DATA.status == "Config save is completed"'
-    - 'result.response[11].DATA.status == "Config deployment has been triggered"'
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
 
 - name: Wait for 40 secs
   wait_for:
@@ -228,18 +178,10 @@
   cisco.dcnm.dcnm_inventory: *conf_role
   register: result
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - setup - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Merge a Switch without seed_ip
   cisco.dcnm.dcnm_inventory:
@@ -248,8 +190,8 @@
     config:
     - seed_ip:
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -269,8 +211,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: nnnnddd # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -290,8 +232,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD55DM # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]

@@ -137,7 +137,8 @@
 				{
 					"interfaceType": "INTERFACE_ETHERNET",
 					"nvPairs": {
-						"INTF_NAME": "Ethernet1/34"
+						"INTF_NAME": "Ethernet1/34",
+            "SPEED": "auto"
 					},
 					"ifName": "Ethernet1/34",
 					"serialNumber": "SAL1819SAN8",
