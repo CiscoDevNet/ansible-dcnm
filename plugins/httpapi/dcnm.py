@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2021 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,11 +35,6 @@ import requests
 from ansible.module_utils._text import to_text
 from ansible.module_utils.connection import ConnectionError
 from ansible.plugins.httpapi import HttpApiBase
-
-# Remove later
-import inspect
-
-import datetime
 
 
 class HttpApi(HttpApiBase):
@@ -132,7 +127,6 @@ class HttpApi(HttpApiBase):
             self.fail_msg.append('Error on attempt to logout from NDFC controller: {}'.format(e))
 
     def logout(self):
-        logmsg = 'FUNCTION {}'.format(inspect.stack()[0][3])
         if self.connection._auth is None:
             return
 
