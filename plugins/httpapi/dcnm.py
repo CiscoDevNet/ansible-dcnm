@@ -108,7 +108,7 @@ class HttpApi(HttpApiBase):
 
         # If both login attemps fail, raise ConnectionError
         if not self.login_succeeded:
-            raise ConnectionError(self._return_info(None, method, path, self.fail_msg))
+            raise ConnectionError(self.fail_msg)
 
     def _logout_old(self, method, path):
         try:
@@ -145,7 +145,7 @@ class HttpApi(HttpApiBase):
         # If both login attemps fail, raise ConnectionError
         if not self.logout_succeeded:
             self.fail_msg.append('Error on attempt to logout from DCNM controller: Unknown DCNM Version')
-            raise ConnectionError(self._return_info(None, method, path, self.fail_msg))
+            raise ConnectionError(self.fail_msg)
 
         self.connection._auth = None
 
@@ -215,11 +215,11 @@ class HttpApi(HttpApiBase):
         rc = response.getcode()
         path = response.geturl()
         msg = response.msg
-        if rc >= 200 and rc <= 299:
+        # This function calls self._return_info to pass the response
+        # data back in a structured dictionary format.
+        # A ConnectionError is generated if the return code is unknown.
+        if rc >= 200 and rc <= 600:
             return self._return_info(rc, method, path, msg, jrd)
-        if rc >= 400:
-            # Add future error code processing here
-            pass
         else:
             msg = 'Unknown RETURN_CODE: {}'.format(rc)
         raise ConnectionError(self._return_info(rc, method, path, msg, jrd))
