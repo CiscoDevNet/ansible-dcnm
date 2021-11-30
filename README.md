@@ -1,11 +1,13 @@
 [![Actions Status](https://github.com/CiscoDevNet/ansible-dcnm/workflows/CI/badge.svg)](https://github.com/CiscoDevNet/ansible-dcnm/actions)
 
 
-# Cisco DCNM Collection
+# Cisco NDFC Collection
 
-The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
+The Ansible Cisco Nexus® Dashboard Fabric Controller (NDFC) (formerly Cisco Data Center Network Manager (DCNM)) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
 
-This collection is intended for use with `DCNM Release 11.4(1)` or later.
+This collection is intended for use with the following release versions:
+  * `DCNM Release 11.4(1)` or later
+  * `NDFC Release 12.0` or later.
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -18,7 +20,7 @@ PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
 ### Supported connections
-The Cisco DCNM collection supports ``httpapi`` connections.
+The Cisco NDFC collection supports ``httpapi`` connections.
 
 ## Included content
 <!--start collection content-->
@@ -47,7 +49,7 @@ Click the ``Content`` button to see the list of content included in this collect
 
 ## Installing this collection
 
-You can install the Cisco DCNM collection with the Ansible Galaxy CLI:
+You can install the Cisco NDFC collection with the Ansible Galaxy CLI:
 
     ansible-galaxy collection install cisco.dcnm
 
@@ -57,7 +59,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 1.2.3
+    version: 2.0.0
 ```
 ## Using this collection
 
@@ -159,9 +161,9 @@ all:
 
 ## Contributing to this collection
 
-Ongoing development efforts and contributions to this collection are solely focused on enhancements to current dcnm modules, additional dcnm modules and enhancements to the connection plugin.
+Ongoing development efforts and contributions to this collection are solely focused on enhancements to current ndfc modules, additional ndfc modules and enhancements to the connection plugin.
 
-We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco DCNM collection repository](https://github.com/CiscoDevNet/ansible-dcnm/issues).
+We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco NDFC collection repository](https://github.com/CiscoDevNet/ansible-dcnm/issues).
 
 ## Changelogs
 
@@ -175,7 +177,7 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## Licensing
 
-Copyright (c) 2020 Cisco and/or its affiliates.
+Copyright (c) 2020-2021 Cisco and/or its affiliates.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
