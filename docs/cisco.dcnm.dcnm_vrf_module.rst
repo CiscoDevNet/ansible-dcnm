@@ -342,7 +342,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -623,16 +622,7 @@ Examples
         state: query
         config:
         - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
         - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          service_vrf_template: null
 
 
 

@@ -106,7 +106,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding first arm of the route peering</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -165,7 +165,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag indicating if the host is to be advertised</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -223,7 +223,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -243,7 +243,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 neighbor address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -263,7 +263,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 vpc peer loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27; This object is mandatory if the service node is part of VPC switch pair</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27; This parameter is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -302,7 +302,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -322,7 +322,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 neighbor address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -342,7 +342,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 vpc peer loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27; This parameter is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -362,7 +362,7 @@ Parameters
                 </td>
                 <td>
                         <div>Local ASN number</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -382,7 +382,7 @@ Parameters
                 </td>
                 <td>
                         <div>Description of the interface</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -403,7 +403,7 @@ Parameters
                 </td>
                 <td>
                         <div>Route Tag</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -424,7 +424,7 @@ Parameters
                 </td>
                 <td>
                         <div>Static route information</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -561,7 +561,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding inside network of the route peering</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -620,7 +620,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag indicating if the host is to be advertised</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -678,7 +678,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -698,7 +698,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 neighbor address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -718,7 +718,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 vpc peer loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object is mandatory if the service node is part of VPC switch pair</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This parameter is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -757,7 +757,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -777,7 +777,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 neighbor address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -797,7 +797,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 vpc peer loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object will be mandatory if the service node switch is part of VPC pair</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object is mandatory if the service node switch is part of VPC pair</div>
                 </td>
             </tr>
             <tr>
@@ -817,7 +817,7 @@ Parameters
                 </td>
                 <td>
                         <div>Local ASN number</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -837,7 +837,7 @@ Parameters
                 </td>
                 <td>
                         <div>Description of the interface</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -858,7 +858,7 @@ Parameters
                 </td>
                 <td>
                         <div>Route Tag</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -879,7 +879,7 @@ Parameters
                 </td>
                 <td>
                         <div>Static route information</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -1033,7 +1033,7 @@ Parameters
                 </td>
                 <td>
                         <div>Nexthop IPV4 information, e.g., 192.168.1.100</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1068,7 +1068,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding outside network of the route peering</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27; or &#x27;inter_tenant_fw&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -1127,7 +1127,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag indicating if the host is to be advertised</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1185,7 +1185,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1205,7 +1205,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 neighbor address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1225,7 +1225,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv4 vpc peer loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This object is mandatory if the service node is part of VPC switch pair</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;. This parameter is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -1264,7 +1264,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1284,7 +1284,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 neighbor address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1304,7 +1304,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPv6 vpc peer loopback address</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27; This parameter is mandatory if the service node is part of VPC switch pair</div>
                 </td>
             </tr>
             <tr>
@@ -1324,7 +1324,7 @@ Parameters
                 </td>
                 <td>
                         <div>Local ASN number</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1344,7 +1344,7 @@ Parameters
                 </td>
                 <td>
                         <div>Description of the interface</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1365,7 +1365,7 @@ Parameters
                 </td>
                 <td>
                         <div>Route Tag</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;ebgp&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1386,7 +1386,7 @@ Parameters
                 </td>
                 <td>
                         <div>Static route information</div>
-                        <div>This object is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27; and &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;peering_option&#x27; is &#x27;static&#x27; and &#x27;deploy_mode&#x27; is &#x27;intra_tenant_fw&#x27;</div>
                 </td>
             </tr>
                                 <tr>
@@ -1526,7 +1526,7 @@ Parameters
                 </td>
                 <td>
                         <div>Specifies the type of peering</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;inter_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is either &#x27;inter_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1544,7 +1544,7 @@ Parameters
                 </td>
                 <td>
                         <div>Reverse Nexthop IPV4 information, e.g., 192.169.1.100</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;intra_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is either &#x27;intra_tenant_fw&#x27; or &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1562,7 +1562,7 @@ Parameters
                 </td>
                 <td>
                         <div>Details regarding second arm of the route peering</div>
-                        <div>This object is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
+                        <div>This parameter is applicable only when &#x27;deploy_mode&#x27; is either &#x27;one_arm_adc&#x27; or &#x27;two_arm_adc&#x27;</div>
                 </td>
             </tr>
                                 <tr>
