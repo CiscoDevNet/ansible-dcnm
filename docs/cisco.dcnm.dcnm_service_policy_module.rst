@@ -561,7 +561,7 @@ Examples
     #
     # Query:
     #   Returns the current DCNM state for the Service Policies listed in the playbook.
-     
+
     # CREATING SERVICE POLICIES
     # =========================
 

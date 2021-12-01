@@ -700,20 +700,7 @@ Examples
         state: query
         config:
         - net_name: ansible-net13
-          vrf_name: Tenant-1
-          net_id: 7005
-          net_template: Default_Network_Universal
-          net_extension_template: Default_Network_Extension_Universal
-          vlan_id: 150
-          gw_ip_subnet: '192.168.30.1/24'
         - net_name: ansible-net12
-          vrf_name: Tenant-2
-          net_id: 7002
-          net_template: Default_Network_Universal
-          net_extension_template: Default_Network_Extension_Universal
-          vlan_id: 151
-          gw_ip_subnet: '192.168.40.1/24'
-          deploy: false
 
 
 

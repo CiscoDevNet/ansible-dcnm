@@ -36,7 +36,7 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>json_data</b>
+                    <b>data</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">raw</span>
@@ -45,7 +45,8 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Additional JSON data to include with the REST API call</div>
+                        <div>Additional data in JSON or TEXT to include with the REST API call</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: json_data</div>
                 </td>
             </tr>
             <tr>
@@ -107,6 +108,23 @@ Examples
       dcnm_rest:
         method: GET
         path: /rest/control/fabrics
+
+    - name: Set deployment to false in lanAttachList for vrf
+        dcnm_rest:
+        method: POST
+        path: /rest/top-down/fabrics/fabric1/vrfs/attachments
+        json_data: '[{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1","serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,"extensionValues":"","instanceValues":"{"loopbackId":"","loopbackIpAddress":"","loopbackIpV6Address":""}"}]}]'
+
+    # Read payload data from file and validate a template
+    - set_fact:
+        data: "{{ lookup('file', 'validate_payload') }}"
+
+    - name: Validate a template
+        cisco.dcnm.dcnm_rest:
+        method: POST
+        path: /fm/fmrest/config/templates/validate
+        json_data: "{{ data }}"
+        register: result
 
 
 
