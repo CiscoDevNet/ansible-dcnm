@@ -354,7 +354,6 @@ class DcnmTemplate:
 
     def dcnm_template_validate_template(self, template):
 
-        #path = "/rest/config/templates/validate"
         path = self.paths["TEMP_VALIDATE"]
 
         resp = dcnm_send(
@@ -387,7 +386,6 @@ class DcnmTemplate:
     def dcnm_template_get_policy_list(self, snos, tlist):
 
         policies = {}
-        #path = "/rest/control/policies/switches?serialNumber=" + snos
         path = self.paths["TEMP_GET_SWITCHES"].format(snos)
 
         resp = dcnm_send(self.module, "GET", path)
@@ -419,7 +417,6 @@ class DcnmTemplate:
         # We need to check all switches on the Server to see if the given templates are deployed
         # on any of the switches
 
-        #path = "/rest/control/switches/roles"
         path = self.paths["TEMP_GET_SW_ROLES"]
 
         resp = dcnm_send(self.module, "GET", path)
@@ -460,7 +457,6 @@ class DcnmTemplate:
 
         payload = {}
         payload["content"] = template["content"]
-        #path = "/rest/config/templates/template"
         path = self.paths["TEMPLATE"]
 
         if self.dcnm_version == 12:
@@ -476,7 +472,6 @@ class DcnmTemplate:
 
         tlist = []
         policies = {}
-        #path = "/rest/config/templates/delete/bulk"
         path = self.paths["TEMP_DELETE_BULK"]
         changed = False
 
@@ -535,7 +530,6 @@ class DcnmTemplate:
             elif self.module.params["state"] == "deleted":
                 name = template["name"]
 
-            #path = "/rest/config/templates/" + name
             path = self.paths["TEMPLATE_WITH_NAME"].format(name)
             template_payload = self.dcnm_template_get_template_info_from_dcnm(
                 path, name
@@ -602,7 +596,6 @@ class DcnmTemplate:
 
         for template in self.template_info:
 
-            #path = "/rest/config/templates/" + template["name"]
             path = self.paths["TEMPLATE_WITH_NAME"].format(template["name"])
             template_payload = self.dcnm_template_get_template_info_from_dcnm(
                 path, template["name"]
