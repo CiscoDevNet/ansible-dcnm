@@ -1,7 +1,7 @@
 [![Actions Status](https://github.com/CiscoDevNet/ansible-dcnm/workflows/CI/badge.svg)](https://github.com/CiscoDevNet/ansible-dcnm/actions)
 
 
-# Cisco NDFC Collection
+# Cisco DCNM Collection
 
 The Ansible Cisco Nexus® Dashboard Fabric Controller (NDFC) (formerly Cisco Data Center Network Manager (DCNM)) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
 
@@ -20,7 +20,7 @@ PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
 ### Supported connections
-The Cisco NDFC collection supports ``httpapi`` connections.
+The Cisco DCNM collection supports ``httpapi`` connections.
 
 ## Included content
 <!--start collection content-->
@@ -49,7 +49,7 @@ Click the ``Content`` button to see the list of content included in this collect
 
 ## Installing this collection
 
-You can install the Cisco NDFC collection with the Ansible Galaxy CLI:
+You can install the Cisco DCNM collection with the Ansible Galaxy CLI:
 
     ansible-galaxy collection install cisco.dcnm
 
@@ -161,9 +161,9 @@ all:
 
 ## Contributing to this collection
 
-Ongoing development efforts and contributions to this collection are solely focused on enhancements to current ndfc modules, additional ndfc modules and enhancements to the connection plugin.
+Ongoing development efforts and contributions to this collection are solely focused on enhancements to current dcnm modules, additional dcnm modules and enhancements to the connection plugin.
 
-We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco NDFC collection repository](https://github.com/CiscoDevNet/ansible-dcnm/issues).
+We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco DCNM collection repository](https://github.com/CiscoDevNet/ansible-dcnm/issues).
 
 ## Changelogs
 
@@ -172,6 +172,7 @@ We welcome community contributions to this collection. If you find problems, ple
 ## More information
 
 - [DCNM installation and configuration guides](https://www.cisco.com/c/en/us/support/cloud-systems-management/prime-data-center-network-manager/products-installation-and-configuration-guides-list.html)
+- [NDFC installation and configuration_guides](https://www.cisco.com/c/en/us/td/docs/dcn/ndfc/1201/installation/cisco-ndfc-install-and-upgrade-guide-1201.html)
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 
