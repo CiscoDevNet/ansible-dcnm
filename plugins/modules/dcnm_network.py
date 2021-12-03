@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2021 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -153,6 +153,11 @@ options:
         description:
         - VRF ID of third DHCP server
         type: str
+        required: false
+      dhcp_loopback_id:
+        description: 'Loopback ID for DHCP Relay interface'
+        type: int
+        note: Configured ID value should be in range 0-1023
         required: false
       attach:
         description:
@@ -381,24 +386,24 @@ from ansible.module_utils.basic import AnsibleModule
 
 class DcnmNetwork:
 
-    dcnm_network_paths={
+    dcnm_network_paths = {
         11: {
-                "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
-                "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
-                "GET_NET_ATTACH": "/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
-                "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
-                "GET_NET": "/rest/top-down/fabrics/{}/networks",
-                "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
-                "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
+            "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
+            "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
+            "GET_NET_ATTACH": "/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+            "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
+            "GET_NET": "/rest/top-down/fabrics/{}/networks",
+            "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
+            "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
             },
         12: {
-                "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
-                "GET_VRF_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
-                "GET_NET_ATTACH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
-                "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
-                "GET_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
-                "GET_NET_NAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
-                "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
+            "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+            "GET_VRF_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
+            "GET_NET_ATTACH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+            "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
+            "GET_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
+            "GET_NET_NAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
+            "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
             }
     }
 
@@ -600,6 +605,7 @@ class DcnmNetwork:
         dhcp1_vrf_changed = False
         dhcp2_vrf_changed = False
         dhcp3_vrf_changed = False
+        dhcp_loopback_changed = False
 
         if want.get('networkId') and want['networkId'] != have['networkId']:
             self.module.fail_json(msg="networkId can not be updated on existing network: {}".
@@ -640,6 +646,8 @@ class DcnmNetwork:
         dhcp2_vrf_have = json_to_dict_have.get('vrfDhcp2', "")
         dhcp3_vrf_want = json_to_dict_want.get('vrfDhcp3', "")
         dhcp3_vrf_have = json_to_dict_have.get('vrfDhcp3', "")
+        dhcp_loopback_want = json_to_dict_want.get('loopbackId', "")
+        dhcp_loopback_have = json_to_dict_have.get('loopbackId', "")
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
         tag_want = json_to_dict_want.get('tag', "")
@@ -667,7 +675,8 @@ class DcnmNetwork:
                     mtu_have != mtu_want or arpsup_have != arpsup_want or \
                     dhcp1_ip_have != dhcp1_ip_want or dhcp2_ip_have != dhcp2_ip_want or \
                     dhcp3_ip_have != dhcp3_ip_want or dhcp1_vrf_have != dhcp1_vrf_want or \
-                    dhcp2_vrf_have != dhcp2_vrf_want or dhcp3_vrf_have != dhcp3_vrf_want:
+                    dhcp2_vrf_have != dhcp2_vrf_want or dhcp3_vrf_have != dhcp3_vrf_want or \
+                    dhcp_loopback_have != dhcp_loopback_want:
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
@@ -700,6 +709,8 @@ class DcnmNetwork:
                     dhcp2_vrf_changed = True
                 if dhcp3_vrf_have != dhcp3_vrf_want:
                     dhcp3_vrf_changed = True
+                if dhcp_loopback_have != dhcp_loopback_want:
+                    dhcp_loopback_changed = True
 
                 want.update({'networkId': have['networkId']})
                 create = want
@@ -744,13 +755,15 @@ class DcnmNetwork:
                     dhcp2_vrf_changed = True
                 if dhcp3_vrf_have != dhcp3_vrf_want:
                     dhcp3_vrf_changed = True
+                if dhcp_loopback_have != dhcp_loopback_want:
+                    dhcp_loopback_changed = True
 
                 want.update({'networkId': have['networkId']})
                 create = want
 
         return create, gw_changed, tg_changed, warn_msg, l2only_changed, vn_changed, \
-                intdesc_changed, mtu_changed, arpsup_changed, dhcp1_ip_changed, dhcp2_ip_changed, \
-                dhcp3_ip_changed, dhcp1_vrf_changed, dhcp2_vrf_changed, dhcp3_vrf_changed
+            intdesc_changed, mtu_changed, arpsup_changed, dhcp1_ip_changed, dhcp2_ip_changed, \
+            dhcp3_ip_changed, dhcp1_vrf_changed, dhcp2_vrf_changed, dhcp3_vrf_changed, dhcp_loopback_changed
 
     def update_create_params(self, net):
 
@@ -794,7 +807,8 @@ class DcnmNetwork:
             'dhcpServerAddr3': net.get('dhcp_srvr3_ip', ""),
             'vrfDhcp': net.get('dhcp_srvr1_vrf', ""),
             'vrfDhcp2': net.get('dhcp_srvr2_vrf', ""),
-            'vrfDhcp3': net.get('dhcp_srvr3_vrf', "")
+            'vrfDhcp3': net.get('dhcp_srvr3_vrf', ""),
+            'loopbackId': net.get('dhcp_loopback_id', "")
         }
 
         if template_conf['vlanId'] is None:
@@ -813,6 +827,8 @@ class DcnmNetwork:
             template_conf['vrfDhcp2'] = ""
         if template_conf['vrfDhcp3'] is None:
             template_conf['vrfDhcp3'] = ""
+        if template_conf['loopbackId'] is None:
+            template_conf['loopbackId'] = ""
 
         net_upd.update({'networkTemplateConfig': json.dumps(template_conf)})
 
@@ -888,7 +904,8 @@ class DcnmNetwork:
                     'dhcpServerAddr3': json_to_dict.get('dhcpServerAddr3', ""),
                     'vrfDhcp': json_to_dict.get('vrfDhcp', ""),
                     'vrfDhcp2': json_to_dict.get('vrfDhcp2', ""),
-                    'vrfDhcp3': json_to_dict.get('vrfDhcp3', "")
+                    'vrfDhcp3': json_to_dict.get('vrfDhcp3', ""),
+                    'loopbackId': json_to_dict.get('loopbackId', "")
                 }
 
                 net.update({'networkTemplateConfig': json.dumps(t_conf)})
@@ -921,7 +938,8 @@ class DcnmNetwork:
                         'dhcpServerAddr3': json_to_dict.get('dhcpServerAddr3', ""),
                         'vrfDhcp': json_to_dict.get('vrfDhcp', ""),
                         'vrfDhcp2': json_to_dict.get('vrfDhcp2', ""),
-                        'vrfDhcp3': json_to_dict.get('vrfDhcp3', "")
+                        'vrfDhcp3': json_to_dict.get('vrfDhcp3', ""),
+                        'loopbackId': json_to_dict.get('loopbackId', "")
                     }
 
                     l2net.update({'networkTemplateConfig': json.dumps(t_conf)})
@@ -1282,6 +1300,7 @@ class DcnmNetwork:
         dhcp1_vrf_changed = {}
         dhcp2_vrf_changed = {}
         dhcp3_vrf_changed = {}
+        dhcp_loopback_changed = {}
 
         for want_c in self.want_create:
             found = False
@@ -1291,7 +1310,7 @@ class DcnmNetwork:
                     found = True
                     diff, gw_chg, tg_chg, warn_msg, l2only_chg, vn_chg, idesc_chg, mtu_chg, \
                         arpsup_chg, dhcp1_ip_chg, dhcp2_ip_chg, dhcp3_ip_chg, dhcp1_vrf_chg, \
-                        dhcp2_vrf_chg, dhcp3_vrf_chg = self.diff_for_create(want_c, have_c)
+                        dhcp2_vrf_chg, dhcp3_vrf_chg, dhcp_loopbk_chg = self.diff_for_create(want_c, have_c)
                     gw_changed.update({want_c['networkName']: gw_chg})
                     tg_changed.update({want_c['networkName']: tg_chg})
                     l2only_changed.update({want_c['networkName']: l2only_chg})
@@ -1305,6 +1324,7 @@ class DcnmNetwork:
                     dhcp1_vrf_changed.update({want_c['networkName']: dhcp1_vrf_chg})
                     dhcp2_vrf_changed.update({want_c['networkName']: dhcp2_vrf_chg})
                     dhcp3_vrf_changed.update({want_c['networkName']: dhcp3_vrf_chg})
+                    dhcp_loopback_changed.update({want_c['networkName']: dhcp_loopbk_chg})
                     if diff:
                         diff_create_update.append(diff)
                     break
@@ -1400,7 +1420,8 @@ class DcnmNetwork:
                             dhcp3_ip_changed.get(want_a['networkName'], False) or \
                             dhcp1_vrf_changed.get(want_a['networkName'], False) or \
                             dhcp2_vrf_changed.get(want_a['networkName'], False) or \
-                            dhcp3_vrf_changed.get(want_a['networkName'], False):
+                            dhcp3_vrf_changed.get(want_a['networkName'], False) or \
+                            dhcp_loopback_changed.get(want_a['networkName'], False):
                             dep_net = want_a['networkName']
 
             if not found and want_a.get('lanAttachList'):
@@ -1473,6 +1494,7 @@ class DcnmNetwork:
             found_c.update({'dhcp_srvr1_vrf': json_to_dict.get('vrfDhcp', "")})
             found_c.update({'dhcp_srvr2_vrf': json_to_dict.get('vrfDhcp2', "")})
             found_c.update({'dhcp_srvr3_vrf': json_to_dict.get('vrfDhcp3', "")})
+            found_c.update({'dhcp_loopback_id': json_to_dict.get('loopbackId', "")})
             found_c.update({'attach': []})
 
             del found_c['fabric']
@@ -1767,7 +1789,8 @@ class DcnmNetwork:
                     'dhcpServerAddr3': json_to_dict.get('dhcpServerAddr3', ""),
                     'vrfDhcp': json_to_dict.get('vrfDhcp', ""),
                     'vrfDhcp2': json_to_dict.get('vrfDhcp2', ""),
-                    'vrfDhcp3': json_to_dict.get('vrfDhcp3', "")
+                    'vrfDhcp3': json_to_dict.get('vrfDhcp3', ""),
+                    'loopbackId': json_to_dict.get('loopbackId', "")
                 }
 
                 net.update({'networkTemplateConfig': json.dumps(t_conf)})
@@ -1824,7 +1847,6 @@ class DcnmNetwork:
                 self.failure(resp)
 
     def validate_input(self):
-
         """Parse the playbook values, validate to param specs."""
 
         state = self.params['state']
@@ -1852,7 +1874,8 @@ class DcnmNetwork:
                 dhcp_srvr3_ip=dict(type='ipv4', default=""),
                 dhcp_srvr1_vrf=dict(type='str', length_max=32),
                 dhcp_srvr2_vrf=dict(type='str', length_max=32),
-                dhcp_srvr3_vrf=dict(type='str', length_max=32)
+                dhcp_srvr3_vrf=dict(type='str', length_max=32),
+                dhcp_loopback_id=dict(type='int', range_min=0, range_max=1023)
             )
             att_spec = dict(
                 ip_address=dict(required=True, type='str'),
@@ -1903,7 +1926,8 @@ class DcnmNetwork:
                 dhcp_srvr3_ip=dict(type='ipv4', default=""),
                 dhcp_srvr1_vrf=dict(type='str', length_max=32),
                 dhcp_srvr2_vrf=dict(type='str', length_max=32),
-                dhcp_srvr3_vrf=dict(type='str', length_max=32)
+                dhcp_srvr3_vrf=dict(type='str', length_max=32),
+                dhcp_loopback_id=dict(type='int', range_min=0, range_max=1023)
             )
             att_spec = dict(
                 ip_address=dict(required=True, type='str'),
@@ -2101,10 +2125,12 @@ class DcnmNetwork:
         if cfg.get("dhcp_srvr3_vrf", None) is None:
             json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
 
+        if cfg.get("dhcp_loopback_id", None) is None:
+            json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
+
         want.update({'networkTemplateConfig': json.dumps(json_to_dict_want)})
 
     def update_want(self):
-
         """
         Routine to compare want and have and make approriate changes to want. This routine checks the existing
         information with the config from playbook and populates the payloads in self.want apropriately.
@@ -2157,7 +2183,6 @@ class DcnmNetwork:
 
 
 def main():
-
     """ main entry point for module execution
     """
 
