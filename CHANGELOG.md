@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.4] - 2021-12-03
+
+### Added
+
+* Added support for configuring the loopback ID for DHCP Relay interface.
+* The feature is configured using the `dhcp_loopback_id` parameter in the `dcnm_network` module
+
 ## [1.2.3] - 2021-11-16
 
 ### Fixed
@@ -113,6 +120,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 * cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 * cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+[1.2.4]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.3...1.2.4
 [1.2.3]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.0...1.2.1
