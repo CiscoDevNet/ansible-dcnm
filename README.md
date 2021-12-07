@@ -3,9 +3,11 @@
 
 # Cisco DCNM Collection
 
-The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
+The Ansible Cisco Nexus® Dashboard Fabric Controller (NDFC) (formerly Cisco Data Center Network Manager (DCNM)) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
 
-This collection is intended for use with `DCNM Release 11.4(1)` or later.
+This collection is intended for use with the following release versions:
+  * `DCNM Release 11.4(1)` or later
+  * `NDFC Release 12.0` or later.
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -57,7 +59,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 1.2.3
+    version: 2.0.0
 ```
 ## Using this collection
 
@@ -170,12 +172,13 @@ We welcome community contributions to this collection. If you find problems, ple
 ## More information
 
 - [DCNM installation and configuration guides](https://www.cisco.com/c/en/us/support/cloud-systems-management/prime-data-center-network-manager/products-installation-and-configuration-guides-list.html)
+- [NDFC installation and configuration guides](https://www.cisco.com/c/en/us/td/docs/dcn/ndfc/1201/installation/cisco-ndfc-install-and-upgrade-guide-1201.html)
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 
 ## Licensing
 
-Copyright (c) 2020 Cisco and/or its affiliates.
+Copyright (c) 2020-2021 Cisco and/or its affiliates.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
