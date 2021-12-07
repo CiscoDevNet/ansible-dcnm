@@ -4250,8 +4250,6 @@ class DcnmServiceRoutePeering:
             # We need the SRPs from create and modify list to check for deployment status. Collect them into new list
             self.deployed_srps = self.dcnm_srp_get_deployed_srp_list (self.diff_deploy)
 
-            # Wait for a while for the DCNM to deploy the config
-            time.sleep(180)
             # Ensure all the route peerings are properly deployed before returning.
             self.dcnm_srp_check_deployment_status (self.deployed_srps, "deployed")
 
