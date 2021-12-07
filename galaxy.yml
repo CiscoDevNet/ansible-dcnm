@@ -9,7 +9,7 @@ authors:
   - Karthik Babu Harichandra Babu <kharicha>
   - Mike Wiebe <mikewiebe>
   - Praveen Ramoorthy <praveenramoorthy>
-description: Ansible collection for the Cisco Nexus® Dashboard Fabric Controller (NDFC) (formerly Cisco Data Center Network Manager (DCNM))
+description: Ansible collection for the Cisco Nexus® Dashboard Fabric Controller (NDFC) - formerly DCNM
 license_file: LICENSE 
 tags: [cisco, ndfc, dcnm, nxos, networking, vxlan]
 dependencies:
