@@ -30,10 +30,17 @@ class TestDcnmIntfModule(TestDcnmModule):
 
     module = dcnm_interface
 
-    fd = open("dcnm-ut.log", "w")
+    fd = None
 
     def init_data(self):
         pass
+
+    def log_msg (self, msg):
+
+        if fd is None:
+            fd = open("intf-ut.log", "w")
+        self.fd.write (msg)
+        self.fd.flush()
 
     def log_msg (self, msg):
         self.fd.write (msg)
