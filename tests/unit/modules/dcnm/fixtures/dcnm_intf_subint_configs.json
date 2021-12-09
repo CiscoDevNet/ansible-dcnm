@@ -172,7 +172,7 @@
 				"ipv6_addr": "fe80::02",
 				"int_vrf": "default",
 				"ipv4_mask_len": 16,
-				"ipv6_mask_len": 48,
+				"ipv6_mask_len": 68,
 				"fabric": "test_fabric",
 				"sno": "SAL1819SAN8",
 				"vlan": 201,
