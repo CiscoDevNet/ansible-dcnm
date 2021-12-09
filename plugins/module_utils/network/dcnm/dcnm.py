@@ -83,8 +83,11 @@ def validate_list_of_dicts(param_list, spec, module=None):
                                                                                 spec[param].get('length_max')))
                 elif type == 'int':
                     item = v.check_type_int(item)
+                    min_value = 1
+                    if spec[param].get('range_min') is not None:
+                        min_value = spec[param].get('range_min')
                     if spec[param].get('range_max'):
-                        if 1 <= item <= spec[param].get('range_max'):
+                        if min_value <= item <= spec[param].get('range_max'):
                             pass
                         else:
                             invalid_params.append('{}:{} : The item exceeds the allowed '
