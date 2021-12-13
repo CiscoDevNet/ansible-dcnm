@@ -2,8 +2,12 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
+    check_deploy: True
     fabric: "{{ ansible_it_fabric }}" 
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
@@ -21,6 +25,7 @@
 
     - name: Create port channel interfaces
       cisco.dcnm.dcnm_interface: &pc_merge
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -76,7 +81,7 @@
               mtu: 9216                       # choose between [min=576, max=9216]
               int_vrf: ""                     # interface VRF 
               ipv4_addr: 192.168.20.1         # ipv4 address for the interface
-              ipv4_mask_len: 16               # choose between [min:1, max:31]
+              ipv4_mask_len: 24               # choose between [min:1, max:31]
               route_tag: ""                   # Route Tag
               cmds:                           # Freeform config
                 - no shutdown
@@ -111,6 +116,7 @@
 
     - name: Delete port channel interfaces
       cisco.dcnm.dcnm_interface: &pc_del
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -166,7 +172,7 @@
               mtu: 9216                       # choose from [min=576, max=9216]
               int_vrf: ""                     # interface VRF 
               ipv4_addr: 192.168.20.1         # ipv4 address for the interface
-              ipv4_mask_len: 16               # choose between [min:1, max:31]
+              ipv4_mask_len: 24               # choose between [min:1, max:31]
               route_tag: ""                   # Route Tag
               cmds:                           # Freeform config
                 - no shutdown
@@ -222,12 +228,15 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
 

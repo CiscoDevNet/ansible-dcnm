@@ -1,0 +1,291 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
+  when: controller_version >= "12"
+
+- name: OVERRIDDEN - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: OVERRIDDEN - Verify if service fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_ext_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: OVERRIDDEN - Clean up any existing service node
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: deleted
+
+- name: OVERRIDDEN -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
+
+- name: OVERRIDDEN - Create Service Node with 2 switches and vPC Interface with type firewall
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: merged
+    config:
+    - name: SN-11
+      type: firewall
+      form_factor: virtual
+      svc_int_name: svc1
+      attach_interface: "{{ ansible_vpc1 }}"
+      switches:
+      - "{{ ansible_switch4 }}"
+      - "{{ ansible_switch5 }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[0].DATA.formFactor == "Virtual"'
+    - 'result.response[0].DATA.interfaceName == "svc1"'
+    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[0].DATA.type == "Firewall"'
+    - 'result.response[0].DATA.name == "SN-11"'
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+###############################################
+###              OVERRIDDEN                  ##
+###############################################
+
+- name: OVERRIDDEN - Update service node - delete and create
+  cisco.dcnm.dcnm_service_node: &conf
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: overridden
+    config:
+    - name: SN-12
+      type: load_balancer
+      form_factor: physical
+      svc_int_name: svc12
+      attach_interface: "{{ ansible_vpc1 }}"
+      switches:
+      - "{{ ansible_switch4 }}"
+      - "{{ ansible_switch5 }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].METHOD == "DELETE"'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+    - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[1].DATA.formFactor == "Physical"'
+    - 'result.response[1].DATA.interfaceName == "svc12"'
+    - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[1].DATA.type == "ADC"'
+    - 'result.response[1].DATA.name == "SN-12"'
+
+- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: OVERRIDDEN - conf - Idempotence
+  cisco.dcnm.dcnm_service_node: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: OVERRIDDEN - Clean up any existing service node
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: deleted
+
+- name: OVERRIDDEN -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
+
+- name: OVERRIDDEN - Create 2 Service Nodes
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: merged
+    config:
+    - name: SN-11
+      type: firewall
+      form_factor: virtual
+      svc_int_name: svc11
+      attach_interface: "{{ ansible_int1 }}"
+      switches:
+      - "{{ ansible_switch1 }}"
+    - name: SN-12
+      type: load_balancer
+      form_factor: virtual
+      svc_int_name: svc12
+      attach_interface: "{{ ansible_int1 }}"
+      switches:
+      - "{{ ansible_switch2 }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[0].DATA.formFactor == "Virtual"'
+    - 'result.response[0].DATA.interfaceName == "svc11"'
+    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[0].DATA.type == "Firewall"'
+    - 'result.response[0].DATA.name == "SN-11"'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+    - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[1].DATA.formFactor == "Virtual"'
+    - 'result.response[1].DATA.interfaceName == "svc12"'
+    - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[1].DATA.type == "ADC"'
+    - 'result.response[1].DATA.name == "SN-12"'
+
+- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 20
+
+- name: OVERRIDDEN - Create and Delete new service nodes
+  cisco.dcnm.dcnm_service_node: &conf1
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: overridden
+    config:
+    - name: SN-13
+      type: virtual_network_function
+      form_factor: virtual
+      svc_int_name: svc13
+      attach_interface: "{{ ansible_int1 }}"
+      switches:
+      - "{{ ansible_switch1 }}"
+    - name: SN-14
+      type: firewall
+      form_factor: virtual
+      svc_int_name: svc14
+      attach_interface: "{{ ansible_int1 }}"
+      switches:
+      - "{{ ansible_switch2 }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].METHOD == "DELETE"'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[1].METHOD == "DELETE"'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+    - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[2].DATA.formFactor == "Virtual"'
+    - 'result.response[2].DATA.interfaceName == "svc13"'
+    - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[2].DATA.type == "VNF"'
+    - 'result.response[2].DATA.name == "SN-13"'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[3].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+    - 'result.response[3].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+    - 'result.response[3].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+    - 'result.response[3].DATA.formFactor == "Virtual"'
+    - 'result.response[3].DATA.interfaceName == "svc14"'
+    - 'result.response[3].DATA.linkTemplateName == "service_link_trunk"'
+    - 'result.response[3].DATA.type == "Firewall"'
+    - 'result.response[3].DATA.name == "SN-14"'
+
+- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: OVERRIDDEN - conf1 - Idempotence
+  cisco.dcnm.dcnm_service_node: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: OVERRIDDEN - Clean up any existing service node
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: deleted
+
+- name: OVERRIDDEN -  Query fabric state before proceeding
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: query
+  register: result
+
+  until:
+    - 'result.response|length == 0'
+  retries: 10
+  delay: 5
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: OVERRIDDEN - Clean up any existing service node
+  cisco.dcnm.dcnm_service_node:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_ext_fabric }}"
+    state: deleted

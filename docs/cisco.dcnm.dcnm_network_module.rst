@@ -42,13 +42,12 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
                          / <span style="color: purple">elements=dictionary</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
-                        <div>List of details of networks being managed</div>
+                        <div>List of details of networks being managed. Not required for state deleted</div>
                 </td>
             </tr>
                                 <tr>
@@ -69,6 +68,7 @@ Parameters
                 </td>
                 <td>
                         <div>ARP suppression</div>
+                        <div>ARP suppression is only supported if SVI is present when Layer-2-Only is not enabled</div>
                 </td>
             </tr>
             <tr>
@@ -117,7 +117,7 @@ Parameters
                     <b>ip_address</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -170,10 +170,26 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_loopback_id</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Loopback ID for DHCP Relay interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr1_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -205,7 +221,7 @@ Parameters
                     <b>dhcp_srvr2_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -237,7 +253,7 @@ Parameters
                     <b>dhcp_srvr3_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -269,7 +285,7 @@ Parameters
                     <b>gw_ip_subnet</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -312,6 +328,7 @@ Parameters
                 </td>
                 <td>
                         <div>Layer 2 only network</div>
+                        <div>If specified as true, VRF Name(vrf_name) should not be specified or can be specified as &quot;&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -328,6 +345,7 @@ Parameters
                 </td>
                 <td>
                         <div>MTU for Layer 3 interfaces</div>
+                        <div>Configured MTU value should be in range 68-9216</div>
                 </td>
             </tr>
             <tr>
@@ -361,6 +379,7 @@ Parameters
                 </td>
                 <td>
                         <div>ID of the network being managed</div>
+                        <div>If not specified in the playbook, DCNM will auto-select an available net_id</div>
                 </td>
             </tr>
             <tr>
@@ -427,7 +446,8 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>VLAN ID for the network</div>
+                        <div>VLAN ID for the network.</div>
+                        <div>If not specified in the playbook, DCNM will auto-select an available vlan_id</div>
                 </td>
             </tr>
             <tr>
@@ -444,6 +464,7 @@ Parameters
                 </td>
                 <td>
                         <div>Name of the vlan configured</div>
+                        <div>if &gt; 32 chars enable, system vlan long-name on switch</div>
                 </td>
             </tr>
             <tr>
@@ -460,6 +481,7 @@ Parameters
                 </td>
                 <td>
                         <div>Name of the VRF to which the network belongs to</div>
+                        <div>This field is required for L3 Networks. VRF name should not be specified or may be specified as &quot;&quot; for L2 networks</div>
                 </td>
             </tr>
 
@@ -512,39 +534,39 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    This module supports the following states:
-
-    Merged:
-      Networks defined in the playbook will be merged into the target fabric.
-        - If the network does not exist it will be added.
-        - If the network exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Networks that are not specified in the playbook will be untouched.
-
-    Replaced:
-      Networks defined in the playbook will be replaced in the target fabric.
-        - If the Networks does not exist it will be added.
-        - If the Networks exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - Networks that are not specified in the playbook will be untouched.
-
-    Overridden:
-      Networks defined in the playbook will be overridden in the target fabric.
-        - If the Networks does not exist it will be added.
-        - If the Networks exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - Networks that are not specified in the playbook will be deleted.
-
-    Deleted:
-      Networks defined in the playbook will be deleted.
-      If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
-
-    Query:
-      Returns the current DCNM state for the Networks listed in the playbook.
+    # This module supports the following states:
+    #
+    # Merged:
+    #   Networks defined in the playbook will be merged into the target fabric.
+    #     - If the network does not exist it will be added.
+    #     - If the network exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Networks that are not specified in the playbook will be untouched.
+    #
+    # Replaced:
+    #   Networks defined in the playbook will be replaced in the target fabric.
+    #     - If the Networks does not exist it will be added.
+    #     - If the Networks exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - Networks that are not specified in the playbook will be untouched.
+    #
+    # Overridden:
+    #   Networks defined in the playbook will be overridden in the target fabric.
+    #     - If the Networks does not exist it will be added.
+    #     - If the Networks exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - Networks that are not specified in the playbook will be deleted.
+    #
+    # Deleted:
+    #   Networks defined in the playbook will be deleted.
+    #   If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+    #
+    # Query:
+    #   Returns the current DCNM state for the Networks listed in the playbook.
 
     - name: Merge networks
       cisco.dcnm.dcnm_network:
@@ -565,7 +587,7 @@ Examples
           - ip_address: 192.168.1.225
             ports: [Ethernet1/13, Ethernet1/14]
             deploy: true
-            deploy: true
+          deploy: true
         - net_name: ansible-net12
           vrf_name: Tenant-2
           net_id: 7002
@@ -644,7 +666,7 @@ Examples
             # - ip_address: 192.168.1.225
             #   ports: [Ethernet1/13, Ethernet1/14]
             #   deploy: true
-            deploy: true
+          deploy: true
           # Delete this network
           # - net_name: ansible-net12
           #   vrf_name: Tenant-2
@@ -692,21 +714,9 @@ Examples
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
         state: query
+        config:
         - net_name: ansible-net13
-          vrf_name: Tenant-1
-          net_id: 7005
-          net_template: Default_Network_Universal
-          net_extension_template: Default_Network_Extension_Universal
-          vlan_id: 150
-          gw_ip_subnet: '192.168.30.1/24'
         - net_name: ansible-net12
-          vrf_name: Tenant-2
-          net_id: 7002
-          net_template: Default_Network_Universal
-          net_extension_template: Default_Network_Extension_Universal
-          vlan_id: 151
-          gw_ip_subnet: '192.168.40.1/24'
-          deploy: false
 
 
 
@@ -718,4 +728,4 @@ Status
 Authors
 ~~~~~~~
 
-- Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail)
+- Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail) Praveen Ramoorthy(@praveenramoorthy)

@@ -25,16 +25,26 @@ description:
     - "DCNM Ansible Module for the following interface service operations"
     - "Create, Delete, Modify PortChannel, VPC, Loopback and Sub-Interfaces"
     - "Modify Ethernet Interfaces"
-author: Mallik Mudigonda
+author: Mallik Mudigonda(@mmudigon)
 options:
+  check_deploy:
+    description:
+    - Deploy operations may take considerable time in certain cases based on the configuration included
+      in the playbook. A success response from DCNM server does not guarantee the completion of deploy
+      operation. This flag if set indicates that the module should verify if the configured state is in
+      sync with what is requested in playbook. If not set the module will return without verifying the
+      state.
+    type: bool
+    required: false
+    default: false
   fabric:
     description:
-      - 'Name of the target fabric for interface operations'
+    - Name of the target fabric for interface operations
     type: str
     required: true
   state:
     description:
-      - The required state of the configuration after module completion.
+    - The required state of the configuration after module completion.
     type: str
     choices:
       - merged
@@ -44,462 +54,472 @@ options:
       - query
     default: merged
   config:
-    description: A dictionary of interface operations
+    description:
+    - A dictionary of interface operations
     type: list
     elements: dict
     suboptions:
       name:
         description:
-          - Name of the interface. Example, po55, eth2/1, lo100, vpc25, eth1/1.1.
+        - Name of the interface. Example, po55, eth2/1, lo100, vpc25, eth1/1.1.
         type: str
         required: true
       switch:
         description:
-          - IP address or DNS name of the management interface. All switches mentioned in this list
-            will be deployed with the included configuration. For vPC interfaces
-            this list object will contain elements each of which is a list of
-            pair of switches
+        - IP address or DNS name of the management interface. All switches mentioned in this list
+          will be deployed with the included configuration. For vPC interfaces
+          this list object will contain elements each of which is a list of
+          pair of switches
         type: list
         required: true
       type:
         description:
-          - Interface type. Example, pc, vpc, sub_int, lo, eth
+        - Interface type. Example, pc, vpc, sub_int, lo, eth
         type: str
         required: true
         choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth']
       deploy:
         description:
-            - Flag indicating if the configuration must be pushed to the switch. If not included
-              it is considered true by default
+        - Flag indicating if the configuration must be pushed to the switch. If not included
+          it is considered true by default
         type: bool
         default: true
       profile_pc:
         description:
-          - NOTE: Though the key shown here is 'profile_pc' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_pc' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for port channel interface configurations.
+        - Though the key shown here is 'profile_pc' the actual key to be used in playbook
+          is 'profile'. The key 'profile_pc' is used here to logically segregate the interface objects applicable for this profile
+        - Object profile which must be included for port channel interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['trunk', 'access', 'l3', 'monitor']
             type: str
             required: true
           members:
             description:
-              - Member interfaces that are part of this port channel
+            - Member interfaces that are part of this port channel
             type: list
             elements: str
             required: true
           access_vlan:
             description:
-              - Vlan for the interface. This option is applicable only for interfaces whose 'mode'
-              - is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode'
+              is 'access'
             type: str
             default: ""
           int_vrf:
             description:
-              - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
+            - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface. This object is applicable only if the 'mode' is 'l3'
-            type: ipv4
+            - IPV4 address of the interface. This object is applicable only if the 'mode' is 'l3'
+            type: str
             default: ""
           ipv4_mask_len:
             description:
-              - IPV4 address mask length. This object is applicable only if the 'mode' is 'l3'
+            - IPV4 address mask length. This object is applicable only if the 'mode' is 'l3'
             type: int
             choices : [Min:1, Max:31]
             default: 8
           route_tag:
             description:
-              - Route tag associated with the interface IP. This object is applicable only if the 'mode' is 'l3'
+            - Route tag associated with the interface IP. This object is applicable only if the 'mode' is 'l3'
             type: str
             default: ""
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_vpc:
         description:
-          - NOTE: Though the key shown here is 'profile_vpc' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_vpc' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for virtual port channel inetrface configurations.
+        - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
+          is 'profile'. The key 'profile_vpc' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for virtual port channel inetrface configurations.
         suboptions:
           mode:
             description:
-              Interface mode
+            -  Interface mode
             choices: ['trunk', 'access']
             type: str
             required: true
           peer1_pcid:
             description:
-              - Port channel identifier of first peer. If this object is not included, then the value defaults to the
-                vPC identifier. This value cannot be changed once vPC is created
+            - Port channel identifier of first peer. If this object is not included, then the value defaults to the
+              vPC identifier. This value cannot be changed once vPC is created
             type: int
             choices: [Min:1, Max:4096]
             default: Default value is the vPC port identifier
           peer2_pcid:
             description:
-              - Port channel identifier of second peer. If this object is not included, then the value defaults to the
-                vPC identifier. This value cannot be changed once vPC is created
+            - Port channel identifier of second peer. If this object is not included, then the value defaults to the
+              vPC identifier. This value cannot be changed once vPC is created
             type: int
             choices: [Min:1, Max:4096]
             default: Default value is the vPC port identifier
           peer1_members:
             description:
-              - Member interfaces that are part of this port channel on first peer
+            - Member interfaces that are part of this port channel on first peer
             type: list
             elements: str
             required: true
           peer2_members:
             description:
-              - Member interfaces that are part of this port channel on second peer
+            - Member interfaces that are part of this port channel on second peer
             type: list
             elements: str
             required: true
           pc_mode:
-            descrption:
-              - Port channel mode
+            description:
+            - Port channel mode
             type: str
             choices: ['active', 'passive', 'on']
             default: active
           bpdu_guard:
             description:
-              - Spanning-tree bpduguard
+            - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
             default: true
           port_type_fast:
             description:
-              - Spanning-tree edge port behavior
+            - Spanning-tree edge port behavior
             type: bool
             choices: [true, false]
             default: true
           mtu:
             description:
-              - Interface MTU
+            - Interface MTU
             type: str
             choices: ['default', 'jumbo']
             default: jumbo
           peer1_allowed_vlans:
             description:
-              - Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose 'mode' is 'trunk'
+            - Vlans that are allowed on this interface of first peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           peer2_allowed_vlans:
             description:
-              - Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose 'mode' is 'trunk'
+            - Vlans that are allowed on this interface of second peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           peer1_access_vlan:
             description:
-              - Vlan for the interface of first peer. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface of first peer.
+              This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ''
           peer2_access_vlan:
             description:
-              - Vlan for the interface of second peer. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface of second peer.
+              This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ''
           peer1_cmds:
             description:
-              - Commands to be included in the configuration under this interface of first peer
+            - Commands to be included in the configuration under this interface of first peer
             type: list
             default: []
           peer2_cmds:
             description:
-              - Commands to be included in the configuration under this interface of second peer
+            - Commands to be included in the configuration under this interface of second peer
             type: list
             default: []
           peer1_description:
             description:
-              - Description of the interface of first peer
+            - Description of the interface of first peer
             type: str
             default: ""
           peer2_description:
             description:
-              - Description of the interface of second peer
+            - Description of the interface of second peer
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_subint:
         description:
-          - NOTE: Though the key shown here is 'profile_subint' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_subint' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for sub-interface configurations.
+        - Though the key shown here is 'profile_subint' the actual key to be used in playbook
+          is 'profile'. The key 'profile_subint' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for sub-interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['subint']
             type: str
             required: true
           int_vrf:
             description:
-              - Interface VRF name.
+            - Interface VRF name.
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface.
-            type: ipv4
+            - IPV4 address of the interface.
+            type: str
             default: ""
           ipv4_mask_len:
             description:
-              - IPV4 address mask length.
+            - IPV4 address mask length.
             type: int
             choices : [Min:8, Max:31]
             default: 8
           ipv6_addr:
             description:
-              - IPV6 address of the interface.
-            type: ipv6
+            - IPV6 address of the interface.
+            type: str
             default: ""
           ipv6_mask_len:
             description:
-              - IPV6 address mask length.
+            - IPV6 address mask length.
             type: int
             choices : [Min:1, Max:31]
             default: 8
           mtu:
             description:
-              - Interface MTU
+            - Interface MTU
             type: int
             choices: [Min: 576, Max: 9216]
             default: 9216
           vlan:
             description:
-              - DOT1Q vlan id for this interface
+            - DOT1Q vlan id for this interface
             type: int
             choices: [Min: 2, Max: 3967]
             default: 0
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_lo:
         description:
-          - NOTE: Though the key shown here is 'profile_lo' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_lo' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for loopback interface configurations.
+        - Though the key shown here is 'profile_lo' the actual key to be used in playbook
+          is 'profile'. The key 'profile_lo' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for loopback interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['lo']
             type: str
             required: true
           int_vrf:
             description:
-              - Interface VRF name.
+            - Interface VRF name.
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface.
-            type: ipv4
+            - IPV4 address of the interface.
+            type: str
             default: ""
           ipv6_addr:
             description:
-              - IPV6 address of the interface.
-            type: ipv6
+            - IPV6 address of the interface.
+            type: str
             default: ""
           route_tag:
             description:
-              - Route tag associated with the interface IP.
+            - Route tag associated with the interface IP.
             type: str
             default: ""
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
       profile_eth:
         description:
-          - NOTE: Though the key shown here is 'profile_eth' the actual key to be used in playbook
-                  is 'profile'. The key 'profile_eth' is used here to logically segregate the interface
-                  objects applicable for this profile
-          - Object profile which must be included for ethernet interface configurations.
+        - Though the key shown here is 'profile_eth' the actual key to be used in playbook
+          is 'profile'. The key 'profile_eth' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for ethernet interface configurations.
         suboptions:
           mode:
-            description: Interface mode
+            description:
+            - Interface mode
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
             type: str
             required: true
           bpdu_guard:
             description:
-              - Spanning-tree bpduguard
+            - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
             default: true
           port_type_fast:
             description:
-              - Spanning-tree edge port behavior
+            - Spanning-tree edge port behavior
             type: bool
             choices: [true, false]
             default: true
           mtu:
             description:
-              - Interface MTU
+            - Interface MTU
             type: str
             choices: ['default', 'jumbo']
             default: jumbo
           allowed_vlans:
             description:
-              - Vlans that are allowed on this interface. This option is applicable only for interfaces whose 'mode' is 'trunk'
+            - Vlans that are allowed on this interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
           access_vlan:
             description:
-              - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ""
           speed:
             description:
-              - Speed of the interface.
+            - Speed of the interface.
             type: str
             choices: ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
             default: Auto
           int_vrf:
             description:
-              - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
+            - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
             type: str
             default: default
           ipv4_addr:
             description:
-              - IPV4 address of the interface. This object is applicable only if the 'mode' is 'routed' or 'epl_routed'
-            type: ipv4
+            - IPV4 address of the interface. This object is applicable only if the 'mode' is
+              'routed' or 'epl_routed'
+            type: str
             default: ""
           ipv4_mask_len:
             description:
-              - IPV4 address mask length. This object is applicable only if the 'mode' is 'routed' or
-                'epl_routed'
+            - IPV4 address mask length. This object is applicable only if the 'mode' is 'routed' or
+              'epl_routed'
             type: int
             choices : [Min:1, Max:31]
             default: 8
           ipv6_addr:
             description:
-              - IPV6 address of the interface. This object is applicable only if the 'mode' is 'epl_routed'
-            type: ipv6
+            - IPV6 address of the interface. This object is applicable only if the 'mode' is 'epl_routed'
+            type: str
             default: ""
           ipv6_mask_len:
             description:
-              - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
+            - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
             type: int
             choices : [Min:1, Max:31]
             default: 8
           route_tag:
             description:
-              - Route tag associated with the interface IP. This object is applicable only if the 'mode' is
-                'routed' or 'epl_routed'
+            - Route tag associated with the interface IP. This object is applicable only if the 'mode' is
+              'routed' or 'epl_routed'
             type: str
             default: ""
           cmds:
             description:
-              - Commands to be included in the configuration under this interface
+            - Commands to be included in the configuration under this interface
             type: list
             default: []
           description:
             description:
-              - Description of the interface
+            - Description of the interface
             type: str
             default: ""
           admin_state:
             description:
-              - Administrative state of the interface
+            - Administrative state of the interface
             type: bool
             default: true
 '''
 
 EXAMPLES = '''
 
-States:
-This module supports the following states:
+# States:
+# This module supports the following states:
+#
+# Merged:
+#   Interfaces defined in the playbook will be merged into the target fabric.
+#
+#   The interfaces listed in the playbook will be created if not already present on the DCNM
+#   server. If the interface is already present and the configuration information included
+#   in the playbook is either different or not present in DCNM, then the corresponding
+#   information is added to the interface on DCNM. If an interface mentioned in playbook
+#   is already present on DCNM and there is no difference in configuration, no operation
+#   will be performed for such interface.
+#
+# Replaced:
+#   Interfaces defined in the playbook will be replaced in the target fabric.
+#
+#   The state of the interfaces listed in the playbook will serve as source of truth for the
+#   same interfaces present on the DCNM under the fabric mentioned. Additions and updations
+#   will be done to bring the DCNM interfaces to the state listed in the playbook.
+#   Note: Replace will only work on the interfaces mentioned in the playbook.
+#
+# Overridden:
+#   Interfaces defined in the playbook will be overridden in the target fabric.
+#
+#   The state of the interfaces listed in the playbook will serve as source of truth for all
+#   the interfaces under the fabric mentioned. Additions and deletions will be done to bring
+#   the DCNM interfaces to the state listed in the playbook. All interfaces other than the
+#   ones mentioned in the playbook will either be deleted or reset to default state.
+#   Note: Override will work on the all the interfaces present in the DCNM Fabric.
+#
+# Deleted:
+#   Interfaces defined in the playbook will be deleted in the target fabric.
+#
+#   Deletes the list of interfaces specified in the playbook.  If the playbook does not include
+#   any switches or interface information, then all interfaces from all switches in the
+#   fabric will either be deleted or put to default state. If configuuration includes information
+#   pertaining to any particular switch, then interfaces belonging to that switch will either be
+#   deleted or put to default. If configuration includes both interface and switch information,
+#   then the specified interfaces will either be deleted or reset on all the seitches specified
+#
+# Query:
+#   Returns the current DCNM state for the interfaces listed in the playbook.
 
-Merged:
-  Interfaces defined in the playbook will be merged into the target fabric.
-
-  The interfaces listed in the playbook will be created if not already present on the DCNM
-  server. If the interface is already present and the configuration information included
-  in the playbook is either different or not present in DCNM, then the corresponding
-  information is added to the interface on DCNM. If an interface mentioned in playbook
-  is already present on DCNM and there is no difference in configuration, no operation
-  will be performed for such interface.
-
-Replaced:
-  Interfaces defined in the playbook will be replaced in the target fabric.
-
-  The state of the interfaces listed in the playbook will serve as source of truth for the
-  same interfaces present on the DCNM under the fabric mentioned. Additions and updations
-  will be done to bring the DCNM interfaces to the state listed in the playbook.
-  Note: Replace will only work on the interfaces mentioned in the playbook.
-
-Overridden:
-  Interfaces defined in the playbook will be overridden in the target fabric.
-
-  The state of the interfaces listed in the playbook will serve as source of truth for all
-  the interfaces under the fabric mentioned. Additions and deletions will be done to bring
-  the DCNM interfaces to the state listed in the playbook. All interfaces other than the
-  ones mentioned in the playbook will either be deleted or reset to default state.
-  Note: Override will work on the all the interfaces present in the DCNM Fabric.
-
-Deleted:
-  Interfaces defined in the playbook will be deleted in the target fabric.
-
-  Deletes the list of interfaces specified in the playbook.  If the playbook does not include
-  any switches or interface information, then all interfaces from all switches in the
-  fabric will either be deleted or put to default state. If configuuration includes information
-  pertaining to any particular switch, then interfaces belonging to that switch will either be
-  deleted or put to default. If configuration includes both interface and switch information,
-  then the specified interfaces will either be deleted or reset on all the seitches specified
-
-Query:
-  Returns the current DCNM state for the interfaces listed in the playbook.
-
-LOOPBACK INTERFACE
+# LOOPBACK INTERFACE
 
 - name: Create loopback interfaces
   cisco.dcnm.dcnm_interface: &lo_merge
@@ -613,7 +633,7 @@ LOOPBACK INTERFACE
       - switch:
           - "192.172.1.1"                 # provide the switch where to deploy the config
 
-PORTCHANNEL INTERFACE
+# PORTCHANNEL INTERFACE
 
 - name: Create port channel interfaces
   cisco.dcnm.dcnm_interface: &pc_merge
@@ -739,7 +759,7 @@ PORTCHANNEL INTERFACE
             - no shutdown
           description: "port channel acting as trunk"
 
-SUB-INTERFACE
+# SUB-INTERFACE
 
 - name: Create sub-interfaces
   cisco.dcnm.dcnm_interface: &sub_merge
@@ -827,7 +847,7 @@ SUB-INTERFACE
             - no shutdown
           description: "sub interface eth1/1.3 configuration - override"
 
-VPC INTERFACE
+# VPC INTERFACE
 
 - name: Create vPC interfaces
   cisco.dcnm.dcnm_interface: &vpc_merge
@@ -938,30 +958,30 @@ VPC INTERFACE
               - no shutdown
               - no shutdown
 
-QUERY
+# QUERY
 
- - name: Query interface details
-      cisco.dcnm.dcnm_interface:
-        fabric: mmudigon-fabric
-        state: query            # only choose from [merged, replaced, deleted, overridden, query]
-        config:
-          - switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: po350
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: lo450
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: eth1/1
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: eth1/15.2
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
-          - name: vpc750
-            switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+- name: Query interface details
+  cisco.dcnm.dcnm_interface:
+    fabric: mmudigon-fabric
+    state: query            # only choose from [merged, replaced, deleted, overridden, query]
+    config:
+      - switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: po350
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: lo450
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: eth1/1
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: eth1/15.2
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+      - name: vpc750
+        switch:
+          - "192.172.1.1"   # provide the switch information where the config is to be deployed
 
 '''
 
@@ -973,14 +993,33 @@ import sys
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send, get_fabric_inventory_details, dcnm_get_ip_addr_info, validate_list_of_dicts, get_ip_sn_dict
+    dcnm_send, get_fabric_inventory_details, dcnm_get_ip_addr_info, validate_list_of_dicts,\
+    get_ip_sn_dict, dcnm_version_supported
 
 LOG_ERROR = 0
 LOG_DEBUG = 4
 LOG_VERBOSE = 5
 
-
 class DcnmIntf:
+
+    dcnm_intf_paths = {
+        11: {
+              "VPC_SNO": "/rest/interface/vpcpair_serial_number?serial_number={}",
+              "IF_WITH_SNO_IFNAME": "/rest/interface?serialNumber={}&ifName={}",
+              "IF_DETAIL_WITH_SNO": "/rest/interface/detail?serialNumber={}",
+              "GLOBAL_IF": "/rest/globalInterface",
+              "GLOBAL_IF_DEPLOY":"/rest/globalInterface/deploy",
+              "INTERFACE": "/rest/interface",
+            },
+        12: {
+              "VPC_SNO": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
+              "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
+              "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface/detail?serialNumber={}",
+              "GLOBAL_IF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/globalInterface",
+              "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/globalInterface/deploy",
+              "INTERFACE": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface",
+            }
+    }
 
     def __init__(self, module):
         self.module = module
@@ -997,15 +1036,19 @@ class DcnmIntf:
         self.diff_create = []
         self.diff_replace = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
         self.log_verbosity = 0
         self.fd = None
         self.vpc_ip_sn = {}
-        self.changed_dict = [{'merged': [], 'deleted': [], 'replaced': [], 'overridden': [], 'deploy': [], 'query': []}]
+        self.changed_dict = [{'merged': [], 'deleted': [], 'replaced': [], 'overridden': [], 'deploy': [], 'query': [], 'debugs': []}]
+
+        self.dcnm_version = dcnm_version_supported(self.module)
 
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        self.paths = self.dcnm_intf_paths[self.dcnm_version]
 
         self.dcnm_intf_facts = {
             'fabric': module.params['fabric'],
@@ -1063,19 +1106,36 @@ class DcnmIntf:
 
         # New Interfaces
         self.pol_types = {
-            "pc_monitor": "int_monitor_port_channel_11_1",
-            "pc_trunk": "int_port_channel_trunk_host_11_1",
-            "pc_access": "int_port_channel_access_host_11_1",
-            "pc_l3": "int_l3_port_channel",
-            "sub_int_subint": "int_subif_11_1",
-            "lo_lo": "int_loopback_11_1",
-            "eth_trunk": "int_trunk_host_11_1",
-            "eth_access": "int_access_host_11_1",
-            "eth_routed": "int_routed_host_11_1",
-            "eth_monitor": "int_monitor_ethernet_11_1",
-            "eth_epl_routed": "epl_routed_intf",
-            "vpc_trunk": "int_vpc_trunk_host_11_1",
-            "vpc_access": "int_vpc_access_host_11_1"
+            11: {
+                    "pc_monitor": "int_monitor_port_channel_11_1",
+                    "pc_trunk": "int_port_channel_trunk_host_11_1",
+                    "pc_access": "int_port_channel_access_host_11_1",
+                    "pc_l3": "int_l3_port_channel",
+                    "sub_int_subint": "int_subif_11_1",
+                    "lo_lo": "int_loopback_11_1",
+                    "eth_trunk": "int_trunk_host_11_1",
+                    "eth_access": "int_access_host_11_1",
+                    "eth_routed": "int_routed_host_11_1",
+                    "eth_monitor": "int_monitor_ethernet_11_1",
+                    "eth_epl_routed": "epl_routed_intf",
+                    "vpc_trunk": "int_vpc_trunk_host_11_1",
+                    "vpc_access": "int_vpc_access_host_11_1"
+                },
+            12: {
+                    "pc_monitor": "int_monitor_port_channel",
+                    "pc_trunk": "int_port_channel_trunk_host",
+                    "pc_access": "int_port_channel_access_host",
+                    "pc_l3": "int_l3_port_channel",
+                    "sub_int_subint": "int_subif",
+                    "lo_lo": "int_loopback",
+                    "eth_trunk": "int_trunk_host",
+                    "eth_access": "int_access_host",
+                    "eth_routed": "int_routed_host",
+                    "eth_monitor": "int_monitor_ethernet",
+                    "eth_epl_routed": "epl_routed_intf",
+                    "vpc_trunk": "int_vpc_trunk_host",
+                    "vpc_access": "int_vpc_access_host"
+                }
         }
 
         # New Interfaces
@@ -1099,10 +1159,12 @@ class DcnmIntf:
 
     def log_msg(self, msg):
 
-        if (self.fd is None):
-            self.fd = open("interface.log", "w+")
-        if (self.fd is not None):
+        if self.fd is None:
+            self.fd = open("interface.log", "a+")
+        if self.fd is not None:
             self.fd.write(msg)
+            self.fd.write("\n")
+            self.fd.flush()
 
     # New Interfaces
     def dcnm_intf_get_if_name(self, name, if_type):
@@ -1125,7 +1187,7 @@ class DcnmIntf:
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
-        path = '/rest/interface/vpcpair_serial_number?serial_number=' + self.ip_sn[sw]
+        path = self.paths["VPC_SNO"].format(self.ip_sn[sw])
         resp = dcnm_send(self.module, 'GET', path)
 
         if (resp and resp['RETURN_CODE'] == 200):
@@ -1166,7 +1228,7 @@ class DcnmIntf:
                             c[ck]['sno'] = self.ip_sn[sw]
                         ifname, port_id = self.dcnm_intf_get_if_name(c['name'], c['type'])
                         c[ck]['ifname'] = ifname
-                        c[ck]['policy'] = self.pol_types[pol_ind_str]
+                        c[ck]['policy'] = self.pol_types[self.dcnm_version][pol_ind_str]
                         self.pb_input.append(c[ck])
 
     def dcnm_intf_validate_interface_input(self, config, common_spec, prof_spec):
@@ -1745,6 +1807,7 @@ class DcnmIntf:
                     "ifName": "",
                     "fabricName": "",
                     "nvPairs": {
+                      "SPEED": "Auto"
                     }
                 }
             ],
@@ -1784,8 +1847,7 @@ class DcnmIntf:
             return intf
 
         pol_ind_str = delem['type'] + '_' + delem['profile']['mode']
-        # intf.update ({"policy" : self.pol_types[delem['profile']['mode']]})
-        intf.update({"policy": self.pol_types[pol_ind_str]})
+        intf.update({"policy": self.pol_types[self.dcnm_version][pol_ind_str]})
         intf.update({"interfaceType": self.int_types[delem['type']]})
 
         # Rest of the data in the dict depends on the interface type and the template
@@ -1847,7 +1909,7 @@ class DcnmIntf:
         else:
             sno = serialNumber
 
-        path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifName
+        path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
         resp = dcnm_send(self.module, 'GET', path)
 
         if ('DATA' in resp and resp['DATA']):
@@ -1858,6 +1920,16 @@ class DcnmIntf:
     def dcnm_intf_get_intf_info_from_dcnm(self, intf):
 
         return self.dcnm_intf_get_intf_info(intf['ifName'], intf['serialNumber'], intf['interfaceType'])
+
+    def dcnm_intf_get_have_all_with_sno(self, sno):
+
+        if '~' in sno:
+            sno = sno.split('~')[0]
+        path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
+        resp = dcnm_send(self.module, 'GET', path)
+
+        if ('DATA' in resp and resp['DATA']):
+            self.have_all.extend(resp['DATA'])
 
     def dcnm_intf_get_have_all(self, sw):
 
@@ -1873,20 +1945,8 @@ class DcnmIntf:
         else:
             sno = self.ip_sn[sw]
 
-        # GET all interfaces
-        path = '/rest/interface/detail?serialNumber=' + sno
-
-        resp = dcnm_send(self.module, 'GET', path)
-
-        if ('DATA' in resp and resp['DATA']):
-            self.have_all.extend(resp['DATA'])
-            self.have_all_list.append(sw)
-        else:
-            self.have_all_list.append(sw)
-            return []
-
-        # adminStatus in all_int_raw will give the deployed status. For deployed interfaces
-        # adminStatus will be 1 and ifIndex will also be allocated and non zero
+        self.have_all_list.append(sw)
+        self.dcnm_intf_get_have_all_with_sno (sno)
 
     def dcnm_intf_get_have(self):
 
@@ -1988,10 +2048,10 @@ class DcnmIntf:
         if (match_have):
             if ((match_have[0]['complianceStatus'] != 'In-Sync') and
                 (match_have[0]['complianceStatus'] != 'Pending')):
-                return True
+                return match_have[0], True
             else:
-                return False
-        return True
+                return match_have[0], False
+        return [], True
 
     def dcnm_intf_compare_want_and_have(self, state):
 
@@ -2017,6 +2077,7 @@ class DcnmIntf:
                 if ((state == 'merged') or (state == 'replaced') or (state == 'overridden')):
                     action = 'add'
             else:
+
                 wkeys = list(want.keys())
                 if ('skipResourceCheck' in wkeys):
                     wkeys.remove('skipResourceCheck')
@@ -2052,6 +2113,7 @@ class DcnmIntf:
                                 for ik in if_keys:
                                     if (ik == 'nvPairs'):
                                         nv_keys = list(want[k][0][ik].keys())
+                                        nv_keys.remove("SPEED")
                                         for nk in nv_keys:
                                             # HAVE may have an entry with a list # of interfaces. Check all the
                                             # interface entries for a match.  Even if one entry matches do not
@@ -2125,20 +2187,25 @@ class DcnmIntf:
                 #   3. Do not add otherwise
 
                 if (False is intf_changed):
-                    rc = self.dcnm_intf_can_be_added(want)
+                    match_intf, rc = self.dcnm_intf_can_be_added(want)
                 else:
+                    match_intf = []
                     rc = True
 
                 if (True is rc):
                     delem['serialNumber'] = sno
                     delem['ifName'] = name
+                    delem['fabricName'] = self.fabric
                     self.diff_deploy.append(delem)
                     self.changed_dict[0]['deploy'].append(copy.deepcopy(delem))
+                    if match_intf != []:
+                        self.changed_dict[0]['debugs'].append({"Name": name, "SNO": sno, "DeployStatus": match_intf["complianceStatus"]})
 
     def dcnm_intf_get_diff_replaced(self):
 
         self.diff_create = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2154,7 +2221,7 @@ class DcnmIntf:
     def dcnm_intf_get_diff_merge(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2202,7 +2269,7 @@ class DcnmIntf:
 
         # default payload to be sent to DCNM for override case
         eth_payload = {
-            "policy": "int_routed_host_11_1",
+            "policy": self.pol_types[self.dcnm_version]["eth_routed"],
             "interfaces": [{
                 "interfaceType": "INTERFACE_ETHERNET",
                 "serialNumber": sno,
@@ -2273,6 +2340,7 @@ class DcnmIntf:
 
         self.diff_create = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2326,6 +2394,7 @@ class DcnmIntf:
                         self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
                         delem['serialNumber'] = sno
                         delem['ifName'] = name
+                        delem['fabricName'] = self.fabric
                         self.diff_deploy.append(delem)
                         self.changed_dict[0]['deploy'].append(copy.deepcopy(delem))
 
@@ -2376,6 +2445,8 @@ class DcnmIntf:
                         delem["fabricName"] = fabric
 
                         self.diff_delete[self.int_index[have['ifType']]].append(delem)
+                        if have["mode"] is not None:
+                            self.diff_delete_deploy[self.int_index[have['ifType']]].append(delem)
                         self.changed_dict[0]['deleted'].append(copy.deepcopy(delem))
                         del_list.append(have)
 
@@ -2399,6 +2470,7 @@ class DcnmIntf:
                 self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
                 delem['serialNumber'] = sno
                 delem['ifName'] = intf['ifName']
+                delem['fabricName'] = self.fabric
                 self.diff_deploy.append(delem)
                 self.changed_dict[0]['deploy'].append(copy.deepcopy(delem))
 
@@ -2408,6 +2480,7 @@ class DcnmIntf:
 
         self.diff_create = []
         self.diff_delete = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2497,6 +2570,7 @@ class DcnmIntf:
                                         self.changed_dict[0]['replaced'].append(copy.deepcopy(uelem))
                                         delem['serialNumber'] = intf['serialNumber']
                                         delem['ifName'] = if_name
+                                        delem['fabricName'] = self.fabric
                                         self.diff_deploy.append(delem)
                         else:
                             intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
@@ -2509,6 +2583,8 @@ class DcnmIntf:
                                 delem["fabricName"] = self.fabric
 
                                 self.diff_delete[self.int_index[if_type]].append(delem)
+                                if "monitor" not in intf_payload["policy"]:
+                                    self.diff_delete_deploy[self.int_index[if_type]].append(delem)
                                 self.changed_dict[0]['deleted'].append(copy.deepcopy(delem))
                 else:
                     self.dcnm_intf_get_diff_overridden(cfg)
@@ -2542,11 +2618,11 @@ class DcnmIntf:
             sno = self.ip_sn[info['switch'][0]]
             if (info['name'] == ''):
                 # GET all interfaces
-                path = '/rest/interface/detail?serialNumber=' + sno
+                path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
             else:
                 ifname, if_type = self.dcnm_extract_if_name(info)
                 # GET a specific interface
-                path = '/rest/interface?serialNumber=' + sno + '&ifName=' + ifname
+                path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifname)
 
             resp = dcnm_send(self.module, 'GET', path)
 
@@ -2591,16 +2667,18 @@ class DcnmIntf:
                 # Consider this case as success.
                 succ_resp['REQUEST_PATH'] = resp['REQUEST_PATH']
                 succ_resp['MESSAGE'] = 'OK'
-                succ_resp['METHOD'] = 'DEPLOY'
+                succ_resp['METHOD'] = resp['METHOD']
+                succ_resp['RETURN_CODE'] = 200
                 return succ_resp, True
-            elif ((ent_resp[ent] == 'No Commands to execute.') or
+            elif (('No Commands to execute' in ent_resp[ent]) or
                   (ent_resp[ent] == 'Failed to fetch policies') or
                   (ent_resp[ent] == 'Failed to fetch switch configuration')):
                 # Consider this case as success.
                 succ_resp['REQUEST_PATH'] = resp['REQUEST_PATH']
                 succ_resp['MESSAGE'] = 'OK'
-                succ_resp['METHOD'] = 'DEPLOY'
+                succ_resp['METHOD'] = resp['METHOD']
                 succ_resp['ORIG_MSG'] = ent_resp[ent]
+                succ_resp['RETURN_CODE'] = 200
             else:
                 failed = True
                 break
@@ -2658,6 +2736,41 @@ class DcnmIntf:
             ulist = usno
         return ulist
 
+    def dcnm_intf_check_deployment_status (self, deploy_list):
+
+        # Check for deployment status of all the configured objects only if the check_deploy flag is set.
+        if self.module.params['check_deploy'] is False:
+            return
+
+        path = self.paths["GLOBAL_IF_DEPLOY"]
+
+        for item in deploy_list:
+            retries = 0
+            while retries < 50:
+                retries += 1
+                name = item['ifName']
+                sno = item['serialNumber']
+
+                match_have = [have for have in self.have_all if ((name.lower() == have['ifName'].lower()) and
+                                                       (sno == have['serialNo']) and
+                                                       (self.fabric == have['fabricName']))]
+                if match_have:
+                    if (match_have[0]['complianceStatus'] == 'In-Sync'):
+                        break
+                    else:
+                        if retries == 10 or retries == 20:
+                            json_payload = json.dumps({"ifName": name, "serialNumber": sno, "fabricName": self.fabric})
+                            dcnm_send(self.module, 'POST', path, json_payload)
+                        time.sleep (20)
+                        self.have_all = []
+                        self.dcnm_intf_get_have_all_with_sno(sno)
+                else:
+                    # For merge state, the interfaces would have been created just now. Fetch them again before checking
+                    self.have_all = []
+                    self.dcnm_intf_get_have_all_with_sno(sno)
+            if (match_have == [] or match_have[0]['complianceStatus'] != 'In-Sync'):
+                self.module.fail_json (msg={"FAILURE REASON": "Interafce "+name+" did not reach 'In-Sync' State", "Compliance Status" : match_have[0]["complianceStatus"]})
+
     def dcnm_intf_send_message_to_dcnm(self):
 
         resp = None
@@ -2668,7 +2781,7 @@ class DcnmIntf:
         deploy = False
         replace = False
 
-        path = '/rest/globalInterface'
+        path = self.paths["GLOBAL_IF"]
 
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
@@ -2677,8 +2790,18 @@ class DcnmIntf:
 
             if (delem == []):
                 continue
+
             json_payload = json.dumps(delem)
             resp = dcnm_send(self.module, 'DELETE', path, json_payload)
+
+            if resp.get("RETURN_CODE") != 200:
+                deploy_failed = False
+                for item in resp["DATA"]:
+                    if 'No Commands to execute' not in item["message"]:
+                        deploy_failed = True
+                if deploy_failed is False:
+                    resp["RETURN_CODE"] = 200
+                    resp["MESSAGE"] = "OK"
 
             if ((resp.get('MESSAGE') != 'OK') or (resp.get('RETURN_CODE') != 200)):
 
@@ -2692,7 +2815,7 @@ class DcnmIntf:
                 if (False is changed):
                     changed = rc
 
-                if (((resp.get('MESSAGE') != 'OK') and (resp.get('MESSAGE') != 'No Commands to execute.')) or
+                if (((resp.get('MESSAGE') != 'OK') and ('No Commands to execute' not in resp.get('MESSAGE'))) or
                     (resp.get('RETURN_CODE') != 200)):
                     self.module.fail_json(msg=resp)
             else:
@@ -2706,19 +2829,37 @@ class DcnmIntf:
         # In 11.4 version of DCNM, sometimes interfaces don't get deleted
         # completely, but only marked for deletion. They get removed only after a
         # deploy. So we will do a deploy on the deleted elements
-        path = '/rest/globalInterface/deploy'
-        for delem in self.diff_delete:
+        path = self.paths["GLOBAL_IF_DEPLOY"]
+        index = -1
+        for delem in self.diff_delete_deploy:
 
+            index = index + 1
             if (delem == []):
                 continue
-            # Deploy just requires ifName and serialNumber
-            [[item.pop('interfaceType'), item.pop('fabricName'), item.pop('interfaceDbId')] for item in delem]
+
+            if index != self.int_index ["INTERFACE_VPC"]: 
+                # Deploy just requires ifName and serialNumber
+                [[item.pop('interfaceType'), item.pop('fabricName'), item.pop('interfaceDbId')] for item in delem]
+            else:
+                [[item.pop('interfaceType'), item.pop('interfaceDbId')] for item in delem]
+
             json_payload = json.dumps(delem)
+
             resp = dcnm_send(self.module, 'POST', path, json_payload)
+
+            if resp.get("RETURN_CODE") != 200:
+                deploy_failed = False
+                for item in resp["DATA"]:
+                    if 'No Commands to execute' not in item["message"]:
+                        deploy_failed = True
+                if deploy_failed is False:
+                    resp["RETURN_CODE"] = 200
+                    resp["MESSAGE"] = "OK"
+            self.result['response'].append(resp)
 
         resp = None
 
-        path = '/rest/interface'
+        path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
 
             json_payload = json.dumps(payload)
@@ -2732,7 +2873,7 @@ class DcnmIntf:
 
         resp = None
 
-        path = '/rest/globalInterface'
+        path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
 
             json_payload = json.dumps(payload)
@@ -2746,7 +2887,7 @@ class DcnmIntf:
 
         resp = None
 
-        path = '/rest/globalInterface/deploy'
+        path = self.paths["GLOBAL_IF_DEPLOY"]
         if (self.diff_deploy):
 
             json_payload = json.dumps(self.diff_deploy)
@@ -2765,13 +2906,17 @@ class DcnmIntf:
 
         resp = None
 
-        # Do a second deploy. Sometimes even if interfaces are created, they are
-        # not being deployed. A second deploy solves the same. Don't worry about
-        # the return values
+        if (self.diff_deploy):
+            # Do a second deploy. Sometimes even if interfaces are created, they are
+            # not being deployed. A second deploy solves the same. Don't worry about
+            # the return values
 
-        resp = dcnm_send(self.module, 'POST', path, json_payload)
+            resp = dcnm_send(self.module, 'POST', path, json_payload)
 
-        resp = None
+            resp = None
+
+        if self.diff_deploy:     
+            self.dcnm_intf_check_deployment_status (self.diff_deploy)
 
         # In overridden and deleted states, if no delete or create is happening and we have
         # only replace, then check the return message for deploy. If it says
@@ -2817,10 +2962,11 @@ def main():
     """
     element_spec = dict(
         fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(type='str', default='merged',
                    choices=['merged', 'replaced', 'overridden', 'deleted',
                               'query']),
+        check_deploy=dict(type='bool', default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec,
@@ -2880,11 +3026,10 @@ def main():
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
+        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
-    # Sleep for 10 secs to ensure that the DCNM will be set to proper state
-    # time.sleep(20)
     module.exit_json(**dcnm_intf.result)
 
 

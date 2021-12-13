@@ -2,10 +2,18 @@
 ##                 SETUP                    ##
 ##############################################
 
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+
 - name: MERGED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/{{ ansible_it_fabric }}
+    path: "{{ rest_path }}"
   register: result
 
 - assert:
@@ -172,47 +180,6 @@
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
-
-- name: MERGED - Clean up any existing vrfs
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
-    state: deleted
-
-- name: MERGED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
-
-- name: MERGED - Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION with check mode set to true
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
-    state: merged
-    check_mode: true
-    config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      source: null
-      service_vrf_template: null
-      attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # optional
-            ipv4_addr: 10.33.0.2/30 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm
-      deploy: true
-  register: result
-
-- assert:
-    that:
-    - 'result.changed == false'
-    - '(result["response"] | length) == 0'
 
 - name: MERGED - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:

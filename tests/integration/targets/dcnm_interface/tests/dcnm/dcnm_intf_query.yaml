@@ -2,8 +2,12 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
+    check_deploy: True
     fabric: "{{ ansible_it_fabric }}" 
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
@@ -21,6 +25,7 @@
 
     - name: Create a mixture of interfaces
       cisco.dcnm.dcnm_interface: &lo_merge
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -33,8 +38,8 @@
               admin_state: true               # choose from [true, false]
               mode: lo                        # choose from [lo]
               int_vrf: ""                     # VRF name
-              ipv4_addr: 192.169.10.1         # ipv4 address for the loopback interface
-              ipv6_addr: fd01::0201           # ipV6 address for the loopback interface
+              ipv4_addr: 192.168.1.1          # ipv4 address for the loopback interface
+              ipv6_addr: fd06::0201           # ipV6 address for the loopback interface
               route_tag: ""                   # Routing Tag for the interface
               cmds:                           # Freeform config
                 - no shutdown
@@ -50,9 +55,9 @@
               mode: subint                    # choose from [subint]
               vlan: 100                       # vlan ID [min:2, max:3967]
               int_vrf: ""                     # VRF name
-              ipv4_addr: 192.168.30.1         # ipv4 address for the sub-interface
+              ipv4_addr: 193.168.2.1          # ipv4 address for the sub-interface
               ipv4_mask_len: 24               # choose between [min:8, max:31]
-              ipv6_addr: fd01::0401           # ipV6 address for the sub-interface
+              ipv6_addr: fd16::0401           # ipV6 address for the sub-interface
               ipv6_mask_len: 64               # choose between [min:64, max:127]
               mtu: 9216                       # choose between [min:576, max:9216]
               cmds:                           # Freeform config
@@ -87,8 +92,8 @@
             profile:
               admin_state: true               # choose from [true, false]
               mode: trunk                     # choose from [trunk, access]
-              peer1_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer2_pcid: 100                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_pcid: 310                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 310                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
               peer1_members:                  # member interfaces on peer 1
                 - "{{ ansible_eth_intf6 }}"
               peer2_members:                  # member interfaces on peer 2
@@ -123,6 +128,7 @@
 
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -163,6 +169,7 @@
 
     - name: Query interface details - Non-Existing
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -199,11 +206,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
+        check_deploy: True
         fabric: "{{ ansible_it_fabric }}" 
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
+      when: IT_CONTEXT is not defined
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined

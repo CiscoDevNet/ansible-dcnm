@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2021 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,15 +47,17 @@ class HttpApi(HttpApiBase):
         self.txt_headers = {
             'Content-Type': "text/plain"
         }
+        self.version = None
 
-    def login(self, username, password):
-        ''' DCNM Login Method.  This method is automatically called by the
-            Ansible plugin architecture if an active Dcnm-Token is not already
-            available.
+    def get_version(self):
+        return self.version
+
+    def set_version(self, version):
+        self.version = version
+
+    def _login_old(self, username, password, method, path):
+        ''' DCNM Helper Function to login to DCNM version 11.
         '''
-        method = 'POST'
-        path = '/rest/logon'
-
         # Ansible expresses the persistent_connect_timeout in seconds.
         # This value needs to be converted to milliseconds for DCNM
         timeout = self.connection.get_option("persistent_connect_timeout") * 1000
@@ -65,31 +67,105 @@ class HttpApi(HttpApiBase):
             response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
             vrd = self._verify_response(response, method, path, response_data)
             if vrd['RETURN_CODE'] != 200:
-                raise ConnectionError(vrd)
+                self.login_fail_msg.append('Error on attempt to connect and authenticate with DCNM controller: {}'.format(vrd))
+                return
 
             response_value = self._get_response_value(response_data)
             self.connection._auth = {'Dcnm-Token': self._response_to_json(response_value)['Dcnm-Token']}
+            self.login_succeeded = True
+            self.set_version(11)
 
         except Exception as e:
-            msg = 'Error on attempt to connect and authenticate with DCNM controller: {}'.format(e)
-            raise ConnectionError(msg)
+            self.login_fail_msg.append('Error on attempt to connect and authenticate with DCNM controller: {}'.format(e))
+
+    def _login_latest(self, username, password, method, path):
+        ''' Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later.
+        '''
+        login_domain = 'DefaultAuth'
+        # login_domain = 'local'
+        payload = {'username': self.connection.get_option('remote_user'), 'password': self.connection.get_option('password'), 'domain': login_domain}
+        data = json.dumps(payload)
+        try:
+            response, response_data = self.connection.send(path, data, method=method, headers=self.headers)
+            vrd = self._verify_response(response, method, path, response_data)
+            if vrd['RETURN_CODE'] != 200:
+                self.login_fail_msg.append('Error on attempt to connect and authenticate with NDFC controller: {}'.format(vrd))
+                return
+
+            self.connection._auth = {'Authorization': 'Bearer {0}'.format(self._response_to_json12(response_data).get('token'))}
+            self.login_succeeded = True
+            self.set_version(12)
+
+        except Exception as e:
+            self.login_fail_msg.append('Error on attempt to connect and authenticate with NDFC controller: {}'.format(e))
+
+    def login(self, username, password):
+        ''' DCNM/NDFC Login Method.  This method is automatically called by the
+            Ansible plugin architecture if an active Token is not already
+            available.
+        '''
+        self.login_succeeded = False
+        self.login_fail_msg = []
+        method = 'POST'
+        path = {'dcnm': '/rest/logon', 'ndfc': '/login'}
+
+        # Attempt to login to DCNM version 11
+        self._login_old(username, password, method, path['dcnm'])
+
+        # If login attempt failed then try NDFC version 12
+        if not self.login_succeeded:
+            self._login_latest(username, password, method, path['ndfc'])
+
+        # If both login attemps fail, raise ConnectionError
+        if not self.login_succeeded:
+            raise ConnectionError(self.login_fail_msg)
+
+    def _logout_old(self, method, path):
+        try:
+            response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
+            vrd = self._verify_response(response, method, path, response_data)
+            if vrd['RETURN_CODE'] != 200:
+                self.logout_fail_msg.append('Error on attempt to logout from DCNM controller: {}'.format(vrd))
+                return
+
+            self.logout_succeeded = True
+
+        except Exception as e:
+            self.logout_fail_msg.append('Error on attempt to logout from DCNM controller: {}'.format(e))
+
+    def _logout_latest(self, method, path):
+        try:
+            response, response_data = self.connection.send(path, {}, method=method, headers=self.headers)
+            vrd = self._verify_response(response, method, path, response_data)
+            if vrd['RETURN_CODE'] != 200:
+                self.logout_fail_msg.append('Error on attempt to logout from NDFC controller: {}'.format(vrd))
+                return
+
+            self.logout_succeeded = True
+
+        except Exception as e:
+            self.logout_fail_msg.append('Error on attempt to logout from NDFC controller: {}'.format(e))
 
     def logout(self):
+        if self.connection._auth is None:
+            return
+
+        self.logout_succeeded = False
+        self.logout_fail_msg = []
         method = 'POST'
-        path = '/rest/logout'
+        path = {'dcnm': '/rest/logout', 'ndfc': '/logout'}
 
-        try:
-            vrd = response, response_data = self.connection.send(path, self.connection._auth['Dcnm-Token'], method=method, headers=self.headers, force_basic_auth=True)
-            if vrd['RETURN_CODE'] != 200:
-                raise ConnectionError(vrd)
+        if self.version == 11:
+            # Logout of DCNM version 11
+            self._logout_old(method, path['dcnm'])
+        elif self.version >= 12:
+            # Logout of DCNM version 12
+            self._logout_latest(method, path['ndfc'])
 
-        except Exception as e:
-            msg = 'Error on attempt to logout from DCNM controller: {}'.format(e)
-            raise ConnectionError(msg)
+        # If both login attemps fail, raise ConnectionError
+        if not self.logout_succeeded:
+            raise ConnectionError(self.logout_fail_msg)
 
-        self._verify_response(response, method, path, response_data)
-
-        # Clean up tokens
         self.connection._auth = None
 
     def check_url_connection(self):
@@ -107,6 +183,7 @@ class HttpApi(HttpApiBase):
 
     def send_request(self, method, path, json=None):
         ''' This method handles all DCNM REST API requests other then login '''
+
         if json is None:
             json = {}
 
@@ -118,9 +195,7 @@ class HttpApi(HttpApiBase):
             if path[0] != '/':
                 msg = 'Value of <path> does not appear to be formated properly'
                 raise ConnectionError(self._return_info(None, method, path, msg))
-            response, rdata = self.connection.send(path, json, method=method,
-                                                   headers=self.headers,
-                                                   force_basic_auth=True)
+            response, rdata = self.connection.send(path, json, method=method, headers=self.headers, force_basic_auth=True)
             return self._verify_response(response, method, path, rdata)
         except Exception as e:
             eargs = e.args[0]
@@ -177,6 +252,21 @@ class HttpApi(HttpApiBase):
         try:
             return json.loads(response_text) if response_text else {}
         # JSONDecodeError only available on Python 3.5+
+        except ValueError:
+            return 'Invalid JSON response: {}'.format(response_text)
+
+    def _response_to_json12(self, response_text):
+        ''' Convert response_text to json format '''
+
+        try:
+            response_value = response_text.getvalue()
+        except Exception:
+            response_value = response_text
+        response_text = to_text(response_value)
+
+        try:
+            return json.loads(response_text) if response_text else {}
+        # # JSONDecodeError only available on Python 3.5+
         except ValueError:
             return 'Invalid JSON response: {}'.format(response_text)
 

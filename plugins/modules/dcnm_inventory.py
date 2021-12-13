@@ -14,15 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-import copy
-import json
-import re
-from ansible.module_utils.six.moves.urllib.parse import urlencode
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info
-
 __author__ = "Karthik Babu Harichandra Babu"
 
 DOCUMENTATION = '''
@@ -32,16 +23,16 @@ short_description: Add and remove Switches from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
     - "Add and remove Switches from a DCNM managed VXLAN fabric."
-author: Karthik Babu Harichandra Babu(kharicha@cisco.com)
+author: Karthik Babu Harichandra Babu(@kharicha)
 options:
   fabric:
     description:
-      - 'Name of the target fabric for Inventory operations'
+    - Name of the target fabric for Inventory operations
     type: str
     required: yes
   state:
     description:
-      - The state of DCNM after module completion.
+    - The state of DCNM after module completion.
     type: str
     choices:
       - merged
@@ -50,155 +41,172 @@ options:
       - query
     default: merged
   config:
-    description: 'List of switches being managed'
+    description:
+    - List of switches being managed. Not required for state deleted
     type: list
     elements: dict
-    required: true
-    note: Not required for state deleted
     suboptions:
       seed_ip:
-        description: 'Seed Name(support both IP address and dns_name) of the switch which needs to be added to the DCNM Fabric'
-        type: ipv4
+        description:
+        - Seed Name(support both IP address and dns_name) of the switch
+          which needs to be added to the DCNM Fabric
+        type: str
         required: true
       auth_proto:
-        description: 'Name of the authentication protocol to be used'
+        description:
+        - Name of the authentication protocol to be used
         choices: ['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES']
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       user_name:
-        description: 'Login username to the switch'
+        description:
+        - Login username to the switch
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       password:
-        description: 'Login password to the switch'
+        description:
+        - Login password to the switch
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       max_hops:
-        description: 'Maximum Hops to reach the switch'
+        description:
+        - Maximum Hops to reach the switch
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
       role:
-        description: 'Role which needs to be assigned to the switch'
+        description:
+        - Role which needs to be assigned to the switch
         choices: ['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
                  'super_spine', 'border_super_spine', 'border_gateway_super_spine']
         type: str
         required: true
         default: leaf
       preserve_configs:
-        description: 'Set this to false for greenfield deployment and true for brownfield deployment'
+        description:
+        - Set this to false for greenfield deployment and true for brownfield deployment
         type: str
-        required: true (except for state 'deleted' and 'query')
+        required: true
 '''
 
 EXAMPLES = '''
-This module supports the following states:
-
-Merged:
-  Switches defined in the playbook will be merged into the target fabric.
-    - If the switch does not exist it will be added.
-    - Switches that are not specified in the playbook will be untouched.
-
-Overridden:
-  The playbook will serve as source of truth for the target fabric.
-    - If the switch does not exist it will be added.
-    - If the switch is not defined in the playbook but exists in DCNM it will be removed.
-    - If the switch exists, properties that need to be modified and can be modified will be modified.
-
-Deleted:
-  Deletes the list of switches specified in the playbook.
-  If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
-
-Query:
-  Returns the current DCNM state for the switches listed in the playbook.
+# This module supports the following states:
+#
+# Merged:
+#   Switches defined in the playbook will be merged into the target fabric.
+#     - If the switch does not exist it will be added.
+#     - Switches that are not specified in the playbook will be untouched.
+#
+# Overridden:
+#   The playbook will serve as source of truth for the target fabric.
+#     - If the switch does not exist it will be added.
+#     - If the switch is not defined in the playbook but exists in DCNM it will be removed.
+#     - If the switch exists, properties that need to be modified and can be modified will be modified.
+#
+# Deleted:
+#   Deletes the list of switches specified in the playbook.
+#   If no switches are provided in the playbook, all the switches present on that DCNM fabric will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the switches listed in the playbook.
 
 
 # The following two switches will be merged into the existing fabric
--name: Merge switch into fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: merged # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: spine
-         preserve_config: False # boolean, default is  true
-       - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: leaf
-         preserve_config: False # boolean, default is  true
+- name: Merge switch into fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: spine
+      preserve_config: False # boolean, default is  true
+    - seed_ip: 192.168.0.2
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: leaf
+      preserve_config: False # boolean, default is true
 
 # The following two switches will be added or updated in the existing fabric and all other
 # switches will be removed from the fabric
 - name: Override Switch
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: overridden # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: spine
-         preserve_config: False # boolean, default is  true
-       - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: leaf
-         preserve_config: False # boolean, default is  true
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: overridden # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: spine
+      preserve_config: False # boolean, default is  true
+    - seed_ip: 192.168.0.2
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: leaf
+      preserve_config: False # boolean, default is true
 
 # The following two switches will be deleted in the existing fabric
 - name: Delete selected switches
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: deleted # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: spine
-         preserve_config: False # boolean, default is  true
-       - seed_ip: 192.168.0.2
-         auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-         user_name: switch_username
-         password: switch_password
-         max_hops: 0
-         role: leaf
-         preserve_config: False # boolean, default is  true
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: deleted # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: spine
+      preserve_config: False # boolean, default is  true
+    - seed_ip: 192.168.0.2
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: switch_username
+      password: switch_password
+      max_hops: 0
+      role: leaf
+      preserve_config: False # boolean, default is  true
 
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: deleted # merged / deleted / overridden / query
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: deleted # merged / deleted / overridden / query
 
 # The following two switches information will be queried in the existing fabric
--name: Query switch into fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: query # merged / deleted / overridden / query
-      config:
-       - seed_ip: 192.168.0.1
-         role: spine
-       - seed_ip: 192.168.0.2
-         role: leaf
+- name: Query switch into fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      role: spine
+    - seed_ip: 192.168.0.2
+      role: leaf
 
 # All the existing switches will be queried in the existing fabric
 - name: Query all the switches in the fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: vxlan-fabric
-      state: query # merged / deleted / overridden / query
-      '''
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / deleted / overridden / query
+'''
+
+import time
+import copy
+import json
+import re
+from ansible.module_utils.six.moves.urllib.parse import urlencode
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, dcnm_version_supported, \
+    get_fabric_details
 
 
 class DcnmInventory:
@@ -218,6 +226,7 @@ class DcnmInventory:
         self.diff_delete = {}
         self.query = []
         self.node_migration = False
+        self.nd_prefix = '/appcenter/cisco/ndfc/api/v1/lan-fabric'
 
         self.result = dict(
             changed=False,
@@ -225,11 +234,18 @@ class DcnmInventory:
             response=[]
         )
 
+        self.controller_version = dcnm_version_supported(self.module)
+        self.fabric_details = get_fabric_details(self.module, self.fabric)
+
+        self.nd = True if self.controller_version >= 12 else False
+
     def update_discover_params(self, inv):
 
         # with the inv parameters perform the test-reachability (discover)
         method = 'POST'
         path = '/rest/control/fabrics/{}/inventory/test-reachability'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
         response = dcnm_send(self.module, method, path, json.dumps(inv))
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
@@ -258,7 +274,7 @@ class DcnmInventory:
         elif state == 'query':
             inv_upd = {
                 "seedIP": s_ip,
-                "role": inv['role'].replace(" ", "")
+                "role": inv['role'].replace(" ", "_")
             }
         else:
             if inv['auth_proto'] == 'MD5':
@@ -283,7 +299,7 @@ class DcnmInventory:
                 "password": inv['password'],
                 "maxHops": inv['max_hops'],
                 "cdpSecondTimeout": "5",
-                "role": inv['role'].replace(" ", ""),
+                "role": inv['role'].replace(" ", "_"),
                 "preserveConfig": inv['preserve_config']
             }
 
@@ -297,7 +313,10 @@ class DcnmInventory:
 
         method = 'GET'
         path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
+
         missing_fabric, not_ok = self.handle_response(inv_objects, 'query_dcnm')
 
         if inv_objects.get('ERROR') == 'Not Found' and inv_objects.get('RETURN_CODE') == 404:
@@ -322,7 +341,7 @@ class DcnmInventory:
             get_switch.update({'platform': inv['nonMdsModel']})
             get_switch.update({'version': inv['release']})
             get_switch.update({'deviceIndex': inv['logicalName'] + '(' + inv['serialNumber'] + ')'})
-            get_switch.update({'role': inv['switchRole'].replace(" ", "")})
+            get_switch.update({'role': inv['switchRole'].replace(" ", "_")})
             get_switch.update({'mode': inv['mode']})
             get_switch.update({'serialNumber': inv['serialNumber']})
             switchdict = {}
@@ -442,9 +461,9 @@ class DcnmInventory:
                         # Assign Role
                         self.assign_role()
 
-                        for x in range(1, 5):
+                        for check in range(1, 300):
                             if not self.all_switches_ok():
-                                time.sleep(300)
+                                time.sleep(5)
                             else:
                                 break
 
@@ -460,7 +479,6 @@ class DcnmInventory:
         self.diff_create = diff_create
 
     def validate_input(self):
-
         """Parse the playbook values, validate to param specs."""
 
         state = self.params['state']
@@ -551,7 +569,10 @@ class DcnmInventory:
 
         method = 'POST'
         path = '/rest/control/fabrics/{}'.format(self.fabric)
-        create_path = path + '/inventory/discover?gfBlockingCall=true'
+        if self.nd:
+            path = self.nd_prefix + path
+        # create_path = path + '/inventory/discover?gfBlockingCall=true'
+        create_path = path + '/inventory/discover'
 
         if self.diff_create:
             for create in self.diff_create:
@@ -564,8 +585,10 @@ class DcnmInventory:
     def rediscover_switch(self, serial_num):
 
         method = 'POST'
-        redisc_path = '/rest/control/fabrics/{}/inventory/rediscover/{}'.format(self.fabric, serial_num)
-        response = dcnm_send(self.module, method, redisc_path)
+        path = '/rest/control/fabrics/{}/inventory/rediscover/{}'.format(self.fabric, serial_num)
+        if self.nd:
+            path = self.nd_prefix + path
+        response = dcnm_send(self.module, method, path)
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
         if fail:
@@ -575,8 +598,10 @@ class DcnmInventory:
 
         # Get Fabric Inventory Details
         method = 'GET'
-        inv_path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        get_inv = dcnm_send(self.module, method, inv_path)
+        path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        get_inv = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_inv, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -587,6 +612,94 @@ class DcnmInventory:
         if not get_inv.get('DATA'):
             return
 
+        def ready_to_continue(inv_data):
+            # This is a helper function to wait for certain events to complete
+            # as part of the switch rediscovery step before moving on.
+
+            # Check # 1
+            # First check migration mode.  Switches will enter migration mode
+            # even if the GRFIELD_DEBUG_FLAG is enabled so this needs to be
+            # checked first.
+            for switch in inv_data.get('DATA'):
+                if switch['mode'].lower() == "migration":
+                    # At least one switch is still in migration mode
+                    # so not ready to continue
+                    return False
+
+            # Check # 2
+            # The fabric has a setting to prevent reload for greenfield
+            # deployments.  If this is enabled we can skip check 3 and just return True
+            if self.fabric_details['nvPairs']['GRFIELD_DEBUG_FLAG'].lower() == "enable":
+                return True
+
+            # Check # 3
+            # If we get to this check that means the GRFIELD_DEBUG_FLAG is disabled
+            # and each switch will go through a realod sequence.  Unfortunately
+            # the switch will show up as managable for a period of time before it
+            # moves to unmanagable but we need to wait for this to allow enough time
+            # for the reload to completed.
+            for switch in inv_data.get('DATA'):
+                if not switch['managable']:
+                    # We found our first switch that changed state to
+                    # unmanageable because it's reloading.  Now we can
+                    # continue
+                    return True
+
+            # We still have not detected a swich is reloading so return False
+            return False
+
+        def switches_managable(inv_data):
+            managable = True
+            for switch in inv_data['DATA']:
+                if not switch['managable']:
+                    managable = False
+                    break
+
+            return managable
+
+        # It can take a while to rediscover switches if they are reloading
+        # while importing them into the fabric.
+        attempt = 1
+        total_attempts = 300
+        # If all switches to be added have preserve_config set to true then
+        # we don't need to loop.
+        all_brownfield_switches = True
+        for switch in self.config:
+            if not switch['preserve_config']:
+                all_brownfield_switches = False
+
+        while attempt < total_attempts and not all_brownfield_switches:
+
+            # Don't error out.  We might miss the status change so worst case
+            # scenario is that we loop 300 times and then bail out.
+            if attempt == 1:
+                if self.fabric_details['nvPairs']['GRFIELD_DEBUG_FLAG'].lower() == "enable":
+                    # It may take a few seconds for switches to enter migration mode when
+                    # this flag is set.  Give it a few seconds.
+                    time.sleep(20)
+            get_inv = dcnm_send(self.module, method, path)
+            if not ready_to_continue(get_inv):
+                time.sleep(5)
+                attempt += 1
+                continue
+            else:
+                break
+
+        attempt = 1
+        total_attempts = 300
+
+        while attempt < total_attempts:
+            if attempt == total_attempts:
+                msg = "Failed to rediscover switches after {} attempts".format(total_attempts)
+                self.module.fail_json(msg=msg)
+            get_inv = dcnm_send(self.module, method, path)
+            if not switches_managable(get_inv):
+                time.sleep(5)
+                attempt += 1
+                continue
+            else:
+                break
+
         for inv in get_inv['DATA']:
             self.rediscover_switch(inv['serialNumber'])
 
@@ -595,8 +708,10 @@ class DcnmInventory:
         all_ok = True
         # Get Fabric Inventory Details
         method = 'GET'
-        inv_path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        get_inv = dcnm_send(self.module, method, inv_path)
+        path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        get_inv = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_inv, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -614,9 +729,11 @@ class DcnmInventory:
     def set_lancred_switch(self, set_lan):
 
         method = 'POST'
-        set_lan_path = '/fm/fmrest/lanConfig/saveSwitchCredentials'
+        path = '/fm/fmrest/lanConfig/saveSwitchCredentials'
+        if self.nd:
+            path = self.nd_prefix + '/' + path[6:]
 
-        response = dcnm_send(self.module, method, set_lan_path, urlencode(set_lan))
+        response = dcnm_send(self.module, method, path, urlencode(set_lan))
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
         if fail:
@@ -626,8 +743,11 @@ class DcnmInventory:
 
         # Get Fabric Inventory Details
         method = 'GET'
-        lan_path = '/fm/fmrest/lanConfig/getLanSwitchCredentials'
-        get_lan = dcnm_send(self.module, method, lan_path)
+        path = '/fm/fmrest/lanConfig/getLanSwitchCredentials'
+        if self.nd:
+            path = self.nd_prefix + '/' + path[6:]
+            # lan_path = '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/lanConfig/getLanSwitchCredentials'
+        get_lan = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_lan, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -650,13 +770,17 @@ class DcnmInventory:
                         "password": create['password'],
                         "v3Protocol": "0"
                     }
-                    self.set_lancred_switch(set_lan)
+                    # TODO: Remove this check later.. should work on ND but does not for some reason
+                    if not self.nd:
+                        self.set_lancred_switch(set_lan)
 
     def assign_role(self):
 
         method = 'GET'
-        inv_path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
-        get_role = dcnm_send(self.module, method, inv_path)
+        path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        get_role = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_role, 'query_dcnm')
 
         if missing_fabric or not_ok:
@@ -674,8 +798,10 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
                 if role['ipAddress'] == create["switches"][0]['ipaddr']:
                     method = 'PUT'
-                    assign_path = '/fm/fmrest/topology/role/{}?newRole={}'.format(role['switchDbID'], create['role'].replace("_", "%20"))
-                    response = dcnm_send(self.module, method, assign_path)
+                    path = '/fm/fmrest/topology/role/{}?newRole={}'.format(role['switchDbID'], create['role'].replace("_", "%20"))
+                    if self.nd:
+                        path = self.nd_prefix + '/' + path[6:]
+                    response = dcnm_send(self.module, method, path)
                     self.result['response'].append(response)
                     fail, self.result['changed'] = self.handle_response(response, "create")
                     if fail:
@@ -689,8 +815,10 @@ class DcnmInventory:
         for x in range(0, no_of_tries):
             # Get Fabric ID
             method = 'GET'
-            fid_path = '/rest/control/fabrics/{}'.format(self.fabric)
-            get_fid = dcnm_send(self.module, method, fid_path)
+            path = '/rest/control/fabrics/{}'.format(self.fabric)
+            if self.nd:
+                path = self.nd_prefix + path
+            get_fid = dcnm_send(self.module, method, path)
             missing_fabric, not_ok = self.handle_response(get_fid, 'create_dcnm')
 
             if not get_fid.get('DATA'):
@@ -705,6 +833,8 @@ class DcnmInventory:
             # config-save
             method = 'POST'
             path = '/rest/control/fabrics/{}'.format(self.fabric)
+            if self.nd:
+                path = self.nd_prefix + path
             save_path = path + '/config-save'
             response = dcnm_send(self.module, method, save_path)
             self.result['response'].append(response)
@@ -716,8 +846,10 @@ class DcnmInventory:
 
                 # Get Fabric Errors
                 method = 'GET'
-                fiderr_path = '/rest/control/fabrics/{}/errors'.format(fabric_id)
-                get_fiderr = dcnm_send(self.module, method, fiderr_path)
+                path = '/rest/control/fabrics/{}/errors'.format(fabric_id)
+                if self.nd:
+                    path = self.nd_prefix + path
+                get_fiderr = dcnm_send(self.module, method, path)
                 missing_fabric, not_ok = self.handle_response(get_fiderr, 'query_dcnm')
 
                 if missing_fabric or not_ok:
@@ -738,8 +870,10 @@ class DcnmInventory:
         # config-deploy
         method = 'POST'
         path = '/rest/control/fabrics/{}'.format(self.fabric)
-        deploy_path = path + '/config-deploy'
-        response = dcnm_send(self.module, method, deploy_path)
+        if self.nd:
+            path = self.nd_prefix + path
+        path = path + '/config-deploy'
+        response = dcnm_send(self.module, method, path)
         self.result['response'].append(response)
         fail, self.result['changed'] = self.handle_response(response, "create")
 
@@ -751,8 +885,10 @@ class DcnmInventory:
         if self.diff_delete:
             method = 'DELETE'
             for sn in self.diff_delete:
-                delete_path = '/rest/control/fabrics/{}/switches/{}'.format(self.fabric, sn)
-                response = dcnm_send(self.module, method, delete_path)
+                path = '/rest/control/fabrics/{}/switches/{}'.format(self.fabric, sn)
+                if self.nd:
+                    path = self.nd_prefix + path
+                response = dcnm_send(self.module, method, path)
                 self.result['response'].append(response)
                 fail, self.result['changed'] = self.handle_response(response, "delete")
 
@@ -765,6 +901,8 @@ class DcnmInventory:
 
         method = 'GET'
         path = '/rest/control/fabrics/{}/inventory'.format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(inv_objects, 'query_dcnm')
 
@@ -788,12 +926,12 @@ class DcnmInventory:
                             query.append(inv)
                             continue
                     elif want_c['role'] != 'None' and want_c["seedIP"] == 'None':
-                        if want_c['role'] == inv['switchRole'].replace(" ", ""):
+                        if want_c['role'] == inv['switchRole'].replace(" ", "_"):
                             query.append(inv)
                             continue
                     else:
                         if want_c["seedIP"] == inv['ipAddress'] and \
-                                want_c['role'] == inv['switchRole'].replace(" ", ""):
+                                want_c['role'] == inv['switchRole'].replace(" ", "_"):
                             query.append(inv)
                             continue
         else:
@@ -846,7 +984,7 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list'),
+        config=dict(required=False, type='list', elements='dict'),
         state=dict(default='merged',
                    choices=['merged', 'overridden', 'deleted', 'query'])
     )
@@ -855,7 +993,6 @@ def main():
                            supports_check_mode=True)
 
     dcnm_inv = DcnmInventory(module)
-
     dcnm_inv.validate_input()
     dcnm_inv.get_want()
     dcnm_inv.get_have()
@@ -897,6 +1034,7 @@ def main():
         module.exit_json(**dcnm_inv.result)
 
     if module.check_mode:
+        dcnm_inv.result['changed'] = False
         module.exit_json(**dcnm_inv.result)
 
     # Delete Switch
@@ -914,28 +1052,23 @@ def main():
             # Import all switches
             dcnm_inv.import_switches()
 
-            # sleep for 2mins
-            time.sleep(120)
-
             # Step 2
             # Rediscover all switches
             dcnm_inv.rediscover_all_switches()
 
-            # sleep for 10mins
-            time.sleep(600)
-
             # Step 3
             # Check all devices are up
-            for x in range(1, 5):
+            for check in range(1, 300):
                 if not dcnm_inv.all_switches_ok():
-                    time.sleep(300)
+                    time.sleep(5)
+                    continue
                 else:
                     break
 
             # Step 4
             # Verify all devices came up finally
             if not dcnm_inv.all_switches_ok():
-                msg = "Unable to make all the switches up after discover under fabric: {}".format(dcnm_inv.fabric)
+                msg = "Failed to import all switches into fabric: {}".format(dcnm_inv.fabric)
                 module.fail_json(msg=msg)
 
             # Step 5

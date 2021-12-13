@@ -43,13 +43,12 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
                          / <span style="color: purple">elements=dictionary</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
-                        <div>List of details of vrfs being managed</div>
+                        <div>List of details of vrfs being managed. Not required for state deleted</div>
                 </td>
             </tr>
                                 <tr>
@@ -98,7 +97,7 @@ Parameters
                     <b>ip_address</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
@@ -175,7 +174,7 @@ Parameters
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -194,7 +193,7 @@ Parameters
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -213,7 +212,7 @@ Parameters
                     <b>neighbor_ipv4</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv4</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -232,7 +231,7 @@ Parameters
                     <b>neighbor_ipv6</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">ipv6</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
@@ -252,6 +251,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -314,6 +314,7 @@ Parameters
                 </td>
                 <td>
                         <div>vlan ID for the vrf attachment</div>
+                        <div>If not specified in the playbook, DCNM will auto-select an available vlan_id</div>
                 </td>
             </tr>
             <tr>
@@ -341,7 +342,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -432,52 +432,52 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
-    This module supports the following states:
-
-    Merged:
-      VRFs defined in the playbook will be merged into the target fabric.
-        - If the VRF does not exist it will be added.
-        - If the VRF exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - VRFs that are not specified in the playbook will be untouched.
-
-    Replaced:
-      VRFs defined in the playbook will be replaced in the target fabric.
-        - If the VRF does not exist it will be added.
-        - If the VRF exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are  not specified
-          in the playbook will be deleted or defaulted if possible.
-        - VRFs that are not specified in the playbook will be untouched.
-
-    Overridden:
-      VRFs defined in the playbook will be overridden in the target fabric.
-        - If the VRF does not exist it will be added.
-        - If the VRF exists but properties managed by the playbook are different
-          they will be updated if possible.
-        - Properties that can be managed by the module but are not specified
-          in the playbook will be deleted or defaulted if possible.
-        - VRFs that are not specified in the playbook will be deleted.
-
-    Deleted:
-      VRFs defined in the playbook will be deleted.
-      If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
-
-    Query:
-      Returns the current DCNM state for the VRFs listed in the playbook.
-
-    rollback functionality:
-    This module supports task level rollback functionality. If any task runs into failures, as part of failure
-    handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
-    beginning of the task execution. Following few lines provide a logical description of how this works,
-    if (failure)
-        want data = have data
-        have data = get state of DCNM
-        Run the module in override state with above set of data to produce the required set of diffs
-        and push the diff payloads to DCNM.
-    If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
+    # This module supports the following states:
+    #
+    # Merged:
+    #   VRFs defined in the playbook will be merged into the target fabric.
+    #     - If the VRF does not exist it will be added.
+    #     - If the VRF exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - VRFs that are not specified in the playbook will be untouched.
+    #
+    # Replaced:
+    #   VRFs defined in the playbook will be replaced in the target fabric.
+    #     - If the VRF does not exist it will be added.
+    #     - If the VRF exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are  not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - VRFs that are not specified in the playbook will be untouched.
+    #
+    # Overridden:
+    #   VRFs defined in the playbook will be overridden in the target fabric.
+    #     - If the VRF does not exist it will be added.
+    #     - If the VRF exists but properties managed by the playbook are different
+    #       they will be updated if possible.
+    #     - Properties that can be managed by the module but are not specified
+    #       in the playbook will be deleted or defaulted if possible.
+    #     - VRFs that are not specified in the playbook will be deleted.
+    #
+    # Deleted:
+    #   VRFs defined in the playbook will be deleted.
+    #   If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
+    #
+    # Query:
+    #   Returns the current DCNM state for the VRFs listed in the playbook.
+    #
+    # rollback functionality:
+    # This module supports task level rollback functionality. If any task runs into failures, as part of failure
+    # handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+    # beginning of the task execution. Following few lines provide a logical description of how this works,
+    # if (failure)
+    #     want data = have data
+    #     have data = get state of DCNM
+    #     Run the module in override state with above set of data to produce the required set of diffs
+    #     and push the diff payloads to DCNM.
+    # If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
 
     # The two VRFs below will be merged into the target fabric.
     - name: Merge vrfs
@@ -622,16 +622,7 @@ Examples
         state: query
         config:
         - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
         - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          service_vrf_template: null
 
 
 
@@ -643,4 +634,4 @@ Status
 Authors
 ~~~~~~~
 
-- Shrishail Kariyappanavar, Karthik Babu Harichandra Babu (kharicha)
+- Shrishail Kariyappanavar(@nkshrishail), Karthik Babu Harichandra Babu (@kharicha), Praveen Ramoorthy(@praveenramoorthy)

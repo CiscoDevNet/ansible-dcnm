@@ -2,6 +2,25 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2021-12-13
+
+### Added
+
+* Nexus Dashboard Fabric Controller (NDFC) support for all collection modules
+* The following new modules are included in this release
+    * `dcnm_service_route_peering` - Module for managing dcnm service route peering
+    * `dcnm_service_policy` - Module for managing dcnm service policy
+    * `dcnm_service_node` - Module for managing dcnm service nodes
+* New parameter `check_deploy` in `dcnm_interface`
+* [Performance improvement of `dcnm_inventory` module](https://github.com/CiscoDevNet/ansible-dcnm/pull/98)
+
+### Fixed
+
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/101
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/87
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/86
+* Fix `dcnm_policy` module configuration deploy issues
+
 ## [1.2.4] - 2021-12-03
 
 ### Added
@@ -120,6 +139,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 * cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 * cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+[2.0.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.4...2.0.0
 [1.2.4]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.3...1.2.4
 [1.2.3]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.1...1.2.2

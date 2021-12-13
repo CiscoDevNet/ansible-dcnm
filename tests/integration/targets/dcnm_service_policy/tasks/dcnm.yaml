@@ -1,0 +1,197 @@
+---
+- name: collect dcnm test cases
+  find:
+    paths: "{{ role_path }}/tests/dcnm"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: dcnm_cases
+
+- set_fact:
+    test_cases:
+      files: "{{ dcnm_cases.files }}"
+
+- name: set test_items
+  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+
+- name: run test cases (connection=httpapi)
+  include: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+
+############################################################
+##                          CLEANUP                       ##
+############################################################    
+
+- name: Cleanup - Delete service policies
+  cisco.dcnm.dcnm_service_policy:
+    fabric: "{{ ansible_it_fabric }}"                    
+    service_fabric: "{{ ansible_it_service_fabric }}" 
+    state: deleted                                    
+  register: result
+
+- assert:
+    that:
+        - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 180
+
+- name: Delete feature_pbr policy
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # only choose form [merged, deleted, query]
+    config:
+      - name: feature_pbr  # name is mandatory
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 180
+
+- name: Cleanup - Delete route peerings
+  cisco.dcnm.dcnm_service_route_peering: 
+    fabric: "{{ ansible_it_fabric }}" 
+    service_fabric: "{{ ansible_it_service_fabric }}" 
+    state: deleted
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 180
+
+- name: Cleanup - Delete Service Nodes
+  cisco.dcnm.dcnm_service_node: 
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_it_service_fabric }}"
+    state: deleted
+    config:
+    - name: "{{ ansible_snode_1 }}"
+      type: firewall
+      form_factor: physical
+      svc_int_name: svc1
+      attach_interface: "{{ ansible_att_intf1 }}"
+      switches:
+        - "{{ ansible_switch1 }}"
+    - name: "{{ ansible_snode_2 }}"
+      type: load_balancer
+      form_factor: physical
+      svc_int_name: svc2
+      attach_interface: "{{ ansible_att_intf2 }}"
+      switches:
+        - "{{ ansible_switch1 }}"
+  register: result
+
+- assert:
+    that:
+    - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: Cleanup - Delete Networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+    config:
+      - net_name: "{{ ansible_net_11 }}"
+        net_id: 110
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 111
+        gw_ip_subnet: '11.11.11.1/24'
+      - net_name: "{{ ansible_net_12 }}"
+        net_id: 120
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 121
+        gw_ip_subnet: '12.12.12.1/24'
+      - net_name: "{{ ansible_net_21 }}"
+        net_id: 210
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 211
+        gw_ip_subnet: '21.21.21.1/24'
+      - net_name: "{{ ansible_net_22 }}"
+        net_id: 220
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 221
+        gw_ip_subnet: '22.22.22.1/24'
+      - net_name: "{{ ansible_net_31 }}"
+        net_id: 310
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 311
+        gw_ip_subnet: '31.31.31.1/24'
+      - net_name: "{{ ansible_net_32 }}"
+        net_id: 320
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 321
+        gw_ip_subnet: '32.32.32.1/24'
+      - net_name: "{{ ansible_net_41 }}"
+        net_id: 410
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 411
+        gw_ip_subnet: '41.41.41.1/24'
+      - net_name: "{{ ansible_net_42 }}"
+        net_id: 420
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 421
+        gw_ip_subnet: '42.42.42.1/24'
+  register: result
+
+- assert:
+    that:
+    - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: Cleanup - Delete all VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}" 
+    state: deleted
+    config:
+      - vrf_name: "{{ ansible_vrf_11 }}"
+        attach:
+            - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
+      - vrf_name: "{{ ansible_vrf_21 }}" 
+        attach:
+            - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
+      - vrf_name: "{{ ansible_vrf_31 }}" 
+        attach:
+            - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
+      - vrf_name: "{{ ansible_vrf_41 }}" 
+        attach:
+            - ip_address: "{{ ansible_switch1 }}"
+            - ip_address: "{{ ansible_switch2 }}"
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'

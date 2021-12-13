@@ -2,10 +2,18 @@
 ##                 SETUP                    ##
 ##############################################
 
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+
 - name: QUERY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
-    path: /rest/control/fabrics/{{ ansible_it_fabric }}
+    path: "{{ rest_path }}"
   register: result
 
 - assert:
@@ -17,10 +25,6 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: QUERY - Merge a Switch using GreenField Deployment
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
@@ -28,8 +32,8 @@
     config:
     - seed_ip: "{{ ansible_switch1 }}"
       auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ ansible_username }}"
-      password: "{{ ansible_pwd }}"
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
       max_hops: 0
       role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
@@ -39,28 +43,18 @@
 - assert:
     that:
     - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - 'result.response[6].RETURN_CODE == 200'
-    - 'result.response[1].DATA.status == "Success"'
-    - 'result.response[2].DATA.status == "Success"'
-    - '"Operation is successful" in result.response[3].DATA'
-    - 'result.response[5].DATA.status == "Config save is completed"'
-    - 'result.response[6].DATA.status == "Config deployment has been triggered"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
 
 #############################################
 #                QUERY                     ##
 #############################################
 
-- name: QUERY - Query a Switch - Seed IP and Role must match
+- name: QUERY - Query a Switch - Hostname and Role must match
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: query
@@ -125,10 +119,6 @@
     that:
     - '"The queried switch is not part of the fabric configured" in result.response'
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: QUERY - Delete all Switch without config element
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
@@ -139,10 +129,6 @@
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
-
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: QUERY - Query a non available Switch
   cisco.dcnm.dcnm_inventory:
@@ -158,11 +144,55 @@
     that:
     - '"The queried switch is not part of the fabric configured" in result.response'
 
+- name: Add Switch with Border Gateways and MD5 to fabric
+  cisco.dcnm.dcnm_inventory: &conf_role
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1  }}"
+      max_hops: 0
+      preserve_config: false
+      role: border_gateway
+      auth_proto: MD5
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+    - seed_ip: "{{ ansible_switch2 }}"
+      max_hops: 0
+      preserve_config: false
+      role: border_gateway
+      auth_proto: MD5
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+  register: result
+
+
+- assert:
+    that:
+    - 'result.changed == true'
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: QUERY - Query a Switch without a config element
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.response[0].ipAddress == "{{ ansible_switch1 }}"'
+    - 'result.response[0].switchRole == "border gateway"'
+    - 'result.response[1].ipAddress == "{{ ansible_switch2 }}"'
+    - 'result.response[1].switchRole == "border gateway"'
+
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################
 
-- name: DELETED - setup - Clean up any existing devices
+- name: QUERY - cleanup - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted

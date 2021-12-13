@@ -1,0 +1,141 @@
+- name: Setup - Remove all existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: Create network with initial dhcp parameter values
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: ansible-vrf-int1
+      net_id: 7009
+      vlan_id: 3505
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: False
+      int_desc: 'test interface'
+      is_l2only: False
+      vlan_name: testvlan_net13
+      dhcp_srvr1_ip: '1.1.1.1'
+      dhcp_srvr2_ip: '2.2.2.2'
+      dhcp_srvr3_ip: '3.3.3.3'
+      dhcp_srvr1_vrf: one
+      dhcp_srvr2_vrf: two
+      dhcp_srvr3_vrf: three
+      dhcp_loopback_id: 1022
+      attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: []
+      deploy: True
+    - net_name: ansible-net14
+      vrf_name: ansible-vrf-int1
+      net_id: 7010
+      vlan_id: 3506
+      gw_ip_subnet: '152.168.31.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: False
+      int_desc: 'test interface'
+      is_l2only: False
+      vlan_name: testvlan_net14
+      dhcp_srvr1_ip: '11.11.11.11'
+      dhcp_srvr2_ip: '12.12.12.12'
+      dhcp_srvr3_ip: '13.13.13.13'
+      dhcp_srvr1_vrf: eleven
+      dhcp_srvr2_vrf: twelve
+      dhcp_srvr3_vrf: thirteen
+      dhcp_loopback_id: 1023
+      attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: []
+      deploy: True
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+  until:
+    - "result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- set_fact:
+    testnet1: "{{ item }}"
+  when: "item.parent.displayName is search('ansible-net13')"
+  loop: "{{ result.response }}"
+
+- set_fact:
+    testnet2: "{{ item }}"
+  when: "item.parent.displayName is search('ansible-net14')"
+  loop: "{{ result.response }}"
+
+- assert:
+    that:
+    - "testnet1.parent.networkTemplateConfig.dhcpServerAddr1 is search('1.1.1.1')"
+    - "testnet1.parent.networkTemplateConfig.dhcpServerAddr2 is search('2.2.2.2')"
+    - "testnet1.parent.networkTemplateConfig.dhcpServerAddr3 is search('3.3.3.3')"
+    - "testnet1.parent.networkTemplateConfig.vrfDhcp is search('one')"
+    - "testnet1.parent.networkTemplateConfig.vrfDhcp2 is search('two')"
+    - "testnet1.parent.networkTemplateConfig.vrfDhcp3 is search('three')"
+    - "testnet1.parent.networkTemplateConfig.loopbackId is search('1022')"
+    - "testnet2.parent.networkTemplateConfig.dhcpServerAddr1 is search('11.11.11.11')"
+    - "testnet2.parent.networkTemplateConfig.dhcpServerAddr2 is search('12.12.12.12')"
+    - "testnet2.parent.networkTemplateConfig.dhcpServerAddr3 is search('13.13.13.13')"
+    - "testnet2.parent.networkTemplateConfig.vrfDhcp is search('eleven')"
+    - "testnet2.parent.networkTemplateConfig.vrfDhcp2 is search('twelve')"
+    - "testnet2.parent.networkTemplateConfig.vrfDhcp3 is search('thirteen')"
+    - "testnet2.parent.networkTemplateConfig.loopbackId is search('1023')"
+
+
+- name: Override network with a single network and change values within that newtwork
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: overridden
+    config:
+    - net_name: ansible-net14
+      vrf_name: ansible-vrf-int1
+      net_id: 7010
+      vlan_id: 3506
+      gw_ip_subnet: '152.168.31.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: False
+      int_desc: 'test interface'
+      is_l2only: False
+      vlan_name: testvlan_net14
+      dhcp_srvr1_ip: '55.11.11.11'
+      dhcp_srvr2_ip: '55.12.12.12'
+      dhcp_srvr3_ip: '55.13.13.13'
+      dhcp_srvr1_vrf: eleven
+      dhcp_srvr2_vrf: twelve
+      dhcp_srvr3_vrf: thirteen
+      dhcp_loopback_id: 55
+      attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: []
+      deploy: True
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+  until:
+    - "result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - "result.response|length == 1"
+    - "result.response[0].parent.networkTemplateConfig.dhcpServerAddr1 is search('55.11.11.11')"
+    - "result.response[0].parent.networkTemplateConfig.dhcpServerAddr2 is search('55.12.12.12')"
+    - "result.response[0].parent.networkTemplateConfig.dhcpServerAddr3 is search('55.13.13.13')"
+    - "result.response[0].parent.networkTemplateConfig.vrfDhcp is search('eleven')"
+    - "result.response[0].parent.networkTemplateConfig.vrfDhcp2 is search('twelve')"
+    - "result.response[0].parent.networkTemplateConfig.vrfDhcp3 is search('thirteen')"
+    - "result.response[0].parent.networkTemplateConfig.loopbackId is search('55')"

@@ -17,6 +17,7 @@
 import socket
 import json
 import time
+import re
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
@@ -82,8 +83,11 @@ def validate_list_of_dicts(param_list, spec, module=None):
                                                                                 spec[param].get('length_max')))
                 elif type == 'int':
                     item = v.check_type_int(item)
+                    min_value = 1
+                    if spec[param].get('range_min') is not None:
+                        min_value = spec[param].get('range_min')
                     if spec[param].get('range_max'):
-                        if 1 <= item <= spec[param].get('range_max'):
+                        if min_value <= item <= spec[param].get('range_max'):
                             pass
                         else:
                             invalid_params.append('{}:{} : The item exceeds the allowed '
@@ -96,7 +100,7 @@ def validate_list_of_dicts(param_list, spec, module=None):
                 elif type == 'dict':
                     item = v.check_type_dict(item)
                 elif ((type == 'ipv4_subnet') or (type == 'ipv4')
-                     or (type == 'ipv6_subnet') or (type == 'ipv6')):
+                      or (type == 'ipv6_subnet') or (type == 'ipv6')):
                     validate_ip_address_format(type, item, invalid_params)
 
                 choice = spec[param].get('choices')
@@ -126,6 +130,10 @@ def get_fabric_inventory_details(module, fabric):
     rc = False
     method = 'GET'
     path = '/rest/control/fabrics/{}/inventory'.format(fabric)
+
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
 
     count = 1
     while (rc is False):
@@ -290,6 +298,10 @@ def get_fabric_details(module, fabric):
     method = 'GET'
     path = '/rest/control/fabrics/{}'.format(fabric)
 
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
+
     count = 1
     while (rc is False):
 
@@ -340,3 +352,43 @@ def dcnm_reset_connection(module):
 
     conn.logout()
     return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
+
+
+def dcnm_version_supported(module):
+    """
+    Query DCNM/NDFC and return the major software version
+
+    Parameters:
+        module: String representing the module
+
+    Returns:
+        int: Major software version for DCNM/NDFC
+    """
+
+    method = 'GET'
+    supported = None
+    data = None
+
+    paths = ["/fm/fmrest/about/version", "/appcenter/cisco/ndfc/api/about/version"]
+    for path in paths:
+        response = dcnm_send(module, method, path)
+        if response['RETURN_CODE'] == 200:
+            data = response.get('DATA')
+            break
+
+    if data:
+        # Parse version information
+        # Examples:
+        #   11.5(1), 12.0.1a'
+        # For these examples 11 or 12 would be returned
+        raw_version = data['version']
+        regex = r"^(\d+)\.\d+"
+        mo = re.search(regex, raw_version)
+        if mo:
+            supported = int(mo.group(1))
+
+    if supported is None:
+        msg = 'Unable to determine the DCNM/NDFC Software Version'
+        module.fail_json(msg=msg)
+
+    return supported
