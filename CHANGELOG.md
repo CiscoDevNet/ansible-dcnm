@@ -48,6 +48,8 @@ Added support for plain text payloads to `dcnm_rest` module
 
 ## [1.2.0] - 2021-07
 
+### Added
+
 * cisco.dcnm.dcnm_network:
   * New parameter `is_l2only:`
   * New parameter `vlan_name:`
