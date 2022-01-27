@@ -78,12 +78,33 @@ class HttpApi(HttpApiBase):
         except Exception as e:
             self.login_fail_msg.append('Error on attempt to connect and authenticate with DCNM controller: {}'.format(e))
 
-    def _login_latest(self, username, password, method, path):
+    def _login_latestv1(self, username, password, method, path):
         ''' Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later.
         '''
         login_domain = 'DefaultAuth'
         # login_domain = 'local'
         payload = {'username': self.connection.get_option('remote_user'), 'password': self.connection.get_option('password'), 'domain': login_domain}
+        data = json.dumps(payload)
+        try:
+            response, response_data = self.connection.send(path, data, method=method, headers=self.headers)
+            vrd = self._verify_response(response, method, path, response_data)
+            if vrd['RETURN_CODE'] != 200:
+                self.login_fail_msg.append('Error on attempt to connect and authenticate with NDFC controller: {}'.format(vrd))
+                return
+
+            self.connection._auth = {'Authorization': 'Bearer {0}'.format(self._response_to_json12(response_data).get('token'))}
+            self.login_succeeded = True
+            self.set_version(12)
+
+        except Exception as e:
+            self.login_fail_msg.append('Error on attempt to connect and authenticate with NDFC controller: {}'.format(e))
+
+    def _login_latestv2(self, username, password, method, path):
+        ''' Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later.
+        '''
+        login_domain = 'DefaultAuth'
+        # login_domain = 'local'
+        payload = {'userName': self.connection.get_option('remote_user'), 'userPasswd': self.connection.get_option('password'), 'domain': login_domain}
         data = json.dumps(payload)
         try:
             response, response_data = self.connection.send(path, data, method=method, headers=self.headers)
@@ -108,13 +129,20 @@ class HttpApi(HttpApiBase):
         self.login_fail_msg = []
         method = 'POST'
         path = {'dcnm': '/rest/logon', 'ndfc': '/login'}
+        login12Func = [self._login_latestv2, self._login_latestv1]
+        iter = 0
 
         # Attempt to login to DCNM version 11
         self._login_old(username, password, method, path['dcnm'])
 
         # If login attempt failed then try NDFC version 12
         if not self.login_succeeded:
-            self._login_latest(username, password, method, path['ndfc'])
+            while (iter < len(login12Func)):
+                func = login12Func[iter]
+                func(username, password, method, path['ndfc'])
+                if self.login_succeeded:
+                    break
+                iter += 1
 
         # If both login attemps fail, raise ConnectionError
         if not self.login_succeeded:
