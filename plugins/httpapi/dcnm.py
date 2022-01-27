@@ -130,19 +130,16 @@ class HttpApi(HttpApiBase):
         method = 'POST'
         path = {'dcnm': '/rest/logon', 'ndfc': '/login'}
         login12Func = [self._login_latestv2, self._login_latestv1]
-        iter = 0
 
         # Attempt to login to DCNM version 11
         self._login_old(username, password, method, path['dcnm'])
 
         # If login attempt failed then try NDFC version 12
         if not self.login_succeeded:
-            while (iter < len(login12Func)):
-                func = login12Func[iter]
+            for func in login12Func:
                 func(username, password, method, path['ndfc'])
                 if self.login_succeeded:
                     break
-                iter += 1
 
         # If both login attemps fail, raise ConnectionError
         if not self.login_succeeded:
