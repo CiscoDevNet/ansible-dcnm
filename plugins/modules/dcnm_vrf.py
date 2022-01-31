@@ -346,7 +346,7 @@ import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     get_fabric_inventory_details, dcnm_send, validate_list_of_dicts, \
     dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, get_ip_sn_fabric_dict, \
-    dcnm_version_supported
+    dcnm_version_supported, dcnm_get_url
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -667,19 +667,7 @@ class DcnmVrf:
         for vrf in vrf_objects['DATA']:
             curr_vrfs += vrf['vrfName'] + ','
 
-        path = self.paths["GET_VRF_ATTACH"].format(self.fabric, curr_vrfs[:-1])
-
-        vrf_attach_objects = dcnm_send(self.module, method, path)
-
-        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
-
-        if missing_fabric or not_ok:
-            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
-            msg2 = "Unable to find attachments for " \
-                   "vrfs: {} under fabric: {}".format(curr_vrfs[:-1], self.fabric)
-
-            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-            return
+        vrf_attach_objects = dcnm_get_url(self.module, self.fabric, self.paths["GET_VRF_ATTACH"], curr_vrfs[:-1], "vrfs")
 
         if not vrf_attach_objects['DATA']:
             return
