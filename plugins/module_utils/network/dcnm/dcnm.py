@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 import socket
 import json
@@ -24,32 +27,38 @@ from ansible.module_utils.connection import Connection
 
 def validate_ip_address_format(type, item, invalid_params):
 
-    if ((type == 'ipv4_subnet') or (type == 'ipv4')):
-        addr_type = 'IPv4'
+    if (type == "ipv4_subnet") or (type == "ipv4"):
+        addr_type = "IPv4"
         addr_family = socket.AF_INET
         mask_len = 32
-    if ((type == 'ipv6_subnet') or (type == 'ipv6')):
-        addr_type = 'IPv6'
+    if (type == "ipv6_subnet") or (type == "ipv6"):
+        addr_type = "IPv6"
         addr_family = socket.AF_INET6
         mask_len = 128
 
-    if (item.strip() != ''):
-        address = item.split('/')[0]
-        if ('subnet' in type):
-            if '/' in item:
-                subnet = item.split('/')[1]
+    if item.strip() != "":
+        address = item.split("/")[0]
+        if "subnet" in type:
+            if "/" in item:
+                subnet = item.split("/")[1]
                 if not subnet or int(subnet) > mask_len:
-                    invalid_params.append('{} : Invalid {} gw/subnet syntax'.format(item, addr_type))
+                    invalid_params.append(
+                        "{} : Invalid {} gw/subnet syntax".format(item, addr_type)
+                    )
             else:
-                invalid_params.append('{} : Invalid {} gw/subnet syntax'.format(item, addr_type))
+                invalid_params.append(
+                    "{} : Invalid {} gw/subnet syntax".format(item, addr_type)
+                )
         try:
             socket.inet_pton(addr_family, address)
         except socket.error:
-            invalid_params.append('{} : Invalid {} address syntax'.format(item, addr_type))
+            invalid_params.append(
+                "{} : Invalid {} address syntax".format(item, addr_type)
+            )
 
 
 def validate_list_of_dicts(param_list, spec, module=None):
-    """ Validate/Normalize playbook params. Will raise when invalid parameters found.
+    """Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
     spec: an argument spec dict
           e.g. spec = dict(ip=dict(required=True, type='ipv4'),
@@ -64,51 +73,67 @@ def validate_list_of_dicts(param_list, spec, module=None):
         for param in spec:
             item = list_entry.get(param)
             if item is None:
-                if spec[param].get('required'):
-                    invalid_params.append('{} : Required parameter not found'.format(param))
+                if spec[param].get("required"):
+                    invalid_params.append(
+                        "{} : Required parameter not found".format(param)
+                    )
                 else:
-                    item = spec[param].get('default')
+                    item = spec[param].get("default")
             else:
-                type = spec[param].get('type')
-                if type == 'str':
+                type = spec[param].get("type")
+                if type == "str":
                     item = v.check_type_str(item)
-                    if spec[param].get('length_max'):
-                        if 1 <= len(item) <= spec[param].get('length_max'):
+                    if spec[param].get("length_max"):
+                        if 1 <= len(item) <= spec[param].get("length_max"):
                             pass
-                        elif param == "vrf_name" and (len(item) <= spec[param].get('length_max')):
+                        elif param == "vrf_name" and (
+                            len(item) <= spec[param].get("length_max")
+                        ):
                             pass
                         else:
-                            invalid_params.append('{}:{} : The string exceeds the allowed '
-                                                  'range of max {} char'.format(param, item,
-                                                                                spec[param].get('length_max')))
-                elif type == 'int':
+                            invalid_params.append(
+                                "{}:{} : The string exceeds the allowed "
+                                "range of max {} char".format(
+                                    param, item, spec[param].get("length_max")
+                                )
+                            )
+                elif type == "int":
                     item = v.check_type_int(item)
                     min_value = 1
-                    if spec[param].get('range_min') is not None:
-                        min_value = spec[param].get('range_min')
-                    if spec[param].get('range_max'):
-                        if min_value <= item <= spec[param].get('range_max'):
+                    if spec[param].get("range_min") is not None:
+                        min_value = spec[param].get("range_min")
+                    if spec[param].get("range_max"):
+                        if min_value <= item <= spec[param].get("range_max"):
                             pass
                         else:
-                            invalid_params.append('{}:{} : The item exceeds the allowed '
-                                                  'range of max {}'.format(param, item,
-                                                                           spec[param].get('range_max')))
-                elif type == 'bool':
+                            invalid_params.append(
+                                "{}:{} : The item exceeds the allowed "
+                                "range of max {}".format(
+                                    param, item, spec[param].get("range_max")
+                                )
+                            )
+                elif type == "bool":
                     item = v.check_type_bool(item)
-                elif type == 'list':
+                elif type == "list":
                     item = v.check_type_list(item)
-                elif type == 'dict':
+                elif type == "dict":
                     item = v.check_type_dict(item)
-                elif ((type == 'ipv4_subnet') or (type == 'ipv4')
-                      or (type == 'ipv6_subnet') or (type == 'ipv6')):
+                elif (
+                    (type == "ipv4_subnet")
+                    or (type == "ipv4")
+                    or (type == "ipv6_subnet")
+                    or (type == "ipv6")
+                ):
                     validate_ip_address_format(type, item, invalid_params)
 
-                choice = spec[param].get('choices')
+                choice = spec[param].get("choices")
                 if choice:
                     if item not in choice:
-                        invalid_params.append('{} : Invalid choice provided'.format(item))
+                        invalid_params.append(
+                            "{} : Invalid choice provided".format(item)
+                        )
 
-                no_log = spec[param].get('no_log')
+                no_log = spec[param].get("no_log")
                 if no_log:
                     if module is not None:
                         module.no_log_values.add(item)
@@ -128,43 +153,43 @@ def get_fabric_inventory_details(module, fabric):
 
     inventory_data = {}
     rc = False
-    method = 'GET'
-    path = '/rest/control/fabrics/{}/inventory'.format(fabric)
+    method = "GET"
+    path = "/rest/control/fabrics/{}/inventory".format(fabric)
 
     conn = Connection(module._socket_path)
     if conn.get_version() == 12:
         path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
 
     count = 1
-    while (rc is False):
+    while rc is False:
 
         response = dcnm_send(module, method, path)
 
-        if not response.get('RETURN_CODE'):
+        if not response.get("RETURN_CODE"):
             rc = True
             module.fail_json(msg=response)
 
-        if response.get('RETURN_CODE') == 404:
+        if response.get("RETURN_CODE") == 404:
             # RC 404 - Object not found
             rc = True
             return inventory_data
 
-        if response.get('RETURN_CODE') == 401:
+        if response.get("RETURN_CODE") == 401:
             # RC 401: Server not reachable. Retry a few times
-            if (count <= 20):
+            if count <= 20:
                 count = count + 1
                 rc = False
                 time.sleep(0.1)
                 continue
             else:
                 raise Exception(response)
-        elif response.get('RETURN_CODE') >= 400:
+        elif response.get("RETURN_CODE") >= 400:
             # Handle additional return codes as needed but for now raise
             # for any error other then 404.
             raise Exception(response)
 
-        for device_data in response.get('DATA'):
-            key = device_data.get('ipAddress')
+        for device_data in response.get("DATA"):
+            key = device_data.get("ipAddress")
             inventory_data[key] = device_data
         rc = True
 
@@ -177,9 +202,9 @@ def get_ip_sn_dict(inventory_data):
     hn_sn = {}
 
     for device_key in inventory_data.keys():
-        ip = inventory_data[device_key].get('ipAddress')
-        sn = inventory_data[device_key].get('serialNumber')
-        hn = inventory_data[device_key].get('logicalName')
+        ip = inventory_data[device_key].get("ipAddress")
+        sn = inventory_data[device_key].get("serialNumber")
+        hn = inventory_data[device_key].get("logicalName")
         ip_sn.update({ip: sn})
         hn_sn.update({hn: sn})
 
@@ -205,9 +230,9 @@ def get_ip_sn_fabric_dict(inventory_data):
     sn_fab = {}
 
     for device_key in inventory_data.keys():
-        ip = inventory_data[device_key].get('ipAddress')
-        sn = inventory_data[device_key].get('serialNumber')
-        fabric_name = inventory_data[device_key].get('fabricName')
+        ip = inventory_data[device_key].get("ipAddress")
+        sn = inventory_data[device_key].get("serialNumber")
+        fabric_name = inventory_data[device_key].get("fabricName")
         ip_fab.update({ip: fabric_name})
         sn_fab.update({sn: fabric_name})
 
@@ -221,9 +246,11 @@ def get_ip_sn_fabric_dict(inventory_data):
 # returned
 def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 
-    msg_dict = {'Error': ''}
+    msg_dict = {"Error": ""}
     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
-    msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+    msg1 = (
+        'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+    )
 
     # Check if the given sw_elem is a v4 ip_addr
     try:
@@ -237,47 +264,47 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
         except socket.error:
             # Not legal
             ip_addr = []
-    if (ip_addr == []):
+    if ip_addr == []:
         # Given element is not an IP address. Try DNS or
         # hostname
         try:
             addr_info = socket.getaddrinfo(sw_elem, 0, socket.AF_INET, 0, 0, 0)
-            if (None is ip_sn):
+            if None is ip_sn:
                 return addr_info[0][4][0]
             if addr_info:
-                if (addr_info[0][4][0] in ip_sn.keys()):
+                if addr_info[0][4][0] in ip_sn.keys():
                     return addr_info[0][4][0]
                 else:
-                    msg_dict['Error'] = msg.format(sw_elem)
+                    msg_dict["Error"] = msg.format(sw_elem)
                     raise module.fail_json(msg=json.dumps(msg_dict))
         except socket.gaierror:
-            if (None is ip_sn):
-                msg_dict['Error'] = msg1.format(sw_elem)
+            if None is ip_sn:
+                msg_dict["Error"] = msg1.format(sw_elem)
                 raise module.fail_json(msg=json.dumps(msg_dict))
             # This means that the given element is neither an IP
             # address nor a DNS name.
             # First look up hn_sn. Get the serial number and look up ip_sn to
             # get the IP address.
             sno = None
-            if (None is not hn_sn):
+            if None is not hn_sn:
                 sno = hn_sn.get(sw_elem, None)
-            if (sno is not None):
+            if sno is not None:
                 ip_addr = [k for k, v in ip_sn.items() if v == sno]
             else:
                 ip_addr = [k for k, v in ip_sn.items() if v == sw_elem]
-            if (ip_addr):
+            if ip_addr:
                 return ip_addr[0]
             else:
-                msg_dict['Error'] = msg.format(sw_elem)
+                msg_dict["Error"] = msg.format(sw_elem)
                 raise module.fail_json(msg=json.dumps(msg_dict))
     else:
         # Given sw_elem is an ip_addr. check if this is valid
-        if (None is ip_sn):
+        if None is ip_sn:
             return ip_addr
-        if (ip_addr in ip_sn.keys()):
+        if ip_addr in ip_sn.keys():
             return ip_addr
         else:
-            msg_dict['Error'] = msg.format(sw_elem)
+            msg_dict["Error"] = msg.format(sw_elem)
             raise module.fail_json(msg=json.dumps(msg_dict))
 
 
@@ -295,54 +322,54 @@ def get_fabric_details(module, fabric):
     """
     fabric_data = {}
     rc = False
-    method = 'GET'
-    path = '/rest/control/fabrics/{}'.format(fabric)
+    method = "GET"
+    path = "/rest/control/fabrics/{}".format(fabric)
 
     conn = Connection(module._socket_path)
     if conn.get_version() == 12:
         path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
 
     count = 1
-    while (rc is False):
+    while rc is False:
 
         response = dcnm_send(module, method, path)
 
-        if not response.get('RETURN_CODE'):
+        if not response.get("RETURN_CODE"):
             rc = True
             module.fail_json(msg=response)
 
-        if response.get('RETURN_CODE') == 404:
+        if response.get("RETURN_CODE") == 404:
             # RC 404 - Object not found
             rc = True
             return fabric_data
 
-        if response.get('RETURN_CODE') == 401:
+        if response.get("RETURN_CODE") == 401:
             # RC 401: Server not reachable. Retry a few times
-            if (count <= 20):
+            if count <= 20:
                 count = count + 1
                 rc = False
                 time.sleep(0.1)
                 continue
             else:
                 raise Exception(response)
-        elif response.get('RETURN_CODE') >= 400:
+        elif response.get("RETURN_CODE") >= 400:
             # Handle additional return codes as needed but for now raise
             # for any error other then 404.
             raise Exception(response)
 
-        fabric_data = response.get('DATA')
+        fabric_data = response.get("DATA")
         rc = True
 
     return fabric_data
 
 
-def dcnm_send(module, method, path, data=None, data_type='json'):
+def dcnm_send(module, method, path, data=None, data_type="json"):
 
     conn = Connection(module._socket_path)
 
-    if (data_type == 'json'):
+    if data_type == "json":
         return conn.send_request(method, path, data)
-    elif (data_type == 'text'):
+    elif data_type == "text":
         return conn.send_txt_request(method, path, data)
 
 
@@ -365,15 +392,15 @@ def dcnm_version_supported(module):
         int: Major software version for DCNM/NDFC
     """
 
-    method = 'GET'
+    method = "GET"
     supported = None
     data = None
 
     paths = ["/fm/fmrest/about/version", "/appcenter/cisco/ndfc/api/about/version"]
     for path in paths:
         response = dcnm_send(module, method, path)
-        if response['RETURN_CODE'] == 200:
-            data = response.get('DATA')
+        if response["RETURN_CODE"] == 200:
+            data = response.get("DATA")
             break
 
     if data:
@@ -381,14 +408,14 @@ def dcnm_version_supported(module):
         # Examples:
         #   11.5(1), 12.0.1a'
         # For these examples 11 or 12 would be returned
-        raw_version = data['version']
+        raw_version = data["version"]
         regex = r"^(\d+)\.\d+"
         mo = re.search(regex, raw_version)
         if mo:
             supported = int(mo.group(1))
 
     if supported is None:
-        msg = 'Unable to determine the DCNM/NDFC Software Version'
+        msg = "Unable to determine the DCNM/NDFC Software Version"
         module.fail_json(msg=msg)
 
     return supported

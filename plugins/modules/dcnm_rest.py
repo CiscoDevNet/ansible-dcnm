@@ -13,10 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 __author__ = "Mike Wiebe"
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: dcnm_rest
 short_description: Send REST API requests to DCNM controller.
@@ -44,9 +47,9 @@ options:
     type: raw
 author:
     - Mike Wiebe (@mikewiebe)
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 # This module can be used to send any REST API requests that are supported by
 # the DCNM controller.
 #
@@ -59,32 +62,31 @@ EXAMPLES = '''
     path: /rest/control/fabrics
 
 - name: Set deployment to false in lanAttachList for vrf
-    dcnm_rest:
+  dcnm_rest:
     method: POST
     path: /rest/top-down/fabrics/fabric1/vrfs/attachments
-    json_data: '[{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1","serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,"extensionValues":"","instanceValues":"{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\"}"}]}]'
+    data: "{{ data }}"
 
 # Read payload data from file and validate a template
 - set_fact:
     data: "{{ lookup('file', 'validate_payload') }}"
 
 - name: Validate a template
-    cisco.dcnm.dcnm_rest:
+  cisco.dcnm.dcnm_rest:
     method: POST
     path: /fm/fmrest/config/templates/validate
     json_data: "{{ data }}"
     register: result
+"""  # noqa
 
-'''
-
-RETURN = '''
+RETURN = """
 response:
     description:
     - Success or Error Data retrieved from DCNM
     returned: always
     type: list
     elements: dict
-'''
+"""
 
 import json
 from json.decoder import JSONDecodeError
@@ -98,24 +100,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 def main():
     # define available arguments/parameters a user can pass to the module
     argument_spec = dict(
-        method=dict(required=True, choices=['GET', 'POST', 'PUT', 'DELETE']),
-        path=dict(required=True, type='str'),
-        data=dict(type='raw', required=False, default=None, aliases=["json_data"]))
+        method=dict(required=True, choices=["GET", "POST", "PUT", "DELETE"]),
+        path=dict(required=True, type="str"),
+        data=dict(type="raw", required=False, default=None, aliases=["json_data"]),
+    )
 
     # seed the result dict
-    result = dict(
-        changed=False,
-        response=dict()
-    )
+    result = dict(changed=False, response=dict())
 
-    module = AnsibleModule(
-        argument_spec=argument_spec,
-        supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    method = module.params['method']
-    path = module.params['path']
-    for key in ['json_data', 'data']:
+    method = module.params["method"]
+    path = module.params["path"]
+    for key in ["json_data", "data"]:
         data = module.params.get(key)
         if data is not None:
             break
@@ -125,16 +122,16 @@ def main():
     # Determine if this is valid JSON or not
     try:
         json.loads(data)
-        result['response'] = dcnm_send(module, method, path, data)
+        result["response"] = dcnm_send(module, method, path, data)
     except json.JSONDecodeError:
         # Resend data as text since it's not valid JSON
-        result['response'] = dcnm_send(module, method, path, data, "text")
+        result["response"] = dcnm_send(module, method, path, data, "text")
 
-    if result['response']['RETURN_CODE'] >= 400:
-        module.fail_json(msg=result['response'])
+    if result["response"]["RETURN_CODE"] >= 400:
+        module.fail_json(msg=result["response"])
 
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

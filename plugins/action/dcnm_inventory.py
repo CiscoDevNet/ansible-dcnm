@@ -33,21 +33,19 @@ class ActionModule(ActionNetworkModule):
 
         timeout = 1000
 
-        if (persistent_command_timeout < timeout or persistent_connect_timeout < timeout):
+        if persistent_command_timeout < timeout or persistent_connect_timeout < timeout:
             display.warning(
-                "PERSISTENT_COMMAND_TIMEOUT is %s"
-                % str(persistent_command_timeout),
+                "PERSISTENT_COMMAND_TIMEOUT is %s" % str(persistent_command_timeout),
                 self._play_context.remote_addr,
             )
             display.warning(
-                "PERSISTENT_CONNECT_TIMEOUT is %s"
-                % str(persistent_connect_timeout),
+                "PERSISTENT_CONNECT_TIMEOUT is %s" % str(persistent_connect_timeout),
                 self._play_context.remote_addr,
             )
-            msg = (
-                "PERSISTENT_COMMAND_TIMEOUT and PERSISTENT_CONNECT_TIMEOUT"
+            msg = "PERSISTENT_COMMAND_TIMEOUT and PERSISTENT_CONNECT_TIMEOUT"
+            msg += " must be set to {0} seconds or higher when using dcnm_inventory module.".format(
+                timeout
             )
-            msg += " must be set to {} seconds or higher when using dcnm_inventory module.".format(timeout)
             msg += " Current persistent_command_timeout setting:" + str(
                 persistent_command_timeout
             )
@@ -56,7 +54,12 @@ class ActionModule(ActionNetworkModule):
             )
             return {"failed": True, "msg": msg}
 
-        if self._task.args.get('state') == 'merged' or self._task.args.get('state') == 'overridden':
-            display.warning("Adding switches to a VXLAN fabric can take a while.  Please be patient...")
+        if (
+            self._task.args.get("state") == "merged"
+            or self._task.args.get("state") == "overridden"
+        ):
+            display.warning(
+                "Adding switches to a VXLAN fabric can take a while.  Please be patient..."
+            )
         self.result = super(ActionModule, self).run(task_vars=task_vars)
         return self.result

@@ -24,43 +24,47 @@ from ansible_collections.ansible.netcommon.plugins.action.network import (
 class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
 
-        msg = ''
+        msg = ""
         warnings = []
-        config = self._task.args.get('config', None)
-        if (config is None):
+        config = self._task.args.get("config", None)
+        if config is None:
             self.result = super(ActionModule, self).run(task_vars=task_vars)
             return self.result
 
         for cfg in config:
 
-            pop_key = ''
+            pop_key = ""
             flattened = False
             flat_sw_list = []
-            if (cfg.get('switch', None) is not None):
-                for sw in cfg['switch']:
-                    if (isinstance(sw, list)):
-                        msg = " !!! Switches included in playbook profiles must be individual items, but given switch element = {} is a list ".format(sw)
+            if cfg.get("switch", None) is not None:
+                for sw in cfg["switch"]:
+                    if isinstance(sw, list):
+                        msg = " !!! Switches included in playbook profiles must be individual items, but given switch element = {0} is a list ".format(
+                            sw
+                        )
                         warnings.append(msg)
                         flattened = True
                     flat_sw_list.extend(sw)
-                if (flattened is True):
-                    cfg['switch'] = flat_sw_list
+                if flattened is True:
+                    cfg["switch"] = flat_sw_list
 
             keys = cfg.keys()
 
             for k in keys:
 
-                if (('profile' in k) and (k != 'profile')):
-                    msg = " !!! Profile name included in playbook tasks must be 'profile', but given profile name = '{}' ".format(k)
+                if ("profile" in k) and (k != "profile"):
+                    msg = " !!! Profile name included in playbook tasks must be 'profile', but given profile name = '{0}' ".format(
+                        k
+                    )
                     warnings.append(msg)
                     pop_key = k
 
-            if (pop_key != ''):
-                cfg['profile'] = cfg[pop_key]
+            if pop_key != "":
+                cfg["profile"] = cfg[pop_key]
                 cfg.pop(pop_key)
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)
-        if (warnings):
-            self.result['warnings'] = []
-            self.result['warnings'].append(warnings)
+        if warnings:
+            self.result["warnings"] = []
+            self.result["warnings"].append(warnings)
         return self.result

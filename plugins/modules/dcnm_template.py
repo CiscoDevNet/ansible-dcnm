@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 __author__ = "Mallik Mudigonda"
 
@@ -169,7 +172,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
-    dcnm_version_supported
+    dcnm_version_supported,
 )
 
 
@@ -177,21 +180,21 @@ class DcnmTemplate:
 
     dcnm_template_paths = {
         11: {
-              "TEMP_VALIDATE": "/rest/config/templates/validate",
-              "TEMP_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
-              "TEMP_GET_SW_ROLES": "/rest/control/switches/roles",
-              "TEMPLATE": "/rest/config/templates/template",
-              "TEMP_DELETE_BULK": "/rest/config/templates/delete/bulk",
-              "TEMPLATE_WITH_NAME": "/rest/config/templates/{}"
-            },
+            "TEMP_VALIDATE": "/rest/config/templates/validate",
+            "TEMP_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
+            "TEMP_GET_SW_ROLES": "/rest/control/switches/roles",
+            "TEMPLATE": "/rest/config/templates/template",
+            "TEMP_DELETE_BULK": "/rest/config/templates/delete/bulk",
+            "TEMPLATE_WITH_NAME": "/rest/config/templates/{}",
+        },
         12: {
-              "TEMP_VALIDATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/validate",
-              "TEMP_GET_SWITCHES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
-              "TEMP_GET_SW_ROLES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/switches/roles",
-              "TEMPLATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/template",
-              "TEMP_DELETE_BULK": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/delete/bulk",
-              "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}"
-            }
+            "TEMP_VALIDATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/validate",
+            "TEMP_GET_SWITCHES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+            "TEMP_GET_SW_ROLES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/switches/roles",
+            "TEMPLATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/template",
+            "TEMP_DELETE_BULK": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/delete/bulk",
+            "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}",
+        },
     }
 
     def __init__(self, module):
@@ -207,9 +210,7 @@ class DcnmTemplate:
         self.valid_fail = []
         self.template_info = []
         self.fd = None
-        self.changed_dict = [
-            {"merged": [], "deleted": [], "query": [], "failed": []}
-        ]
+        self.changed_dict = [{"merged": [], "deleted": [], "query": [], "failed": []}]
 
         self.dcnm_version = dcnm_version_supported(self.module)
 
@@ -228,7 +229,9 @@ class DcnmTemplate:
     def dcnm_template_validate_input(self):
 
         if self.config is None:
-            self.module.fail_json(msg="config: parameter is required and cannot be empty")
+            self.module.fail_json(
+                msg="config: parameter is required and cannot be empty"
+            )
 
         if self.module.params["state"] == "merged":
             template_spec = dict(
@@ -246,7 +249,7 @@ class DcnmTemplate:
             self.config, template_spec
         )
         if invalid_params:
-            mesg = "Invalid parameters in playbook: {}".format(invalid_params)
+            mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
             self.module.fail_json(msg=mesg)
 
         self.template_info.extend(template_info)
@@ -270,10 +273,12 @@ class DcnmTemplate:
 
         if self.module.params["state"] == "merged":
 
-            if (("template variables" not in ditem['content']) and ("template content" not in ditem["content"])):
-                std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template variables\n##\n##template content\n"
+            if ("template variables" not in ditem["content"]) and (
+                "template content" not in ditem["content"]
+            ):
+                std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template variables\n##\n##template content\n"  # noqa
             else:
-                std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n"
+                std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n"  # noqa
 
             template_payload = {}
 
@@ -307,9 +312,7 @@ class DcnmTemplate:
                 # have must be updated.
 
                 match_pb = [
-                    t
-                    for t in self.pb_input
-                    if template["template_name"] == t["name"]
+                    t for t in self.pb_input if template["template_name"] == t["name"]
                 ][0]
 
                 if match_pb:
@@ -356,9 +359,7 @@ class DcnmTemplate:
 
         path = self.paths["TEMP_VALIDATE"]
 
-        resp = dcnm_send(
-            self.module, "POST", path, template["content"], "text"
-        )
+        resp = dcnm_send(self.module, "POST", path, template["content"], "text")
 
         if resp and resp["RETURN_CODE"] == 200 and resp["MESSAGE"] == "OK":
             # DATA may have multiple dicts with different reports. Check all reports and ignore warnings.
@@ -366,14 +367,17 @@ class DcnmTemplate:
 
             # resp['DATA'] may be a list in case of templates with no parameters. But for templates
             # with parameters resp['DATA'] will be a dict directly with 'status' as 'Template Validation Successful'
-            if isinstance(resp['DATA'], list):
+            if isinstance(resp["DATA"], list):
                 for d in resp["DATA"]:
-                    if d.get("reportItemType", ' ').lower() == "error":
+                    if d.get("reportItemType", " ").lower() == "error":
                         self.result["response"].append(resp)
                         return 0
                 return resp["RETURN_CODE"]
-            elif isinstance(resp['DATA'], dict):
-                if resp['DATA'].get("status",  ' ').lower() != "template validation successful":
+            elif isinstance(resp["DATA"], dict):
+                if (
+                    resp["DATA"].get("status", " ").lower()
+                    != "template validation successful"
+                ):
                     self.result["response"].append(resp)
                     return 0
                 return resp["RETURN_CODE"]
@@ -401,12 +405,12 @@ class DcnmTemplate:
                     if policies.get(p["templateName"], None) is None:
                         policies[p["templateName"]] = {}
                     policies[p["templateName"]][p["policyId"]] = {}
-                    policies[p["templateName"]][p["policyId"]][
+                    policies[p["templateName"]][p["policyId"]]["fabricName"] = p[
                         "fabricName"
-                    ] = p["fabricName"]
-                    policies[p["templateName"]][p["policyId"]][
+                    ]
+                    policies[p["templateName"]][p["policyId"]]["serialNumber"] = p[
                         "serialNumber"
-                    ] = p["serialNumber"]
+                    ]
 
         return policies
 
@@ -442,12 +446,7 @@ class DcnmTemplate:
 
         # Get the list of templates not deleted because they are in use.
 
-        tstr = (
-            resp["DATA"]
-            .split("not deleted:")[1]
-            .replace("[", "")
-            .replace("]", "")
-        )
+        tstr = resp["DATA"].split("not deleted:")[1].replace("[", "").replace("]", "")
         tstr = tstr.replace(" ", "")
         template_list = tstr.split(",")
 
@@ -577,9 +576,7 @@ class DcnmTemplate:
         for template in self.want:
 
             # Check if the template is present. If not ignore the request
-            match_temp = [
-                t for t in self.have if template["name"] == t["name"]
-            ]
+            match_temp = [t for t in self.have if template["name"] == t["name"]]
 
             if match_temp:
                 del_payload["fabTemplate"].append(template["name"])
@@ -620,9 +617,7 @@ class DcnmTemplate:
 
         # First process delete list
         if self.diff_delete:
-            delete_flag = self.dcnm_template_delete_template(
-                self.diff_delete[0]
-            )
+            delete_flag = self.dcnm_template_delete_template(self.diff_delete[0])
 
         for template in self.diff_create:
             resp = self.dcnm_template_create_template(template)
@@ -630,14 +625,14 @@ class DcnmTemplate:
                 resp = resp[0]
             if resp and resp["RETURN_CODE"] == 200:
                 create_flag = True
-            if resp and resp['RETURN_CODE'] >= 400:
+            if resp and resp["RETURN_CODE"] >= 400:
                 self.module.fail_json(msg=resp)
 
         self.result["changed"] = delete_flag or create_flag
 
     def dcnm_template_build_content(self, content, name, desc, tags):
 
-        std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
+        std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"  # noqa
 
         std_cont = std_cont.replace("__TEMPLATE_NAME", name)
         std_cont = std_cont.replace("__DESCRIPTION", desc)
@@ -660,10 +655,9 @@ class DcnmTemplate:
 
 def main():
 
-    """ main entry point for module execution
-    """
+    """main entry point for module execution"""
     element_spec = dict(
-        config=dict(required=True, type="list", elements='dict'),
+        config=dict(required=True, type="list", elements="dict"),
         state=dict(
             type="str",
             default="merged",
@@ -671,9 +665,7 @@ def main():
         ),
     )
 
-    module = AnsibleModule(
-        argument_spec=element_spec, supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     dcnm_template = DcnmTemplate(module)
 
