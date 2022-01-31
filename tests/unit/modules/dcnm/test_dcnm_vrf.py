@@ -110,12 +110,16 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_dcnm_version_supported = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.dcnm_version_supported')
         self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
 
+        self.mock_dcnm_get_url = patch('ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.dcnm_get_url')
+        self.run_dcnm_get_url = self.mock_dcnm_get_url.start()
+
     def tearDown(self):
         super(TestDcnmVrfModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
         self.mock_dcnm_version_supported.stop()
+        self.mock_dcnm_get_url.stop()
 
     def load_fixtures(self, response=None, device=''):
 
@@ -133,7 +137,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif '_check_mode' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only]
 
@@ -157,25 +162,29 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif '_merged_duplicate' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only]
 
         elif '_merged_lite_duplicate' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only]
 
         elif '_merged_with_incorrect' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only]
 
         elif '_merged_with_update' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
                                               self.blank_data, self.attach_success_resp,
@@ -183,7 +192,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif '_merged_lite_update_vlan' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only,
                                               self.blank_data, self.attach_success_resp,
@@ -191,7 +201,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif '_merged_lite_update' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp]
@@ -216,7 +227,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'replace_with_no_atch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -224,7 +236,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'replace_lite_no_atch' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -233,7 +246,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'replace_with_changes' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -241,7 +255,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'replace_lite_changes' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -249,13 +264,15 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'replace_without_changes' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only]
 
         elif 'replace_lite_without_changes' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only]
 
@@ -269,7 +286,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'lite_override_with_deletions' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -280,7 +298,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'override_with_deletions' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_ov_att1_only,
                                               self.mock_vrf_attach_get_ext_object_ov_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -291,19 +310,22 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'override_without_changes' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only]
 
         elif 'override_no_changes_lite' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att3_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,]
 
         elif 'delete_std' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -313,7 +335,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'delete_std_lite' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att4_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -324,7 +347,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'delete_failure' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
@@ -339,7 +363,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             obj1['DATA'][0].update({'vrfName': 'test_vrf_dcnm'})
             obj2['DATA'][0].update({'vrfName': 'test_vrf_dcnm'})
 
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object_dcnm_only, self.mock_vrf_attach_object_dcnm_only,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object_dcnm_only]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object_dcnm_only,
                                               self.mock_vrf_attach_get_ext_object_dcnm_att1_only, self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
                                               self.attach_success_resp, self.deploy_success_resp,
                                               obj1,
@@ -348,7 +373,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'query' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att2_only,
                                               self.mock_vrf_object,
@@ -357,7 +383,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'query_vrf_lite' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
                                               self.mock_vrf_object,
@@ -366,7 +393,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif 'query_vrf_lite_without_config' in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.mock_vrf_object, self.mock_vrf_attach_object2,
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
+            self.run_dcnm_send.side_effect = [self.mock_vrf_object,
                                               self.mock_vrf_attach_get_ext_object_merge_att1_only,
                                               self.mock_vrf_attach_get_ext_object_merge_att4_only,
                                               self.mock_vrf_object,
