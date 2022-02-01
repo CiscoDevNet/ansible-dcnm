@@ -406,7 +406,10 @@ def parse_response(response):
 
 def dcnm_get_url(module, fabric, path, items, module_name):
     """
-    Query DCNM/NDFC and return the major software version
+    Query DCNM/NDFC and return query values.
+    Some queries like network/vrf queries send thier names
+    as part of URL. This method sends multiple queries and returns
+    a consolidated response if the url exceeds 6K characters.
 
     Parameters:
         module: String representing the module
@@ -422,6 +425,10 @@ def dcnm_get_url(module, fabric, path, items, module_name):
     method = 'GET'
     send_count = 1
 
+    # NDFC/DCNM12 can handle url with up 6144 characters.
+    # The size here represents the total size of all item names.
+    # The number 5900 has been arrived after making some room
+    # for query path(url)
     if sys.getsizeof(items) > 5900:
         if (sys.getsizeof(items) % 5900) == 0:
             send_count = sys.getsizeof(items)/5900
@@ -446,9 +453,9 @@ def dcnm_get_url(module, fabric, path, items, module_name):
         missing_fabric, not_ok = parse_response(att_objects)
 
         if missing_fabric or not_ok:
-            msg1 = "Fabric {} not present on DCNM".format(fabric)
+            msg1 = "Fabric {0} not present on DCNM".format(fabric)
             msg2 = "Unable to find " \
-                   "{}: {} under fabric: {}".format(module_name, items[:-1], fabric)
+                   "{0}: {1} under fabric: {2}".format(module_name, items[:-1], fabric)
 
             module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
