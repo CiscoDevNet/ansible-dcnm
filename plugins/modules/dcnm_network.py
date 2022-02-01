@@ -379,7 +379,7 @@ import copy
 import re
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
     dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, \
-    get_ip_sn_fabric_dict, dcnm_version_supported
+    get_ip_sn_fabric_dict, dcnm_version_supported, dcnm_get_url
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
@@ -954,19 +954,7 @@ class DcnmNetwork:
         if not curr_networks:
             return
 
-        path = self.paths["GET_NET_ATTACH"].format(self.fabric, ','.join(curr_networks))
-
-        net_attach_objects = dcnm_send(self.module, method, path)
-
-        missing_fabric, not_ok = self.handle_response(net_attach_objects, 'query_dcnm')
-
-        if missing_fabric or not_ok:
-            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
-            msg2 = "Unable to find attachments for " \
-                   "networks: {} under fabric: {}".format(','.join(curr_networks), self.fabric)
-
-            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-            return
+        net_attach_objects = dcnm_get_url(self.module, self.fabric, self.paths["GET_NET_ATTACH"], ','.join(curr_networks), "networks")
 
         if not net_attach_objects['DATA']:
             return

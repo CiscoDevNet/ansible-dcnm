@@ -18,6 +18,7 @@ import socket
 import json
 import time
 import re
+import sys
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
@@ -392,3 +393,78 @@ def dcnm_version_supported(module):
         module.fail_json(msg=msg)
 
     return supported
+
+
+def parse_response(response):
+
+    if response.get('ERROR') == 'Not Found' and response['RETURN_CODE'] == 404:
+        return True, False
+    if response['RETURN_CODE'] != 200 or response['MESSAGE'] != 'OK':
+        return False, True
+    return False, False
+
+
+def dcnm_get_url(module, fabric, path, items, module_name):
+    """
+    Query DCNM/NDFC and return query values.
+    Some queries like network/vrf queries send thier names
+    as part of URL. This method sends multiple queries and returns
+    a consolidated response if the url exceeds 6144 characters.
+
+    Parameters:
+        module: String representing the module
+        fabric: String representing the fabric
+        path: String representing the path to query
+        items: String representing query items
+        module_name: String representing the name of calling module
+
+    Returns:
+        dict: Response DATA from DCNM/NDFC
+    """
+
+    method = 'GET'
+    send_count = 1
+
+    # NDFC/DCNM12 can handle urls upto 6144 characters.
+    # The size here represents the total size of all item names.
+    # The number 5900 has been arrived after making some room
+    # for query path(url)
+    if sys.getsizeof(items) > 5900:
+        if (sys.getsizeof(items) % 5900) == 0:
+            send_count = sys.getsizeof(items)/5900
+        else:
+            send_count = sys.getsizeof(items)//5900 + 1
+
+    itemlist = items.split(',')
+
+    iter = 0
+    while iter < send_count:
+        if send_count == 1:
+            url = path.format(fabric, items)
+        elif (iter != (send_count - 1)):
+            itemstr = ','.join(itemlist[(iter*(len(itemlist)//send_count)):((iter+1)*(len(itemlist)//send_count))])
+            url = path.format(fabric, itemstr)
+        else:
+            itemstr = ','.join(itemlist[iter*(len(itemlist)//send_count):])
+            url = path.format(fabric, itemstr)
+
+        att_objects = dcnm_send(module, method, url)
+
+        missing_fabric, not_ok = parse_response(att_objects)
+
+        if missing_fabric or not_ok:
+            msg1 = "Fabric {0} not present on DCNM".format(fabric)
+            msg2 = "Unable to find " \
+                   "{0}: {1} under fabric: {2}".format(module_name, items[:-1], fabric)
+
+            module.fail_json(msg=msg1 if missing_fabric else msg2)
+            return
+
+        if iter == 0:
+            attach_objects = att_objects
+        else:
+            attach_objects['DATA'].extend(att_objects['DATA'])
+
+        iter += 1
+
+    return attach_objects
