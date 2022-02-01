@@ -409,7 +409,7 @@ def dcnm_get_url(module, fabric, path, items, module_name):
     Query DCNM/NDFC and return query values.
     Some queries like network/vrf queries send thier names
     as part of URL. This method sends multiple queries and returns
-    a consolidated response if the url exceeds 6K characters.
+    a consolidated response if the url exceeds 6144 characters.
 
     Parameters:
         module: String representing the module
@@ -425,7 +425,7 @@ def dcnm_get_url(module, fabric, path, items, module_name):
     method = 'GET'
     send_count = 1
 
-    # NDFC/DCNM12 can handle url with up 6144 characters.
+    # NDFC/DCNM12 can handle urls upto 6144 characters.
     # The size here represents the total size of all item names.
     # The number 5900 has been arrived after making some room
     # for query path(url)
