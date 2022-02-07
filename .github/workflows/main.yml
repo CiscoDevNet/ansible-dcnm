@@ -74,17 +74,10 @@ jobs:
       run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
 
     - name: Run sanity tests
-      run: ansible-test sanity --docker -v --color --truncate 0
+      run: ansible-test sanity
+#       run: ansible-test sanity --docker -v --color --truncate 0
       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
-    
-#     - name: Generate coverage report
-#       run: ansible-test coverage xml -v --requirements --group-by command --group-by version
-#       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/mso
-  
-#     - name: Push coverate report to codecov.io
-#       run: bash <(curl -s https://codecov.io/bash) -s 'tests/output/reports/' -F integration
-#       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/mso
-  
+
 
   unit-tests:
     name: Run DCNM Unit Tests
