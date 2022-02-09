@@ -1,6 +1,4 @@
-#!/usr/bin/python
-#
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2022 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,25 +13,33 @@
 # limitations under the License.
 
 # Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import os
 import json
 
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import set_module_args as _set_module_args
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
+    AnsibleExitJson,
+    AnsibleFailJson,
+    ModuleTestCase,
+)
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
+    set_module_args as _set_module_args,
+)
 
 
 def set_module_args(args):
     return _set_module_args(args)
 
 
-fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
+fixture_path = os.path.join(os.path.dirname(__file__), "fixtures")
 fixture_data = {}
 
+
 def loadPlaybookData(module_name):
-    path = os.path.join(fixture_path, "{}.json".format(module_name))
+    path = os.path.join(fixture_path, "{0}.json".format(module_name))
 
     with open(path) as f:
         data = f.read()
@@ -45,7 +51,8 @@ def loadPlaybookData(module_name):
 
     return j_data
 
-def load_fixture(module_name, name, device=''):
+
+def load_fixture(module_name, name, device=""):
     path = os.path.join(fixture_path, module_name, device, name)
     if not os.path.exists(path):
         path = os.path.join(fixture_path, module_name, name)
@@ -66,9 +73,10 @@ def load_fixture(module_name, name, device=''):
 
 
 class TestDcnmModule(ModuleTestCase):
-
-    def execute_module_devices(self, failed=False, changed=False, response=None, sort=True, defaults=False):
-        module_name = self.module.__name__.rsplit('.', 1)[1]
+    def execute_module_devices(
+        self, failed=False, changed=False, response=None, sort=True, defaults=False
+    ):
+        module_name = self.module.__name__.rsplit(".", 1)[1]
         local_fixture_path = os.path.join(fixture_path, module_name)
 
         models = []
@@ -77,30 +85,36 @@ class TestDcnmModule(ModuleTestCase):
             if os.path.isdir(path):
                 models.append(os.path.basename(path))
         if not models:
-            models = ['']
+            models = [""]
 
         retvals = {}
         for model in models:
-            retvals[model] = self.execute_module(failed, changed, response, sort, device=model)
+            retvals[model] = self.execute_module(
+                failed, changed, response, sort, device=model
+            )
 
         return retvals
 
-    def execute_module(self, failed=False, changed=False, response=None, sort=True, device=''):
+    def execute_module(
+        self, failed=False, changed=False, response=None, sort=True, device=""
+    ):
 
         self.load_fixtures(response, device=device)
 
         if failed:
             result = self.failed()
-            self.assertTrue(result['failed'], result)
+            self.assertTrue(result["failed"], result)
         else:
             result = self.changed(changed)
-            self.assertEqual(result['changed'], changed, result)
+            self.assertEqual(result["changed"], changed, result)
 
         if response is not None:
             if sort:
-                self.assertEqual(sorted(response), sorted(result['response']), result['response'])
+                self.assertEqual(
+                    sorted(response), sorted(result["response"]), result["response"]
+                )
             else:
-                self.assertEqual(response, result['response'], result['response'])
+                self.assertEqual(response, result["response"], result["response"])
 
         return result
 
@@ -109,7 +123,7 @@ class TestDcnmModule(ModuleTestCase):
             self.module.main()
 
         result = exc.exception.args[0]
-        self.assertTrue(result['failed'], result)
+        self.assertTrue(result["failed"], result)
         return result
 
     def changed(self, changed=False):
@@ -117,8 +131,8 @@ class TestDcnmModule(ModuleTestCase):
             self.module.main()
 
         result = exc.exception.args[0]
-        self.assertEqual(result['changed'], changed, result)
+        self.assertEqual(result["changed"], changed, result)
         return result
 
-    def load_fixtures(self, response=None, device=''):
+    def load_fixtures(self, response=None, device=""):
         pass
