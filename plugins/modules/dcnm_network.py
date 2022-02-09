@@ -1474,7 +1474,7 @@ class DcnmNetwork:
                     method = "POST"
 
                     attempt = 0
-                    while True and attempt < 10:
+                    while attempt < 10:
                         attempt += 1
                         path = self.paths["GET_NET_ID"].format(self.fabric)
                         if self.dcnm_version > 11:
