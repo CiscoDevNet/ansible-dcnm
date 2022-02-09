@@ -272,4 +272,3 @@
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
-

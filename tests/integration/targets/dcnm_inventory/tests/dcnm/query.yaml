@@ -196,4 +196,3 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
-
