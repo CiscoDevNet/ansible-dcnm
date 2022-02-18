@@ -341,7 +341,7 @@ class DcnmTemplate:
 
                     if match_pb.get("type", None) is None:
                         # Type is not included in config. So take it from have
-                        type = have["type"]
+                        type = have["contentType"].lower()
                         update_content = True
                     else:
                         type = match_pb["type"]
