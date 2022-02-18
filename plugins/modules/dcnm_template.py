@@ -66,6 +66,15 @@ options:
         - Multiple line configuration snip that can be used to associate to
           devices as policy
         type: str
+
+      type:
+        description:
+        - Type of the template content either CLI or Python
+        type: str
+        choices:
+          - cli
+          - python
+        default: cli
 """
 
 EXAMPLES = """
@@ -236,6 +245,7 @@ class DcnmTemplate:
                 description=dict(required=False, type="str", default=""),
                 tags=dict(required=False, type="str", default=""),
                 content=dict(required=True, type="str"),
+                type=dict(required=False, type="str", default="cli"),
             )
         elif self.module.params["state"] == "deleted":
             template_spec = dict(name=dict(required=True, type="str"))
@@ -280,6 +290,8 @@ class DcnmTemplate:
             std_cont = std_cont.replace("__TEMPLATE_NAME", ditem["name"])
             std_cont = std_cont.replace("__DESCRIPTION", ditem["description"])
             std_cont = std_cont.replace("__TAGS", ditem["tags"])
+            if ditem["type"] == "python":
+                std_cont = std_cont.replace("TEMPLATE_CLI", "PYTHON")
 
             final_cont = std_cont + ditem["content"] + "##"
 
@@ -327,12 +339,20 @@ class DcnmTemplate:
                     else:
                         tags = match_pb["tags"]
 
+                    if match_pb.get("type", None) is None:
+                        # Type is not included in config. So take it from have
+                        type = have["type"]
+                        update_content = True
+                    else:
+                        type = match_pb["type"]
+
                     if update_content is True:
                         template["content"] = self.dcnm_template_build_content(
                             match_pb["content"],
                             template["template_name"],
                             desc,
                             tags,
+                            type,
                         )
                 # Check the content
                 # Before doing that remove 'imports = ;\n' from have. We do not have it in want.
@@ -635,13 +655,15 @@ class DcnmTemplate:
 
         self.result["changed"] = delete_flag or create_flag
 
-    def dcnm_template_build_content(self, content, name, desc, tags):
+    def dcnm_template_build_content(self, content, name, desc, tags, type):
 
         std_cont = "##template properties\nname = __TEMPLATE_NAME;\ndescription = __DESCRIPTION;\ntags = __TAGS;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\n##\n##template content\n"
 
         std_cont = std_cont.replace("__TEMPLATE_NAME", name)
         std_cont = std_cont.replace("__DESCRIPTION", desc)
         std_cont = std_cont.replace("__TAGS", tags)
+        if type == "python":
+            std_cont = std_cont.replace("TEMPLATE_CLI", "PYTHON")
 
         final_cont = std_cont + content + "##"
         return final_cont
