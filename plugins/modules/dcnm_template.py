@@ -677,6 +677,10 @@ class DcnmTemplate:
             return
 
         for cfg in self.config:
+            # Default value is not filled automatically in dicts nested in list
+            # Therefore handle defaulting type field of config list here
+            if "type" not in cfg.keys():
+                cfg["type"] = "cli"
             self.pb_input.append(copy.deepcopy(cfg))
 
 
