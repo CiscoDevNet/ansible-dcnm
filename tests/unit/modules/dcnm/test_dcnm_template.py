@@ -660,7 +660,7 @@ class TestDcnmTemplateModule(TestDcnmModule):
 
         set_module_args(dict(state='merged',
                              config=self.playbook_config))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=True)
 
 
         self.assertEqual(len(result['diff'][0]['failed']), 1)

@@ -695,6 +695,9 @@ def main():
 
     dcnm_template.result["diff"] = dcnm_template.changed_dict
 
+    if dcnm_template.changed_dict[0]["failed"]:
+        module.fail_json("Template validation failed", **dcnm_template.result)
+
     if dcnm_template.diff_create or dcnm_template.diff_delete:
         dcnm_template.result["changed"] = True
     else:
