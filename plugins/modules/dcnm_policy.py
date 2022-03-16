@@ -513,6 +513,7 @@ class DcnmPolicy:
         policy_payload["id"] = policy["id"]
         policy_payload["serialNumber"] = self.ip_sn[sw]
         policy_payload["policyId"] = policy["policyId"]
+        policy_payload["description"] = pelem["description"]
         policy_payload["templateName"] = policy["templateName"]
         policy_payload["priority"] = pelem["priority"]
         policy_payload["create_additional_policy"] = pelem[
@@ -717,8 +718,7 @@ class DcnmPolicy:
                 # A policy exists and it needs to be updated
                 # Merge is allowed only in the case of user providing policyId in place of templateName.
                 # This is because there can be multiple policies with the same templateName and hence we
-                # will not know which policy the user is referring to. In the case where a user is providing
-                # a templateName and we are here, ignore the policy.
+                # will not know which policy the user is referring to.
                 if policy.get("policyId", None) is not None:
                     if policy not in self.diff_modify:
                         self.changed_dict[0]["merged"].append(policy)
@@ -732,9 +732,20 @@ class DcnmPolicy:
                         self.diff_create.append(policy)
             elif rc == "DCNM_POLICY_DONT_ADD":
                 # A policy exists and there is no difference between the one that exists and the one that is
-                # is requested to be creted. Check the 'create_additional_policy' flag and crete it if it is
+                # is requested to be created. Check the 'create_additional_policy' flag and create it if it is
                 # set to True
                 if policy["create_additional_policy"] is True:
+
+                    # Check if policy is being created using policy ID. In such a case since we are trying to create
+                    # and additional policy here, clear the "id" and "policyId" fields. Otherwise CREATE will fail
+                    # complaining the policy being created is not unique since a policy with the same policy number
+                    # already exists
+
+                    if "POLICY-" in policy.get("policyId", ''):
+                        policy.pop("id")
+                        policy.pop("policyId")
+                        policy["policy_id_given"] = False
+
                     self.changed_dict[0]["merged"].append(policy)
                     self.diff_create.append(policy)
                     policy_id = None
