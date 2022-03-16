@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2022 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ class ActionModule(ActionNetworkModule):
             if (cfg.get('switch', None) is not None):
                 for sw in cfg['switch']:
                     if (isinstance(sw, list)):
-                        msg = " !!! Switches included in playbook profiles must be individual items, but given switch element = {} is a list ".format(sw)
+                        msg = " !!! Switches included in playbook profiles must be individual items, but given switch element = {0} is a list ".format(sw)
                         warnings.append(msg)
                         flattened = True
                     flat_sw_list.extend(sw)
@@ -51,7 +51,7 @@ class ActionModule(ActionNetworkModule):
             for k in keys:
 
                 if (('profile' in k) and (k != 'profile')):
-                    msg = " !!! Profile name included in playbook tasks must be 'profile', but given profile name = '{}' ".format(k)
+                    msg = " !!! Profile name included in playbook tasks must be 'profile', but given profile name = '{0}' ".format(k)
                     warnings.append(msg)
                     pop_key = k
 

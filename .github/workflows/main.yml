@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the develop branch
   push:
-    branches: [ develop, main ]
+    branches: [ develop, main, ansible-test-fixes ]
   pull_request:
     branches: [ develop, main ]
 
@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.12, 2.10.0]
+        ansible: [2.9.27, 2.10.17, 2.11.8, 2.12.2]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
     
-    - name: Set up Python 3.7
+    - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
-        python-version: 3.7
+        python-version: 3.8
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -43,6 +43,38 @@ jobs:
         name: collection
         path: .cache/collection-tarballs
 
+
+  sanity:
+    name: Run ansible-sanity tests
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible: [2.9.27, 2.10.17, 2.11.8, 2.12.2]
+    steps:
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install ansible-base (v${{ matrix.ansible }})
+      run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+    - name: Download migrated collection artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: collection
+        path: .cache/collection-tarballs
+
+    - name: Install the collection tarball
+      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+
+    - name: Run sanity tests
+      run: ansible-test sanity --docker --python 3.8 -v --color --truncate 0
+      working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
+
+
   unit-tests:
     name: Run DCNM Unit Tests
     needs:
@@ -50,12 +82,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.12, 2.10.0]
+        ansible: [2.9.27, 2.10.17, 2.11.8, 2.12.2]
     steps:
-    - name: Set up Python 3.7
+    - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
-        python-version: 3.7
+        python-version: 3.8
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -77,7 +109,6 @@ jobs:
 
     - name: Run DCNM Unit tests
       run: coverage run --source=. -m pytest tests/unit/modules/dcnm/. -vvvv
-      #run: ansible-test units --docker -v --color --truncate 0 --coverage
       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
       env:
         PYTHONPATH: /home/runner/.ansible/collections
@@ -85,4 +116,3 @@ jobs:
     - name: Generate coverage report
       run: coverage report
       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
-
