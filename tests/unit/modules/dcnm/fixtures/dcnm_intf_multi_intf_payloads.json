@@ -1,38 +1,214 @@
 
 {
-	"pc_merged_trunk_payloads" : 
-	{
-		"MESSAGE": "OK",
-			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel300",
-			"DATA": [
-			{
-				"policy": "int_port_channel_trunk_host_11_1",
-				"interfaces": [
-				{
-					"ifName": "port-channel300",
-					"serialNumber": "SAL1819SAN8",
-					"nvPairs": {
-						"MEMBER_INTERFACES": "e1/9",
-						"FABRIC_NAME": "test_fabric",
-						"PO_ID": "Port-channel300",
-						"MTU": "jumbo",
-						"SPEED": "auto",
-						"PRIORITY": "500",
-						"PORTTYPE_FAST_ENABLED": "True",
-						"PC_MODE": "on",
-						"POLICY_DESC": "",
-						"CONF": "no shutdown",
-						"BPDUGUARD_ENABLED": "True",
-						"ADMIN_STATE": "True",
-						"POLICY_ID": "POLICY-1849470",
-						"ALLOWED_VLANS": "none",
-						"DESC": "port channel acting as trunk"
-					}
-				}],
+  "pc_merged_trunk_payloads" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel300",
+      "DATA": [
+      {
+        "policy": "int_port_channel_trunk_host_11_1",
+        "interfaces": [
+        {
+          "ifName": "port-channel300",
+          "serialNumber": "SAL1819SAN8",
+          "nvPairs": {
+            "MEMBER_INTERFACES": "e1/9",
+            "FABRIC_NAME": "test_fabric",
+            "PO_ID": "Port-channel300",
+            "MTU": "jumbo",
+            "SPEED": "auto",
+            "PRIORITY": "500",
+            "PORTTYPE_FAST_ENABLED": "True",
+            "PC_MODE": "on",
+            "POLICY_DESC": "",
+            "CONF": "no shutdown",
+            "BPDUGUARD_ENABLED": "True",
+            "ADMIN_STATE": "True",
+            "POLICY_ID": "POLICY-1849470",
+            "ALLOWED_VLANS": "none",
+            "DESC": "port channel acting as trunk"
+          }
+        }],
         "skipResourceCheck": "True"
-			}
-		],
-		"RETURN_CODE": 200,
-		"METHOD": "GET"
-	}
+      }
+    ],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  },
+
+    "pc_payload":
+    {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "DATA": [
+      {
+        "policy": "int_port_channel_trunk_host_11_1",
+        "interfaceType": "INTERFACE_PORT_CHANNEL",
+        "interfaces": [
+        {
+          "serialNumber": "SAL1819SAN8",
+          "interfaceType": "INTERFACE_PORT_CHANNEL",
+          "ifName": "Port-channel300",
+          "fabricName": "test_fabric",
+          "nvPairs": {
+            "SPEED": "Auto",
+            "MEMBER_INTERFACES": "e1/9",
+            "PC_MODE": "on",
+            "BPDUGUARD_ENABLED": "true",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "MTU": "jumbo",
+            "ALLOWED_VLANS": "none",
+            "PO_ID": "Port-channel300",
+            "DESC": "port channel acting as trunk",
+            "CONF": "no shutdown",
+            "ADMIN_STATE": "true"
+          }
+        }
+        ],
+        "skipResourceCheck": "false"
+      }]
+    },
+    "vpc_payload":
+    {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "DATA": [
+      {
+        "policy": "int_vpc_trunk_host_11_1",
+        "interfaceType": "INTERFACE_VPC",
+        "interfaces": [
+        {
+          "serialNumber": "FOX1821H035~SAL1819SAN8",
+          "interfaceType": "INTERFACE_VPC",
+          "ifName": "vPC301",
+          "fabricName": "test_fabric",
+          "nvPairs": {
+            "SPEED": "Auto",
+            "PEER1_MEMBER_INTERFACES": "e1/14",
+            "PEER2_MEMBER_INTERFACES": "e1/14",
+            "PC_MODE": "on",
+            "BPDUGUARD_ENABLED": "true",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "MTU": "jumbo",
+            "PEER1_ALLOWED_VLANS": "none",
+            "PEER2_ALLOWED_VLANS": "none",
+            "PEER1_PCID": "1",
+            "PEER2_PCID": "1",
+            "PEER1_PO_DESC": "VPC acting as trunk peer1",
+            "PEER2_PO_DESC": "VPC acting as trunk peer2",
+            "PEER1_PO_CONF": "no shutdown",
+            "PEER2_PO_CONF": "no shutdown",
+            "ADMIN_STATE": "true",
+            "INTF_NAME": "vPC301"
+          }
+        }
+        ],
+        "skipResourceCheck": "false"
+      }]
+    },
+
+    "eth_payload":
+    {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "DATA": [
+      {
+        "policy": "int_trunk_host_11_1",
+        "interfaceType": "INTERFACE_ETHERNET",
+        "interfaces": [
+        {
+          "serialNumber": "SAL1819SAN8",
+          "interfaceType": "INTERFACE_ETHERNET",
+          "ifName": "Ethernet1/10",
+          "fabricName": "test_fabric",
+          "nvPairs": {
+            "SPEED": "auto",
+            "BPDUGUARD_ENABLED": "true",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "MTU": "jumbo",
+            "ALLOWED_VLANS": "none",
+            "INTF_NAME": "Ethernet1/10",
+            "DESC": "eth interface  acting as trunk",
+            "CONF": "no shutdown",
+            "ADMIN_STATE": "true"
+          }
+        }
+        ]
+      }]
+    },
+
+    "subint_payload":
+    {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "DATA": [
+      {
+        "policy": "int_subif_11_1",
+        "interfaceType": "SUBINTERFACE",
+        "interfaces": [
+        {
+          "serialNumber": "SAL1819SAN8",
+          "interfaceType": "SUBINTERFACE",
+          "ifName": "Ethernet1/1.1",
+          "fabricName": "test_fabric",
+          "nvPairs": {
+            "SPEED": "Auto",
+            "VLAN": "100",
+            "INTF_VRF": "",
+            "IP": "1.1.1.1",
+            "PREFIX": "24",
+            "IPv6": "",
+            "IPv6_PREFIX": "",
+            "MTU": "9216",
+            "INTF_NAME": "Ethernet1/1.1",
+            "DESC": "sub interface eth25/1.1 configuration",
+            "CONF": "no shutdown",
+            "ADMIN_STATE": "true"
+          }
+        }
+        ],
+        "skipResourceCheck": "false"
+      }]
+    },
+
+    "lo_payload":
+    {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "DATA": [
+      {
+        "policy": "int_loopback_11_1",
+        "interfaceType": "INTERFACE_LOOPBACK",
+        "interfaces": [
+        {
+          "serialNumber": "SAL1819SAN8",
+          "interfaceType": "INTERFACE_LOOPBACK",
+          "ifName": "Loopback303",
+          "fabricName": "test_fabric",
+          "nvPairs": {
+            "SPEED": "Auto",
+            "INTF_VRF": "",
+            "IP": "100.10.10.1",
+            "V6IP": "",
+            "ROUTE_MAP_TAG": "",
+            "INTF_NAME": "Loopback303",
+            "DESC": "loopback interface 100 configuration",
+            "CONF": "no shutdown",
+            "ADMIN_STATE": "true"
+          }
+        }
+        ],
+        "skipResourceCheck": "false"
+      }]
+    }
 }

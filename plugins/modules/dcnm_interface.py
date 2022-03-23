@@ -1223,7 +1223,11 @@ class DcnmIntf:
 
                         c[ck]['fabric'] = self.dcnm_intf_facts['fabric']
                         if (cfg['type'] == 'vpc'):
-                            c[ck]['sno'] = self.vpc_ip_sn[sw]
+                            if self.vpc_ip_sn.get(sw, None) is None:
+                                self.module.fail_json(msg="Switch '{}' is not part of VPC pair, but given I/F '{}' is of type VPC".format(sw, c['name']))
+                            else:
+                                c[ck]['sno'] = self.vpc_ip_sn[sw]
+
                         else:
                             c[ck]['sno'] = self.ip_sn[sw]
                         ifname, port_id = self.dcnm_intf_get_if_name(c['name'], c['type'])
@@ -1968,10 +1972,7 @@ class DcnmIntf:
                 if (intf_payload):
                     self.have.append(intf_payload)
 
-    def dcnm_intf_compare_elements(self, name, sno, fabric, ie1, ie2, k, state):
-
-        # unicode encoded strings must be decoded to get proper strings which is required
-        # for comparison purposes
+    def dcnm_intf_translate_elements (self, ie1, ie2):
 
         if sys.version_info[0] >= 3:
             # Python version 3 onwards trfeats unicode as strings. No special treatment is required
@@ -1987,9 +1988,40 @@ class DcnmIntf:
             else:
                 e2 = ie2
 
+        return e1, e2
+
+    def dcnm_intf_merge_want_and_have(self, key, wvalue, hvalue):
+
+        comb_key = ""
+        e1, e2 = self.dcnm_intf_translate_elements (wvalue, hvalue)
+
+        if "CONF" in key:
+            if e1 == "":
+                comb_key = e2
+            elif e2 == "":
+                comb_key = e1
+            else:
+                comb_key = e2 + '\n' + e1
+        else:
+            if e1 == "":
+                comb_key = e2
+            elif e2 == "":
+                comb_key = e1
+            else:
+                comb_key = e2 + ',' + e1
+        return comb_key
+
+    def dcnm_intf_compare_elements(self, name, sno, fabric, ie1, ie2, k, state):
+
+        # unicode encoded strings must be decoded to get proper strings which is required
+        # for comparison purposes
+
+        e1, e2 = self.dcnm_intf_translate_elements (ie1, ie2)
+
         # The keys in key_translate represent a concatenated string. We should split
         # these strings and then compare the values
         key_translate = ['MEMBER_INTERFACES', 'CONF', 'PEER1_MEMBER_INTERFACES', 'PEER2_MEMBER_INTERFACES', 'PEER1_PO_CONF', 'PEER2_PO_CONF']
+        merge = False
 
         # Some keys have values given as a list which is encoded into a
         # string. So split that up into list and then use 'set' to process
@@ -1999,8 +2031,13 @@ class DcnmIntf:
             # MEMBER_INTERFACES, PEER1_MEMBER_INTERFACES, and PEER2_MEMBER_INTERFACES
             # have ',' joining differnet elements. So use a multi-delimiter split
             # to split with any delim
-            t_e1 = set(re.split(r'[\n,]', e1.strip()))
-            t_e2 = set(re.split(r'[\n,]', e2.strip()))
+            t_e1 = sorted(re.split(r'[\n,]', e1.strip()))
+
+            t_e2 = sorted(re.split(r'[\n,]', e2.strip()))
+
+            # Merging of aggregate objects (refer objects in key_translate at the top) should happen only for "merged" state.
+            if state == 'merged':
+                merge = True
         else:
             if (isinstance(e1, str)):
                 t_e1 = e1.lower()
@@ -2033,6 +2070,8 @@ class DcnmIntf:
                     # values for non-mandatory objects.
                     return 'copy_and_add'
                 else:
+                    if merge:
+                        return 'merge_and_add'
                     return 'add'
         return 'dont_add'
 
@@ -2127,6 +2166,9 @@ class DcnmIntf:
                                             if (res == 'copy_and_add'):
                                                 want[k][0][ik][nk] = d[k][0][ik][nk]
                                                 changed_dict[k][0][ik][nk] = d[k][0][ik][nk]
+                                            if (res == 'merge_and_add'):
+                                                want[k][0][ik][nk] = self.dcnm_intf_merge_want_and_have(nk, want[k][0][ik][nk], d[k][0][ik][nk])
+                                                changed_dict[k][0][ik][nk] = want[k][0][ik][nk]
                                             if (res != 'dont_add'):
                                                 action = 'update'
                                             else:
@@ -2145,6 +2187,9 @@ class DcnmIntf:
                                         if (res == 'copy_and_add'):
                                             want[k][0][ik] = d[k][0][ik]
                                             changed_dict[k][0][ik] = d[k][0][ik]
+                                        if (res == 'merge_and_add'):
+                                            want[k][0][ik] = self.dcnm_intf_merge_want_and_have(ik, want[k][0][ik], d[k][0][ik])
+                                            changed_dict[k][0][ik] = want[k][0][ik]
                                         if (res != 'dont_add'):
                                             action = 'update'
                                         else:
@@ -2158,6 +2203,9 @@ class DcnmIntf:
                                 if (res == 'copy_and_add'):
                                     want[k] = d[k]
                                     changed_dict[k] = d[k]
+                                if (res == 'merge_and_add'):
+                                    want[k] = self.dcnm_intf_merge_want_and_have(k, want[k], d[k])
+                                    changed_dict[k] = want[k]
                                 if (res != 'dont_add'):
                                     action = 'update'
                                 else:
