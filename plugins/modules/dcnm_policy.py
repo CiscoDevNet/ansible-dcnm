@@ -918,7 +918,7 @@ class DcnmPolicy:
                 else:
                     fl = resp["DATA"]["failureList"]
 
-                if "is not unique" in fl["message"]:
+                if "is not unique" in fl.get("message", ""):
                     retries = retries + 1
                     continue
                 else:
