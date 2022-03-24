@@ -1238,7 +1238,7 @@ class DcnmIntf:
                         c[ck]["fabric"] = self.dcnm_intf_facts["fabric"]
                         if cfg["type"] == "vpc":
                             if self.vpc_ip_sn.get(sw, None) is None:
-                                self.module.fail_json(msg="Switch '{}' is not part of VPC pair, but given I/F '{}' is of type VPC".format(sw, c['name']))
+                                self.module.fail_json(msg="Switch '{0}' is not part of VPC pair, but given I/F '{1}' is of type VPC".format(sw, c['name']))
                             else:
                                 c[ck]['sno'] = self.vpc_ip_sn[sw]
                         else:
