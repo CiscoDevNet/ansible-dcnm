@@ -2110,7 +2110,7 @@ class DcnmIntf:
                 if intf_payload:
                     self.have.append(intf_payload)
 
-    def dcnm_intf_translate_elements (self, ie1, ie2):
+    def dcnm_intf_translate_elements(self, ie1, ie2):
 
         if sys.version_info[0] >= 3:
             # Python version 3 onwards trfeats unicode as strings. No special treatment is required
@@ -2131,7 +2131,7 @@ class DcnmIntf:
     def dcnm_intf_merge_want_and_have(self, key, wvalue, hvalue):
 
         comb_key = ""
-        e1, e2 = self.dcnm_intf_translate_elements (wvalue, hvalue)
+        e1, e2 = self.dcnm_intf_translate_elements(wvalue, hvalue)
 
         if "CONF" in key:
             if e1 == "":
@@ -2154,7 +2154,7 @@ class DcnmIntf:
         # unicode encoded strings must be decoded to get proper strings which is required
         # for comparison purposes
 
-        e1, e2 = self.dcnm_intf_translate_elements (ie1, ie2)
+        e1, e2 = self.dcnm_intf_translate_elements(ie1, ie2)
 
         # The keys in key_translate represent a concatenated string. We should split
         # these strings and then compare the values

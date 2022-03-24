@@ -120,13 +120,13 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if ("_multi_intf_merged_exist" in self._testMethodName):
             # No I/F exists case
-            playbook_pc_intf  = self.payloads_data.get("pc_payload")
-            playbook_lo_intf  = self.payloads_data.get("lo_payload")
+            playbook_pc_intf = self.payloads_data.get("pc_payload")
+            playbook_lo_intf = self.payloads_data.get("lo_payload")
             playbook_eth_intf = self.payloads_data.get("eth_payload")
             playbook_subint_intf = self.payloads_data.get("subint_payload")
             playbook_vpc_intf = self.payloads_data.get("vpc_payload")
-            playbook_have_all_data  = self.have_all_payloads_data.get("payloads")
-            playbook_deployed_data  = self.have_all_payloads_data.get("deployed_payloads")
+            playbook_have_all_data = self.have_all_payloads_data.get("payloads")
+            playbook_deployed_data = self.have_all_payloads_data.get("deployed_payloads")
 
             self.run_dcnm_send.side_effect = [
                 self.playbook_mock_vpc_resp,
@@ -1399,16 +1399,16 @@ class TestDcnmIntfModule(TestDcnmModule):
     def test_dcnm_intf_multi_intf_merged_exist(self):
 
         # load the json from playbooks
-        self.config_data     = loadPlaybookData("dcnm_intf_multi_intf_configs")
-        self.have_all_payloads_data  = loadPlaybookData("dcnm_intf_have_all_payloads")
-        self.payloads_data   = loadPlaybookData("dcnm_intf_multi_intf_payloads")
+        self.config_data = loadPlaybookData("dcnm_intf_multi_intf_configs")
+        self.have_all_payloads_data = loadPlaybookData("dcnm_intf_have_all_payloads")
+        self.payloads_data = loadPlaybookData("dcnm_intf_multi_intf_payloads")
 
         # load required config data
-        self.playbook_config         = self.config_data.get("multi_intf_merged_config_exist")
+        self.playbook_config = self.config_data.get("multi_intf_merged_config_exist")
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
-        self.playbook_mock_vpc_resp  = self.config_data.get("mock_vpc_resp")
-        self.mock_ip_sn              = self.config_data.get("mock_ip_sn")
-        self.mock_fab_inv            = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
 
         set_module_args(dict(state="merged",
                              fabric="test_fabric",
@@ -1418,16 +1418,16 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["merged"]), 5)
         for d in result["diff"][0]["merged"]:
             for intf in d["interfaces"]:
-                self.assertEqual ((intf["ifName"] in ["Port-channel300",
-                                                      "vPC301",
-                                                      "Ethernet1/1.1",
-                                                      "Ethernet1/10",
-                                                      "Loopback303"]), True)
+                self.assertEqual((intf["ifName"] in ["Port-channel300",
+                                                     "vPC301",
+                                                     "Ethernet1/1.1",
+                                                     "Ethernet1/10",
+                                                     "Loopback303"]), True)
                 for key in intf["nvPairs"]:
                     if "MEMBER_INTERFACES" in key:
-                        self.assertEqual (len(intf["nvPairs"][key].split(",")), 2)
+                        self.assertEqual(len(intf["nvPairs"][key].split(",")), 2)
                     if "CONF" in key:
-                        self.assertEqual (len(intf["nvPairs"][key].split("\n")), 2)
+                        self.assertEqual(len(intf["nvPairs"][key].split("\n")), 2)
 
     def test_dcnm_intf_missing_intf_elems_merged_new(self):
 
