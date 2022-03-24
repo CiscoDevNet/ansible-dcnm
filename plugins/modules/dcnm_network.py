@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2021 Cisco and/or its affiliates.
+# Copyright (c) 2020-2022 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import absolute_import, division, print_function
 
+__metaclass__ = type
 __author__ = "Chris Van Heuveln, Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy"
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: dcnm_network
 short_description: Add and remove Networks from a DCNM managed VXLAN fabric.
@@ -155,9 +157,10 @@ options:
         type: str
         required: false
       dhcp_loopback_id:
-        description: 'Loopback ID for DHCP Relay interface'
+        description:
+        - Loopback ID for DHCP Relay interface
+        - Configured ID value should be in range 0-1023
         type: int
-        note: Configured ID value should be in range 0-1023
         required: false
       attach:
         description:
@@ -185,9 +188,9 @@ options:
         - Global knob to control whether to deploy the attachment
         type: bool
         default: true
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 # This module supports the following states:
 #
 # Merged:
@@ -371,15 +374,23 @@ EXAMPLES = '''
     config:
     - net_name: ansible-net13
     - net_name: ansible-net12
-'''
+"""
 
 import json
 import time
 import copy
 import re
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import get_fabric_inventory_details, \
-    dcnm_send, validate_list_of_dicts, dcnm_get_ip_addr_info, get_ip_sn_dict, get_fabric_details, \
-    get_ip_sn_fabric_dict, dcnm_version_supported, dcnm_get_url
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    get_fabric_inventory_details,
+    dcnm_send,
+    validate_list_of_dicts,
+    dcnm_get_ip_addr_info,
+    get_ip_sn_dict,
+    get_fabric_details,
+    get_ip_sn_fabric_dict,
+    dcnm_version_supported,
+    dcnm_get_url,
+)
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
@@ -394,8 +405,8 @@ class DcnmNetwork:
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
-            "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
-            },
+            "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        },
         12: {
             "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
             "GET_VRF_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
@@ -403,15 +414,15 @@ class DcnmNetwork:
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
-            "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN"
-            }
+            "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        },
     }
 
     def __init__(self, module):
         self.module = module
         self.params = module.params
-        self.fabric = module.params['fabric']
-        self.config = copy.deepcopy(module.params.get('config'))
+        self.fabric = module.params["fabric"]
+        self.config = copy.deepcopy(module.params.get("config"))
         self.check_mode = False
         self.conn = Connection(module._socket_path)
         self.have_create = []
@@ -445,18 +456,15 @@ class DcnmNetwork:
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         self.fabric_det = get_fabric_details(module, self.fabric)
-        self.is_ms_fabric = True if self.fabric_det.get('fabricType') == 'MFD' else False
+        self.is_ms_fabric = (
+            True if self.fabric_det.get("fabricType") == "MFD" else False
+        )
         if self.dcnm_version > 12:
             self.paths = self.dcnm_network_paths[12]
         else:
             self.paths = self.dcnm_network_paths[self.dcnm_version]
 
-        self.result = dict(
-            changed=False,
-            diff=[],
-            response=[],
-            warnings=[]
-        )
+        self.result = dict(changed=False, diff=[], response=[], warnings=[])
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
@@ -473,35 +481,60 @@ class DcnmNetwork:
             found = False
             if have_a:
                 for have in have_a:
-                    if want['serialNumber'] == have['serialNumber']:
+                    if want["serialNumber"] == have["serialNumber"]:
                         found = True
 
-                        if want.get('isAttached') is not None:
-                            if bool(have['isAttached']) and bool(want['isAttached']):
-                                h_sw_ports = have['switchPorts'].split(",") if have['switchPorts'] else []
-                                w_sw_ports = want['switchPorts'].split(",") if want['switchPorts'] else []
+                        if want.get("isAttached") is not None:
+                            if bool(have["isAttached"]) and bool(want["isAttached"]):
+                                h_sw_ports = (
+                                    have["switchPorts"].split(",")
+                                    if have["switchPorts"]
+                                    else []
+                                )
+                                w_sw_ports = (
+                                    want["switchPorts"].split(",")
+                                    if want["switchPorts"]
+                                    else []
+                                )
 
                                 # This is needed to handle cases where vlan is updated after deploying the network
                                 # and attachments. This ensures that the attachments before vlan update will use previous
                                 # vlan id. All the active attachments on DCNM will have a vlan-id.
-                                if have.get('vlan'):
-                                    want['vlan'] = have.get('vlan')
+                                if have.get("vlan"):
+                                    want["vlan"] = have.get("vlan")
 
                                 if sorted(h_sw_ports) != sorted(w_sw_ports):
-                                    atch_sw_ports = list(set(w_sw_ports) - set(h_sw_ports))
+                                    atch_sw_ports = list(
+                                        set(w_sw_ports) - set(h_sw_ports)
+                                    )
 
                                     # Adding some logic which is needed for replace and override.
                                     if replace:
-                                        dtach_sw_ports = list(set(h_sw_ports) - set(w_sw_ports))
+                                        dtach_sw_ports = list(
+                                            set(h_sw_ports) - set(w_sw_ports)
+                                        )
 
                                         if not atch_sw_ports and not dtach_sw_ports:
                                             continue
 
-                                        want.update({'switchPorts': ','.join(atch_sw_ports) if atch_sw_ports else ""})
                                         want.update(
-                                            {'detachSwitchPorts': ','.join(dtach_sw_ports) if dtach_sw_ports else ""})
+                                            {
+                                                "switchPorts": ",".join(atch_sw_ports)
+                                                if atch_sw_ports
+                                                else ""
+                                            }
+                                        )
+                                        want.update(
+                                            {
+                                                "detachSwitchPorts": ",".join(
+                                                    dtach_sw_ports
+                                                )
+                                                if dtach_sw_ports
+                                                else ""
+                                            }
+                                        )
 
-                                        del want['isAttached']
+                                        del want["isAttached"]
                                         attach_list.append(want)
 
                                         continue
@@ -510,33 +543,35 @@ class DcnmNetwork:
                                         # The attachments in the have consist of attachments in want and more.
                                         continue
 
-                                    want.update({'switchPorts': ','.join(atch_sw_ports)})
-                                    del want['isAttached']
+                                    want.update(
+                                        {"switchPorts": ",".join(atch_sw_ports)}
+                                    )
+                                    del want["isAttached"]
                                     attach_list.append(want)
                                     continue
 
-                            if bool(have['isAttached']) is not bool(want['isAttached']):
+                            if bool(have["isAttached"]) is not bool(want["isAttached"]):
                                 # When the attachment is to be detached and undeployed, ignore any changes
                                 # to the attach section in the want(i.e in the playbook).
 
-                                if not bool(want['isAttached']):
-                                    del have['isAttached']
-                                    have.update({'deployment': False})
+                                if not bool(want["isAttached"]):
+                                    del have["isAttached"]
+                                    have.update({"deployment": False})
                                     attach_list.append(have)
                                     continue
-                                del want['isAttached']
+                                del want["isAttached"]
                                 attach_list.append(want)
                                 continue
 
-                        if bool(have['deployment']) is not bool(want['deployment']):
+                        if bool(have["deployment"]) is not bool(want["deployment"]):
                             # We hit this section when attachment is successful, but, deployment is stuck in PENDING or
                             # OUT-OF-SYNC. In such cases, we just add the object to deploy list only. have['deployment']
                             # is set to False when deployment is PENDING or OUT-OF-SYNC - ref - get_have()
                             dep_net = True
 
             if not found:
-                if bool(want['deployment']):
-                    del want['isAttached']
+                if bool(want["deployment"]):
+                    del want["isAttached"]
                     attach_list.append(want)
 
         return attach_list, dep_net
@@ -547,37 +582,46 @@ class DcnmNetwork:
             return {}
 
         serial = ""
-        attach['ip_address'] = dcnm_get_ip_addr_info(self.module, attach['ip_address'], None, None)
+        attach["ip_address"] = dcnm_get_ip_addr_info(
+            self.module, attach["ip_address"], None, None
+        )
         for ip, ser in self.ip_sn.items():
-            if ip == attach['ip_address']:
+            if ip == attach["ip_address"]:
                 serial = ser
 
         if not serial:
-            self.module.fail_json(msg='Fabric: {} does not have the switch: {}'
-                                  .format(self.fabric, attach['ip_address']))
+            self.module.fail_json(
+                msg="Fabric: {0} does not have the switch: {1}".format(
+                    self.fabric, attach["ip_address"]
+                )
+            )
 
-        role = self.inventory_data[attach['ip_address']].get('switchRole')
-        if role.lower() == 'spine' or role.lower() == 'super spine':
-            msg = 'Networks cannot be attached to switch {} with role {}'.format(attach['ip_address'], role)
+        role = self.inventory_data[attach["ip_address"]].get("switchRole")
+        if role.lower() == "spine" or role.lower() == "super spine":
+            msg = "Networks cannot be attached to switch {0} with role {1}".format(
+                attach["ip_address"], role
+            )
             self.module.fail_json(msg=msg)
 
-        attach.update({'fabric': self.fabric})
-        attach.update({'networkName': net_name})
-        attach.update({'serialNumber': serial})
-        attach.update({'switchPorts': ','.join(attach['ports'])})
-        attach.update({'detachSwitchPorts': ""})  # Is this supported??Need to handle correct
-        attach.update({'vlan': 0})
-        attach.update({'dot1QVlan': 0})
-        attach.update({'untagged': False})
-        attach.update({'deployment': deploy})
-        attach.update({'isAttached': deploy})
-        attach.update({'extensionValues': ""})
-        attach.update({'instanceValues': ""})
-        attach.update({'freeformConfig': ""})
-        if 'deploy' in attach:
-            del attach['deploy']
-        del attach['ports']
-        del attach['ip_address']
+        attach.update({"fabric": self.fabric})
+        attach.update({"networkName": net_name})
+        attach.update({"serialNumber": serial})
+        attach.update({"switchPorts": ",".join(attach["ports"])})
+        attach.update(
+            {"detachSwitchPorts": ""}
+        )  # Is this supported??Need to handle correct
+        attach.update({"vlan": 0})
+        attach.update({"dot1QVlan": 0})
+        attach.update({"untagged": False})
+        attach.update({"deployment": deploy})
+        attach.update({"isAttached": deploy})
+        attach.update({"extensionValues": ""})
+        attach.update({"instanceValues": ""})
+        attach.update({"freeformConfig": ""})
+        if "deploy" in attach:
+            del attach["deploy"]
+        del attach["ports"]
+        del attach["ip_address"]
 
         return attach
 
@@ -607,51 +651,57 @@ class DcnmNetwork:
         dhcp3_vrf_changed = False
         dhcp_loopback_changed = False
 
-        if want.get('networkId') and want['networkId'] != have['networkId']:
-            self.module.fail_json(msg="networkId can not be updated on existing network: {}".
-                                  format(want['networkName']))
+        if want.get("networkId") and want["networkId"] != have["networkId"]:
+            self.module.fail_json(
+                msg="networkId can not be updated on existing network: {0}".format(
+                    want["networkName"]
+                )
+            )
 
-        if have['vrf'] != want['vrf']:
-            self.module.fail_json(msg="The network {} existing already can not change"
-                                      " the VRF association from vrf:{} to vrf:{}".
-                                  format(want['networkName'], have['vrf'], want['vrf']))
+        if have["vrf"] != want["vrf"]:
+            self.module.fail_json(
+                msg="The network {0} existing already can not change"
+                " the VRF association from vrf:{1} to vrf:{2}".format(
+                    want["networkName"], have["vrf"], want["vrf"]
+                )
+            )
 
-        json_to_dict_want = json.loads(want['networkTemplateConfig'])
-        json_to_dict_have = json.loads(have['networkTemplateConfig'])
+        json_to_dict_want = json.loads(want["networkTemplateConfig"])
+        json_to_dict_have = json.loads(have["networkTemplateConfig"])
 
-        gw_ip_want = json_to_dict_want.get('gatewayIpAddress', "")
-        gw_ip_have = json_to_dict_have.get('gatewayIpAddress', "")
-        vlanId_want = json_to_dict_want.get('vlanId', "")
-        vlanId_have = json_to_dict_have.get('vlanId')
-        l2only_want = json_to_dict_want.get('isLayer2Only', "")
-        l2only_have = json_to_dict_have.get('isLayer2Only', "")
-        vlanName_want = json_to_dict_want.get('vlanName', "")
-        vlanName_have = json_to_dict_have.get('vlanName', "")
-        intDesc_want = json_to_dict_want.get('intfDescription', "")
-        intDesc_have = json_to_dict_have.get('intfDescription', "")
-        mtu_want = json_to_dict_want.get('mtu', "")
-        mtu_have = json_to_dict_have.get('mtu', "")
-        arpsup_want = json_to_dict_want.get('suppressArp', "")
-        arpsup_have = json_to_dict_have.get('suppressArp', "")
-        dhcp1_ip_want = json_to_dict_want.get('dhcpServerAddr1', "")
-        dhcp1_ip_want = json_to_dict_want.get('dhcpServerAddr1', "")
-        dhcp1_ip_have = json_to_dict_have.get('dhcpServerAddr1', "")
-        dhcp2_ip_want = json_to_dict_want.get('dhcpServerAddr2', "")
-        dhcp2_ip_have = json_to_dict_have.get('dhcpServerAddr2', "")
-        dhcp3_ip_want = json_to_dict_want.get('dhcpServerAddr3', "")
-        dhcp3_ip_have = json_to_dict_have.get('dhcpServerAddr3', "")
-        dhcp1_vrf_want = json_to_dict_want.get('vrfDhcp', "")
-        dhcp1_vrf_have = json_to_dict_have.get('vrfDhcp', "")
-        dhcp2_vrf_want = json_to_dict_want.get('vrfDhcp2', "")
-        dhcp2_vrf_have = json_to_dict_have.get('vrfDhcp2', "")
-        dhcp3_vrf_want = json_to_dict_want.get('vrfDhcp3', "")
-        dhcp3_vrf_have = json_to_dict_have.get('vrfDhcp3', "")
-        dhcp_loopback_want = json_to_dict_want.get('loopbackId', "")
-        dhcp_loopback_have = json_to_dict_have.get('loopbackId', "")
+        gw_ip_want = json_to_dict_want.get("gatewayIpAddress", "")
+        gw_ip_have = json_to_dict_have.get("gatewayIpAddress", "")
+        vlanId_want = json_to_dict_want.get("vlanId", "")
+        vlanId_have = json_to_dict_have.get("vlanId")
+        l2only_want = json_to_dict_want.get("isLayer2Only", "")
+        l2only_have = json_to_dict_have.get("isLayer2Only", "")
+        vlanName_want = json_to_dict_want.get("vlanName", "")
+        vlanName_have = json_to_dict_have.get("vlanName", "")
+        intDesc_want = json_to_dict_want.get("intfDescription", "")
+        intDesc_have = json_to_dict_have.get("intfDescription", "")
+        mtu_want = json_to_dict_want.get("mtu", "")
+        mtu_have = json_to_dict_have.get("mtu", "")
+        arpsup_want = json_to_dict_want.get("suppressArp", "")
+        arpsup_have = json_to_dict_have.get("suppressArp", "")
+        dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
+        dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
+        dhcp1_ip_have = json_to_dict_have.get("dhcpServerAddr1", "")
+        dhcp2_ip_want = json_to_dict_want.get("dhcpServerAddr2", "")
+        dhcp2_ip_have = json_to_dict_have.get("dhcpServerAddr2", "")
+        dhcp3_ip_want = json_to_dict_want.get("dhcpServerAddr3", "")
+        dhcp3_ip_have = json_to_dict_have.get("dhcpServerAddr3", "")
+        dhcp1_vrf_want = json_to_dict_want.get("vrfDhcp", "")
+        dhcp1_vrf_have = json_to_dict_have.get("vrfDhcp", "")
+        dhcp2_vrf_want = json_to_dict_want.get("vrfDhcp2", "")
+        dhcp2_vrf_have = json_to_dict_have.get("vrfDhcp2", "")
+        dhcp3_vrf_want = json_to_dict_want.get("vrfDhcp3", "")
+        dhcp3_vrf_have = json_to_dict_have.get("vrfDhcp3", "")
+        dhcp_loopback_want = json_to_dict_want.get("loopbackId", "")
+        dhcp_loopback_have = json_to_dict_have.get("loopbackId", "")
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
-        tag_want = json_to_dict_want.get('tag', "")
-        tag_have = json_to_dict_have.get('tag')
+        tag_want = json_to_dict_want.get("tag", "")
+        tag_have = json_to_dict_have.get("tag")
         if tag_have != "":
             tag_have = int(tag_have)
         if mtu_have != "":
@@ -667,21 +717,30 @@ class DcnmNetwork:
 
         if vlanId_want:
 
-            if have['networkTemplate'] != want['networkTemplate'] or \
-                    have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
-                    gw_ip_have != gw_ip_want or vlanId_have != vlanId_want or \
-                    tag_have != tag_want or l2only_have != l2only_want or \
-                    vlanName_have != vlanName_want or intDesc_have != intDesc_want or \
-                    mtu_have != mtu_want or arpsup_have != arpsup_want or \
-                    dhcp1_ip_have != dhcp1_ip_want or dhcp2_ip_have != dhcp2_ip_want or \
-                    dhcp3_ip_have != dhcp3_ip_want or dhcp1_vrf_have != dhcp1_vrf_want or \
-                    dhcp2_vrf_have != dhcp2_vrf_want or dhcp3_vrf_have != dhcp3_vrf_want or \
-                    dhcp_loopback_have != dhcp_loopback_want:
+            if (
+                have["networkTemplate"] != want["networkTemplate"]
+                or have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
+                or gw_ip_have != gw_ip_want
+                or vlanId_have != vlanId_want
+                or tag_have != tag_want
+                or l2only_have != l2only_want
+                or vlanName_have != vlanName_want
+                or intDesc_have != intDesc_want
+                or mtu_have != mtu_want
+                or arpsup_have != arpsup_want
+                or dhcp1_ip_have != dhcp1_ip_want
+                or dhcp2_ip_have != dhcp2_ip_want
+                or dhcp3_ip_have != dhcp3_ip_want
+                or dhcp1_vrf_have != dhcp1_vrf_want
+                or dhcp2_vrf_have != dhcp2_vrf_want
+                or dhcp3_vrf_have != dhcp3_vrf_want
+                or dhcp_loopback_have != dhcp_loopback_want
+            ):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
                 if vlanId_have != vlanId_want:
-                    warn_msg = 'The VLAN change will effect only new attachments.'
+                    warn_msg = "The VLAN change will effect only new attachments."
 
                 if gw_ip_have != gw_ip_want:
                     gw_changed = True
@@ -712,20 +771,28 @@ class DcnmNetwork:
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
 
-                want.update({'networkId': have['networkId']})
+                want.update({"networkId": have["networkId"]})
                 create = want
 
         else:
 
-            if have['networkTemplate'] != want['networkTemplate'] or \
-                    have['networkExtensionTemplate'] != want['networkExtensionTemplate'] or \
-                    gw_ip_have != gw_ip_want or tag_have != tag_want or \
-                    l2only_have != l2only_want or vlanName_have != vlanName_want or \
-                    intDesc_have != intDesc_want or mtu_have != mtu_want or \
-                    arpsup_have != arpsup_want or dhcp1_ip_have != dhcp1_ip_want or \
-                    dhcp2_ip_have != dhcp2_ip_want or dhcp3_ip_have != dhcp3_ip_want or \
-                    dhcp1_vrf_have != dhcp1_vrf_want or dhcp2_vrf_have != dhcp2_vrf_want or \
-                    dhcp3_vrf_have != dhcp3_vrf_want:
+            if (
+                have["networkTemplate"] != want["networkTemplate"]
+                or have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
+                or gw_ip_have != gw_ip_want
+                or tag_have != tag_want
+                or l2only_have != l2only_want
+                or vlanName_have != vlanName_want
+                or intDesc_have != intDesc_want
+                or mtu_have != mtu_want
+                or arpsup_have != arpsup_want
+                or dhcp1_ip_have != dhcp1_ip_want
+                or dhcp2_ip_have != dhcp2_ip_want
+                or dhcp3_ip_have != dhcp3_ip_want
+                or dhcp1_vrf_have != dhcp1_vrf_want
+                or dhcp2_vrf_have != dhcp2_vrf_want
+                or dhcp3_vrf_have != dhcp3_vrf_want
+            ):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
@@ -758,79 +825,100 @@ class DcnmNetwork:
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
 
-                want.update({'networkId': have['networkId']})
+                want.update({"networkId": have["networkId"]})
                 create = want
 
-        return create, gw_changed, tg_changed, warn_msg, l2only_changed, vn_changed, \
-            intdesc_changed, mtu_changed, arpsup_changed, dhcp1_ip_changed, dhcp2_ip_changed, \
-            dhcp3_ip_changed, dhcp1_vrf_changed, dhcp2_vrf_changed, dhcp3_vrf_changed, dhcp_loopback_changed
+        return (
+            create,
+            gw_changed,
+            tg_changed,
+            warn_msg,
+            l2only_changed,
+            vn_changed,
+            intdesc_changed,
+            mtu_changed,
+            arpsup_changed,
+            dhcp1_ip_changed,
+            dhcp2_ip_changed,
+            dhcp3_ip_changed,
+            dhcp1_vrf_changed,
+            dhcp2_vrf_changed,
+            dhcp3_vrf_changed,
+            dhcp_loopback_changed,
+        )
 
     def update_create_params(self, net):
 
         if not net:
             return net
 
-        state = self.params['state']
+        state = self.params["state"]
 
-        n_template = net.get('net_template', 'Default_Network_Universal')
-        ne_template = net.get('net_extension_template', 'Default_Network_Extension_Universal')
+        n_template = net.get("net_template", "Default_Network_Universal")
+        ne_template = net.get(
+            "net_extension_template", "Default_Network_Extension_Universal"
+        )
 
-        if state == 'deleted':
+        if state == "deleted":
             net_upd = {
-                'fabric': self.fabric,
-                'networkName': net['net_name'],
-                'networkId': net.get('net_id', None),  # Network id will be auto generated in get_diff_merge()
-                'networkTemplate': n_template,
-                'networkExtensionTemplate': ne_template,
+                "fabric": self.fabric,
+                "networkName": net["net_name"],
+                "networkId": net.get(
+                    "net_id", None
+                ),  # Network id will be auto generated in get_diff_merge()
+                "networkTemplate": n_template,
+                "networkExtensionTemplate": ne_template,
             }
         else:
             net_upd = {
-                'fabric': self.fabric,
-                'vrf': net['vrf_name'],
-                'networkName': net['net_name'],
-                'networkId': net.get('net_id', None),  # Network id will be auto generated in get_diff_merge()
-                'networkTemplate': n_template,
-                'networkExtensionTemplate': ne_template,
+                "fabric": self.fabric,
+                "vrf": net["vrf_name"],
+                "networkName": net["net_name"],
+                "networkId": net.get(
+                    "net_id", None
+                ),  # Network id will be auto generated in get_diff_merge()
+                "networkTemplate": n_template,
+                "networkExtensionTemplate": ne_template,
             }
 
         template_conf = {
-            'vlanId': net.get('vlan_id'),
-            'gatewayIpAddress': net.get('gw_ip_subnet', ""),
-            'isLayer2Only': net.get('is_l2only', False),
-            'tag': net.get('routing_tag'),
-            'vlanName': net.get('vlan_name', ""),
-            'intfDescription': net.get('int_desc', ""),
-            'mtu': net.get('mtu_l3intf', ""),
-            'suppressArp': net.get('arp_suppress', False),
-            'dhcpServerAddr1': net.get('dhcp_srvr1_ip', ""),
-            'dhcpServerAddr2': net.get('dhcp_srvr2_ip', ""),
-            'dhcpServerAddr3': net.get('dhcp_srvr3_ip', ""),
-            'vrfDhcp': net.get('dhcp_srvr1_vrf', ""),
-            'vrfDhcp2': net.get('dhcp_srvr2_vrf', ""),
-            'vrfDhcp3': net.get('dhcp_srvr3_vrf', ""),
-            'loopbackId': net.get('dhcp_loopback_id', "")
+            "vlanId": net.get("vlan_id"),
+            "gatewayIpAddress": net.get("gw_ip_subnet", ""),
+            "isLayer2Only": net.get("is_l2only", False),
+            "tag": net.get("routing_tag"),
+            "vlanName": net.get("vlan_name", ""),
+            "intfDescription": net.get("int_desc", ""),
+            "mtu": net.get("mtu_l3intf", ""),
+            "suppressArp": net.get("arp_suppress", False),
+            "dhcpServerAddr1": net.get("dhcp_srvr1_ip", ""),
+            "dhcpServerAddr2": net.get("dhcp_srvr2_ip", ""),
+            "dhcpServerAddr3": net.get("dhcp_srvr3_ip", ""),
+            "vrfDhcp": net.get("dhcp_srvr1_vrf", ""),
+            "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
+            "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
+            "loopbackId": net.get("dhcp_loopback_id", ""),
         }
 
-        if template_conf['vlanId'] is None:
-            template_conf['vlanId'] = ""
-        if template_conf['tag'] is None:
-            template_conf['tag'] = ""
-        if template_conf['vlanName'] is None:
-            template_conf['vlanName'] = ""
-        if template_conf['intfDescription'] is None:
-            template_conf['intfDescription'] = ""
-        if template_conf['mtu'] is None:
-            template_conf['mtu'] = ""
-        if template_conf['vrfDhcp'] is None:
-            template_conf['vrfDhcp'] = ""
-        if template_conf['vrfDhcp2'] is None:
-            template_conf['vrfDhcp2'] = ""
-        if template_conf['vrfDhcp3'] is None:
-            template_conf['vrfDhcp3'] = ""
-        if template_conf['loopbackId'] is None:
-            template_conf['loopbackId'] = ""
+        if template_conf["vlanId"] is None:
+            template_conf["vlanId"] = ""
+        if template_conf["tag"] is None:
+            template_conf["tag"] = ""
+        if template_conf["vlanName"] is None:
+            template_conf["vlanName"] = ""
+        if template_conf["intfDescription"] is None:
+            template_conf["intfDescription"] = ""
+        if template_conf["mtu"] is None:
+            template_conf["mtu"] = ""
+        if template_conf["vrfDhcp"] is None:
+            template_conf["vrfDhcp"] = ""
+        if template_conf["vrfDhcp2"] is None:
+            template_conf["vrfDhcp2"] = ""
+        if template_conf["vrfDhcp3"] is None:
+            template_conf["vrfDhcp3"] = ""
+        if template_conf["loopbackId"] is None:
+            template_conf["loopbackId"] = ""
 
-        net_upd.update({'networkTemplateConfig': json.dumps(template_conf)})
+        net_upd.update({"networkTemplateConfig": json.dumps(template_conf)})
 
         return net_upd
 
@@ -844,181 +932,196 @@ class DcnmNetwork:
 
         l2only_configured = False
 
-        state = self.params['state']
+        state = self.params["state"]
 
-        method = 'GET'
+        method = "GET"
         path = self.paths["GET_VRF"].format(self.fabric)
 
         vrf_objects = dcnm_send(self.module, method, path)
 
-        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+        missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
         if missing_fabric or not_ok:
-            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
-            msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
+            msg2 = "Unable to find VRFs under fabric: {0}".format(self.fabric)
 
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
 
-        if not state == 'deleted' and not state == 'query':
+        if not state == "deleted" and not state == "query":
             if self.config:
                 for net in self.config:
                     vrf_found = False
-                    vrf_missing = net.get('vrf_name', 'NA')
-                    if (vrf_missing == 'NA' or vrf_missing == "") and net.get('is_l2only', False) is True:
+                    vrf_missing = net.get("vrf_name", "NA")
+                    if (vrf_missing == "NA" or vrf_missing == "") and net.get(
+                        "is_l2only", False
+                    ) is True:
                         # set vrf_missing to NA again as it can be ""
                         vrf_missing = "NA"
                         vrf_found = True
                         l2only_configured = True
                         continue
-                    if vrf_objects['DATA']:
-                        for vrf in vrf_objects['DATA']:
-                            if vrf_missing == vrf['vrfName']:
+                    if vrf_objects["DATA"]:
+                        for vrf in vrf_objects["DATA"]:
+                            if vrf_missing == vrf["vrfName"]:
                                 vrf_found = True
                                 break
                     if not vrf_found:
-                        self.module.fail_json(msg="VRF: {} is missing in fabric: {}".format(vrf_missing, self.fabric))
+                        self.module.fail_json(
+                            msg="VRF: {0} is missing in fabric: {1}".format(
+                                vrf_missing, self.fabric
+                            )
+                        )
 
-        for vrf in vrf_objects['DATA']:
+        for vrf in vrf_objects["DATA"]:
 
-            path = self.paths["GET_VRF_NET"].format(self.fabric, vrf['vrfName'])
+            path = self.paths["GET_VRF_NET"].format(self.fabric, vrf["vrfName"])
 
             networks_per_vrf = dcnm_send(self.module, method, path)
 
-            if not networks_per_vrf['DATA']:
+            if not networks_per_vrf["DATA"]:
                 continue
 
-            for net in networks_per_vrf['DATA']:
-                json_to_dict = json.loads(net['networkTemplateConfig'])
+            for net in networks_per_vrf["DATA"]:
+                json_to_dict = json.loads(net["networkTemplateConfig"])
                 t_conf = {
-                    'vlanId': json_to_dict.get('vlanId', ""),
-                    'gatewayIpAddress': json_to_dict.get('gatewayIpAddress', ""),
-                    'isLayer2Only': json_to_dict.get('isLayer2Only', False),
-                    'tag': json_to_dict.get('tag', ""),
-                    'vlanName': json_to_dict.get('vlanName', ""),
-                    'intfDescription': json_to_dict.get('intfDescription', ""),
-                    'mtu': json_to_dict.get('mtu', ""),
-                    'suppressArp': json_to_dict.get('suppressArp', False),
-                    'dhcpServerAddr1': json_to_dict.get('dhcpServerAddr1', ""),
-                    'dhcpServerAddr2': json_to_dict.get('dhcpServerAddr2', ""),
-                    'dhcpServerAddr3': json_to_dict.get('dhcpServerAddr3', ""),
-                    'vrfDhcp': json_to_dict.get('vrfDhcp', ""),
-                    'vrfDhcp2': json_to_dict.get('vrfDhcp2', ""),
-                    'vrfDhcp3': json_to_dict.get('vrfDhcp3', ""),
-                    'loopbackId': json_to_dict.get('loopbackId', "")
+                    "vlanId": json_to_dict.get("vlanId", ""),
+                    "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+                    "isLayer2Only": json_to_dict.get("isLayer2Only", False),
+                    "tag": json_to_dict.get("tag", ""),
+                    "vlanName": json_to_dict.get("vlanName", ""),
+                    "intfDescription": json_to_dict.get("intfDescription", ""),
+                    "mtu": json_to_dict.get("mtu", ""),
+                    "suppressArp": json_to_dict.get("suppressArp", False),
+                    "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
+                    "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
+                    "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
+                    "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
+                    "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
+                    "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "loopbackId": json_to_dict.get("loopbackId", ""),
                 }
 
-                net.update({'networkTemplateConfig': json.dumps(t_conf)})
-                del net['displayName']
-                del net['serviceNetworkTemplate']
-                del net['source']
+                net.update({"networkTemplateConfig": json.dumps(t_conf)})
+                del net["displayName"]
+                del net["serviceNetworkTemplate"]
+                del net["source"]
 
-                curr_networks.append(net['networkName'])
+                curr_networks.append(net["networkName"])
 
                 have_create.append(net)
 
-        if l2only_configured is True or state == 'deleted':
+        if l2only_configured is True or state == "deleted":
             path = self.paths["GET_VRF_NET"].format(self.fabric, "NA")
             networks_per_navrf = dcnm_send(self.module, method, path)
 
-            if networks_per_navrf.get('DATA'):
-                for l2net in networks_per_navrf['DATA']:
-                    json_to_dict = json.loads(l2net['networkTemplateConfig'])
+            if networks_per_navrf.get("DATA"):
+                for l2net in networks_per_navrf["DATA"]:
+                    json_to_dict = json.loads(l2net["networkTemplateConfig"])
                     t_conf = {
-                        'vlanId': json_to_dict.get('vlanId', ""),
-                        'gatewayIpAddress': json_to_dict.get('gatewayIpAddress', ""),
-                        'isLayer2Only': json_to_dict.get('isLayer2Only', False),
-                        'tag': json_to_dict.get('tag', ""),
-                        'vlanName': json_to_dict.get('vlanName', ""),
-                        'intfDescription': json_to_dict.get('intfDescription', ""),
-                        'mtu': json_to_dict.get('mtu', ""),
-                        'suppressArp': json_to_dict.get('suppressArp', False),
-                        'dhcpServerAddr1': json_to_dict.get('dhcpServerAddr1', ""),
-                        'dhcpServerAddr2': json_to_dict.get('dhcpServerAddr2', ""),
-                        'dhcpServerAddr3': json_to_dict.get('dhcpServerAddr3', ""),
-                        'vrfDhcp': json_to_dict.get('vrfDhcp', ""),
-                        'vrfDhcp2': json_to_dict.get('vrfDhcp2', ""),
-                        'vrfDhcp3': json_to_dict.get('vrfDhcp3', ""),
-                        'loopbackId': json_to_dict.get('loopbackId', "")
+                        "vlanId": json_to_dict.get("vlanId", ""),
+                        "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+                        "isLayer2Only": json_to_dict.get("isLayer2Only", False),
+                        "tag": json_to_dict.get("tag", ""),
+                        "vlanName": json_to_dict.get("vlanName", ""),
+                        "intfDescription": json_to_dict.get("intfDescription", ""),
+                        "mtu": json_to_dict.get("mtu", ""),
+                        "suppressArp": json_to_dict.get("suppressArp", False),
+                        "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
+                        "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
+                        "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
+                        "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
+                        "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
+                        "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                        "loopbackId": json_to_dict.get("loopbackId", ""),
                     }
 
-                    l2net.update({'networkTemplateConfig': json.dumps(t_conf)})
-                    del l2net['displayName']
-                    del l2net['serviceNetworkTemplate']
-                    del l2net['source']
+                    l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
+                    del l2net["displayName"]
+                    del l2net["serviceNetworkTemplate"]
+                    del l2net["source"]
 
-                    curr_networks.append(l2net['networkName'])
+                    curr_networks.append(l2net["networkName"])
 
                     have_create.append(l2net)
 
         if not curr_networks:
             return
 
-        net_attach_objects = dcnm_get_url(self.module, self.fabric, self.paths["GET_NET_ATTACH"], ','.join(curr_networks), "networks")
+        net_attach_objects = dcnm_get_url(
+            self.module,
+            self.fabric,
+            self.paths["GET_NET_ATTACH"],
+            ",".join(curr_networks),
+            "networks",
+        )
 
-        if not net_attach_objects['DATA']:
+        if not net_attach_objects["DATA"]:
             return
 
-        for net_attach in net_attach_objects['DATA']:
-            if not net_attach.get('lanAttachList'):
+        for net_attach in net_attach_objects["DATA"]:
+            if not net_attach.get("lanAttachList"):
                 continue
-            attach_list = net_attach['lanAttachList']
-            dep_net = ''
+            attach_list = net_attach["lanAttachList"]
+            dep_net = ""
             for attach in attach_list:
-                attach_state = False if attach['lanAttachState'] == "NA" else True
-                deploy = attach['isLanAttached']
-                if bool(deploy) and (attach['lanAttachState'] == "OUT-OF-SYNC" or attach['lanAttachState'] == "PENDING"):
+                attach_state = False if attach["lanAttachState"] == "NA" else True
+                deploy = attach["isLanAttached"]
+                if bool(deploy) and (
+                    attach["lanAttachState"] == "OUT-OF-SYNC"
+                    or attach["lanAttachState"] == "PENDING"
+                ):
                     deploy = False
 
                 if bool(deploy):
-                    dep_net = attach['networkName']
+                    dep_net = attach["networkName"]
 
-                sn = attach['switchSerialNo']
-                vlan = attach['vlanId']
-                ports = attach['portNames']
+                sn = attach["switchSerialNo"]
+                vlan = attach["vlanId"]
+                ports = attach["portNames"]
 
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
                 # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
                 # on the attach section of outgoing payload.
 
-                del attach['vlanId']
-                del attach['switchSerialNo']
-                del attach['switchName']
-                del attach['switchRole']
-                del attach['ipAddress']
-                del attach['lanAttachState']
-                del attach['isLanAttached']
-                del attach['fabricName']
-                del attach['portNames']
-                del attach['switchDbId']
-                del attach['networkId']
+                del attach["vlanId"]
+                del attach["switchSerialNo"]
+                del attach["switchName"]
+                del attach["switchRole"]
+                del attach["ipAddress"]
+                del attach["lanAttachState"]
+                del attach["isLanAttached"]
+                del attach["fabricName"]
+                del attach["portNames"]
+                del attach["switchDbId"]
+                del attach["networkId"]
 
-                if 'displayName' in attach.keys():
-                    del attach['displayName']
-                if 'interfaceGroups' in attach.keys():
-                    del attach['interfaceGroups']
+                if "displayName" in attach.keys():
+                    del attach["displayName"]
+                if "interfaceGroups" in attach.keys():
+                    del attach["interfaceGroups"]
 
-                attach.update({'fabric': self.fabric})
-                attach.update({'vlan': vlan})
-                attach.update({'serialNumber': sn})
-                attach.update({'deployment': deploy})
-                attach.update({'extensionValues': ""})
-                attach.update({'instanceValues': ""})
-                attach.update({'freeformConfig': ""})
-                attach.update({'isAttached': attach_state})
-                attach.update({'dot1QVlan': 0})
-                attach.update({'detachSwitchPorts': ""})
-                attach.update({'switchPorts': ports})
-                attach.update({'untagged': False})
+                attach.update({"fabric": self.fabric})
+                attach.update({"vlan": vlan})
+                attach.update({"serialNumber": sn})
+                attach.update({"deployment": deploy})
+                attach.update({"extensionValues": ""})
+                attach.update({"instanceValues": ""})
+                attach.update({"freeformConfig": ""})
+                attach.update({"isAttached": attach_state})
+                attach.update({"dot1QVlan": 0})
+                attach.update({"detachSwitchPorts": ""})
+                attach.update({"switchPorts": ports})
+                attach.update({"untagged": False})
 
             if dep_net:
                 dep_networks.append(dep_net)
 
-        have_attach = net_attach_objects['DATA']
+        have_attach = net_attach_objects["DATA"]
 
         if dep_networks:
-            have_deploy.update({'networkNames': ','.join(dep_networks)})
+            have_deploy.update({"networkNames": ",".join(dep_networks)})
 
         self.have_create = have_create
         self.have_attach = have_attach
@@ -1039,26 +1142,26 @@ class DcnmNetwork:
             net_attach = {}
             networks = []
 
-            net_deploy = net.get('deploy', True)
+            net_deploy = net.get("deploy", True)
 
             want_create.append(self.update_create_params(net))
 
-            if not net.get('attach'):
+            if not net.get("attach"):
                 continue
-            for attach in net['attach']:
-                deploy = net_deploy if "deploy" not in attach else attach['deploy']
-                networks.append(self.update_attach_params(attach,
-                                                          net['net_name'],
-                                                          deploy))
+            for attach in net["attach"]:
+                deploy = net_deploy if "deploy" not in attach else attach["deploy"]
+                networks.append(
+                    self.update_attach_params(attach, net["net_name"], deploy)
+                )
             if networks:
-                net_attach.update({'networkName': net['net_name']})
-                net_attach.update({'lanAttachList': networks})
+                net_attach.update({"networkName": net["net_name"]})
+                net_attach.update({"lanAttachList": networks})
                 want_attach.append(net_attach)
 
-            all_networks += net['net_name'] + ","
+            all_networks += net["net_name"] + ","
 
         if all_networks:
-            want_deploy.update({'networkNames': all_networks[:-1]})
+            want_deploy.update({"networkNames": all_networks[:-1]})
 
         self.want_create = want_create
         self.want_attach = want_attach
@@ -1070,51 +1173,65 @@ class DcnmNetwork:
         diff_undeploy = {}
         diff_delete = {}
 
-        all_nets = ''
+        all_nets = ""
 
         if self.config:
 
             for want_c in self.want_create:
-                if not next((have_c for have_c in self.have_create if have_c['networkName'] == want_c['networkName']), None):
+                if not next(
+                    (
+                        have_c
+                        for have_c in self.have_create
+                        if have_c["networkName"] == want_c["networkName"]
+                    ),
+                    None,
+                ):
                     continue
-                diff_delete.update({want_c['networkName']: 'DEPLOYED'})
+                diff_delete.update({want_c["networkName"]: "DEPLOYED"})
 
-                have_a = next((attach for attach in self.have_attach if attach['networkName'] == want_c['networkName']), None)
+                have_a = next(
+                    (
+                        attach
+                        for attach in self.have_attach
+                        if attach["networkName"] == want_c["networkName"]
+                    ),
+                    None,
+                )
 
                 if not have_a:
                     continue
 
                 to_del = []
-                atch_h = have_a['lanAttachList']
+                atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
-                    if a_h['isAttached']:
-                        del a_h['isAttached']
-                        a_h.update({'deployment': False})
+                    if a_h["isAttached"]:
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
                         to_del.append(a_h)
                 if to_del:
-                    have_a.update({'lanAttachList': to_del})
+                    have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
-                    all_nets += have_a['networkName'] + ","
+                    all_nets += have_a["networkName"] + ","
             if all_nets:
-                diff_undeploy.update({'networkNames': all_nets[:-1]})
+                diff_undeploy.update({"networkNames": all_nets[:-1]})
 
         else:
             for have_a in self.have_attach:
                 to_del = []
-                atch_h = have_a['lanAttachList']
+                atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
-                    if a_h['isAttached']:
-                        del a_h['isAttached']
-                        a_h.update({'deployment': False})
+                    if a_h["isAttached"]:
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
                         to_del.append(a_h)
                 if to_del:
-                    have_a.update({'lanAttachList': to_del})
+                    have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
-                    all_nets += have_a['networkName'] + ","
+                    all_nets += have_a["networkName"] + ","
 
-                diff_delete.update({have_a['networkName']: 'DEPLOYED'})
+                diff_delete.update({have_a["networkName"]: "DEPLOYED"})
             if all_nets:
-                diff_undeploy.update({'networkNames': all_nets[:-1]})
+                diff_undeploy.update({"networkNames": all_nets[:-1]})
 
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
@@ -1122,7 +1239,7 @@ class DcnmNetwork:
 
     def get_diff_override(self):
 
-        all_nets = ''
+        all_nets = ""
         diff_delete = {}
 
         warn_msg = self.get_diff_replace()
@@ -1138,28 +1255,35 @@ class DcnmNetwork:
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
 
-            found = next((net for net in self.want_create if net['networkName'] == have_a['networkName']), None)
+            found = next(
+                (
+                    net
+                    for net in self.want_create
+                    if net["networkName"] == have_a["networkName"]
+                ),
+                None,
+            )
 
             to_del = []
             if not found:
-                atch_h = have_a['lanAttachList']
+                atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
-                    if a_h['isAttached']:
-                        del a_h['isAttached']
-                        a_h.update({'deployment': False})
+                    if a_h["isAttached"]:
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
                         to_del.append(a_h)
 
                 if to_del:
-                    have_a.update({'lanAttachList': to_del})
+                    have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
-                    all_nets += have_a['networkName'] + ","
+                    all_nets += have_a["networkName"] + ","
 
                 # The following is added just to help in deletion, we need to wait for detach transaction to complete
                 # before attempting to delete the network.
-                diff_delete.update({have_a['networkName']: 'DEPLOYED'})
+                diff_delete.update({have_a["networkName"]: "DEPLOYED"})
 
         if all_nets:
-            diff_undeploy.update({'networkNames': all_nets[:-1]})
+            diff_undeploy.update({"networkNames": all_nets[:-1]})
 
         self.diff_create = diff_create
         self.diff_attach = diff_attach
@@ -1171,7 +1295,7 @@ class DcnmNetwork:
 
     def get_diff_replace(self):
 
-        all_nets = ''
+        all_nets = ""
 
         warn_msg = self.get_diff_merge(replace=True)
         diff_create = self.diff_create
@@ -1185,25 +1309,25 @@ class DcnmNetwork:
                 # This block will take care of deleting any attachments that are present only on DCNM
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
                 # but, the attaches may be different to what the DCNM has for the same network.
-                if have_a['networkName'] == want_a['networkName']:
+                if have_a["networkName"] == want_a["networkName"]:
                     h_in_w = True
-                    atch_h = have_a['lanAttachList']
-                    atch_w = want_a.get('lanAttachList')
+                    atch_h = have_a["lanAttachList"]
+                    atch_w = want_a.get("lanAttachList")
 
                     for a_h in atch_h:
-                        if not a_h['isAttached']:
+                        if not a_h["isAttached"]:
                             continue
                         a_match = False
 
                         if atch_w:
                             for a_w in atch_w:
-                                if a_h['serialNumber'] == a_w['serialNumber']:
+                                if a_h["serialNumber"] == a_w["serialNumber"]:
                                     # Have is already in diff, no need to continue looking for it.
                                     a_match = True
                                     break
                         if not a_match:
-                            del a_h['isAttached']
-                            a_h.update({'deployment': False})
+                            del a_h["isAttached"]
+                            a_h.update({"deployment": False})
                             r_net_list.append(a_h)
                     break
 
@@ -1211,31 +1335,38 @@ class DcnmNetwork:
                 # This block will take care of deleting all the attachments which are in DCNM but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
-                found = next((net for net in self.want_create if net['networkName'] == have_a['networkName']), None)
+                found = next(
+                    (
+                        net
+                        for net in self.want_create
+                        if net["networkName"] == have_a["networkName"]
+                    ),
+                    None,
+                )
                 if found:
-                    atch_h = have_a['lanAttachList']
+                    atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
-                        if not a_h['isAttached']:
+                        if not a_h["isAttached"]:
                             continue
-                        del a_h['isAttached']
-                        a_h.update({'deployment': False})
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
                         r_net_list.append(a_h)
 
             if r_net_list:
                 in_diff = False
                 for d_attach in self.diff_attach:
-                    if have_a['networkName'] == d_attach['networkName']:
+                    if have_a["networkName"] == d_attach["networkName"]:
                         in_diff = True
-                        d_attach['lanAttachList'].extend(r_net_list)
+                        d_attach["lanAttachList"].extend(r_net_list)
                         break
 
                 if not in_diff:
                     r_net_dict = {
-                        'networkName': have_a['networkName'],
-                        'lanAttachList': r_net_list
+                        "networkName": have_a["networkName"],
+                        "lanAttachList": r_net_list,
                     }
                     diff_attach.append(r_net_dict)
-                    all_nets += have_a['networkName'] + ","
+                    all_nets += have_a["networkName"] + ","
 
         if not all_nets:
             self.diff_create = diff_create
@@ -1244,10 +1375,10 @@ class DcnmNetwork:
             return warn_msg
 
         if not self.diff_deploy:
-            diff_deploy.update({'networkNames': all_nets[:-1]})
+            diff_deploy.update({"networkNames": all_nets[:-1]})
         else:
-            nets = self.diff_deploy['networkNames'] + "," + all_nets[:-1]
-            diff_deploy.update({'networkNames': nets})
+            nets = self.diff_deploy["networkNames"] + "," + all_nets[:-1]
+            diff_deploy.update({"networkNames": nets})
 
         self.diff_create = diff_create
         self.diff_attach = diff_attach
@@ -1293,75 +1424,104 @@ class DcnmNetwork:
         for want_c in self.want_create:
             found = False
             for have_c in self.have_create:
-                if want_c['networkName'] == have_c['networkName']:
+                if want_c["networkName"] == have_c["networkName"]:
 
                     found = True
-                    diff, gw_chg, tg_chg, warn_msg, l2only_chg, vn_chg, idesc_chg, mtu_chg, \
-                        arpsup_chg, dhcp1_ip_chg, dhcp2_ip_chg, dhcp3_ip_chg, dhcp1_vrf_chg, \
-                        dhcp2_vrf_chg, dhcp3_vrf_chg, dhcp_loopbk_chg = self.diff_for_create(want_c, have_c)
-                    gw_changed.update({want_c['networkName']: gw_chg})
-                    tg_changed.update({want_c['networkName']: tg_chg})
-                    l2only_changed.update({want_c['networkName']: l2only_chg})
-                    vn_changed.update({want_c['networkName']: vn_chg})
-                    intdesc_changed.update({want_c['networkName']: idesc_chg})
-                    mtu_changed.update({want_c['networkName']: mtu_chg})
-                    arpsup_changed.update({want_c['networkName']: arpsup_chg})
-                    dhcp1_ip_changed.update({want_c['networkName']: dhcp1_ip_chg})
-                    dhcp2_ip_changed.update({want_c['networkName']: dhcp2_ip_chg})
-                    dhcp3_ip_changed.update({want_c['networkName']: dhcp3_ip_chg})
-                    dhcp1_vrf_changed.update({want_c['networkName']: dhcp1_vrf_chg})
-                    dhcp2_vrf_changed.update({want_c['networkName']: dhcp2_vrf_chg})
-                    dhcp3_vrf_changed.update({want_c['networkName']: dhcp3_vrf_chg})
-                    dhcp_loopback_changed.update({want_c['networkName']: dhcp_loopbk_chg})
+                    (
+                        diff,
+                        gw_chg,
+                        tg_chg,
+                        warn_msg,
+                        l2only_chg,
+                        vn_chg,
+                        idesc_chg,
+                        mtu_chg,
+                        arpsup_chg,
+                        dhcp1_ip_chg,
+                        dhcp2_ip_chg,
+                        dhcp3_ip_chg,
+                        dhcp1_vrf_chg,
+                        dhcp2_vrf_chg,
+                        dhcp3_vrf_chg,
+                        dhcp_loopbk_chg,
+                    ) = self.diff_for_create(want_c, have_c)
+                    gw_changed.update({want_c["networkName"]: gw_chg})
+                    tg_changed.update({want_c["networkName"]: tg_chg})
+                    l2only_changed.update({want_c["networkName"]: l2only_chg})
+                    vn_changed.update({want_c["networkName"]: vn_chg})
+                    intdesc_changed.update({want_c["networkName"]: idesc_chg})
+                    mtu_changed.update({want_c["networkName"]: mtu_chg})
+                    arpsup_changed.update({want_c["networkName"]: arpsup_chg})
+                    dhcp1_ip_changed.update({want_c["networkName"]: dhcp1_ip_chg})
+                    dhcp2_ip_changed.update({want_c["networkName"]: dhcp2_ip_chg})
+                    dhcp3_ip_changed.update({want_c["networkName"]: dhcp3_ip_chg})
+                    dhcp1_vrf_changed.update({want_c["networkName"]: dhcp1_vrf_chg})
+                    dhcp2_vrf_changed.update({want_c["networkName"]: dhcp2_vrf_chg})
+                    dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
+                    dhcp_loopback_changed.update(
+                        {want_c["networkName"]: dhcp_loopbk_chg}
+                    )
                     if diff:
                         diff_create_update.append(diff)
                     break
             if not found:
-                net_id = want_c.get('networkId', None)
+                net_id = want_c.get("networkId", None)
 
                 if not net_id:
                     # networkId(VNI-id) is not provided by user.
                     # Need to query DCNM to fetch next available networkId and use it here.
 
-                    method = 'POST'
+                    method = "POST"
 
                     attempt = 0
-                    while True and attempt < 10:
+                    while attempt < 10:
                         attempt += 1
                         path = self.paths["GET_NET_ID"].format(self.fabric)
                         if self.dcnm_version > 11:
-                            net_id_obj = dcnm_send(self.module, 'GET', path)
+                            net_id_obj = dcnm_send(self.module, "GET", path)
                         else:
                             net_id_obj = dcnm_send(self.module, method, path)
 
-                        missing_fabric, not_ok = self.handle_response(net_id_obj, 'query_dcnm')
+                        missing_fabric, not_ok = self.handle_response(
+                            net_id_obj, "query_dcnm"
+                        )
 
                         if missing_fabric or not_ok:
-                            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
-                            msg2 = "Unable to generate networkId for network: {} " \
-                                   "under fabric: {}".format(want_c['networkName'], self.fabric)
+                            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
+                            msg2 = (
+                                "Unable to generate networkId for network: {0} "
+                                "under fabric: {1}".format(
+                                    want_c["networkName"], self.fabric
+                                )
+                            )
 
                             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-                        if not net_id_obj['DATA']:
+                        if not net_id_obj["DATA"]:
                             continue
 
                         if self.dcnm_version == 11:
-                            net_id = net_id_obj['DATA'].get('segmentId')
+                            net_id = net_id_obj["DATA"].get("segmentId")
                         elif self.dcnm_version >= 12:
-                            net_id = net_id_obj['DATA'].get('l2vni')
+                            net_id = net_id_obj["DATA"].get("l2vni")
                         else:
-                            msg = "Unsupported DCNM version: version {}".format(self.dcnm_version)
+                            msg = "Unsupported DCNM version: version {0}".format(
+                                self.dcnm_version
+                            )
                             self.module.fail_json(msg)
 
                         if net_id != prev_net_id_fetched:
-                            want_c.update({'networkId': net_id})
+                            want_c.update({"networkId": net_id})
                             prev_net_id_fetched = net_id
                             break
 
                     if not net_id:
-                        self.module.fail_json(msg="Unable to generate networkId for network: {} "
-                                                  "under fabric: {}".format(want_c['networkName'], self.fabric))
+                        self.module.fail_json(
+                            msg="Unable to generate networkId for network: {0} "
+                            "under fabric: {1}".format(
+                                want_c["networkName"], self.fabric
+                            )
+                        )
 
                     create_path = self.paths["GET_NET"].format(self.fabric)
                     diff_create_quick.append(want_c)
@@ -1369,9 +1529,11 @@ class DcnmNetwork:
                     if self.module.check_mode:
                         continue
 
-                    resp = dcnm_send(self.module, method, create_path, json.dumps(want_c))
-                    self.result['response'].append(resp)
-                    fail, self.result['changed'] = self.handle_response(resp, "create")
+                    resp = dcnm_send(
+                        self.module, method, create_path, json.dumps(want_c)
+                    )
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "create")
                     if fail:
                         self.failure(resp)
 
@@ -1380,56 +1542,60 @@ class DcnmNetwork:
 
         all_nets = []
         for want_a in self.want_attach:
-            dep_net = ''
+            dep_net = ""
             found = False
             for have_a in self.have_attach:
-                if want_a['networkName'] == have_a['networkName']:
+                if want_a["networkName"] == have_a["networkName"]:
 
                     found = True
-                    diff, net = self.diff_for_attach_deploy(want_a['lanAttachList'], have_a['lanAttachList'],
-                                                            replace)
+                    diff, net = self.diff_for_attach_deploy(
+                        want_a["lanAttachList"], have_a["lanAttachList"], replace
+                    )
 
                     if diff:
                         base = want_a.copy()
-                        del base['lanAttachList']
-                        base.update({'lanAttachList': diff})
+                        del base["lanAttachList"]
+                        base.update({"lanAttachList": diff})
                         diff_attach.append(base)
-                        dep_net = want_a['networkName']
+                        dep_net = want_a["networkName"]
                     else:
-                        if net or gw_changed.get(want_a['networkName'], False) or \
-                            tg_changed.get(want_a['networkName'], False) or \
-                            l2only_changed.get(want_a['networkName'], False) or \
-                            vn_changed.get(want_a['networkName'], False) or \
-                            intdesc_changed.get(want_a['networkName'], False) or \
-                            mtu_changed.get(want_a['networkName'], False) or \
-                            arpsup_changed.get(want_a['networkName'], False) or \
-                            dhcp1_ip_changed.get(want_a['networkName'], False) or \
-                            dhcp2_ip_changed.get(want_a['networkName'], False) or \
-                            dhcp3_ip_changed.get(want_a['networkName'], False) or \
-                            dhcp1_vrf_changed.get(want_a['networkName'], False) or \
-                            dhcp2_vrf_changed.get(want_a['networkName'], False) or \
-                            dhcp3_vrf_changed.get(want_a['networkName'], False) or \
-                            dhcp_loopback_changed.get(want_a['networkName'], False):
-                            dep_net = want_a['networkName']
+                        if (
+                            net
+                            or gw_changed.get(want_a["networkName"], False)
+                            or tg_changed.get(want_a["networkName"], False)
+                            or l2only_changed.get(want_a["networkName"], False)
+                            or vn_changed.get(want_a["networkName"], False)
+                            or intdesc_changed.get(want_a["networkName"], False)
+                            or mtu_changed.get(want_a["networkName"], False)
+                            or arpsup_changed.get(want_a["networkName"], False)
+                            or dhcp1_ip_changed.get(want_a["networkName"], False)
+                            or dhcp2_ip_changed.get(want_a["networkName"], False)
+                            or dhcp3_ip_changed.get(want_a["networkName"], False)
+                            or dhcp1_vrf_changed.get(want_a["networkName"], False)
+                            or dhcp2_vrf_changed.get(want_a["networkName"], False)
+                            or dhcp3_vrf_changed.get(want_a["networkName"], False)
+                            or dhcp_loopback_changed.get(want_a["networkName"], False)
+                        ):
+                            dep_net = want_a["networkName"]
 
-            if not found and want_a.get('lanAttachList'):
+            if not found and want_a.get("lanAttachList"):
                 atch_list = []
-                for attach in want_a['lanAttachList']:
-                    del attach['isAttached']
-                    if bool(attach['deployment']):
+                for attach in want_a["lanAttachList"]:
+                    del attach["isAttached"]
+                    if bool(attach["deployment"]):
                         atch_list.append(attach)
                 if atch_list:
                     base = want_a.copy()
-                    del base['lanAttachList']
-                    base.update({'lanAttachList': atch_list})
+                    del base["lanAttachList"]
+                    base.update({"lanAttachList": atch_list})
                     diff_attach.append(base)
-                    dep_net = want_a['networkName']
+                    dep_net = want_a["networkName"]
 
             if dep_net:
                 all_nets.append(dep_net)
 
         if all_nets:
-            diff_deploy.update({'networkNames': ','.join(all_nets)})
+            diff_deploy.update({"networkNames": ",".join(all_nets)})
 
         self.diff_create = diff_create
         self.diff_create_update = diff_create_update
@@ -1448,8 +1614,12 @@ class DcnmNetwork:
         diff_create_update = copy.deepcopy(self.diff_create_update)
         diff_attach = copy.deepcopy(self.diff_attach)
         diff_detach = copy.deepcopy(self.diff_detach)
-        diff_deploy = self.diff_deploy['networkNames'].split(",") if self.diff_deploy else []
-        diff_undeploy = self.diff_undeploy['networkNames'].split(",") if self.diff_undeploy else []
+        diff_deploy = (
+            self.diff_deploy["networkNames"].split(",") if self.diff_deploy else []
+        )
+        diff_undeploy = (
+            self.diff_undeploy["networkNames"].split(",") if self.diff_undeploy else []
+        )
 
         diff_create.extend(diff_create_quick)
         diff_create.extend(diff_create_update)
@@ -1458,65 +1628,74 @@ class DcnmNetwork:
 
         for want_d in diff_create:
 
-            found_a = next((net for net in diff_attach if net['networkName'] == want_d['networkName']), None)
+            found_a = next(
+                (
+                    net
+                    for net in diff_attach
+                    if net["networkName"] == want_d["networkName"]
+                ),
+                None,
+            )
 
             found_c = want_d
 
-            json_to_dict = json.loads(found_c['networkTemplateConfig'])
+            json_to_dict = json.loads(found_c["networkTemplateConfig"])
 
-            found_c.update({'net_name': found_c['networkName']})
-            found_c.update({'vrf_name': found_c.get('vrf', "NA")})
-            found_c.update({'net_id': found_c['networkId']})
-            found_c.update({'vlan_id': json_to_dict.get('vlanId', "")})
-            found_c.update({'gw_ip_subnet': json_to_dict.get('gatewayIpAddress', "")})
-            found_c.update({'net_template': found_c['networkTemplate']})
-            found_c.update({'net_extension_template': found_c['networkExtensionTemplate']})
-            found_c.update({'is_l2only': json_to_dict.get('isLayer2Only', False)})
-            found_c.update({'vlan_name': json_to_dict.get('vlanName', "")})
-            found_c.update({'int_desc': json_to_dict.get('intfDescription', "")})
-            found_c.update({'mtu_l3intf': json_to_dict.get('mtu', "")})
-            found_c.update({'arp_suppress': json_to_dict.get('suppressArp', False)})
-            found_c.update({'dhcp_srvr1_ip': json_to_dict.get('dhcpServerAddr1', "")})
-            found_c.update({'dhcp_srvr2_ip': json_to_dict.get('dhcpServerAddr2', "")})
-            found_c.update({'dhcp_srvr3_ip': json_to_dict.get('dhcpServerAddr3', "")})
-            found_c.update({'dhcp_srvr1_vrf': json_to_dict.get('vrfDhcp', "")})
-            found_c.update({'dhcp_srvr2_vrf': json_to_dict.get('vrfDhcp2', "")})
-            found_c.update({'dhcp_srvr3_vrf': json_to_dict.get('vrfDhcp3', "")})
-            found_c.update({'dhcp_loopback_id': json_to_dict.get('loopbackId', "")})
-            found_c.update({'attach': []})
+            found_c.update({"net_name": found_c["networkName"]})
+            found_c.update({"vrf_name": found_c.get("vrf", "NA")})
+            found_c.update({"net_id": found_c["networkId"]})
+            found_c.update({"vlan_id": json_to_dict.get("vlanId", "")})
+            found_c.update({"gw_ip_subnet": json_to_dict.get("gatewayIpAddress", "")})
+            found_c.update({"net_template": found_c["networkTemplate"]})
+            found_c.update(
+                {"net_extension_template": found_c["networkExtensionTemplate"]}
+            )
+            found_c.update({"is_l2only": json_to_dict.get("isLayer2Only", False)})
+            found_c.update({"vlan_name": json_to_dict.get("vlanName", "")})
+            found_c.update({"int_desc": json_to_dict.get("intfDescription", "")})
+            found_c.update({"mtu_l3intf": json_to_dict.get("mtu", "")})
+            found_c.update({"arp_suppress": json_to_dict.get("suppressArp", False)})
+            found_c.update({"dhcp_srvr1_ip": json_to_dict.get("dhcpServerAddr1", "")})
+            found_c.update({"dhcp_srvr2_ip": json_to_dict.get("dhcpServerAddr2", "")})
+            found_c.update({"dhcp_srvr3_ip": json_to_dict.get("dhcpServerAddr3", "")})
+            found_c.update({"dhcp_srvr1_vrf": json_to_dict.get("vrfDhcp", "")})
+            found_c.update({"dhcp_srvr2_vrf": json_to_dict.get("vrfDhcp2", "")})
+            found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
+            found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
+            found_c.update({"attach": []})
 
-            del found_c['fabric']
-            del found_c['networkName']
-            del found_c['networkId']
-            del found_c['networkTemplate']
-            del found_c['networkExtensionTemplate']
-            del found_c['networkTemplateConfig']
-            del found_c['vrf']
+            del found_c["fabric"]
+            del found_c["networkName"]
+            del found_c["networkId"]
+            del found_c["networkTemplate"]
+            del found_c["networkExtensionTemplate"]
+            del found_c["networkTemplateConfig"]
+            del found_c["vrf"]
 
-            if diff_deploy and found_c['net_name'] in diff_deploy:
-                diff_deploy.remove(found_c['net_name'])
+            if diff_deploy and found_c["net_name"] in diff_deploy:
+                diff_deploy.remove(found_c["net_name"])
             if not found_a:
                 diff.append(found_c)
                 continue
 
-            attach = found_a['lanAttachList']
+            attach = found_a["lanAttachList"]
 
             for a_w in attach:
                 attach_d = {}
                 detach_d = {}
 
                 for k, v in self.ip_sn.items():
-                    if v == a_w['serialNumber']:
-                        attach_d.update({'ip_address': k})
+                    if v == a_w["serialNumber"]:
+                        attach_d.update({"ip_address": k})
                         break
-                if a_w['detachSwitchPorts']:
-                    detach_d.update({'ip_address': attach_d['ip_address']})
-                    detach_d.update({'ports': a_w['detachSwitchPorts']})
-                    detach_d.update({'deploy': False})
-                    found_c['attach'].append(detach_d)
-                attach_d.update({'ports': a_w['switchPorts']})
-                attach_d.update({'deploy': a_w['deployment']})
-                found_c['attach'].append(attach_d)
+                if a_w["detachSwitchPorts"]:
+                    detach_d.update({"ip_address": attach_d["ip_address"]})
+                    detach_d.update({"ports": a_w["detachSwitchPorts"]})
+                    detach_d.update({"deploy": False})
+                    found_c["attach"].append(detach_d)
+                attach_d.update({"ports": a_w["switchPorts"]})
+                attach_d.update({"deploy": a_w["deployment"]})
+                found_c["attach"].append(attach_d)
 
             diff.append(found_c)
 
@@ -1525,50 +1704,50 @@ class DcnmNetwork:
         for vrf in diff_attach:
             new_attach_dict = {}
             new_attach_list = []
-            attach = vrf['lanAttachList']
+            attach = vrf["lanAttachList"]
 
             for a_w in attach:
                 attach_d = {}
                 detach_d = {}
 
                 for k, v in self.ip_sn.items():
-                    if v == a_w['serialNumber']:
-                        attach_d.update({'ip_address': k})
+                    if v == a_w["serialNumber"]:
+                        attach_d.update({"ip_address": k})
                         break
-                if a_w['detachSwitchPorts']:
-                    detach_d.update({'ip_address': attach_d['ip_address']})
-                    detach_d.update({'ports': a_w['detachSwitchPorts']})
-                    detach_d.update({'deploy': False})
+                if a_w["detachSwitchPorts"]:
+                    detach_d.update({"ip_address": attach_d["ip_address"]})
+                    detach_d.update({"ports": a_w["detachSwitchPorts"]})
+                    detach_d.update({"deploy": False})
                     new_attach_list.append(detach_d)
-                attach_d.update({'ports': a_w['switchPorts']})
-                attach_d.update({'deploy': a_w['deployment']})
+                attach_d.update({"ports": a_w["switchPorts"]})
+                attach_d.update({"deploy": a_w["deployment"]})
                 new_attach_list.append(attach_d)
 
             if new_attach_list:
-                if diff_deploy and vrf['networkName'] in diff_deploy:
-                    diff_deploy.remove(vrf['networkName'])
-                new_attach_dict.update({'attach': new_attach_list})
-                new_attach_dict.update({'net_name': vrf['networkName']})
+                if diff_deploy and vrf["networkName"] in diff_deploy:
+                    diff_deploy.remove(vrf["networkName"])
+                new_attach_dict.update({"attach": new_attach_list})
+                new_attach_dict.update({"net_name": vrf["networkName"]})
                 diff.append(new_attach_dict)
 
         for net in diff_deploy:
-            new_deploy_dict = {'net_name': net}
+            new_deploy_dict = {"net_name": net}
             diff.append(new_deploy_dict)
 
         self.diff_input_format = diff
 
     def get_diff_query(self):
 
-        method = 'GET'
+        method = "GET"
         path = self.paths["GET_VRF"].format(self.fabric)
 
         vrf_objects = dcnm_send(self.module, method, path)
 
-        missing_fabric, not_ok = self.handle_response(vrf_objects, 'query_dcnm')
+        missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
         if missing_fabric or not_ok:
-            msg1 = "Fabric {} not present on DCNM".format(self.fabric)
-            msg2 = "Unable to find VRFs under fabric: {}".format(self.fabric)
+            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
+            msg2 = "Unable to find VRFs under fabric: {0}".format(self.fabric)
 
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
@@ -1578,34 +1757,40 @@ class DcnmNetwork:
             if self.have_create or self.have_attach:
                 for want_c in self.want_create:
                     # Query the Network
-                    item = {'parent': {}, 'attach': []}
-                    path = self.paths["GET_NET_NAME"].format(self.fabric, want_c['networkName'])
+                    item = {"parent": {}, "attach": []}
+                    path = self.paths["GET_NET_NAME"].format(
+                        self.fabric, want_c["networkName"]
+                    )
                     network = dcnm_send(self.module, method, path)
 
-                    if not network['DATA']:
+                    if not network["DATA"]:
                         continue
 
-                    net = network['DATA']
-                    if (want_c['networkName'] == net['networkName']):
-                        item['parent'] = net
-                        item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
+                    net = network["DATA"]
+                    if want_c["networkName"] == net["networkName"]:
+                        item["parent"] = net
+                        item["parent"]["networkTemplateConfig"] = json.loads(
+                            net["networkTemplateConfig"]
+                        )
 
                         # Query the Attachment for the found Networks
-                        path = self.paths["GET_NET_ATTACH"].format(self.fabric, want_c['networkName'])
+                        path = self.paths["GET_NET_ATTACH"].format(
+                            self.fabric, want_c["networkName"]
+                        )
                         net_attach_objects = dcnm_send(self.module, method, path)
 
-                        if not net_attach_objects['DATA']:
+                        if not net_attach_objects["DATA"]:
                             return
 
-                        for net_attach in net_attach_objects['DATA']:
-                            if want_c['networkName'] == net_attach['networkName']:
-                                if not net_attach.get('lanAttachList'):
+                        for net_attach in net_attach_objects["DATA"]:
+                            if want_c["networkName"] == net_attach["networkName"]:
+                                if not net_attach.get("lanAttachList"):
                                     continue
-                                attach_list = net_attach['lanAttachList']
+                                attach_list = net_attach["lanAttachList"]
 
                                 for attach in attach_list:
                                     # append the attach network details
-                                    item['attach'].append(attach)
+                                    item["attach"].append(attach)
                                 query.append(item)
 
         else:
@@ -1613,37 +1798,41 @@ class DcnmNetwork:
             path = self.paths["GET_NET"].format(self.fabric)
             networks = dcnm_send(self.module, method, path)
 
-            if not networks['DATA']:
+            if not networks["DATA"]:
                 return
 
-            for net in networks['DATA']:
-                item = {'parent': {}, 'attach': []}
+            for net in networks["DATA"]:
+                item = {"parent": {}, "attach": []}
                 # append the parent network details
-                item['parent'] = net
-                item['parent']['networkTemplateConfig'] = json.loads(net['networkTemplateConfig'])
+                item["parent"] = net
+                item["parent"]["networkTemplateConfig"] = json.loads(
+                    net["networkTemplateConfig"]
+                )
 
                 # fetch the attachment for the network
-                path = self.paths["GET_NET_ATTACH"].format(self.fabric, net['networkName'])
+                path = self.paths["GET_NET_ATTACH"].format(
+                    self.fabric, net["networkName"]
+                )
                 net_attach_objects = dcnm_send(self.module, method, path)
 
-                if not net_attach_objects['DATA']:
+                if not net_attach_objects["DATA"]:
                     return
 
-                for net_attach in net_attach_objects['DATA']:
-                    if not net_attach.get('lanAttachList'):
+                for net_attach in net_attach_objects["DATA"]:
+                    if not net_attach.get("lanAttachList"):
                         continue
-                    attach_list = net_attach['lanAttachList']
+                    attach_list = net_attach["lanAttachList"]
 
                     for attach in attach_list:
                         # append the attach network details
-                        item['attach'].append(attach)
+                        item["attach"].append(attach)
                     query.append(item)
 
         self.query = query
 
     def wait_for_del_ready(self):
 
-        method = 'GET'
+        method = "GET"
         if self.diff_delete:
             for net in self.diff_delete:
                 state = False
@@ -1651,18 +1840,21 @@ class DcnmNetwork:
                 while not state:
                     resp = dcnm_send(self.module, method, path)
                     state = True
-                    if resp['DATA']:
-                        attach_list = resp['DATA'][0]['lanAttachList']
+                    if resp["DATA"]:
+                        attach_list = resp["DATA"][0]["lanAttachList"]
                         for atch in attach_list:
-                            if atch['lanAttachState'] == 'OUT-OF-SYNC' or atch['lanAttachState'] == 'FAILED':
-                                self.diff_delete.update({net: 'OUT-OF-SYNC'})
+                            if (
+                                atch["lanAttachState"] == "OUT-OF-SYNC"
+                                or atch["lanAttachState"] == "FAILED"
+                            ):
+                                self.diff_delete.update({net: "OUT-OF-SYNC"})
                                 break
-                            if atch['lanAttachState'] != 'NA':
-                                self.diff_delete.update({net: 'DEPLOYED'})
+                            if atch["lanAttachState"] != "NA":
+                                self.diff_delete.update({net: "DEPLOYED"})
                                 state = False
                                 time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                                 break
-                            self.diff_delete.update({net: 'NA'})
+                            self.diff_delete.update({net: "NA"})
 
             return True
 
@@ -1671,20 +1863,20 @@ class DcnmNetwork:
             return
 
         for list_elem in diff:
-            for node in list_elem['lanAttachList']:
-                node['fabric'] = self.sn_fab[node['serialNumber']]
+            for node in list_elem["lanAttachList"]:
+                node["fabric"] = self.sn_fab[node["serialNumber"]]
 
     def push_to_remote(self, is_rollback=False):
 
         path = self.paths["GET_NET"].format(self.fabric)
 
-        method = 'PUT'
+        method = "PUT"
         if self.diff_create_update:
             for net in self.diff_create_update:
-                update_path = path + '/{}'.format(net['networkName'])
+                update_path = path + "/{0}".format(net["networkName"])
                 resp = dcnm_send(self.module, method, update_path, json.dumps(net))
-                self.result['response'].append(resp)
-                fail, self.result['changed'] = self.handle_response(resp, "create")
+                self.result["response"].append(resp)
+                fail, self.result["changed"] = self.handle_response(resp, "create")
                 if fail:
                     if is_rollback:
                         self.failed_to_rollback = True
@@ -1697,45 +1889,49 @@ class DcnmNetwork:
         # needed specially for state: overridden
         #
 
-        method = 'POST'
+        method = "POST"
         if self.diff_detach:
-            detach_path = path + '/attachments'
+            detach_path = path + "/attachments"
 
             # Update the fabric name to specific fabric which the switches are part of.
             self.update_ms_fabric(self.diff_detach)
 
-            resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
-            self.result['response'].append(resp)
-            fail, self.result['changed'] = self.handle_response(resp, "attach")
+            resp = dcnm_send(
+                self.module, method, detach_path, json.dumps(self.diff_detach)
+            )
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "attach")
             if fail:
                 if is_rollback:
                     self.failed_to_rollback = True
                     return
                 self.failure(resp)
 
-        method = 'POST'
+        method = "POST"
         if self.diff_undeploy:
-            deploy_path = path + '/deployments'
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
-            self.result['response'].append(resp)
-            fail, self.result['changed'] = self.handle_response(resp, "deploy")
+            deploy_path = path + "/deployments"
+            resp = dcnm_send(
+                self.module, method, deploy_path, json.dumps(self.diff_undeploy)
+            )
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
             if fail:
                 if is_rollback:
                     self.failed_to_rollback = True
                     return
                 self.failure(resp)
 
-        method = 'DELETE'
-        del_failure = ''
+        method = "DELETE"
+        del_failure = ""
         if self.diff_delete and self.wait_for_del_ready():
             for net, state in self.diff_delete.items():
-                if state == 'OUT-OF-SYNC':
+                if state == "OUT-OF-SYNC":
                     del_failure += net + ","
                     continue
                 delete_path = path + "/" + net
                 resp = dcnm_send(self.module, method, delete_path)
-                self.result['response'].append(resp)
-                fail, self.result['changed'] = self.handle_response(resp, "delete")
+                self.result["response"].append(resp)
+                fail, self.result["changed"] = self.handle_response(resp, "delete")
                 if fail:
                     if is_rollback:
                         self.failed_to_rollback = True
@@ -1743,8 +1939,8 @@ class DcnmNetwork:
                     self.failure(resp)
 
         if del_failure:
-            resp = 'Deletion of Networkss {} has failed'.format(del_failure[:-1])
-            self.result['response'].append(resp)
+            resp = "Deletion of Networkss {0} has failed".format(del_failure[:-1])
+            self.result["response"].append(resp)
             if is_rollback:
                 self.failed_to_rollback = True
                 return
@@ -1752,67 +1948,75 @@ class DcnmNetwork:
 
         if self.diff_create:
             for net in self.diff_create:
-                json_to_dict = json.loads(net['networkTemplateConfig'])
-                vlanId = json_to_dict.get('vlanId', "")
+                json_to_dict = json.loads(net["networkTemplateConfig"])
+                vlanId = json_to_dict.get("vlanId", "")
 
                 if not vlanId:
                     vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-                    vlan_data = dcnm_send(self.module, 'GET', vlan_path)
+                    vlan_data = dcnm_send(self.module, "GET", vlan_path)
 
-                    if vlan_data['RETURN_CODE'] != 200:
-                        self.module.fail_json(msg='Failure getting autogenerated vlan_id {}'.format(vlan_data))
-                    vlanId = vlan_data['DATA']
+                    if vlan_data["RETURN_CODE"] != 200:
+                        self.module.fail_json(
+                            msg="Failure getting autogenerated vlan_id {0}".format(
+                                vlan_data
+                            )
+                        )
+                    vlanId = vlan_data["DATA"]
 
                 t_conf = {
-                    'vlanId': vlanId,
-                    'gatewayIpAddress': json_to_dict.get('gatewayIpAddress', ""),
-                    'isLayer2Only': json_to_dict.get('isLayer2Only', False),
-                    'tag': json_to_dict.get('tag', ""),
-                    'vlanName': json_to_dict.get('vlanName', ""),
-                    'intfDescription': json_to_dict.get('intfDescription', ""),
-                    'mtu': json_to_dict.get('mtu', ""),
-                    'suppressArp': json_to_dict.get('suppressArp', False),
-                    'dhcpServerAddr1': json_to_dict.get('dhcpServerAddr1', ""),
-                    'dhcpServerAddr2': json_to_dict.get('dhcpServerAddr2', ""),
-                    'dhcpServerAddr3': json_to_dict.get('dhcpServerAddr3', ""),
-                    'vrfDhcp': json_to_dict.get('vrfDhcp', ""),
-                    'vrfDhcp2': json_to_dict.get('vrfDhcp2', ""),
-                    'vrfDhcp3': json_to_dict.get('vrfDhcp3', ""),
-                    'loopbackId': json_to_dict.get('loopbackId', "")
+                    "vlanId": vlanId,
+                    "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+                    "isLayer2Only": json_to_dict.get("isLayer2Only", False),
+                    "tag": json_to_dict.get("tag", ""),
+                    "vlanName": json_to_dict.get("vlanName", ""),
+                    "intfDescription": json_to_dict.get("intfDescription", ""),
+                    "mtu": json_to_dict.get("mtu", ""),
+                    "suppressArp": json_to_dict.get("suppressArp", False),
+                    "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
+                    "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
+                    "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
+                    "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
+                    "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
+                    "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "loopbackId": json_to_dict.get("loopbackId", ""),
                 }
 
-                net.update({'networkTemplateConfig': json.dumps(t_conf)})
+                net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
-                method = 'POST'
+                method = "POST"
                 resp = dcnm_send(self.module, method, path, json.dumps(net))
-                self.result['response'].append(resp)
-                fail, self.result['changed'] = self.handle_response(resp, "create")
+                self.result["response"].append(resp)
+                fail, self.result["changed"] = self.handle_response(resp, "create")
                 if fail:
                     if is_rollback:
                         self.failed_to_rollback = True
                         return
                     self.failure(resp)
 
-        method = 'POST'
+        method = "POST"
         if self.diff_attach:
-            attach_path = path + '/attachments'
+            attach_path = path + "/attachments"
 
             # Update the fabric name to specific fabric which the switches are part of.
             self.update_ms_fabric(self.diff_attach)
 
             for attempt in range(0, 50):
-                resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
+                resp = dcnm_send(
+                    self.module, method, attach_path, json.dumps(self.diff_attach)
+                )
                 update_in_progress = False
-                for key in resp['DATA'].keys():
-                    if re.search(r'Failed.*Please try after some time', str(resp['DATA'][key])):
+                for key in resp["DATA"].keys():
+                    if re.search(
+                        r"Failed.*Please try after some time", str(resp["DATA"][key])
+                    ):
                         update_in_progress = True
                 if update_in_progress:
                     time.sleep(1)
                     continue
-                else:
-                    break
-            self.result['response'].append(resp)
-            fail, self.result['changed'] = self.handle_response(resp, "attach")
+
+                break
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "attach")
             # If we get here and an update_in_progress is True then
             # not all of the attachments were successful which represents a
             # failure condition.
@@ -1822,12 +2026,14 @@ class DcnmNetwork:
                     return
                 self.failure(resp)
 
-        method = 'POST'
+        method = "POST"
         if self.diff_deploy:
-            deploy_path = path + '/deployments'
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_deploy))
-            self.result['response'].append(resp)
-            fail, self.result['changed'] = self.handle_response(resp, "deploy")
+            deploy_path = path + "/deployments"
+            resp = dcnm_send(
+                self.module, method, deploy_path, json.dumps(self.diff_deploy)
+            )
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
             if fail:
                 if is_rollback:
                     self.failed_to_rollback = True
@@ -1837,133 +2043,184 @@ class DcnmNetwork:
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
 
-        state = self.params['state']
+        state = self.params["state"]
 
-        if state == 'query':
+        if state == "query":
 
             net_spec = dict(
-                net_name=dict(required=True, type='str', length_max=64),
-                net_id=dict(type='int', range_max=16777214),
-                vrf_name=dict(type='str', length_max=32),
-                attach=dict(type='list'),
-                deploy=dict(type='bool'),
-                gw_ip_subnet=dict(type='ipv4_subnet', default=""),
-                vlan_id=dict(type='int', range_max=4094),
-                routing_tag=dict(type='int', default=12345, range_max=4294967295),
-                net_template=dict(type='str', default='Default_Network_Universal'),
-                net_extension_template=dict(type='str', default='Default_Network_Extension_Universal'),
-                is_l2only=dict(type='bool', default=False),
-                vlan_name=dict(type='str', length_max=128),
-                int_desc=dict(type='str', length_max=258),
-                mtu_l3intf=dict(type='int', range_min=68, range_max=9216),
-                arp_suppress=dict(type='bool', default=False),
-                dhcp_srvr1_ip=dict(type='ipv4', default=""),
-                dhcp_srvr2_ip=dict(type='ipv4', default=""),
-                dhcp_srvr3_ip=dict(type='ipv4', default=""),
-                dhcp_srvr1_vrf=dict(type='str', length_max=32),
-                dhcp_srvr2_vrf=dict(type='str', length_max=32),
-                dhcp_srvr3_vrf=dict(type='str', length_max=32),
-                dhcp_loopback_id=dict(type='int', range_min=0, range_max=1023)
+                net_name=dict(required=True, type="str", length_max=64),
+                net_id=dict(type="int", range_max=16777214),
+                vrf_name=dict(type="str", length_max=32),
+                attach=dict(type="list"),
+                deploy=dict(type="bool"),
+                gw_ip_subnet=dict(type="ipv4_subnet", default=""),
+                vlan_id=dict(type="int", range_max=4094),
+                routing_tag=dict(type="int", default=12345, range_max=4294967295),
+                net_template=dict(type="str", default="Default_Network_Universal"),
+                net_extension_template=dict(
+                    type="str", default="Default_Network_Extension_Universal"
+                ),
+                is_l2only=dict(type="bool", default=False),
+                vlan_name=dict(type="str", length_max=128),
+                int_desc=dict(type="str", length_max=258),
+                mtu_l3intf=dict(type="int", range_min=68, range_max=9216),
+                arp_suppress=dict(type="bool", default=False),
+                dhcp_srvr1_ip=dict(type="ipv4", default=""),
+                dhcp_srvr2_ip=dict(type="ipv4", default=""),
+                dhcp_srvr3_ip=dict(type="ipv4", default=""),
+                dhcp_srvr1_vrf=dict(type="str", length_max=32),
+                dhcp_srvr2_vrf=dict(type="str", length_max=32),
+                dhcp_srvr3_vrf=dict(type="str", length_max=32),
+                dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
             )
             att_spec = dict(
-                ip_address=dict(required=True, type='str'),
-                ports=dict(required=True, type='list'),
-                deploy=dict(type='bool', default=True)
+                ip_address=dict(required=True, type="str"),
+                ports=dict(required=True, type="list"),
+                deploy=dict(type="bool", default=True),
             )
 
             if self.config:
                 msg = None
                 # Validate net params
-                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                valid_net, invalid_params = validate_list_of_dicts(
+                    self.config, net_spec
+                )
                 for net in valid_net:
-                    if net.get('attach'):
-                        valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
-                        net['attach'] = valid_att
+                    if net.get("attach"):
+                        valid_att, invalid_att = validate_list_of_dicts(
+                            net["attach"], att_spec
+                        )
+                        net["attach"] = valid_att
                         invalid_params.extend(invalid_att)
 
-                    if net.get('is_l2only', False) is True:
-                        if net.get('vrf_name', "") is None or net.get('vrf_name', "") == "":
-                            net['vrf_name'] = 'NA'
+                    if net.get("is_l2only", False) is True:
+                        if (
+                            net.get("vrf_name", "") is None
+                            or net.get("vrf_name", "") == ""
+                        ):
+                            net["vrf_name"] = "NA"
 
                     self.validated.append(net)
 
                 if invalid_params:
-                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    msg = "Invalid parameters in playbook: {0}".format(
+                        "\n".join(invalid_params)
+                    )
                     self.module.fail_json(msg=msg)
 
         else:
 
             net_spec = dict(
-                net_name=dict(required=True, type='str', length_max=64),
-                net_id=dict(type='int', range_max=16777214),
-                vrf_name=dict(type='str', length_max=32),
-                attach=dict(type='list'),
-                deploy=dict(type='bool'),
-                gw_ip_subnet=dict(type='ipv4_subnet', default=""),
-                vlan_id=dict(type='int', range_max=4094),
-                routing_tag=dict(type='int', default=12345, range_max=4294967295),
-                net_template=dict(type='str', default='Default_Network_Universal'),
-                net_extension_template=dict(type='str', default='Default_Network_Extension_Universal'),
-                is_l2only=dict(type='bool', default=False),
-                vlan_name=dict(type='str', length_max=128),
-                int_desc=dict(type='str', length_max=258),
-                mtu_l3intf=dict(type='int', range_min=68, range_max=9216),
-                arp_suppress=dict(type='bool', default=False),
-                dhcp_srvr1_ip=dict(type='ipv4', default=""),
-                dhcp_srvr2_ip=dict(type='ipv4', default=""),
-                dhcp_srvr3_ip=dict(type='ipv4', default=""),
-                dhcp_srvr1_vrf=dict(type='str', length_max=32),
-                dhcp_srvr2_vrf=dict(type='str', length_max=32),
-                dhcp_srvr3_vrf=dict(type='str', length_max=32),
-                dhcp_loopback_id=dict(type='int', range_min=0, range_max=1023)
+                net_name=dict(required=True, type="str", length_max=64),
+                net_id=dict(type="int", range_max=16777214),
+                vrf_name=dict(type="str", length_max=32),
+                attach=dict(type="list"),
+                deploy=dict(type="bool"),
+                gw_ip_subnet=dict(type="ipv4_subnet", default=""),
+                vlan_id=dict(type="int", range_max=4094),
+                routing_tag=dict(type="int", default=12345, range_max=4294967295),
+                net_template=dict(type="str", default="Default_Network_Universal"),
+                net_extension_template=dict(
+                    type="str", default="Default_Network_Extension_Universal"
+                ),
+                is_l2only=dict(type="bool", default=False),
+                vlan_name=dict(type="str", length_max=128),
+                int_desc=dict(type="str", length_max=258),
+                mtu_l3intf=dict(type="int", range_min=68, range_max=9216),
+                arp_suppress=dict(type="bool", default=False),
+                dhcp_srvr1_ip=dict(type="ipv4", default=""),
+                dhcp_srvr2_ip=dict(type="ipv4", default=""),
+                dhcp_srvr3_ip=dict(type="ipv4", default=""),
+                dhcp_srvr1_vrf=dict(type="str", length_max=32),
+                dhcp_srvr2_vrf=dict(type="str", length_max=32),
+                dhcp_srvr3_vrf=dict(type="str", length_max=32),
+                dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
             )
             att_spec = dict(
-                ip_address=dict(required=True, type='str'),
-                ports=dict(required=True, type='list'),
-                deploy=dict(type='bool', default=True)
+                ip_address=dict(required=True, type="str"),
+                ports=dict(required=True, type="list"),
+                deploy=dict(type="bool", default=True),
             )
 
             if self.config:
                 msg = None
                 # Validate net params
-                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                valid_net, invalid_params = validate_list_of_dicts(
+                    self.config, net_spec
+                )
                 for net in valid_net:
-                    if net.get('attach'):
-                        valid_att, invalid_att = validate_list_of_dicts(net['attach'], att_spec)
-                        net['attach'] = valid_att
+                    if net.get("attach"):
+                        valid_att, invalid_att = validate_list_of_dicts(
+                            net["attach"], att_spec
+                        )
+                        net["attach"] = valid_att
                         invalid_params.extend(invalid_att)
 
-                    if state != 'deleted':
-                        if net.get('is_l2only', False) is True:
-                            if net.get('vrf_name', "") is not None and net.get('vrf_name', "") != "":
-                                invalid_params.append("vrf_name should not be specified for L2 Networks")
+                    if state != "deleted":
+                        if net.get("is_l2only", False) is True:
+                            if (
+                                net.get("vrf_name", "") is not None
+                                and net.get("vrf_name", "") != ""
+                            ):
+                                invalid_params.append(
+                                    "vrf_name should not be specified for L2 Networks"
+                                )
                             else:
-                                net['vrf_name'] = 'NA'
+                                net["vrf_name"] = "NA"
                         else:
-                            if net.get('vrf_name', "") is None:
-                                invalid_params.append("vrf_name is required for L3 Networks")
+                            if net.get("vrf_name", "") is None:
+                                invalid_params.append(
+                                    "vrf_name is required for L3 Networks"
+                                )
 
-                        if (net.get('dhcp_srvr1_ip') and not net.get('dhcp_srvr1_vrf')) or \
-                                (net.get('dhcp_srvr1_vrf') and not net.get('dhcp_srvr1_ip')) or \
-                                (net.get('dhcp_srvr2_ip') and not net.get('dhcp_srvr2_vrf')) or \
-                                (net.get('dhcp_srvr2_vrf') and not net.get('dhcp_srvr2_ip')) or \
-                                (net.get('dhcp_srvr3_ip') and not net.get('dhcp_srvr3_vrf')) or \
-                                (net.get('dhcp_srvr3_vrf') and not net.get('dhcp_srvr3_ip')):
-                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+                        if (
+                            (net.get("dhcp_srvr1_ip") and not net.get("dhcp_srvr1_vrf"))
+                            or (
+                                net.get("dhcp_srvr1_vrf")
+                                and not net.get("dhcp_srvr1_ip")
+                            )
+                            or (
+                                net.get("dhcp_srvr2_ip")
+                                and not net.get("dhcp_srvr2_vrf")
+                            )
+                            or (
+                                net.get("dhcp_srvr2_vrf")
+                                and not net.get("dhcp_srvr2_ip")
+                            )
+                            or (
+                                net.get("dhcp_srvr3_ip")
+                                and not net.get("dhcp_srvr3_vrf")
+                            )
+                            or (
+                                net.get("dhcp_srvr3_vrf")
+                                and not net.get("dhcp_srvr3_ip")
+                            )
+                        ):
+                            invalid_params.append(
+                                "DHCP server IP should be specified along with DHCP server VRF"
+                            )
 
                     self.validated.append(net)
 
                 if invalid_params:
-                    msg = 'Invalid parameters in playbook: {}'.format('\n'.join(invalid_params))
+                    msg = "Invalid parameters in playbook: {0}".format(
+                        "\n".join(invalid_params)
+                    )
                     self.module.fail_json(msg=msg)
 
             else:
-                state = self.params['state']
+                state = self.params["state"]
                 msg = None
 
-                if state == 'merged' or state == 'overridden' or \
-                        state == 'replaced' or state == 'query':
-                    msg = "config: element is mandatory for this state {}".format(state)
+                if (
+                    state == "merged"
+                    or state == "overridden"
+                    or state == "replaced"
+                    or state == "query"
+                ):
+                    msg = "config: element is mandatory for this state {0}".format(
+                        state
+                    )
 
             if msg:
                 self.module.fail_json(msg=msg)
@@ -1975,31 +2232,31 @@ class DcnmNetwork:
 
         res = resp.copy()
 
-        if op == 'query_dcnm':
+        if op == "query_dcnm":
             # This if blocks handles responses to the query APIs against DCNM.
             # Basically all GET operations.
             #
-            if res.get('ERROR') == 'Not Found' and res['RETURN_CODE'] == 404:
+            if res.get("ERROR") == "Not Found" and res["RETURN_CODE"] == 404:
                 return True, False
-            if res['RETURN_CODE'] != 200 or res['MESSAGE'] != 'OK':
+            if res["RETURN_CODE"] != 200 or res["MESSAGE"] != "OK":
                 return False, True
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get('MESSAGE') != 'OK':
+        if res.get("MESSAGE") != "OK":
             fail = True
             changed = False
             return fail, changed
-        if res.get('ERROR'):
+        if res.get("ERROR"):
             fail = True
             changed = False
-        if op == 'attach' and 'is in use already' in str(res.values()):
+        if op == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
-        if op == 'attach' and 'Invalid interfaces' in str(res.values()):
+        if op == "attach" and "Invalid interfaces" in str(res.values()):
             fail = True
             changed = True
-        if op == 'deploy' and 'No switches PENDING for deployment' in str(res.values()):
+        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()):
             changed = False
 
         return fail, changed
@@ -2024,16 +2281,18 @@ class DcnmNetwork:
         if self.failed_to_rollback:
             msg1 = "FAILED - Attempted rollback of the task has failed, may need manual intervention"
         else:
-            msg1 = 'SUCCESS - Attempted rollback of the task has succeeded'
+            msg1 = "SUCCESS - Attempted rollback of the task has succeeded"
 
         res = copy.deepcopy(resp)
-        res.update({'ROLLBACK_RESULT': msg1})
+        res.update({"ROLLBACK_RESULT": msg1})
 
-        if not resp.get('DATA'):
-            data = copy.deepcopy(resp.get('DATA'))
-            if data.get('stackTrace'):
-                data.update({'stackTrace': 'Stack trace is hidden, use \'-vvvvv\' to print it'})
-                res.update({'DATA': data})
+        if not resp.get("DATA"):
+            data = copy.deepcopy(resp.get("DATA"))
+            if data.get("stackTrace"):
+                data.update(
+                    {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
+                )
+                res.update({"DATA": data})
 
         if self.module._verbosity >= 5:
             self.module.fail_json(msg=res)
@@ -2054,8 +2313,8 @@ class DcnmNetwork:
         if cfg.get("net_extension_template", None) is None:
             want["networkExtensionTemplate"] = have["networkExtensionTemplate"]
 
-        json_to_dict_want = json.loads(want['networkTemplateConfig'])
-        json_to_dict_have = json.loads(have['networkTemplateConfig'])
+        json_to_dict_want = json.loads(want["networkTemplateConfig"])
+        json_to_dict_have = json.loads(have["networkTemplateConfig"])
 
         if cfg.get("vlan_id", None) is None:
             json_to_dict_want["vlanId"] = json_to_dict_have["vlanId"]
@@ -2068,7 +2327,9 @@ class DcnmNetwork:
                 json_to_dict_want["tag"] = int(json_to_dict_want["tag"])
 
         if cfg.get("gw_ip_subnet", None) is None:
-            json_to_dict_want["gatewayIpAddress"] = json_to_dict_have["gatewayIpAddress"]
+            json_to_dict_want["gatewayIpAddress"] = json_to_dict_have[
+                "gatewayIpAddress"
+            ]
 
         if cfg.get("is_l2only", None) is None:
             json_to_dict_want["isLayer2Only"] = json_to_dict_have["isLayer2Only"]
@@ -2116,7 +2377,7 @@ class DcnmNetwork:
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
 
-        want.update({'networkTemplateConfig': json.dumps(json_to_dict_want)})
+        want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
     def update_want(self):
         """
@@ -2147,47 +2408,43 @@ class DcnmNetwork:
             match_have = [
                 have
                 for have in self.have_create
-                if (
-                    (net["networkName"] == have["networkName"])
-                )
+                if ((net["networkName"] == have["networkName"]))
             ]
             if match_have == []:
                 continue
 
             # Get the network from self.config to check if a particular object is included or not
             match_cfg = [
-                cfg
-                for cfg in self.config
-                if (
-                    (net["networkName"] == cfg["net_name"])
-                )
+                cfg for cfg in self.config if ((net["networkName"] == cfg["net_name"]))
             ]
             if match_cfg == []:
                 continue
 
-            self.dcnm_update_network_information(
-                net, match_have[0], match_cfg[0]
-            )
+            self.dcnm_update_network_information(net, match_have[0], match_cfg[0])
 
 
 def main():
-    """ main entry point for module execution
-    """
+    """main entry point for module execution"""
 
     element_spec = dict(
-        fabric=dict(required=True, type='str'),
-        config=dict(required=False, type='list', elements='dict'),
-        state=dict(default='merged',
-                   choices=['merged', 'replaced', 'deleted', 'overridden', 'query']),
+        fabric=dict(required=True, type="str"),
+        config=dict(required=False, type="list", elements="dict"),
+        state=dict(
+            default="merged",
+            choices=["merged", "replaced", "deleted", "overridden", "query"],
+        ),
     )
 
-    module = AnsibleModule(argument_spec=element_spec,
-                           supports_check_mode=True)
+    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     dcnm_net = DcnmNetwork(module)
 
     if not dcnm_net.ip_sn:
-        module.fail_json(msg="Fabric {} missing on DCNM or does not have any switches".format(dcnm_net.fabric))
+        module.fail_json(
+            msg="Fabric {0} missing on DCNM or does not have any switches".format(
+                dcnm_net.fabric
+            )
+        )
 
     dcnm_net.validate_input()
 
@@ -2202,36 +2459,43 @@ def main():
     # they must be purged or defaulted.
     dcnm_net.update_want()
 
-    if module.params['state'] == 'merged':
+    if module.params["state"] == "merged":
         warn_msg = dcnm_net.get_diff_merge()
 
-    if module.params['state'] == 'replaced':
+    if module.params["state"] == "replaced":
         warn_msg = dcnm_net.get_diff_replace()
 
-    if module.params['state'] == 'overridden':
+    if module.params["state"] == "overridden":
         warn_msg = dcnm_net.get_diff_override()
 
-    if module.params['state'] == 'deleted':
+    if module.params["state"] == "deleted":
         dcnm_net.get_diff_delete()
 
-    if module.params['state'] == 'query':
+    if module.params["state"] == "query":
         dcnm_net.get_diff_query()
-        dcnm_net.result['response'] = dcnm_net.query
+        dcnm_net.result["response"] = dcnm_net.query
 
-    dcnm_net.result['warnings'].append(warn_msg) if warn_msg else []
+    dcnm_net.result["warnings"].append(warn_msg) if warn_msg else []
 
-    if dcnm_net.diff_create or dcnm_net.diff_create_quick or dcnm_net.diff_attach \
-            or dcnm_net.diff_deploy or dcnm_net.diff_delete or dcnm_net.diff_create_update \
-            or dcnm_net.diff_detach or dcnm_net.diff_undeploy:
-        dcnm_net.result['changed'] = True
+    if (
+        dcnm_net.diff_create
+        or dcnm_net.diff_create_quick
+        or dcnm_net.diff_attach
+        or dcnm_net.diff_deploy
+        or dcnm_net.diff_delete
+        or dcnm_net.diff_create_update
+        or dcnm_net.diff_detach
+        or dcnm_net.diff_undeploy
+    ):
+        dcnm_net.result["changed"] = True
     else:
         module.exit_json(**dcnm_net.result)
 
     dcnm_net.format_diff()
-    dcnm_net.result['diff'] = dcnm_net.diff_input_format
+    dcnm_net.result["diff"] = dcnm_net.diff_input_format
 
     if module.check_mode:
-        dcnm_net.result['changed'] = False
+        dcnm_net.result["changed"] = False
         module.exit_json(**dcnm_net.result)
 
     dcnm_net.push_to_remote()
@@ -2239,5 +2503,5 @@ def main():
     module.exit_json(**dcnm_net.result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

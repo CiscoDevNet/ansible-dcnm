@@ -113,4 +113,3 @@
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
-

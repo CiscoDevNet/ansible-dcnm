@@ -50,4 +50,3 @@
     that:
       - 'item["RETURN_CODE"] == 200'  
   loop: '{{ result.response }}'
-

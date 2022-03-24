@@ -935,4 +935,3 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
-
