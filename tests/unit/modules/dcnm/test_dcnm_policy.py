@@ -1154,6 +1154,8 @@ class TestDcnmPolicyModule(TestDcnmModule):
         )
         result = self.execute_module(changed=True, failed=False)
 
+        self.assertEqual(result["diff"][0]["merged"][0]["description"], "modifying policy with policy ID")
+
         self.assertEqual(len(result["diff"][0]["merged"]), 1)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
