@@ -1,0 +1,511 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Remove local log file
+  local_action: command rm -f interface.log
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_it_fabric }}" 
+    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##              MERGE                       ##
+##############################################
+
+    - name: Create eth/sub/lo interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "eth interface  acting as trunk"
+
+          - name: lo100                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: lo                        # choose from [lo]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.1.1          # ipv4 address for the loopback interface
+              ipv6_addr: fd08::0201           # ipV6 address for the loopback interface
+              route_tag: ""                   # Routing Tag for the interface
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "loopback interface 100 configuration"
+
+          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: subint                    # choose from [subint]
+              vlan: 100                       # vlan ID [min:2, max:3967]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.30.1         # ipv4 address for the sub-interface
+              ipv4_mask_len: 24               # choose between [min:8, max:31]
+              ipv6_addr: fd0d::0401           # ipV6 address for the sub-interface
+              ipv6_mask_len: 64               # choose between [min:64, max:127]
+              mtu: 9216                       # choose between [min:576, max:9216]
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "sub interface eth1/1.1 configuration"
+
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 3'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 3'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify aggregate members like cmds
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - spanning-tree bpduguard enable
+              description: "eth interface  acting as trunk"
+
+          - name: lo100                       # should be of the form lo<port-id>
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: lo                        # choose from [lo]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.1.1          # ipv4 address for the loopback interface
+              ipv6_addr: fd08::0201           # ipV6 address for the loopback interface
+              route_tag: ""                   # Routing Tag for the interface
+              cmds:                           # Freeform config
+                - spanning-tree bpduguard enable
+              description: "loopback interface 100 configuration"
+
+          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: subint                    # choose from [subint]
+              vlan: 100                       # vlan ID [min:2, max:3967]
+              int_vrf: ""                     # VRF name
+              ipv4_addr: 192.168.30.1         # ipv4 address for the sub-interface
+              ipv4_mask_len: 24               # choose between [min:8, max:31]
+              ipv6_addr: fd0d::0401           # ipV6 address for the sub-interface
+              ipv6_mask_len: 64               # choose between [min:64, max:127]
+              mtu: 9216                       # choose between [min:576, max:9216]
+              cmds:                           # Freeform config
+                - spanning-tree bpduguard enable
+              description: "sub interface eth1/1.1 configuration"
+
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 3'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 3'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 2'
+          - '(result["diff"][0]["merged"][1]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 2'
+          - '(result["diff"][0]["merged"][2]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+
+##############################################
+##              MERGE                       ##
+##############################################
+
+    - name: Create po interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces 
+                - "{{ ansible_eth_intf13 }}"
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - no shutdown
+              description: "port channel acting as trunk"
+
+          - name: po310                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              description: "port channel acting as trunk"
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify po300 - no aggregate members like members and cmds
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              description: "port channel acting as trunk"
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 1'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"].split(",") | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify po300 - new aggregate members like members and cmds
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po300                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces 
+                - "{{ ansible_eth_intf14 }}"
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              cmds:                           # Freeform config
+                - spanning-tree bpduguard enable
+              description: "port channel acting as trunk"
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 2'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"].split(",") | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify po310 - no aggregate members like members and cmds
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po310                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              description: "port channel acting as trunk - updated"
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify po310 - new aggregate members like members and cmds
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po310                       # should be of the form po<port-id>
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, l3, monitor]
+              members:                        # member interfaces 
+                - "{{ ansible_eth_intf18 }}"
+              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              cmds:                           # Freeform config
+                - spanning-tree bpduguard enable
+              allowed_vlans: none             # choose from [none, all, vlan range] 
+              description: "port channel acting as trunk"
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 1'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"].split(",") | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##              MERGE                       ##
+##############################################
+
+    - name: Create vpc interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - "{{ ansible_switch1 }}"
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 120                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 120                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - "{{ ansible_eth_intf15 }}"
+              peer2_members:                  # member interfaces on peer 2
+                - "{{ ansible_eth_intf15 }}"
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+              peer1_cmds:                     # Freeform config
+                - no shutdown
+              peer2_cmds:                     # Freeform config
+                - no shutdown
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify aggregate members like peer1_cmds, peer2_cmds, peer1_members and peer2_members 
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc750                      # should be of the form vpc<port-id>
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            switch:                           # provide switches of vPC pair
+              - "{{ ansible_switch1 }}"
+            deploy: true                      # choose from [true, false]
+            profile:
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access]
+              peer1_pcid: 120                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer2_pcid: 120                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+              peer1_members:                  # member interfaces on peer 1
+                - "{{ ansible_eth_intf16 }}"
+              peer2_members:                  # member interfaces on peer 2
+                - "{{ ansible_eth_intf16 }}"
+              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+              peer1_cmds:                     # Freeform config
+                - spanning-tree bpduguard enable
+              peer2_cmds:                     # Freeform config
+                - spanning-tree bpduguard enable
+
+
+      register: result
+
+    - assert:
+        that:
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"].split("\n") | length) == 2'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"].split("\n") | length) == 2'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["PEER1_MEMBER_INTERFACES"].split(",") | length) == 2'
+          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["PEER2_MEMBER_INTERFACES"].split(",") | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: IT_CONTEXT is not defined
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
