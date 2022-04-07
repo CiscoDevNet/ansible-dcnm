@@ -574,6 +574,29 @@ class DcnmNetwork:
                     del want["isAttached"]
                     attach_list.append(want)
 
+        if (self.params["state"] == "merged"):
+            for attach in attach_list:
+                for ip, ser in self.ip_sn.items():
+                    if ser == attach["serialNumber"]:
+                        ip_addr = ip
+                        break
+                is_vpc = self.inventory_data[ip_addr].get("isVpcConfigured")
+                if is_vpc is True:
+                    peer_found = False
+                    peer_ser = self.inventory_data[ip_addr].get(
+                        "peerSerialNumber"
+                    )
+                    for attch in attach_list:
+                        if peer_ser == attch["serialNumber"]:
+                            peer_found = True
+                    if not peer_found:
+                        for hav in have_a:
+                            if hav["serialNumber"] == peer_ser:
+                                hav.update({"switchPorts": ""})
+                                del hav["isAttached"]
+                                attach_list.append(hav)
+                                break
+
         return attach_list, dep_net
 
     def update_attach_params(self, attach, net_name, deploy):
@@ -1132,6 +1155,7 @@ class DcnmNetwork:
         want_create = []
         want_attach = []
         want_deploy = {}
+        attach_dict = dict(ip_address="", ports=[], deploy=True)
 
         all_networks = ""
 
@@ -1154,6 +1178,36 @@ class DcnmNetwork:
                     self.update_attach_params(attach, net["net_name"], deploy)
                 )
             if networks:
+                if self.params["state"] == "merged":
+                    for attch in net["attach"]:
+                        for ip, ser in self.ip_sn.items():
+                            if ser == attach["serialNumber"]:
+                                ip_address = ip
+                                break
+                        deploy = attch["deployment"]
+                        is_vpc = self.inventory_data[ip_address].get(
+                            "isVpcConfigured"
+                        )
+                        if is_vpc is True:
+                            peer_found = False
+                            peer_ser = self.inventory_data[ip_address].get(
+                                "peerSerialNumber"
+                            )
+                            for network in networks:
+                                if peer_ser == network["serialNumber"]:
+                                    peer_found = True
+                                    break
+                            if not peer_found:
+                                for ip, ser in self.ip_sn.items():
+                                    if ser == peer_ser:
+                                        ip_addr = ip
+                                        break
+                                attach_dict.update({"ip_address": ip_addr})
+                                networks.append(
+                                    self.update_attach_params(
+                                        attach_dict, net["net_name"], deploy
+                                    )
+                                )
                 net_attach.update({"networkName": net["net_name"]})
                 net_attach.update({"lanAttachList": networks})
                 want_attach.append(net_attach)
