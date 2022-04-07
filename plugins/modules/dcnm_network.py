@@ -1199,7 +1199,7 @@ class DcnmNetwork:
                             if not peer_found:
                                 msg = (
                                         "Switch {0} in fabric {1} is configured for vPC, "
-                                        "please attach the peer switch to network".format(
+                                        "please attach the peer switch also to network".format(
                                             ip_address, self.fabric
                                         )
                                 )
