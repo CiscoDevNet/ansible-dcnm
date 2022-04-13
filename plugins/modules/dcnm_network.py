@@ -1182,7 +1182,7 @@ class DcnmNetwork:
                         if ser == attch["serialNumber"]:
                             ip_address = ip
                             break
-                    deploy = attch["deployment"]
+                    # deploy = attch["deployment"]
                     is_vpc = self.inventory_data[ip_address].get(
                         "isVpcConfigured"
                     )
@@ -1197,11 +1197,9 @@ class DcnmNetwork:
                                 break
                         if not peer_found:
                             msg = (
-                                    "Switch {0} in fabric {1} is configured for vPC, "
-                                    "please attach the peer switch also to network".format(
-                                        ip_address, self.fabric
-                                    )
-                            )
+                                "Switch {0} in fabric {1} is configured for vPC, "
+                                "please attach the peer switch also to network"
+                                .format(ip_address, self.fabric))
                             self.module.fail_json(msg=msg)
                             # This code add the peer switch in vpc cases automatically
                             # As of now UI return error in such cases. Uncomment this if
