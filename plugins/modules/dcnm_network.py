@@ -574,28 +574,28 @@ class DcnmNetwork:
                     del want["isAttached"]
                     attach_list.append(want)
 
-        if (self.params["state"] == "merged"):
-            for attach in attach_list:
-                for ip, ser in self.ip_sn.items():
-                    if ser == attach["serialNumber"]:
-                        ip_addr = ip
-                        break
-                is_vpc = self.inventory_data[ip_addr].get("isVpcConfigured")
-                if is_vpc is True:
-                    peer_found = False
-                    peer_ser = self.inventory_data[ip_addr].get(
-                        "peerSerialNumber"
-                    )
-                    for attch in attach_list:
-                        if peer_ser == attch["serialNumber"]:
-                            peer_found = True
-                    if not peer_found:
-                        for hav in have_a:
-                            if hav["serialNumber"] == peer_ser:
-                                hav.update({"switchPorts": ""})
-                                del hav["isAttached"]
-                                attach_list.append(hav)
-                                break
+        for attach in attach_list:
+            for ip, ser in self.ip_sn.items():
+                if ser == attach["serialNumber"]:
+                    ip_addr = ip
+                    break
+            is_vpc = self.inventory_data[ip_addr].get("isVpcConfigured")
+            if is_vpc is True:
+                peer_found = False
+                peer_ser = self.inventory_data[ip_addr].get(
+                    "peerSerialNumber"
+                )
+                for attch in attach_list:
+                    if peer_ser == attch["serialNumber"]:
+                        peer_found = True
+                if not peer_found:
+                    for hav in have_a:
+                        if hav["serialNumber"] == peer_ser:
+                            havtoattach = copy.deepcopy(hav)
+                            havtoattach.update({"switchPorts": ""})
+                            del havtoattach["isAttached"]
+                            attach_list.append(havtoattach)
+                            break
 
         return attach_list, dep_net
 
@@ -1177,47 +1177,46 @@ class DcnmNetwork:
                     self.update_attach_params(attach, net["net_name"], deploy)
                 )
             if networks:
-                if self.params["state"] == "merged":
-                    for attch in net["attach"]:
-                        for ip, ser in self.ip_sn.items():
-                            if ser == attch["serialNumber"]:
-                                ip_address = ip
-                                break
-                        deploy = attch["deployment"]
-                        is_vpc = self.inventory_data[ip_address].get(
-                            "isVpcConfigured"
+                for attch in net["attach"]:
+                    for ip, ser in self.ip_sn.items():
+                        if ser == attch["serialNumber"]:
+                            ip_address = ip
+                            break
+                    deploy = attch["deployment"]
+                    is_vpc = self.inventory_data[ip_address].get(
+                        "isVpcConfigured"
+                    )
+                    if is_vpc is True:
+                        peer_found = False
+                        peer_ser = self.inventory_data[ip_address].get(
+                            "peerSerialNumber"
                         )
-                        if is_vpc is True:
-                            peer_found = False
-                            peer_ser = self.inventory_data[ip_address].get(
-                                "peerSerialNumber"
+                        for network in networks:
+                            if peer_ser == network["serialNumber"]:
+                                peer_found = True
+                                break
+                        if not peer_found:
+                            msg = (
+                                    "Switch {0} in fabric {1} is configured for vPC, "
+                                    "please attach the peer switch also to network".format(
+                                        ip_address, self.fabric
+                                    )
                             )
-                            for network in networks:
-                                if peer_ser == network["serialNumber"]:
-                                    peer_found = True
-                                    break
-                            if not peer_found:
-                                msg = (
-                                        "Switch {0} in fabric {1} is configured for vPC, "
-                                        "please attach the peer switch also to network".format(
-                                            ip_address, self.fabric
-                                        )
-                                )
-                                self.module.fail_json(msg=msg)
-                                # This code add the peer switch in vpc cases automatically
-                                # As of now UI return error in such cases. Uncomment this if
-                                # UI behaviour changes
-                                # attach_dict = dict(ip_address="", ports=[], deploy=True)
-                                # for ip, ser in self.ip_sn.items():
-                                #     if ser == peer_ser:
-                                #         ip_addr = ip
-                                #         break
-                                # attach_dict.update({"ip_address": ip_addr})
-                                # networks.append(
-                                #     self.update_attach_params(
-                                #         attach_dict, net["net_name"], deploy
-                                #     )
-                                # )
+                            self.module.fail_json(msg=msg)
+                            # This code add the peer switch in vpc cases automatically
+                            # As of now UI return error in such cases. Uncomment this if
+                            # UI behaviour changes
+                            # attach_dict = dict(ip_address="", ports=[], deploy=True)
+                            # for ip, ser in self.ip_sn.items():
+                            #     if ser == peer_ser:
+                            #         ip_addr = ip
+                            #         break
+                            # attach_dict.update({"ip_address": ip_addr})
+                            # networks.append(
+                            #     self.update_attach_params(
+                            #         attach_dict, net["net_name"], deploy
+                            #     )
+                            # )
                 net_attach.update({"networkName": net["net_name"]})
                 net_attach.update({"lanAttachList": networks})
                 want_attach.append(net_attach)
