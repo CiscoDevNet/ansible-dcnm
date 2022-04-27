@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2022 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ EXAMPLES = """
 # Entity name format
 # ==================
 #
-# The formt of the entity name depends on the scope_type of the resource being allocated.
+# The format of the entity name depends on the scope_type of the resource being allocated.
 
 # Scope Type                Entity Name
 # =====================================
@@ -286,7 +286,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
-    dcnm_reset_connection,
     dcnm_version_supported,
     get_ip_sn_dict,
     get_fabric_inventory_details,
@@ -468,6 +467,19 @@ class DcnmResManager:
 
         cfg = []
         for item in self.config:
+
+            if self.module.params["state"] != "query":
+                if item.get("scope_type", None) is None:
+                    self.module.fail_json(msg="Mandatory parameter 'scope_type' missing")
+
+                if item.get("pool_type", None) is None:
+                    self.module.fail_json(msg="Mandatory parameter 'pool_type' missing")
+
+                if item.get("pool_name", None) is None:
+                    self.module.fail_json(msg="Mandatory parameter 'pool_name' missing")
+
+                if item.get("entity_name", None) is None:
+                    self.module.fail_json(msg="Mandatory parameter 'entity_name' missing")
 
             rc, mesg = self.dcnm_rm_check_resource_params(item)
             if not rc:
@@ -1012,6 +1024,7 @@ class DcnmResManager:
                                     "RM_GET_RESOURCES_BY_SNO_AND_POOLNAME"
                                 ].format(self.ip_sn[sw], res["pool_name"])
                             )
+                            filter_by_switch = True
                     else:
                         path_list.append(
                             self.paths[
@@ -1029,7 +1042,6 @@ class DcnmResManager:
                         filter_by_switch = True
 
                 for path in path_list:
-
                     if res_pools.get(path, None) is None:
                         resp = dcnm_send(self.module, "GET", path)
                     else:
@@ -1089,7 +1101,7 @@ class DcnmResManager:
     def dcnm_rm_match_switch(self, sw, sw_list):
 
         """
-        Routine to compare switch information. This is used to filter out resource informtion during query.
+        Routine to compare switch information. This is used to filter out resource information during query.
 
         Parameters:
             sw - switch information included in the resource on DCNM server
