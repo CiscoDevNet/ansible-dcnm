@@ -12,7 +12,7 @@
 ##############################################
 
     - name: Create Resources - Invalid Pool type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -24,7 +24,7 @@
       ignore_errors: yes
 
     - name: Create Resources - Invalid Pool Name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -36,7 +36,7 @@
       ignore_errors: yes
 
     - name: Create Resources - L3 VNI wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -48,7 +48,7 @@
       ignore_errors: yes
 
     - name: Create Resources - L2VNI - wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -60,7 +60,7 @@
       ignore_errors: yes
 
     - name: Create Resources - LOOPBACK_ID wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -75,7 +75,7 @@
       ignore_errors: yes
 
     - name: Create Resources - VPC_ID wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -90,7 +90,7 @@
       ignore_errors: yes
 
     - name: Create Resources - LOOPBACK0_IP_POOL wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -102,7 +102,7 @@
       ignore_errors: yes
 
     - name: Create Resources - LOOPBACK1_IP_POOL wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:
@@ -116,7 +116,7 @@
       ignore_errors: yes
 
     - name: Create Resources - SUBNET wrong scope type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}" 
         config:

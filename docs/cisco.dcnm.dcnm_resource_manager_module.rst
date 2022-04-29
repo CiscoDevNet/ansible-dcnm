@@ -1,9 +1,9 @@
-.. _cisco.dcnm.dcnm_res_manager_module:
+.. _cisco.dcnm.dcnm_resource_manager_module:
 
 
-***************************
-cisco.dcnm.dcnm_res_manager
-***************************
+********************************
+cisco.dcnm.dcnm_resource_manager
+********************************
 
 **DCNM ansible module for managing resources.**
 
@@ -219,7 +219,7 @@ Examples
     # Entity name format
     # ==================
     #
-    # The formt of the entity name depends on the scope_type of the resource being allocated.
+    # The format of the entity name depends on the scope_type of the resource being allocated.
 
     # Scope Type                Entity Name
     # =====================================
@@ -249,7 +249,7 @@ Examples
     # CREATING RESOURCES
     # ==================
     - name: Create Resources
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                               # choose form [merged, deleted, query]
         fabric: test_fabric
         config:
@@ -294,7 +294,7 @@ Examples
     # ==================
 
     - name: Delete Resources
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: deleted                              # choose form [merged, deleted, query]
         fabric: test_fabric
         config:
@@ -334,12 +334,12 @@ Examples
     # ======================
 
     - name: Query all Resources - no filters
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                               # choose form [merged, deleted, query]
         fabric: test_fabric
 
     - name: Query Resources - filter by entity name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                # choose form [merged, deleted, query]
         fabric: test_fabric
         config:
@@ -350,7 +350,7 @@ Examples
           - entity_name: "9M99N34RDED~Ethernet1/2~~9NXHSNTEO6CEthernet1/2" # A unique name to identify the resource
 
     - name: Query Resources - filter by switch
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                # choose form [merged, deleted, query]
         fabric: test_fabric
         config:
@@ -358,7 +358,7 @@ Examples
               - 192.175.1.1
 
     - name: Query Resources - filter by fabric and pool name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                # choose form [merged, deleted, query]
         fabric: test_fabric
         config:
@@ -367,7 +367,7 @@ Examples
           - pool_name: "SUBNET"                     # Based on the 'poolType', select appropriate name
 
     - name: Query Resources - filter by switch and pool name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -382,7 +382,7 @@ Examples
               - 192.175.1.2
 
     - name: Query Resources - mixed query
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                # choose form [merged, deleted, query]
         fabric: test_fabric
         config:

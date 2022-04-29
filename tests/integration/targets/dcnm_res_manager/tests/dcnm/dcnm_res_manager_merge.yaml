@@ -6,7 +6,7 @@
   local_action: command rm -f res_mgr.log
 
 - name: Delete Resources
-  cisco.dcnm.dcnm_res_manager: &rm_delete
+  cisco.dcnm.dcnm_resource_manager: &rm_delete
     state: deleted                                 # choose form [merged, deleted, query]
     fabric: "{{ ansible_it_fabric }}"
     config:
@@ -68,7 +68,7 @@
 ##############################################
 
     - name: Create Resources
-      cisco.dcnm.dcnm_res_manager: &rm_merge
+      cisco.dcnm.dcnm_resource_manager: &rm_merge
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -143,7 +143,7 @@
 ##############################################
 
     - name: Create Resources - Idempotence
-      cisco.dcnm.dcnm_res_manager: *rm_merge
+      cisco.dcnm.dcnm_resource_manager: *rm_merge
       register: result
 
     - assert:
@@ -162,7 +162,7 @@
 ##############################################
 
     - name: Modify Resources
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -236,7 +236,7 @@
 ##############################################
 
     - name: Create Resources - Missing switch info
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -253,7 +253,7 @@
           - '"switch : Required parameter not found" in result["msg"]'
 
     - name: Create Resources - Missing scope_type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -272,7 +272,7 @@
           - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
     - name: Create Resources - Missing pool_type
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -291,7 +291,7 @@
           - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
     - name: Create Resources - Missing pool_name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -310,7 +310,7 @@
           - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
     - name: Create Resources - Missing entity_name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -329,7 +329,7 @@
           - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
     - name: Create Resources - Missing resource value
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -354,7 +354,7 @@
   always:
 
     - name: Delete Resources
-      cisco.dcnm.dcnm_res_manager: *rm_delete
+      cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
       when: IT_CONTEXT is not defined
 

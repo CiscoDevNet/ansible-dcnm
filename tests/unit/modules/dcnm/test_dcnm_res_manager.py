@@ -17,9 +17,9 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from ansible_collections.ansible.netcommon.tests.unit.compat.mock import patch
+from unittest.mock import patch
 
-from ansible_collections.cisco.dcnm.plugins.modules import dcnm_res_manager
+from ansible_collections.cisco.dcnm.plugins.modules import dcnm_resource_manager
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
 import json
@@ -28,7 +28,7 @@ import copy
 
 class TestDcnmResManagerModule(TestDcnmModule):
 
-    module = dcnm_res_manager
+    module = dcnm_resource_manager
     fd = None
 
     def init_data(self):
@@ -45,22 +45,22 @@ class TestDcnmResManagerModule(TestDcnmModule):
         super(TestDcnmResManagerModule, self).setUp()
 
         self.mock_dcnm_ip_sn = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_res_manager.get_ip_sn_dict"
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_resource_manager.get_ip_sn_dict"
         )
         self.run_dcnm_ip_sn = self.mock_dcnm_ip_sn.start()
 
         self.mock_dcnm_fabric_details = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_res_manager.get_fabric_inventory_details"
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_resource_manager.get_fabric_inventory_details"
         )
         self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
 
         self.mock_dcnm_send = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_res_manager.dcnm_send"
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_resource_manager.dcnm_send"
         )
         self.run_dcnm_send = self.mock_dcnm_send.start()
 
         self.mock_dcnm_version_supported = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_res_manager.dcnm_version_supported"
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_resource_manager.dcnm_version_supported"
         )
         self.run_dcnm_version_supported = (
             self.mock_dcnm_version_supported.start()

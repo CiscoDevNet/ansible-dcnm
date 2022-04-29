@@ -6,7 +6,7 @@
   local_action: command rm -f res_mgr.log
 
 - name: Delete Resources
-  cisco.dcnm.dcnm_res_manager: &rm_delete
+  cisco.dcnm.dcnm_resource_manager: &rm_delete
     state: deleted                                 # choose form [merged, deleted, query]
     fabric: "{{ ansible_it_fabric }}"
     config:
@@ -68,7 +68,7 @@
 ##############################################
 
     - name: Create Resources
-      cisco.dcnm.dcnm_res_manager: &rm_merge
+      cisco.dcnm.dcnm_resource_manager: &rm_merge
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -142,7 +142,7 @@
 ##############################################
 
     - name: Query all Resources - no filters
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
       register: result
@@ -165,7 +165,7 @@
           - "mmudigon-2"
 
     - name: Query Resources - filter by entity name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -187,7 +187,7 @@
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by switch 1
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -201,7 +201,7 @@
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by switch 2
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -215,7 +215,7 @@
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by fabric and pool name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -247,7 +247,7 @@
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by switch and pool name
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -286,7 +286,7 @@
       loop: '{{ result.response }}'
 
     - name: Query Resources - mixed query
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -312,7 +312,7 @@
   always:
 
     - name: Delete Resources
-      cisco.dcnm.dcnm_res_manager: *rm_delete
+      cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
       when: IT_CONTEXT is not defined
 

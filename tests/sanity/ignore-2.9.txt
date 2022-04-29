@@ -8,6 +8,6 @@ plugins/modules/dcnm_service_node.py validate-modules:missing-gplv3-license # GP
 plugins/modules/dcnm_template.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_service_route_peering.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_service_policy.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
-plugins/modules/dcnm_res_manager.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_resource_manager.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_rest.py import-2.6!skip
 plugins/modules/dcnm_rest.py import-2.7!skip

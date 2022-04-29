@@ -20,7 +20,7 @@ __author__ = "Mallik Mudigonda"
 
 DOCUMENTATION = """
 ---
-module: dcnm_res_manager
+module: dcnm_resource_manager
 short_description: DCNM ansible module for managing resources.
 version_added: "2.1.0"
 description:
@@ -130,7 +130,7 @@ EXAMPLES = """
 # CREATING RESOURCES
 # ==================
 - name: Create Resources
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: merged                               # choose form [merged, deleted, query]
     fabric: test_fabric
     config:
@@ -175,7 +175,7 @@ EXAMPLES = """
 # ==================
 
 - name: Delete Resources
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: deleted                              # choose form [merged, deleted, query]
     fabric: test_fabric
     config:
@@ -215,12 +215,12 @@ EXAMPLES = """
 # ======================
 
 - name: Query all Resources - no filters
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: query                               # choose form [merged, deleted, query]
     fabric: test_fabric
 
 - name: Query Resources - filter by entity name
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: query                                # choose form [merged, deleted, query]
     fabric: test_fabric
     config:
@@ -231,7 +231,7 @@ EXAMPLES = """
       - entity_name: "9M99N34RDED~Ethernet1/2~~9NXHSNTEO6CEthernet1/2" # A unique name to identify the resource
 
 - name: Query Resources - filter by switch
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: query                                # choose form [merged, deleted, query]
     fabric: test_fabric
     config:
@@ -239,7 +239,7 @@ EXAMPLES = """
           - 192.175.1.1
 
 - name: Query Resources - filter by fabric and pool name
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: query                                # choose form [merged, deleted, query]
     fabric: test_fabric
     config:
@@ -248,7 +248,7 @@ EXAMPLES = """
       - pool_name: "SUBNET"                     # Based on the 'poolType', select appropriate name
 
 - name: Query Resources - filter by switch and pool name
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: query                                # choose form [merged, deleted, query]
     fabric: "{{ ansible_it_fabric }}"
     config:
@@ -263,7 +263,7 @@ EXAMPLES = """
           - 192.175.1.2
 
 - name: Query Resources - mixed query
-  cisco.dcnm.dcnm_res_manager:
+  cisco.dcnm.dcnm_resource_manager:
     state: query                                # choose form [merged, deleted, query]
     fabric: test_fabric
     config:
@@ -470,16 +470,24 @@ class DcnmResManager:
 
             if self.module.params["state"] != "query":
                 if item.get("scope_type", None) is None:
-                    self.module.fail_json(msg="Mandatory parameter 'scope_type' missing")
+                    self.module.fail_json(
+                        msg="Mandatory parameter 'scope_type' missing"
+                    )
 
                 if item.get("pool_type", None) is None:
-                    self.module.fail_json(msg="Mandatory parameter 'pool_type' missing")
+                    self.module.fail_json(
+                        msg="Mandatory parameter 'pool_type' missing"
+                    )
 
                 if item.get("pool_name", None) is None:
-                    self.module.fail_json(msg="Mandatory parameter 'pool_name' missing")
+                    self.module.fail_json(
+                        msg="Mandatory parameter 'pool_name' missing"
+                    )
 
                 if item.get("entity_name", None) is None:
-                    self.module.fail_json(msg="Mandatory parameter 'entity_name' missing")
+                    self.module.fail_json(
+                        msg="Mandatory parameter 'entity_name' missing"
+                    )
 
             rc, mesg = self.dcnm_rm_check_resource_params(item)
             if not rc:

@@ -6,7 +6,7 @@
   local_action: command rm -f res_mgr.log
 
 - name: Delete Resources
-  cisco.dcnm.dcnm_res_manager: &rm_delete
+  cisco.dcnm.dcnm_resource_manager: &rm_delete
     state: deleted                                 # choose form [merged, deleted, query]
     fabric: "{{ ansible_it_fabric }}"
     config:
@@ -68,7 +68,7 @@
 ##############################################
 
     - name: Create Resources
-      cisco.dcnm.dcnm_res_manager: &rm_merge
+      cisco.dcnm.dcnm_resource_manager: &rm_merge
         state: merged                              # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -142,7 +142,7 @@
 ##############################################
 
     - name: Delete Resources
-      cisco.dcnm.dcnm_res_manager: *rm_delete
+      cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
 
     - assert:
@@ -162,7 +162,7 @@
 ##############################################
 
     - name: Delete Resources - Idempotence
-      cisco.dcnm.dcnm_res_manager: *rm_delete
+      cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
 
     - assert:
@@ -181,7 +181,7 @@
 ##############################################
 
     - name: Delete Resources - scope_type missing
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -198,7 +198,7 @@
 ##############################################
 
     - name: Delete Resources - pool_type missing
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -215,7 +215,7 @@
 ##############################################
 
     - name: Delete Resources - entity_name missing
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -234,7 +234,7 @@
 ##############################################
 
     - name: Delete Resources - pool_name missing
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -253,7 +253,7 @@
 ##############################################
 
     - name: Delete Resources - switch info missing
-      cisco.dcnm.dcnm_res_manager:
+      cisco.dcnm.dcnm_resource_manager:
         state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
