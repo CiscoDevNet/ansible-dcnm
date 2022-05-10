@@ -110,7 +110,7 @@ Examples
         path: /rest/control/fabrics
 
     - name: Set deployment to false in lanAttachList for vrf
-        dcnm_rest:
+      dcnm_rest:
         method: POST
         path: /rest/top-down/fabrics/fabric1/vrfs/attachments
         json_data: '[{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1","serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,"extensionValues":"","instanceValues":"{"loopbackId":"","loopbackIpAddress":"","loopbackIpV6Address":""}"}]}]'
@@ -120,7 +120,7 @@ Examples
         data: "{{ lookup('file', 'validate_payload') }}"
 
     - name: Validate a template
-        cisco.dcnm.dcnm_rest:
+      cisco.dcnm.dcnm_rest:
         method: POST
         path: /fm/fmrest/config/templates/validate
         json_data: "{{ data }}"

@@ -180,6 +180,7 @@ Parameters
                 </td>
                 <td>
                         <div>Loopback ID for DHCP Relay interface</div>
+                        <div>Configured ID value should be in range 0-1023</div>
                 </td>
             </tr>
             <tr>
@@ -532,7 +533,7 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     # This module supports the following states:
     #

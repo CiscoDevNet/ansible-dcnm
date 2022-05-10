@@ -293,8 +293,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:1</li>
-                                    <li>Max:31</li>
+                                    <li>Min 1</li>
+                                    <li>Max 31</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
@@ -333,8 +333,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:1</li>
-                                    <li>Max:31</li>
+                                    <li>Min 1</li>
+                                    <li>Max 31</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
@@ -763,8 +763,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:1</li>
-                                    <li>Max:31</li>
+                                    <li>Min 1</li>
+                                    <li>Max 31</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
@@ -957,8 +957,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:8</li>
-                                    <li>Max:31</li>
+                                    <li>Min 8</li>
+                                    <li>Max 31</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
@@ -997,8 +997,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:1</li>
-                                    <li>Max:31</li>
+                                    <li>Min 1</li>
+                                    <li>Max 31</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
@@ -1040,8 +1040,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>{&#39;Min&#39;: 576}</li>
-                                    <li>{&#39;Max&#39;: 9216}</li>
+                                    <li>Min 576</li>
+                                    <li>Max 9216</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">9216</div>
                 </td>
@@ -1062,8 +1062,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>{&#39;Min&#39;: 2}</li>
-                                    <li>{&#39;Max&#39;: 3967}</li>
+                                    <li>Min 2</li>
+                                    <li>Max 3967</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
@@ -1306,8 +1306,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:1</li>
-                                    <li>Max:4096</li>
+                                    <li>Min 1</li>
+                                    <li>Max 4096</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">"Default value is the vPC port identifier"</div>
                 </td>
@@ -1423,8 +1423,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min:1</li>
-                                    <li>Max:4096</li>
+                                    <li>Min 1</li>
+                                    <li>Max 4096</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">"Default value is the vPC port identifier"</div>
                 </td>

@@ -17,7 +17,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from ansible_collections.ansible.netcommon.tests.unit.compat.mock import patch
+from unittest.mock import patch
 
 # from units.compat.mock import patch
 

@@ -1,0 +1,130 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Remove local log file
+  local_action: command rm -f res_mgr.log
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create Resources - Invalid Pool type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
+            pool_type: "IDLE"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L3_VNI"                  # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            resource: "101"                          # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - Invalid Pool Name
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "WRONG_POOL"                  # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            resource: "101"                          # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - L3 VNI wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L3_VNI"                      # Based on the 'poolType', select appropriate name
+            scope_type: "device"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            resource: "102"                          # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - L2VNI - wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "l2_vni_fabric"             # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L2_VNI"                      # Based on the 'poolType', select appropriate name
+            scope_type: "device_interface"           # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            resource: "102"                          # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - LOOPBACK_ID wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "loopback_dev"              # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK_ID"                 # Based on the 'poolType', select appropriate name
+            scope_type: "link"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"              
+              - "{{ ansible_switch2 }}"              
+            resource: "200"                          # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - VPC_ID wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"  # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "VPC_ID"                      # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"              
+              - "{{ ansible_switch2 }}"              
+            resource: "500"                          # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - LOOPBACK0_IP_POOL wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "mmudigon-2"                # A unique name to identify the resource
+            pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK0_IP_POOL"           # Based on the 'poolType', select appropriate name
+            scope_type: "link"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            resource: "110.1.1.1"                    # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - LOOPBACK1_IP_POOL wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_10 }}"  # A unique name to identify the resource
+            pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK1_IP_POOL"           # Based on the 'poolType', select appropriate name
+            scope_type: "device"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"              
+            resource: "fe:80::04"                    # The value of the resource being created
+      ignore_errors: yes
+
+    - name: Create Resources - SUBNET wrong scope type
+      cisco.dcnm.dcnm_resource_manager:
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}" 
+        config:
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"  # A unique name to identify the resource
+            pool_type: "SUBNET"                      # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
+            scope_type: "device_interface"           # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']             
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"              
+            resource: "fe:80:0505::05/64"            # The value of the resource being created
+      ignore_errors: yes
