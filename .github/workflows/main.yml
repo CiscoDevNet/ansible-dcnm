@@ -71,7 +71,7 @@ jobs:
       run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
 
     - name: Run sanity tests
-      run: ansible-test sanity --docker --python 3.8 -v --color --truncate 0 --skip-test import
+      run: ansible-test sanity --docker --python 3.8 -v --color --truncate 0
       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
 
 
