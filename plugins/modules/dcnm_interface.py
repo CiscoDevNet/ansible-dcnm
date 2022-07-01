@@ -401,10 +401,12 @@ options:
             default: true
           mtu:
             description:
-            - Interface MTU
+            - Interface MTU.
+            - Can be specified either "default" or "jumbo" for access and
+              trunk interface types. If not specified, it defaults to "jumbo"
+            - Can be specified with any value within 576 and 9216 for routed interface
+              types. If not specified, it defaults to 9216
             type: str
-            choices: ['default', 'jumbo']
-            default: jumbo
           allowed_vlans:
             description:
             - Vlans that are allowed on this interface.
@@ -1017,14 +1019,16 @@ class DcnmIntf:
             "GLOBAL_IF": "/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/rest/globalInterface/deploy",
             "INTERFACE": "/rest/interface",
+            "IF_MARK_DELETE": "/rest/globalInterface",
         },
         12: {
-            "VPC_SNO": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
-            "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
-            "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface/detail?serialNumber={}",
-            "GLOBAL_IF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/globalInterface",
-            "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/globalInterface/deploy",
-            "INTERFACE": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/interface",
+            "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
+            "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
+            "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber={}",
+            "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
+            "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
+            "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
+            "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
         },
     }
 
@@ -1464,7 +1468,7 @@ class DcnmIntf:
             mode=dict(required=True, type="str"),
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
-            mtu=dict(type="str", default="jumbo"),
+            mtu=dict(type="str", default="jumbo", choices=["jumbo", "default"]),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
             cmds=dict(type="list"),
@@ -1476,7 +1480,7 @@ class DcnmIntf:
             mode=dict(required=True, type="str"),
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
-            mtu=dict(type="str", default="jumbo"),
+            mtu=dict(type="str", default="jumbo", choices=["jumbo", "default"]),
             speed=dict(type="str", default="Auto"),
             access_vlan=dict(type="str", default=""),
             cmds=dict(type="list"),
@@ -2339,7 +2343,7 @@ class DcnmIntf:
                                                 break
                                         if res == "copy_and_add":
                                             want[k][0][ik][nk] = d[k][0][ik][nk]
-                                            changed_dict[k][0][ik][nk] = d[k][0][ik][nk]
+                                            continue
                                         if (res == "merge_and_add"):
                                             want[k][0][ik][nk] = self.dcnm_intf_merge_want_and_have(nk, want[k][0][ik][nk], d[k][0][ik][nk])
                                             changed_dict[k][0][ik][nk] = want[k][0][ik][nk]
@@ -2366,7 +2370,7 @@ class DcnmIntf:
                                             break
                                     if res == "copy_and_add":
                                         want[k][0][ik] = d[k][0][ik]
-                                        changed_dict[k][0][ik] = d[k][0][ik]
+                                        continue
                                     if (res == "merge_and_add"):
                                         want[k][0][ik] = self.dcnm_intf_merge_want_and_have(ik, want[k][0][ik], d[k][0][ik])
                                         changed_dict[k][0][ik] = want[k][0][ik]
@@ -2383,7 +2387,7 @@ class DcnmIntf:
 
                             if res == "copy_and_add":
                                 want[k] = d[k]
-                                changed_dict[k] = d[k]
+                                continue
                             if (res == "merge_and_add"):
                                 want[k] = self.dcnm_intf_merge_want_and_have(k, want[k], d[k])
                                 changed_dict[k] = want[k]
@@ -3117,7 +3121,7 @@ class DcnmIntf:
         deploy = False
         replace = False
 
-        path = self.paths["GLOBAL_IF"]
+        path = self.paths["IF_MARK_DELETE"]
 
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
@@ -3127,7 +3131,20 @@ class DcnmIntf:
             if delem == []:
                 continue
 
-            json_payload = json.dumps(delem)
+            if (self.dcnm_version < 12):
+                json_payload = json.dumps(delem)
+            else:
+                send_payload = copy.deepcopy(delem)
+                [
+                    [
+                        item.pop("interfaceType"),
+                        item.pop("fabricName"),
+                        item.pop("interfaceDbId"),
+                    ]
+                    for item in send_payload
+                ]
+                json_payload = json.dumps(send_payload)
+
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
 
             if resp.get("RETURN_CODE") != 200:
@@ -3178,14 +3195,22 @@ class DcnmIntf:
 
             if index != self.int_index["INTERFACE_VPC"]:
                 # Deploy just requires ifName and serialNumber
-                [
+                if (self.dcnm_version < 12):
                     [
-                        item.pop("interfaceType"),
-                        item.pop("fabricName"),
-                        item.pop("interfaceDbId"),
+                        [
+                            item.pop("interfaceType"),
+                            item.pop("fabricName"),
+                            item.pop("interfaceDbId"),
+                        ]
+                        for item in delem
                     ]
-                    for item in delem
-                ]
+                else:
+                    [
+                        [
+                            item.pop("interfaceDbId"),
+                        ]
+                        for item in delem
+                    ]
             else:
                 [
                     [item.pop("interfaceType"), item.pop("interfaceDbId")]

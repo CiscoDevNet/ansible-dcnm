@@ -181,11 +181,17 @@ options:
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
+            - This knob has been deprecated from release 2.0.2 onwards and will not have any functional
+              impact if specified in playbook.
             type: bool
             default: true
       deploy:
         description:
         - Global knob to control whether to deploy the attachment
+        - Until 2.0.1 this knob will create and deploy the attachment in DCNM only when set to "True" in playbook
+        - From 2.0.2 onwards, attachments specified in the playbook will always be created in DCNM.
+          This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
+          If set to "False", the attachments will be created in DCNM, but will not be deployed
         type: bool
         default: true
 """
@@ -408,12 +414,12 @@ class DcnmNetwork:
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
         },
         12: {
-            "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
-            "GET_VRF_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
-            "GET_NET_ATTACH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+            "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+            "GET_VRF_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
+            "GET_NET_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
-            "GET_NET": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
-            "GET_NET_NAME": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
+            "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
+            "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
         },
     }
@@ -570,7 +576,7 @@ class DcnmNetwork:
                             dep_net = True
 
             if not found:
-                if bool(want["deployment"]):
+                if bool(want["isAttached"]):
                     del want["isAttached"]
                     attach_list.append(want)
 
@@ -637,7 +643,7 @@ class DcnmNetwork:
         attach.update({"dot1QVlan": 0})
         attach.update({"untagged": False})
         attach.update({"deployment": deploy})
-        attach.update({"isAttached": deploy})
+        attach.update({"isAttached": True})
         attach.update({"extensionValues": ""})
         attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
@@ -1041,32 +1047,33 @@ class DcnmNetwork:
             if networks_per_navrf.get("DATA"):
                 for l2net in networks_per_navrf["DATA"]:
                     json_to_dict = json.loads(l2net["networkTemplateConfig"])
-                    t_conf = {
-                        "vlanId": json_to_dict.get("vlanId", ""),
-                        "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
-                        "isLayer2Only": json_to_dict.get("isLayer2Only", False),
-                        "tag": json_to_dict.get("tag", ""),
-                        "vlanName": json_to_dict.get("vlanName", ""),
-                        "intfDescription": json_to_dict.get("intfDescription", ""),
-                        "mtu": json_to_dict.get("mtu", ""),
-                        "suppressArp": json_to_dict.get("suppressArp", False),
-                        "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                        "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                        "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                        "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                        "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                        "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
-                        "loopbackId": json_to_dict.get("loopbackId", ""),
-                    }
+                    if (json_to_dict.get("vrfName", "")) == "NA":
+                        t_conf = {
+                            "vlanId": json_to_dict.get("vlanId", ""),
+                            "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+                            "isLayer2Only": json_to_dict.get("isLayer2Only", False),
+                            "tag": json_to_dict.get("tag", ""),
+                            "vlanName": json_to_dict.get("vlanName", ""),
+                            "intfDescription": json_to_dict.get("intfDescription", ""),
+                            "mtu": json_to_dict.get("mtu", ""),
+                            "suppressArp": json_to_dict.get("suppressArp", False),
+                            "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
+                            "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
+                            "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
+                            "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
+                            "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
+                            "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                            "loopbackId": json_to_dict.get("loopbackId", ""),
+                        }
 
-                    l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
-                    del l2net["displayName"]
-                    del l2net["serviceNetworkTemplate"]
-                    del l2net["source"]
+                        l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
+                        del l2net["displayName"]
+                        del l2net["serviceNetworkTemplate"]
+                        del l2net["source"]
 
-                    curr_networks.append(l2net["networkName"])
+                        curr_networks.append(l2net["networkName"])
 
-                    have_create.append(l2net)
+                        have_create.append(l2net)
 
         if not curr_networks:
             return
@@ -1090,13 +1097,16 @@ class DcnmNetwork:
             for attach in attach_list:
                 attach_state = False if attach["lanAttachState"] == "NA" else True
                 deploy = attach["isLanAttached"]
+                deployed = False
                 if bool(deploy) and (
                     attach["lanAttachState"] == "OUT-OF-SYNC"
                     or attach["lanAttachState"] == "PENDING"
                 ):
-                    deploy = False
+                    deployed = False
+                else:
+                    deployed = True
 
-                if bool(deploy):
+                if bool(deployed):
                     dep_net = attach["networkName"]
 
                 sn = attach["switchSerialNo"]
@@ -1128,7 +1138,7 @@ class DcnmNetwork:
                 attach.update({"fabric": self.fabric})
                 attach.update({"vlan": vlan})
                 attach.update({"serialNumber": sn})
-                attach.update({"deployment": deploy})
+                attach.update({"deployment": deployed})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": ""})
                 attach.update({"freeformConfig": ""})
@@ -1643,14 +1653,14 @@ class DcnmNetwork:
                 atch_list = []
                 for attach in want_a["lanAttachList"]:
                     del attach["isAttached"]
-                    if bool(attach["deployment"]):
-                        atch_list.append(attach)
+                    atch_list.append(attach)
                 if atch_list:
                     base = want_a.copy()
                     del base["lanAttachList"]
                     base.update({"lanAttachList": atch_list})
                     diff_attach.append(base)
-                    dep_net = want_a["networkName"]
+                    if bool(attach["deployment"]):
+                        dep_net = want_a["networkName"]
 
             if dep_net:
                 all_nets.append(dep_net)

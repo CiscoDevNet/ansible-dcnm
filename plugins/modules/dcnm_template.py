@@ -197,8 +197,8 @@ class DcnmTemplate:
         },
         12: {
             "TEMP_VALIDATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/validate",
-            "TEMP_GET_SWITCHES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
-            "TEMP_GET_SW_ROLES": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/control/switches/roles",
+            "TEMP_GET_SWITCHES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+            "TEMP_GET_SW_ROLES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/roles",
             "TEMPLATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/template",
             "TEMP_DELETE_BULK": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/delete/bulk",
             "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}",

@@ -132,7 +132,7 @@
               ipv6_addr: fd08::0201           # ipV6 address for the loopback interface
               route_tag: ""                   # Routing Tag for the interface
               cmds:                           # Freeform config
-                - spanning-tree bpduguard enable
+                - logging event port link-status
               description: "loopback interface 100 configuration"
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
@@ -151,7 +151,7 @@
               ipv6_mask_len: 64               # choose between [min:64, max:127]
               mtu: 9216                       # choose between [min:576, max:9216]
               cmds:                           # Freeform config
-                - spanning-tree bpduguard enable
+                - logging event port link-status
               description: "sub interface eth1/1.1 configuration"
 
       register: result
@@ -255,18 +255,12 @@
 
     - assert:
         that:
-          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
-          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["CONF"].split("\n") | length) == 1'
-          - '(result["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"].split(",") | length) == 1'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - 'result.changed == false'
 
     - name: Modify po300 - new aggregate members like members and cmds
       cisco.dcnm.dcnm_interface:
