@@ -145,7 +145,7 @@
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # optional
+            interface: "{{ ansible_sw2_int3 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
@@ -189,7 +189,7 @@
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # optional
+            interface: "{{ ansible_sw2_int3 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
