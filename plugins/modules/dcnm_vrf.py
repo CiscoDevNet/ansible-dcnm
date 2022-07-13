@@ -141,15 +141,17 @@ options:
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
-            - This knob has been deprecated from release 2.0.2 onwards and will not have any functional
+            - This knob has been deprecated from release 2.1.0 onwards and will not have any functional
               impact if specified in playbook.
             type: bool
             default: true
       deploy:
         description:
         - Global knob to control whether to deploy the attachment
-        - Until 2.0.1 this knob will create and deploy the attachment in DCNM only when set to "True" in playbook
-        - From 2.0.2 onwards, attachments specified in the playbook will always be created in DCNM.
+        - VERSION 2.0.1 AND BEFORE
+          This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
+        - VERSION 2.1.0 AND LATER
+          Attachments specified in the playbook will always be created in DCNM.
           This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
           If set to "False", the attachments will be created in DCNM, but will not be deployed
         type: bool
