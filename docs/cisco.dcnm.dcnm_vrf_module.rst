@@ -87,7 +87,7 @@ Parameters
                 </td>
                 <td>
                         <div>Per switch knob to control whether to deploy the attachment</div>
-                        <div>This knob has been deprecated from release 2.1.0 onwards and will not have any functional impact if specified in playbook.</div>
+                        <div>This knob has been deprecated from Ansible NDFC Collection Version 2.1.0 onwards. There will not be any functional impact if specified in playbook.</div>
                 </td>
             </tr>
             <tr>
@@ -282,9 +282,9 @@ Parameters
                 </td>
                 <td>
                         <div>Global knob to control whether to deploy the attachment</div>
-                        <div>VERSION 2.0.1 AND BEFORE</div>
+                        <div>Ansible NDFC Collection Behavior for Version 2.0.1 and earlier</div>
                         <div>This knob will create and deploy the attachment in DCNM only when set to &quot;True&quot; in playbook</div>
-                        <div>VERSION 2.1.0 AND LATER</div>
+                        <div>Ansible NDFC Collection Behavior for Version 2.1.0 and later</div>
                         <div>Attachments specified in the playbook will always be created in DCNM. This knob, when set to &quot;True&quot;,  will deploy the attachment in DCNM, by pushing the configs to switch. If set to &quot;False&quot;, the attachments will be created in DCNM, but will not be deployed</div>
                 </td>
             </tr>
