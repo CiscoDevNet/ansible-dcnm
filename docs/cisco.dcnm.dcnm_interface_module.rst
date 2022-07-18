@@ -379,13 +379,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>default</li>
-                                    <li><div style="color: blue"><b>jumbo</b>&nbsp;&larr;</div></li>
-                        </ul>
                 </td>
                 <td>
-                        <div>Interface MTU</div>
+                        <div>Interface MTU.</div>
+                        <div>Can be specified either &quot;default&quot; or &quot;jumbo&quot; for access and trunk interface types. If not specified, it defaults to &quot;jumbo&quot;</div>
+                        <div>Can be specified with any value within 576 and 9216 for routed interface types. If not specified, it defaults to 9216</div>
                 </td>
             </tr>
             <tr>

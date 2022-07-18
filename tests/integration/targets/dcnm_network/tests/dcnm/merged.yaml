@@ -708,11 +708,11 @@
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[0].attach[0].networkName== "ansible-net13"'
-    - '"{{ ansible_switch2 }}" in result.response[0].attach[0].ipAddress'
+    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.response[0].attach[0].ipAddress'
     - 'result.response[0].attach[1].isLanAttached== true'
     - 'result.response[0].attach[1].lanAttachState== "DEPLOYED"'
     - 'result.response[0].attach[1].networkName== "ansible-net13"'
-    - '"{{ ansible_switch1 }}" in result.response[0].attach[1].ipAddress'
+    - '"{{ ansible_switch1 }}" or "{{ ansible_switch2 }}" in result.response[0].attach[1].ipAddress'
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:

@@ -4140,6 +4140,11 @@ class DcnmServiceRoutePeering:
                             resp["VLANS"] = re.findall(
                                 r"\d+", resp["DATA"]["error"].get("detail", "")
                             )
+                        if "is already Detached state and no action taken" in resp["DATA"]["error"].get(
+                            "detail", ""
+                        ):
+                            # This case can be considered as no error, because detaching an already detahced SRP may return this code
+                            rc = "no_error"
         return rc
 
     def dcnm_srp_get_deployed_srp_list(self, diff_deploy):
@@ -4368,6 +4373,10 @@ class DcnmServiceRoutePeering:
                 rc = self.dcnm_srp_check_for_errors_in_resp(resp)
                 resp["METHOD"] = "DELETE"
 
+                if rc == "no_error":
+                    resp = None
+                    break
+
                 if rc == "in_use_error":
                     # We may see this if SRPs use a vlan id already in use. In such a case delete the SRP directly
                     # Mark this element for "no deploy" so that it is deleted directly without deploy
@@ -4376,6 +4385,7 @@ class DcnmServiceRoutePeering:
                     break
                 time.sleep(10)
                 continue
+
             if resp is not None:
                 resp["RETRIES"] = retries
                 self.result["response"].append(resp)

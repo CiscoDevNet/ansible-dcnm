@@ -157,7 +157,7 @@ def get_fabric_inventory_details(module, fabric):
 
     conn = Connection(module._socket_path)
     if conn.get_version() == 12:
-        path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
 
     count = 1
     while rc is False:
@@ -326,7 +326,7 @@ def get_fabric_details(module, fabric):
 
     conn = Connection(module._socket_path)
     if conn.get_version() == 12:
-        path = "/appcenter/cisco/ndfc/v1/lan-fabric" + path
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
 
     count = 1
     while rc is False:

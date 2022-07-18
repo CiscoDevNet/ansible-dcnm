@@ -141,11 +141,19 @@ options:
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
+            - This knob has been deprecated from Ansible NDFC Collection Version 2.1.0 onwards.
+              There will not be any functional impact if specified in playbook.
             type: bool
             default: true
       deploy:
         description:
         - Global knob to control whether to deploy the attachment
+        - Ansible NDFC Collection Behavior for Version 2.0.1 and earlier
+        - This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
+        - Ansible NDFC Collection Behavior for Version 2.1.0 and later
+        - Attachments specified in the playbook will always be created in DCNM.
+          This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
+          If set to "False", the attachments will be created in DCNM, but will not be deployed
         type: bool
         default: true
 """
@@ -372,9 +380,9 @@ class DcnmVrf:
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
         },
         12: {
-            "GET_VRF": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
-            "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
-            "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
+            "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+            "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
+            "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
             "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
         },
@@ -520,7 +528,7 @@ class DcnmVrf:
                                 dep_vrf = True
 
             if not found:
-                if bool(want["deployment"]):
+                if bool(want["isAttached"]):
                     del want["isAttached"]
                     attach_list.append(want)
 
@@ -612,7 +620,7 @@ class DcnmVrf:
         attach.update({"vrfName": vrf_name})
         attach.update({"vlan": vlanId})
         attach.update({"deployment": deploy})
-        attach.update({"isAttached": deploy})
+        attach.update({"isAttached": True})
         attach.update({"serialNumber": serial})
         if self.vrf_ext:
             attach.update({"extensionValues": json.dumps(ext_values).replace(" ", "")})
@@ -783,13 +791,16 @@ class DcnmVrf:
             for attach in attach_list:
                 attach_state = False if attach["lanAttachState"] == "NA" else True
                 deploy = attach["isLanAttached"]
+                deployed = False
                 if bool(deploy) and (
                     attach["lanAttachState"] == "OUT-OF-SYNC"
                     or attach["lanAttachState"] == "PENDING"
                 ):
-                    deploy = False
+                    deployed = False
+                else:
+                    deployed = True
 
-                if bool(deploy):
+                if bool(deployed):
                     dep_vrf = attach["vrfName"]
 
                 sn = attach["switchSerialNo"]
@@ -813,7 +824,7 @@ class DcnmVrf:
                 attach.update({"fabric": self.fabric})
                 attach.update({"vlan": vlan})
                 attach.update({"serialNumber": sn})
-                attach.update({"deployment": deploy})
+                attach.update({"deployment": deployed})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": ""})
                 attach.update({"freeformConfig": ""})
@@ -1267,7 +1278,6 @@ class DcnmVrf:
                     diff, vrf = self.diff_for_attach_deploy(
                         want_a["lanAttachList"], have_a["lanAttachList"]
                     )
-
                     if diff:
                         base = want_a.copy()
                         del base["lanAttachList"]
@@ -1284,14 +1294,14 @@ class DcnmVrf:
                 for attach in want_a["lanAttachList"]:
                     if attach.get("isAttached"):
                         del attach["isAttached"]
-                    if bool(attach["deployment"]):
-                        atch_list.append(attach)
+                    atch_list.append(attach)
                 if atch_list:
                     base = want_a.copy()
                     del base["lanAttachList"]
                     base.update({"lanAttachList": atch_list})
                     diff_attach.append(base)
-                    dep_vrf = want_a["vrfName"]
+                    if bool(attach["deployment"]):
+                        dep_vrf = want_a["vrfName"]
 
             if dep_vrf:
                 all_vrfs += dep_vrf + ","

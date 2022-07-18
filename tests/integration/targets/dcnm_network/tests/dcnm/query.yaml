@@ -188,10 +188,10 @@
     - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == false'
     - 'result.diff[1].attach[0].deploy == false'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[1].net_name == "ansible-net12"'
+    - '"{{ ansible_switch1 }}" or "{{ ansible_switch2 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.diff[1].attach[0].ip_address'
+    - '"ansible-net13" or "ansible-net12" in result.diff[1].net_name'
+    - '"ansible-net13" or "ansible-net12" in result.diff[0].net_name'
 
 - name: QUERY - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
