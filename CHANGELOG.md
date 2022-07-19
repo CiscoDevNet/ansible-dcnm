@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 * The following new modules are included in this release
-    * `dcnm_resource_manager` - Module for managing dcnm resources
+    * `dcnm_resource_manager` - Module for managing dcnm resources.
       [Reference Info](https://www.cisco.com/c/en/us/td/docs/dcn/ndfc/121x/configuration/fabric-controller/cisco-ndfc-fabric-controller-configuration-guide-121x/lan-fabrics.html#task_fsg_sn4_zqb)
 
 ### Fixed
@@ -24,8 +24,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Fixed Restapi used in version detection mechanism in module utils.
 * Fixed Restapi used in various modules to support the latest api's.
 * Fixed deploy knob behavior for vrf and network module to align with GUI functionality.
-* Fixed idempotence issue in interface module
-* Fixed diff generation issue for network deletion with NDFC
+* Fixed idempotence issue in interface module.
+* Fixed diff generation issue for network deletion with NDFC.
 
 ### Deprecated
 
@@ -170,6 +170,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 * cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 * cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+[2.1.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/2.0.1...2.1.0
 [2.0.1]: https://github.com/CiscoDevNet/ansible-dcnm/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.4...2.0.0
 [1.2.4]: https://github.com/CiscoDevNet/ansible-dcnm/compare/1.2.3...1.2.4
