@@ -138,6 +138,15 @@
         index_var: my_idx
       register: result
 
+    # Assert for description being non-empty
+    - assert:
+        that:
+          - 'item["description"] != ""'
+      when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
+      loop: '{{ result.results[0]["diff"][0]["merged"] }}'
+      loop_control:
+        index_var: my_idx
+
     # Assert for Create responses
     - assert:
         that:

@@ -117,6 +117,26 @@ Parameters
                         <div>User defined labels for identifying the templates</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>cli</b>&nbsp;&larr;</div></li>
+                                    <li>python</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Type of the template content either CLI or Python</div>
+                </td>
+            </tr>
 
             <tr>
                 <td colspan="2">

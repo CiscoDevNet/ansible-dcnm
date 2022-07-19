@@ -222,7 +222,7 @@
   "modify_policy_104_with_policy_id" : [
   {
     "create_additional_policy": false,
-    "description": "modifying policy with template name",
+    "description": "modifying policy with policy ID",
     "name": "POLICY-123840",
     "priority": 904
   },

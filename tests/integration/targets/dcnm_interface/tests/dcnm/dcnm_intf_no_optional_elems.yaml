@@ -126,11 +126,11 @@
     - assert:
         that:
           - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 11'
+          - '(result["diff"][0]["merged"] | length) == 10'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 9'
+          - '(result["diff"][0]["deploy"] | length) == 8'
 
     - assert:
         that:
@@ -274,4 +274,3 @@
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
-

@@ -1,0 +1,74 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+
+- name: SCALE - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: SCALE - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: SCALE - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: Dummy set fact for leaf_attach_list
+  set_fact:
+    leaf_vrf_attach: []
+
+- name: Build list of VRFs to be deployed
+  set_fact:
+    vrfs_list: "{{ vrfs_list|default([]) + [{ 'vrf_name': 'TEST_VRF%03d' | format(item), 'deploy': 'no', 'vrf_id': (item | int + 50000) | int, 'vlan_id': (item | int + 2000) | int, 'attach': leaf_vrf_attach }] }}"
+  loop: '{{ range(0, 800) | list }}'
+
+- name: Push all VRFs to DCNM
+  cisco.dcnm.dcnm_vrf:
+    fabric: '{{ ansible_it_fabric }}'
+    state: merged
+    config: '{{ vrfs_list }}'
+  register: result
+
+- name: SCALE - Clean up existing vrfs
+  cisco.dcnm.dcnm_vrf: &conf
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: SCALE - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
+- name: SCALE - conf - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+    - 'result.diff|length == 0'
+
+################################################
+####                 CLEAN-UP                 ##
+################################################
+
+- name: SCALE - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted

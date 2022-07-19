@@ -54,4 +54,3 @@
     - "result.response[0].parent.networkTemplateConfig.vrfDhcp2 is search('two')"
     - "result.response[0].parent.networkTemplateConfig.vrfDhcp3 is search('three')"
     - "result.response[0].parent.networkTemplateConfig.loopbackId is search('0')"
-

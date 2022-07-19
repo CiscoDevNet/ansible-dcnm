@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Cisco and/or its affiliates.
+# Copyright (c) 2020-2022 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class ActionModule(ActionNetworkModule):
             msg = (
                 "PERSISTENT_COMMAND_TIMEOUT and PERSISTENT_CONNECT_TIMEOUT"
             )
-            msg += " must be set to {} seconds or higher when using dcnm_inventory module.".format(timeout)
+            msg += " must be set to {0} seconds or higher when using dcnm_inventory module.".format(timeout)
             msg += " Current persistent_command_timeout setting:" + str(
                 persistent_command_timeout
             )

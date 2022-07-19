@@ -221,4 +221,3 @@
 - name: Initialize the setup - sleep for 180 seconds for DCNM to completely update the state
   wait_for:
     timeout: 180
-
