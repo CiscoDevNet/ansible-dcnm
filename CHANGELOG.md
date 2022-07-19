@@ -4,6 +4,33 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [2.1.0] - 2022-06-19
+
+### Added
+
+* The following new modules are included in this release
+    * `dcnm_resource_manager` - Module for managing dcnm resources
+      [Reference Info](https://www.cisco.com/c/en/us/td/docs/dcn/ndfc/121x/configuration/fabric-controller/cisco-ndfc-fabric-controller-configuration-guide-121x/lan-fabrics.html#task_fsg_sn4_zqb)
+
+### Fixed
+
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/151
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/143
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/141
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/139
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/137
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/134
+* https://github.com/CiscoDevNet/ansible-dcnm/issues/112
+* Fixed Restapi used in version detection mechanism in module utils.
+* Fixed Restapi used in various modules to support the latest api's.
+* Fixed deploy knob behavior for vrf and network module to align with GUI functionality.
+* Fixed idempotence issue in interface module
+* Fixed diff generation issue for network deletion with NDFC
+
+### Deprecated
+
+* Deploy knob for individual attachments in vrf and network modules has been marked for deprecation.
+
 ## [2.0.1] - 2022-01-28
 
 Fixed httpapi plugin issue preventing connections to latest version of NDFC (Version: `12.0.2f`)
