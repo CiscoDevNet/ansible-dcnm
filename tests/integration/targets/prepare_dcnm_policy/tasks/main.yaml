@@ -106,7 +106,7 @@
                   path sys/ch depth unbounded
                 subscription 3
                   dst-grp 3
-                  snsr-grp 2 sample-interval 30000
+                  snsr-grp 3 sample-interval 30000
 
           - name: template_104
             description: "Template_104"
