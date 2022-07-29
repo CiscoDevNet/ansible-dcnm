@@ -177,7 +177,7 @@ EXAMPLES = """
 #
 # Deleted:
 #   Policies defined in the playbook will be deleted in the target fabric.
-#   
+#
 #   WARNING: Deleting a policy will deploy all pending configurations on the impacted switches.
 #
 # Query:
