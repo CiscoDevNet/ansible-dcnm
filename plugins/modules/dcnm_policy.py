@@ -367,7 +367,7 @@ class DcnmPolicy:
             "POLICY_DEPLOY": "/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
             "POLICY_WITH_POLICY_ID": "/rest/control/policies/{}",
-            "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview?forceShowRun=false&showBrief=true",
+            "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview/",
         },
         12: {
             "POLICY_WITH_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
@@ -377,7 +377,7 @@ class DcnmPolicy:
             "POLICY_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
             "POLICY_WITH_POLICY_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
-            "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview?forceShowRun=false&showBrief=true",
+            "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/",
         },
     }
 
@@ -1029,7 +1029,7 @@ class DcnmPolicy:
                 # Get the SYNC status of the switch. After deploy, the status
                 # MUST be "In-Sync". If not keep retrying
                 path = self.paths["CONFIG_PREVIEW"].format(self.fabric)
-                path = path + ",".join(del_snos)
+                path = path + ",".join(del_snos) + "?forceShowRun=false&showBrief=true"
 
                 cp_resp = dcnm_send(self.module, "GET", path, "")
 
