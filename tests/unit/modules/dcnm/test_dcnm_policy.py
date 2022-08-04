@@ -532,7 +532,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -580,7 +580,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -628,7 +628,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -659,7 +659,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -703,7 +703,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -751,7 +751,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -796,7 +796,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -846,7 +846,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -896,7 +896,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -952,7 +952,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -995,7 +995,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1040,7 +1040,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1088,7 +1088,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1138,7 +1138,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1189,7 +1189,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1238,7 +1238,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1290,7 +1290,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1340,7 +1340,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1390,7 +1390,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1426,7 +1426,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1456,7 +1456,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1486,7 +1486,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1516,7 +1516,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data
@@ -1546,7 +1546,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
         # get mock ip_sn and fabric_inventory_details
-        self.mock_fab_inv = []
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
 
         # load required config data

@@ -414,6 +414,9 @@ class DcnmPolicy:
         self.inventory_data = get_fabric_inventory_details(
             self.module, self.fabric
         )
+
+        # Get all switches which are managable. Will be required to check deploy status.
+        self.managable = [self.inventory_data[key]["serialNumber"] for key in self.inventory_data.keys() if self.inventory_data[key]["managable"]]
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(changed=False, diff=[], response=[])
@@ -989,7 +992,9 @@ class DcnmPolicy:
 
             # Get all serial numbers. We will require this to do save and deploy
             if policy["serialNumber"] not in snos:
-                snos.append(policy["serialNumber"])
+                # Add the serial number only if the switch is managable.
+                if policy["serialNumber"] in self.managable:
+                    snos.append(policy["serialNumber"])
 
             # First Mark the policy as deleted. Then deploy the same to remove the configuration
             # from the switch. Then we can finally delete the policies from the DCNM server
@@ -1280,6 +1285,8 @@ def main():
     dcnm_policy.dcnm_translate_switch_info(
         dcnm_policy.config, dcnm_policy.ip_sn, dcnm_policy.hn_sn
     )
+
+    dcnm_policy.log_msg(f"MANAGABLE = {dcnm_policy.managable}\n")
 
     if module.params["state"] != "query":
         # Translate the given playbook config to some convenient format. Each policy should
