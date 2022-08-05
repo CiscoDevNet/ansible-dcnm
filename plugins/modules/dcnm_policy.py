@@ -1286,8 +1286,6 @@ def main():
         dcnm_policy.config, dcnm_policy.ip_sn, dcnm_policy.hn_sn
     )
 
-    dcnm_policy.log_msg(f"MANAGABLE = {dcnm_policy.managable}\n")
-
     if module.params["state"] != "query":
         # Translate the given playbook config to some convenient format. Each policy should
         # have the switches to be deployed.
