@@ -178,6 +178,8 @@ EXAMPLES = """
 # Deleted:
 #   Policies defined in the playbook will be deleted in the target fabric.
 #
+#   WARNING: Deleting a policy will deploy all pending configurations on the impacted switches.
+#
 # Query:
 #   Returns the current DCNM state for the policies listed in the playbook.
 
@@ -365,7 +367,7 @@ class DcnmPolicy:
             "POLICY_DEPLOY": "/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
             "POLICY_WITH_POLICY_ID": "/rest/control/policies/{}",
-            "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview?forceShowRun=false&showBrief=true",
+            "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview/",
         },
         12: {
             "POLICY_WITH_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
@@ -375,7 +377,7 @@ class DcnmPolicy:
             "POLICY_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
             "POLICY_WITH_POLICY_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
-            "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview?forceShowRun=false&showBrief=true",
+            "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/",
         },
     }
 
@@ -409,7 +411,12 @@ class DcnmPolicy:
 
         self.dcnm_version = dcnm_version_supported(self.module)
 
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.inventory_data = get_fabric_inventory_details(
+            self.module, self.fabric
+        )
+
+        # Get all switches which are managable. Will be required to check deploy status.
+        self.managable = [self.inventory_data[key]["serialNumber"] for key in self.inventory_data.keys() if self.inventory_data[key]["managable"]]
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(changed=False, diff=[], response=[])
@@ -438,7 +445,9 @@ class DcnmPolicy:
 
         policy_spec = dict(
             name=dict(required=True, type="str"),
-            create_additional_policy=dict(required=False, type="bool", default=True),
+            create_additional_policy=dict(
+                required=False, type="bool", default=True
+            ),
             description=dict(required=False, type="str", default=""),
             priority=dict(required=False, type=int, default=500),
             policy_vars=dict(required=False, type=dict, default={}),
@@ -449,7 +458,9 @@ class DcnmPolicy:
 
             clist = []
             clist.append(cfg)
-            policy_info, invalid_params = validate_list_of_dicts(clist, policy_spec)
+            policy_info, invalid_params = validate_list_of_dicts(
+                clist, policy_spec
+            )
             if invalid_params:
                 mesg = 'Invalid parameters in playbook: while processing policy "{0}", Error: {1}'.format(
                     cfg["name"], invalid_params
@@ -473,7 +484,9 @@ class DcnmPolicy:
         policy_payload["templateName"] = pelem["name"]
         policy_payload["description"] = pelem["description"]
         policy_payload["priority"] = pelem["priority"]
-        policy_payload["create_additional_policy"] = pelem["create_additional_policy"]
+        policy_payload["create_additional_policy"] = pelem[
+            "create_additional_policy"
+        ]
 
         policy_payload["policy_id_given"] = False
 
@@ -511,7 +524,9 @@ class DcnmPolicy:
         policy_payload["description"] = pelem["description"]
         policy_payload["templateName"] = policy["templateName"]
         policy_payload["priority"] = pelem["priority"]
-        policy_payload["create_additional_policy"] = pelem["create_additional_policy"]
+        policy_payload["create_additional_policy"] = pelem[
+            "create_additional_policy"
+        ]
         policy_payload["nvPairs"] = policy["nvPairs"]
 
         policy_payload["policy_id_given"] = True
@@ -668,10 +683,7 @@ class DcnmPolicy:
                             )
                             == "DCNM_POLICY_MATCH"
                         ):
-                            return (
-                                "DCNM_POLICY_DONT_ADD",
-                                have["policyId"],
-                            )
+                            return ("DCNM_POLICY_DONT_ADD", have["policyId"])
         if found is True:
             # Found a matching policy with the given template name, but other objects don't match.
             # Go ahead and merge the objects into the existing policy
@@ -735,7 +747,7 @@ class DcnmPolicy:
                     # complaining the policy being created is not unique since a policy with the same policy number
                     # already exists
 
-                    if "POLICY-" in policy.get("policyId", ''):
+                    if "POLICY-" in policy.get("policyId", ""):
                         policy.pop("id")
                         policy.pop("policyId")
                         policy["policy_id_given"] = False
@@ -751,7 +763,9 @@ class DcnmPolicy:
                 deploy["serialNo"] = policy["serialNumber"]
                 self.changed_dict[0]["deploy"].append(deploy)
 
-                if (policy_id is not None) and (policy_id not in self.deploy_payload):
+                if (policy_id is not None) and (
+                    policy_id not in self.deploy_payload
+                ):
                     self.deploy_payload.append(policy_id)
 
     def dcnm_policy_get_delete_payload(self, policy):
@@ -808,13 +822,14 @@ class DcnmPolicy:
         for pol in match_pol:
 
             del_payload = self.dcnm_policy_get_delete_payload(pol)
-            self.diff_delete.append(del_payload)
-            self.changed_dict[0]["deleted"].append(
-                {
-                    "policy": pol["policyId"],
-                    "templateName": pol["templateName"],
-                }
-            )
+            if del_payload not in self.diff_delete:
+                self.diff_delete.append(del_payload)
+                self.changed_dict[0]["deleted"].append(
+                    {
+                        "policy": pol["policyId"],
+                        "templateName": pol["templateName"],
+                    }
+                )
 
     def dcnm_policy_get_diff_query(self):
 
@@ -845,8 +860,13 @@ class DcnmPolicy:
                 # Policy ID is given, Fetch the specific information.
                 pinfo = self.dcnm_policy_get_policy_info_from_dcnm(cfg["name"])
                 if pinfo != []:
-                    if pinfo["templateName"] not in self.changed_dict[0]["query"]:
-                        self.changed_dict[0]["query"].append(pinfo["templateName"])
+                    if (
+                        pinfo["templateName"]
+                        not in self.changed_dict[0]["query"]
+                    ):
+                        self.changed_dict[0]["query"].append(
+                            pinfo["templateName"]
+                        )
                     self.result["response"].append(pinfo)
             else:
                 # templateName is given. Note this down
@@ -879,7 +899,10 @@ class DcnmPolicy:
                         [
                             t["templateName"]
                             for t in match_pol
-                            if (t["templateName"] not in self.changed_dict[0]["query"])
+                            if (
+                                t["templateName"]
+                                not in self.changed_dict[0]["query"]
+                            )
                         ]
                     )
                 )
@@ -943,9 +966,12 @@ class DcnmPolicy:
 
         return resp
 
-    def dcnm_policy_save_and_deploy(self, snos):
+    def dcnm_policy_deploy_to_switches(self, snos):
 
         deploy_path = self.paths["POLICY_CFG_DEPLOY"].format(self.fabric)
+
+        switches = ",".join(snos)
+        deploy_path = deploy_path + switches
 
         resp = dcnm_send(self.module, "POST", deploy_path, "")
         self.result["response"].append(resp)
@@ -966,11 +992,14 @@ class DcnmPolicy:
 
             # Get all serial numbers. We will require this to do save and deploy
             if policy["serialNumber"] not in snos:
-                snos.append(policy["serialNumber"])
+                # Add the serial number only if the switch is managable.
+                if policy["serialNumber"] in self.managable:
+                    snos.append(policy["serialNumber"])
 
             # First Mark the policy as deleted. Then deploy the same to remove the configuration
             # from the switch. Then we can finally delete the policies from the DCNM server
             resp = self.dcnm_policy_delete_policy(policy, True)
+
             if isinstance(resp, list):
                 resp = resp[0]
             if (
@@ -986,28 +1015,34 @@ class DcnmPolicy:
                 self.result["response"].append(resp)
                 self.module.fail_json(msg=resp)
 
-        # Once all policies are deleted, do a save & deploy so that the deleted policies are removed from the
+        # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
         # switch
         if (snos != []) and (mark_delete_flag is True):
 
+            # make a copy of snos. We will be updating snos in the following loop. But snos will be required
+            # further down
+            del_snos = snos.copy()
             retries = 0
             while retries < 50:
 
                 retries += 1
-                resp = self.dcnm_policy_save_and_deploy(snos)
+                resp = self.dcnm_policy_deploy_to_switches(del_snos)
+
                 if resp and (resp["RETURN_CODE"] != 200):
                     self.module.fail_json(msg=resp)
 
-                # Get the SYNC status of the switch. Afte config and deploy at fabric level, the status
+                # Get the SYNC status of the switch. After deploy, the status
                 # MUST be "In-Sync". If not keep retrying
                 path = self.paths["CONFIG_PREVIEW"].format(self.fabric)
+                path = path + ",".join(del_snos) + "?forceShowRun=false&showBrief=true"
+
                 cp_resp = dcnm_send(self.module, "GET", path, "")
 
                 if cp_resp.get("RETURN_CODE", 0) == 200:
                     match_data = [
                         item
                         for item in cp_resp.get("DATA", [])
-                        if item["switchId"] in snos
+                        if item["switchId"] in del_snos
                     ]
                 else:
                     self.module.fail_json(msg=cp_resp)
@@ -1016,6 +1051,9 @@ class DcnmPolicy:
                 for item in match_data:
                     if item["status"].lower() != "in-sync":
                         retry = True
+                    else:
+                        # remove the sno which is in "in-sync" from del_snos list
+                        del_snos.remove(item["switchId"])
                 if retry:
                     time.sleep(1)
                 else:
@@ -1037,6 +1075,7 @@ class DcnmPolicy:
                 and resp["MESSAGE"] == "OK"
             ):
                 resp = self.dcnm_policy_delete_policy(ditem, False)
+
                 if isinstance(resp, list):
                     resp = resp[0]
                 if (
@@ -1049,10 +1088,10 @@ class DcnmPolicy:
                         delete_flag = True
                         self.result["response"].append(resp)
 
-        # Once all policies are deleted, do a save & deploy so that the deleted policies are removed from the
+        # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
         # switch
         if (snos != []) and (delete_flag is True):
-            self.dcnm_policy_save_and_deploy(snos)
+            self.dcnm_policy_deploy_to_switches(snos)
             if resp and (resp["RETURN_CODE"] != 200):
                 self.module.fail_json(msg=resp)
 
@@ -1070,9 +1109,9 @@ class DcnmPolicy:
                 and (resp.get("DATA", None) is not None)
             ):
                 if resp["DATA"].get("successList", None) is not None:
-                    if "is created successfully" in resp["DATA"]["successList"][0].get(
-                        "message"
-                    ):
+                    if "is created successfully" in resp["DATA"][
+                        "successList"
+                    ][0].get("message"):
                         policy_id = re.findall(
                             r"POLICY-\d+",
                             resp["DATA"]["successList"][0].get("message"),
@@ -1098,9 +1137,9 @@ class DcnmPolicy:
                 and (resp.get("DATA", None) is not None)
             ):
                 if resp["DATA"].get("successList", None) is not None:
-                    if "is created successfully" in resp["DATA"]["successList"][0].get(
-                        "message"
-                    ):
+                    if "is created successfully" in resp["DATA"][
+                        "successList"
+                    ][0].get("message"):
                         create_flag = True
             else:
                 self.module.fail_json(msg=resp)
@@ -1147,7 +1186,9 @@ class DcnmPolicy:
         # We will remove it from there and add it to individual policies
 
         # Get the position of the matching dict
-        pos = next((index for (index, d) in enumerate(config) if "switch" in d), None)
+        pos = next(
+            (index for (index, d) in enumerate(config) if "switch" in d), None
+        )
 
         if pos is None:
             return config
@@ -1208,7 +1249,9 @@ def main():
         deploy=dict(required=False, type="bool", default=True),
     )
 
-    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+    module = AnsibleModule(
+        argument_spec=element_spec, supports_check_mode=True
+    )
 
     dcnm_policy = DcnmPolicy(module)
 
@@ -1246,7 +1289,9 @@ def main():
     if module.params["state"] != "query":
         # Translate the given playbook config to some convenient format. Each policy should
         # have the switches to be deployed.
-        dcnm_policy.config = dcnm_policy.dcnm_translate_config(dcnm_policy.config)
+        dcnm_policy.config = dcnm_policy.dcnm_translate_config(
+            dcnm_policy.config
+        )
 
         # See if this is required
         dcnm_policy.dcnm_policy_copy_config()

@@ -2,6 +2,9 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Remove local log file
+  local_action: command rm -f policy.log
+
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
