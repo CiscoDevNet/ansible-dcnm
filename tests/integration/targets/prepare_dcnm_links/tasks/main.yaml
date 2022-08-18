@@ -79,4 +79,3 @@
 - name: Show the multisite fabric list information
   debug:
     var: ms_fabric_list
-

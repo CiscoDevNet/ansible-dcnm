@@ -312,4 +312,3 @@
               dummy: 1
       ignore_errors: yes          
       register: result
-

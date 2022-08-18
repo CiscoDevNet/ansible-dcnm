@@ -364,4 +364,3 @@
               dummy: 11
       ignore_errors: yes          
       register: result
-
