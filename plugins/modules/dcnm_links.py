@@ -48,11 +48,11 @@ options:
     description:
       - Flag to control deployment of links. If set to 'true' then the links included will be deployed to
         specified switches. If set to 'false', the links will be created but not deployed.
-        NOTE: Setting this flag to 'true' will result in all pending configurations on the source and destination
-               devices to be deployed.
+      - Setting this flag to 'true' will result in all pending configurations on the source and destination
+        devices to be deployed.
     type: bool
     required: false
-    default: true  
+    default: true
   config:
     description:
       - A list of dictionaries containing Links information.
@@ -64,6 +64,7 @@ options:
           - Name of the destination fabric. If this is same as 'src_fabric' then the link is considered
             intra-fabric link. If this parameter is different from 'src_fabric', then the link is considered
             inter-fabric link.
+        type: str
         required: true
       src_device:
         description:
@@ -90,7 +91,7 @@ options:
           - Name of the template that is applied on the link being configured.
           - The last 3 template choices are applicable for inter-fabric links and the others
             are applicable for intra-fabric links.
-          - This parameter is required only for 'merged' and 'replaced' states. It is 
+          - This parameter is required only for 'merged' and 'replaced' states. It is
           - optional for other states.
         type: str
         required: true
@@ -115,7 +116,7 @@ options:
               - This parameter is required only if template is 'int_intra_fabric_num_link' or
                 'ios_xe_int_intra_fabric_num_link' or 'int_intra_vpc_peer_keep_alive_link'.
             type: str
-            required: true 
+            required: true
           peer2_ipv4_address:
             description:
               - IPV4 address of the destination interface.
@@ -132,7 +133,7 @@ options:
                 'ios_xe_int_intra_fabric_num_link' or 'int_intra_vpc_peer_keep_alive_link'.
             type: str
             required: false
-            default: "" 
+            default: ""
           peer2_ipv6_address:
             description:
               - IPV6 address of the destination interface.
@@ -160,7 +161,7 @@ options:
               - This parameter is required only if template is 'ext_fabric_setup' or 'ext_multisite_underlay_setup'
                 or "ext_evpn_multisite_overlay_setup"
             type: str
-            required; true    
+            required: true
           src_asn:
             description:
               - BGP ASN number on the source fabric.
@@ -174,7 +175,7 @@ options:
               - This parameter is required only if template is 'ext_fabric_setup' or 'ext_multisite_underlay_setup'.
                 or "ext_evpn_multisite_overlay_setup"
             type: str
-            required: true    
+            required: true
           auto_deploy:
             description:
               - Flag that controls auto generation of neighbor VRF Lite configuration for managed neighbor devices.
@@ -247,7 +248,7 @@ options:
               - This parameter is required only if template is 'ext_evpn_multisite_overlay_setup'.
             type: int
             required: false
-            default: 5  
+            default: 5
           admin_state:
             description:
               - Admin state of the link.
@@ -258,25 +259,25 @@ options:
           mtu:
             description:
               - MTU of the link.
-              - This parameter is optional if template is 'ios_xe_int_intra_fabric_num_link'. The default value 
+              - This parameter is optional if template is 'ios_xe_int_intra_fabric_num_link'. The default value
                 in this case will be 1500.
-              - This parameter is not required if template is 'ext_evpn_multisite_overlay_setup'. 
+              - This parameter is not required if template is 'ext_evpn_multisite_overlay_setup'.
             type: int
             required: true
           peer1_description:
             description:
-              - Description of the source interface. 
+              - Description of the source interface.
               - This parameter is not required if template is 'ext_evpn_multisite_overlay_setup'.
             type: str
             required: false
             default: ""
           peer2_description:
             description:
-              - Description of the destination interface. 
+              - Description of the destination interface.
               - This parameter is not required if template is 'ext_evpn_multisite_overlay_setup'.
             type: str
             required: false
-            default: ""  
+            default: ""
           peer1_cmds:
             description:
               - Commands to be included in the configuration under the source interface.
@@ -316,12 +317,12 @@ options:
             default: false
           intf_vrf:
             description:
-              - Name of the non-default VRF for the link. 
+              - Name of the non-default VRF for the link.
               - Make sure to configure the VRF before using it here.
               - This parameter is applicable only if template is 'int_intra_vpc_peer_keep_alive_link'.
             type: str
             required: false
-            default: ""        
+            default: ""
 """
 
 EXAMPLES = """
@@ -361,7 +362,7 @@ EXAMPLES = """
 # NUMBERED FABRIC
 #
 # INTRA-FABRIC
-    
+
     - name: Create Links
       cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
@@ -372,7 +373,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/1"                         # Interface on the Destination fabric
             src_device: 193.168.1.1                              # Device on the Source fabric
             dst_device: 193.168.1.2                              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
+            template: int_intra_fabric_num_link                  # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -391,13 +392,13 @@ EXAMPLES = """
                 - no shutdown                                    # optional, default is ""
               peer2_cmds:                                        # Freeform config for destination device
                 - no shutdown                                    # optional, default is ""
-              
+
           - dst_fabric: "ansible_num_fabric"                     # Destination fabric
             src_interface: "Ethernet1/2"                         # Interface on the Source fabric
             dst_interface: "Ethernet1/2"                         # Interface on the Destination fabric
             src_device: 193.168.1.1                              # Device on the Source fabric
             dst_device: 193.168.1.2                              # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
+            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -406,7 +407,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/3"                         # Interface on the Destination fabric
             src_device: 193.168.1.1                              # Device on the Source fabric
             dst_device: 193.168.1.2                              # Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from 
+            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -440,7 +441,7 @@ EXAMPLES = """
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -448,7 +449,7 @@ EXAMPLES = """
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: 1000                                      # BGP ASN in source fabric
               dst_asn: 1001                                      # BGP ASN in destination fabric
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
               auto_deploy: false                                 # optional, default is false
                                                                  # Flag that controls auto generation of neighbor VRF Lite configuration
               peer1_description: "Description of source"         # optional, default is ""
@@ -463,7 +464,7 @@ EXAMPLES = """
             dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
+            template: ext_multisite_underlay_setup               # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -471,11 +472,11 @@ EXAMPLES = """
               neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
               src_asn: 1200                                      # BGP ASN in source fabric
               dst_asn: 1201                                      # BGP ASN in destination fabric
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
               deploy_dci_tracking: false                         # optional, default is false
               max_paths: 1                                       # optional, default is 1
-              route_tag: 12345                                   # optional, optional is "" 
-              ebgp_password_enable: true                         # optional, default is true 
+              route_tag: 12345                                   # optional, optional is ""
+              ebgp_password_enable: true                         # optional, default is true
               ebgp_password: 0102030405                          # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
                                                                  # is false.
               inherit_from_msd: True                             # optional, required only if ebgp_password_enable flag is true, default is false
@@ -494,7 +495,7 @@ EXAMPLES = """
             dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
+            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -503,17 +504,17 @@ EXAMPLES = """
               src_asn: 1300                                      # BGP ASN in source fabric
               dst_asn: 1301                                      # BGP ASN in destination fabric
               trm_enabled: false                                 # optional, default is false
-              bgp_multihop: 5                                    # optional, default is 5 
-              ebgp_password_enable: true                         # optional, default is true 
+              bgp_multihop: 5                                    # optional, default is 5
+              ebgp_password_enable: true                         # optional, default is true
               ebgp_password: 0102030405                          # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
-                                                                 # is false. Default is 3 
+                                                                 # is false. Default is 3
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebpg_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
                                                                  # is false. Default is 3
                                                                  # choose from [3 - 3DES, 7 - Cisco ]
-                                                                  
+
 # FABRIC WITH VPC PAIRED SWITCHES
-   
+
     - name: Create Links
       cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
@@ -524,7 +525,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/4"                         # Interface on the Destination fabric
             src_device: "ansible_vpc_switch1"                    # Device on the Source fabric
             dst_device: "ansible_vpc_switch2"                    # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
+            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -543,10 +544,10 @@ EXAMPLES = """
                 - no shutdown                                    # optional, default is ""
               peer2_cmds:                                        # Freeform config for destination device
                 - no shutdown                                    # optional, default is ""
-              intf_vrf: "test_vrf"                               # optional, default is ""  
+              intf_vrf: "test_vrf"                               # optional, default is ""
 
 # UNNUMBERED FABRIC
-    
+
     - name: Create Links
       cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
@@ -557,7 +558,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/1"                         # Interface on the Destination fabric
             src_device: "ansible_unnum_switch1"                  # Device on the Source fabric
             dst_device: "ansible_unnum_switch2"                  # Device on the Destination fabric
-            template: int_intra_fabric_unnum_link                # template to be applied, choose from 
+            template: int_intra_fabric_unnum_link                # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -578,13 +579,13 @@ EXAMPLES = """
             dst_interface: "Ethernet1/2"                         # Interface on the Destination fabric
             src_device: "ansible_unnum_switch1"                  # Device on the Source fabric
             dst_device: "ansible_unnum_switch2"                  # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
+            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-   
+
 # IPV6 UNDERLAY FABRIC
-    
+
     - name: Create Links
       cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
@@ -595,7 +596,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/1"                         # Interface on the Destination fabric
             src_device: "ansible_ipv6_switch1"                   # Device on the Source fabric
             dst_device: "ansible_ipv6_switch2"                   # Device on the Destination fabric
-            template: int_intra_fabric_ipv6_link_local           # template to be applied, choose from 
+            template: int_intra_fabric_ipv6_link_local           # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -622,7 +623,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/2"                         # Interface on the Destination fabric
             src_device: "ansible_ipv6_switch1"                   # Device on the Source fabric
             dst_device: "ansible_ipv6_switch2"                   # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
+            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -631,7 +632,7 @@ EXAMPLES = """
             dst_interface: "Ethernet1/3"                         # Interface on the Destination fabric
             src_device: "ansible_ipv6_switch1"                   # Device on the Source fabric
             dst_device: "ansible_ipv6_switch2"                   # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
+            template: int_intra_fabric_num_link                  # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -651,7 +652,7 @@ EXAMPLES = """
               peer1_cmds:                                        # Freeform config for source device
                 - no shutdown                                    # optional, default is ""
               peer2_cmds:                                        # Freeform config for destination device
-                - no shutdown                                    # optional, default is ""  
+                - no shutdown                                    # optional, default is ""
 # DELETE LINKS
 
     - name: Delete Links
@@ -671,14 +672,14 @@ EXAMPLES = """
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "ansible_num_fabric"
-      
+
     - name: Query Links - with Src & Dst Fabric
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "ansible_num_fabric"
         config:
           - dst_fabric: "ansible_num_fabric"                     # optional, Destination fabric
-    
+
     - name: Query Links - with Src & Dst Fabric, Src Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
@@ -723,7 +724,7 @@ EXAMPLES = """
             dst_device: 193.168.1.2                              # optional, Device on the Destination fabric
  #
  # INTRA-FABRIC
- #     
+ #
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
@@ -734,13 +735,13 @@ EXAMPLES = """
             dst_interface: "Ethernet1/1"                         # optional, Interface on the Destination fabric
             src_device: 193.168.1.1                              # optional, Device on the Source fabric
             dst_device: 193.168.1.2                              # optional, Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # optional, template to be applied, choose from 
+            template: int_intra_fabric_num_link                  # optional, template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]  
+                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 #
 # INTER-FABRIC
-#                                                     
+#
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
@@ -751,7 +752,7 @@ EXAMPLES = """
             dst_interface: "{{ intf_1_6 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
-            template: ext_fabric_setup                           # optional, template to be applied, choose from 
+            template: ext_fabric_setup                           # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
 """
@@ -784,7 +785,7 @@ class DcnmLinks:
             "LINKS_UPDATE": "/rest/control/links/",
             "LINKS_GET_BY_FABRIC": "/rest/control/links/fabrics/{}",
             "LINKS_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
-            "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview/"
+            "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview/",
         },
         12: {
             "LINKS_GET_BY_SWITCH_PAIR": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links",
@@ -793,7 +794,7 @@ class DcnmLinks:
             "LINKS_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
             "LINKS_GET_BY_FABRIC": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/fabrics/{}",
             "LINKS_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
-            "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/"
+            "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/",
         },
     }
 
@@ -807,9 +808,9 @@ class DcnmLinks:
             "ios_xe_int_intra_fabric_num_link": "ios_xe_int_intra_fabric_num_link",
             "ext_fabric_setup": "ext_fabric_setup_11_1",
             "ext_multisite_underlay_setup": "ext_multisite_underlay_setup_11_1",
-            "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup"  
+            "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup",
         },
-        12: { 
+        12: {
             "int_intra_fabric_ipv6_link_local": "int_intra_fabric_ipv6_link_local",
             "int_intra_fabric_num_link": "int_intra_fabric_num_link",
             "int_intra_fabric_unnum_link": "int_intra_fabric_unnum_link",
@@ -818,8 +819,8 @@ class DcnmLinks:
             "ios_xe_int_intra_fabric_num_link": "ios_xe_int_intra_fabric_num_link",
             "ext_fabric_setup": "ext_fabric_setup",
             "ext_multisite_underlay_setup": "ext_multisite_underlay_setup",
-            "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup" 
-        }
+            "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup",
+        },
     }
 
     dcnm_links_xlated_template_names = {
@@ -832,7 +833,7 @@ class DcnmLinks:
             "ios_xe_int_intra_fabric_num_link",
             "ext_fabric_setup_11_1",
             "ext_multisite_underlay_setup_11_1",
-            "ext_evpn_multisite_overlay_setup" 
+            "ext_evpn_multisite_overlay_setup",
         ],
         12: [
             "int_intra_fabric_ipv6_link_local",
@@ -843,8 +844,8 @@ class DcnmLinks:
             "ios_xe_int_intra_fabric_num_link",
             "ext_fabric_setup",
             "ext_multisite_underlay_setup",
-            "ext_evpn_multisite_overlay_setup" 
-        ]
+            "ext_evpn_multisite_overlay_setup",
+        ],
     }
 
     def __init__(self, module):
@@ -862,7 +863,14 @@ class DcnmLinks:
         self.diff_deploy = {}
         self.fd = None
         self.changed_dict = [
-            {"merged": [], "deleted": [], "modified": [], "query": [], "deploy": [], "debugs": []}
+            {
+                "merged": [],
+                "deleted": [],
+                "modified": [],
+                "query": [],
+                "deploy": [],
+                "debugs": [],
+            }
         ]
 
         self.dcnm_version = dcnm_version_supported(self.module)
@@ -870,13 +878,13 @@ class DcnmLinks:
             self.module, self.fabric
         )
 
-        self.src_fabric_info = get_fabric_details(
-            self.module, self.fabric
-        )
+        self.src_fabric_info = get_fabric_details(self.module, self.fabric)
 
         self.paths = self.dcnm_links_paths[self.dcnm_version]
         self.templates = self.dcnm_links_xlate_template[self.dcnm_version]
-        self.template_choices = self.dcnm_links_xlated_template_names[self.dcnm_version]
+        self.template_choices = self.dcnm_links_xlated_template_names[
+            self.dcnm_version
+        ]
 
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -892,7 +900,7 @@ class DcnmLinks:
     def dcnm_links_compare_ip_addresses(self, addr1, addr2):
 
         """
-        Routine to compare the IP address values after converting to IP address objects. 
+        Routine to compare the IP address values after converting to IP address objects.
 
         Parameters:
             addrr1 : First IP address value
@@ -920,9 +928,7 @@ class DcnmLinks:
                 ipaddress.ip_address(rv1[0]) == ipaddress.ip_address(rv2[0])
             ) and (rv1[1] == rv2[1])
         else:
-            return (
-                ipaddress.ip_address(addr1) == ipaddress.ip_address(addr2)
-            )
+            return ipaddress.ip_address(addr1) == ipaddress.ip_address(addr2)
 
     def dcnm_links_validate_and_build_links_info(self, cfg, link_spec):
 
@@ -945,17 +951,23 @@ class DcnmLinks:
             mesg = "Invalid parameters in playbook: {0}".format(
                 "while processing Link Info related to -  [ "
                 + "src_fabric: "
-                + self.fabric + ", "
+                + self.fabric
+                + ", "
                 + "dst_fabric: "
-                + cfg[0].get("dst_fabric", "NA") + ", "
+                + cfg[0].get("dst_fabric", "NA")
+                + ", "
                 + "src_device: "
-                + cfg[0].get("src_device", "NA") + ", "
+                + cfg[0].get("src_device", "NA")
+                + ", "
                 + "dst_device: "
-                + cfg[0].get("dst_device", "NA") + ", "
+                + cfg[0].get("dst_device", "NA")
+                + ", "
                 + "src_interface: "
-                + cfg[0].get("src_interface", "NA") + ", "
+                + cfg[0].get("src_interface", "NA")
+                + ", "
                 + "dst_interface: "
-                + cfg[0].get("dst_interface", "NA") + ", "
+                + cfg[0].get("dst_interface", "NA")
+                + ", "
                 + "template: "
                 + cfg[0].get("template", "NA")
                 + " ], "
@@ -963,30 +975,37 @@ class DcnmLinks:
             )
             self.module.fail_json(msg=mesg)
 
-        
-        if cfg[0].get("profile", "")  == "":
+        if cfg[0].get("profile", "") == "":
             self.links_info.extend(links_info)
             return
 
         cfg_profile = []
-        cfg_profile.append (cfg[0]["profile"])
+        cfg_profile.append(cfg[0]["profile"])
 
-        profile_info, invalid_params = validate_list_of_dicts(cfg_profile, link_spec["profile"])
+        profile_info, invalid_params = validate_list_of_dicts(
+            cfg_profile, link_spec["profile"]
+        )
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(
                 "while processing Link Info related to -  [ "
                 + "src_fabric: "
-                + self.fabric + ", "
+                + self.fabric
+                + ", "
                 + "dst_fabric: "
-                + cfg[0].get("dst_fabric", "NA") + ", "
+                + cfg[0].get("dst_fabric", "NA")
+                + ", "
                 + "src_device: "
-                + cfg[0].get("src_device", "NA") + ", "
+                + cfg[0].get("src_device", "NA")
+                + ", "
                 + "dst_device: "
-                + cfg[0].get("dst_device", "NA") + ", "
+                + cfg[0].get("dst_device", "NA")
+                + ", "
                 + "src_interface: "
-                + cfg[0].get("src_interface", "NA") + ", "
+                + cfg[0].get("src_interface", "NA")
+                + ", "
                 + "dst_interface: "
-                + cfg[0].get("dst_interface", "NA") + ", "
+                + cfg[0].get("dst_interface", "NA")
+                + ", "
                 + "template: "
                 + cfg[0].get("template", "NA")
                 + " ], "
@@ -1033,29 +1052,46 @@ class DcnmLinks:
     def dcnm_links_get_intra_fabric_link_spec(self, cfg):
 
         intra_fabric_choices = self.template_choices[0:6]
-        
+
         link_spec = dict(
             dst_fabric=dict(required=True, type="str"),
             src_device=dict(required=True, type="str"),
             dst_device=dict(required=True, type="str"),
             src_interface=dict(required=True, type="str"),
             dst_interface=dict(required=True, type="str"),
-            template=dict(required=True, type="str", choices = intra_fabric_choices),
-            profile=dict()
+            template=dict(
+                required=True, type="str", choices=intra_fabric_choices
+            ),
+            profile=dict(),
         )
 
         if cfg[0].get("template", "") == "":
             self.module.fail_json(msg="Required parameter not found: template")
 
-        if (cfg[0]["template"] != self.templates["int_pre_provision_intra_fabric_link"]):
-            if cfg[0].get("profile", None) is None:
-                self.module.fail_json(msg="Required information not found: profile")    
-
-        if (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"]) or (
-            cfg[0]["template"] == self.templates["ios_xe_int_intra_fabric_num_link"]) or (
-            cfg[0]["template"] == self.templates["int_intra_vpc_peer_keep_alive_link"]   
+        if (
+            cfg[0]["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
         ):
-            if self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower() == "false":
+            if cfg[0].get("profile", None) is None:
+                self.module.fail_json(
+                    msg="Required information not found: profile"
+                )
+
+        if (
+            (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"])
+            or (
+                cfg[0]["template"]
+                == self.templates["ios_xe_int_intra_fabric_num_link"]
+            )
+            or (
+                cfg[0]["template"]
+                == self.templates["int_intra_vpc_peer_keep_alive_link"]
+            )
+        ):
+            if (
+                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                == "false"
+            ):
                 link_spec["profile"]["peer1_ipv4_addr"] = dict(
                     required=True, type="ipv4"
                 )
@@ -1075,141 +1111,145 @@ class DcnmLinks:
                 link_spec["profile"]["peer2_ipv4_addr"] = dict(
                     type="ipv4", default=""
                 )
-        if (cfg[0]["template"] != self.templates["int_pre_provision_intra_fabric_link"]):
+        if (
+            cfg[0]["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+        ):
             link_spec["profile"]["admin_state"] = dict(
-                required=True, type="bool", choices=[True,False]
+                required=True, type="bool", choices=[True, False]
             )
-            if cfg[0]["template"] != self.templates["ios_xe_int_intra_fabric_num_link"]:
-                link_spec["profile"]["mtu"] = dict(
-                    required=True, type="int"
-                )
+            if (
+                cfg[0]["template"]
+                != self.templates["ios_xe_int_intra_fabric_num_link"]
+            ):
+                link_spec["profile"]["mtu"] = dict(required=True, type="int")
             else:
-                 link_spec["profile"]["mtu"] = dict(
-                    type="int", default=1500
-                )   
+                link_spec["profile"]["mtu"] = dict(type="int", default=1500)
             link_spec["profile"]["peer1_description"] = dict(
                 type="str", default=""
             )
             link_spec["profile"]["peer2_description"] = dict(
                 type="str", default=""
             )
-            link_spec["profile"]["peer1_cmds"] = dict(
-                type="list", default=[]
-            )
-            link_spec["profile"]["peer2_cmds"] = dict(
-                type="list", default=[]
-            )        
+            link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
+            link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
 
-        if (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"]) or (
-            cfg[0]["template"] == self.templates["int_intra_fabric_ipv6_link_local"]) or (
-            cfg[0]["template"] == self.templates["int_intra_fabric_unnum_link"]        
+        if (
+            (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"])
+            or (
+                cfg[0]["template"]
+                == self.templates["int_intra_fabric_ipv6_link_local"]
+            )
+            or (
+                cfg[0]["template"]
+                == self.templates["int_intra_fabric_unnum_link"]
+            )
         ):
             link_spec["profile"]["enable_macsec"] = dict(
                 type="bool", default=False
             )
 
-        if (cfg[0]["template"] == self.templates["int_intra_vpc_peer_keep_alive_link"]):
-            link_spec["profile"]["intf_vrf"] = dict(
-                type="str", default=""
-            )
+        if (
+            cfg[0]["template"]
+            == self.templates["int_intra_vpc_peer_keep_alive_link"]
+        ):
+            link_spec["profile"]["intf_vrf"] = dict(type="str", default="")
 
-        if (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"]):
+        if cfg[0]["template"] == self.templates["int_intra_fabric_num_link"]:
             link_spec["profile"]["peer1_bfd_echo_disable"] = dict(
                 type="bool", default=False
             )
             link_spec["profile"]["peer2_bfd_echo_disable"] = dict(
                 type="bool", default=False
             )
-        
+
         return link_spec
 
     def dcnm_links_get_inter_fabric_link_spec(self, cfg):
 
         inter_fabric_choices = self.template_choices[6:9]
-        
+
         link_spec = dict(
             dst_fabric=dict(required=True, type="str"),
             src_device=dict(required=True, type="str"),
             dst_device=dict(required=True, type="str"),
             src_interface=dict(required=True, type="str"),
             dst_interface=dict(required=True, type="str"),
-            template=dict(required=True, type="str", choices = inter_fabric_choices),
-            profile=dict()
+            template=dict(
+                required=True, type="str", choices=inter_fabric_choices
+            ),
+            profile=dict(),
         )
 
         if cfg[0].get("template", "") == "":
             self.module.fail_json(msg="Required parameter not found: template")
 
-        if ((cfg[0].get("template", "") == self.templates["ext_multisite_underlay_setup"]) or (
-             cfg[0].get("template", "") == self.templates["ext_fabric_setup"])
+        if (
+            cfg[0].get("template", "")
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            cfg[0].get("template", "") == self.templates["ext_fabric_setup"]
         ):
             link_spec["profile"]["ipv4_subnet"] = dict(
                 required=True, type="ipv4_subnet"
             )
-            link_spec["profile"]["mtu"] = dict(
-                type="int", default=9216
-            )
+            link_spec["profile"]["mtu"] = dict(type="int", default=9216)
             link_spec["profile"]["peer1_description"] = dict(
                 type="str", default=""
             )
             link_spec["profile"]["peer2_description"] = dict(
                 type="str", default=""
             )
-            link_spec["profile"]["peer1_cmds"] = dict(
-                type="list", default=[]
-            )
-            link_spec["profile"]["peer2_cmds"] = dict(
-                type="list", default=[]
-            )   
+            link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
+            link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
         else:
             link_spec["profile"]["ipv4_addr"] = dict(
                 required=True, type="ipv4"
             )
-        
-        link_spec["profile"]["neighbor_ip"] = dict(
-            required=True, type="ipv4"
-        )
-        link_spec["profile"]["src_asn"] = dict(
-            required=True, type="int"
-        )
-        link_spec["profile"]["dst_asn"] = dict(
-            required=True, type="int"
-        )
-        
-        
-        if cfg[0].get("template", "") == self.templates["ext_fabric_setup"]:       
+
+        link_spec["profile"]["neighbor_ip"] = dict(required=True, type="ipv4")
+        link_spec["profile"]["src_asn"] = dict(required=True, type="int")
+        link_spec["profile"]["dst_asn"] = dict(required=True, type="int")
+
+        if cfg[0].get("template", "") == self.templates["ext_fabric_setup"]:
             link_spec["profile"]["auto_deploy"] = dict(
                 type="bool", default=False
             )
 
-        if cfg[0].get("template", "") == self.templates["ext_multisite_underlay_setup"]:
-            link_spec["profile"]["max_paths"] = dict(
-                type="int", default=1
-            )
-            link_spec["profile"]["route_tag"] = dict(
-                type="str", default=""
-            )
+        if (
+            cfg[0].get("template", "")
+            == self.templates["ext_multisite_underlay_setup"]
+        ):
+            link_spec["profile"]["max_paths"] = dict(type="int", default=1)
+            link_spec["profile"]["route_tag"] = dict(type="str", default="")
             link_spec["profile"]["deploy_dci_tracking"] = dict(
                 type="bool", default=False
             )
 
-        if cfg[0].get("template", "") == self.templates["ext_evpn_multisite_overlay_setup"]:
+        if (
+            cfg[0].get("template", "")
+            == self.templates["ext_evpn_multisite_overlay_setup"]
+        ):
             link_spec["profile"]["trm_enabled"] = dict(
                 type="bool", default=False
             )
-            link_spec["profile"]["bgp_multihop"] = dict(
-                type="int", default=5
-            )
+            link_spec["profile"]["bgp_multihop"] = dict(type="int", default=5)
 
-        if ((cfg[0].get("template", "") == self.templates["ext_multisite_underlay_setup"]) or (
-            cfg[0].get("template", "") == self.templates["ext_evpn_multisite_overlay_setup"])
+        if (
+            cfg[0].get("template", "")
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            cfg[0].get("template", "")
+            == self.templates["ext_evpn_multisite_overlay_setup"]
         ):
             link_spec["profile"]["ebgp_password_enable"] = dict(
                 type="bool", default=True
             )
 
             if cfg[0].get("profile", None) is None:
-                self.module.fail_json(msg="Required information not found: profile")
+                self.module.fail_json(
+                    msg="Required information not found: profile"
+                )
 
             # Other parameters depend on "bgp_password_enable" flag.
             if cfg[0]["profile"].get("ebgp_password_enable", True) is True:
@@ -1221,7 +1261,7 @@ class DcnmLinks:
                         required=True, type="str"
                     )
                     link_spec["profile"]["ebgp_auth_key_type"] = dict(
-                        type="int", default=3, choices=[3,7]
+                        type="int", default=3, choices=[3, 7]
                     )
 
         return link_spec
@@ -1240,7 +1280,9 @@ class DcnmLinks:
         """
 
         if cfg[0].get("dst_fabric", "") == "":
-            self.module.fail_json(msg="Required parameter not found: dst_fabric")
+            self.module.fail_json(
+                msg="Required parameter not found: dst_fabric"
+            )
 
         if self.fabric == cfg[0]["dst_fabric"]:
             link_spec = self.dcnm_links_get_intra_fabric_link_spec(cfg)
@@ -1268,9 +1310,9 @@ class DcnmLinks:
             src_device=dict(required=True, type="str"),
             dst_device=dict(required=True, type="str"),
             src_interface=dict(required=True, type="str"),
-            dst_interface=dict(required=True, type="str")
+            dst_interface=dict(required=True, type="str"),
         )
-        
+
         links_info, invalid_params = validate_list_of_dicts(cfg, link_spec)
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
@@ -1299,9 +1341,11 @@ class DcnmLinks:
             dst_device=dict(type="str", default=""),
             src_interface=dict(type="str", default=""),
             dst_interface=dict(type="str", default=""),
-            template=dict(type="str", choices = self.template_choices, default="")
+            template=dict(
+                type="str", choices=self.template_choices, default=""
+            ),
         )
-                                                                
+
         links_info, invalid_params = validate_list_of_dicts(cfg, link_spec)
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
@@ -1321,7 +1365,7 @@ class DcnmLinks:
         Returns:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
         """
-        
+
         link_payload = {
             "sourceFabric": self.fabric,
             "destinationFabric": link.get("dst_fabric"),
@@ -1334,8 +1378,12 @@ class DcnmLinks:
         if self.module.params["state"] == "deleted":
             return link_payload
 
-        link_payload["sourceSwitchName"] = self.sn_hn.get(link_payload["sourceDevice"], "Switch1")
-        link_payload["destinationSwitchName"] = self.sn_hn.get(link_payload["destinationDevice"], "Switch2")
+        link_payload["sourceSwitchName"] = self.sn_hn.get(
+            link_payload["sourceDevice"], "Switch1"
+        )
+        link_payload["destinationSwitchName"] = self.sn_hn.get(
+            link_payload["destinationDevice"], "Switch2"
+        )
         link_payload["templateName"] = link.get("template")
 
         # Intra and Inter fabric payloads are different. Build them separately
@@ -1358,59 +1406,99 @@ class DcnmLinks:
 
         Returns:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
-        """  
+        """
 
         link_payload["nvPairs"] = {}
-        if ((link["template"] == self.templates["ext_multisite_underlay_setup"]) or (
-             link["template"] == self.templates["ext_fabric_setup"])
-        ):
-            ip_prefix = link["profile"]["ipv4_subnet"].split('/')
+        if (
+            link["template"] == self.templates["ext_multisite_underlay_setup"]
+        ) or (link["template"] == self.templates["ext_fabric_setup"]):
+            ip_prefix = link["profile"]["ipv4_subnet"].split("/")
 
-            link_payload["nvPairs"]["IP_MASK"] = str(ipaddress.ip_address(ip_prefix[0])) + '/' + ip_prefix[1]
+            link_payload["nvPairs"]["IP_MASK"] = (
+                str(ipaddress.ip_address(ip_prefix[0])) + "/" + ip_prefix[1]
+            )
             link_payload["nvPairs"]["MTU"] = link["profile"]["mtu"]
-            link_payload["nvPairs"]["PEER1_DESC"] = link["profile"]["peer1_description"]
-            link_payload["nvPairs"]["PEER2_DESC"] = link["profile"]["peer2_description"]
+            link_payload["nvPairs"]["PEER1_DESC"] = link["profile"][
+                "peer1_description"
+            ]
+            link_payload["nvPairs"]["PEER2_DESC"] = link["profile"][
+                "peer2_description"
+            ]
 
             if link["profile"].get("peer1_cmds") == []:
                 link_payload["nvPairs"]["PEER1_CONF"] = ""
             else:
-                link_payload["nvPairs"]["PEER1_CONF"] = "\n".join(link["profile"].get("peer1_cmds"))
+                link_payload["nvPairs"]["PEER1_CONF"] = "\n".join(
+                    link["profile"].get("peer1_cmds")
+                )
 
             if link["profile"].get("peer2_cmds") == []:
                 link_payload["nvPairs"]["PEER2_CONF"] = ""
             else:
-                link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(link["profile"].get("peer2_cmds"))
+                link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(
+                    link["profile"].get("peer2_cmds")
+                )
         else:
-            link_payload["nvPairs"]["SOURCE_IP"] = str(ipaddress.ip_address(link["profile"]["ipv4_addr"]))
-        
-        link_payload["nvPairs"]["NEIGHBOR_IP"] = str(ipaddress.ip_address(link["profile"]["neighbor_ip"]))
+            link_payload["nvPairs"]["SOURCE_IP"] = str(
+                ipaddress.ip_address(link["profile"]["ipv4_addr"])
+            )
+
+        link_payload["nvPairs"]["NEIGHBOR_IP"] = str(
+            ipaddress.ip_address(link["profile"]["neighbor_ip"])
+        )
         link_payload["nvPairs"]["asn"] = link["profile"]["src_asn"]
         link_payload["nvPairs"]["NEIGHBOR_ASN"] = link["profile"]["dst_asn"]
-        
-        if link["template"] == self.templates["ext_fabric_setup"]:       
-            link_payload["nvPairs"]["AUTO_VRF_LITE_FLAG"] = link["profile"]["auto_deploy"]
-            link_payload["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE" ] = "Ext_VRF_Lite_Jython"
+
+        if link["template"] == self.templates["ext_fabric_setup"]:
+            link_payload["nvPairs"]["AUTO_VRF_LITE_FLAG"] = link["profile"][
+                "auto_deploy"
+            ]
+            link_payload["nvPairs"][
+                "VRF_LITE_JYTHON_TEMPLATE"
+            ] = "Ext_VRF_Lite_Jython"
 
         if link["template"] == self.templates["ext_multisite_underlay_setup"]:
             link_payload["nvPairs"]["MAX_PATHS"] = link["profile"]["max_paths"]
-            link_payload["nvPairs"]["ROUTING_TAG"] = link["profile"]["route_tag"]
-            link_payload["nvPairs"]["DEPLOY_DCI_TRACKING"] = link["profile"]["deploy_dci_tracking"]
+            link_payload["nvPairs"]["ROUTING_TAG"] = link["profile"][
+                "route_tag"
+            ]
+            link_payload["nvPairs"]["DEPLOY_DCI_TRACKING"] = link["profile"][
+                "deploy_dci_tracking"
+            ]
 
-        if link["template"] == self.templates["ext_evpn_multisite_overlay_setup"]:
-            link_payload["nvPairs"]["TRM_ENABLED"] = link["profile"]["trm_enabled"]
-            link_payload["nvPairs"]["BGP_MULTIHOP"] = link["profile"]["bgp_multihop"]
-
-        if ((link["template"] == self.templates["ext_multisite_underlay_setup"]) or (
-             link["template"] == self.templates["ext_evpn_multisite_overlay_setup"])
+        if (
+            link["template"]
+            == self.templates["ext_evpn_multisite_overlay_setup"]
         ):
-            link_payload["nvPairs"]["BGP_PASSWORD_ENABLE"] = link["profile"]["ebgp_password_enable"]
+            link_payload["nvPairs"]["TRM_ENABLED"] = link["profile"][
+                "trm_enabled"
+            ]
+            link_payload["nvPairs"]["BGP_MULTIHOP"] = link["profile"][
+                "bgp_multihop"
+            ]
+
+        if (
+            link["template"] == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            link["template"]
+            == self.templates["ext_evpn_multisite_overlay_setup"]
+        ):
+            link_payload["nvPairs"]["BGP_PASSWORD_ENABLE"] = link["profile"][
+                "ebgp_password_enable"
+            ]
 
             # Other parameters depend on "bgp_password_enable" flag.
             if link["profile"].get("ebgp_password_enable", True) is True:
-                link_payload["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] = link["profile"]["inherit_from_msd"]
+                link_payload["nvPairs"][
+                    "BGP_PASSWORD_INHERIT_FROM_MSD"
+                ] = link["profile"]["inherit_from_msd"]
                 if link["profile"].get("inherit_from_msd", True) is False:
-                    link_payload["nvPairs"]["BGP_PASSWORD"] = link["profile"]["ebgp_password"]
-                    link_payload["nvPairs"]["BGP_AUTH_KEY_TYPE"] = link["profile"]["ebgp_auth_key_type"]
+                    link_payload["nvPairs"]["BGP_PASSWORD"] = link["profile"][
+                        "ebgp_password"
+                    ]
+                    link_payload["nvPairs"]["BGP_AUTH_KEY_TYPE"] = link[
+                        "profile"
+                    ]["ebgp_auth_key_type"]
 
     def dcnm_links_get_intra_fabric_links_payload(self, link, link_payload):
 
@@ -1424,81 +1512,160 @@ class DcnmLinks:
 
         Returns:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
-        """  
+        """
 
-        if (link["template"] != self.templates["int_pre_provision_intra_fabric_link"]):
+        if (
+            link["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+        ):
             link_payload["nvPairs"] = {}
-            link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get("admin_state")
+            link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get(
+                "admin_state"
+            )
             link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu")
-            link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get("peer1_description")
-            link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get("peer2_description")
-            
+            link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
+                "peer1_description"
+            )
+            link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get(
+                "peer2_description"
+            )
+
             if link["profile"].get("peer1_cmds") == []:
                 link_payload["nvPairs"]["PEER1_CONF"] = ""
             else:
-                link_payload["nvPairs"]["PEER1_CONF"] = "\n".join(link["profile"].get("peer1_cmds"))
+                link_payload["nvPairs"]["PEER1_CONF"] = "\n".join(
+                    link["profile"].get("peer1_cmds")
+                )
 
             if link["profile"].get("peer2_cmds") == []:
                 link_payload["nvPairs"]["PEER2_CONF"] = ""
             else:
-                link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(link["profile"].get("peer2_cmds"))
+                link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(
+                    link["profile"].get("peer2_cmds")
+                )
 
-        if (link["template"] == self.templates["int_intra_fabric_num_link"]) or (
-            link["template"] == self.templates["ios_xe_int_intra_fabric_num_link"]) or (
-            link["template"] == self.templates["int_intra_vpc_peer_keep_alive_link"]   
+        if (
+            (link["template"] == self.templates["int_intra_fabric_num_link"])
+            or (
+                link["template"]
+                == self.templates["ios_xe_int_intra_fabric_num_link"]
+            )
+            or (
+                link["template"]
+                == self.templates["int_intra_vpc_peer_keep_alive_link"]
+            )
         ):
-            if self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower() == "false":
-                link_payload["nvPairs"]["PEER1_IP"] = str(ipaddress.ip_address(link["profile"].get("peer1_ipv4_addr")))
-                link_payload["nvPairs"]["PEER2_IP"] = str(ipaddress.ip_address(link["profile"].get("peer2_ipv4_addr")))
+            if (
+                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                == "false"
+            ):
+                link_payload["nvPairs"]["PEER1_IP"] = str(
+                    ipaddress.ip_address(
+                        link["profile"].get("peer1_ipv4_addr")
+                    )
+                )
+                link_payload["nvPairs"]["PEER2_IP"] = str(
+                    ipaddress.ip_address(
+                        link["profile"].get("peer2_ipv4_addr")
+                    )
+                )
             else:
-                if (link["template"] != self.templates["ios_xe_int_intra_fabric_num_link"]):
-                    link_payload["nvPairs"]["PEER1_V6IP"] = str(ipaddress.ip_address(link["profile"].get("peer1_ipv6_addr")))
-                    link_payload["nvPairs"]["PEER2_V6IP"] = str(ipaddress.ip_address(link["profile"].get("peer2_ipv6_addr")))
+                if (
+                    link["template"]
+                    != self.templates["ios_xe_int_intra_fabric_num_link"]
+                ):
+                    link_payload["nvPairs"]["PEER1_V6IP"] = str(
+                        ipaddress.ip_address(
+                            link["profile"].get("peer1_ipv6_addr")
+                        )
+                    )
+                    link_payload["nvPairs"]["PEER2_V6IP"] = str(
+                        ipaddress.ip_address(
+                            link["profile"].get("peer2_ipv6_addr")
+                        )
+                    )
                     if link["profile"].get("peer1_ipv4_addr", "") != "":
-                        link_payload["nvPairs"]["PEER1_IP"] = str(ipaddress.ip_address(link["profile"].get("peer1_ipv4_addr")))
+                        link_payload["nvPairs"]["PEER1_IP"] = str(
+                            ipaddress.ip_address(
+                                link["profile"].get("peer1_ipv4_addr")
+                            )
+                        )
                     else:
                         link_payload["nvPairs"]["PEER1_IP"] = ""
 
                     if link["profile"].get("peer2_ipv4_addr", "") != "":
-                        link_payload["nvPairs"]["PEER2_IP"] = str(ipaddress.ip_address(link["profile"].get("peer2_ipv4_addr")))
+                        link_payload["nvPairs"]["PEER2_IP"] = str(
+                            ipaddress.ip_address(
+                                link["profile"].get("peer2_ipv4_addr")
+                            )
+                        )
                     else:
                         link_payload["nvPairs"]["PEER2_IP"] = ""
                 else:
-                    link_payload["nvPairs"]["PEER1_IP"] = str(ipaddress.ip_address(link["profile"].get("peer1_ipv6_addr")))
-                    link_payload["nvPairs"]["PEER2_IP"] = str(ipaddress.ip_address(link["profile"].get("peer2_ipv6_addr")))
-        
-        if (link["template"] == self.templates["int_intra_fabric_num_link"]) or (
-            link["template"] == self.templates["int_intra_fabric_ipv6_link_local"]) or (
-            link["template"] == self.templates["int_intra_fabric_unnum_link"]        
+                    link_payload["nvPairs"]["PEER1_IP"] = str(
+                        ipaddress.ip_address(
+                            link["profile"].get("peer1_ipv6_addr")
+                        )
+                    )
+                    link_payload["nvPairs"]["PEER2_IP"] = str(
+                        ipaddress.ip_address(
+                            link["profile"].get("peer2_ipv6_addr")
+                        )
+                    )
+
+        if (
+            (link["template"] == self.templates["int_intra_fabric_num_link"])
+            or (
+                link["template"]
+                == self.templates["int_intra_fabric_ipv6_link_local"]
+            )
+            or (
+                link["template"]
+                == self.templates["int_intra_fabric_unnum_link"]
+            )
         ):
-            link_payload["nvPairs"]["ENABLE_MACSEC"] = link["profile"].get("enable_macsec")
+            link_payload["nvPairs"]["ENABLE_MACSEC"] = link["profile"].get(
+                "enable_macsec"
+            )
 
-        if (link["template"] == self.templates["int_intra_vpc_peer_keep_alive_link"]):
-            link_payload["nvPairs"]["INTF_VRF"] = link["profile"].get("intf_vrf")
+        if (
+            link["template"]
+            == self.templates["int_intra_vpc_peer_keep_alive_link"]
+        ):
+            link_payload["nvPairs"]["INTF_VRF"] = link["profile"].get(
+                "intf_vrf"
+            )
 
-        if (link["template"] == self.templates["int_intra_fabric_num_link"]):
-            link_payload["nvPairs"]["PEER1_BFD_ECHO_DISABLE"] = link["profile"].get("peer1_bfd_echo_disable")
-            link_payload["nvPairs"]["PEER2_BFD_ECHO_DISABLE"] = link["profile"].get("peer2_bfd_echo_disable")
+        if link["template"] == self.templates["int_intra_fabric_num_link"]:
+            link_payload["nvPairs"]["PEER1_BFD_ECHO_DISABLE"] = link[
+                "profile"
+            ].get("peer1_bfd_echo_disable")
+            link_payload["nvPairs"]["PEER2_BFD_ECHO_DISABLE"] = link[
+                "profile"
+            ].get("peer2_bfd_echo_disable")
 
-    def dcnm_links_update_inter_fabric_links_information(self, wlink, hlink, cfg):
-        
+    def dcnm_links_update_inter_fabric_links_information(
+        self, wlink, hlink, cfg
+    ):
+
         if (wlink.get("nvPairs", None) is None) or (
-           (hlink.get("nvPairs", None) is None)
+            (hlink.get("nvPairs", None) is None)
         ):
             return
 
-        if ((wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]) or (
-             wlink["templateName"] == self.templates["ext_fabric_setup"])
-        ):
+        if (
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (wlink["templateName"] == self.templates["ext_fabric_setup"]):
             if cfg["profile"].get("ipv4_subnet", None) is None:
                 wlink["nvPairs"]["IP_MASK"] = hlink["nvPairs"]["IP_MASK"]
-           
-            if cfg["profile"].get("mtu", None) is None:    
+
+            if cfg["profile"].get("mtu", None) is None:
                 wlink["nvPairs"]["MTU"] = hlink["nvPairs"]["MTU"]
 
-            if cfg["profile"].get("peer1_decription", None) is None:    
+            if cfg["profile"].get("peer1_decription", None) is None:
                 wlink["nvPairs"]["PEER1_DESC"] = hlink["nvPairs"]["PEER1_DESC"]
-            if cfg["profile"].get("peer2_decription", None) is None:    
+            if cfg["profile"].get("peer2_decription", None) is None:
                 wlink["nvPairs"]["PEER2_DESC"] = hlink["nvPairs"]["PEER2_DESC"]
 
             # Note down that 'want' is updated with information from 'have'. We will need
@@ -1517,53 +1684,85 @@ class DcnmLinks:
             # so that dcnm_links_merge_want_and_have() can be generic for all cases
             wlink["peer1_conf_defaulted"] = True
             wlink["peer2_conf_defaulted"] = True
-        
+
         if cfg["profile"].get("neighbor_ip", None) is None:
             wlink["nvPairs"]["NEIGHBOR_IP"] = hlink["nvPairs"]["NEIGHBOR_IP"]
         if cfg["profile"].get("src_asn", None) is None:
             wlink["nvPairs"]["asn"] = hlink["nvPairs"]["asn"]
-        if cfg["profile"].get("dst_asn", None) is None:    
+        if cfg["profile"].get("dst_asn", None) is None:
             wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"]["NEIGHBOR_ASN"]
-        
-        if wlink["templateName"] == self.templates["ext_fabric_setup"]:
-            if cfg["profile"].get("auto_deploy", None) is None:        
-                wlink["nvPairs"]["AUTO_VRF_LITE_FLAG"] = hlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]
-            wlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"] = hlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE" ]
 
-        if wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]:
+        if wlink["templateName"] == self.templates["ext_fabric_setup"]:
+            if cfg["profile"].get("auto_deploy", None) is None:
+                wlink["nvPairs"]["AUTO_VRF_LITE_FLAG"] = hlink["nvPairs"][
+                    "AUTO_VRF_LITE_FLAG"
+                ]
+            wlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"] = hlink["nvPairs"][
+                "VRF_LITE_JYTHON_TEMPLATE"
+            ]
+
+        if (
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
+        ):
             if cfg["profile"].get("max_paths", None) is None:
                 wlink["nvPairs"]["MAX_PATHS"] = hlink["nvPairs"]["MAX_PATHS"]
-            if cfg["profile"].get("route_tag", None) is None:    
-                wlink["nvPairs"]["ROUTING_TAG"] = hlink["nvPairs"]["ROUTING_TAG"]
-            if cfg["profile"].get("deploy_dci_tracking", None) is None:    
-                wlink["nvPairs"]["DEPLOY_DCI_TRACKING"] = hlink["nvPairs"]["DEPLOY_DCI_TRACKING"]
+            if cfg["profile"].get("route_tag", None) is None:
+                wlink["nvPairs"]["ROUTING_TAG"] = hlink["nvPairs"][
+                    "ROUTING_TAG"
+                ]
+            if cfg["profile"].get("deploy_dci_tracking", None) is None:
+                wlink["nvPairs"]["DEPLOY_DCI_TRACKING"] = hlink["nvPairs"][
+                    "DEPLOY_DCI_TRACKING"
+                ]
 
-        if wlink["templateName"] == self.templates["ext_evpn_multisite_overlay_setup"]:
+        if (
+            wlink["templateName"]
+            == self.templates["ext_evpn_multisite_overlay_setup"]
+        ):
             if cfg["profile"].get("trm_enabled", None) is None:
-                wlink["nvPairs"]["TRM_ENABLED"] = hlink["nvPairs"]["TRM_ENABLED"]
-            if cfg["profile"].get("bgp_multihop", None) is None:    
-                wlink["nvPairs"]["BGP_MULTIHOP"] = hlink["nvPairs"]["BGP_MULTIHOP"]
+                wlink["nvPairs"]["TRM_ENABLED"] = hlink["nvPairs"][
+                    "TRM_ENABLED"
+                ]
+            if cfg["profile"].get("bgp_multihop", None) is None:
+                wlink["nvPairs"]["BGP_MULTIHOP"] = hlink["nvPairs"][
+                    "BGP_MULTIHOP"
+                ]
 
-        if ((wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]) or (
-             wlink["templateName"] == self.templates["ext_evpn_multisite_overlay_setup"])
+        if (
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            wlink["templateName"]
+            == self.templates["ext_evpn_multisite_overlay_setup"]
         ):
             if cfg["profile"].get("ebgp_password_enable", None) is None:
-                wlink["nvPairs"]["BGP_PASSWORD_ENABLE"] = hlink["nvPairs"]["BGP_PASSWORD_ENABLE"]
+                wlink["nvPairs"]["BGP_PASSWORD_ENABLE"] = hlink["nvPairs"][
+                    "BGP_PASSWORD_ENABLE"
+                ]
 
             # Other parameters depend on "bgp_password_enable" flag.
-            if  wlink["nvPairs"]["BGP_PASSWORD_ENABLE"] is True:
+            if wlink["nvPairs"]["BGP_PASSWORD_ENABLE"] is True:
                 if cfg["profile"].get("inherit_from_msd", None) is None:
-                    wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] = hlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]
-                if  wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] is False:
+                    wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] = hlink[
+                        "nvPairs"
+                    ]["BGP_PASSWORD_INHERIT_FROM_MSD"]
+                if wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] is False:
                     if cfg["profile"].get("ebgp_password", None) is None:
-                        wlink["nvPairs"]["BGP_PASSWORD"] = hlink["nvPairs"]["BGP_PASSWORD"]
-                    if cfg["profile"].get("ebgp_auth_key_type", None) is None:    
-                        wlink["nvPairs"]["BGP_AUTH_KEY_TYPE"] = hlink["nvPairs"]["BGP_AUTH_KEY_TYPE"]
+                        wlink["nvPairs"]["BGP_PASSWORD"] = hlink["nvPairs"][
+                            "BGP_PASSWORD"
+                        ]
+                    if cfg["profile"].get("ebgp_auth_key_type", None) is None:
+                        wlink["nvPairs"]["BGP_AUTH_KEY_TYPE"] = hlink[
+                            "nvPairs"
+                        ]["BGP_AUTH_KEY_TYPE"]
 
-    def dcnm_links_update_intra_fabric_links_information(self, wlink, hlink, cfg):
+    def dcnm_links_update_intra_fabric_links_information(
+        self, wlink, hlink, cfg
+    ):
 
         if (wlink.get("nvPairs", None) is None) or (
-           (hlink.get("nvPairs", None) is None)
+            (hlink.get("nvPairs", None) is None)
         ):
             return
 
@@ -1585,43 +1784,89 @@ class DcnmLinks:
             wlink["nvPairs"]["PEER2_CONF"] = hlink["nvPairs"]["PEER2_CONF"]
             wlink["peer2_conf_defaulted"] = True
 
-        if (wlink["templateName"] == self.templates["int_intra_fabric_num_link"]) or (
-            wlink["templateName"] == self.templates["ios_xe_int_intra_fabric_num_link"]) or (
-            wlink["templateName"] == self.templates["int_intra_vpc_peer_keep_alive_link"]   
+        if (
+            (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_num_link"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["ios_xe_int_intra_fabric_num_link"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["int_intra_vpc_peer_keep_alive_link"]
+            )
         ):
-            if self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower() == "false":
+            if (
+                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                == "false"
+            ):
                 if cfg["profile"].get("peer1_ipv4_addr", None) is None:
                     wlink["nvPairs"]["PEER1_IP"] = hlink["nvPairs"]["PEER1_IP"]
                 if cfg["profile"].get("peer2_ipv4_addr", None) is None:
                     wlink["nvPairs"]["PEER2_IP"] = hlink["nvPairs"]["PEER2_IP"]
             else:
-                if wlink["templateName"] != self.templates["ios_xe_int_intra_fabric_num_link"]:
+                if (
+                    wlink["templateName"]
+                    != self.templates["ios_xe_int_intra_fabric_num_link"]
+                ):
                     if cfg["profile"].get("peer1_ipv6_addr", None) is None:
-                        wlink["nvPairs"]["PEER1_V6IP"] = hlink["nvPairs"]["PEER1_V6IP"]
+                        wlink["nvPairs"]["PEER1_V6IP"] = hlink["nvPairs"][
+                            "PEER1_V6IP"
+                        ]
                     if cfg["profile"].get("peer2_ipv6_addr", None) is None:
-                        wlink["nvPairs"]["PEER2_V6IP"] = hlink["nvPairs"]["PEER2_V6IP"]
+                        wlink["nvPairs"]["PEER2_V6IP"] = hlink["nvPairs"][
+                            "PEER2_V6IP"
+                        ]
                 else:
                     if cfg["profile"].get("peer1_ipv4_addr", None) is None:
-                        wlink["nvPairs"]["PEER1_IP"] = hlink["nvPairs"]["PEER1_IP"]
+                        wlink["nvPairs"]["PEER1_IP"] = hlink["nvPairs"][
+                            "PEER1_IP"
+                        ]
                     if cfg["profile"].get("peer2_ipv4_addr", None) is None:
-                        wlink["nvPairs"]["PEER2_IP"] = hlink["nvPairs"]["PEER2_IP"]
-   
-        if (wlink["templateName"] == self.templates["int_intra_fabric_num_link"]) or (
-            wlink["templateName"] == self.templates["int_intra_fabric_ipv6_link_local"]) or (
-            wlink["templateName"] == self.templates["int_intra_fabric_unnum_link"]        
+                        wlink["nvPairs"]["PEER2_IP"] = hlink["nvPairs"][
+                            "PEER2_IP"
+                        ]
+
+        if (
+            (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_num_link"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_ipv6_link_local"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_unnum_link"]
+            )
         ):
             if cfg["profile"].get("enable_macsec", None) is None:
-                wlink["nvPairs"]["ENABLE_MACSEC"] = hlink["nvPairs"]["ENABLE_MACSEC"]
+                wlink["nvPairs"]["ENABLE_MACSEC"] = hlink["nvPairs"][
+                    "ENABLE_MACSEC"
+                ]
 
-        if (wlink["templateName"] == self.templates["int_intra_vpc_peer_keep_alive_link"]):
+        if (
+            wlink["templateName"]
+            == self.templates["int_intra_vpc_peer_keep_alive_link"]
+        ):
             if cfg["profile"].get("intf_vrf", None) is None:
                 wlink["nvPairs"]["INTF_VRF"] = hlink["nvPairs"]["INTF_VRF"]
 
-        if (wlink["templateName"] == self.templates["int_intra_fabric_num_link"]):
+        if (
+            wlink["templateName"]
+            == self.templates["int_intra_fabric_num_link"]
+        ):
             if cfg["profile"].get("peer1_bfd_echo_disable", None) is None:
-                wlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"] = hlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]
+                wlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"] = hlink["nvPairs"][
+                    "PEER1_BFD_ECHO_DISABLE"
+                ]
             if cfg["profile"].get("peer2_bfd_echo_disable", None) is None:
-                wlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"] = hlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]
+                wlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"] = hlink["nvPairs"][
+                    "PEER2_BFD_ECHO_DISABLE"
+                ]
 
     def dcnm_links_update_want(self):
 
@@ -1635,13 +1880,31 @@ class DcnmLinks:
                 for have in self.have
                 if (
                     (have["sw1-info"]["fabric-name"] == want["sourceFabric"])
-                    and (have["sw2-info"]["fabric-name"] == want["destinationFabric"])
-                    and (have["sw1-info"]["if-name"] == want["sourceInterface"])
-                    and (have["sw2-info"]["if-name"] == want["destinationInterface"])
-                    and (have["sw1-info"]["sw-serial-number"] == want["sourceDevice"])
-                    and (have["sw2-info"]["sw-serial-number"] == want["destinationDevice"])
-                    and (have.get("templateName", "") == want.get("templateName", ""))
-                )]
+                    and (
+                        have["sw2-info"]["fabric-name"]
+                        == want["destinationFabric"]
+                    )
+                    and (
+                        have["sw1-info"]["if-name"] == want["sourceInterface"]
+                    )
+                    and (
+                        have["sw2-info"]["if-name"]
+                        == want["destinationInterface"]
+                    )
+                    and (
+                        have["sw1-info"]["sw-serial-number"]
+                        == want["sourceDevice"]
+                    )
+                    and (
+                        have["sw2-info"]["sw-serial-number"]
+                        == want["destinationDevice"]
+                    )
+                    and (
+                        have.get("templateName", "")
+                        == want.get("templateName", "")
+                    )
+                )
+            ]
 
             match_cfg = [
                 cfg
@@ -1652,18 +1915,26 @@ class DcnmLinks:
                     and (cfg["src_interface"] == want["sourceInterface"])
                     and (cfg["dst_interface"] == want["destinationInterface"])
                     and (self.ip_sn[cfg["src_device"]] == want["sourceDevice"])
-                    and (self.ip_sn[cfg["dst_device"]] == want["destinationDevice"])
+                    and (
+                        self.ip_sn[cfg["dst_device"]]
+                        == want["destinationDevice"]
+                    )
                     and (cfg["template"] == want["templateName"])
-                )]
+                )
+            ]
 
             if match_cfg == []:
                 continue
 
             for mlink in match_links:
                 if want["sourceFabric"] == want["destinationFabric"]:
-                    self.dcnm_links_update_intra_fabric_links_information (want, mlink, match_cfg[0])
+                    self.dcnm_links_update_intra_fabric_links_information(
+                        want, mlink, match_cfg[0]
+                    )
                 else:
-                    self.dcnm_links_update_inter_fabric_links_information (want, mlink, match_cfg[0])    
+                    self.dcnm_links_update_inter_fabric_links_information(
+                        want, mlink, match_cfg[0]
+                    )
 
     def dcnm_links_get_want(self):
 
@@ -1696,15 +1967,21 @@ class DcnmLinks:
 
         Parameters:
             link  (dict): Link information
-    
+
         Returns:
             resp["DATA"] (dict): Link informatikon obtained from the DCNM server if it exists
             [] otherwise
         """
 
         # link object is from self.want. These objets would have translated devices to serial numbers already.
-        path = self.paths["LINKS_GET_BY_SWITCH_PAIR"] + "?switch1Sn={}&switch2Sn={}".format(link["sourceDevice"], link["destinationDevice"])
-        path = path + "&switch1IfName={}&switch2IfName={}".format(link["sourceInterface"], link["destinationInterface"])
+        path = self.paths[
+            "LINKS_GET_BY_SWITCH_PAIR"
+        ] + "?switch1Sn={}&switch2Sn={}".format(
+            link["sourceDevice"], link["destinationDevice"]
+        )
+        path = path + "&switch1IfName={}&switch2IfName={}".format(
+            link["sourceInterface"], link["destinationInterface"]
+        )
 
         resp = dcnm_send(self.module, "GET", path)
 
@@ -1714,20 +1991,26 @@ class DcnmLinks:
             and (resp["MESSAGE"] == "OK")
             and resp["DATA"]
         ):
-            # The response DATA will include all links between src_device and dst_device. We are interested 
+            # The response DATA will include all links between src_device and dst_device. We are interested
             # only in a LINK that matches the given 'link'. Try to match for the information in the response
 
             # resp["DATA"] will be a list if there is more than one link. It will be a dict otherwise
 
-            if not isinstance (resp["DATA"], list):
+            if not isinstance(resp["DATA"], list):
                 resp["DATA"] = [resp["DATA"]]
 
             match_link = [
                 link_elem
                 for link_elem in resp["DATA"]
                 if (
-                    (link_elem["sw1-info"]["fabric-name"] == link["sourceFabric"]) and
-                    (link_elem["sw2-info"]["fabric-name"] == link["destinationFabric"])
+                    (
+                        link_elem["sw1-info"]["fabric-name"]
+                        == link["sourceFabric"]
+                    )
+                    and (
+                        link_elem["sw2-info"]["fabric-name"]
+                        == link["destinationFabric"]
+                    )
                 )
             ]
 
@@ -1759,7 +2042,7 @@ class DcnmLinks:
             if (have != []) and (have not in self.have):
                 self.have.append(have)
 
-    def dcnm_links_compare_inter_fabric_link_params (self, wlink, hlink):
+    def dcnm_links_compare_inter_fabric_link_params(self, wlink, hlink):
 
         """
         Routine to compare two links and update mismatch information.
@@ -1779,88 +2062,355 @@ class DcnmLinks:
         if hlink["templateName"] != wlink["templateName"]:
             # We found a Link that matched all other key values, but the template is different. This means
             # the user is trying to change the template of an existing link. So go ahead and merge the same
-            mismatch_reasons.append({"TEMPLATE_MISMATCH": [wlink["templateName"], hlink["templateName"]]})
+            mismatch_reasons.append(
+                {
+                    "TEMPLATE_MISMATCH": [
+                        wlink["templateName"],
+                        hlink["templateName"],
+                    ]
+                }
+            )
             return "DCNM_LINK_MERGE", mismatch_reasons, hlink
 
         if (wlink.get("nvPairs", None) is None) or (
-           (hlink.get("nvPairs", None) is None)
+            (hlink.get("nvPairs", None) is None)
         ):
             return "DCNM_LINK_EXIST", [], []
 
-        if ((wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]) or (
-             wlink["templateName"] == self.templates["ext_fabric_setup"])
-        ):
-            if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["IP_MASK"], hlink["nvPairs"]["IP_MASK"]) is False:
-                mismatch_reasons.append({"IP_MASK_MISMATCH": [wlink["nvPairs"]["IP_MASK"], hlink["nvPairs"]["IP_MASK"]]})
-            if str(wlink["nvPairs"]["MTU"]).lower() != str(hlink["nvPairs"]["MTU"]).lower():
-                mismatch_reasons.append({"MTU_MISMATCH": [str(wlink["nvPairs"]["MTU"]).lower(), str(hlink["nvPairs"]["MTU"]).lower()]})
-            if wlink["nvPairs"]["PEER1_DESC"] != hlink["nvPairs"]["PEER1_DESC"]:
-                mismatch_reasons.append({"PEER1_DESC_MISMATCH": [wlink["nvPairs"]["PEER1_DESC"], hlink["nvPairs"]["PEER1_DESC"]]})    
-            if wlink["nvPairs"]["PEER2_DESC"] != hlink["nvPairs"]["PEER2_DESC"]:
-                mismatch_reasons.append({"PEER2_DESC_MISMATCH": [wlink["nvPairs"]["PEER2_DESC"], hlink["nvPairs"]["PEER2_DESC"]]})
+        if (
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (wlink["templateName"] == self.templates["ext_fabric_setup"]):
+            if (
+                self.dcnm_links_compare_ip_addresses(
+                    wlink["nvPairs"]["IP_MASK"], hlink["nvPairs"]["IP_MASK"]
+                )
+                is False
+            ):
+                mismatch_reasons.append(
+                    {
+                        "IP_MASK_MISMATCH": [
+                            wlink["nvPairs"]["IP_MASK"],
+                            hlink["nvPairs"]["IP_MASK"],
+                        ]
+                    }
+                )
+            if (
+                str(wlink["nvPairs"]["MTU"]).lower()
+                != str(hlink["nvPairs"]["MTU"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "MTU_MISMATCH": [
+                            str(wlink["nvPairs"]["MTU"]).lower(),
+                            str(hlink["nvPairs"]["MTU"]).lower(),
+                        ]
+                    }
+                )
+            if (
+                wlink["nvPairs"]["PEER1_DESC"]
+                != hlink["nvPairs"]["PEER1_DESC"]
+            ):
+                mismatch_reasons.append(
+                    {
+                        "PEER1_DESC_MISMATCH": [
+                            wlink["nvPairs"]["PEER1_DESC"],
+                            hlink["nvPairs"]["PEER1_DESC"],
+                        ]
+                    }
+                )
+            if (
+                wlink["nvPairs"]["PEER2_DESC"]
+                != hlink["nvPairs"]["PEER2_DESC"]
+            ):
+                mismatch_reasons.append(
+                    {
+                        "PEER2_DESC_MISMATCH": [
+                            wlink["nvPairs"]["PEER2_DESC"],
+                            hlink["nvPairs"]["PEER2_DESC"],
+                        ]
+                    }
+                )
 
-            if wlink["nvPairs"]["PEER1_CONF"] != hlink["nvPairs"]["PEER1_CONF"]:
-                mismatch_reasons.append({"PEER1_CONF_MISMATCH": [wlink["nvPairs"]["PEER1_CONF"], hlink["nvPairs"]["PEER1_CONF"]]})
-            if wlink["nvPairs"]["PEER2_CONF"] != hlink["nvPairs"]["PEER2_CONF"]:
-                mismatch_reasons.append({"PEER2_CONF_MISMATCH": [wlink["nvPairs"]["PEER2_CONF"], hlink["nvPairs"]["PEER2_CONF"]]})
+            if (
+                wlink["nvPairs"]["PEER1_CONF"]
+                != hlink["nvPairs"]["PEER1_CONF"]
+            ):
+                mismatch_reasons.append(
+                    {
+                        "PEER1_CONF_MISMATCH": [
+                            wlink["nvPairs"]["PEER1_CONF"],
+                            hlink["nvPairs"]["PEER1_CONF"],
+                        ]
+                    }
+                )
+            if (
+                wlink["nvPairs"]["PEER2_CONF"]
+                != hlink["nvPairs"]["PEER2_CONF"]
+            ):
+                mismatch_reasons.append(
+                    {
+                        "PEER2_CONF_MISMATCH": [
+                            wlink["nvPairs"]["PEER2_CONF"],
+                            hlink["nvPairs"]["PEER2_CONF"],
+                        ]
+                    }
+                )
         else:
-            if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["SOURCE_IP"], hlink["nvPairs"]["SOURCE_IP"]) is False:
-                mismatch_reasons.append({"SOURCE_IP_MISMATCH": [wlink["nvPairs"]["SOURCE_IP"], hlink["nvPairs"]["SOURCE_IP"]]})
+            if (
+                self.dcnm_links_compare_ip_addresses(
+                    wlink["nvPairs"]["SOURCE_IP"],
+                    hlink["nvPairs"]["SOURCE_IP"],
+                )
+                is False
+            ):
+                mismatch_reasons.append(
+                    {
+                        "SOURCE_IP_MISMATCH": [
+                            wlink["nvPairs"]["SOURCE_IP"],
+                            hlink["nvPairs"]["SOURCE_IP"],
+                        ]
+                    }
+                )
 
-        if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["NEIGHBOR_IP"], hlink["nvPairs"]["NEIGHBOR_IP"]) is False:
-            mismatch_reasons.append({"NEIGHBOR_IP_MISMATCH": [wlink["nvPairs"]["NEIGHBOR_IP"], hlink["nvPairs"]["NEIGHBOR_IP"]]})
-        if str(wlink["nvPairs"]["asn"]).lower() != str(hlink["nvPairs"]["asn"]).lower():
-            mismatch_reasons.append({"ASN_MISMATCH": [str(wlink["nvPairs"]["asn"]).lower(), str(hlink["nvPairs"]["asn"]).lower()]})
-        if str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower() != str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower():
-            mismatch_reasons.append({"NEIGHBOR_ASN_MISMATCH": [str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower(), str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower()]})
+        if (
+            self.dcnm_links_compare_ip_addresses(
+                wlink["nvPairs"]["NEIGHBOR_IP"],
+                hlink["nvPairs"]["NEIGHBOR_IP"],
+            )
+            is False
+        ):
+            mismatch_reasons.append(
+                {
+                    "NEIGHBOR_IP_MISMATCH": [
+                        wlink["nvPairs"]["NEIGHBOR_IP"],
+                        hlink["nvPairs"]["NEIGHBOR_IP"],
+                    ]
+                }
+            )
+        if (
+            str(wlink["nvPairs"]["asn"]).lower()
+            != str(hlink["nvPairs"]["asn"]).lower()
+        ):
+            mismatch_reasons.append(
+                {
+                    "ASN_MISMATCH": [
+                        str(wlink["nvPairs"]["asn"]).lower(),
+                        str(hlink["nvPairs"]["asn"]).lower(),
+                    ]
+                }
+            )
+        if (
+            str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower()
+            != str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower()
+        ):
+            mismatch_reasons.append(
+                {
+                    "NEIGHBOR_ASN_MISMATCH": [
+                        str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower(),
+                        str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower(),
+                    ]
+                }
+            )
 
         if wlink["templateName"] == self.templates["ext_fabric_setup"]:
-                    
-            if str(wlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]).lower() != str(hlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]).lower():
-                mismatch_reasons.append({"AUTO_VRF_LITE_FLAG_MISMATCH": [str(wlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]).lower(), str(hlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]).lower()]})
-            if wlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"] != hlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"]:
-                mismatch_reasons.append({"VRF_LITE_JYTHON_TEMPLATE_MISMATCH": [wlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"], hlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"]]})
 
-        if wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]:
-            
-            if str(wlink["nvPairs"]["MAX_PATHS"]).lower() != str(hlink["nvPairs"]["MAX_PATHS"]).lower():
-                mismatch_reasons.append({"MAX_PATHS_MISMATCH": [str(wlink["nvPairs"]["MAX_PATHS"]).lower(), str(hlink["nvPairs"]["MAX_PATHS"]).lower()]})    
-            if str(wlink["nvPairs"]["ROUTING_TAG"]).lower() != str(hlink["nvPairs"]["ROUTING_TAG"]).lower():
-                mismatch_reasons.append({"ROUTING_TAG_MISMATCH": [str(wlink["nvPairs"]["ROUTING_TAG"]).lower(), str(hlink["nvPairs"]["ROUTING_TAG"]).lower()]})    
-            if str(wlink["nvPairs"]["DEPLOY_DCI_TRACKING"]).lower() != str(hlink["nvPairs"]["DEPLOY_DCI_TRACKING"]).lower():
-                mismatch_reasons.append({"DEPLOY_DCI_TRACKING_MISMATCH": [str(wlink["nvPairs"]["DEPLOY_DCI_TRACKING"]).lower(), str(hlink["nvPairs"]["DEPLOY_DCI_TRACKING"]).lower()]})
+            if (
+                str(wlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]).lower()
+                != str(hlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "AUTO_VRF_LITE_FLAG_MISMATCH": [
+                            str(
+                                wlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]
+                            ).lower(),
+                            str(
+                                hlink["nvPairs"]["AUTO_VRF_LITE_FLAG"]
+                            ).lower(),
+                        ]
+                    }
+                )
+            if (
+                wlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"]
+                != hlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"]
+            ):
+                mismatch_reasons.append(
+                    {
+                        "VRF_LITE_JYTHON_TEMPLATE_MISMATCH": [
+                            wlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"],
+                            hlink["nvPairs"]["VRF_LITE_JYTHON_TEMPLATE"],
+                        ]
+                    }
+                )
 
-        if wlink["templateName"] == self.templates["ext_evpn_multisite_overlay_setup"]:
-            
-            if str(wlink["nvPairs"]["TRM_ENABLED"]).lower() != str(hlink["nvPairs"]["TRM_ENABLED"]).lower():
-                mismatch_reasons.append({"TRM_ENABLED_MISMATCH": [str(wlink["nvPairs"]["TRM_ENABLED"]).lower(), str(hlink["nvPairs"]["TRM_ENABLED"]).lower()]})
-            if str(wlink["nvPairs"]["BGP_MULTIHOP"]).lower() != str(hlink["nvPairs"]["BGP_MULTIHOP"]).lower():
-                mismatch_reasons.append({"BGP_MULTIHOP_MISMATCH": [str(wlink["nvPairs"]["BGP_MULTIHOP"]).lower(), str(hlink["nvPairs"]["BGP_MULTIHOP"]).lower()]})
-
-        if ((wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]) or (
-             wlink["templateName"] == self.templates["ext_evpn_multisite_overlay_setup"])
+        if (
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
         ):
-            
-            if str(wlink["nvPairs"]["BGP_PASSWORD_ENABLE"]).lower() != str(hlink["nvPairs"]["BGP_PASSWORD_ENABLE"]).lower():
-                mismatch_reasons.append({"BGP_PASSWORD_ENABLE_MISMATCH": [str(wlink["nvPairs"]["BGP_PASSWORD_ENABLE"]).lower(), str(hlink["nvPairs"]["BGP_PASSWORD_ENABLE"]).lower()]})
+
+            if (
+                str(wlink["nvPairs"]["MAX_PATHS"]).lower()
+                != str(hlink["nvPairs"]["MAX_PATHS"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "MAX_PATHS_MISMATCH": [
+                            str(wlink["nvPairs"]["MAX_PATHS"]).lower(),
+                            str(hlink["nvPairs"]["MAX_PATHS"]).lower(),
+                        ]
+                    }
+                )
+            if (
+                str(wlink["nvPairs"]["ROUTING_TAG"]).lower()
+                != str(hlink["nvPairs"]["ROUTING_TAG"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "ROUTING_TAG_MISMATCH": [
+                            str(wlink["nvPairs"]["ROUTING_TAG"]).lower(),
+                            str(hlink["nvPairs"]["ROUTING_TAG"]).lower(),
+                        ]
+                    }
+                )
+            if (
+                str(wlink["nvPairs"]["DEPLOY_DCI_TRACKING"]).lower()
+                != str(hlink["nvPairs"]["DEPLOY_DCI_TRACKING"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "DEPLOY_DCI_TRACKING_MISMATCH": [
+                            str(
+                                wlink["nvPairs"]["DEPLOY_DCI_TRACKING"]
+                            ).lower(),
+                            str(
+                                hlink["nvPairs"]["DEPLOY_DCI_TRACKING"]
+                            ).lower(),
+                        ]
+                    }
+                )
+
+        if (
+            wlink["templateName"]
+            == self.templates["ext_evpn_multisite_overlay_setup"]
+        ):
+
+            if (
+                str(wlink["nvPairs"]["TRM_ENABLED"]).lower()
+                != str(hlink["nvPairs"]["TRM_ENABLED"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "TRM_ENABLED_MISMATCH": [
+                            str(wlink["nvPairs"]["TRM_ENABLED"]).lower(),
+                            str(hlink["nvPairs"]["TRM_ENABLED"]).lower(),
+                        ]
+                    }
+                )
+            if (
+                str(wlink["nvPairs"]["BGP_MULTIHOP"]).lower()
+                != str(hlink["nvPairs"]["BGP_MULTIHOP"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "BGP_MULTIHOP_MISMATCH": [
+                            str(wlink["nvPairs"]["BGP_MULTIHOP"]).lower(),
+                            str(hlink["nvPairs"]["BGP_MULTIHOP"]).lower(),
+                        ]
+                    }
+                )
+
+        if (
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            wlink["templateName"]
+            == self.templates["ext_evpn_multisite_overlay_setup"]
+        ):
+
+            if (
+                str(wlink["nvPairs"]["BGP_PASSWORD_ENABLE"]).lower()
+                != str(hlink["nvPairs"]["BGP_PASSWORD_ENABLE"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "BGP_PASSWORD_ENABLE_MISMATCH": [
+                            str(
+                                wlink["nvPairs"]["BGP_PASSWORD_ENABLE"]
+                            ).lower(),
+                            str(
+                                hlink["nvPairs"]["BGP_PASSWORD_ENABLE"]
+                            ).lower(),
+                        ]
+                    }
+                )
             # Other parameters depend on "bgp_password_enable" flag.
-            if  wlink["nvPairs"]["BGP_PASSWORD_ENABLE"] is True:
-                
-                if str(wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]).lower() != str(hlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]).lower():
-                    mismatch_reasons.append({"BGP_PASSWORD_INHERIT_FROM_MSD_MISMATCH": [str(wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]).lower(), str(hlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]).lower()]})    
-                if  wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] is False:
-                    
-                    if wlink["nvPairs"]["BGP_PASSWORD"] != hlink["nvPairs"].get("BGP_PASSWORD", ""):
-                        mismatch_reasons.append({"BGP_PASSWORD_MISMATCH":[wlink["nvPairs"]["BGP_PASSWORD"], hlink["nvPairs"].get("BGP_PASSWORD", "")]})   
-                    if str(wlink["nvPairs"]["BGP_AUTH_KEY_TYPE"]).lower() != str(hlink["nvPairs"].get("BGP_AUTH_KEY_TYPE", "")).lower():
-                        mismatch_reasons.append({"BGP_AUTH_KEY_TYPE_MISMATCH":[str(wlink["nvPairs"]["BGP_AUTH_KEY_TYPE"]).lower(), str(hlink["nvPairs"].get("BGP_AUTH_KEY_TYPE", "")).lower()]})
-        
+            if wlink["nvPairs"]["BGP_PASSWORD_ENABLE"] is True:
+
+                if (
+                    str(
+                        wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]
+                    ).lower()
+                    != str(
+                        hlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"]
+                    ).lower()
+                ):
+                    mismatch_reasons.append(
+                        {
+                            "BGP_PASSWORD_INHERIT_FROM_MSD_MISMATCH": [
+                                str(
+                                    wlink["nvPairs"][
+                                        "BGP_PASSWORD_INHERIT_FROM_MSD"
+                                    ]
+                                ).lower(),
+                                str(
+                                    hlink["nvPairs"][
+                                        "BGP_PASSWORD_INHERIT_FROM_MSD"
+                                    ]
+                                ).lower(),
+                            ]
+                        }
+                    )
+                if wlink["nvPairs"]["BGP_PASSWORD_INHERIT_FROM_MSD"] is False:
+
+                    if wlink["nvPairs"]["BGP_PASSWORD"] != hlink[
+                        "nvPairs"
+                    ].get("BGP_PASSWORD", ""):
+                        mismatch_reasons.append(
+                            {
+                                "BGP_PASSWORD_MISMATCH": [
+                                    wlink["nvPairs"]["BGP_PASSWORD"],
+                                    hlink["nvPairs"].get("BGP_PASSWORD", ""),
+                                ]
+                            }
+                        )
+                    if (
+                        str(wlink["nvPairs"]["BGP_AUTH_KEY_TYPE"]).lower()
+                        != str(
+                            hlink["nvPairs"].get("BGP_AUTH_KEY_TYPE", "")
+                        ).lower()
+                    ):
+                        mismatch_reasons.append(
+                            {
+                                "BGP_AUTH_KEY_TYPE_MISMATCH": [
+                                    str(
+                                        wlink["nvPairs"]["BGP_AUTH_KEY_TYPE"]
+                                    ).lower(),
+                                    str(
+                                        hlink["nvPairs"].get(
+                                            "BGP_AUTH_KEY_TYPE", ""
+                                        )
+                                    ).lower(),
+                                ]
+                            }
+                        )
+
         if mismatch_reasons != []:
             return "DCNM_LINK_MERGE", mismatch_reasons, hlink
         else:
             return "DCNM_LINK_EXIST", [], []
 
-    def dcnm_links_compare_intra_fabric_link_params (self, wlink, hlink):
+    def dcnm_links_compare_intra_fabric_link_params(self, wlink, hlink):
 
         """
         Routine to compare two links and update mismatch information.
@@ -1880,66 +2430,278 @@ class DcnmLinks:
         if hlink["templateName"] != wlink["templateName"]:
             # We found a Link that matched all other key values, but the template is different. This means
             # the user is trying to change the template of an existing link. So go ahead and merge the same
-            mismatch_reasons.append({"TEMPLATE_MISMATCH": [wlink["templateName"], hlink["templateName"]]})
+            mismatch_reasons.append(
+                {
+                    "TEMPLATE_MISMATCH": [
+                        wlink["templateName"],
+                        hlink["templateName"],
+                    ]
+                }
+            )
             return "DCNM_LINK_MERGE", mismatch_reasons, hlink
 
         if (wlink.get("nvPairs", None) is None) or (
-           (hlink.get("nvPairs", None) is None)
+            (hlink.get("nvPairs", None) is None)
         ):
             return "DCNM_LINK_EXIST", [], []
 
         # Compare common info for all templates first
-        if str(wlink["nvPairs"]["ADMIN_STATE"]).lower() != str(hlink["nvPairs"]["ADMIN_STATE"]).lower():
-            mismatch_reasons.append({"ADMIN_STATE_MISMATCH": [str(wlink["nvPairs"]["ADMIN_STATE"]).lower(), str(hlink["nvPairs"]["ADMIN_STATE"]).lower()]})
-        if str(wlink["nvPairs"]["MTU"]).lower() != str(hlink["nvPairs"]["MTU"]).lower():
-            mismatch_reasons.append({"MTU_MISMATCH": [wlink["nvPairs"]["MTU"], hlink["nvPairs"]["MTU"]]})
+        if (
+            str(wlink["nvPairs"]["ADMIN_STATE"]).lower()
+            != str(hlink["nvPairs"]["ADMIN_STATE"]).lower()
+        ):
+            mismatch_reasons.append(
+                {
+                    "ADMIN_STATE_MISMATCH": [
+                        str(wlink["nvPairs"]["ADMIN_STATE"]).lower(),
+                        str(hlink["nvPairs"]["ADMIN_STATE"]).lower(),
+                    ]
+                }
+            )
+        if (
+            str(wlink["nvPairs"]["MTU"]).lower()
+            != str(hlink["nvPairs"]["MTU"]).lower()
+        ):
+            mismatch_reasons.append(
+                {
+                    "MTU_MISMATCH": [
+                        wlink["nvPairs"]["MTU"],
+                        hlink["nvPairs"]["MTU"],
+                    ]
+                }
+            )
         if wlink["nvPairs"]["PEER1_DESC"] != hlink["nvPairs"]["PEER1_DESC"]:
-            mismatch_reasons.append({"PEER1_DESC_MISMATCH": [wlink["nvPairs"]["PEER1_DESC"], hlink["nvPairs"]["PEER1_DESC"]]})
+            mismatch_reasons.append(
+                {
+                    "PEER1_DESC_MISMATCH": [
+                        wlink["nvPairs"]["PEER1_DESC"],
+                        hlink["nvPairs"]["PEER1_DESC"],
+                    ]
+                }
+            )
         if wlink["nvPairs"]["PEER2_DESC"] != hlink["nvPairs"]["PEER2_DESC"]:
-            mismatch_reasons.append({"PEER2_DESC_MISMATCH": [wlink["nvPairs"]["PEER2_DESC"], hlink["nvPairs"]["PEER2_DESC"]]})
+            mismatch_reasons.append(
+                {
+                    "PEER2_DESC_MISMATCH": [
+                        wlink["nvPairs"]["PEER2_DESC"],
+                        hlink["nvPairs"]["PEER2_DESC"],
+                    ]
+                }
+            )
         if wlink["nvPairs"]["PEER1_CONF"] != hlink["nvPairs"]["PEER1_CONF"]:
-            mismatch_reasons.append({"PEER1_CONF_MISMATCH": [wlink["nvPairs"]["PEER1_CONF"], hlink["nvPairs"]["PEER1_CONF"]]})
+            mismatch_reasons.append(
+                {
+                    "PEER1_CONF_MISMATCH": [
+                        wlink["nvPairs"]["PEER1_CONF"],
+                        hlink["nvPairs"]["PEER1_CONF"],
+                    ]
+                }
+            )
         if wlink["nvPairs"]["PEER2_CONF"] != hlink["nvPairs"]["PEER2_CONF"]:
-            mismatch_reasons.append({"PEER2_CONF_MISMATCH": [wlink["nvPairs"]["PEER2_CONF"], hlink["nvPairs"]["PEER2_CONF"]]})
+            mismatch_reasons.append(
+                {
+                    "PEER2_CONF_MISMATCH": [
+                        wlink["nvPairs"]["PEER2_CONF"],
+                        hlink["nvPairs"]["PEER2_CONF"],
+                    ]
+                }
+            )
 
-        if (wlink["templateName"] == self.templates["int_intra_fabric_num_link"]) or (
-            wlink["templateName"] == self.templates["ios_xe_int_intra_fabric_num_link"]) or (
-            wlink["templateName"] == self.templates["int_intra_vpc_peer_keep_alive_link"]   
+        if (
+            (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_num_link"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["ios_xe_int_intra_fabric_num_link"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["int_intra_vpc_peer_keep_alive_link"]
+            )
         ):
-            if self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower() == "false":
-                if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["PEER1_IP"], hlink["nvPairs"].get("PEER1_IP")) is False:
-                    mismatch_reasons.append({"PEER1_IP_MISMATCH": [wlink["nvPairs"]["PEER1_IP"], hlink["nvPairs"]["PEER1_IP"]]})
-                if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["PEER2_IP"], hlink["nvPairs"].get("PEER2_IP")) is False:
-                    mismatch_reasons.append({"PEER2_IP_MISMATCH": [wlink["nvPairs"]["PEER2_IP"], hlink["nvPairs"]["PEER2_IP"]]})
+            if (
+                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                == "false"
+            ):
+                if (
+                    self.dcnm_links_compare_ip_addresses(
+                        wlink["nvPairs"]["PEER1_IP"],
+                        hlink["nvPairs"].get("PEER1_IP"),
+                    )
+                    is False
+                ):
+                    mismatch_reasons.append(
+                        {
+                            "PEER1_IP_MISMATCH": [
+                                wlink["nvPairs"]["PEER1_IP"],
+                                hlink["nvPairs"]["PEER1_IP"],
+                            ]
+                        }
+                    )
+                if (
+                    self.dcnm_links_compare_ip_addresses(
+                        wlink["nvPairs"]["PEER2_IP"],
+                        hlink["nvPairs"].get("PEER2_IP"),
+                    )
+                    is False
+                ):
+                    mismatch_reasons.append(
+                        {
+                            "PEER2_IP_MISMATCH": [
+                                wlink["nvPairs"]["PEER2_IP"],
+                                hlink["nvPairs"]["PEER2_IP"],
+                            ]
+                        }
+                    )
             else:
-                if wlink["templateName"] != self.templates["ios_xe_int_intra_fabric_num_link"]:
-                    if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["PEER1_V6IP"], hlink["nvPairs"].get("PEER1_V6IP")) is False:
-                        mismatch_reasons.append({"PEER1_IPV6_MISMATCH": [wlink["nvPairs"]["PEER1_V6IP"], hlink["nvPairs"]["PEER1_V6IP"]]})
-                    if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["PEER2_V6IP"], hlink["nvPairs"].get("PEER2_V6IP")) is False:
-                        mismatch_reasons.append({"PEER2_IPV6_MISMATCH": [wlink["nvPairs"]["PEER2_V6IP"], hlink["nvPairs"]["PEER2_V6IP"]]})
+                if (
+                    wlink["templateName"]
+                    != self.templates["ios_xe_int_intra_fabric_num_link"]
+                ):
+                    if (
+                        self.dcnm_links_compare_ip_addresses(
+                            wlink["nvPairs"]["PEER1_V6IP"],
+                            hlink["nvPairs"].get("PEER1_V6IP"),
+                        )
+                        is False
+                    ):
+                        mismatch_reasons.append(
+                            {
+                                "PEER1_IPV6_MISMATCH": [
+                                    wlink["nvPairs"]["PEER1_V6IP"],
+                                    hlink["nvPairs"]["PEER1_V6IP"],
+                                ]
+                            }
+                        )
+                    if (
+                        self.dcnm_links_compare_ip_addresses(
+                            wlink["nvPairs"]["PEER2_V6IP"],
+                            hlink["nvPairs"].get("PEER2_V6IP"),
+                        )
+                        is False
+                    ):
+                        mismatch_reasons.append(
+                            {
+                                "PEER2_IPV6_MISMATCH": [
+                                    wlink["nvPairs"]["PEER2_V6IP"],
+                                    hlink["nvPairs"]["PEER2_V6IP"],
+                                ]
+                            }
+                        )
                 else:
-                    if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["PEER1_IP"], hlink["nvPairs"].get("PEER1_IP")) is False:
-                        mismatch_reasons.append({"PEER1_IP_MISMATCH": [wlink["nvPairs"]["PEER1_IP"], hlink["nvPairs"]["PEER1_IP"]]})
-                    if self.dcnm_links_compare_ip_addresses(wlink["nvPairs"]["PEER2_IP"], hlink["nvPairs"].get("PEER2_IP")) is False:
-                        mismatch_reasons.append({"PEER2_IP_MISMATCH": [wlink["nvPairs"]["PEER2_IP"], hlink["nvPairs"]["PEER2_IP"]]})
-   
-        if (wlink["templateName"] == self.templates["int_intra_fabric_num_link"]) or (
-            wlink["templateName"] == self.templates["int_intra_fabric_ipv6_link_local"]) or (
-            wlink["templateName"] == self.templates["int_intra_fabric_unnum_link"]        
+                    if (
+                        self.dcnm_links_compare_ip_addresses(
+                            wlink["nvPairs"]["PEER1_IP"],
+                            hlink["nvPairs"].get("PEER1_IP"),
+                        )
+                        is False
+                    ):
+                        mismatch_reasons.append(
+                            {
+                                "PEER1_IP_MISMATCH": [
+                                    wlink["nvPairs"]["PEER1_IP"],
+                                    hlink["nvPairs"]["PEER1_IP"],
+                                ]
+                            }
+                        )
+                    if (
+                        self.dcnm_links_compare_ip_addresses(
+                            wlink["nvPairs"]["PEER2_IP"],
+                            hlink["nvPairs"].get("PEER2_IP"),
+                        )
+                        is False
+                    ):
+                        mismatch_reasons.append(
+                            {
+                                "PEER2_IP_MISMATCH": [
+                                    wlink["nvPairs"]["PEER2_IP"],
+                                    hlink["nvPairs"]["PEER2_IP"],
+                                ]
+                            }
+                        )
+
+        if (
+            (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_num_link"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_ipv6_link_local"]
+            )
+            or (
+                wlink["templateName"]
+                == self.templates["int_intra_fabric_unnum_link"]
+            )
         ):
-            if str(wlink["nvPairs"]["ENABLE_MACSEC"]).lower() != str(hlink["nvPairs"].get("ENABLE_MACSEC")).lower():
-                mismatch_reasons.append({"ENABLE_MACSEC_MISMATCH": [str(wlink["nvPairs"]["ENABLE_MACSEC"]).lower(), str(hlink["nvPairs"]["ENABLE_MACSEC"]).lower()]})
+            if (
+                str(wlink["nvPairs"]["ENABLE_MACSEC"]).lower()
+                != str(hlink["nvPairs"].get("ENABLE_MACSEC")).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "ENABLE_MACSEC_MISMATCH": [
+                            str(wlink["nvPairs"]["ENABLE_MACSEC"]).lower(),
+                            str(hlink["nvPairs"]["ENABLE_MACSEC"]).lower(),
+                        ]
+                    }
+                )
 
-        if (wlink["templateName"] == self.templates["int_intra_vpc_peer_keep_alive_link"]):
+        if (
+            wlink["templateName"]
+            == self.templates["int_intra_vpc_peer_keep_alive_link"]
+        ):
 
-            if wlink["nvPairs"]["INTF_VRF"] != hlink["nvPairs"].get("INTF_VRF"):
-                mismatch_reasons.append({"INTF_VRF_MISMATCH": [wlink["nvPairs"]["INTF_VRF"], hlink["nvPairs"]["INTF_VRF"]]})
+            if wlink["nvPairs"]["INTF_VRF"] != hlink["nvPairs"].get(
+                "INTF_VRF"
+            ):
+                mismatch_reasons.append(
+                    {
+                        "INTF_VRF_MISMATCH": [
+                            wlink["nvPairs"]["INTF_VRF"],
+                            hlink["nvPairs"]["INTF_VRF"],
+                        ]
+                    }
+                )
 
-        if (wlink["templateName"] == self.templates["int_intra_fabric_num_link"]):
-            if str(wlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]).lower() != str(hlink["nvPairs"].get("PEER1_BFD_ECHO_DISABLE")).lower():
-                mismatch_reasons.append({"PEER1_BFD_ECHO_DISABLE_MISMATCH": [str(wlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]).lower(), str(hlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]).lower()]})
-            if str(wlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]).lower() != str(hlink["nvPairs"].get("PEER2_BFD_ECHO_DISABLE")).lower():
-                mismatch_reasons.append({"PEER2_BFD_ECHO_DISABLE_MISMATCH": [str(wlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]).lower(), str(hlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]).lower()]})
+        if (
+            wlink["templateName"]
+            == self.templates["int_intra_fabric_num_link"]
+        ):
+            if (
+                str(wlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]).lower()
+                != str(hlink["nvPairs"].get("PEER1_BFD_ECHO_DISABLE")).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "PEER1_BFD_ECHO_DISABLE_MISMATCH": [
+                            str(
+                                wlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]
+                            ).lower(),
+                            str(
+                                hlink["nvPairs"]["PEER1_BFD_ECHO_DISABLE"]
+                            ).lower(),
+                        ]
+                    }
+                )
+            if (
+                str(wlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]).lower()
+                != str(hlink["nvPairs"].get("PEER2_BFD_ECHO_DISABLE")).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "PEER2_BFD_ECHO_DISABLE_MISMATCH": [
+                            str(
+                                wlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]
+                            ).lower(),
+                            str(
+                                hlink["nvPairs"]["PEER2_BFD_ECHO_DISABLE"]
+                            ).lower(),
+                        ]
+                    }
+                )
 
         if mismatch_reasons != []:
             return "DCNM_LINK_MERGE", mismatch_reasons, hlink
@@ -1961,37 +2723,52 @@ class DcnmLinks:
             DCNM_LINK_CREATE (str): - if a new link is to be created
             return value of  dcnm_links_compare_intra_fabric_link_params or dcnm_links_compare_inter_fabric_link_params
         """
-        
+
         match_have = [
             have
             for have in self.have
             if (
                 (have["sw1-info"]["fabric-name"] == want["sourceFabric"])
-                and (have["sw2-info"]["fabric-name"] == want["destinationFabric"])
+                and (
+                    have["sw2-info"]["fabric-name"]
+                    == want["destinationFabric"]
+                )
                 and (have["sw1-info"]["if-name"] == want["sourceInterface"])
-                and (have["sw2-info"]["if-name"] == want["destinationInterface"])
-                and (have["sw1-info"]["sw-serial-number"] == want["sourceDevice"])
-                and (have["sw2-info"]["sw-serial-number"] == want["destinationDevice"])
+                and (
+                    have["sw2-info"]["if-name"] == want["destinationInterface"]
+                )
+                and (
+                    have["sw1-info"]["sw-serial-number"]
+                    == want["sourceDevice"]
+                )
+                and (
+                    have["sw2-info"]["sw-serial-number"]
+                    == want["destinationDevice"]
+                )
             )
         ]
 
-        for mlink in  match_have:
+        for mlink in match_have:
             if want["sourceFabric"] == want["destinationFabric"]:
-                return self.dcnm_links_compare_intra_fabric_link_params (want, mlink)
+                return self.dcnm_links_compare_intra_fabric_link_params(
+                    want, mlink
+                )
             else:
-                return self.dcnm_links_compare_inter_fabric_link_params (want, mlink)   
+                return self.dcnm_links_compare_inter_fabric_link_params(
+                    want, mlink
+                )
 
-        return "DCNM_LINK_CREATE", [], []  
+        return "DCNM_LINK_CREATE", [], []
 
     def dcnm_links_merge_want_and_have(self, want, have):
 
         if (want.get("nvPairs", None) is None) or (
-           (have.get("nvPairs", None) is None)
-           ):
-           return
-        
+            (have.get("nvPairs", None) is None)
+        ):
+            return
+
         if want.get("peer1_conf_defaulted", False) is False:
-        
+
             # In the current run, if want["nvPairs"]["PEER1_CONF"] is not included
             # then it would have been updated with values from 'have' in the function
             # dcnm_links_update_want(). So no need to do the merge here.
@@ -2001,13 +2778,17 @@ class DcnmLinks:
                 # Nothing to merge. Leave want as it is
                 pass
             else:
-                want["nvPairs"]["PEER1_CONF"] = have["nvPairs"]["PEER1_CONF"] + '\n' + want["nvPairs"]["PEER1_CONF"]
+                want["nvPairs"]["PEER1_CONF"] = (
+                    have["nvPairs"]["PEER1_CONF"]
+                    + "\n"
+                    + want["nvPairs"]["PEER1_CONF"]
+                )
         else:
             # Remove the "peer1_conf_defaulted" from want
             want.pop("peer1_conf_defaulted")
 
         if want.get("peer2_conf_defaulted", False) is False:
-            
+
             # In the current run, if want["nvPairs"]["PEER2_CONF"] is not included
             # then it would have been updated with values from 'have' in the function
             # dcnm_links_update_want(). So no need to do the merge here.
@@ -2017,16 +2798,20 @@ class DcnmLinks:
                 # Nothing to merge. Leave want as it is
                 pass
             else:
-                want["nvPairs"]["PEER2_CONF"] = have["nvPairs"]["PEER2_CONF"] + '\n' + want["nvPairs"]["PEER2_CONF"]
+                want["nvPairs"]["PEER2_CONF"] = (
+                    have["nvPairs"]["PEER2_CONF"]
+                    + "\n"
+                    + want["nvPairs"]["PEER2_CONF"]
+                )
         else:
             # Remove the "peer2_conf_defaulted" from want
             want.pop("peer2_conf_defaulted")
-       
+
     def dcnm_links_update_diff_deploy(self, fabric, device):
 
         if self.diff_deploy.get(fabric, "") == "":
             self.diff_deploy[fabric] = []
-        
+
         if device not in self.diff_deploy[fabric]:
             self.diff_deploy[fabric].append(device)
 
@@ -2060,15 +2845,13 @@ class DcnmLinks:
                     # Note down the Link UUID in link. We will need this to update the link
                     link["link-uuid"] = have["link-uuid"]
                     self.changed_dict[0]["modified"].append(link)
-                    self.changed_dict[0]["debugs"].append(
-                            {"REASONS": reasons}
-                    )
+                    self.changed_dict[0]["debugs"].append({"REASONS": reasons})
                     # Fields like CONF which are a list of commands should be handled differently in this case.
                     # For existing links, we will have to merge the current list of commands with already existing
                     # ones in have. For replace, no need to merge them. They must be replaced with what is given.
                     if self.module.params["state"] == "merged":
                         # Check if the templates are same. If not dont try to merge want and have, because
-                        # the parameters in want anf have will be different. Since template has changed, go ahead 
+                        # the parameters in want anf have will be different. Since template has changed, go ahead
                         # and push MODIFY request with the new payload
 
                         if link["templateName"] == have["templateName"]:
@@ -2077,15 +2860,20 @@ class DcnmLinks:
 
             # Check if "deploy" flag is True. If True, deploy the changes.
             # NOTE: There is no Link level deploy functionality. Deploy always happens at switch level.
-            #       If "deploy" flag is set to "true", then all pending configurations on the source and 
+            #       If "deploy" flag is set to "true", then all pending configurations on the source and
             #       destination devices will be deployed.
             if self.deploy:
-                self.dcnm_links_update_diff_deploy(self.fabric, link["sourceDevice"])
-                self.dcnm_links_update_diff_deploy(link["destinationFabric"], link["destinationDevice"])
+                self.dcnm_links_update_diff_deploy(
+                    self.fabric, link["sourceDevice"]
+                )
+                self.dcnm_links_update_diff_deploy(
+                    link["destinationFabric"], link["destinationDevice"]
+                )
 
-                
         if self.diff_deploy != {}:
-            self.changed_dict[0]["deploy"].append(copy.deepcopy(self.diff_deploy))
+            self.changed_dict[0]["deploy"].append(
+                copy.deepcopy(self.diff_deploy)
+            )
 
     def dcnm_links_get_diff_deleted(self):
 
@@ -2100,7 +2888,7 @@ class DcnmLinks:
         Returns:
             None
         """
-        
+
         for link in self.links_info:
 
             match_links = [
@@ -2111,27 +2899,42 @@ class DcnmLinks:
                     and (have["sw2-info"]["fabric-name"] == link["dst_fabric"])
                     and (have["sw1-info"]["if-name"] == link["src_interface"])
                     and (have["sw2-info"]["if-name"] == link["dst_interface"])
-                    and (have["sw1-info"]["sw-serial-number"] == self.ip_sn[link["src_device"]])
-                    and (have["sw2-info"]["sw-serial-number"] == self.ip_sn[link["dst_device"]])
-                )]
+                    and (
+                        have["sw1-info"]["sw-serial-number"]
+                        == self.ip_sn[link["src_device"]]
+                    )
+                    and (
+                        have["sw2-info"]["sw-serial-number"]
+                        == self.ip_sn[link["dst_device"]]
+                    )
+                )
+            ]
 
             for mlink in match_links:
                 self.diff_delete.append(mlink["link-uuid"])
-                self.changed_dict[0]["deleted"].append ({"src_fabric": self.fabric, 
-                                                         "dst_fabric": link["dst_fabric"],
-                                                         "src_interface": link["src_interface"],
-                                                         "dst_interface": link["dst_interface"],
-                                                         "src_device": link["src_device"],
-                                                         "dst_device": link["dst_device"],
-                                                         "UUID": mlink["link-uuid"]
-                                                         })
-                
-                
-                self.dcnm_links_update_diff_deploy(self.fabric, self.ip_sn[link["src_device"]])
-                self.dcnm_links_update_diff_deploy(link["dst_fabric"], self.ip_sn[link["dst_device"]])
-        
+                self.changed_dict[0]["deleted"].append(
+                    {
+                        "src_fabric": self.fabric,
+                        "dst_fabric": link["dst_fabric"],
+                        "src_interface": link["src_interface"],
+                        "dst_interface": link["dst_interface"],
+                        "src_device": link["src_device"],
+                        "dst_device": link["dst_device"],
+                        "UUID": mlink["link-uuid"],
+                    }
+                )
+
+                self.dcnm_links_update_diff_deploy(
+                    self.fabric, self.ip_sn[link["src_device"]]
+                )
+                self.dcnm_links_update_diff_deploy(
+                    link["dst_fabric"], self.ip_sn[link["dst_device"]]
+                )
+
         if self.diff_deploy != {}:
-            self.changed_dict[0]["deploy"].append(copy.deepcopy(self.diff_deploy))                                         
+            self.changed_dict[0]["deploy"].append(
+                copy.deepcopy(self.diff_deploy)
+            )
 
     def dcnm_links_get_diff_query(self):
 
@@ -2147,12 +2950,12 @@ class DcnmLinks:
             None
         """
 
-        # 'src_fabric' is always given. Use that to get all links and then filter based on arguments 
+        # 'src_fabric' is always given. Use that to get all links and then filter based on arguments
         # included in playbook
 
         path = self.paths["LINKS_GET_BY_FABRIC"].format(self.fabric)
 
-        resp = dcnm_send (self.module, "GET", path)
+        resp = dcnm_send(self.module, "GET", path)
 
         if resp and resp["RETURN_CODE"] == 200 and resp["DATA"]:
             if self.links_info == []:
@@ -2165,14 +2968,50 @@ class DcnmLinks:
 
                 match_query = [
                     rlink
-                    for rlink in resp["DATA"] 
+                    for rlink in resp["DATA"]
                     if (
-                    ((link["dst_fabric"] == "") or (rlink["sw2-info"]["fabric-name"] == link["dst_fabric"]))
-                    and ((link["src_interface"] == "") or (rlink["sw1-info"]["if-name"] == link["src_interface"]))
-                    and ((link["dst_interface"] == "") or (rlink["sw2-info"]["if-name"] == link["dst_interface"]))
-                    and ((link["src_device"] == "") or (rlink["sw1-info"]["sw-serial-number"] == self.ip_sn[link["src_device"]]))
-                    and ((link["dst_device"] == "") or (rlink["sw2-info"]["sw-serial-number"] == self.ip_sn[link["dst_device"]]))
-                    and ((link["template"] == "") or (rlink.get("templateName", None) == link["template"]))
+                        (
+                            (link["dst_fabric"] == "")
+                            or (
+                                rlink["sw2-info"]["fabric-name"]
+                                == link["dst_fabric"]
+                            )
+                        )
+                        and (
+                            (link["src_interface"] == "")
+                            or (
+                                rlink["sw1-info"]["if-name"]
+                                == link["src_interface"]
+                            )
+                        )
+                        and (
+                            (link["dst_interface"] == "")
+                            or (
+                                rlink["sw2-info"]["if-name"]
+                                == link["dst_interface"]
+                            )
+                        )
+                        and (
+                            (link["src_device"] == "")
+                            or (
+                                rlink["sw1-info"]["sw-serial-number"]
+                                == self.ip_sn[link["src_device"]]
+                            )
+                        )
+                        and (
+                            (link["dst_device"] == "")
+                            or (
+                                rlink["sw2-info"]["sw-serial-number"]
+                                == self.ip_sn[link["dst_device"]]
+                            )
+                        )
+                        and (
+                            (link["template"] == "")
+                            or (
+                                rlink.get("templateName", None)
+                                == link["template"]
+                            )
+                        )
                     )
                 ]
 
@@ -2187,7 +3026,7 @@ class DcnmLinks:
 
         for fabric in self.diff_deploy.keys():
             if self.diff_deploy[fabric] != []:
-                
+
                 deploy_path = self.paths["LINKS_CFG_DEPLOY"].format(fabric)
 
                 switches = ",".join(self.diff_deploy[fabric])
@@ -2208,9 +3047,13 @@ class DcnmLinks:
         for fabric in self.diff_deploy.keys():
 
             if self.diff_deploy[fabric] != []:
-                
+
                 path = self.paths["CONFIG_PREVIEW"].format(fabric)
-                path = path + ",".join(self.diff_deploy[fabric]) + "?forceShowRun=false&showBrief=true"
+                path = (
+                    path
+                    + ",".join(self.diff_deploy[fabric])
+                    + "?forceShowRun=false&showBrief=true"
+                )
 
                 cp_resp = dcnm_send(self.module, "GET", path, "")
 
@@ -2264,7 +3107,7 @@ class DcnmLinks:
 
             if resp != []:
                 self.result["response"].append(resp)
-            
+
             if resp and resp.get("RETURN_CODE") != 200:
                 resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
@@ -2295,7 +3138,7 @@ class DcnmLinks:
 
             if resp != []:
                 self.result["response"].append(resp)
-            
+
             if resp and resp.get("RETURN_CODE") != 200:
                 resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
@@ -2303,10 +3146,10 @@ class DcnmLinks:
                 modified_flag = True
 
         if self.diff_deploy != {}:
-            
+
             retries = 0
             while retries < 3:
-                
+
                 retry = False
                 retries += 1
 
@@ -2325,7 +3168,9 @@ class DcnmLinks:
                 else:
                     break
 
-        self.result["changed"] = create_flag or modified_flag or delete_flag or deploy_flag
+        self.result["changed"] = (
+            create_flag or modified_flag or delete_flag or deploy_flag
+        )
 
     def dcnm_links_update_inventory_data(self):
 
@@ -2346,7 +3191,7 @@ class DcnmLinks:
             return
 
         # Soure fabric is already processed. Add it to processed list
-        processed_fabrics.append (self.fabric)
+        processed_fabrics.append(self.fabric)
 
         for cfg in self.config:
 
@@ -2367,7 +3212,7 @@ class DcnmLinks:
     def dcnm_links_translate_playbook_info(self, config, ip_sn, hn_sn):
 
         """
-        Routine to translate parameters in playbook if required. 
+        Routine to translate parameters in playbook if required.
             - This routine converts the hostname information included in
               playbook to actual addresses.
             - translates template names based on version of DCNM
@@ -2390,13 +3235,16 @@ class DcnmLinks:
                 cfg["src_device"] = dcnm_get_ip_addr_info(
                     self.module, cfg["src_device"], ip_sn, hn_sn
                 )
-            if cfg.get("dst_device", "") != "":    
+            if cfg.get("dst_device", "") != "":
                 cfg["dst_device"] = dcnm_get_ip_addr_info(
                     self.module, cfg["dst_device"], ip_sn, hn_sn
                 )
-            
+
             if cfg.get("template", None) is not None:
-                cfg["template"] = self.templates.get(cfg["template"], "dcnm_links_invalid_template")
+                cfg["template"] = self.templates.get(
+                    cfg["template"], "dcnm_links_invalid_template"
+                )
+
 
 def main():
 
@@ -2404,13 +3252,13 @@ def main():
     """
     element_spec = dict(
         src_fabric=dict(required=True, type="str"),
-        config=dict(required=False, type="list", elements="dict", default=[]),   
+        config=dict(required=False, type="list", elements="dict", default=[]),
         state=dict(
             type="str",
             default="merged",
             choices=["merged", "deleted", "replaced", "query"],
         ),
-        deploy=dict(type=bool, default="true")
+        deploy=dict(type="bool", default="true"),
     )
 
     module = AnsibleModule(
@@ -2434,7 +3282,7 @@ def main():
     dcnm_links.dcnm_links_translate_playbook_info(
         dcnm_links.config, dcnm_links.ip_sn, dcnm_links.hn_sn
     )
-    
+
     dcnm_links.dcnm_links_validate_input()
 
     if module.params["state"] != "query":
@@ -2449,9 +3297,10 @@ def main():
         dcnm_links.dcnm_links_update_want()
 
     if (module.params["state"] == "merged") or (
-        module.params["state"] == "replaced"):
-        dcnm_links.dcnm_links_get_diff_merge()   
-    
+        module.params["state"] == "replaced"
+    ):
+        dcnm_links.dcnm_links_get_diff_merge()
+
     if module.params["state"] == "deleted":
         dcnm_links.dcnm_links_get_diff_deleted()
 
@@ -2466,7 +3315,7 @@ def main():
     if module.check_mode:
         dcnm_links.result["changed"] = False
         module.exit_json(**dcnm_links.result)
-    
+
     dcnm_links.dcnm_links_send_message_to_dcnm()
 
     module.exit_json(**dcnm_links.result)
