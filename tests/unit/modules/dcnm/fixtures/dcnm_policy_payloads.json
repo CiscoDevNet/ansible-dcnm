@@ -1,4 +1,19 @@
 {
+  "mock_fab_inv": {
+      "10.10.10.224": {
+        "managable": true,
+        "serialNumber": "XYZKSJHSMK1"
+      },
+      "10.10.10.225": {
+        "managable": true,
+        "serialNumber": "XYZKSJHSMK2"
+      },
+      "10.10.10.226": {
+        "managable": true,
+        "serialNumber": "XYZKSJHSMK3"
+      }
+  },
+
   "mock_ip_sn" : {
     "10.10.10.224": "XYZKSJHSMK1",
       "10.10.10.225": "XYZKSJHSMK2",

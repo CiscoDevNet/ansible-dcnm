@@ -373,6 +373,8 @@ Examples
     #
     # Deleted:
     #   Policies defined in the playbook will be deleted in the target fabric.
+    #   
+    #   WARNING: Deleting a policy will deploy all pending configurations on the impacted switches.
     #
     # Query:
     #   Returns the current DCNM state for the policies listed in the playbook.
