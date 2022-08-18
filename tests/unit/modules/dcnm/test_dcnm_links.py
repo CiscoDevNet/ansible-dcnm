@@ -101,61 +101,78 @@ class TestDcnmLinksModule(TestDcnmModule):
         if "test_dcnm_intra_links_missing_" in self._testMethodName:
             self.run_dcnm_fabric_info.side_effect = [self.mock_num_fab_info]
 
-        if ("test_dcnm_intra_links_missing_peer1_ipv6" in self._testMethodName) or (
-           ("test_dcnm_intra_links_missing_peer2_ipv6" in self._testMethodName)
+        if (
+            "test_dcnm_intra_links_missing_peer1_ipv6" in self._testMethodName
+        ) or (
+            (
+                "test_dcnm_intra_links_missing_peer2_ipv6"
+                in self._testMethodName
+            )
         ):
             self.run_dcnm_fabric_info.side_effect = [self.mock_ipv6_fab_info]
 
-    # -------------------------- INTRA-FABRIC-UNNUMBERED --------------------------
+        # -------------------------- INTRA-FABRIC-UNNUMBERED --------------------------
 
-        if "test_dcnm_intra_links_unnumbered_merged_new_no_opts" == self._testMethodName:
-
-            merge_links_resp = self.payloads_data.get(
-                "merge_links_fabric_response"
-            )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
-
-            self.run_dcnm_send.side_effect = [
-              [], [],
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
-            ]
-
-        if "test_dcnm_intra_links_unnumbered_merged_new" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_merged_new_no_opts"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [],
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_unnumbered_merged_new_no_deploy" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_merged_new"
+            == self._testMethodName
+        ):
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
+            ]
+
+        if (
+            "test_dcnm_intra_links_unnumbered_merged_new_no_deploy"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
 
             self.run_dcnm_send.side_effect = [
-              [], [],
-              merge_links_resp, merge_links_resp
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
             ]
 
-        if "test_dcnm_intra_links_unnumbered_merged_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_merged_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_unnum_fabric_response"
@@ -166,37 +183,40 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_unnumbered_merged_new_no_state" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_merged_new_no_state"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [],
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_merged_new_check_mode" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_merged_new_check_mode"
+            == self._testMethodName
+        ):
             pass
 
         if (
@@ -211,21 +231,21 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_unnumbered_modify_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_modify_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_unnum_fabric_response"
@@ -236,20 +256,21 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_unnumbered_replace_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_replace_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_unnum_fabric_response"
@@ -260,21 +281,21 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_unnumbered_delete_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_delete_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_unnum_fabric_response"
@@ -285,19 +306,20 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, [], [], [],
-              delete_links_resp, delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                [],
+                [],
+                [],
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
-
 
         if (
             "test_dcnm_intra_links_unnumbered_delete_existing_and_non_existing"
@@ -310,27 +332,31 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, [], [], [], [],
-              delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                [],
+                [],
+                [],
+                [],
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
+        if (
+            "test_dcnm_intra_links_unnumbered_delete_non_existing"
+            == self._testMethodName
+        ):
 
-        if "test_dcnm_intra_links_unnumbered_delete_non_existing" == self._testMethodName:
+            self.run_dcnm_send.side_effect = [[], [], [], [], []]
 
-            self.run_dcnm_send.side_effect = [
-              [], [], [], [], []
-            ]
-
-        if "test_dcnm_intra_links_unnumbered_template_change" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_unnumbered_template_change"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_unnum_fabric_response"
@@ -338,41 +364,45 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_intra_links_unnumbered_query" in self._testMethodName:
 
-            query_links_resp = self.payloads_data.get("intra_query_links_unnum_fabric_response")
+            query_links_resp = self.payloads_data.get(
+                "intra_query_links_unnum_fabric_response"
+            )
             self.run_dcnm_send.side_effect = [query_links_resp]
 
-    # -------------------------- INTRA-FABRIC-IPV6 ----------------------------------
+        # -------------------------- INTRA-FABRIC-IPV6 ----------------------------------
 
-        if "test_dcnm_intra_links_ipv6_merged_new_no_opts" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_ipv6_merged_new_no_opts"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_intra_links_ipv6_merged_new" == self._testMethodName:
@@ -380,20 +410,24 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_ipv6_merged_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_ipv6_merged_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_ipv6_fabric_response"
@@ -407,35 +441,37 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_ipv6_merged_new_no_state" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_ipv6_merged_new_no_state"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if (
@@ -454,21 +490,22 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_ipv6_modify_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_ipv6_modify_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_ipv6_fabric_response"
@@ -482,20 +519,23 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, 
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_ipv6_replace_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_ipv6_replace_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_ipv6_fabric_response"
@@ -509,21 +549,23 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_ipv6_delete_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_ipv6_delete_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_ipv6_fabric_response"
@@ -537,19 +579,21 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, [], [],
-              delete_links_resp, delete_links_resp, delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                [],
+                [],
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
-
 
         if (
             "test_dcnm_intra_links_ipv6_delete_existing_and_non_existing"
@@ -566,49 +610,57 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, [], [],
-              delete_links_resp, delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                [],
+                [],
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
+        if (
+            "test_dcnm_intra_links_ipv6_delete_non_existing"
+            == self._testMethodName
+        ):
 
-        if "test_dcnm_intra_links_ipv6_delete_non_existing" == self._testMethodName:
-
-            self.run_dcnm_send.side_effect = [
-              [], [], [], [], []
-            ]
+            self.run_dcnm_send.side_effect = [[], [], [], [], []]
 
         if "test_dcnm_intra_links_ipv6_query" in self._testMethodName:
 
-            query_links_resp = self.payloads_data.get("intra_query_links_ipv6_fabric_response")
+            query_links_resp = self.payloads_data.get(
+                "intra_query_links_ipv6_fabric_response"
+            )
             self.run_dcnm_send.side_effect = [query_links_resp]
 
-    # -------------------------- INTRA-FABRIC-NUMBERED --------------------------
+        # -------------------------- INTRA-FABRIC-NUMBERED --------------------------
 
-        if "test_dcnm_intra_links_numbered_merged_new_no_opts" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_merged_new_no_opts"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_intra_links_numbered_merged_new" == self._testMethodName:
@@ -616,20 +668,24 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_numbered_merged_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_merged_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_num_fabric_response"
@@ -643,35 +699,37 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_numbered_merged_new_no_state" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_merged_new_no_state"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if (
@@ -689,21 +747,22 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_numbered_modify_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_modify_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_num_fabric_response"
@@ -717,20 +776,23 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, 
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_numbered_replace_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_replace_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_num_fabric_response"
@@ -744,21 +806,23 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              merge_links_resp, merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_numbered_delete_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_delete_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_num_fabric_response"
@@ -772,19 +836,21 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, [], [],
-              delete_links_resp, delete_links_resp, delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                [],
+                [],
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
-
 
         if (
             "test_dcnm_intra_links_numbered_delete_existing_and_non_existing"
@@ -801,27 +867,32 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, [], [],
-              delete_links_resp, delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                [],
+                [],
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
+        if (
+            "test_dcnm_intra_links_numbered_delete_non_existing"
+            == self._testMethodName
+        ):
 
-        if "test_dcnm_intra_links_numbered_delete_non_existing" == self._testMethodName:
+            self.run_dcnm_send.side_effect = [[], [], [], [], []]
 
-            self.run_dcnm_send.side_effect = [
-              [], [], [], [], []
-            ]
-
-        if "test_dcnm_intra_links_numbered_template_change" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_numbered_template_change"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_num_fabric_response"
@@ -829,41 +900,41 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_intra_links_numbered_query" in self._testMethodName:
 
-            query_links_resp = self.payloads_data.get("intra_query_links_num_fabric_response")
+            query_links_resp = self.payloads_data.get(
+                "intra_query_links_num_fabric_response"
+            )
             self.run_dcnm_send.side_effect = [query_links_resp]
 
-    # ------------------------------ INTRA-FABRIC-VPC ---------------------------
+        # ------------------------------ INTRA-FABRIC-VPC ---------------------------
 
-        if "test_dcnm_intra_links_vpc_merged_new_no_opts" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_vpc_merged_new_no_opts"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], 
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_intra_links_vpc_merged_new" == self._testMethodName:
@@ -871,17 +942,14 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], 
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_intra_links_vpc_merged_existing" == self._testMethodName:
@@ -892,35 +960,31 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_intra_links_vpc_merged_new_no_state" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_vpc_merged_new_no_state"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [],
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                [],
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
         if (
@@ -933,19 +997,15 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
-
 
         if "test_dcnm_intra_links_vpc_modify_existing" == self._testMethodName:
 
@@ -955,20 +1015,20 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_intra_links_vpc_replace_existing" == self._testMethodName:
+        if (
+            "test_dcnm_intra_links_vpc_replace_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "intra_have_link1_vpc_num_fabric_response"
@@ -976,19 +1036,15 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1,
-              merge_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
-
 
         if "test_dcnm_intra_links_vpc_delete_existing" == self._testMethodName:
 
@@ -998,19 +1054,19 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, [], [], [], [],
-              delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                [],
+                [],
+                [],
+                [],
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
-
 
         if (
             "test_dcnm_intra_links_vpc_delete_existing_and_non_existing"
@@ -1023,51 +1079,66 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, [], [], [], [],
-              delete_links_resp,
-              deploy_resp, config_preview_resp
+                have_links_resp1,
+                [],
+                [],
+                [],
+                [],
+                delete_links_resp,
+                deploy_resp,
+                config_preview_resp,
             ]
 
+        if (
+            "test_dcnm_intra_links_vpc_delete_non_existing"
+            == self._testMethodName
+        ):
 
-        if "test_dcnm_intra_links_vpc_delete_non_existing" == self._testMethodName:
-
-            self.run_dcnm_send.side_effect = [
-              [], [], [], [], []
-            ]
+            self.run_dcnm_send.side_effect = [[], [], [], [], []]
 
         if "test_dcnm_intra_links_vpc_query" in self._testMethodName:
 
-            query_links_resp = self.payloads_data.get("intra_query_links_vpc_response")
+            query_links_resp = self.payloads_data.get(
+                "intra_query_links_vpc_response"
+            )
             self.run_dcnm_send.side_effect = [query_links_resp]
 
-    # -------------------------- INTER-FABRIC-NUMBERED --------------------------
+        # -------------------------- INTER-FABRIC-NUMBERED --------------------------
 
-        if "test_dcnm_inter_links_numbered_merged_new_no_opts" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_merged_new_no_opts"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [], [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_inter_links_numbered_merged_new" == self._testMethodName:
@@ -1075,22 +1146,34 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [], [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_inter_links_numbered_merged_existing" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_merged_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "inter_have_link1_num_fabric_response"
@@ -1113,39 +1196,54 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              have_links_resp4, have_links_resp5, have_links_resp6,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                have_links_resp4,
+                have_links_resp5,
+                have_links_resp6,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_inter_links_numbered_merged_new_no_state" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_merged_new_no_state"
+            == self._testMethodName
+        ):
 
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              [], [], [], [], [], [],
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
         if (
@@ -1169,23 +1267,31 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              have_links_resp4, have_links_resp5, have_links_resp6,
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                have_links_resp4,
+                have_links_resp5,
+                have_links_resp6,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_inter_links_numbered_modify_existing" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_modify_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "inter_have_link1_num_fabric_response"
@@ -1208,23 +1314,34 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, 
-              have_links_resp4, have_links_resp5, have_links_resp6, 
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                have_links_resp4,
+                have_links_resp5,
+                have_links_resp6,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
-        if "test_dcnm_inter_links_numbered_replace_existing" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_replace_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "inter_have_link1_num_fabric_response"
@@ -1247,24 +1364,34 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, 
-              have_links_resp4, have_links_resp5, have_links_resp6, 
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              merge_links_resp, merge_links_resp, merge_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                have_links_resp4,
+                have_links_resp5,
+                have_links_resp6,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
-
-        if "test_dcnm_inter_links_numbered_delete_existing" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_delete_existing"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "inter_have_link1_num_fabric_response"
@@ -1287,22 +1414,29 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3, 
-              have_links_resp4, have_links_resp5, have_links_resp6, 
-              delete_links_resp, delete_links_resp, delete_links_resp,
-              delete_links_resp, delete_links_resp, delete_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                have_links_resp4,
+                have_links_resp5,
+                have_links_resp6,
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
-
 
         if (
             "test_dcnm_inter_links_numbered_delete_existing_and_non_existing"
@@ -1326,30 +1460,39 @@ class TestDcnmLinksModule(TestDcnmModule):
             delete_links_resp = self.payloads_data.get(
                 "delete_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, have_links_resp2, have_links_resp3,
-              have_links_resp4, have_links_resp5, have_links_resp6,
-              delete_links_resp, delete_links_resp,
-              delete_links_resp, delete_links_resp,
-              deploy_resp, deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp, config_preview_resp
+                have_links_resp1,
+                have_links_resp2,
+                have_links_resp3,
+                have_links_resp4,
+                have_links_resp5,
+                have_links_resp6,
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                delete_links_resp,
+                deploy_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
+        if (
+            "test_dcnm_inter_links_numbered_delete_non_existing"
+            == self._testMethodName
+        ):
 
-        if "test_dcnm_inter_links_numbered_delete_non_existing" == self._testMethodName:
+            self.run_dcnm_send.side_effect = [[], [], [], [], [], []]
 
-            self.run_dcnm_send.side_effect = [
-              [], [], [], [], [], []
-            ]
-
-        if "test_dcnm_inter_links_numbered_template_change" == self._testMethodName:
+        if (
+            "test_dcnm_inter_links_numbered_template_change"
+            == self._testMethodName
+        ):
 
             have_links_resp1 = self.payloads_data.get(
                 "inter_have_link1_num_fabric_response"
@@ -1357,30 +1500,33 @@ class TestDcnmLinksModule(TestDcnmModule):
             merge_links_resp = self.payloads_data.get(
                 "merge_links_fabric_response"
             )
-            deploy_resp = self.payloads_data.get(
-                "deploy_resp"
-            )
-            config_preview_resp = self.payloads_data.get(
-                "config_preview_resp"
-            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
-              have_links_resp1, merge_links_resp,
-              deploy_resp, deploy_resp,
-              config_preview_resp, config_preview_resp
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                deploy_resp,
+                config_preview_resp,
+                config_preview_resp,
             ]
 
         if "test_dcnm_inter_links_numbered_query" in self._testMethodName:
 
-            query_links_resp = self.payloads_data.get("inter_query_links_num_fabric_response")
+            query_links_resp = self.payloads_data.get(
+                "inter_query_links_num_fabric_response"
+            )
             self.run_dcnm_send.side_effect = [query_links_resp]
 
     def load_fixtures(self, response=None, device=""):
 
         self.run_dcnm_version_supported.side_effect = [12]
-        self.run_dcnm_fabric_details.side_effect = [self.mock_fab_inv,
-                                                    self.mock_fab_inv,
-                                                    self.mock_fab_inv]
+        self.run_dcnm_fabric_details.side_effect = [
+            self.mock_fab_inv,
+            self.mock_fab_inv,
+            self.mock_fab_inv,
+        ]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, self.mock_hn_sn]]
         # Load Links related side-effects
         self.load_links_fixtures()
@@ -1396,7 +1542,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_merge_num_no_opts_config")
+        self.playbook_config = self.config_data.get(
+            "intra_merge_num_no_opts_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1404,7 +1552,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -1413,7 +1563,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -1434,7 +1586,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -1443,7 +1597,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -1464,7 +1620,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -1473,7 +1631,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -1494,7 +1654,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -1503,7 +1665,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -1536,13 +1700,17 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
 
-    def test_dcnm_intra_links_numbered_merged_new_existing_and_non_existing(self):
+    def test_dcnm_intra_links_numbered_merged_new_existing_and_non_existing(
+        self
+    ):
 
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_links_configs")
@@ -1569,7 +1737,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -1602,7 +1772,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 2)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -1635,12 +1807,13 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 2)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-
 
     def test_dcnm_intra_links_numbered_delete_existing(self):
 
@@ -1669,7 +1842,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 3)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -1702,7 +1877,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 2)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -1748,7 +1925,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_modify_num_template_config")
+        self.playbook_config = self.config_data.get(
+            "intra_modify_num_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1768,7 +1947,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 1)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -1810,7 +1991,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_num_dest_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_num_dest_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1839,7 +2022,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_num_src_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_num_src_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1868,7 +2053,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_num_dst_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_num_dst_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1897,7 +2084,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_num_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_num_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1926,7 +2115,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_num_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_num_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -1986,15 +2177,21 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_merge_unnum_no_opts_config")
+        self.playbook_config = self.config_data.get(
+            "intra_merge_unnum_no_opts_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_umnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_umnum_fab_data"
+        )
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-unnumbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-unnumbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2003,7 +2200,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2020,11 +2219,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-unnumbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-unnumbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2033,7 +2236,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2050,12 +2255,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-unnumbered", config=self.playbook_config,
-                deploy=False
+                state="merged",
+                src_fabric="mmudigon-unnumbered",
+                config=self.playbook_config,
+                deploy=False,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2081,11 +2290,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-unnumbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-unnumbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2094,7 +2307,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2111,11 +2326,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-unnumbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-unnumbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2124,7 +2343,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2141,7 +2362,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2157,13 +2380,17 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
 
-    def test_dcnm_intra_links_unnumbered_merged_new_existing_and_non_existing(self):
+    def test_dcnm_intra_links_unnumbered_merged_new_existing_and_non_existing(
+        self
+    ):
 
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_links_configs")
@@ -2174,7 +2401,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2190,7 +2419,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2203,11 +2434,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_modify_unnum_config")
+        self.playbook_config = self.config_data.get(
+            "intra_modify_unnum_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2223,7 +2458,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 1)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2236,11 +2473,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_replace_unnum_config")
+        self.playbook_config = self.config_data.get(
+            "intra_replace_unnum_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2256,12 +2497,13 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 1)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-
 
     def test_dcnm_intra_links_unnumbered_delete_existing(self):
 
@@ -2270,11 +2512,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_delete_unnum_config")
+        self.playbook_config = self.config_data.get(
+            "intra_delete_unnum_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2290,24 +2536,32 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 2)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
 
-    def test_dcnm_intra_links_unnumbered_delete_existing_and_non_existing(self):
+    def test_dcnm_intra_links_unnumbered_delete_existing_and_non_existing(
+        self
+    ):
 
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_links_configs")
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_delete_unnum_config")
+        self.playbook_config = self.config_data.get(
+            "intra_delete_unnum_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2323,7 +2577,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 1)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -2336,11 +2592,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_delete_unnum_config")
+        self.playbook_config = self.config_data.get(
+            "intra_delete_unnum_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2369,11 +2629,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_modify_unnum_template_config")
+        self.playbook_config = self.config_data.get(
+            "intra_modify_unnum_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2389,7 +2653,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 1)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-unnumbered"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -2402,11 +2668,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_unnum_not_exist")
+        self.playbook_config = self.config_data.get(
+            "intra_query_unnum_not_exist"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2435,7 +2705,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2460,11 +2732,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_unnum_dest_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_unnum_dest_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2489,11 +2765,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_unnum_src_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_unnum_src_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2518,11 +2798,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_unnum_dst_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_unnum_dst_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2547,11 +2831,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_unnum_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_unnum_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2576,11 +2864,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_unnum_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_unnum_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2609,7 +2901,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
 
         set_module_args(
             dict(
@@ -2636,7 +2930,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_merge_ipv6_no_opts_config")
+        self.playbook_config = self.config_data.get(
+            "intra_merge_ipv6_no_opts_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -2644,7 +2940,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-ipv6-underlay", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-ipv6-underlay",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2653,7 +2951,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2674,7 +2974,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-ipv6-underlay", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-ipv6-underlay",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2683,7 +2985,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2704,7 +3008,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-ipv6-underlay", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-ipv6-underlay",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2713,7 +3019,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2734,7 +3042,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-ipv6-underlay", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-ipv6-underlay",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -2743,7 +3053,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2776,7 +3088,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2809,7 +3123,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2842,7 +3158,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 2)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
@@ -2855,7 +3173,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_replace_ipv6_config")
+        self.playbook_config = self.config_data.get(
+            "intra_replace_ipv6_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -2875,12 +3195,13 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 2)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate create responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-
 
     def test_dcnm_intra_links_ipv6_delete_existing(self):
 
@@ -2909,7 +3230,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 3)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -2942,7 +3265,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 2)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-ipv6-underlay"]), 2
+        )
 
         # Validate delete responses
         for resp in result["response"]:
@@ -3017,7 +3342,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_ipv6_dest_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_ipv6_dest_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3046,7 +3373,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_ipv6_src_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_ipv6_src_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3075,7 +3404,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_ipv6_dst_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_ipv6_dst_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3104,7 +3435,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_ipv6_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_ipv6_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3133,7 +3466,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_ipv6_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_ipv6_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3191,7 +3526,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_ipv6_not_exist")
+        self.playbook_config = self.config_data.get(
+            "intra_query_ipv6_not_exist"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3222,7 +3559,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_merge_vpc_no_opts_config")
+        self.playbook_config = self.config_data.get(
+            "intra_merge_vpc_no_opts_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3230,7 +3569,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3260,7 +3601,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3290,7 +3633,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3320,7 +3665,9 @@ class TestDcnmLinksModule(TestDcnmModule):
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3467,7 +3814,6 @@ class TestDcnmLinksModule(TestDcnmModule):
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
 
-
     def test_dcnm_intra_links_vpc_delete_existing(self):
 
         # load the json from playbooks
@@ -3603,7 +3949,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_vpc_dest_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_vpc_dest_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3632,7 +3980,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_vpc_src_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_vpc_src_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3661,7 +4011,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_vpc_dst_dev_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_vpc_dst_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3690,7 +4042,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_vpc_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_vpc_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3719,7 +4073,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_query_vpc_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_query_vpc_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -3779,17 +4135,23 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_merge_num_no_opts_config")
+        self.playbook_config = self.config_data.get(
+            "inter_merge_num_no_opts_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3798,7 +4160,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -3818,12 +4182,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3832,7 +4200,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -3852,12 +4222,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3866,7 +4240,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -3886,12 +4262,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
             dict(
-                state="merged", src_fabric="mmudigon-numbered", config=self.playbook_config
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
             )
         )
         result = self.execute_module(changed=True, failed=False)
@@ -3900,7 +4280,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -3920,7 +4302,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -3937,7 +4321,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -3945,7 +4331,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
 
-    def test_dcnm_inter_links_numbered_merged_new_existing_and_non_existing(self):
+    def test_dcnm_inter_links_numbered_merged_new_existing_and_non_existing(
+        self
+    ):
 
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_links_configs")
@@ -3957,7 +4345,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -3974,7 +4364,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -3994,7 +4386,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4011,7 +4405,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 6)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -4031,7 +4427,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4048,14 +4446,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 6)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
         # Validate create responses
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
-
 
     def test_dcnm_inter_links_numbered_delete_existing(self):
 
@@ -4069,7 +4468,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4086,7 +4487,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 6)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -4106,7 +4509,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4123,7 +4528,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 4)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net1"]), 1)
 
@@ -4143,7 +4550,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4173,12 +4582,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_modify_num_template_config")
+        self.playbook_config = self.config_data.get(
+            "inter_modify_num_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4195,7 +4608,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["modified"]), 1)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1
+        )
         self.assertEqual(len(result["diff"][0]["deploy"][0]["test_net"]), 1)
 
         # Validate delete responses
@@ -4214,7 +4629,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4240,12 +4657,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_query_num_dest_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "inter_query_num_dest_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4271,12 +4692,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_query_num_src_dev_config")
+        self.playbook_config = self.config_data.get(
+            "inter_query_num_src_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4302,12 +4727,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_query_num_dst_dev_config")
+        self.playbook_config = self.config_data.get(
+            "inter_query_num_dst_dev_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4333,12 +4762,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_query_num_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "inter_query_num_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4364,12 +4797,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_query_num_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "inter_query_num_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4400,7 +4837,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4426,12 +4865,16 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_query_num_not_exist")
+        self.playbook_config = self.config_data.get(
+            "inter_query_num_not_exist"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
-        self.mock_unnum_fab_info = self.payloads_data.get("mock_unnum_fab_data")
+        self.mock_unnum_fab_info = self.payloads_data.get(
+            "mock_unnum_fab_data"
+        )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -4459,7 +4902,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_invalid_template_config")
+        self.playbook_config = self.config_data.get(
+            "intra_invalid_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4488,18 +4933,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_src_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_src_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
 
-        set_module_args(
-            dict(
-                state="merged",
-                config=self.playbook_config,
-            )
-        )
+        set_module_args(dict(state="merged", config=self.playbook_config))
 
         result = None
 
@@ -4507,7 +4949,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("missing required arguments: src_fabric" in str(e)), True)
+            self.assertEqual(
+                ("missing required arguments: src_fabric" in str(e)), True
+            )
 
     def test_dcnm_intra_links_missing_dst_fabric(self):
 
@@ -4516,7 +4960,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_dst_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_dst_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4536,7 +4982,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("Required parameter not found: dst_fabric" in str(e)), True)
+            self.assertEqual(
+                ("Required parameter not found: dst_fabric" in str(e)), True
+            )
 
     def test_dcnm_intra_links_missing_src_intf(self):
 
@@ -4545,7 +4993,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4565,7 +5015,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("src_interface : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("src_interface : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_intra_links_missing_dst_intf(self):
 
@@ -4574,7 +5027,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4594,7 +5049,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("dst_interface : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("dst_interface : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_intra_links_missing_src_device(self):
 
@@ -4603,7 +5061,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_src_device_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_src_device_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4623,7 +5083,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("src_device : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("src_device : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_intra_links_missing_dst_device(self):
 
@@ -4632,7 +5094,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_dst_device_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_dst_device_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4652,7 +5116,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("dst_device : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("dst_device : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_intra_links_missing_template(self):
 
@@ -4661,7 +5127,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_template_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4681,7 +5149,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("Required parameter not found: template" in str(e)), True)
+            self.assertEqual(
+                ("Required parameter not found: template" in str(e)), True
+            )
 
     def test_dcnm_intra_links_missing_peer1_ipv6(self):
 
@@ -4690,7 +5160,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_peer1_ipv6_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_peer1_ipv6_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4711,7 +5183,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("peer1_ipv6_addr : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("peer1_ipv6_addr : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_intra_links_missing_peer2_ipv6(self):
 
@@ -4720,7 +5195,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_peer2_ipv6_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_peer2_ipv6_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4741,7 +5218,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("peer2_ipv6_addr : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("peer2_ipv6_addr : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_intra_links_missing_peer1_ipv4(self):
 
@@ -4750,7 +5230,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_peer1_ipv4_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_peer1_ipv4_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4770,7 +5252,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("peer1_ipv4_addr : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("peer1_ipv4_addr : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_intra_links_missing_peer2_ipv4(self):
 
@@ -4779,7 +5264,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_peer2_ipv4_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_peer2_ipv4_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4799,7 +5286,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("peer2_ipv4_addr : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("peer2_ipv4_addr : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_intra_links_missing_mtu(self):
 
@@ -4828,7 +5318,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("mtu : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("mtu : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_intra_links_missing_admin_state(self):
 
@@ -4837,7 +5329,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("intra_missing_admin_state_config")
+        self.playbook_config = self.config_data.get(
+            "intra_missing_admin_state_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4857,7 +5351,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("admin_state : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("admin_state : Required parameter not found" in str(e)), True
+            )
 
     # ---------------------- INTER-FABRIC INVALID PARAMS ----------------------------
 
@@ -4868,7 +5364,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_invalid_template_config")
+        self.playbook_config = self.config_data.get(
+            "inter_invalid_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4897,18 +5395,15 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_src_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_src_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
 
-        set_module_args(
-            dict(
-                state="merged",
-                config=self.playbook_config,
-            )
-        )
+        set_module_args(dict(state="merged", config=self.playbook_config))
 
         result = None
 
@@ -4916,7 +5411,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("missing required arguments: src_fabric" in str(e)), True)
+            self.assertEqual(
+                ("missing required arguments: src_fabric" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_dst_fabric(self):
 
@@ -4925,7 +5422,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_dst_fabric_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_dst_fabric_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4945,7 +5444,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("Required parameter not found: dst_fabric" in str(e)), True)
+            self.assertEqual(
+                ("Required parameter not found: dst_fabric" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_src_intf(self):
 
@@ -4954,7 +5455,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_src_intf_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_src_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -4974,7 +5477,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("src_interface : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("src_interface : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_inter_links_missing_dst_intf(self):
 
@@ -4983,7 +5489,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_dst_intf_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_dst_intf_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5003,7 +5511,10 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("dst_interface : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("dst_interface : Required parameter not found" in str(e)),
+                True,
+            )
 
     def test_dcnm_inter_links_missing_src_device(self):
 
@@ -5012,7 +5523,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_src_device_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_src_device_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5032,7 +5545,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("src_device : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("src_device : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_dst_device(self):
 
@@ -5041,7 +5556,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_dst_device_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_dst_device_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5061,7 +5578,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("dst_device : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("dst_device : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_template(self):
 
@@ -5070,7 +5589,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_template_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_template_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5090,7 +5611,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("Required parameter not found: template" in str(e)), True)
+            self.assertEqual(
+                ("Required parameter not found: template" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_ipv4_subnet(self):
 
@@ -5099,7 +5622,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_ipv4_subnet_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_ipv4_subnet_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5120,7 +5645,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("ipv4_subnet : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("ipv4_subnet : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_neighbor_ip(self):
 
@@ -5129,7 +5656,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_neighbor_ip_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_neighbor_ip_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5150,7 +5679,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("neighbor_ip : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("neighbor_ip : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_src_asn(self):
 
@@ -5159,7 +5690,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_src_asn_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_src_asn_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5179,7 +5712,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("src_asn : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("src_asn : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_dst_asn(self):
 
@@ -5188,7 +5723,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_dst_asn_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_dst_asn_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5208,7 +5745,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("dst_asn : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("dst_asn : Required parameter not found" in str(e)), True
+            )
 
     def test_dcnm_inter_links_missing_ipv4_addr(self):
 
@@ -5217,7 +5756,9 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.payloads_data = loadPlaybookData("dcnm_links_payloads")
 
         # load required config data
-        self.playbook_config = self.config_data.get("inter_missing_ipv4_addr_config")
+        self.playbook_config = self.config_data.get(
+            "inter_missing_ipv4_addr_config"
+        )
         self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
@@ -5237,4 +5778,6 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("ipv4_addr : Required parameter not found" in str(e)), True)
+            self.assertEqual(
+                ("ipv4_addr : Required parameter not found" in str(e)), True
+            )
