@@ -1976,10 +1976,10 @@ class DcnmLinks:
         # link object is from self.want. These objets would have translated devices to serial numbers already.
         path = self.paths[
             "LINKS_GET_BY_SWITCH_PAIR"
-        ] + "?switch1Sn={}&switch2Sn={}".format(
+        ] + "?switch1Sn={0}&switch2Sn={1}".format(
             link["sourceDevice"], link["destinationDevice"]
         )
-        path = path + "&switch1IfName={}&switch2IfName={}".format(
+        path = path + "&switch1IfName={0}&switch2IfName={1}".format(
             link["sourceInterface"], link["destinationInterface"]
         )
 
