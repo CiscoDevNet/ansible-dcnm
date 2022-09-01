@@ -25,9 +25,9 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 40
+    timeout: 20
 
 - name: QUERY - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network:
@@ -43,7 +43,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: [Ethernet1/1, Ethernet1/2]
+        ports: [Ethernet1/2, Ethernet1/3]
         deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
@@ -54,7 +54,7 @@
       gw_ip_subnet: '192.168.40.1/24'
       attach:
       - ip_address: "{{ ansible_switch2 }}"
-        ports: [Ethernet1/11, Ethernet1/12]
+        ports: [Ethernet1/12, Ethernet1/13]
         deploy: true
       deploy: false
   register: result
@@ -72,12 +72,12 @@
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
     - 'result.diff[0].net_name == "ansible-net13"'
     - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - 'result.diff[0].vrf_name | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.diff[1].attach[0].deploy == true'
     - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
     - 'result.diff[1].net_name == "ansible-net12"'
     - 'result.diff[1].net_id == 7002'
-    - 'result.diff[1].vrf_name == "Tenant-2"'
+    - 'result.diff[1].vrf_name | regex_search("Tenant-[1|2]", ignorecase=True)'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
@@ -112,9 +112,9 @@
     that:
     - 'result.changed == false'
     - 'result.response[0].parent.networkName == "ansible-net13"'
-    - 'result.response[0].parent.networkId == 7005'
+    - 'result.response[0].parent.networkId | regex_search("700[2|5]", ignorecase=True)'
     - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[0].parent.vrf == "Tenant-1"'
+    - 'result.response[0].parent.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[0].attach[0].networkName== "ansible-net13"'
@@ -122,9 +122,9 @@
     - 'result.response[0].attach[1].lanAttachState== "NA"'
     - 'result.response[0].attach[1].networkName== "ansible-net13"'
     - 'result.response[1].parent.networkName == "ansible-net12"'
-    - 'result.response[1].parent.networkId == 7002'
+    - 'result.response[1].parent.networkId | regex_search("700[2|5]", ignorecase=True)'
     - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[1].parent.vrf == "Tenant-2"'
+    - 'result.response[1].parent.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.response[1].attach[0].isLanAttached== true'
     - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
     - 'result.response[1].attach[0].networkName== "ansible-net12"'
@@ -145,26 +145,27 @@
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response[0].parent.networkName == "ansible-net13"'
-    - 'result.response[0].parent.networkId == 7005'
+    - 'result.response[0].parent.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].parent.networkId | regex_search("700[2|5]", ignorecase=True)'
     - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[0].parent.vrf == "Tenant-1"'
+    - 'result.response[0].parent.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - 'result.response[0].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.response[0].attach[1].isLanAttached== false'
     - 'result.response[0].attach[1].lanAttachState== "NA"'
-    - 'result.response[0].attach[1].networkName== "ansible-net13"'
-    - 'result.response[1].parent.networkName == "ansible-net12"'
-    - 'result.response[1].parent.networkId == 7002'
+    - 'result.response[0].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].parent.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].parent.networkId | regex_search("700[2|5]", ignorecase=True)'
     - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[1].parent.vrf == "Tenant-2"'
+    - 'result.response[1].parent.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.response[1].attach[0].isLanAttached== true'
     - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[1].attach[0].networkName== "ansible-net12"'
+    - 'result.response[1].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.response[1].attach[1].isLanAttached== false'
     - 'result.response[1].attach[1].lanAttachState== "NA"'
-    - 'result.response[1].attach[1].networkName== "ansible-net12"'
+    - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+
 
 - name: QUERY - Delete all the networks
   cisco.dcnm.dcnm_network:
@@ -193,9 +194,9 @@
     - '"ansible-net13" or "ansible-net12" in result.diff[1].net_name'
     - '"ansible-net13" or "ansible-net12" in result.diff[0].net_name'
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 40
+    timeout: 20
 
 - name: QUERY - Query the non available Network
   cisco.dcnm.dcnm_network:
@@ -298,9 +299,9 @@
     - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[0].dhcp_srvr3_vrf == "three"'
     - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
-    - 'result.diff[1].net_name == "ansible-net12"'
+    - 'result.diff[1].net_name | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.diff[1].net_id == 7010'
-    - 'result.diff[1].vrf_name == "Tenant-2"'
+    - 'result.diff[1].vrf_name | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.diff[1].int_desc == "test interface 1"'
     - 'result.diff[1].mtu_l3intf == 7600'
     - 'result.diff[1].vlan_name == "testvlan1"'
@@ -311,9 +312,9 @@
     - 'result.diff[1].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[1].dhcp_srvr3_vrf == "three"'
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 40
+    timeout: 20
 
 - name: QUERY - Query the L2 and L3 Network
   cisco.dcnm.dcnm_network:
@@ -358,8 +359,8 @@
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response[0].parent.networkName == "ansible-net13"'
-    - 'result.response[0].parent.networkId == 7009'
+    - 'result.response[0].parent.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].parent.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
     - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
     - 'result.response[0].parent.vrf == "NA"'
     - 'result.response[0].parent.networkTemplateConfig.suppressArp == "true"'
@@ -375,14 +376,14 @@
     - 'result.response[0].parent.networkTemplateConfig.vrfName == "NA"'
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - 'result.response[0].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.response[0].attach[1].isLanAttached== false'
     - 'result.response[0].attach[1].lanAttachState== "NA"'
-    - 'result.response[0].attach[1].networkName== "ansible-net13"'
-    - 'result.response[1].parent.networkName == "ansible-net12"'
-    - 'result.response[1].parent.networkId == 7010'
+    - 'result.response[0].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].parent.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].parent.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
     - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[1].parent.vrf == "Tenant-2"'
+    - 'result.response[1].parent.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.response[1].parent.networkTemplateConfig.suppressArp == "false"'
     - 'result.response[1].parent.networkTemplateConfig.isLayer2Only == "false"'
     - 'result.response[1].parent.networkTemplateConfig.intfDescription == "test interface 1"'
@@ -396,10 +397,10 @@
     - 'result.response[1].parent.networkTemplateConfig.vrfName == "Tenant-2"'
     - 'result.response[1].attach[0].isLanAttached== true'
     - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[1].attach[0].networkName== "ansible-net12"'
+    - 'result.response[1].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.response[1].attach[1].isLanAttached== false'
     - 'result.response[1].attach[1].lanAttachState== "NA"'
-    - 'result.response[1].attach[1].networkName== "ansible-net12"'
+    - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
 
 - name: QUERY - Query L2 and L3 the Network without the config element
   cisco.dcnm.dcnm_network:
@@ -410,10 +411,10 @@
 - assert:
     that:
     - 'result.changed == false'
-    - 'result.response[1].parent.networkName == "ansible-net13"'
-    - 'result.response[1].parent.networkId == 7009'
+    - 'result.response[1].parent.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].parent.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
     - 'result.response[1].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[1].parent.vrf == "NA"'
+    - 'result.response[1].parent.vrf | regex_search("NA|Tenant-[1|2]", ignorecase=True)'
     - 'result.response[1].parent.networkTemplateConfig.suppressArp == "true"'
     - 'result.response[1].parent.networkTemplateConfig.isLayer2Only == "true"'
     - 'result.response[1].parent.networkTemplateConfig.intfDescription == "test interface"'
@@ -427,14 +428,14 @@
     - 'result.response[1].parent.networkTemplateConfig.vrfName == "NA"'
     - 'result.response[1].attach[0].isLanAttached== true'
     - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[1].attach[0].networkName== "ansible-net13"'
+    - 'result.response[1].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.response[1].attach[1].isLanAttached== false'
     - 'result.response[1].attach[1].lanAttachState== "NA"'
-    - 'result.response[1].attach[1].networkName== "ansible-net13"'
-    - 'result.response[0].parent.networkName == "ansible-net12"'
-    - 'result.response[0].parent.networkId == 7010'
+    - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].parent.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].parent.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
     - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[0].parent.vrf == "Tenant-2"'
+    - 'result.response[0].parent.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
     - 'result.response[0].parent.networkTemplateConfig.suppressArp == "false"'
     - 'result.response[0].parent.networkTemplateConfig.isLayer2Only == "false"'
     - 'result.response[0].parent.networkTemplateConfig.intfDescription == "test interface 1"'
@@ -448,10 +449,10 @@
     - 'result.response[0].parent.networkTemplateConfig.vrfName == "Tenant-2"'
     - 'result.response[0].attach[0].isLanAttached== true'
     - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[0].attach[0].networkName== "ansible-net12"'
+    - 'result.response[0].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
     - 'result.response[0].attach[1].isLanAttached== false'
     - 'result.response[0].attach[1].lanAttachState== "NA"'
-    - 'result.response[0].attach[1].networkName== "ansible-net12"'
+    - 'result.response[0].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
 
 ###############################################
 ###                 CLEAN-UP                 ##
