@@ -312,9 +312,9 @@
     - 'result.diff[1].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[1].dhcp_srvr3_vrf == "three"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 - name: QUERY - Query the L2 and L3 Network
   cisco.dcnm.dcnm_network:
