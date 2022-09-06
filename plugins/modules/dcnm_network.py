@@ -1654,8 +1654,10 @@ class DcnmNetwork:
             if not found and want_a.get("lanAttachList"):
                 atch_list = []
                 for attach in want_a["lanAttachList"]:
-                    del attach["isAttached"]
-                    atch_list.append(attach)
+                    # Saftey check
+                    if attach.get("isAttached"):
+                        del attach["isAttached"]
+                        atch_list.append(attach)
                 if atch_list:
                     base = want_a.copy()
                     del base["lanAttachList"]
