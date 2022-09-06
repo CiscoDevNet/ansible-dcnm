@@ -10,7 +10,7 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
   when: controller_version >= "12"
 
-- name: QUERY - Verify if fabric - Fabric1 is deployed.
+- name: Verify if fabric - Fabric1 is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -20,16 +20,17 @@
     that:
     - 'result.response.DATA != None'
 
-- name: QUERY - setup - Clean up any existing networks
+- name: Setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
+  register: result
+  until:
+    - "result.response | length == 0"
+  retries: 30
+  delay: 2
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
-- name: QUERY - Create, Attach and Deploy Multiple Network with Single Switch Attach
+- name: Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: merged
@@ -59,6 +60,17 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -78,10 +90,6 @@
     - 'result.diff[1].net_name == "ansible-net12"'
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name | regex_search("Tenant-[1|2]", ignorecase=True)'
-
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 ###############################################
 ###                QUERY                     ##
@@ -132,10 +140,6 @@
     - 'result.response[1].attach[1].lanAttachState== "NA"'
     - 'result.response[1].attach[1].networkName== "ansible-net12"'
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: QUERY - Query the Network without the config element
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
@@ -167,11 +171,21 @@
     - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
 
 
-- name: QUERY - Delete all the networks
+- name: Delete all the networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
   register: result
+
+- name: Query fabric state until all networks are deleted
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response | length == 0"
+  retries: 30
+  delay: 2
 
 - assert:
     that:
@@ -194,9 +208,6 @@
     - '"ansible-net13" or "ansible-net12" in result.diff[1].net_name'
     - '"ansible-net13" or "ansible-net12" in result.diff[0].net_name'
 
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: QUERY - Query the non available Network
   cisco.dcnm.dcnm_network:
@@ -224,7 +235,7 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: QUERY - Create a L2 only and L3 networks along with all dhcp, arp options
+- name: Create a L2 only and L3 networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network: &conf3
     fabric: "{{ ansible_it_fabric }}"
     state: merged
@@ -273,6 +284,17 @@
       deploy: True
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -311,10 +333,6 @@
     - 'result.diff[1].dhcp_srvr2_vrf == "two"'
     - 'result.diff[1].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[1].dhcp_srvr3_vrf == "three"'
-
-- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: QUERY - Query the L2 and L3 Network
   cisco.dcnm.dcnm_network:
