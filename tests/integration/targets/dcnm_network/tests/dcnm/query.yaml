@@ -79,9 +79,9 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name | regex_search("Tenant-[1|2]", ignorecase=True)'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 ###############################################
 ###                QUERY                     ##
@@ -132,9 +132,9 @@
     - 'result.response[1].attach[1].lanAttachState== "NA"'
     - 'result.response[1].attach[1].networkName== "ansible-net12"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 - name: QUERY - Query the Network without the config element
   cisco.dcnm.dcnm_network:
@@ -194,9 +194,9 @@
     - '"ansible-net13" or "ansible-net12" in result.diff[1].net_name'
     - '"ansible-net13" or "ansible-net12" in result.diff[0].net_name'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
-    timeout: 20
+    timeout: 40
 
 - name: QUERY - Query the non available Network
   cisco.dcnm.dcnm_network:
