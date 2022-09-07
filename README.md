@@ -3,7 +3,7 @@
 
 # Cisco DCNM Collection
 
-Mike Test - 2
+Mike Test
 
 The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules to help automate common day 2 operations for VXLAN EVPN fabrics.
 
