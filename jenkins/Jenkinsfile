@@ -68,6 +68,12 @@ pipeline {
             }
         }
         stage("Run NDFC Integration Tests") {
+            environment {
+                HTTP_PROXY = "${env.HTTP_PROXY}"
+                HTTPS_PROXY = "${env.HTTP_PROXY}"
+                http_proxy = "${env.HTTP_PROXY}"
+                https_proxy = "${env.HTTP_PROXY}"
+            }
             steps {
                 withPythonEnv('/var/jenkins_home/.pyenv/versions/ndfc-ansible/bin/python') {
                     dir("/var/jenkins_home/ndfc/ansible/hacking") {
