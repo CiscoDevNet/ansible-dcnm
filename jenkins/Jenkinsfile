@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+    
+    parameters {
+        string(name: 'NDFC_IP_ADDRESS', defaultValue: 'rtp-ndfc1.cisco.com', description: 'NDFC IP or DNS Name')
+        string(name: 'NDFC_GITHUB_BRANCH', defaultValue: 'fix_dcnm_network_tests', description: 'NDFC Ansible Collection GitHub Branch')
+        string(name: 'NDFC_FABRIC_NAME', defaultValue: 'Test-Fabric', description: 'NDFC Fabric Name')
+        string(name: 'NDFC_CONTROLLER_VERSION', defaultValue: '12', description: 'NDFC Controller Version')
+        string(name: 'NDFC_SWITCH1_IP', defaultValue: "${env.NDFC_SWITCH1_IP}", description: 'NDFC NXOS SWITCH1_IP')
+        string(name: 'NDFC_SWITCH2_IP', defaultValue: "${env.NDFC_SWITCH2_IP}", description: 'NDFC NXOS SWITCH2_IP')
+        string(name: 'NDFC_SWITCH3_IP', defaultValue: "${env.NDFC_SWITCH3_IP}", description: 'NDFC NXOS SWITCH3_IP')
+        string(name: 'NDFC_TEST_ROLE', defaultValue: 'dcnm_network', description: 'NDFC Integration Test Role')
+        string(name: 'NDFC_TEST_NAME', defaultValue: 'query', description: 'NDFC Integration Test Name')
+        
+    }
+
+    stages {
+        stage("Select GitHub Branch") {
+            environment {
+                HTTP_PROXY = "${env.HTTP_PROXY}"
+                HTTPS_PROXY = "${env.HTTP_PROXY}"
+                http_proxy = "${env.HTTP_PROXY}"
+                https_proxy = "${env.HTTP_PROXY}"
+            }
+            steps {
+                dir("/var/jenkins_home/ndfc/collections/ansible_collections/cisco/dcnm") {
+                    sh """#!/bin/bash
+                          # env
+                          git branch --set-upstream-to=origin/${params.NDFC_GITHUB_BRANCH} ${params.NDFC_GITHUB_BRANCH}
+                          git fetch origin
+                          git checkout ${params.NDFC_GITHUB_BRANCH}
+                          git pull
+                          git log -n 5
+                       """
+                }
+            }
+        }
+        stage("Build Ansible Inventory") {
+            environment {
+                NDFC_CREDS = credentials('ndfc_credentials')
+                NXOS_CREDS = credentials('nxos_credentials')
+            }
+            steps {
+                dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
+                    sh """#!/bin/bash
+                          python build_inventory.py $NDFC_CREDS_USR \
+                                                    $NDFC_CREDS_PSW \
+                                                    ${params.NDFC_IP_ADDRESS} \
+                                                    ${params.NDFC_SWITCH1_IP} \
+                                                    ${params.NDFC_SWITCH2_IP} \
+                                                    ${params.NDFC_SWITCH3_IP} \
+                                                    $NXOS_CREDS_USR \
+                                                    $NXOS_CREDS_PSW
+                       """
+                }
+            }
+        }
+        stage("Build Ansible Tests File") {
+            steps {
+                dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
+                    sh """#!/bin/bash
+                          python build_tests.py ${params.NDFC_TEST_NAME} \
+                                                    ${params.NDFC_FABRIC_NAME} \
+                                                    ${params.NDFC_CONTROLLER_VERSION} \
+                                                    ${params.NDFC_TEST_ROLE} \
+                      """
+                }
+            }
+        }
+        stage("Run NDFC Integration Tests") {
+            steps {
+                withPythonEnv('/var/jenkins_home/.pyenv/versions/ndfc-ansible/bin/python') {
+                    dir("/var/jenkins_home/ndfc/ansible/hacking") {
+                        sh '''#!/bin/bash
+                              pip install requests
+                              pip install -r /var/jenkins_home/ndfc/ansible/requirements.txt
+                              source ndfc_setup
+                              ansible --version
+                              cd /var/jenkins_home/ndfc/collections/ansible_collections/playbooks
+                              ansible-playbook -i ndfc_inventory.yml ndfc_tests.yml -vvvv
+                          '''
+                    }
+                }
+            }
+        }
+    }
+}
