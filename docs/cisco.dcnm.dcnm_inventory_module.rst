@@ -29,12 +29,12 @@ Parameters
 
     <table  border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="2">Parameter</th>
+            <th colspan="3">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -51,18 +51,17 @@ Parameters
             </tr>
                                 <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>auth_proto</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>MD5</li>
+                                    <li><div style="color: blue"><b>MD5</b>&nbsp;&larr;</div></li>
                                     <li>SHA</li>
                                     <li>MD5_DES</li>
                                     <li>MD5_AES</li>
@@ -71,21 +70,21 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Name of the authentication protocol to be used</div>
+                        <div>Name of the authentication protocol to be used. For POAP configurations authentication protocol should be &#x27;MD5&#x27;.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>max_hops</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
+                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Maximum Hops to reach the switch</div>
@@ -93,7 +92,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>password</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -110,9 +109,45 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>poap</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Configurations of switch to Bootstrap/Pre-provision.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>preserve_configs</b>
+                    <b>config_data</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Basic config data of switch to Bootstrap/Pre-provision. &#x27;modulesModel&#x27; and &#x27;gateway&#x27; parameters are mandatory. &#x27;modulesModel&#x27; is list of model of modules in switch to Bootstrap/Pre-provision. &#x27;gateway&#x27; is the gateway IP with mask for the switch to Bootstrap/Pre-provision. For other supported config data please refer to NDFC/DCNM configuration guide.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hostname</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
@@ -122,18 +157,92 @@ Parameters
                 <td>
                 </td>
                 <td>
+                        <div>Hostname of switch to Bootstrap/Pre-provision.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>model</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Model of switch to Bootstrap/Pre-provision.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>serial_number</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Serial number of switch to Bootstrap/Pre-provision.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Software version of switch to Bootstrap/Pre-provision.</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>preserve_config</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
                         <div>Set this to false for greenfield deployment and true for brownfield deployment</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>role</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -155,7 +264,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>seed_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -172,7 +281,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>user_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -184,12 +293,12 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Login username to the switch</div>
+                        <div>Login username to the switch. For POAP configurations username should be &#x27;admin&#x27;</div>
                 </td>
             </tr>
 
             <tr>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -205,7 +314,26 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>query_poap</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Query for Bootstrap(POAP) capable swicthes available.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -222,7 +350,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>The state of DCNM after module completion.</div>
+                        <div>The state of DCNM after module completion. &#x27;merged&#x27; and &#x27;query&#x27; are the only states supported for POAP</div>
                 </td>
             </tr>
     </table>
@@ -321,6 +449,85 @@ Examples
           role: leaf
           preserve_config: False # boolean, default is  true
 
+    # The following switch will be Bootstrapped and merged into the existing fabric
+    - name: Poap switch Configuration
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: merged # Only 2 options supported merged/query for poap config
+        config:
+        # All the values below are mandatory if poap configuration is being done - state is merged
+        - seed_ip: 192.168.0.5
+          user_name: switch_username
+          password: switch_password
+          role: border_gateway
+          poap:
+            - serial_number: 1A2BCDEFJKL
+              model: 'N9K-C9300v'
+              version: '9.3(7)'
+              hostname: 'POAP_SWITCH'
+              config_data:
+                modulesModel: [N9K-X9364v, N9K-vSUP]
+                gateway: 192.168.0.1/24
+
+    # The following switch will be Pre-provisioned and merged into the existing fabric
+    - name: Pre-provision switch Configuration
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: merged # Only 2 options supported merged/query for poap config
+        config:
+        # All the values below are mandatory if poap configuration is being done - state is merged
+        - seed_ip: 192.168.0.4
+          user_name: switch_username
+          password: switch_password
+          role: border
+          poap:
+            - serial_number: 1A2BCDEFGHI
+              model: 'N9K-C9300v'
+              version: '9.3(7)'
+              hostname: 'PREPRO_SWITCH'
+              config_data:
+                modulesModel: [N9K-X9364v, N9K-vSUP]
+                gateway: 192.168.0.1/24
+              preprovision: True
+
+    - name: Poap, Pre-provision and existing switch Configuration
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: merged # Only 2 options supported merged/query for poap config
+        config:
+        - seed_ip: 192.168.0.2
+          user_name: switch_username
+          password: switch_password
+          role: border_gateway
+          poap:
+            - serial_number: 1A2BCDEFGHI
+              model: 'N9K-C9300v'
+              version: '9.3(7)'
+              hostname: 'POAP_SWITCH'
+              config_data:
+                modulesModel: [N9K-X9364v, N9K-vSUP]
+                gateway: 192.168.0.1/24
+        - seed_ip: 192.168.0.3
+          user_name: switch_username
+          password: switch_password
+          auth_proto: MD5
+          max_hops: 0
+          preserve_config: False
+          role: spine
+        - seed_ip: 192.168.0.4
+          user_name: switch_username
+          password: switch_password
+          role: border
+          poap:
+            - serial_number: 1A2BCDEFGHI
+              model: 'N9K-C9300v'
+              version: '9.3(7)'
+              hostname: 'PREPRO_SWITCH'
+              config_data:
+                modulesModel: [N9K-X9364v, N9K-vSUP]
+                gateway: 192.168.0.1/24
+              preprovision: True
+
     # All the switches will be deleted in the existing fabric
     - name: Delete all the switches
       cisco.dcnm.dcnm_inventory:
@@ -344,6 +551,14 @@ Examples
         fabric: vxlan-fabric
         state: query # merged / deleted / overridden / query
 
+    # All the existing switches along with available Bootstrap(POAP)
+    # will be queried in the existing fabric
+    - name: Query all the switches in the fabric
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: query # merged / query
+        query_poap: True
+
 
 
 
@@ -354,4 +569,4 @@ Status
 Authors
 ~~~~~~~
 
-- Karthik Babu Harichandra Babu(@kharicha)
+- Karthik Babu Harichandra Babu(@kharicha), Praveen Ramoorthy(@praveenramoorthy)
