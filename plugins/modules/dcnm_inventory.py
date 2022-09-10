@@ -505,7 +505,7 @@ class DcnmInventory:
 
             resp = self.update_discover_params(inv_upd)
 
-            if (type(resp[0]) is dict):
+            if (isinstance(resp[0], dict)):
                 match = re.search(r"\S+\((\S+)\)", resp[0]["deviceIndex"])
                 if match is None:
                     msg = ("Failed to get the serial number of the specied switch")
