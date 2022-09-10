@@ -421,7 +421,7 @@ class DcnmInventory:
                         poap_upd.update({"reAdd": resp["reAdd"]})
                         poap_upd.update({"fingerprint": resp["fingerprint"]})
                         poap_upd.update({"imagePolicy": ""})
-                        #poap_upd.update({"role": "leaf"})
+                        # poap_upd.update({"role": "leaf"})
                     return
 
         msg = ("Specified switch is not listed in bootstrap devices. "
@@ -439,7 +439,7 @@ class DcnmInventory:
 
         state = self.params["state"]
 
-        if  state == "merged":
+        if state == "merged":
             poap_upd = {
                 "ipAddress": s_ip,
                 "discoveryAuthProtocol": "0",
@@ -457,7 +457,6 @@ class DcnmInventory:
 
             snos = {"serialno": poap["serial_number"], "preprovision": poap["preprovision"]}
             self.switch_snos.append(snos)
-
 
         return poap_upd
 
@@ -512,7 +511,7 @@ class DcnmInventory:
                     self.module.fail_json(msg)
                 else:
                     serial_num = match.groups()[0]
-                    snos = {"serialno": serial_num, "preprovision": False }
+                    snos = {"serialno": serial_num, "preprovision": False}
                     self.switch_snos.append(snos)
 
             inv_upd["switches"] = resp
@@ -720,7 +719,7 @@ class DcnmInventory:
 
         if query_poap is True and state != "query":
             msg = "query_poap: should not be set 'True' for state {0}".format(
-                    state
+                state
             )
             self.module.fail_json(msg=msg)
 
@@ -773,7 +772,7 @@ class DcnmInventory:
                         or "password" not in inv
                     ):
                         msg = "seed ip/user name and password are mandatory under inventory parameters"
-                    if  "poap" in inv:
+                    if "poap" in inv:
                         if state != "merged":
                             msg = "merged and query are only supported states for POAP"
                         if inv["user_name"] != "admin":
@@ -816,7 +815,7 @@ class DcnmInventory:
                 for inv in self.config:
                     if "seed_ip" not in inv:
                         msg = "seed ip is mandatory under inventory parameters for switch deletion"
-                    if  "poap" in inv:
+                    if "poap" in inv:
                         msg = "merged and query are only supported states for POAP"
 
             if msg:
@@ -1271,7 +1270,6 @@ class DcnmInventory:
 
         query = []
         query_poap = self.params["query_poap"]
-
 
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
