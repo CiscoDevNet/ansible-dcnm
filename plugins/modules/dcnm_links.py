@@ -935,7 +935,7 @@ class DcnmLinks:
 
         """
         Routine to validate the playbook input and fill up default values for objects not included.
-        In this case we validate the playbook against link_spec which inlcudes required information
+        In this case we validate the playbook against link_spec which includes required information
         This routine updates self.links_info with validated playbook information by defaulting values
         not included
 
@@ -3271,7 +3271,7 @@ def main():
     state = module.params["state"]
 
     if [] is dcnm_links.config:
-        if state == "merged":
+        if state == "merged" or state == "replaced":
             module.fail_json(
                 msg="'config' element is mandatory for state '{0}', given = '{1}'".format(
                     state, dcnm_links.config
