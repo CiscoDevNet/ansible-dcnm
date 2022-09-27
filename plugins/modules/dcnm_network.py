@@ -2227,6 +2227,9 @@ class DcnmNetwork:
                             net["attach"], att_spec
                         )
                         net["attach"] = valid_att
+                        for attach in net["attach"]:
+                            if attach.get("ports"):
+                                attach["ports"] = [port.capitalize() for port in attach["ports"]]
                         invalid_params.extend(invalid_att)
 
                     if state != "deleted":
@@ -2316,7 +2319,7 @@ class DcnmNetwork:
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get("MESSAGE") != "OK":
+        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] != 200:
             fail = True
             changed = False
             return fail, changed
@@ -2335,6 +2338,12 @@ class DcnmNetwork:
         return fail, changed
 
     def failure(self, resp):
+
+        # Donot Rollback for Multi-site fabrics
+        if self.is_ms_fabric:
+            self.failed_to_rollback = True
+            self.module.fail_json(msg=resp)
+            return
 
         # Implementing a per task rollback logic here so that we rollback DCNM to the have state
         # whenever there is a failure in any of the APIs.
