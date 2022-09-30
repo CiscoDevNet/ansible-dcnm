@@ -222,17 +222,16 @@ class TestDcnmInvModule(TestDcnmModule):
 
         if "get_have_failure" in self._testMethodName:
             self.run_dcnm_send.side_effect = [
-                self.get_have_initial_failure,
                 self.get_have_failure,
             ]
 
         elif "merge_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -250,10 +249,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_role_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -271,10 +270,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_brownfield_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
                 self.get_inventory_initial_switch_success,
@@ -291,9 +290,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_multiple_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.mock_inv_discover109_params,
                 self.mock_inv_discover_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.import_switch_discover_success,
                 self.get_inventory_multiple_switch_success,
@@ -317,9 +316,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_multiple_brownfield_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.mock_inv_discover_params,
                 self.mock_inv_discover107_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.import_switch_discover_success,
                 self.get_inventory_multiple_bf_switch_success,
@@ -342,9 +341,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_multiple_brown_green_field_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.mock_inv_discover_params,
                 self.mock_inv_discover107_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.import_switch_discover_success,
                 self.get_inventory_multiple_bf_gf_switch_success,
@@ -403,8 +402,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "override_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_override_switch_success,
+                self.mock_inv_discover_params,
                 self.delete_switch107_success,
                 self.import_switch_discover_success,
                 self.get_inventory_override_switch_success,
@@ -425,8 +424,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "migration_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_migration_switch_success,
+                self.mock_inv_discover_params,
                 self.get_inventory_initial_switch_success,
                 self.set_assign_role_success,
                 self.get_inventory_initial_switch_success,
@@ -442,34 +441,33 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "have_initial_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_initial_failure,
             ]
 
         elif "import_switch_discover_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_initial_success,
+                self.mock_inv_discover_params,
                 self.import_switch_discover_failure,
             ]
 
         elif "get_inventory_initial_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_failure,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_failure,
             ]
 
         elif "rediscover_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_failure,
@@ -478,10 +476,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "get_lan_switch_cred_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -493,10 +491,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "set_lan_switch_cred_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -509,10 +507,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "set_assign_role_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -544,10 +542,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "config_save_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -564,10 +562,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "config_deploy_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -596,8 +594,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "already_created_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_already_created_switch_success,
+                self.mock_inv_discover_params,
             ]
 
         elif "already_deleted_switch" in self._testMethodName:
@@ -615,8 +613,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "poap_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.get_inventory_query_poap_success,
                 self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
                 self.config_poap_switch_success,
                 self.get_inventory_poap_switch_success,
                 self.get_inventory_poap_switch_success,
@@ -634,8 +632,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "poap_role_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.get_inventory_query_poap_success,
                 self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
                 self.config_poap_switch_success,
                 self.get_inventory_poap_switch_success,
                 self.get_inventory_poap_switch_success,
@@ -688,9 +686,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_multi_type_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.get_inventory_query_poap_success,
                 self.poap_inv_discover_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.config_poap_switch_success,
                 self.get_inventory_merge_multi_type_switch_success,

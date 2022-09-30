@@ -121,7 +121,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Configurations of switch to Bootstrap/Pre-provision.</div>
+                        <div>Configurations of switch to Bootstrap/Pre-provision. Please note that POAP and DHCP configurations needs to enabled in fabric configuration before adding/preprovisioning switches through POAP. Idempotence checks against inventory is only for &#x27;IP Address&#x27; for Preprovision configs. Idempotence checks against inventory is only for &#x27;IP Address&#x27; and &#x27;Serial Number&#x27; for Bootstrap configs.</div>
                 </td>
             </tr>
                                 <tr>
@@ -165,6 +165,23 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>image_policy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the image policy to be applied on switch during Bootstrap/Pre-provision.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>model</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -183,17 +200,33 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>serial_number</b>
+                    <b>preprovision_serial</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
-                        <div>Serial number of switch to Bootstrap/Pre-provision.</div>
+                        <div>Serial number of switch to Pre-provision. When &#x27;preprovision_serial&#x27; is provided along with &#x27;serial_number&#x27;, then the Preprovisioned switch(with serial number as in &#x27;preprovision_serial&#x27;) will be swapped with a actual switch(with serial number in &#x27;serial_number&#x27;) through bootstrap. Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>serial_number</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Serial number of switch to Bootstrap. When &#x27;preprovision_serial&#x27; is provided along with &#x27;serial_number&#x27;, then the Preprovisioned switch(with serial number as in &#x27;preprovision_serial&#x27;) will be swapped with a actual switch(with serial number in &#x27;serial_number&#x27;) through bootstrap. Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.</div>
                 </td>
             </tr>
             <tr>
@@ -461,10 +494,11 @@ Examples
           password: switch_password
           role: border_gateway
           poap:
-            - serial_number: 1A2BCDEFJKL
+            - serial_number: 2A3BCDEFJKL
               model: 'N9K-C9300v'
               version: '9.3(7)'
               hostname: 'POAP_SWITCH'
+              image_policy: "poap_image_policy"
               config_data:
                 modulesModel: [N9K-X9364v, N9K-vSUP]
                 gateway: 192.168.0.1/24
@@ -481,14 +515,14 @@ Examples
           password: switch_password
           role: border
           poap:
-            - serial_number: 1A2BCDEFGHI
+            - preprovision_serial: 1A2BCDEFGHI
               model: 'N9K-C9300v'
               version: '9.3(7)'
               hostname: 'PREPRO_SWITCH'
+              image_policy: "prepro_image_policy"
               config_data:
                 modulesModel: [N9K-X9364v, N9K-vSUP]
                 gateway: 192.168.0.1/24
-              preprovision: True
 
     - name: Poap, Pre-provision and existing switch Configuration
       cisco.dcnm.dcnm_inventory:
@@ -500,10 +534,11 @@ Examples
           password: switch_password
           role: border_gateway
           poap:
-            - serial_number: 1A2BCDEFGHI
+            - serial_number: 2A3BCDEFGHI
               model: 'N9K-C9300v'
               version: '9.3(7)'
               hostname: 'POAP_SWITCH'
+              image_policy: "poap_image_policy"
               config_data:
                 modulesModel: [N9K-X9364v, N9K-vSUP]
                 gateway: 192.168.0.1/24
@@ -519,14 +554,37 @@ Examples
           password: switch_password
           role: border
           poap:
-            - serial_number: 1A2BCDEFGHI
+            - preprovision_serial: 1A2BCDEFGHI
               model: 'N9K-C9300v'
               version: '9.3(7)'
               hostname: 'PREPRO_SWITCH'
+              image_policy: "prepro_image_policy"
               config_data:
                 modulesModel: [N9K-X9364v, N9K-vSUP]
                 gateway: 192.168.0.1/24
-              preprovision: True
+
+    # The following pre-provisioned switch will be swapped with actual swicth in the existing fabric
+    # This swap feature is supported only in NDFC and not on DCNM 11.x versions
+    - name: Pre-provision switch Configuration
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: merged # Only 2 options supported merged/query for poap config
+        config:
+        # All the values below are mandatory if poap configuration is being done - state is merged
+        - seed_ip: 192.168.0.4
+          user_name: switch_username
+          password: switch_password
+          role: border
+          poap:
+            - preprovision_serial: 1A2BCDEFGHI
+              serial_number: 2A3BCDEFGHI
+              model: 'N9K-C9300v'
+              version: '9.3(7)'
+              hostname: 'PREPRO_SWITCH'
+              image_policy: "poap_image_policy"
+              config_data:
+                modulesModel: [N9K-X9364v, N9K-vSUP]
+                gateway: 192.168.0.1/24
 
     # All the switches will be deleted in the existing fabric
     - name: Delete all the switches
