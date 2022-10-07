@@ -133,7 +133,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">dictionary</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -151,7 +150,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -186,7 +184,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -238,7 +235,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -564,6 +560,8 @@ Examples
                 gateway: 192.168.0.1/24
 
     # The following pre-provisioned switch will be swapped with actual swicth in the existing fabric
+    # No Need to provide any other parameters for swap operation as bootstrap will inherit the preprovision configs
+    # If other parameters are provided it will be overidden with preprovision switch configs
     # This swap feature is supported only in NDFC and not on DCNM 11.x versions
     - name: Pre-provision switch Configuration
       cisco.dcnm.dcnm_inventory:
@@ -578,13 +576,6 @@ Examples
           poap:
             - preprovision_serial: 1A2BCDEFGHI
               serial_number: 2A3BCDEFGHI
-              model: 'N9K-C9300v'
-              version: '9.3(7)'
-              hostname: 'PREPRO_SWITCH'
-              image_policy: "poap_image_policy"
-              config_data:
-                modulesModel: [N9K-X9364v, N9K-vSUP]
-                gateway: 192.168.0.1/24
 
     # All the switches will be deleted in the existing fabric
     - name: Delete all the switches

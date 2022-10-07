@@ -126,17 +126,17 @@ options:
             description:
             - Model of switch to Bootstrap/Pre-provision.
             type: str
-            required: true
+            required: false
           version:
             description:
             - Software version of switch to Bootstrap/Pre-provision.
             type: str
-            required: true
+            required: false
           hostname:
             description:
             - Hostname of switch to Bootstrap/Pre-provision.
             type: str
-            required: true
+            required: false
           image_policy:
             description:
             - Name of the image policy to be applied on switch during Bootstrap/Pre-provision.
@@ -150,7 +150,7 @@ options:
               'gateway' is the gateway IP with mask for the switch to Bootstrap/Pre-provision.
               For other supported config data please refer to NDFC/DCNM configuration guide.
             type: dict
-            required: true
+            required: false
   query_poap:
     description:
     - Query for Bootstrap(POAP) capable swicthes available.
@@ -327,6 +327,8 @@ EXAMPLES = """
             gateway: 192.168.0.1/24
 
 # The following pre-provisioned switch will be swapped with actual swicth in the existing fabric
+# No Need to provide any other parameters for swap operation as bootstrap will inherit the preprovision configs
+# If other parameters are provided it will be overidden with preprovision switch configs
 # This swap feature is supported only in NDFC and not on DCNM 11.x versions
 - name: Pre-provision switch Configuration
   cisco.dcnm.dcnm_inventory:
@@ -341,13 +343,6 @@ EXAMPLES = """
       poap:
         - preprovision_serial: 1A2BCDEFGHI
           serial_number: 2A3BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'PREPRO_SWITCH'
-          image_policy: "poap_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
-            gateway: 192.168.0.1/24
 
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches
@@ -817,10 +812,10 @@ class DcnmInventory:
             poap_spec = dict(
                 serial_number=dict(type="str", default=""),
                 preprovision_serial=dict(type="str", default=""),
-                model=dict(required=True, type="str"),
-                version=dict(required=True, type="str"),
-                hostname=dict(required=True, type="str"),
-                config_data=dict(required=True, type="dict"),
+                model=dict(type="str", default=""),
+                version=dict(type="str", default=""),
+                hostname=dict(type="str", default=""),
+                config_data=dict(type="dict", default={}),
                 image_policy=dict(type="str", default="")
             )
 
@@ -840,6 +835,13 @@ class DcnmInventory:
                             msg = "For poap configuration, supported user_name is 'admin'"
                         if inv["poap"][0].get("serial_number") is None and inv["poap"][0].get("preprovision_serial") is None:
                             msg = "Please provide 'serial_number' for bootstrap or 'preprovision_serial' for preprovision"
+                        if ((inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") is None) or
+                           (inv["poap"][0].get("preprovision_serial") and inv["poap"][0].get("serial_number") is None)):
+                            if (inv["poap"][0].get("model") is None or inv["poap"][0].get("version") is None or
+                               inv["poap"][0].get("hostname") is None or not inv["poap"][0]["config_data"]):
+                                msg = "model, version, hostname and config_data must be provided for {0}".format(
+                                    "Preprovisioning/Bootstraping a switch"
+                                )
                         if inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") and not self.nd:
                             msg = "Serial number swap is not supported in DCNM version 11"
             else:
@@ -1418,6 +1420,34 @@ class DcnmInventory:
         if fail:
             self.failure(response)
 
+        method = "GET"
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(
+            self.fabric
+        )
+        if self.nd:
+            path = self.nd_prefix + path
+        response = dcnm_send(self.module, method, path)
+        self.result["response"].append(response)
+        fail, self.result["changed"] = self.handle_response(response, "query")
+
+        if fail:
+            self.module.fail_json(msg=response)
+
+        if "DATA" in response:
+            for resp in response["DATA"]:
+                if (resp["serialNumber"] == poap["serialNumber"]):
+                    resp.update({"password": poap["password"]})
+                    resp.update({"discoveryAuthProtocol": "0"})
+                    resp.pop("seedSwitchFlag")
+                    return resp
+
+        msg = "Specified switch {0}".format(
+            poap["serial_number"] + " is not listed in bootstrap devices or inventory. " +
+            "If you are trying to pre-provision, please set " +
+            "'preprovision_serial' instead of 'serial_number' in your task")
+
+        self.module.fail_json(msg=response)
+
     def poap_config(self):
 
         method = "POST"
@@ -1427,14 +1457,14 @@ class DcnmInventory:
         if self.want_create_poap:
             poap_list = copy.deepcopy(self.want_create_poap)
 
-            for poap in poap_list:
-                poap.pop("role")
-                if self.nd and poap["serialNumber"] and poap["preprovisionSerial"]:
-                    self.swap_serial(poap)
-                    poap["reAdd"] = "true"
-                if not poap["serialNumber"] and poap["preprovisionSerial"]:
-                    poap["serialNumber"] = poap["preprovisionSerial"]
-                poap.pop("preprovisionSerial")
+            for i in range(len(poap_list)):
+                poap_list[i].pop("role")
+                if self.nd and poap_list[i]["serialNumber"] and poap_list[i]["preprovisionSerial"]:
+                    poap_list[i] = self.swap_serial(poap_list[i])
+                if not poap_list[i]["serialNumber"] and poap_list[i]["preprovisionSerial"]:
+                    poap_list[i]["serialNumber"] = poap_list[i]["preprovisionSerial"]
+                if "preprovisionSerial" in poap_list[i]:
+                    poap_list[i].pop("preprovisionSerial")
 
             response = dcnm_send(self.module, method, path, json.dumps(poap_list))
             self.result["response"].append(response)
