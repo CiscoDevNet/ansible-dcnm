@@ -1,0 +1,81 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: '11'
+  when: ( result.response['DATA']['version'] == 'DEVEL' )
+  ignore_errors: yes
+
+- name: Initialise ms_fabric_list
+  set_fact:
+    ms_fabric_list: []
+
+- name: Get the Fabric associations
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /rest/control/fabrics/msd/fabric-associations 
+  when: controller_version == '11'
+  register: result
+  ignore_errors: yes
+
+- name: Setting fact
+  set_fact:
+    ms_fabric_list: "{{ (ms_fabric_list | default([])) + [item['fabricName']] }}"
+  when: (controller_version == '11' and result.response["RETURN_CODE"] == 200) and (item['fabricParent'] != 'None')
+  loop: '{{ result.response["DATA"] }}'
+  ignore_errors: yes
+
+- name: Show the multisite fabric list information
+  debug:
+    var: ms_fabric_list
+
+- name: Get the Fabric associations
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations 
+  when: controller_version == '12'
+  register: result
+  ignore_errors: yes
+
+- name: Setting fact
+  set_fact:
+    ms_fabric_list: "{{ (ms_fabric_list | default([])) + [item['fabricName']] }}"
+  when: (controller_version == '12' and result.response["RETURN_CODE"] == 200) and (item['fabricParent'] != 'None')
+  loop: '{{ result.response["DATA"] }}'
+  ignore_errors: yes
+
+- name: Show the multisite fabric list information
+  debug:
+    var: ms_fabric_list

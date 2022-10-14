@@ -2037,7 +2037,7 @@ class DcnmVrf:
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get("MESSAGE") != "OK":
+        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] != 200:
             fail = True
             changed = False
             return fail, changed
@@ -2053,6 +2053,12 @@ class DcnmVrf:
         return fail, changed
 
     def failure(self, resp):
+
+        # Donot Rollback for Multi-site fabrics
+        if self.fabric_type == "MFD":
+            self.failed_to_rollback = True
+            self.module.fail_json(msg=resp)
+            return
 
         # Implementing a per task rollback logic here so that we rollback DCNM to the have state
         # whenever there is a failure in any of the APIs.
