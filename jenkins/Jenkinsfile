@@ -25,7 +25,9 @@ pipeline {
             steps {
                 dir("/var/jenkins_home/ndfc/collections/ansible_collections/cisco/dcnm") {
                     sh """#!/bin/bash
-                          # env
+                          env
+                          echo 'divide'
+                          echo 'divide'
                           git branch --set-upstream-to=origin/${params.NDFC_GITHUB_BRANCH} ${params.NDFC_GITHUB_BRANCH}
                           git fetch origin
                           git checkout ${params.NDFC_GITHUB_BRANCH}
@@ -106,4 +108,3 @@ pipeline {
         }
     }
 }
-
