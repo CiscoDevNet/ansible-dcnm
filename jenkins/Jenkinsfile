@@ -39,6 +39,10 @@ pipeline {
             environment {
                 NDFC_CREDS = credentials('ndfc_credentials')
                 NXOS_CREDS = credentials('nxos_credentials')
+                HTTP_PROXY = "${env.HTTP_PROXY}"
+                HTTPS_PROXY = "${env.HTTP_PROXY}"
+                http_proxy = "${env.HTTP_PROXY}"
+                https_proxy = "${env.HTTP_PROXY}"
             }
             steps {
                 withPythonEnv('/var/jenkins_home/.pyenv/versions/ndfc-ansible/bin/python') {
