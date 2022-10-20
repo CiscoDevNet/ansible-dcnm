@@ -63,14 +63,22 @@ pipeline {
             }
         }
         stage("Build Ansible Tests File") {
+            environment {
+                HTTP_PROXY = "${env.HTTP_PROXY}"
+                HTTPS_PROXY = "${env.HTTP_PROXY}"
+                http_proxy = "${env.HTTP_PROXY}"
+                https_proxy = "${env.HTTP_PROXY}"
+            }
             steps {
-                dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
-                    sh """#!/bin/bash
-                          python build_tests.py ${params.NDFC_TEST_NAME} \
-                                                    ${params.NDFC_FABRIC_NAME} \
-                                                    ${params.NDFC_CONTROLLER_VERSION} \
-                                                    ${params.NDFC_TEST_ROLE} \
-                      """
+                withPythonEnv('/var/jenkins_home/.pyenv/versions/ndfc-ansible/bin/python') {
+                    dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
+                        sh """#!/bin/bash
+                            python build_tests.py ${params.NDFC_TEST_NAME} \
+                                                        ${params.NDFC_FABRIC_NAME} \
+                                                        ${params.NDFC_CONTROLLER_VERSION} \
+                                                        ${params.NDFC_TEST_ROLE} \
+                        """
+                    }
                 }
             }
         }
@@ -98,3 +106,4 @@ pipeline {
         }
     }
 }
+
