@@ -44,6 +44,7 @@ pipeline {
                 withPythonEnv('/var/jenkins_home/.pyenv/versions/ndfc-ansible/bin/python') {
                     dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
                         sh """#!/bin/bash
+                            pip install jinja2
                             python build_inventory.py $NDFC_CREDS_USR \
                                                         $NDFC_CREDS_PSW \
                                                         ${params.NDFC_IP_ADDRESS} \
