@@ -41,17 +41,19 @@ pipeline {
                 NXOS_CREDS = credentials('nxos_credentials')
             }
             steps {
-                dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
-                    sh """#!/bin/bash
-                          python build_inventory.py $NDFC_CREDS_USR \
-                                                    $NDFC_CREDS_PSW \
-                                                    ${params.NDFC_IP_ADDRESS} \
-                                                    ${params.NDFC_SWITCH1_IP} \
-                                                    ${params.NDFC_SWITCH2_IP} \
-                                                    ${params.NDFC_SWITCH3_IP} \
-                                                    $NXOS_CREDS_USR \
-                                                    $NXOS_CREDS_PSW
-                       """
+                withPythonEnv('/var/jenkins_home/.pyenv/versions/ndfc-ansible/bin/python') {
+                    dir("/var/jenkins_home/ndfc/collections/ansible_collections/playbooks") {
+                        sh """#!/bin/bash
+                            python build_inventory.py $NDFC_CREDS_USR \
+                                                        $NDFC_CREDS_PSW \
+                                                        ${params.NDFC_IP_ADDRESS} \
+                                                        ${params.NDFC_SWITCH1_IP} \
+                                                        ${params.NDFC_SWITCH2_IP} \
+                                                        ${params.NDFC_SWITCH3_IP} \
+                                                        $NXOS_CREDS_USR \
+                                                        $NXOS_CREDS_PSW
+                        """
+                    }
                 }
             }
         }
