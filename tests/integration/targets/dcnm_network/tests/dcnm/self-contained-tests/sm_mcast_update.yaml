@@ -1,0 +1,76 @@
+- name: Setup - Remove all existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+- name: Create network with initial DEFAULT mcast parameter value
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: ansible-vrf-int1
+      net_id: 7009
+      vlan_id: 3505
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: False
+      int_desc: 'test interface'
+      is_l2only: False
+      vlan_name: testvlan
+      dhcp_loopback_id: 0
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: []
+      deploy: True
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+  until:
+    - "result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - "result.response[0].parent.networkTemplateConfig.mcastGroup is search('239.1.1.1')"
+
+- name: Change mcast parameter values
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: ansible-vrf-int1
+      net_id: 7009
+      vlan_id: 3505
+      gw_ip_subnet: '152.168.30.1/24'
+      mtu_l3intf: 7600
+      arp_suppress: False
+      int_desc: 'test interface'
+      is_l2only: False
+      vlan_name: testvlan
+      multicast_group_address: '230.55.24.155'
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: []
+      deploy: True
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  register: result
+  until:
+    - "result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - "result.response[0].parent.networkTemplateConfig.mcastGroup is search('230.55.24.155')"
