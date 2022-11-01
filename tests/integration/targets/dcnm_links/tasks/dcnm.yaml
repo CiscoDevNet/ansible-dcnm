@@ -1,0 +1,20 @@
+---
+- name: collect dcnm test cases
+  find:
+    paths: "{{ role_path }}/tests/dcnm"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: dcnm_cases
+
+- set_fact:
+    test_cases:
+      files: "{{ dcnm_cases.files }}"
+
+- name: set test_items
+  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+
+- name: run test cases (connection=httpapi)
+  include: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run

@@ -162,6 +162,11 @@ options:
         - Configured ID value should be in range 0-1023
         type: int
         required: false
+      multicast_group_address:
+        description:
+        - The multicast IP address for the network
+        type: str
+        required: false
       attach:
         description:
         - List of network attachment details
@@ -681,6 +686,7 @@ class DcnmNetwork:
         dhcp2_vrf_changed = False
         dhcp3_vrf_changed = False
         dhcp_loopback_changed = False
+        multicast_group_address_changed = False
 
         if want.get("networkId") and want["networkId"] != have["networkId"]:
             self.module.fail_json(
@@ -729,6 +735,8 @@ class DcnmNetwork:
         dhcp3_vrf_have = json_to_dict_have.get("vrfDhcp3", "")
         dhcp_loopback_want = json_to_dict_want.get("loopbackId", "")
         dhcp_loopback_have = json_to_dict_have.get("loopbackId", "")
+        multicast_group_address_want = json_to_dict_want.get("mcastGroup", "")
+        multicast_group_address_have = json_to_dict_have.get("mcastGroup", "")
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
         tag_want = json_to_dict_want.get("tag", "")
@@ -766,6 +774,7 @@ class DcnmNetwork:
                 or dhcp2_vrf_have != dhcp2_vrf_want
                 or dhcp3_vrf_have != dhcp3_vrf_want
                 or dhcp_loopback_have != dhcp_loopback_want
+                or multicast_group_address_have != multicast_group_address_want
             ):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -801,6 +810,8 @@ class DcnmNetwork:
                     dhcp3_vrf_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
+                if multicast_group_address_have != multicast_group_address_want:
+                    multicast_group_address_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -855,6 +866,8 @@ class DcnmNetwork:
                     dhcp3_vrf_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
+                if multicast_group_address_have != multicast_group_address_want:
+                    multicast_group_address_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -876,6 +889,7 @@ class DcnmNetwork:
             dhcp2_vrf_changed,
             dhcp3_vrf_changed,
             dhcp_loopback_changed,
+            multicast_group_address_changed,
         )
 
     def update_create_params(self, net):
@@ -928,6 +942,7 @@ class DcnmNetwork:
             "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
             "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
             "loopbackId": net.get("dhcp_loopback_id", ""),
+            "mcastGroup": net.get("multicast_group_address", ""),
         }
 
         if template_conf["vlanId"] is None:
@@ -948,6 +963,8 @@ class DcnmNetwork:
             template_conf["vrfDhcp3"] = ""
         if template_conf["loopbackId"] is None:
             template_conf["loopbackId"] = ""
+        if template_conf["mcastGroup"] is None:
+            template_conf["mcastGroup"] = ""
 
         net_upd.update({"networkTemplateConfig": json.dumps(template_conf)})
 
@@ -1031,6 +1048,7 @@ class DcnmNetwork:
                     "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
+                    "mcastGroup": json_to_dict.get("mcastGroup", ""),
                 }
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
@@ -1066,6 +1084,7 @@ class DcnmNetwork:
                             "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                             "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
+                            "mcastGroup": json_to_dict.get("mcastGroup", ""),
                         }
 
                         l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
@@ -1493,6 +1512,7 @@ class DcnmNetwork:
         dhcp2_vrf_changed = {}
         dhcp3_vrf_changed = {}
         dhcp_loopback_changed = {}
+        multicast_group_address_changed = {}
 
         for want_c in self.want_create:
             found = False
@@ -1517,6 +1537,7 @@ class DcnmNetwork:
                         dhcp2_vrf_chg,
                         dhcp3_vrf_chg,
                         dhcp_loopbk_chg,
+                        mcast_grp_chg,
                     ) = self.diff_for_create(want_c, have_c)
                     gw_changed.update({want_c["networkName"]: gw_chg})
                     tg_changed.update({want_c["networkName"]: tg_chg})
@@ -1533,6 +1554,9 @@ class DcnmNetwork:
                     dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
                     dhcp_loopback_changed.update(
                         {want_c["networkName"]: dhcp_loopbk_chg}
+                    )
+                    multicast_group_address_changed.update(
+                        {want_c["networkName"]: mcast_grp_chg}
                     )
                     if diff:
                         diff_create_update.append(diff)
@@ -1648,6 +1672,7 @@ class DcnmNetwork:
                             or dhcp2_vrf_changed.get(want_a["networkName"], False)
                             or dhcp3_vrf_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
+                            or multicast_group_address_changed.get(want_a["networkName"], False)
                         ):
                             dep_net = want_a["networkName"]
 
@@ -1737,6 +1762,7 @@ class DcnmNetwork:
             found_c.update({"dhcp_srvr2_vrf": json_to_dict.get("vrfDhcp2", "")})
             found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
             found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
+            found_c.update({"multicast_group_address": json_to_dict.get("mcastGroup", "")})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -2054,6 +2080,7 @@ class DcnmNetwork:
                     "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
+                    "mcastGroup": json_to_dict.get("mcastGroup", ""),
                 }
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
@@ -2147,6 +2174,7 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
+                multicast_group_address=dict(type="ipv4", default=""),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2210,6 +2238,7 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
+                multicast_group_address=dict(type="ipv4", default=""),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2229,6 +2258,9 @@ class DcnmNetwork:
                             net["attach"], att_spec
                         )
                         net["attach"] = valid_att
+                        for attach in net["attach"]:
+                            if attach.get("ports"):
+                                attach["ports"] = [port.capitalize() for port in attach["ports"]]
                         invalid_params.extend(invalid_att)
 
                     if state != "deleted":
@@ -2318,7 +2350,7 @@ class DcnmNetwork:
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get("MESSAGE") != "OK":
+        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] != 200:
             fail = True
             changed = False
             return fail, changed
@@ -2337,6 +2369,12 @@ class DcnmNetwork:
         return fail, changed
 
     def failure(self, resp):
+
+        # Donot Rollback for Multi-site fabrics
+        if self.is_ms_fabric:
+            self.failed_to_rollback = True
+            self.module.fail_json(msg=resp)
+            return
 
         # Implementing a per task rollback logic here so that we rollback DCNM to the have state
         # whenever there is a failure in any of the APIs.
@@ -2408,9 +2446,9 @@ class DcnmNetwork:
 
         if cfg.get("is_l2only", None) is None:
             json_to_dict_want["isLayer2Only"] = json_to_dict_have["isLayer2Only"]
-            if json_to_dict_want["isLayer2Only"].lower() == "true":
+            if str(json_to_dict_want["isLayer2Only"]).lower() == "true":
                 json_to_dict_want["isLayer2Only"] = True
-            elif json_to_dict_want["isLayer2Only"].lower() == "false":
+            elif str(json_to_dict_want["isLayer2Only"]).lower() == "false":
                 json_to_dict_want["isLayer2Only"] = False
 
         if cfg.get("vlan_name", None) is None:
@@ -2426,9 +2464,9 @@ class DcnmNetwork:
 
         if cfg.get("arp_suppress", None) is None:
             json_to_dict_want["suppressArp"] = json_to_dict_have["suppressArp"]
-            if json_to_dict_want["suppressArp"].lower() == "true":
+            if str(json_to_dict_want["suppressArp"]).lower() == "true":
                 json_to_dict_want["suppressArp"] = True
-            elif json_to_dict_want["suppressArp"].lower() == "false":
+            elif str(json_to_dict_want["suppressArp"]).lower() == "false":
                 json_to_dict_want["suppressArp"] = False
 
         if cfg.get("dhcp_srvr1_ip", None) is None:
@@ -2451,6 +2489,9 @@ class DcnmNetwork:
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
+
+        if cfg.get("multicast_group_address", None) is None:
+            json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
