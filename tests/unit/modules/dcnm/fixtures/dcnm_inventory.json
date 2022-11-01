@@ -182,11 +182,11 @@
     "playbook_poap_switch_config" : [
       {
         "password": "password",
-        "seed_ip": "192.168.123.223",
+        "seed_ip": "192.168.1.223",
         "user_name": "admin",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_test",
             "model": "N9K-C9300v",
             "serial_number": "9D2DAUJJFQQ",
@@ -196,15 +196,33 @@
       }
     ],
 
+    "playbook_poap_swap_switch_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "poap": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "model": "N9K-C9300v",
+            "serial_number": "9D2DAUJJFQQ",
+            "preprovision_serial": "9D2DAUJJFRR",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
     "playbook_poap_role_switch_config" : [
       {
         "password": "password",
-        "seed_ip": "192.168.123.223",
+        "seed_ip": "192.168.1.223",
         "user_name": "admin",
 	"role": "border_gateway",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_test",
             "model": "N9K-C9300v",
             "serial_number": "9D2DAUJJFQQ",
@@ -217,11 +235,11 @@
     "playbook_preprovision_switch_config" : [
       {
         "password": "password",
-        "seed_ip": "192.168.123.224",
+        "seed_ip": "192.168.1.224",
         "user_name": "admin",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_prepro",
             "model": "N9K-C9300v",
             "preprovision_serial": "9D2DAUJJFRR",
@@ -234,12 +252,12 @@
     "playbook_preprovision_role_switch_config" : [
       {
         "password": "password",
-        "seed_ip": "192.168.123.224",
+        "seed_ip": "192.168.1.224",
         "user_name": "admin",
 	"role": "border_gateway",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_prepro",
             "model": "N9K-C9300v",
             "preprovision_serial": "9D2DAUJJFRR",
@@ -252,11 +270,11 @@
     "playbook_poap_wrong_user_switch_config" : [
       {
         "password": "password",
-        "seed_ip": "192.168.123.223",
+        "seed_ip": "192.168.1.223",
         "user_name": "user",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_test",
             "model": "N9K-C9300v",
             "serial_number": "9D2DAUJJFQQ",
@@ -269,12 +287,12 @@
     "playbook_merge_multi_type_switch_config" : [
       {
         "password": "password",
-        "seed_ip": "192.168.123.223",
+        "seed_ip": "192.168.1.223",
         "user_name": "admin",
 	"role": "border_gateway",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_test",
             "model": "N9K-C9300v",
             "serial_number": "9D2DAUJJFQQ",
@@ -288,17 +306,17 @@
         "password": "password",
         "preserve_config": false,
         "role": "border_gateway",
-        "seed_ip": "192.168.123.219",
+        "seed_ip": "192.168.1.219",
         "user_name": "username"
       },
       {
         "password": "password",
-        "seed_ip": "192.168.123.224",
+        "seed_ip": "192.168.1.224",
         "user_name": "admin",
 	"role": "border_gateway",
         "poap": [
           {
-            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.123.1/24\"}",
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
             "hostname": "test_poap_prepro",
             "model": "N9K-C9300v",
             "preprovision_serial": "9D2DAUJJFRR",
@@ -308,6 +326,69 @@
       }
     ],
 
+    "playbook_poap_no_pre_ser_switch_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "poap": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "model": "N9K-C9300v",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
+    "playbook_poap_no_model_switch_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "poap": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "serial_number": "9D2DAUJJFQQ",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
+    "playbook_poap_swap_dcnm11_switch_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.224",
+        "user_name": "admin",
+        "poap": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_prepro",
+            "model": "N9K-C9300v",
+            "serial_number": "9D2DAUJJFQQ",
+            "preprovision_serial": "9D2DAUJJFRR",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
+    "playbook_no_user_switch_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.224"
+      }
+    ],
+
+    "playbook_no_ip_deleted_switch_config" : [
+      {
+        "password": "password",
+        "user_name": "admin"
+      }
+    ],
   "mock_inv_discover_params": {
     "ERROR": "",
     "RETURN_CODE": 200,
@@ -2975,7 +3056,7 @@
             ],
             "displayValues": [
                 "n9k-110",
-                "192.168.123.217",
+                "192.168.1.217",
                 "kharicha-fabric",
                 "FGE19030RSA",
                 "52",
@@ -2993,7 +3074,7 @@
             "fid": 3,
             "health": -1,
             "index": 1,
-            "ipAddress": "192.168.123.217",
+            "ipAddress": "192.168.1.217",
             "isLan": false,
             "isNonNexus": false,
             "isPmCollect": false,
@@ -3072,7 +3153,7 @@
 	    "serialNumber": "9D2DAUJJFQQ",
 	    "model": "N9K-C9300v",
 	    "version": "9.3(7)",
-	    "data": "{\"gateway\": \"192.168.123.1/24\", \"modulesModel\": [\"N9K-X9364v\", \"N9K-vSUP\"]}",
+	    "data": "{\"gateway\": \"192.168.1.1/24\", \"modulesModel\": [\"N9K-X9364v\", \"N9K-vSUP\"]}",
 	    "publicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDBuJ+5KalTYzNMr8F6SsgCHdGlF0r1+as+4OrRwpMxFHK69g9OLdaWMHQ1IzSyUJqGi5j13ITrhr+Ooc3qeFjyLAzkawKFCEyeoKniaqgPYjkn7PT+XWTCuIrTsg8s6E7V5IdWdMGB2GWoYdZ3pUR/Bz2VGa3eEnzJd8nMBRLydZ51BzPq5c+TGO1eBAaeSgz0UaAATvYZNOzJxVaQGzZsvgjK5eMAf5dYDHP4BBZzb3HOAazsww+8C6Jx3vlVpzBQeNt08UMCJnY+1XTKO4SMVJ5ztV6a3P5F4IX9SDGQV1Cy35bx2mG7Nc3V2BTQ6ACl424Lajo9DaUJg3yHVK28Y3V9TZC10+q3p34qCLePO9fo0peTMS4jrL0YntBiKo8r5M3PGYozRfKnZxGJJSqt3Z5BKK1ED8QtQuUkEmWDT1JK2OiVr250SMjEfPxwGqArbLVGzbC2XokGoWCOSxwWI4vlebsudFHc166wrYSpEcj3fRQIOP04eIeWt27Zjdk=",
 	    "fingerprint": "MD5:05:97:51:63:09:85:52:59:17:4f:2d:01:c7:36:11:03",
 	    "reAdd": false,
@@ -3118,7 +3199,7 @@
         ],
         "displayValues": [
             "n9k-110",
-            "192.168.123.223",
+            "192.168.1.223",
             "kharicha-fabric",
             "9D2DAUJJFQQ",
             "52",
@@ -3136,7 +3217,7 @@
         "fid": 3,
         "health": -1,
         "index": 1,
-        "ipAddress": "192.168.123.223",
+        "ipAddress": "192.168.1.223",
         "isLan": false,
         "isNonNexus": false,
         "isPmCollect": false,
@@ -3232,7 +3313,7 @@
             ],
             "displayValues": [
                 "n9k-110",
-                "192.168.123.224",
+                "192.168.1.224",
                 "kharicha-fabric",
                 "9D2DAUJJFRR",
                 "52",
@@ -3250,7 +3331,7 @@
             "fid": 3,
             "health": -1,
             "index": 1,
-            "ipAddress": "192.168.123.224",
+            "ipAddress": "192.168.1.224",
             "isLan": false,
             "isNonNexus": false,
             "isPmCollect": false,
@@ -3332,7 +3413,7 @@
         "auth": true,
         "deviceIndex": "poap_test_static(944XJW7L3YJ)",
         "hopCount": 0,
-        "ipaddr": "192.168.123.219",
+        "ipaddr": "192.168.1.219",
         "known": false,
         "lastChange": null,
         "platform": "N9K-C9508",
@@ -3362,7 +3443,7 @@
          "model":"N9K-C9300v",
          "version":"None",
          "upTime":42021,
-         "ipAddress":"192.168.123.219",
+         "ipAddress":"192.168.1.219",
          "mgmtAddress":"None",
          "vendor":"Cisco",
          "displayHdrs":[
@@ -3378,7 +3459,7 @@
          ],
          "displayValues":[
             "poap_test_static",
-            "192.168.123.219",
+            "192.168.1.219",
             "kharicha-fabric",
             "944XJW7L3YJ",
             "64",
@@ -3487,7 +3568,7 @@
          "model":"N9K-C9300v",
          "version":"None",
          "upTime":166169597441,
-         "ipAddress":"192.168.123.224",
+         "ipAddress":"192.168.1.224",
          "mgmtAddress":"None",
          "vendor":"None",
          "displayHdrs":[
@@ -3503,7 +3584,7 @@
          ],
          "displayValues":[
             "test_poap_prepro",
-            "192.168.123.224",
+            "192.168.1.224",
             "kharicha-fabric",
             "9D2DAUJJFRR",
             "0",
@@ -3612,7 +3693,7 @@
          "model":"N9K-C9300v",
          "version":"None",
          "upTime":36548,
-         "ipAddress":"192.168.123.223",
+         "ipAddress":"192.168.1.223",
          "mgmtAddress":"None",
          "vendor":"Cisco",
          "displayHdrs":[
@@ -3628,7 +3709,7 @@
          ],
          "displayValues":[
             "test_poap_test",
-            "192.168.123.223",
+            "192.168.1.223",
             "kharicha-fabric",
             "9D2DAUJJFQQ",
             "64",

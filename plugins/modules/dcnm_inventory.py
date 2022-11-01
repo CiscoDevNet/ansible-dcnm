@@ -153,7 +153,7 @@ options:
             required: false
   query_poap:
     description:
-    - Query for Bootstrap(POAP) capable swicthes available.
+    - Query for Bootstrap(POAP) capable switches available.
     type: bool
     required: false
     default: false
@@ -245,6 +245,15 @@ EXAMPLES = """
       role: leaf
       preserve_config: False # boolean, default is  true
 
+# The following task will enable Bootstrap and DHCP on an existing fabric.
+# Please note that only bootstrap and DHCP configs are present in the below example.
+# You have to add other existing fabric configs to the task.
+- name: Bootstrap and DHCP Configuration
+  cisco.dcnm.dcnm_rest:
+    method: PUT
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/vxlan-fabric
+    json_data: '{"fabricId": "FABRIC-7","fabricName": "vxlan-fabric","id": 7,"nvPairs":{...,"BOOTSTRAP_ENABLE": true,"DHCP_ENABLE": true,"DHCP_IPV6_ENABLE": "DHCPv4","DHCP_START": "192.168.1.10", "DHCP_END": "192.168.1.20","MGMT_GW": "192.168.123.1","MGMT_PREFIX": "24",...},"templateName": "Easy_Fabric"}'
+
 # The following switch will be Bootstrapped and merged into the existing fabric
 - name: Poap switch Configuration
   cisco.dcnm.dcnm_inventory:
@@ -326,7 +335,7 @@ EXAMPLES = """
             modulesModel: [N9K-X9364v, N9K-vSUP]
             gateway: 192.168.0.1/24
 
-# The following pre-provisioned switch will be swapped with actual swicth in the existing fabric
+# The following pre-provisioned switch will be swapped with actual switch in the existing fabric
 # No Need to provide any other parameters for swap operation as bootstrap will inherit the preprovision configs
 # If other parameters are provided it will be overidden with preprovision switch configs
 # This swap feature is supported only in NDFC and not on DCNM 11.x versions
@@ -828,6 +837,7 @@ class DcnmInventory:
                         or "password" not in inv
                     ):
                         msg = "seed ip/user name and password are mandatory under inventory parameters"
+                        break
                     if "poap" in inv:
                         if state != "merged":
                             msg = "'merged' and 'query' are only supported states for POAP"
@@ -883,7 +893,7 @@ class DcnmInventory:
                     if "seed_ip" not in inv:
                         msg = "seed ip is mandatory under inventory parameters for switch deletion"
                     if "poap" in inv:
-                        msg = "merged and query are only supported states for POAP"
+                        msg = "'merged' and 'query' are only supported states for POAP"
 
             if msg:
                 self.module.fail_json(msg=msg)
