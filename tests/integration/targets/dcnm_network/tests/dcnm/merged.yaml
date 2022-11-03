@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: MERGED - Verify if fabric - Fabric1 is deployed.
@@ -22,12 +22,8 @@
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 ##############################################
 ##                MERGED                    ##
@@ -35,7 +31,7 @@
 
 - name: MERGED - Create New Network without Deploy
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -48,6 +44,18 @@
       deploy: False
   register: result
 
+- name: Query fabric for creation of Network Object
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.displayName is search('ansible-net13')"
+    - "query_result.response[0].parent.networkId is search('7005')"
+    - "query_result.response[0].parent.vrf is search('Tenant-1')"
+  retries: 5
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -57,22 +65,14 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Create New Network with Deploy
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -85,6 +85,18 @@
       deploy: True
   register: result
 
+- name: Query fabric for creation of Network Object
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.displayName is search('ansible-net13')"
+    - "query_result.response[0].parent.networkId is search('7005')"
+    - "query_result.response[0].parent.vrf is search('Tenant-1')"
+  retries: 5
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -94,22 +106,14 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Create New Network with Attach and global deploy
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -125,6 +129,16 @@
       deploy: True
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -138,22 +152,14 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Create New Network with Attach specific deploy and no global deploy
   cisco.dcnm.dcnm_network: &conf
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -170,6 +176,16 @@
       deploy: False
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -183,10 +199,6 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf
   register: result
@@ -198,16 +210,12 @@
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network: &conf1
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -235,6 +243,17 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -255,10 +274,6 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_network: *conf1
   register: result
@@ -270,16 +285,12 @@
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: MERGED - Create, Attach and Deploy Single Network with Multiple Switch Attach
   cisco.dcnm.dcnm_network: &conf2
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -299,6 +310,16 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -315,10 +336,6 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: MERGED - conf2 - Idempotence
   cisco.dcnm.dcnm_network: *conf2
   register: result
@@ -330,16 +347,12 @@
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: MERGED - Create, Attach and Deploy Multiple Network with Multiple Switch Attach - Automatic Vlan Proposed
   cisco.dcnm.dcnm_network: &conf3
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -372,6 +385,17 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -394,10 +418,6 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_network: *conf3
   register: result
@@ -409,16 +429,12 @@
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: MERGED - Create, Attach and Deploy Single Network with Multiple Switch Attach - Routing Tag Specified
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -439,6 +455,16 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -455,22 +481,14 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Create L2 only networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network: &conf4
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -497,6 +515,16 @@
       deploy: True
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -521,26 +549,23 @@
     - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[0].dhcp_srvr3_vrf == "three"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - conf4 - Idempotence
   cisco.dcnm.dcnm_network: *conf4
   register: result
 
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: MERGED - Create L3 networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network: &conf5
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -551,7 +576,9 @@
       vlan_id: 3504
       gw_ip_subnet: '152.168.30.1/24'
       mtu_l3intf: 7600
-      arp_suppress: True
+      # Leave 'arp_suppress' this false to avoid TCAM issue
+      # Please configure TCAM region for Ingress ARP-Ether ACL before configuring ARP supression
+      arp_suppress: False
       int_desc: 'test interface'
       vlan_name: testvlan
       dhcp_srvr1_ip: '1.1.1.1'
@@ -567,6 +594,16 @@
       deploy: True
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -579,7 +616,7 @@
     - 'result.diff[0].net_name == "ansible-net13"'
     - 'result.diff[0].net_id == 7009'
     - 'result.diff[0].vrf_name == "Tenant-1"'
-    - 'result.diff[0].arp_suppress == true'
+    - 'result.diff[0].arp_suppress == false'
     - 'result.diff[0].int_desc == "test interface"'
     - 'result.diff[0].is_l2only == false'
     - 'result.diff[0].mtu_l3intf == 7600'
@@ -591,22 +628,23 @@
     - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[0].dhcp_srvr3_vrf == "three"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - conf5 - Idempotence
   cisco.dcnm.dcnm_network: *conf5
   register: result
 
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: MERGED - Create L3 networks along with all dhcp, arp options without attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -627,6 +665,16 @@
       dhcp_srvr3_vrf: three
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkName is search('ansible-net13')"
+  retries: 5
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -645,13 +693,9 @@
     - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[0].dhcp_srvr3_vrf == "three"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED -  attach networks to already created network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -662,6 +706,16 @@
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
   register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
 
 - assert:
     that:
@@ -675,13 +729,9 @@
     - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - Query the Network to check for configs
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: query
   register: result
 
@@ -716,12 +766,12 @@
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: MERGED - Create Network with invalid network name
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name:
@@ -742,7 +792,7 @@
 
 - name: MERGED - Create Network with invalid VRF name
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -763,7 +813,7 @@
 
 - name: MERGED - Create Network with invalid vlan id
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -784,7 +834,7 @@
 
 - name: MERGED - Create Network and deploy in invalid switch
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -809,7 +859,7 @@
 
 - name: MERGED - Create Network and deploy in switch with null interface
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -834,7 +884,7 @@
 
 - name: MERGED - Create Network with out of range routing tag
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -856,7 +906,7 @@
 
 - name: MERGED - Create L2 only Network with a vrf name
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -878,7 +928,7 @@
 
 - name: MERGED - Create L3 Network without a vrf name
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -898,7 +948,7 @@
 
 - name: MERGED - Create L3 Network with DHCP server IP alone
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -918,13 +968,9 @@
     - 'result.changed == false'
     - '"Invalid parameters in playbook: DHCP server IP should be specified along with DHCP server VRF" in result.msg'
 
-- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 ##############################################
@@ -933,5 +979,5 @@
 
 - name: MERGED - setup - remove any networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
