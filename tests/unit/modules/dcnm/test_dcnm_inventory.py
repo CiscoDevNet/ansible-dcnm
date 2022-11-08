@@ -39,6 +39,8 @@ class TestDcnmInvModule(TestDcnmModule):
 
     SUCCESS_RETURN_CODE = 200
 
+    version = 11
+
     playbook_merge_switch_config = test_data.get("playbook_merge_switch_config")
     playbook_merge_role_switch_config = test_data.get(
         "playbook_merge_role_switch_config"
@@ -66,6 +68,19 @@ class TestDcnmInvModule(TestDcnmModule):
         "playbook_invalid_discover_payload_config"
     )
     playbook_query_switch_config = test_data.get("playbook_query_switch_config")
+    playbook_poap_switch_config = test_data.get("playbook_poap_switch_config")
+    playbook_poap_role_switch_config = test_data.get("playbook_poap_role_switch_config")
+    playbook_preprovision_switch_config = test_data.get("playbook_preprovision_switch_config")
+    playbook_preprovision_role_switch_config = test_data.get("playbook_preprovision_role_switch_config")
+    playbook_poap_wrong_user_switch_config = test_data.get("playbook_poap_wrong_user_switch_config")
+    playbook_merge_multi_type_switch_config = test_data.get("playbook_merge_multi_type_switch_config")
+    playbook_poap_no_pre_ser_switch_config = test_data.get("playbook_poap_no_pre_ser_switch_config")
+    playbook_poap_no_model_switch_config = test_data.get("playbook_poap_no_model_switch_config")
+    playbook_poap_swap_dcnm11_switch_config = test_data.get("playbook_poap_swap_dcnm11_switch_config")
+    playbook_no_user_switch_config = test_data.get("playbook_no_user_switch_config")
+    playbook_no_ip_deleted_switch_config = test_data.get("playbook_no_ip_deleted_switch_config")
+    playbook_poap_no_merged_query_switch_config = test_data.get("playbook_poap_no_merged_query_switch_config")
+    playbook_poap_swap_switch_config = test_data.get("playbook_poap_swap_switch_config")
 
     # initial merge switch success
     get_have_initial_success = test_data.get("get_have_initial_success")
@@ -124,6 +139,24 @@ class TestDcnmInvModule(TestDcnmModule):
     get_fabric_id_success = test_data.get("get_fabric_id_success")
     config_save_switch_success = test_data.get("config_save_switch_success")
     config_deploy_switch_success = test_data.get("config_deploy_switch_success")
+    get_inventory_query_poap_switch_success = test_data.get(
+        "get_inventory_query_poap_switch_success"
+    )
+    get_inventory_query_poap_success = test_data.get(
+        "get_inventory_query_poap_success"
+    )
+    get_inventory_poap_switch_success = test_data.get(
+        "get_inventory_poap_switch_success"
+    )
+    config_poap_switch_success = test_data.get("config_poap_switch_success")
+    get_inventory_prepro_switch_success = test_data.get(
+        "get_inventory_prepro_switch_success"
+    )
+    config_poap_switch_success = test_data.get("config_poap_switch_success")
+    poap_inv_discover_params = test_data.get("poap_inv_discover_params")
+    get_inventory_merge_multi_type_switch_success = test_data.get(
+        "get_inventory_merge_multi_type_switch_success"
+    )
 
     # initial delete switch success
     get_have_one_switch_success = test_data.get("get_have_one_switch_success")
@@ -191,24 +224,27 @@ class TestDcnmInvModule(TestDcnmModule):
 
     def load_fixtures(self, response=None, device=""):
 
-        self.run_dcnm_version_supported.return_value = 11
+        if self.version == 12:
+            self.run_dcnm_version_supported.return_value = 12
+        else:
+            self.run_dcnm_version_supported.return_value = 11
+
         self.run_dcnm_fabric_details.return_value = {
             "nvPairs": {"GRFIELD_DEBUG_FLAG": "Enable"}
         }
 
         if "get_have_failure" in self._testMethodName:
             self.run_dcnm_send.side_effect = [
-                self.get_have_initial_failure,
                 self.get_have_failure,
             ]
 
         elif "merge_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -226,10 +262,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_role_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -247,10 +283,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_brownfield_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
                 self.get_inventory_initial_switch_success,
@@ -267,9 +303,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_multiple_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.mock_inv_discover109_params,
                 self.mock_inv_discover_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.import_switch_discover_success,
                 self.get_inventory_multiple_switch_success,
@@ -293,9 +329,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "merge_multiple_brownfield_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.mock_inv_discover_params,
                 self.mock_inv_discover107_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.import_switch_discover_success,
                 self.get_inventory_multiple_bf_switch_success,
@@ -315,12 +351,35 @@ class TestDcnmInvModule(TestDcnmModule):
                 self.config_deploy_switch_success,
             ]
 
+        elif "merge_multiple_dcnm12_brown_green_field_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.mock_inv_discover_params,
+                self.mock_inv_discover107_params,
+                self.import_switch_discover_success,
+                self.import_switch_discover_success,
+                self.get_inventory_multiple_bf_gf_switch_success,
+                self.get_inventory_multiple_bf_gf_switch_success,
+                self.rediscover_switch107_success,
+                self.rediscover_switch_success,
+                self.get_inventory_multiple_bf_gf_switch_success,
+                self.get_inventory_multiple_bf_gf_switch_success,
+                self.get_lan_multiple_new_bf_switch_cred_success,
+                self.get_inventory_multiple_bf_gf_switch_success,
+                self.set_assign_role_success,
+                self.set_assign_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
+
         elif "merge_multiple_brown_green_field_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
                 self.mock_inv_discover_params,
                 self.mock_inv_discover107_params,
-                self.get_have_initial_success,
                 self.import_switch_discover_success,
                 self.import_switch_discover_success,
                 self.get_inventory_multiple_bf_gf_switch_success,
@@ -338,6 +397,13 @@ class TestDcnmInvModule(TestDcnmModule):
                 self.get_fabric_id_success,
                 self.config_save_switch_success,
                 self.config_deploy_switch_success,
+            ]
+
+        elif "delete_dcnm12_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_one_switch_success,
+                self.delete_switch_success,
             ]
 
         elif "delete_switch" in self._testMethodName:
@@ -362,6 +428,13 @@ class TestDcnmInvModule(TestDcnmModule):
                 self.delete_switch_success,
             ]
 
+        elif "query_dcnm12_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_one_switch_success,
+                self.get_inventory_query_switch_success,
+            ]
+
         elif "query_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
@@ -379,8 +452,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "override_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_override_switch_success,
+                self.mock_inv_discover_params,
                 self.delete_switch107_success,
                 self.import_switch_discover_success,
                 self.get_inventory_override_switch_success,
@@ -401,8 +474,8 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "migration_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_migration_switch_success,
+                self.mock_inv_discover_params,
                 self.get_inventory_initial_switch_success,
                 self.set_assign_role_success,
                 self.get_inventory_initial_switch_success,
@@ -418,34 +491,33 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "have_initial_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_initial_failure,
             ]
 
         elif "import_switch_discover_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_initial_success,
+                self.mock_inv_discover_params,
                 self.import_switch_discover_failure,
             ]
 
         elif "get_inventory_initial_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_failure,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_failure,
             ]
 
         elif "rediscover_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_failure,
@@ -454,10 +526,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "get_lan_switch_cred_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -469,10 +541,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "set_lan_switch_cred_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -485,10 +557,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "set_assign_role_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -520,10 +592,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "config_save_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -540,10 +612,10 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "config_deploy_switch_failure" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
+                self.get_inventory_initial_switch_success,
                 self.mock_inv_discover_params,
                 self.get_have_initial_success,
                 self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.get_inventory_initial_switch_success,
                 self.rediscover_switch_success,
@@ -572,13 +644,192 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "already_created_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
                 self.get_have_already_created_switch_success,
+                self.mock_inv_discover_params,
             ]
 
         elif "already_deleted_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [self.get_inventory_blank_success]
+
+        elif "query_poap_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_one_switch_success,
+                self.get_inventory_query_poap_switch_success,
+                self.get_inventory_query_poap_success,
+            ]
+
+        elif "poap_dcnm12_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
+                self.config_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.rediscover_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_poap_switch_success,
+                self.set_assign_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
+
+        elif "poap_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
+                self.config_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.rediscover_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_poap_switch_success,
+                self.set_assign_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
+
+        elif "poap_swap_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
+                self.config_poap_switch_success,
+                self.get_inventory_query_poap_success,
+                self.config_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.rediscover_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_poap_switch_success,
+                self.set_assign_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
+
+        elif "poap_role_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
+                self.config_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.rediscover_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_poap_switch_success,
+                self.set_assign_bg_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
+
+        elif "preprovision_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.config_poap_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_prepro_switch_success,
+                self.set_assign_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+            ]
+
+        elif "preprovision_role_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.config_poap_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_inventory_prepro_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_prepro_switch_success,
+                self.set_assign_bg_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+            ]
+
+        elif "poap_wrong_user_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "poap_no_pre_ser_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "poap_no_model_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "poap_swap_dcnm11_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "no_user_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "no_ip_deleted_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "poap_no_merged_query_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "poap_overridden_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "poap_idempotent_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_inventory_merge_multi_type_switch_success,
+            ]
+
+        elif "prepro_idempotent_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_inventory_merge_multi_type_switch_success,
+            ]
+
+        elif "merge_multi_type_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
+                self.poap_inv_discover_params,
+                self.import_switch_discover_success,
+                self.config_poap_switch_success,
+                self.get_inventory_merge_multi_type_switch_success,
+                self.get_inventory_merge_multi_type_switch_success,
+                self.get_inventory_merge_multi_type_switch_success,
+                self.rediscover_switch_success,
+                self.rediscover_switch_success,
+                self.get_inventory_merge_multi_type_switch_success,
+                self.get_inventory_merge_multi_type_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_merge_multi_type_switch_success,
+                self.set_assign_bg_role_success,
+                self.set_assign_bg_role_success,
+                self.set_assign_bg_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
 
         else:
             pass
@@ -987,3 +1238,342 @@ class TestDcnmInvModule(TestDcnmModule):
             result["response"],
             "The queried switch is not part of the fabric configured",
         )
+
+    def test_dcnm_inv_query_poap_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="query",
+                fabric="kharicha-fabric",
+                query_poap="true",
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        self.assertEqual(result["response"][0]["ipAddress"], "192.168.1.217")
+        self.assertEqual(result["response"][0]["switchRole"], "leaf")
+        self.assertEqual(result["response"][1]["model"], "N9K-C9300v")
+        self.assertEqual(result["response"][1]["serialNumber"], "9D2DAUJJFQQ")
+        self.assertEqual(result["response"][1]["version"], "9.3(7)")
+
+    def test_dcnm_inv_poap_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_poap_role_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_role_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(result["response"][3]["DATA"]["newRole"], "border gateway")
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_preprovision_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_preprovision_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_preprovision_role_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_preprovision_role_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(result["response"][1]["DATA"]["newRole"], "border gateway")
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_poap_wrong_user_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_wrong_user_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "For poap configuration, supported user_name is 'admin'",
+        )
+
+    def test_dcnm_inv_poap_merge_multi_type_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_merge_multi_type_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+
+    def test_dcnm_inv_poap_no_pre_ser_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_no_pre_ser_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "Please provide 'serial_number' for bootstrap or 'preprovision_serial' for preprovision",
+        )
+
+    def test_dcnm_inv_poap_no_model_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_no_model_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "model, version, hostname and config_data must be provided for Preprovisioning/Bootstraping a switch",
+        )
+
+    def test_dcnm_inv_poap_swap_dcnm11_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_swap_dcnm11_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "Serial number swap is not supported in DCNM version 11",
+        )
+
+    def test_dcnm_inv_no_user_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_no_user_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "seed ip/user name and password are mandatory under inventory parameters",
+        )
+
+    def test_dcnm_inv_poap_no_merged_query_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "'merged' and 'query' are only supported states for POAP",
+        )
+
+    def test_dcnm_inv_no_ip_deleted_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="kharicha-fabric",
+                config=self.playbook_no_ip_deleted_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "seed ip is mandatory under inventory parameters for switch deletion",
+        )
+
+    def test_dcnm_inv_poap_overridden_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "'merged' and 'query' are only supported states for POAP",
+        )
+
+    def test_dcnm_inv_poap_idempotent_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(
+            result.get("response"),
+            "The switch provided is already part of the fabric and cannot be created again",
+        )
+
+    def test_dcnm_inv_prepro_idempotent_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_preprovision_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(
+            result.get("response"),
+            "The switch provided is already part of the fabric and cannot be created again",
+        )
+
+    def test_dcnm_inv_merge_multiple_dcnm12_brown_green_field_switch_fabric(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_merge_bf_gf_multiple_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.version = 11
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_delete_dcnm12_switch_fabric(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="kharicha-fabric",
+                config=self.playbook_delete_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.version = 11
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_query_dcnm12_switch_fabric(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="query",
+                fabric="kharicha-fabric",
+                config=self.playbook_query_switch_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.version = 11
+
+        self.assertEqual(result["response"][0]["ipAddress"], "192.168.1.110")
+        self.assertEqual(result["response"][0]["switchRole"], "leaf")
+
+    def test_dcnm_inv_poap_dcnm12_switch_fabric(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.version = 11
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_poap_swap_switch_fabric(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_swap_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.version = 11
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")

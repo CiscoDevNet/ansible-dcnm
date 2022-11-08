@@ -16,7 +16,7 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Karthik Babu Harichandra Babu"
+__author__ = "Karthik Babu Harichandra Babu, Praveen Ramoorthy"
 
 DOCUMENTATION = """
 ---
@@ -25,7 +25,7 @@ short_description: Add and remove Switches from a DCNM managed VXLAN fabric.
 version_added: "0.9.0"
 description:
     - "Add and remove Switches from a DCNM managed VXLAN fabric."
-author: Karthik Babu Harichandra Babu(@kharicha)
+author: Karthik Babu Harichandra Babu(@kharicha), Praveen Ramoorthy(@praveenramoorthy)
 options:
   fabric:
     description:
@@ -35,6 +35,7 @@ options:
   state:
     description:
     - The state of DCNM after module completion.
+      'merged' and 'query' are the only states supported for POAP
     type: str
     choices:
       - merged
@@ -56,13 +57,16 @@ options:
         required: true
       auth_proto:
         description:
-        - Name of the authentication protocol to be used
+        - Name of the authentication protocol to be used.
+          For POAP configurations authentication protocol should be 'MD5'.
         choices: ['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES']
         type: str
-        required: true
+        required: false
+        default: 'MD5'
       user_name:
         description:
-        - Login username to the switch
+        - Login username to the switch.
+          For POAP configurations username should be 'admin'
         type: str
         required: true
       password:
@@ -74,20 +78,85 @@ options:
         description:
         - Maximum Hops to reach the switch
         type: str
-        required: true
+        required: false
+        default: 0
       role:
         description:
         - Role which needs to be assigned to the switch
         choices: ['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
                  'super_spine', 'border_super_spine', 'border_gateway_super_spine']
         type: str
-        required: true
+        required: false
         default: leaf
-      preserve_configs:
+      preserve_config:
         description:
         - Set this to false for greenfield deployment and true for brownfield deployment
-        type: str
-        required: true
+        type: bool
+        required: false
+        default: false
+      poap:
+        description:
+        - Configurations of switch to Bootstrap/Pre-provision.
+          Please note that POAP and DHCP configurations needs to enabled in fabric configuration
+          before adding/preprovisioning switches through POAP.
+          Idempotence checks against inventory is only for 'IP Address' for Preprovision configs.
+          Idempotence checks against inventory is only for 'IP Address' and 'Serial Number' for Bootstrap configs.
+        type: list
+        elements: dict
+        suboptions:
+          serial_number:
+            description:
+            - Serial number of switch to Bootstrap.
+              When 'preprovision_serial' is provided along with 'serial_number',
+              then the Preprovisioned switch(with serial number as in 'preprovision_serial') will be swapped
+              with a actual switch(with serial number in 'serial_number') through bootstrap.
+              Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.
+            type: str
+            required: false
+          preprovision_serial:
+            description:
+            - Serial number of switch to Pre-provision.
+              When 'preprovision_serial' is provided along with 'serial_number',
+              then the Preprovisioned switch(with serial number as in 'preprovision_serial') will be swapped
+              with a actual switch(with serial number in 'serial_number') through bootstrap.
+              Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.
+            type: str
+            required: false
+          model:
+            description:
+            - Model of switch to Bootstrap/Pre-provision.
+            type: str
+            required: false
+          version:
+            description:
+            - Software version of switch to Bootstrap/Pre-provision.
+            type: str
+            required: false
+          hostname:
+            description:
+            - Hostname of switch to Bootstrap/Pre-provision.
+            type: str
+            required: false
+          image_policy:
+            description:
+            - Name of the image policy to be applied on switch during Bootstrap/Pre-provision.
+            type: str
+            required: false
+          config_data:
+            description:
+            - Basic config data of switch to Bootstrap/Pre-provision.
+              'modulesModel' and 'gateway' parameters are mandatory.
+              'modulesModel' is list of model of modules in switch to Bootstrap/Pre-provision.
+              'gateway' is the gateway IP with mask for the switch to Bootstrap/Pre-provision.
+              For other supported config data please refer to NDFC/DCNM configuration guide.
+            type: dict
+            required: false
+  query_poap:
+    description:
+    - Query for Bootstrap(POAP) capable switches available.
+    type: bool
+    required: false
+    default: false
 """
 
 EXAMPLES = """
@@ -176,6 +245,114 @@ EXAMPLES = """
       role: leaf
       preserve_config: False # boolean, default is  true
 
+# The following task will enable Bootstrap and DHCP on an existing fabric.
+# Please note that only bootstrap and DHCP configs are present in the below example.
+# You have to add other existing fabric configs to the task.
+- name: Bootstrap and DHCP Configuration
+  cisco.dcnm.dcnm_rest:
+    method: PUT
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/vxlan-fabric
+    json_data: '{"fabricId": "FABRIC-7","fabricName": "vxlan-fabric","id": 7,"nvPairs":{...,"BOOTSTRAP_ENABLE": true,"DHCP_ENABLE": true,"DHCP_IPV6_ENABLE": "DHCPv4","DHCP_START": "192.168.1.10", "DHCP_END": "192.168.1.20","MGMT_GW": "192.168.123.1","MGMT_PREFIX": "24",...},"templateName": "Easy_Fabric"}' # noqa
+
+# The following switch will be Bootstrapped and merged into the existing fabric
+- name: Poap switch Configuration
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+    # All the values below are mandatory if poap configuration is being done - state is merged
+    - seed_ip: 192.168.0.5
+      user_name: switch_username
+      password: switch_password
+      role: border_gateway
+      poap:
+        - serial_number: 2A3BCDEFJKL
+          model: 'N9K-C9300v'
+          version: '9.3(7)'
+          hostname: 'POAP_SWITCH'
+          image_policy: "poap_image_policy"
+          config_data:
+            modulesModel: [N9K-X9364v, N9K-vSUP]
+            gateway: 192.168.0.1/24
+
+# The following switch will be Pre-provisioned and merged into the existing fabric
+- name: Pre-provision switch Configuration
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+    # All the values below are mandatory if poap configuration is being done - state is merged
+    - seed_ip: 192.168.0.4
+      user_name: switch_username
+      password: switch_password
+      role: border
+      poap:
+        - preprovision_serial: 1A2BCDEFGHI
+          model: 'N9K-C9300v'
+          version: '9.3(7)'
+          hostname: 'PREPRO_SWITCH'
+          image_policy: "prepro_image_policy"
+          config_data:
+            modulesModel: [N9K-X9364v, N9K-vSUP]
+            gateway: 192.168.0.1/24
+
+- name: Poap, Pre-provision and existing switch Configuration
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+    - seed_ip: 192.168.0.2
+      user_name: switch_username
+      password: switch_password
+      role: border_gateway
+      poap:
+        - serial_number: 2A3BCDEFGHI
+          model: 'N9K-C9300v'
+          version: '9.3(7)'
+          hostname: 'POAP_SWITCH'
+          image_policy: "poap_image_policy"
+          config_data:
+            modulesModel: [N9K-X9364v, N9K-vSUP]
+            gateway: 192.168.0.1/24
+    - seed_ip: 192.168.0.3
+      user_name: switch_username
+      password: switch_password
+      auth_proto: MD5
+      max_hops: 0
+      preserve_config: False
+      role: spine
+    - seed_ip: 192.168.0.4
+      user_name: switch_username
+      password: switch_password
+      role: border
+      poap:
+        - preprovision_serial: 1A2BCDEFGHI
+          model: 'N9K-C9300v'
+          version: '9.3(7)'
+          hostname: 'PREPRO_SWITCH'
+          image_policy: "prepro_image_policy"
+          config_data:
+            modulesModel: [N9K-X9364v, N9K-vSUP]
+            gateway: 192.168.0.1/24
+
+# The following pre-provisioned switch will be swapped with actual switch in the existing fabric
+# No Need to provide any other parameters for swap operation as bootstrap will inherit the preprovision configs
+# If other parameters are provided it will be overidden with preprovision switch configs
+# This swap feature is supported only in NDFC and not on DCNM 11.x versions
+- name: Pre-provision switch Configuration
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+    # All the values below are mandatory if poap configuration is being done - state is merged
+    - seed_ip: 192.168.0.4
+      user_name: switch_username
+      password: switch_password
+      role: border
+      poap:
+        - preprovision_serial: 1A2BCDEFGHI
+          serial_number: 2A3BCDEFGHI
+
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches
   cisco.dcnm.dcnm_inventory:
@@ -198,6 +375,14 @@ EXAMPLES = """
   cisco.dcnm.dcnm_inventory:
     fabric: vxlan-fabric
     state: query # merged / deleted / overridden / query
+
+# All the existing switches along with available Bootstrap(POAP)
+# will be queried in the existing fabric
+- name: Query all the switches in the fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / query
+    query_poap: True
 """
 
 import time
@@ -226,12 +411,14 @@ class DcnmInventory:
         self.validated = []
         self.have_create = []
         self.want_create = []
+        self.want_create_poap = []
         self.diff_create = []
         self.diff_save = {}
         self.diff_delete = {}
         self.query = []
         self.node_migration = False
         self.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
+        self.switch_snos = []
 
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -239,6 +426,91 @@ class DcnmInventory:
         self.fabric_details = get_fabric_details(self.module, self.fabric)
 
         self.nd = True if self.controller_version >= 12 else False
+
+    def discover_poap_params(self, poap_upd, poap):
+
+        for have_c in self.have_create:
+            # Idempotence - Bootstrap but already in inventory
+            if poap_upd["serialNumber"]:
+                if (
+                    poap_upd["ipAddress"] == have_c["switches"][0]["ipaddr"]
+                    and poap_upd["serialNumber"] == have_c["switches"][0]["serialNumber"]
+                ):
+                    return {}
+
+            # Idempotence - Preprovision but already in inventory
+            if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
+                if (
+                    poap_upd["ipAddress"] == have_c["switches"][0]["ipaddr"]
+                ):
+                    return {}
+
+        # Preprovision case
+        if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
+            return poap_upd
+
+        method = "GET"
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(
+            self.fabric
+        )
+        if self.nd:
+            path = self.nd_prefix + path
+        response = dcnm_send(self.module, method, path)
+        self.result["response"].append(response)
+        fail, self.result["changed"] = self.handle_response(response, "query")
+
+        if fail:
+            self.module.fail_json(msg=response)
+
+        if "DATA" in response:
+            for resp in response["DATA"]:
+                if (resp["serialNumber"] == poap["serial_number"]):
+                    if self.nd:
+                        poap_upd.update({"publicKey": resp["publicKey"]})
+                        poap_upd.update({"reAdd": resp["reAdd"]})
+                        poap_upd.update({"fingerprint": resp["fingerprint"]})
+                        if poap["image_policy"]:
+                            poap_upd.update({"imagePolicy": poap["image_policy"]})
+                        else:
+                            poap_upd.update({"imagePolicy": ""})
+                        # poap_upd.update({"role": "leaf"})
+                    return poap_upd
+
+        msg = "Specified switch {0}".format(
+            poap["serial_number"] + " is not listed in bootstrap devices or inventory. " +
+            "If you are trying to pre-provision, please set " +
+            "'preprovision_serial' instead of 'serial_number' in your task")
+
+        self.module.fail_json(msg)
+
+    def update_poap_params(self, inv, poap):
+
+        s_ip = "None"
+        if inv["seed_ip"]:
+            s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
+
+        state = self.params["state"]
+
+        if state == "merged":
+            poap_upd = {
+                "ipAddress": s_ip,
+                "discoveryAuthProtocol": "0",
+                "password": inv["password"],
+                "hostname": poap["hostname"],
+                "model": poap["model"],
+                "serialNumber": poap["serial_number"],
+                "version": poap["version"],
+                "data": json.dumps(poap["config_data"]),
+                "role": inv["role"].replace(" ", "_"),
+                "preprovisionSerial": poap["preprovision_serial"],
+            }
+
+            poap_upd = self.discover_poap_params(poap_upd, poap)
+
+            if poap_upd.get("serialNumber"):
+                self.switch_snos.append(poap_upd["serialNumber"])
+
+        return poap_upd
 
     def update_discover_params(self, inv):
 
@@ -362,17 +634,24 @@ class DcnmInventory:
     def get_want(self):
 
         want_create = []
+        want_create_poap = []
 
         if not self.config:
             return
 
         for inv in self.validated:
-            want_create.append(self.update_create_params(inv))
+            if inv.get("poap"):
+                create_poap = self.update_poap_params(inv, inv["poap"][0])
+                if create_poap:
+                    want_create_poap.append(create_poap)
+            else:
+                want_create.append(self.update_create_params(inv))
 
-        if not want_create:
+        if not want_create and not want_create_poap:
             return
 
         self.want_create = want_create
+        self.want_create_poap = want_create_poap
 
     def get_diff_override(self):
 
@@ -450,11 +729,9 @@ class DcnmInventory:
 
         for want_c in self.want_create:
             found = False
+            match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
+            serial_num = match.groups()[0]
             for have_c in self.have_create:
-                match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
-                if match is None:
-                    continue
-                serial_num = match.groups()[0]
                 if (
                     want_c["switches"][0]["ipaddr"] == have_c["switches"][0]["ipaddr"]
                     and serial_num == have_c["switches"][0]["serialNumber"]
@@ -472,6 +749,7 @@ class DcnmInventory:
                     if have_c["switches"][0]["mode"] == "Migration":
                         # Switch is already discovered using DCNM GUI
                         # Perform assign-role/config-save/config-deploy
+                        self.switch_snos.append(serial_num)
                         self.node_migration = True
                         diff_create.append(want_c)
                         self.diff_create = diff_create
@@ -492,6 +770,7 @@ class DcnmInventory:
                         self.config_deploy()
 
             if not found:
+                self.switch_snos.append(serial_num)
                 diff_create.append(want_c)
 
         self.diff_create = diff_create
@@ -500,6 +779,13 @@ class DcnmInventory:
         """Parse the playbook values, validate to param specs."""
 
         state = self.params["state"]
+        query_poap = self.params["query_poap"]
+
+        if query_poap is True and state != "query":
+            msg = "query_poap: should not be set 'True' for state {0}".format(
+                state
+            )
+            self.module.fail_json(msg=msg)
 
         if state == "merged" or state == "overridden":
 
@@ -529,6 +815,17 @@ class DcnmInventory:
                     default="leaf",
                 ),
                 preserve_config=dict(type="bool", default=False),
+                poap=dict(type="list"),
+            )
+
+            poap_spec = dict(
+                serial_number=dict(type="str", default=""),
+                preprovision_serial=dict(type="str", default=""),
+                model=dict(type="str", default=""),
+                version=dict(type="str", default=""),
+                hostname=dict(type="str", default=""),
+                config_data=dict(type="dict", default={}),
+                image_policy=dict(type="str", default="")
             )
 
             msg = None
@@ -540,7 +837,23 @@ class DcnmInventory:
                         or "password" not in inv
                     ):
                         msg = "seed ip/user name and password are mandatory under inventory parameters"
-
+                        break
+                    if "poap" in inv:
+                        if state != "merged":
+                            msg = "'merged' and 'query' are only supported states for POAP"
+                        if inv["user_name"] != "admin":
+                            msg = "For poap configuration, supported user_name is 'admin'"
+                        if inv["poap"][0].get("serial_number") is None and inv["poap"][0].get("preprovision_serial") is None:
+                            msg = "Please provide 'serial_number' for bootstrap or 'preprovision_serial' for preprovision"
+                        if ((inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") is None) or
+                           (inv["poap"][0].get("preprovision_serial") and inv["poap"][0].get("serial_number") is None)):
+                            if (inv["poap"][0].get("model") is None or inv["poap"][0].get("version") is None or
+                               inv["poap"][0].get("hostname") is None or not inv["poap"][0]["config_data"]):
+                                msg = "model, version, hostname and config_data must be provided for {0}".format(
+                                    "Preprovisioning/Bootstraping a switch"
+                                )
+                        if inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") and not self.nd:
+                            msg = "Serial number swap is not supported in DCNM version 11"
             else:
                 if state == "merged":
                     msg = "config: element is mandatory for this state {0}".format(
@@ -555,6 +868,13 @@ class DcnmInventory:
                     self.config, inv_spec, self.module
                 )
                 for inv in valid_inv:
+                    if inv.get("poap"):
+                        valid_poap, invalid_poap = validate_list_of_dicts(
+                            inv["poap"], poap_spec, self.module
+                        )
+                        invalid_params.extend(invalid_poap)
+                        inv["poap"] = valid_poap
+
                     self.validated.append(inv)
 
                 if invalid_params:
@@ -572,6 +892,8 @@ class DcnmInventory:
                 for inv in self.config:
                     if "seed_ip" not in inv:
                         msg = "seed ip is mandatory under inventory parameters for switch deletion"
+                    if "poap" in inv:
+                        msg = "'merged' and 'query' are only supported states for POAP"
 
             if msg:
                 self.module.fail_json(msg=msg)
@@ -686,10 +1008,11 @@ class DcnmInventory:
             # even if the GRFIELD_DEBUG_FLAG is enabled so this needs to be
             # checked first.
             for switch in inv_data.get("DATA"):
-                if switch["mode"].lower() == "migration":
-                    # At least one switch is still in migration mode
-                    # so not ready to continue
-                    return False
+                for snos in self.switch_snos:
+                    if snos == switch["serialNumber"] and switch["mode"].lower() == "migration":
+                        # At least one switch is still in migration mode
+                        # so not ready to continue
+                        return False
 
             # Check # 2
             # The fabric has a setting to prevent reload for greenfield
@@ -704,11 +1027,12 @@ class DcnmInventory:
             # moves to unmanagable but we need to wait for this to allow enough time
             # for the reload to completed.
             for switch in inv_data.get("DATA"):
-                if not switch["managable"]:
-                    # We found our first switch that changed state to
-                    # unmanageable because it's reloading.  Now we can
-                    # continue
-                    return True
+                for snos in self.switch_snos:
+                    if snos == switch["serialNumber"] and not switch["managable"]:
+                        # We found our first switch that changed state to
+                        # unmanageable because it's reloading.  Now we can
+                        # continue
+                        return True
 
             # We still have not detected a swich is reloading so return False
             return False
@@ -716,9 +1040,10 @@ class DcnmInventory:
         def switches_managable(inv_data):
             managable = True
             for switch in inv_data["DATA"]:
-                if not switch["managable"]:
-                    managable = False
-                    break
+                for snos in self.switch_snos:
+                    if snos == switch["serialNumber"] and not switch["managable"]:
+                        managable = False
+                        break
 
             return managable
 
@@ -730,10 +1055,10 @@ class DcnmInventory:
         # we don't need to loop.
         all_brownfield_switches = True
         for switch in self.config:
-            if not switch["preserve_config"]:
+            if not switch.get("preserve_config", True):
                 all_brownfield_switches = False
 
-        while attempt < total_attempts and not all_brownfield_switches:
+        while attempt < total_attempts and not all_brownfield_switches and self.switch_snos:
 
             # Don't error out.  We might miss the status change so worst case
             # scenario is that we loop 300 times and then bail out.
@@ -771,7 +1096,9 @@ class DcnmInventory:
             break
 
         for inv in get_inv["DATA"]:
-            self.rediscover_switch(inv["serialNumber"])
+            for snos in self.switch_snos:
+                if snos == inv["serialNumber"]:
+                    self.rediscover_switch(inv["serialNumber"])
 
     def all_switches_ok(self):
 
@@ -790,9 +1117,10 @@ class DcnmInventory:
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
         for inv in get_inv["DATA"]:
-            if inv["status"] != "ok":
-                all_ok = False
-                self.rediscover_switch(inv["serialNumber"])
+            for snos in self.switch_snos:
+                if snos == inv["serialNumber"] and inv["status"] != "ok":
+                    all_ok = False
+                    self.rediscover_switch(inv["serialNumber"])
 
         return all_ok
 
@@ -811,6 +1139,7 @@ class DcnmInventory:
 
     def lancred_all_switches(self):
 
+        want_list = []
         # Get Fabric Inventory Details
         method = "GET"
         path = "/fm/fmrest/lanConfig/getLanSwitchCredentials"
@@ -850,6 +1179,7 @@ class DcnmInventory:
 
     def assign_role(self):
 
+        want_list = []
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
         if self.nd:
@@ -865,7 +1195,7 @@ class DcnmInventory:
         if not get_role.get("DATA"):
             return
 
-        for create in self.want_create:
+        for create in self.diff_create:
             for role in get_role["DATA"]:
                 if not role["switchDbID"]:
                     msg = "Unable to get SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
@@ -887,10 +1217,37 @@ class DcnmInventory:
                     if fail:
                         self.failure(response)
 
+        for create in self.want_create_poap:
+            for role in get_role["DATA"]:
+                if not role["switchDbID"]:
+                    msg = "Unable to get SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
+                        self.fabric
+                    )
+                    self.module.fail_json(msg=msg)
+                if role["ipAddress"] == create["ipAddress"]:
+                    method = "PUT"
+                    path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
+                        role["switchDbID"], create["role"].replace("_", "%20")
+                    )
+                    if self.nd:
+                        path = self.nd_prefix + "/" + path[6:]
+                    response = dcnm_send(self.module, method, path)
+                    self.result["response"].append(response)
+                    fail, self.result["changed"] = self.handle_response(
+                        response, "create"
+                    )
+                    if fail:
+                        self.failure(response)
+
     def config_save(self):
 
         success = False
         no_of_tries = 3
+
+        # NDFC/DCNM return error when we config-save a fabric with single Pre-provisioned switch.
+        if not self.have_create and not self.want_create:
+            if len(self.want_create_poap) == 1 and not self.switch_snos:
+                return
 
         for x in range(0, no_of_tries):
             # Get Fabric ID
@@ -950,17 +1307,22 @@ class DcnmInventory:
     def config_deploy(self):
 
         # config-deploy
+        sernos = []
         method = "POST"
         path = "/rest/control/fabrics/{0}".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
-        path = path + "/config-deploy"
-        response = dcnm_send(self.module, method, path)
-        self.result["response"].append(response)
-        fail, self.result["changed"] = self.handle_response(response, "create")
+        path = path + "/config-deploy/"
 
-        if fail:
-            self.failure(response)
+        switches = ",".join(self.switch_snos)
+        if switches:
+            path = path + switches
+            response = dcnm_send(self.module, method, path)
+            self.result["response"].append(response)
+            fail, self.result["changed"] = self.handle_response(response, "create")
+
+            if fail:
+                self.failure(response)
 
     def delete_switch(self):
 
@@ -980,6 +1342,7 @@ class DcnmInventory:
     def get_diff_query(self):
 
         query = []
+        query_poap = self.params["query_poap"]
 
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
@@ -1002,10 +1365,10 @@ class DcnmInventory:
             msg2 = "Unable to find inventories under fabric: {0}".format(self.fabric)
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-        if not inv_objects["DATA"]:
+        if not inv_objects["DATA"] and not query_poap:
             return
 
-        if self.config:
+        if self.config and inv_objects["DATA"]:
             for want_c in self.want_create:
                 for inv in inv_objects["DATA"]:
                     if want_c["role"] == "None" and want_c["seedIP"] != "None":
@@ -1026,7 +1389,99 @@ class DcnmInventory:
             for inv in inv_objects["DATA"]:
                 query.append(inv)
 
+        if query_poap is True:
+            method = "GET"
+            path = "/rest/control/fabrics/{0}/inventory/poap".format(self.fabric)
+            if self.nd:
+                path = self.nd_prefix + path
+            poap_objects = dcnm_send(self.module, method, path)
+            missing_fabric, not_ok = self.handle_response(poap_objects, "query_dcnm")
+
+            if (
+                poap_objects.get("ERROR") == "Not Found"
+                and poap_objects.get("RETURN_CODE") == 404
+            ):
+                self.module.fail_json(
+                    msg="Fabric {0} not present on DCNM".format(self.fabric)
+                )
+                return
+
+            if missing_fabric or not_ok:
+                msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
+                msg2 = "Unable to find inventories under fabric: {0}".format(self.fabric)
+                self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+            if poap_objects["DATA"]:
+                for poap in poap_objects["DATA"]:
+                    query.append(poap)
+
         self.query = query
+
+    def swap_serial(self, poap):
+
+        method = "POST"
+        swap_path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{0}/swapSN/{1}/{2}".format(
+                    self.fabric, poap["preprovisionSerial"], poap["serialNumber"]
+        )
+        response = dcnm_send(self.module, method, swap_path)
+        self.result["response"].append(response)
+        fail, self.result["changed"] = self.handle_response(response, "create_poap")
+
+        if fail:
+            self.failure(response)
+
+        method = "GET"
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(
+            self.fabric
+        )
+        if self.nd:
+            path = self.nd_prefix + path
+        response = dcnm_send(self.module, method, path)
+        self.result["response"].append(response)
+        fail, self.result["changed"] = self.handle_response(response, "query")
+
+        if fail:
+            self.module.fail_json(msg=response)
+
+        if "DATA" in response:
+            for resp in response["DATA"]:
+                if (resp["serialNumber"] == poap["serialNumber"]):
+                    resp.update({"password": poap["password"]})
+                    resp.update({"discoveryAuthProtocol": "0"})
+                    resp.pop("seedSwitchFlag")
+                    return resp
+
+        msg = "Specified switch {0}".format(
+            poap["serial_number"] + " is not listed in bootstrap devices or inventory. " +
+            "If you are trying to pre-provision, please set " +
+            "'preprovision_serial' instead of 'serial_number' in your task")
+
+        self.module.fail_json(msg=response)
+
+    def poap_config(self):
+
+        method = "POST"
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        if self.want_create_poap:
+            poap_list = copy.deepcopy(self.want_create_poap)
+
+            for i in range(len(poap_list)):
+                poap_list[i].pop("role")
+                if self.nd and poap_list[i]["serialNumber"] and poap_list[i]["preprovisionSerial"]:
+                    poap_list[i] = self.swap_serial(poap_list[i])
+                if not poap_list[i]["serialNumber"] and poap_list[i]["preprovisionSerial"]:
+                    poap_list[i]["serialNumber"] = poap_list[i]["preprovisionSerial"]
+                if "preprovisionSerial" in poap_list[i]:
+                    poap_list[i].pop("preprovisionSerial")
+
+            response = dcnm_send(self.module, method, path, json.dumps(poap_list))
+            self.result["response"].append(response)
+            fail, self.result["changed"] = self.handle_response(response, "create_poap")
+
+            if fail:
+                self.failure(response)
 
     def handle_response(self, res, op):
 
@@ -1077,14 +1532,15 @@ def main():
         state=dict(
             default="merged", choices=["merged", "overridden", "deleted", "query"]
         ),
+        query_poap=dict(type="bool", default=False)
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     dcnm_inv = DcnmInventory(module)
     dcnm_inv.validate_input()
-    dcnm_inv.get_want()
     dcnm_inv.get_have()
+    dcnm_inv.get_want()
 
     if module.params["state"] == "merged":
         dcnm_inv.get_diff_merge()
@@ -1106,7 +1562,7 @@ def main():
             "response"
         ] = "The switch provided is not part of the fabric and cannot be deleted"
 
-    if not dcnm_inv.diff_create and module.params["state"] == "merged":
+    if not dcnm_inv.diff_create and module.params["state"] == "merged" and not dcnm_inv.want_create_poap:
         dcnm_inv.result["changed"] = False
         dcnm_inv.result[
             "response"
@@ -1128,7 +1584,7 @@ def main():
             "response"
         ] = "The queried switch is not part of the fabric configured"
 
-    if dcnm_inv.diff_create or dcnm_inv.diff_delete:
+    if dcnm_inv.diff_create or dcnm_inv.diff_delete or dcnm_inv.want_create_poap:
         dcnm_inv.result["changed"] = True
     else:
         module.exit_json(**dcnm_inv.result)
@@ -1145,12 +1601,13 @@ def main():
 
     # Discover & Register Switch
     if not dcnm_inv.node_migration:
-
-        if dcnm_inv.diff_create:
+        if dcnm_inv.diff_create or dcnm_inv.want_create_poap:
 
             # Step 1
             # Import all switches
             dcnm_inv.import_switches()
+
+            dcnm_inv.poap_config()
 
             # Step 2
             # Rediscover all switches

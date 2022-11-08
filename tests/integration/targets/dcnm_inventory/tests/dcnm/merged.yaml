@@ -178,6 +178,11 @@
   cisco.dcnm.dcnm_inventory: *conf_role
   register: result
 
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+
 - name: MERGED - setup - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
