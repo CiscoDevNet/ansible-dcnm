@@ -37,7 +37,7 @@
 
 - assert:
     that:
-    - "result.response[0].parent.networkTemplateConfig.mcastGroup is search('239.1.1.1')"
+    - "result.response[0].parent.networkTemplateConfig.mcastGroup is search('239.1.1.1|239.1.1.0')"
 
 - name: Change mcast parameter values
   cisco.dcnm.dcnm_network:

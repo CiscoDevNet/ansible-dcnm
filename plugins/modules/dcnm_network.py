@@ -2014,6 +2014,16 @@ class DcnmNetwork:
             resp = dcnm_send(
                 self.module, method, deploy_path, json.dumps(self.diff_undeploy)
             )
+            # Use the self.wait_for_del_ready() function to refresh the state
+            # of self.diff_delete dict and re-attempt the undeploy action if
+            # the state of the network is "OUT-OF-SYNC"
+            self.wait_for_del_ready()
+            for net, state in self.diff_delete.items():
+                if state == "OUT-OF-SYNC":
+                    resp = dcnm_send(
+                        self.module, method, deploy_path, json.dumps(self.diff_undeploy)
+                    )
+
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
             if fail:
@@ -2040,12 +2050,12 @@ class DcnmNetwork:
                     self.failure(resp)
 
         if del_failure:
-            resp = "Deletion of Networkss {0} has failed".format(del_failure[:-1])
+            fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
             self.result["response"].append(resp)
             if is_rollback:
                 self.failed_to_rollback = True
                 return
-            self.failure(resp)
+            self.failure(fail_msg)
 
         if self.diff_create:
             for net in self.diff_create:
@@ -2174,7 +2184,7 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4", default=""),
+                multicast_group_address=dict(type="ipv4", default="239.1.1.0"),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2238,7 +2248,7 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4", default=""),
+                multicast_group_address=dict(type="ipv4", default="239.1.1.0"),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2397,6 +2407,9 @@ class DcnmNetwork:
             msg1 = "SUCCESS - Attempted rollback of the task has succeeded"
 
         res = copy.deepcopy(resp)
+        if isinstance(res, str):
+            self.module.fail_json(msg=res)
+
         res.update({"ROLLBACK_RESULT": msg1})
 
         if not resp.get("DATA"):
