@@ -150,7 +150,7 @@
         "ipv4_mask_len": 24,
         "mode": "vlan",
         "mtu": 9216,
-        "netflow_monitor": "svi1001",
+        "netflow_monitor": "",
         "preempt": true,
         "route_tag": 1001,
         "vrf_dhcp1": "blue",

@@ -42,7 +42,7 @@
           "serialNumber": "SAL1819SAN8"
         }
         ],
-        "policy": "int_vlan_11_1",
+        "policy": "int_vlan",
         "skipResourceCheck": "false"
       }],
     "RETURN_CODE": 200,

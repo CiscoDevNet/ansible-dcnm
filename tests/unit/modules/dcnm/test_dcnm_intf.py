@@ -3418,7 +3418,6 @@ class TestDcnmIntfModule(TestDcnmModule):
         ovr_if_names = ["vlan1010"]
 
         for intf in result["diff"][0]["deleted"]:
-            self.log_msg(f"IF = {intf['ifName']}\n")
             self.assertEqual((intf["ifName"].lower() in del_if_names), True)
 
         for d in result["diff"][0]["replaced"]:
