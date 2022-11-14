@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f interface.log
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -29,7 +29,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po333                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -37,7 +37,7 @@
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -48,7 +48,7 @@
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
@@ -57,7 +57,7 @@
               ipv4_addr: 193.168.2.1          # ipv4 address for the loopback interface
 
           - name: vpc100                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
@@ -131,7 +131,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po333                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -139,7 +139,7 @@
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -150,7 +150,7 @@
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
@@ -159,7 +159,7 @@
               ipv4_addr: 193.168.2.1          # ipv4 address for the loopback interface
 
           - name: vpc100                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
@@ -238,7 +238,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po333                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -246,7 +246,7 @@
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -257,7 +257,7 @@
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
@@ -266,7 +266,7 @@
               ipv4_addr: 193.168.2.1          # ipv4 address for the loopback interface
 
           - name: vpc100                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"

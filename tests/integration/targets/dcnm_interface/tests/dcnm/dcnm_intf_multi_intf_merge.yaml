@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f interface.log
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -30,7 +30,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -47,7 +47,7 @@
               description: "eth interface  acting as trunk"
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
@@ -63,7 +63,7 @@
               description: "loopback interface 100 configuration"
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -103,7 +103,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -120,7 +120,7 @@
               description: "eth interface  acting as trunk"
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
@@ -136,7 +136,7 @@
               description: "loopback interface 100 configuration"
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -184,7 +184,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -203,7 +203,7 @@
               description: "port channel acting as trunk"
 
           - name: po310                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -238,7 +238,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -269,7 +269,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -310,7 +310,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po310                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -345,7 +345,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po310                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -390,7 +390,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vpc750                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
             deploy: true                      # choose from [true, false]
@@ -437,7 +437,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vpc750                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
             deploy: true                      # choose from [true, false]

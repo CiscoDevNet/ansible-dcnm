@@ -872,6 +872,29 @@
       "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
       "DATA": [
       {
+        "ifName": "vlan2001",
+        "mode": "vlan",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_VLAN",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "False",
+        "alias": "",
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      },
+      {
         "ifName": "port-channel1000",
         "mode": "access",
         "serialNo": "SAL1819SAN8",
@@ -1128,4 +1151,5 @@
       "RETURN_CODE": 200,
       "METHOD": "GET"
   }
+
 }

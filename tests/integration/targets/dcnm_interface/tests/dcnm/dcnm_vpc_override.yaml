@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f interface.log
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -30,7 +30,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vpc750                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
@@ -54,7 +54,7 @@
               peer2_description: "VPC acting as trunk peer2"
 
           - name: vpc751                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
@@ -103,7 +103,7 @@
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vpc752                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
