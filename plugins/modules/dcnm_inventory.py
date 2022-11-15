@@ -35,7 +35,7 @@ options:
   state:
     description:
     - The state of DCNM after module completion.
-      'merged' and 'query' are the only states supported for POAP
+    - I(merged) and I(query) are the only states supported for POAP.
     type: str
     choices:
       - merged
@@ -58,7 +58,7 @@ options:
       auth_proto:
         description:
         - Name of the authentication protocol to be used.
-          For POAP configurations authentication protocol should be 'MD5'.
+        - For POAP configurations authentication protocol should be I(MD5).
         choices: ['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES']
         type: str
         required: false
@@ -66,7 +66,7 @@ options:
       user_name:
         description:
         - Login username to the switch.
-          For POAP configurations username should be 'admin'
+        - For POAP configurations username should be I(admin)
         type: str
         required: true
       password:
@@ -97,29 +97,29 @@ options:
       poap:
         description:
         - Configurations of switch to Bootstrap/Pre-provision.
-          Please note that POAP and DHCP configurations needs to enabled in fabric configuration
+        - Please note that POAP and DHCP configurations needs to enabled in fabric configuration
           before adding/preprovisioning switches through POAP.
-          Idempotence checks against inventory is only for 'IP Address' for Preprovision configs.
-          Idempotence checks against inventory is only for 'IP Address' and 'Serial Number' for Bootstrap configs.
+        - Idempotence checks against inventory is only for B(IP Address) for Preprovision configs.
+        - Idempotence checks against inventory is only for B(IP Address) and B(Serial Number) for Bootstrap configs.
         type: list
         elements: dict
         suboptions:
           serial_number:
             description:
             - Serial number of switch to Bootstrap.
-              When 'preprovision_serial' is provided along with 'serial_number',
-              then the Preprovisioned switch(with serial number as in 'preprovision_serial') will be swapped
-              with a actual switch(with serial number in 'serial_number') through bootstrap.
-              Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.
+            - When C(preprovision_serial) is provided along with C(serial_number),
+              then the Preprovisioned switch(with serial number as in C(preprovision_serial)) will be swapped
+              with a actual switch(with serial number in C(serial_number)) through bootstrap.
+            - Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.
             type: str
             required: false
           preprovision_serial:
             description:
             - Serial number of switch to Pre-provision.
-              When 'preprovision_serial' is provided along with 'serial_number',
-              then the Preprovisioned switch(with serial number as in 'preprovision_serial') will be swapped
-              with a actual switch(with serial number in 'serial_number') through bootstrap.
-              Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.
+            - When C(preprovision_serial) is provided along with C(serial_number),
+              then the Preprovisioned switch(with serial number as in C(preprovision_serial)) will be swapped
+              with a actual switch(with serial number in C(serial_number)) through bootstrap.
+            - Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.
             type: str
             required: false
           model:
@@ -145,10 +145,10 @@ options:
           config_data:
             description:
             - Basic config data of switch to Bootstrap/Pre-provision.
-              'modulesModel' and 'gateway' parameters are mandatory.
-              'modulesModel' is list of model of modules in switch to Bootstrap/Pre-provision.
-              'gateway' is the gateway IP with mask for the switch to Bootstrap/Pre-provision.
-              For other supported config data please refer to NDFC/DCNM configuration guide.
+            - C(modulesModel) and C(gateway) are mandatory.
+            - C(modulesModel) is list of model of modules in switch to Bootstrap/Pre-provision.
+            - C(gateway) is the gateway IP with mask for the switch to Bootstrap/Pre-provision.
+            - For other supported config data please refer to NDFC/DCNM configuration guide.
             type: dict
             required: false
   query_poap:
@@ -244,6 +244,29 @@ EXAMPLES = """
       max_hops: 0
       role: leaf
       preserve_config: False # boolean, default is  true
+
+# All the switches will be deleted in the existing fabric
+- name: Delete all the switches
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: deleted # merged / deleted / overridden / query
+
+# The following two switches information will be queried in the existing fabric
+- name: Query switch into fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / deleted / overridden / query
+    config:
+    - seed_ip: 192.168.0.1
+      role: spine
+    - seed_ip: 192.168.0.2
+      role: leaf
+
+# All the existing switches will be queried in the existing fabric
+- name: Query all the switches in the fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: query # merged / deleted / overridden / query
 
 # The following task will enable Bootstrap and DHCP on an existing fabric.
 # Please note that only bootstrap and DHCP configs are present in the below example.
@@ -352,29 +375,6 @@ EXAMPLES = """
       poap:
         - preprovision_serial: 1A2BCDEFGHI
           serial_number: 2A3BCDEFGHI
-
-# All the switches will be deleted in the existing fabric
-- name: Delete all the switches
-  cisco.dcnm.dcnm_inventory:
-    fabric: vxlan-fabric
-    state: deleted # merged / deleted / overridden / query
-
-# The following two switches information will be queried in the existing fabric
-- name: Query switch into fabric
-  cisco.dcnm.dcnm_inventory:
-    fabric: vxlan-fabric
-    state: query # merged / deleted / overridden / query
-    config:
-    - seed_ip: 192.168.0.1
-      role: spine
-    - seed_ip: 192.168.0.2
-      role: leaf
-
-# All the existing switches will be queried in the existing fabric
-- name: Query all the switches in the fabric
-  cisco.dcnm.dcnm_inventory:
-    fabric: vxlan-fabric
-    state: query # merged / deleted / overridden / query
 
 # All the existing switches along with available Bootstrap(POAP)
 # will be queried in the existing fabric
