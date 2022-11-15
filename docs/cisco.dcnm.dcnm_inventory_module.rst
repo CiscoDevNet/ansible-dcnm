@@ -70,7 +70,8 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Name of the authentication protocol to be used. For POAP configurations authentication protocol should be &#x27;MD5&#x27;.</div>
+                        <div>Name of the authentication protocol to be used.</div>
+                        <div>For POAP configurations authentication protocol should be <em>MD5</em>.</div>
                 </td>
             </tr>
             <tr>
@@ -121,7 +122,10 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Configurations of switch to Bootstrap/Pre-provision. Please note that POAP and DHCP configurations needs to enabled in fabric configuration before adding/preprovisioning switches through POAP. Idempotence checks against inventory is only for &#x27;IP Address&#x27; for Preprovision configs. Idempotence checks against inventory is only for &#x27;IP Address&#x27; and &#x27;Serial Number&#x27; for Bootstrap configs.</div>
+                        <div>Configurations of switch to Bootstrap/Pre-provision.</div>
+                        <div>Please note that POAP and DHCP configurations needs to enabled in fabric configuration before adding/preprovisioning switches through POAP.</div>
+                        <div>Idempotence checks against inventory is only for <b>IP Address</b> for Preprovision configs.</div>
+                        <div>Idempotence checks against inventory is only for <b>IP Address</b> and <b>Serial Number</b> for Bootstrap configs.</div>
                 </td>
             </tr>
                                 <tr>
@@ -138,7 +142,11 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Basic config data of switch to Bootstrap/Pre-provision. &#x27;modulesModel&#x27; and &#x27;gateway&#x27; parameters are mandatory. &#x27;modulesModel&#x27; is list of model of modules in switch to Bootstrap/Pre-provision. &#x27;gateway&#x27; is the gateway IP with mask for the switch to Bootstrap/Pre-provision. For other supported config data please refer to NDFC/DCNM configuration guide.</div>
+                        <div>Basic config data of switch to Bootstrap/Pre-provision.</div>
+                        <div><code>modulesModel</code> and <code>gateway</code> are mandatory.</div>
+                        <div><code>modulesModel</code> is list of model of modules in switch to Bootstrap/Pre-provision.</div>
+                        <div><code>gateway</code> is the gateway IP with mask for the switch to Bootstrap/Pre-provision.</div>
+                        <div>For other supported config data please refer to NDFC/DCNM configuration guide.</div>
                 </td>
             </tr>
             <tr>
@@ -206,7 +214,9 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Serial number of switch to Pre-provision. When &#x27;preprovision_serial&#x27; is provided along with &#x27;serial_number&#x27;, then the Preprovisioned switch(with serial number as in &#x27;preprovision_serial&#x27;) will be swapped with a actual switch(with serial number in &#x27;serial_number&#x27;) through bootstrap. Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.</div>
+                        <div>Serial number of switch to Pre-provision.</div>
+                        <div>When <code>preprovision_serial</code> is provided along with <code>serial_number</code>, then the Preprovisioned switch(with serial number as in <code>preprovision_serial</code>) will be swapped with a actual switch(with serial number in <code>serial_number</code>) through bootstrap.</div>
+                        <div>Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.</div>
                 </td>
             </tr>
             <tr>
@@ -223,7 +233,9 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Serial number of switch to Bootstrap. When &#x27;preprovision_serial&#x27; is provided along with &#x27;serial_number&#x27;, then the Preprovisioned switch(with serial number as in &#x27;preprovision_serial&#x27;) will be swapped with a actual switch(with serial number in &#x27;serial_number&#x27;) through bootstrap. Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.</div>
+                        <div>Serial number of switch to Bootstrap.</div>
+                        <div>When <code>preprovision_serial</code> is provided along with <code>serial_number</code>, then the Preprovisioned switch(with serial number as in <code>preprovision_serial</code>) will be swapped with a actual switch(with serial number in <code>serial_number</code>) through bootstrap.</div>
+                        <div>Swap feature is supported only on NDFC and is not supported on DCNM 11.x versions.</div>
                 </td>
             </tr>
             <tr>
@@ -322,7 +334,8 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Login username to the switch. For POAP configurations username should be &#x27;admin&#x27;</div>
+                        <div>Login username to the switch.</div>
+                        <div>For POAP configurations username should be <em>admin</em></div>
                 </td>
             </tr>
 
@@ -379,7 +392,8 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>The state of DCNM after module completion. &#x27;merged&#x27; and &#x27;query&#x27; are the only states supported for POAP</div>
+                        <div>The state of DCNM after module completion.</div>
+                        <div><em>merged</em> and <em>query</em> are the only states supported for POAP.</div>
                 </td>
             </tr>
     </table>
@@ -477,6 +491,29 @@ Examples
           max_hops: 0
           role: leaf
           preserve_config: False # boolean, default is  true
+
+    # All the switches will be deleted in the existing fabric
+    - name: Delete all the switches
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: deleted # merged / deleted / overridden / query
+
+    # The following two switches information will be queried in the existing fabric
+    - name: Query switch into fabric
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: query # merged / deleted / overridden / query
+        config:
+        - seed_ip: 192.168.0.1
+          role: spine
+        - seed_ip: 192.168.0.2
+          role: leaf
+
+    # All the existing switches will be queried in the existing fabric
+    - name: Query all the switches in the fabric
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: query # merged / deleted / overridden / query
 
     # The following task will enable Bootstrap and DHCP on an existing fabric.
     # Please note that only bootstrap and DHCP configs are present in the below example.
@@ -585,29 +622,6 @@ Examples
           poap:
             - preprovision_serial: 1A2BCDEFGHI
               serial_number: 2A3BCDEFGHI
-
-    # All the switches will be deleted in the existing fabric
-    - name: Delete all the switches
-      cisco.dcnm.dcnm_inventory:
-        fabric: vxlan-fabric
-        state: deleted # merged / deleted / overridden / query
-
-    # The following two switches information will be queried in the existing fabric
-    - name: Query switch into fabric
-      cisco.dcnm.dcnm_inventory:
-        fabric: vxlan-fabric
-        state: query # merged / deleted / overridden / query
-        config:
-        - seed_ip: 192.168.0.1
-          role: spine
-        - seed_ip: 192.168.0.2
-          role: leaf
-
-    # All the existing switches will be queried in the existing fabric
-    - name: Query all the switches in the fabric
-      cisco.dcnm.dcnm_inventory:
-        fabric: vxlan-fabric
-        state: query # merged / deleted / overridden / query
 
     # All the existing switches along with available Bootstrap(POAP)
     # will be queried in the existing fabric
