@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.4.0] - 2022-11-17
+
+### Added
+
+* POAP support in `dcnm_inventory` module
+* SVI interface support in `dcnm_interface` module
+
+### Fixed
+
+* Fix for a problem where networks cannot be deleted when detach/undeploy fails and network is in an out of sync state.
+* Fix default value for `multicast_group_address` property in `dcnm_network`
+
 ## [2.3.0] - 2022-10-28
 
 ### Added
@@ -194,6 +206,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 * cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 * cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+[2.4.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/2.3.0...2.4.0
 [2.3.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/2.2.0...2.3.0
 [2.2.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/CiscoDevNet/ansible-dcnm/compare/2.1.0...2.1.1
