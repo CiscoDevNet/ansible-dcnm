@@ -34,12 +34,12 @@
 
 - name: Remove all existing networks to start with a clean state
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: Create vrfs required for this test and remove all other vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int1
@@ -64,4 +64,4 @@
       - ip_address: "{{ ansible_switch2 }}"
       deploy: true
 
-- { include: dcnm.yaml, tags: ['dcnm'] }
+- { include_tasks: dcnm.yaml, tags: ['dcnm'] }
