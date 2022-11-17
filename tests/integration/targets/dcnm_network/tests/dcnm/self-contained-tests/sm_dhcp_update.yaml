@@ -1,11 +1,11 @@
 - name: Setup - Remove all existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: Create network with initial dhcp parameter values
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -33,7 +33,7 @@
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: query
   register: result
   until:
@@ -53,7 +53,7 @@
 
 - name: Change dhcp parameter values
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -81,7 +81,7 @@
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: query
   register: result
   until:

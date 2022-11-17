@@ -76,10 +76,10 @@ options:
         required: true
       type:
         description:
-        - Interface type. Example, pc, vpc, sub_int, lo, eth
+        - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -475,6 +475,146 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+      profile_svi:
+        description:
+        - Though the key shown here is 'profile_svi' the actual key to be used in playbook
+          is 'profile'. The key 'profile_svi' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for SVI interface configurations.
+        suboptions:
+          mode:
+            description:
+            - Interface mode.
+            choices: ['vlan']
+            type: str
+            required: true
+          int_vrf:
+            description:
+            - Interface VRF name.
+            type: str
+            default: "default"
+          ipv4_addr:
+            description:
+            - IPV4 address of the interface.
+            type: str
+            default: ""
+          ipv4_mask_len:
+            description:
+            - IPV4 address mask length. This parameter is required if 'ipv4_addr' is included.
+            type: int
+            choices : [Min 1, Max 31]
+          cmds:
+            description:
+            - Commands to be included in the configuration under this interface.
+            type: list
+            default: []
+          description:
+            description:
+            - Description of the interface.
+            type: str
+            default: ""
+          admin_state:
+            description:
+            - Administrative state of the interface.
+            type: bool
+            required: true
+          route_tag:
+            description:
+            - Route tag associated with the interface IP.
+            type: str
+            default: ""
+          mtu:
+            description:
+            - Interface MTU.
+            type: int
+            default: 9216
+          disable_ip_redirects:
+            description:
+            - Flag to enable/disable IP redirects.
+            type: bool
+            default: false
+          enable_hsrp:
+            description:
+            - Flag to enable/disable HSRP on the interface.
+            type: bool
+            default: false
+          hsrp_vip:
+            description:
+            - Virtual IP address for HSRP. This parameter is required if "enable_hsrp" is True.
+            type: str
+            default: ""
+          hsrp_group:
+            description:
+            - HSRP group. This parameter is required if "enable_hsrp" is True.
+            type: str
+            default: ""
+          hsrp_priority:
+            description:
+            - HSRP priority.
+            type: str
+            default: ""
+          hsrp_vmac:
+            description:
+            - HSRP virtual MAC.
+            type: str
+            default: ""
+          dhcp_server_addr1:
+            description:
+            - DHCP relay server address.
+            type: str
+            default: ""
+          vrf_dhcp1:
+            description:
+            - VRF to reach DHCP server. This parameter is required if "dhcp_server_addr1" is included.
+            type: str
+            default: ""
+          dhcp_server_addr2:
+            description:
+            - DHCP relay server address.
+            type: str
+            default: ""
+          vrf_dhcp2:
+            description:
+            - VRF to reach DHCP server. This parameter is required if "dhcp_server_addr2" is included.
+            type: str
+            default: ""
+          dhcp_server_addr3:
+            description:
+            - DHCP relay server address.
+            type: str
+            default: ""
+          vrf_dhcp3:
+            description:
+            - VRF to reach DHCP server. This parameter is required if "dhcp_server_addr3" is included.
+            type: str
+            default: ""
+          adv_subnet_in_underlay:
+            description:
+            - Flag to enable/disable advertisements of subnets into underlay.
+            type: bool
+            default: false
+          enable_netflow:
+            description:
+            - Flag to enable netflow.
+            type: bool
+            default: false
+          netflow_monitor:
+            description:
+            - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
+            type: str
+            default: ""
+          hsrp_version:
+            description:
+            - HSRP protocol version.
+            type: int
+            default: 1
+            choices: [1,2]
+          preempt:
+            description:
+            - Flag to enable/disable overthrow of low priority active routers. This parameter is valid only if "enable_hsrp" is True.
+            type: bool
+            default: false
+
 """
 
 EXAMPLES = """
@@ -961,6 +1101,120 @@ EXAMPLES = """
               - no shutdown
               - no shutdown
 
+# SVI INTERFACES
+
+- name: Create SVI interfaces including optional parameters
+  cisco.dcnm.dcnm_interface: &svi_merge2
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vlan1001                              # should be of the form vlan<vlan-id>
+        type: svi                                   # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          int_vrf: blue                             # optional, Interface VRF name, default is "default"
+          ipv4_addr: 192.168.2.1                    # optional, Interfae IP, default is ""
+          ipv4_mask_len: 24                         # optional, IP mask length, default is ""
+          mtu: 9216                                 # optional, MTU default is ""
+          route_tag: 1001                           # optional, Routing TAG, default is ""
+          disable_ip_redirects: true                # optional, flag to enable/disable IP redirects, default is "false"
+          cmds:                                     # Freeform config
+            - no shutdown
+          admin_state: true                         # Flag to enable/disable Vlan interaface
+          enable_hsrp: true                         # optional, flag to enable/disable HSRP on the interface, default is "false"
+          hsrp_vip: 192.168.2.100                   # optional, Virtual IP address for HSRP, default is ""
+          hsrp_group: 10                            # optional, HSRP group, default is ""
+          hsrp_priority: 5                          # optional, HSRP priority, default is ""
+          hsrp_vmac: 0000.0101.ac0a                 # optional, HSRP virtual MAC, default is ""
+          dhcp_server_addr1: 192.200.1.1            # optional, DHCP relay server address, default is ""
+          vrf_dhcp1: blue                           # optional, VRF to reach DHCP server. default is ""
+          dhcp_server_addr2: 192.200.1.2            # optional, DHCP relay server address, default is ""
+          vrf_dhcp2: blue                           # optional, VRF to reach DHCP server. default is ""
+          dhcp_server_addr3: 192.200.1.3            # optional, DHCP relay server address, default is ""
+          vrf_dhcp3: blue                           # optional, VRF to reach DHCP server. default is ""
+          adv_subnet_in_underlay: true              # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
+          enable_netflow: false                     # optional, flag to enable netflow, default is "false"
+          netflow_monitor: svi1001                  # optional, name of netflow monitor, default is ""
+          hsrp_version: 1                           # optional, HSRP protocol version, default is 1
+          preempt: true                             # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
+          mode: vlan                                # choose from [vlan, vlan_admin_state], default is "vlan"
+          description: Switched vlan interface 1001 # optional, Interface description, default is ""
+
+- name: Replace SVI interface
+  cisco.dcnm.dcnm_interface: &svi_replace
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: replaced                                       # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vlan1001                                    # should be of the form vlan<vlan-id>
+        type: svi                                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+        switch:
+          - "{{ ansible_switch1 }}"                       # provide the switch information where the config is to be deployed
+        deploy: true                                      # choose from [true, false]
+        profile:
+          int_vrf: red                                    # optional, Interface VRF name, default is "default"
+          ipv4_addr: 192.169.2.1                          # optional, Interfae IP, default is ""
+          ipv4_mask_len: 20                               # optional, IP mask length, default is ""
+          mtu: 9210                                       # optional, MTU default is ""
+          route_tag: 1002                                 # optional, Routing TAG, default is ""
+          disable_ip_redirects: false                     # optional, flag to enable/disable IP redirects, default is "false"
+          cmds:                                           # Freeform config
+            - no shutdown
+          admin_state: false                              # Flag to enable/disable Vlan interaface
+          enable_hsrp: true                               # optional, flag to enable/disable HSRP on the interface, default is "false"
+          hsrp_vip: 192.169.2.100                         # optional, Virtual IP address for HSRP, default is ""
+          hsrp_group: 11                                  # optional, HSRP group, default is ""
+          hsrp_priority: 5                                # optional, HSRP priority, default is ""
+          hsrp_vmac: 0000.0102.ac0a                       # optional, HSRP virtual MAC, default is ""
+          dhcp_server_addr1: 193.200.1.1                  # optional, DHCP relay server address, default is ""
+          vrf_dhcp1: green                                # optional, VRF to reach DHCP server. default is ""
+          dhcp_server_addr2: 193.200.1.2                  # optional, DHCP relay server address, default is ""
+          vrf_dhcp2: green                                # optional, VRF to reach DHCP server. default is ""
+          dhcp_server_addr3: 193.200.1.3                  # optional, DHCP relay server address, default is ""
+          vrf_dhcp3: green                                # optional, VRF to reach DHCP server. default is ""
+          adv_subnet_in_underlay: false                   # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
+          enable_netflow: false                           # optional, flag to enable netflow, default is "false"
+          netflow_monitor: svi1002                        # optional, name of netflow monitor, default is ""
+          hsrp_version: 2                                 # optional, HSRP protocol version, default is 1
+          preempt: false                                  # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
+          mode: vlan                                      # choose from [vlan, vlan_admin_state], default is "vlan"
+          description: Switched vlan interface 1001 - Rep # optional, Interface description, default is ""
+
+- name: Delete SVI interfaces
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_svi_fabric }}"
+    state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vlan1000                    # should be of the form vlan<vlan-id>
+        type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+        switch:
+          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+      - name: vlan1001                    # should be of the form vlan<vlan-id>
+        type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+        switch:
+          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+- name: Override SVI interface
+  cisco.dcnm.dcnm_interface: &svi_override
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: overridden                                     # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vlan1002                                    # should be of the form vlan<vlan-id>
+        type: svi                                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+        switch:
+          - "{{ ansible_switch1 }}"                       # provide the switch information where the config is to be deployed
+        deploy: true                                      # choose from [true, false]
+        profile:
+          admin_state: true                               # Flag to enable/disable Vlan interaface
+          mode: vlan                                      # choose from [vlan, vlan_admin_state], default is "vlan"
+
+
 # QUERY
 
 - name: Query interface details
@@ -969,22 +1223,22 @@ EXAMPLES = """
     state: query            # only choose from [merged, replaced, deleted, overridden, query]
     config:
       - switch:
-          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - "192.172.1.1"
       - name: po350
         switch:
-          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - "192.172.1.1"
       - name: lo450
         switch:
-          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - "192.172.1.1"
       - name: eth1/1
         switch:
-          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - "192.172.1.1"
       - name: eth1/15.2
         switch:
-          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - "192.172.1.1"
       - name: vpc750
         switch:
-          - "192.172.1.1"   # provide the switch information where the config is to be deployed
+          - "192.172.1.1"
 
 """
 
@@ -1003,10 +1257,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_ip_sn_dict,
     dcnm_version_supported,
 )
-
-LOG_ERROR = 0
-LOG_DEBUG = 4
-LOG_VERBOSE = 5
 
 
 class DcnmIntf:
@@ -1046,8 +1296,8 @@ class DcnmIntf:
         self.have_all_list = []
         self.diff_create = []
         self.diff_replace = []
-        self.diff_delete = [[], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
         self.log_verbosity = 0
@@ -1067,7 +1317,9 @@ class DcnmIntf:
 
         self.dcnm_version = dcnm_version_supported(self.module)
 
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.inventory_data = get_fabric_inventory_details(
+            self.module, self.fabric
+        )
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.paths = self.dcnm_intf_paths[self.dcnm_version]
 
@@ -1081,6 +1333,23 @@ class DcnmIntf:
         # New Interfaces
         # To map keys from self.have to keys from config
         self.keymap = {
+            "DISABLE_IP_REDIRECTS": "disable_ip_redirects",
+            "ENABLE_HSRP": "enable_hsrp",
+            "HSRP_VIP": "hsrp_vip",
+            "HSRP_GROUP": "hsrp_group",
+            "PREEMPT": "preempt",
+            "HSRP_VERSION": "hsrp_version",
+            "HSRP_PRIORITY": "hsrp_priority",
+            "MAC": "hsrp_vmac",
+            "dhcpServerAddr1": "dhcp_server_addr1",
+            "dhcpServerAddr2": "dhcp_server_addr2",
+            "dhcpServerAddr3": "dhcp_server_addr3",
+            "vrfDhcp1": "vrf_dhcp1",
+            "vrfDhcp2": "vrf_dhcp2",
+            "vrfDhcp3": "vrf_dhcp3",
+            "advSubnetInUnderlay": "adv_subnet_in_unbderlay",
+            "ENABLE_NETFLOW": "enable_netflow",
+            "NETFLOW_MONITOR": "netflow_monitor",
             "policy": "policy",
             "ifName": "ifname",
             "serialNumber": "sno",
@@ -1089,6 +1358,7 @@ class DcnmIntf:
             "INTF_VRF": "int_vrf",
             "V6IP": "ipv6_addr",
             "IPv6": "ipv6_addr",
+            "PREFIX": "ipv4_mask_len",
             "IPv6_PREFIX": "ipv6_mask_len",
             "ROUTING_TAG": "route_tag",
             "ROUTE_MAP_TAG": "route_tag",
@@ -1104,7 +1374,6 @@ class DcnmIntf:
             "SPEED": "speed",
             "ALLOWED_VLANS": "allowed_vlans",
             "ACCESS_VLAN": "access_vlan",
-            "PREFIX": "ipv4_mask_len",
             "INTF_NAME": "ifname",
             "PO_ID": "ifname",
             "PEER1_PCID": "peer1_pcid",
@@ -1137,6 +1406,8 @@ class DcnmIntf:
                 "eth_epl_routed": "epl_routed_intf",
                 "vpc_trunk": "int_vpc_trunk_host_11_1",
                 "vpc_access": "int_vpc_access_host_11_1",
+                "svi_vlan": "int_vlan",
+                "svi_vlan_admin_state": "int_vlan_admin_state",
             },
             12: {
                 "pc_monitor": "int_monitor_port_channel",
@@ -1152,6 +1423,8 @@ class DcnmIntf:
                 "eth_epl_routed": "epl_routed_intf",
                 "vpc_trunk": "int_vpc_trunk_host",
                 "vpc_access": "int_vpc_access_host",
+                "svi_vlan": "int_vlan",
+                "svi_vlan_admin_state": "int_vlan_admin_state",
             },
         }
 
@@ -1162,6 +1435,7 @@ class DcnmIntf:
             "sub_int": "SUBINTERFACE",
             "lo": "INTERFACE_LOOPBACK",
             "eth": "INTERFACE_ETHERNET",
+            "svi": "INTERFACE_VLAN",
         }
 
         # New Interfaces
@@ -1171,12 +1445,13 @@ class DcnmIntf:
             "INTERFACE_ETHERNET": 2,
             "INTERFACE_LOOPBACK": 3,
             "SUBINTERFACE": 4,
+            "INTERFACE_VLAN": 5,
         }
 
     def log_msg(self, msg):
 
         if self.fd is None:
-            self.fd = open("interface.log", "w+")
+            self.fd = open("dcnm_intf.log", "a+")
         if self.fd is not None:
             self.fd.write(msg)
             self.fd.write("\n")
@@ -1200,6 +1475,9 @@ class DcnmIntf:
         if "eth" == if_type:
             port_id = re.findall(r"\d+\/\d+", name)
             return ("Ethernet" + str(port_id[0]), port_id[0])
+        if "svi" == if_type:
+            port_id = re.findall(r"\d+", name)
+            return ("vlan" + str(port_id[0]), port_id[0])
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
@@ -1237,24 +1515,41 @@ class DcnmIntf:
                                 msg="<type> element, which is mandatory is missing in config"
                             )
 
-                        pol_ind_str = cfg["type"] + "_" + cfg["profile"]["mode"]
-
                         c[ck]["fabric"] = self.dcnm_intf_facts["fabric"]
                         if cfg["type"] == "vpc":
                             if self.vpc_ip_sn.get(sw, None) is None:
-                                self.module.fail_json(msg="Switch '{0}' is not part of VPC pair, but given I/F '{1}' is of type VPC".format(sw, c['name']))
+                                self.module.fail_json(
+                                    msg="Switch '{0}' is not part of VPC pair, but given I/F '{1}' is of type VPC".format(
+                                        sw, c["name"]
+                                    )
+                                )
                             else:
-                                c[ck]['sno'] = self.vpc_ip_sn[sw]
+                                c[ck]["sno"] = self.vpc_ip_sn[sw]
                         else:
                             c[ck]["sno"] = self.ip_sn[sw]
                         ifname, port_id = self.dcnm_intf_get_if_name(
                             c["name"], c["type"]
                         )
+
+                        if "mode" not in cfg["profile"]:
+                            self.module.fail_json(
+                                msg="Invalid parameters in playbook: while processing interface "
+                                + ifname
+                                + ", mode : Required parameter not found"
+                            )
+                        pol_ind_str = (
+                            cfg["type"] + "_" + cfg["profile"]["mode"]
+                        )
+
                         c[ck]["ifname"] = ifname
-                        c[ck]["policy"] = self.pol_types[self.dcnm_version][pol_ind_str]
+                        c[ck]["policy"] = self.pol_types[self.dcnm_version][
+                            pol_ind_str
+                        ]
                         self.pb_input.append(c[ck])
 
-    def dcnm_intf_validate_interface_input(self, config, common_spec, prof_spec):
+    def dcnm_intf_validate_interface_input(
+        self, config, common_spec, prof_spec
+    ):
 
         plist = []
 
@@ -1275,19 +1570,22 @@ class DcnmIntf:
             for item in intf_info:
 
                 plist.append(item["profile"])
-                intf_profile, invalid_params = validate_list_of_dicts(plist, prof_spec)
+                intf_profile, invalid_params = validate_list_of_dicts(
+                    plist, prof_spec
+                )
 
                 # Merge the info from the intf_profile into the intf_info to have a single dict to be used for building
                 # payloads
                 item["profile"].update(intf_profile[0])
 
                 plist.remove(item["profile"])
+
                 if invalid_params:
                     mesg = "Invalid parameters in playbook: {0}".format(
                         "while processing interface "
                         + config[0]["name"]
-                        + "\n"
-                        + "\n".join(invalid_params)
+                        + ", "
+                        + ", ".join(invalid_params)
                     )
                     self.module.fail_json(msg=mesg)
 
@@ -1342,13 +1640,17 @@ class DcnmIntf:
         )
 
         if "trunk" == config[0]["profile"]["mode"]:
-            self.dcnm_intf_validate_interface_input(config, pc_spec, pc_prof_spec_trunk)
+            self.dcnm_intf_validate_interface_input(
+                config, pc_spec, pc_prof_spec_trunk
+            )
         if "access" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_access
             )
         if "l3" == config[0]["profile"]["mode"]:
-            self.dcnm_intf_validate_interface_input(config, pc_spec, pc_prof_spec_l3)
+            self.dcnm_intf_validate_interface_input(
+                config, pc_spec, pc_prof_spec_l3
+            )
         if "monitor" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(config, pc_spec, None)
 
@@ -1364,8 +1666,12 @@ class DcnmIntf:
 
         vpc_prof_spec_trunk = dict(
             mode=dict(required=True, type="str"),
-            peer1_pcid=dict(type="int", default=0, range_min=1, range_max=4096),
-            peer2_pcid=dict(type="int", default=0, range_min=1, range_max=4096),
+            peer1_pcid=dict(
+                type="int", default=0, range_min=1, range_max=4096
+            ),
+            peer2_pcid=dict(
+                type="int", default=0, range_min=1, range_max=4096
+            ),
             peer1_members=dict(type="list"),
             peer2_members=dict(type="list"),
             pc_mode=dict(type="str", default="active"),
@@ -1383,8 +1689,12 @@ class DcnmIntf:
 
         vpc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
-            peer1_pcid=dict(type="int", default=0, range_min=1, range_max=4096),
-            peer2_pcid=dict(type="int", default=0, range_min=1, range_max=4096),
+            peer1_pcid=dict(
+                type="int", default=0, range_min=1, range_max=4096
+            ),
+            peer2_pcid=dict(
+                type="int", default=0, range_min=1, range_max=4096
+            ),
             peer1_members=dict(type="list"),
             peer2_members=dict(type="list"),
             pc_mode=dict(type="str", default="active"),
@@ -1401,9 +1711,13 @@ class DcnmIntf:
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
-            self.dcnm_intf_validate_interface_input(cfg, vpc_spec, vpc_prof_spec_trunk)
+            self.dcnm_intf_validate_interface_input(
+                cfg, vpc_spec, vpc_prof_spec_trunk
+            )
         if "access" == cfg[0]["profile"]["mode"]:
-            self.dcnm_intf_validate_interface_input(cfg, vpc_spec, vpc_prof_spec_access)
+            self.dcnm_intf_validate_interface_input(
+                cfg, vpc_spec, vpc_prof_spec_access
+            )
 
     def dcnm_intf_validate_sub_interface_input(self, cfg):
 
@@ -1419,10 +1733,14 @@ class DcnmIntf:
             mode=dict(required=True, type="str"),
             vlan=dict(required=True, type="int", range_min=2, range_max=3967),
             ipv4_addr=dict(required=True, type="ipv4"),
-            ipv4_mask_len=dict(required=True, type="int", range_min=8, range_max=31),
+            ipv4_mask_len=dict(
+                required=True, type="int", range_min=8, range_max=31
+            ),
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
-            ipv6_mask_len=dict(type="int", range_min=64, range_max=127, default=64),
+            ipv6_mask_len=dict(
+                type="int", range_min=64, range_max=127, default=64
+            ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
             cmds=dict(type="list"),
             description=dict(type="str", default=""),
@@ -1468,7 +1786,9 @@ class DcnmIntf:
             mode=dict(required=True, type="str"),
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
-            mtu=dict(type="str", default="jumbo", choices=["jumbo", "default"]),
+            mtu=dict(
+                type="str", default="jumbo", choices=["jumbo", "default"]
+            ),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
             cmds=dict(type="list"),
@@ -1480,7 +1800,9 @@ class DcnmIntf:
             mode=dict(required=True, type="str"),
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
-            mtu=dict(type="str", default="jumbo", choices=["jumbo", "default"]),
+            mtu=dict(
+                type="str", default="jumbo", choices=["jumbo", "default"]
+            ),
             speed=dict(type="str", default="Auto"),
             access_vlan=dict(type="str", default=""),
             cmds=dict(type="list"),
@@ -1505,7 +1827,9 @@ class DcnmIntf:
             ipv4_addr=dict(required=True, type="ipv4"),
             ipv4_mask_len=dict(type="int", default=8),
             ipv6_addr=dict(type="ipv6", default=""),
-            ipv6_mask_len=dict(type="int", range_min=64, range_max=127, default=64),
+            ipv6_mask_len=dict(
+                type="int", range_min=64, range_max=127, default=64
+            ),
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=1500, range_max=9216),
             speed=dict(type="str", default="Auto"),
@@ -1515,9 +1839,13 @@ class DcnmIntf:
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
-            self.dcnm_intf_validate_interface_input(cfg, eth_spec, eth_prof_spec_trunk)
+            self.dcnm_intf_validate_interface_input(
+                cfg, eth_spec, eth_prof_spec_trunk
+            )
         if "access" == cfg[0]["profile"]["mode"]:
-            self.dcnm_intf_validate_interface_input(cfg, eth_spec, eth_prof_spec_access)
+            self.dcnm_intf_validate_interface_input(
+                cfg, eth_spec, eth_prof_spec_access
+            )
         if "routed" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_routed_host
@@ -1528,6 +1856,84 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_epl_routed_host
             )
+
+    def dcnm_intf_validate_vlan_interface_input(self, cfg):
+
+        svi_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        svi_prof_spec = dict(
+            mode=dict(required=True, type="str"),
+            ipv4_addr=dict(type="ipv4", default=""),
+            int_vrf=dict(type="str", default="default"),
+            mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
+            cmds=dict(type="list", default=""),
+            description=dict(type="str", default=""),
+            admin_state=dict(required=True, type="bool", default=True),
+            route_tag=dict(type=str, default=""),
+            disable_ip_redirects=dict(type="bool", default=True),
+            dhcp_server_addr1=dict(type="ipv4", default=""),
+            dhcp_server_addr2=dict(type="ipv4", default=""),
+            dhcp_server_addr3=dict(type="ipv4", default=""),
+            adv_subnet_in_underlay=dict(type="bool", default=False),
+            enable_hsrp=dict(type="bool", default=False),
+            enable_netflow=dict(type="bool", default=False),
+        )
+
+        if cfg[0]["profile"].get("dhcp_server_addr1", "") != "":
+            svi_prof_spec["vrf_dhcp1"] = dict(required=True, type="str")
+        else:
+            svi_prof_spec["vrf_dhcp1"] = dict(type="str", default="")
+
+        if cfg[0]["profile"].get("dhcp_server_addr2", "") != "":
+            svi_prof_spec["vrf_dhcp2"] = dict(required=True, type="str")
+        else:
+            svi_prof_spec["vrf_dhcp2"] = dict(type="str", default="")
+
+        if cfg[0]["profile"].get("dhcp_server_addr3", "") != "":
+            svi_prof_spec["vrf_dhcp3"] = dict(required=True, type="str")
+        else:
+            svi_prof_spec["vrf_dhcp3"] = dict(type="str", default="")
+
+        if cfg[0]["profile"].get("ipv4_addr", False) is not False:
+            svi_prof_spec["ipv4_mask_len"] = dict(
+                required=True, type="int", range_min=1, range_max=31
+            )
+        else:
+            svi_prof_spec["ipv4_mask_len"] = dict(
+                type="int", range_min=1, range_max=31, default=""
+            )
+
+        if cfg[0]["profile"].get("enable_hsrp", False) is True:
+            svi_prof_spec["hsrp_vip"] = dict(required=True, type="ipv4")
+            svi_prof_spec["hsrp_group"] = dict(required=True, type="int")
+            svi_prof_spec["preempt"] = dict(type="bool", default=False)
+        else:
+            svi_prof_spec["hsrp_vip"] = dict(type="ipv4", default="")
+            svi_prof_spec["hsrp_group"] = dict(type="int", default="")
+            if cfg[0]["profile"].get("preempt", False) is not False:
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface "
+                    + cfg[0]["name"]
+                    + ", preempt : Not a valid parameter"
+                )
+        svi_prof_spec["hsrp_priority"] = dict(
+            type="int", range_min=0, range_max=255, default=""
+        )
+        svi_prof_spec["hsrp_vmac"] = dict(type="str", default="")
+        svi_prof_spec["hsrp_version"] = dict(
+            type="int", range_min=1, range_max=2, default=""
+        )
+
+        if cfg[0]["profile"].get("enable_netflow", False) is True:
+            svi_prof_spec["netflow_monitor"] = dict(required=True, type="str")
+
+        self.dcnm_intf_validate_interface_input(cfg, svi_spec, svi_prof_spec)
 
     def dcnm_intf_validate_delete_state_input(self, cfg):
 
@@ -1605,30 +2011,38 @@ class DcnmIntf:
                     self.dcnm_intf_validate_loopback_interface_input(cfg)
                 if item["type"] == "eth":
                     self.dcnm_intf_validate_ethernet_interface_input(cfg)
+                if item["type"] == "svi":
+                    self.dcnm_intf_validate_vlan_interface_input(cfg)
             cfg.remove(citem)
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
 
         # Extract port id from the given name, which is of the form 'po300'
 
-        ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
         intf["interfaces"][0].update({"ifName": ifname})
 
         if delem[profile]["mode"] == "trunk":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["members"]
-                )
-            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile]["pc_mode"]
-            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[profile][
-                "bpdu_guard"
-            ].lower()
+                intf["interfaces"][0]["nvPairs"][
+                    "MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["members"])
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
             intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
                 delem[profile]["port_type_fast"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
             ]
@@ -1637,17 +2051,21 @@ class DcnmIntf:
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["members"]
-                )
-            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile]["pc_mode"]
-            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[profile][
-                "bpdu_guard"
-            ].lower()
+                intf["interfaces"][0]["nvPairs"][
+                    "MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["members"])
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
             intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
                 delem[profile]["port_type_fast"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
             intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
                 "access_vlan"
             ]
@@ -1656,12 +2074,18 @@ class DcnmIntf:
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["members"]
-                )
-            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile]["pc_mode"]
-            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile]["int_vrf"]
-            intf["interfaces"][0]["nvPairs"]["IP"] = str(delem[profile]["ipv4_addr"])
+                intf["interfaces"][0]["nvPairs"][
+                    "MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["members"])
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+                "int_vrf"
+            ]
+            intf["interfaces"][0]["nvPairs"]["IP"] = str(
+                delem[profile]["ipv4_addr"]
+            )
             if delem[profile]["ipv4_addr"] != "":
                 intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
                     delem[profile]["ipv4_mask_len"]
@@ -1672,12 +2096,16 @@ class DcnmIntf:
                 "route_tag"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
         if delem[profile]["mode"] != "monitor":
-            intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile]["description"]
+            intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
+                "description"
+            ]
             if delem[profile]["cmds"] is None:
                 intf["interfaces"][0]["nvPairs"]["CONF"] = ""
             else:
@@ -1692,39 +2120,49 @@ class DcnmIntf:
 
         # Extract port id from the given name, which is of the form 'vpc300'
 
-        ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
         intf["interfaces"][0].update({"ifName": ifname})
 
         if delem[profile]["mode"] == "trunk":
 
             if delem[profile]["peer1_members"] is None:
-                intf["interfaces"][0]["nvPairs"]["PEER1_MEMBER_INTERFACES"] = ""
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER1_MEMBER_INTERFACES"
+                ] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER1_MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["peer1_members"]
-                )
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER1_MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["peer1_members"])
 
             if delem[profile]["peer2_members"] is None:
-                intf["interfaces"][0]["nvPairs"]["PEER2_MEMBER_INTERFACES"] = ""
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER2_MEMBER_INTERFACES"
+                ] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER2_MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["peer2_members"]
-                )
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER2_MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["peer2_members"])
 
-            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile]["pc_mode"]
-            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[profile][
-                "bpdu_guard"
-            ].lower()
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
             intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
                 delem[profile]["port_type_fast"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
-            intf["interfaces"][0]["nvPairs"]["PEER1_ALLOWED_VLANS"] = delem[profile][
-                "peer1_allowed_vlans"
-            ]
-            intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = delem[profile][
-                "peer2_allowed_vlans"
-            ]
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["PEER1_ALLOWED_VLANS"] = delem[
+                profile
+            ]["peer1_allowed_vlans"]
+            intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = delem[
+                profile
+            ]["peer2_allowed_vlans"]
 
             if delem[profile]["peer1_pcid"] == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
@@ -1743,33 +2181,41 @@ class DcnmIntf:
         if delem[profile]["mode"] == "access":
 
             if delem[profile]["peer1_members"] is None:
-                intf["interfaces"][0]["nvPairs"]["PEER1_MEMBER_INTERFACES"] = ""
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER1_MEMBER_INTERFACES"
+                ] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER1_MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["peer1_members"]
-                )
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER1_MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["peer1_members"])
 
             if delem[profile]["peer2_members"] is None:
-                intf["interfaces"][0]["nvPairs"]["PEER2_MEMBER_INTERFACES"] = ""
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER2_MEMBER_INTERFACES"
+                ] = ""
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER2_MEMBER_INTERFACES"] = ",".join(
-                    delem[profile]["peer2_members"]
-                )
+                intf["interfaces"][0]["nvPairs"][
+                    "PEER2_MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["peer2_members"])
 
-            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile]["pc_mode"]
-            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[profile][
-                "bpdu_guard"
-            ].lower()
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
             intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
                 delem[profile]["port_type_fast"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
-            intf["interfaces"][0]["nvPairs"]["PEER1_ACCESS_VLAN"] = delem[profile][
-                "peer1_access_vlan"
-            ]
-            intf["interfaces"][0]["nvPairs"]["PEER2_ACCESS_VLAN"] = delem[profile][
-                "peer2_access_vlan"
-            ]
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["PEER1_ACCESS_VLAN"] = delem[
+                profile
+            ]["peer1_access_vlan"]
+            intf["interfaces"][0]["nvPairs"]["PEER2_ACCESS_VLAN"] = delem[
+                profile
+            ]["peer2_access_vlan"]
 
             if delem[profile]["peer1_pcid"] == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
@@ -1812,17 +2258,25 @@ class DcnmIntf:
 
         # Extract port id from the given name, which is of the form 'po300'
 
-        ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
         intf["interfaces"][0].update({"ifName": ifname})
 
         intf["interfaces"][0]["nvPairs"]["VLAN"] = str(delem[profile]["vlan"])
-        intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile]["int_vrf"]
-        intf["interfaces"][0]["nvPairs"]["IP"] = str(delem[profile]["ipv4_addr"])
+        intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+            "int_vrf"
+        ]
+        intf["interfaces"][0]["nvPairs"]["IP"] = str(
+            delem[profile]["ipv4_addr"]
+        )
         intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
             delem[profile]["ipv4_mask_len"]
         )
         if delem[profile]["ipv6_addr"]:
-            intf["interfaces"][0]["nvPairs"]["IPv6"] = str(delem[profile]["ipv6_addr"])
+            intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
+                delem[profile]["ipv6_addr"]
+            )
             intf["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = str(
                 delem[profile]["ipv6_mask_len"]
             )
@@ -1831,11 +2285,15 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = ""
         intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
-        intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile]["description"]
+        intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
+            "description"
+        ]
         if delem[profile]["cmds"] is None:
             intf["interfaces"][0]["nvPairs"]["CONF"] = ""
         else:
-            intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(delem[profile]["cmds"])
+            intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(
+                delem[profile]["cmds"]
+            )
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
@@ -1844,19 +2302,33 @@ class DcnmIntf:
 
         # Extract port id from the given name, which is of the form 'po300'
 
-        ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
         intf["interfaces"][0].update({"ifName": ifname})
 
-        intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile]["int_vrf"]
-        intf["interfaces"][0]["nvPairs"]["IP"] = str(delem[profile]["ipv4_addr"])
-        intf["interfaces"][0]["nvPairs"]["V6IP"] = str(delem[profile]["ipv6_addr"])
-        intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile]["route_tag"]
+        intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+            "int_vrf"
+        ]
+        intf["interfaces"][0]["nvPairs"]["IP"] = str(
+            delem[profile]["ipv4_addr"]
+        )
+        intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
+            delem[profile]["ipv6_addr"]
+        )
+        intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
+            "route_tag"
+        ]
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
-        intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile]["description"]
+        intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
+            "description"
+        ]
         if delem[profile]["cmds"] is None:
             intf["interfaces"][0]["nvPairs"]["CONF"] = ""
         else:
-            intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(delem[profile]["cmds"])
+            intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(
+                delem[profile]["cmds"]
+            )
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
@@ -1865,38 +2337,52 @@ class DcnmIntf:
 
         # Extract port id from the given name, which is of the form 'po300'
 
-        ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
         intf["interfaces"][0].update({"ifName": ifname})
 
         if delem[profile]["mode"] == "trunk":
-            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[profile][
-                "bpdu_guard"
-            ].lower()
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
             intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
                 delem[profile]["port_type_fast"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(delem[profile]["speed"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
+                delem[profile]["speed"]
+            )
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "access":
-            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[profile][
-                "bpdu_guard"
-            ].lower()
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
             intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
                 delem[profile]["port_type_fast"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(delem[profile]["speed"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
+                delem[profile]["speed"]
+            )
             intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "routed":
-            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile]["int_vrf"]
-            intf["interfaces"][0]["nvPairs"]["IP"] = str(delem[profile]["ipv4_addr"])
+            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+                "int_vrf"
+            ]
+            intf["interfaces"][0]["nvPairs"]["IP"] = str(
+                delem[profile]["ipv4_addr"]
+            )
             if delem[profile]["ipv4_addr"] != "":
                 intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
                     delem[profile]["ipv4_mask_len"]
@@ -1906,29 +2392,43 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
                 "route_tag"
             ]
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(delem[profile]["speed"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
+                delem[profile]["speed"]
+            )
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "epl_routed":
-            intf["interfaces"][0]["nvPairs"]["IP"] = str(delem[profile]["ipv4_addr"])
+            intf["interfaces"][0]["nvPairs"]["IP"] = str(
+                delem[profile]["ipv4_addr"]
+            )
             intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
                 delem[profile]["ipv4_mask_len"]
             )
-            intf["interfaces"][0]["nvPairs"]["IPv6"] = str(delem[profile]["ipv6_addr"])
+            intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
+                delem[profile]["ipv6_addr"]
+            )
             intf["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = str(
                 delem[profile]["ipv6_mask_len"]
             )
             intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
                 "route_tag"
             ]
-            intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(delem[profile]["speed"])
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
+                delem[profile]["speed"]
+            )
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
         if delem[profile]["mode"] != "monitor":
-            intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile]["description"]
+            intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
+                "description"
+            ]
             if delem[profile]["cmds"] is None:
                 intf["interfaces"][0]["nvPairs"]["CONF"] = ""
             else:
@@ -1938,6 +2438,112 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
                 delem[profile]["admin_state"]
             ).lower()
+
+    def dcnm_intf_get_svi_payload(self, delem, intf, profile):
+
+        # Extract port id from the given name, which is of the form 'po300'
+
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
+        intf["interfaces"][0].update({"ifName": ifname})
+
+        if delem[profile]["mode"] == "vlan":
+            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+                "int_vrf"
+            ]
+            intf["interfaces"][0]["nvPairs"]["IP"] = str(
+                delem[profile]["ipv4_addr"]
+            )
+            intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
+                delem[profile]["ipv4_mask_len"]
+            )
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = str(
+                delem[profile]["route_tag"]
+            )
+            intf["interfaces"][0]["nvPairs"]["DISABLE_IP_REDIRECTS"] = str(
+                delem[profile]["disable_ip_redirects"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
+                "description"
+            ]
+
+            if delem[profile]["cmds"] is None:
+                intf["interfaces"][0]["nvPairs"]["CONF"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(
+                    delem[profile]["cmds"]
+                )
+            # intf["interfaces"][0]["nvPairs"]["CONF"] = str(delem[profile]["cmds"])
+            intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
+                delem[profile]["admin_state"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["ENABLE_HSRP"] = str(
+                delem[profile]["enable_hsrp"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["HSRP_VIP"] = str(
+                delem[profile]["hsrp_vip"]
+            )
+            intf["interfaces"][0]["nvPairs"]["HSRP_GROUP"] = str(
+                delem[profile]["hsrp_group"]
+            )
+            if str(delem[profile]["enable_hsrp"]).lower() == "true":
+                intf["interfaces"][0]["nvPairs"]["PREEMPT"] = str(
+                    delem[profile]["preempt"]
+                ).lower()
+            else:
+                intf["interfaces"][0]["nvPairs"]["PREEMPT"] = str(
+                    False
+                ).lower()
+
+            intf["interfaces"][0]["nvPairs"]["HSRP_VERSION"] = str(
+                delem[profile]["hsrp_version"]
+            )
+            intf["interfaces"][0]["nvPairs"]["HSRP_PRIORITY"] = str(
+                delem[profile]["hsrp_priority"]
+            )
+            intf["interfaces"][0]["nvPairs"]["MAC"] = str(
+                delem[profile]["hsrp_vmac"]
+            )
+            intf["interfaces"][0]["nvPairs"]["dhcpServerAddr1"] = str(
+                delem[profile]["dhcp_server_addr1"]
+            )
+            intf["interfaces"][0]["nvPairs"]["vrfDhcp1"] = str(
+                delem[profile]["vrf_dhcp1"]
+            )
+            intf["interfaces"][0]["nvPairs"]["dhcpServerAddr2"] = str(
+                delem[profile]["dhcp_server_addr2"]
+            )
+            intf["interfaces"][0]["nvPairs"]["vrfDhcp2"] = str(
+                delem[profile]["vrf_dhcp2"]
+            )
+            intf["interfaces"][0]["nvPairs"]["dhcpServerAddr3"] = str(
+                delem[profile]["dhcp_server_addr3"]
+            )
+            intf["interfaces"][0]["nvPairs"]["vrfDhcp3"] = str(
+                delem[profile]["vrf_dhcp3"]
+            )
+            intf["interfaces"][0]["nvPairs"]["advSubnetInUnderlay"] = str(
+                delem[profile]["adv_subnet_in_underlay"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["ENABLE_NETFLOW"] = str(
+                delem[profile]["enable_netflow"]
+            ).lower()
+
+            if str(delem[profile]["enable_netflow"]).lower() == "true":
+                intf["interfaces"][0]["nvPairs"]["NETFLOW_MONITOR"] = str(
+                    delem[profile]["netflow_monitor"]
+                )
+            else:
+                intf["interfaces"][0]["nvPairs"]["NETFLOW_MONITOR"] = ""
+
+            intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+            # we don't need SPEED for SVI interfaces
+            intf["interfaces"][0]["nvPairs"].pop("SPEED")
 
     # New Interfaces
     def dcnm_get_intf_payload(self, delem, sw):
@@ -1975,18 +2581,24 @@ class DcnmIntf:
         # intf.update ({"interfaceType"  : self.int_types[delem['type']]})
 
         if "vpc" == delem["type"]:
-            intf["interfaces"][0].update({"serialNumber": str(self.vpc_ip_sn[sw])})
+            intf["interfaces"][0].update(
+                {"serialNumber": str(self.vpc_ip_sn[sw])}
+            )
         else:
             intf["interfaces"][0].update({"serialNumber": str(self.ip_sn[sw])})
 
-        intf["interfaces"][0].update({"interfaceType": self.int_types[delem["type"]]})
+        intf["interfaces"][0].update(
+            {"interfaceType": self.int_types[delem["type"]]}
+        )
         intf["interfaces"][0].update({"fabricName": self.fabric})
 
         if "profile" not in delem.keys():
             # for state 'deleted', 'profile' construct is not included. So just update the ifName here
             # and return. Rest of the code is all 'profile' specific and hence not required for 'deleted'
 
-            ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+            ifname, port_id = self.dcnm_intf_get_if_name(
+                delem["name"], delem["type"]
+            )
             intf["interfaces"][0].update({"ifName": ifname})
             return intf
 
@@ -2010,6 +2622,9 @@ class DcnmIntf:
             # Ethernet interface payload does not have interfaceType and skipResourceCheck flags. Pop
             # them out
             intf.pop("skipResourceCheck")
+
+        if "svi" == delem["type"]:
+            self.dcnm_intf_get_svi_payload(delem, intf, "profile")
 
         return intf
 
@@ -2117,15 +2732,19 @@ class DcnmIntf:
     def dcnm_intf_translate_elements(self, ie1, ie2):
 
         if sys.version_info[0] >= 3:
-            # Python version 3 onwards trfeats unicode as strings. No special treatment is required
+            # Python version 3 onwards treats unicode as strings. No special treatment is required
             e1 = ie1
             e2 = ie2
         else:
-            if isinstance(ie1, unicode):  # noqa pylint: disable=undefined-variable
+            if isinstance(
+                ie1, unicode  # noqa pylint: disable=undefined-variable
+            ):
                 e1 = ie1.encode("utf-8")
             else:
                 e1 = ie1
-            if isinstance(ie2, unicode):  # noqa pylint: disable=undefined-variable
+            if isinstance(
+                ie2, unicode  # noqa pylint: disable=undefined-variable
+            ):
                 e2 = ie2.encode("utf-8")
             else:
                 e2 = ie2
@@ -2143,17 +2762,19 @@ class DcnmIntf:
             elif e2 == "":
                 comb_key = e1
             else:
-                comb_key = e2 + '\n' + e1
+                comb_key = e2 + "\n" + e1
         else:
             if e1 == "":
                 comb_key = e2
             elif e2 == "":
                 comb_key = e1
             else:
-                comb_key = e2 + ',' + e1
+                comb_key = e2 + "," + e1
         return comb_key
 
-    def dcnm_intf_compare_elements(self, name, sno, fabric, ie1, ie2, k, state):
+    def dcnm_intf_compare_elements(
+        self, name, sno, fabric, ie1, ie2, k, state
+    ):
 
         # unicode encoded strings must be decoded to get proper strings which is required
         # for comparison purposes
@@ -2198,6 +2819,7 @@ class DcnmIntf:
                 t_e2 = e2
 
         if t_e1 != t_e2:
+
             if (state == "replaced") or (state == "overridden"):
                 return "add"
             elif state == "merged":
@@ -2324,7 +2946,8 @@ class DcnmIntf:
                             for ik in if_keys:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
-                                    nv_keys.remove("SPEED")
+                                    if "SPEED" in nv_keys:
+                                        nv_keys.remove("SPEED")
                                     for nk in nv_keys:
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
@@ -2342,11 +2965,21 @@ class DcnmIntf:
                                             if res == "dont_add":
                                                 break
                                         if res == "copy_and_add":
-                                            want[k][0][ik][nk] = d[k][0][ik][nk]
+                                            want[k][0][ik][nk] = d[k][0][ik][
+                                                nk
+                                            ]
                                             continue
-                                        if (res == "merge_and_add"):
-                                            want[k][0][ik][nk] = self.dcnm_intf_merge_want_and_have(nk, want[k][0][ik][nk], d[k][0][ik][nk])
-                                            changed_dict[k][0][ik][nk] = want[k][0][ik][nk]
+                                        if res == "merge_and_add":
+                                            want[k][0][ik][
+                                                nk
+                                            ] = self.dcnm_intf_merge_want_and_have(
+                                                nk,
+                                                want[k][0][ik][nk],
+                                                d[k][0][ik][nk],
+                                            )
+                                            changed_dict[k][0][ik][nk] = want[
+                                                k
+                                            ][0][ik][nk]
                                         if res != "dont_add":
                                             action = "update"
                                         else:
@@ -2371,8 +3004,12 @@ class DcnmIntf:
                                     if res == "copy_and_add":
                                         want[k][0][ik] = d[k][0][ik]
                                         continue
-                                    if (res == "merge_and_add"):
-                                        want[k][0][ik] = self.dcnm_intf_merge_want_and_have(ik, want[k][0][ik], d[k][0][ik])
+                                    if res == "merge_and_add":
+                                        want[k][0][
+                                            ik
+                                        ] = self.dcnm_intf_merge_want_and_have(
+                                            ik, want[k][0][ik], d[k][0][ik]
+                                        )
                                         changed_dict[k][0][ik] = want[k][0][ik]
                                     if res != "dont_add":
                                         action = "update"
@@ -2388,8 +3025,10 @@ class DcnmIntf:
                             if res == "copy_and_add":
                                 want[k] = d[k]
                                 continue
-                            if (res == "merge_and_add"):
-                                want[k] = self.dcnm_intf_merge_want_and_have(k, want[k], d[k])
+                            if res == "merge_and_add":
+                                want[k] = self.dcnm_intf_merge_want_and_have(
+                                    k, want[k], d[k]
+                                )
                                 changed_dict[k] = want[k]
                             if res != "dont_add":
                                 action = "update"
@@ -2443,8 +3082,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_replaced(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2460,7 +3099,7 @@ class DcnmIntf:
     def dcnm_intf_get_diff_merge(self):
 
         self.diff_create = []
-        self.diff_delete_deploy = [[], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2549,7 +3188,8 @@ class DcnmIntf:
                 return False, item["ifname"]
             if item.get("members"):
                 if have["ifName"] in [
-                    self.dcnm_intf_get_if_name(mem, "eth")[0] for mem in item["members"]
+                    self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    for mem in item["members"]
                 ]:
                     return False, item["ifname"]
             elif (item.get("peer1_members")) or (item.get("peer2_members")):
@@ -2586,15 +3226,16 @@ class DcnmIntf:
                 # both the switches. So check before adding to have_all
 
                 if not any(
-                    d.get("serialNo", None) == self.ip_sn[sw] for d in self.have_all
+                    d.get("serialNo", None) == self.ip_sn[sw]
+                    for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(sw)
 
     def dcnm_intf_get_diff_overridden(self, cfg):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2635,7 +3276,9 @@ class DcnmIntf:
                     defer_list.append(have)
                     continue
 
-                uelem = self.dcnm_intf_get_default_eth_payload(name, sno, fabric)
+                uelem = self.dcnm_intf_get_default_eth_payload(
+                    name, sno, fabric
+                )
                 # Before we add the interface to replace list, check if the default payload is same as
                 # what is already present. If both are same, skip the interface.
                 # So during idempotence, we may add the same interface again if we don't compare
@@ -2643,7 +3286,16 @@ class DcnmIntf:
                 intf = self.dcnm_intf_get_intf_info(
                     have["ifName"], have["serialNo"], have["ifType"]
                 )
-                if self.dcnm_compare_default_payload(uelem, intf) == "DCNM_INTF_MATCH":
+
+                if intf == []:
+                    # In case of LANClassic fabrics, a GET on policy details for Ethernet interfaces will return [] since
+                    # these interfaces dont have any policies configured by default. In that case there is nothing to be done
+                    continue
+
+                if (
+                    self.dcnm_compare_default_payload(uelem, intf)
+                    == "DCNM_INTF_MATCH"
+                ):
                     continue
 
                 if uelem is not None:
@@ -2651,13 +3303,19 @@ class DcnmIntf:
                     # member of any port-channel. If so, do not default that
                     rc, intf = self.dcnm_intf_can_be_replaced(have)
                     if rc is True:
-                        self.dcnm_intf_merge_intf_info(uelem, self.diff_replace)
-                        self.changed_dict[0]["replaced"].append(copy.deepcopy(uelem))
+                        self.dcnm_intf_merge_intf_info(
+                            uelem, self.diff_replace
+                        )
+                        self.changed_dict[0]["replaced"].append(
+                            copy.deepcopy(uelem)
+                        )
                         delem["serialNumber"] = sno
                         delem["ifName"] = name
                         delem["fabricName"] = self.fabric
                         self.diff_deploy.append(delem)
-                        self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+                        self.changed_dict[0]["deploy"].append(
+                            copy.deepcopy(delem)
+                        )
 
             # Sub-interafces are returned as INTERFACE_ETHERNET in have_all. So do an
             # additional check to see if it is physical. If not assume it to be sub-interface
@@ -2669,6 +3327,7 @@ class DcnmIntf:
                 or (have["ifType"] == "INTERFACE_LOOPBACK")
                 or (have["ifType"] == "SUBINTERFACE")
                 or (have["ifType"] == "INTERFACE_VPC")
+                or (have["ifType"] == "INTERFACE_VLAN")
                 or (
                     (have["ifType"] == "INTERFACE_ETHERNET")
                     and (
@@ -2702,7 +3361,10 @@ class DcnmIntf:
                         d
                         for d in self.want
                         if (
-                            (name.lower() == d["interfaces"][0]["ifName"].lower())
+                            (
+                                name.lower()
+                                == d["interfaces"][0]["ifName"].lower()
+                            )
                             and (sno == d["interfaces"][0]["serialNumber"])
                             and (fabric == d["interfaces"][0]["fabricName"])
                         )
@@ -2718,12 +3380,18 @@ class DcnmIntf:
                         delem["serialNumber"] = sno
                         delem["fabricName"] = fabric
 
-                        self.diff_delete[self.int_index[have["ifType"]]].append(delem)
-                        if have["mode"] is not None:
-                            self.diff_delete_deploy[
-                                self.int_index[have["ifType"]]
-                            ].append(delem)
-                        self.changed_dict[0]["deleted"].append(copy.deepcopy(delem))
+                        self.diff_delete[
+                            self.int_index[have["ifType"]]
+                        ].append(delem)
+
+                        # For INTERFACE_VLAN the "mode" argment is not set in have_all.
+                        # if have["mode"] is not None or have["ifType"] == "INTERFACE_VLAN":
+                        self.diff_delete_deploy[
+                            self.int_index[have["ifType"]]
+                        ].append(delem)
+                        self.changed_dict[0]["deleted"].append(
+                            copy.deepcopy(delem)
+                        )
                         del_list.append(have)
 
         for intf in defer_list:
@@ -2763,8 +3431,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_deleted(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -2834,21 +3502,38 @@ class DcnmIntf:
                                 have
                                 for have in self.have_all
                                 if (
-                                    (intf["ifName"].lower() == have["ifName"].lower())
-                                    and (intf["serialNumber"] == have["serialNo"])
+                                    (
+                                        intf["ifName"].lower()
+                                        == have["ifName"].lower()
+                                    )
+                                    and (
+                                        intf["serialNumber"]
+                                        == have["serialNo"]
+                                    )
                                 )
                             ][0]
                             if (
                                 match_have
-                                and (str(match_have["isPhysical"]).lower() != "none")
-                                and (str(match_have["isPhysical"]).lower() == "true")
+                                and (
+                                    str(match_have["isPhysical"]).lower()
+                                    != "none"
+                                )
+                                and (
+                                    str(match_have["isPhysical"]).lower()
+                                    == "true"
+                                )
                             ):
 
-                                if str(match_have["deletable"]).lower() == "false":
+                                if (
+                                    str(match_have["deletable"]).lower()
+                                    == "false"
+                                ):
                                     continue
 
                                 uelem = self.dcnm_intf_get_default_eth_payload(
-                                    intf["ifName"], intf["serialNumber"], self.fabric
+                                    intf["ifName"],
+                                    intf["serialNumber"],
+                                    self.fabric,
                                 )
                                 intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(
                                     intf
@@ -2877,15 +3562,19 @@ class DcnmIntf:
                                         self.dcnm_intf_merge_intf_info(
                                             uelem, self.diff_replace
                                         )
-                                        self.changed_dict[0]["replaced"].append(
-                                            copy.deepcopy(uelem)
-                                        )
-                                        delem["serialNumber"] = intf["serialNumber"]
+                                        self.changed_dict[0][
+                                            "replaced"
+                                        ].append(copy.deepcopy(uelem))
+                                        delem["serialNumber"] = intf[
+                                            "serialNumber"
+                                        ]
                                         delem["ifName"] = if_name
                                         delem["fabricName"] = self.fabric
                                         self.diff_deploy.append(delem)
                         else:
-                            intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+                            intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(
+                                intf
+                            )
 
                             if intf_payload != []:
                                 delem["interfaceDbId"] = 0
@@ -2894,7 +3583,9 @@ class DcnmIntf:
                                 delem["serialNumber"] = intf["serialNumber"]
                                 delem["fabricName"] = self.fabric
 
-                                self.diff_delete[self.int_index[if_type]].append(delem)
+                                self.diff_delete[
+                                    self.int_index[if_type]
+                                ].append(delem)
                                 if "monitor" not in intf_payload["policy"]:
                                     self.diff_delete_deploy[
                                         self.int_index[if_type]
@@ -2915,14 +3606,21 @@ class DcnmIntf:
             if_type = "INTERFACE_LOOPBACK"
         elif cfg["name"][0:3].lower() == "eth":
             if "." not in cfg["name"]:
-                if_name, port_id = self.dcnm_intf_get_if_name(cfg["name"], "eth")
+                if_name, port_id = self.dcnm_intf_get_if_name(
+                    cfg["name"], "eth"
+                )
                 if_type = "INTERFACE_ETHERNET"
             else:
-                if_name, port_id = self.dcnm_intf_get_if_name(cfg["name"], "sub_int")
+                if_name, port_id = self.dcnm_intf_get_if_name(
+                    cfg["name"], "sub_int"
+                )
                 if_type = "SUBINTERFACE"
         elif cfg["name"][0:3].lower() == "vpc":
             if_name, port_id = self.dcnm_intf_get_if_name(cfg["name"], "vpc")
             if_type = "INTERFACE_VPC"
+        elif cfg["name"][0:4].lower() == "vlan":
+            if_name, port_id = self.dcnm_intf_get_if_name(cfg["name"], "svi")
+            if_type = "INTERFACE_VLAN"
         else:
             if_name = ""
             if_type = ""
@@ -2966,11 +3664,14 @@ class DcnmIntf:
 
         ent_resp = {}
         for ent in entities:
+
             ent_resp[ent] = "No Error"
             if isinstance(resp["DATA"], list):
                 for data in resp["DATA"]:
                     host = data.get("entity")
+
                     if host:
+                        host = host.split(":")[0]
                         if self.hn_sn.get(host) == ent:
                             ent_resp[ent] = data.get("message")
                     else:
@@ -2978,24 +3679,21 @@ class DcnmIntf:
             elif isinstance(resp["DATA"], str):
                 ent_resp[ent] = resp["DATA"]
 
+        succ_resp["ORIG_MSG"] = []
         for ent in entities:
             if ent_resp[ent] == "No Error":
-                # Consider this case as success.
-                succ_resp["REQUEST_PATH"] = resp["REQUEST_PATH"]
-                succ_resp["MESSAGE"] = "OK"
-                succ_resp["METHOD"] = resp["METHOD"]
-                succ_resp["RETURN_CODE"] = 200
-                return succ_resp, True
+                continue
             elif (
                 ("No Commands to execute" in ent_resp[ent])
                 or (ent_resp[ent] == "Failed to fetch policies")
                 or (ent_resp[ent] == "Failed to fetch switch configuration")
+                or (ent_resp[ent] == "In-Sync")
             ):
                 # Consider this case as success.
                 succ_resp["REQUEST_PATH"] = resp["REQUEST_PATH"]
                 succ_resp["MESSAGE"] = "OK"
                 succ_resp["METHOD"] = resp["METHOD"]
-                succ_resp["ORIG_MSG"] = ent_resp[ent]
+                succ_resp["ORIG_MSG"].append(ent_resp[ent])
                 succ_resp["RETURN_CODE"] = 200
             else:
                 failed = True
@@ -3018,7 +3716,9 @@ class DcnmIntf:
             # Consider that as success and mark the change flag as 'False; to indicate
             # nothinbg actually changed
 
-            if (resp.get("MESSAGE") == "OK") and (resp.get("RETURN_CODE") == 200):
+            if (resp.get("MESSAGE") == "OK") and (
+                resp.get("RETURN_CODE") == 200
+            ):
                 return resp, True
 
             presp, changed = self.dcnm_parse_response(resp)
@@ -3065,9 +3765,11 @@ class DcnmIntf:
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
 
+        resp = {}
+
         for item in deploy_list:
             retries = 0
-            while retries < 50:
+            while retries < 60:
                 retries += 1
                 name = item["ifName"]
                 sno = item["serialNumber"]
@@ -3093,21 +3795,29 @@ class DcnmIntf:
                                 "fabricName": self.fabric,
                             }
                         )
-                        dcnm_send(self.module, "POST", path, json_payload)
-                    time.sleep(20)
+                        resp = dcnm_send(
+                            self.module, "POST", path, json_payload
+                        )
+                    time.sleep(5)
                     self.have_all = []
                     self.dcnm_intf_get_have_all_with_sno(sno)
                 else:
                     # For merge state, the interfaces would have been created just now. Fetch them again before checking
                     self.have_all = []
                     self.dcnm_intf_get_have_all_with_sno(sno)
-            if match_have == [] or match_have[0]["complianceStatus"] != "In-Sync":
+            if (
+                match_have == []
+                or match_have[0]["complianceStatus"] != "In-Sync"
+            ):
                 self.module.fail_json(
                     msg={
                         "FAILURE REASON": "Interafce "
                         + name
                         + " did not reach 'In-Sync' State",
                         "Compliance Status": match_have[0]["complianceStatus"],
+                        # "CHANGED": self.changed_dict,
+                        # "RESP": resp
+                        "RESULT": self.result,
                     }
                 )
 
@@ -3131,7 +3841,7 @@ class DcnmIntf:
             if delem == []:
                 continue
 
-            if (self.dcnm_version < 12):
+            if self.dcnm_version < 12:
                 json_payload = json.dumps(delem)
             else:
                 send_payload = copy.deepcopy(delem)
@@ -3156,7 +3866,9 @@ class DcnmIntf:
                     resp["RETURN_CODE"] = 200
                     resp["MESSAGE"] = "OK"
 
-            if (resp.get("MESSAGE") != "OK") or (resp.get("RETURN_CODE") != 200):
+            if (resp.get("MESSAGE") != "OK") or (
+                resp.get("RETURN_CODE") != 200
+            ):
 
                 # there may be cases which are not actual failures. retry the
                 # action
@@ -3173,6 +3885,7 @@ class DcnmIntf:
                     (resp.get("MESSAGE") != "OK")
                     and ("No Commands to execute" not in resp.get("MESSAGE"))
                 ) or (resp.get("RETURN_CODE") != 200):
+                    resp["CHANGED"] = self.changed_dict
                     self.module.fail_json(msg=resp)
             else:
                 changed = True
@@ -3195,7 +3908,7 @@ class DcnmIntf:
 
             if index != self.int_index["INTERFACE_VPC"]:
                 # Deploy just requires ifName and serialNumber
-                if (self.dcnm_version < 12):
+                if self.dcnm_version < 12:
                     [
                         [
                             item.pop("interfaceType"),
@@ -3205,12 +3918,7 @@ class DcnmIntf:
                         for item in delem
                     ]
                 else:
-                    [
-                        [
-                            item.pop("interfaceDbId"),
-                        ]
-                        for item in delem
-                    ]
+                    [[item.pop("interfaceDbId")] for item in delem]
             else:
                 [
                     [item.pop("interfaceType"), item.pop("interfaceDbId")]
@@ -3240,7 +3948,10 @@ class DcnmIntf:
             resp = dcnm_send(self.module, "PUT", path, json_payload)
             self.result["response"].append(resp)
 
-            if (resp.get("MESSAGE") != "OK") or (resp.get("RETURN_CODE") != 200):
+            if (resp.get("MESSAGE") != "OK") or (
+                resp.get("RETURN_CODE") != 200
+            ):
+                resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
                 replace = True
@@ -3254,7 +3965,10 @@ class DcnmIntf:
             resp = dcnm_send(self.module, "POST", path, json_payload)
             self.result["response"].append(resp)
 
-            if (resp.get("MESSAGE") != "OK") or (resp.get("RETURN_CODE") != 200):
+            if (resp.get("MESSAGE") != "OK") or (
+                resp.get("RETURN_CODE") != 200
+            ):
+                resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
                 create = True
@@ -3268,7 +3982,9 @@ class DcnmIntf:
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
-            if (resp.get("MESSAGE") != "OK") and (resp.get("RETURN_CODE") != 200):
+            if (resp.get("MESSAGE") != "OK") and (
+                resp.get("RETURN_CODE") != 200
+            ):
                 resp, rc = self.dcnm_parse_response(resp)
                 changed = rc
             else:
@@ -3277,6 +3993,13 @@ class DcnmIntf:
             deploy = changed
 
             self.result["response"].append(resp)
+
+            # Continue further only if original deploy is success. Fail otherwise
+            if (resp.get("MESSAGE") != "OK") and (
+                resp.get("RETURN_CODE") != 200
+            ):
+                resp["CHANGED"] = self.changed_dict
+                self.module.fail_json(msg=resp)
 
         resp = None
 
@@ -3318,7 +4041,9 @@ class DcnmIntf:
             if None is cfg.get("switch", None):
                 continue
             for sw_elem in cfg["switch"]:
-                addr_info = dcnm_get_ip_addr_info(self.module, sw_elem, ip_sn, hn_sn)
+                addr_info = dcnm_get_ip_addr_info(
+                    self.module, sw_elem, ip_sn, hn_sn
+                )
                 cfg["switch"][index] = addr_info
                 index = index + 1
 
@@ -3345,7 +4070,9 @@ def main():
         check_deploy=dict(type="bool", default=False),
     )
 
-    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+    module = AnsibleModule(
+        argument_spec=element_spec, supports_check_mode=True
+    )
 
     dcnm_intf = DcnmIntf(module)
 
@@ -3379,7 +4106,9 @@ def main():
     dcnm_intf.dcnm_intf_validate_input()
 
     # state 'deleted' may not include all the information
-    if (module.params["state"] != "query") and (module.params["state"] != "deleted"):
+    if (module.params["state"] != "query") and (
+        module.params["state"] != "deleted"
+    ):
         dcnm_intf.dcnm_intf_get_want()
         dcnm_intf.dcnm_intf_get_have()
 
@@ -3412,6 +4141,7 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_ETHERNET"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["SUBINTERFACE"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_LOOPBACK"]]
+        or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
     ):
         dcnm_intf.result["changed"] = True
     else:
@@ -3422,6 +4152,7 @@ def main():
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
+
     module.exit_json(**dcnm_intf.result)
 
 

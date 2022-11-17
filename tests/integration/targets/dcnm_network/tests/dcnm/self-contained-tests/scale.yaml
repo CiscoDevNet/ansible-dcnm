@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: SCALE - Verify if fabric is deployed.
@@ -22,7 +22,7 @@
 
 - name: SCALE - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: SCALE - sleep for 40 seconds for DCNM to completely update the state
@@ -40,14 +40,14 @@
 
 - name: Push all Networks to DCNM
   cisco.dcnm.dcnm_network:
-    fabric: '{{ ansible_it_fabric }}'
+    fabric: '{{ test_fabric }}'
     state: merged
     config: '{{ nets_list }}'
   register: result
 
 - name: SCALE - Clean up existing networks
   cisco.dcnm.dcnm_network: &conf
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: SCALE - sleep for 40 seconds for DCNM to completely update the state
@@ -70,5 +70,5 @@
 
 - name: SCALE - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted

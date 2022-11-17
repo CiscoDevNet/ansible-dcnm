@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: OVERRIDDEN - Verify if fabric - Fabric1 is deployed.
@@ -22,16 +22,12 @@
 
 - name: OVERRIDDEN - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -62,6 +58,17 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -82,17 +89,13 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 ##############################################
 ##                OVERRIDDEN                ##
 ##############################################
 
 - name: OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network: &conf1
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: overridden
     config:
     - net_name: ansible-net13
@@ -111,6 +114,16 @@
       # delete the second network
       deploy: false
   register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
 
 - assert:
     that:
@@ -138,10 +151,6 @@
     - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
     - 'result.diff[1].net_name == "ansible-net12"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: OVERRIDDEN - conf1 - Idempotence
   cisco.dcnm.dcnm_network: *conf1
   register: result
@@ -153,12 +162,12 @@
 
 - name: OVERRIDDEN - setup - remove any networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
 
 - name: OVERRIDDEN- Create, Attach and Deploy L2. L3 Network with Switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -207,6 +216,17 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -233,13 +253,9 @@
     - 'result.diff[1].is_l2only == false'
     - 'result.diff[1].vlan_name == "testvlan1"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: OVERRIDDEN - Override L2, L3 Networks with a new L2 network 
   cisco.dcnm.dcnm_network: &conf2
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: overridden
     config:
     - net_name: ansible-net14
@@ -264,6 +280,16 @@
         deploy: true
       deploy: false
   register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
 
 - assert:
     that:
@@ -295,10 +321,6 @@
     - 'result.diff[1].net_name == "ansible-net12"'
     - 'result.diff[2].net_name == "ansible-net13"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: OVERRIDDEN - conf2 - Idempotence
   cisco.dcnm.dcnm_network: *conf2
   register: result
@@ -310,7 +332,7 @@
 
 - name: OVERRIDDEN - Check for networks in fabric
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: query
   register: result
 
@@ -325,5 +347,5 @@
 
 - name: OVERRIDDEN - setup - remove any networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted

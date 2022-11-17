@@ -183,9 +183,9 @@
 
 - assert:
     that:
-    - 'result.response[0].ipAddress == "{{ ansible_switch1 }}"'
+    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.response[0].ipAddress'
     - 'result.response[0].switchRole == "border gateway"'
-    - 'result.response[1].ipAddress == "{{ ansible_switch2 }}"'
+    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.response[1].ipAddress'
     - 'result.response[1].switchRole == "border gateway"'
 
 ##############################################

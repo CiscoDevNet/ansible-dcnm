@@ -1,0 +1,272 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    poap_enabled: False
+
+- set_fact:
+    poap_switch_present: False
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+
+# Below commented tasks are sample tasks to enable Bootstrap and DHCP along with DHCP configs
+# Please make sure you provide correct values for required fields 
+# Fabric config has many NDFC/DCNM auto generated values, so always GET the configs first
+# and then set the required values.
+#
+# - name: POAP MERGED - Get the configs of the fabric deployed.
+#   cisco.dcnm.dcnm_rest:
+#     method: GET
+#     path: "{{ rest_path }}"
+#   register: result
+#
+# - set_fact:
+#     result.response.DATA.nvPairs["BOOTSTRAP_ENABLE"] = true
+#     result.response.DATA.nvPairs["DHCP_ENABLE"] = true
+#     result.response.DATA.nvPairs["DHCP_IPV6_ENABLE"] = "DHCPv4"
+#     result.response.DATA.nvPairs["DHCP_START"] = "192.168.1.10"
+#     result.response.DATA.nvPairs["DHCP_END"] = "192.168.1.20"
+#     result.response.DATA.nvPairs["MGMT_GW"] = "192.168.1.1"
+#     result.response.DATA.nvPairs["MGMT_PREFIX"] = "24"
+#
+# - name: POAP MERGED - Configure Bootstrap and DHCP on Fabric 
+#   cisco.dcnm.dcnm_rest:
+#     method: PUT
+#     path: "{{ rest_path }}"
+#     json_data: "{{ result.response.DATA }}"
+#
+
+- name: POAP MERGED - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- set_fact:
+    poap_enabled: True
+  when: result.response.DATA.nvPairs["BOOTSTRAP_ENABLE"] == "true"
+
+- name: POAP MERGED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
+##############################################
+##                MERGED                    ##
+##############################################
+
+- name: POAP MERGED - Pre-provision switch Configuration
+  cisco.dcnm.dcnm_inventory: &conf_prepro
+    fabric: '{{ ansible_it_fabric }}'
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: '{{ ansible_prepro_switch }}'
+        user_name: '{{ switch_username }}'
+        password: '{{ switch_password }}'
+        role: border_gateway
+        poap:
+          - preprovision_serial: '{{ ansible_prepro_serial }}'
+            model: '{{ ansible_prepro_model }}'
+            version: '{{ ansible_prepro_swversion }}'
+            hostname: '{{ ansible_prepro_hostname }}'
+            config_data:
+              modulesModel: '{{ ansible_modules_model }}'
+              gateway: '{{ ansible_bstrap_gateway }}'
+  when: poap_enabled == True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+  when: (poap_enabled == True)
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  when: (poap_enabled == True)
+  loop: '{{ result.response }}'
+
+- name: POAP MERGED - Pre-provision switch Configuration - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_prepro
+  when: poap_enabled == True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+  when: (poap_enabled == True)
+
+- name: POAP MERGED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+  when: (poap_enabled == True)
+
+- name: POAP MERGED - Query for POAP enabled swicthes
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    query_poap: True
+    state: query
+  when: poap_enabled == True
+  register: result
+
+- assert:
+    that:
+    - 'result.response != None'
+  when: poap_enabled == True
+
+- name: Check poap query for switches
+  set_fact:
+    poap_switch_present: True
+  when: (poap_enabled == True and (item['serialNumber'] == '{{ ansible_poap_serial }}'))
+  loop: '{{ result.response }}'
+  ignore_errors: yes
+
+- name: POAP MERGED - Poap, Pre-provision and discovered switch Configuration
+  cisco.dcnm.dcnm_inventory: &conf_poap
+    fabric: '{{ ansible_it_fabric }}'
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: '{{ ansible_poap_switch }}'
+        user_name: '{{ switch_username }}'
+        password: '{{ switch_password }}'
+        role: border_gateway
+        poap:
+          - serial_number: '{{ ansible_poap_serial }}'
+            model: '{{ ansible_poap_model }}'
+            version: '{{ ansible_poap_swversion }}'
+            hostname: '{{ ansible_poap_hostname }}'
+            config_data:
+              modulesModel: '{{ ansible_modules_model }}'
+              gateway: '{{ ansible_bstrap_gateway }}'
+      - seed_ip: '{{ ansible_switch1 }}'
+        user_name: '{{ switch_username }}'
+        password: '{{ switch_password }}'
+        auth_proto: MD5
+        max_hops: 0
+        preserve_config: False
+        role: spine
+      - seed_ip: '{{ ansible_prepro_switch }}'
+        user_name: '{{ switch_username }}'
+        password: '{{ switch_password }}'
+        role: border
+        poap:
+          - preprovision_serial: '{{ ansible_prepro_serial }}'
+            model: '{{ ansible_prepro_model }}'
+            version: '{{ ansible_prepro_swversion }}'
+            hostname: '{{ ansible_prepro_hostname }}'
+            config_data:
+              modulesModel: '{{ ansible_modules_model }}'
+              gateway: '{{ ansible_bstrap_gateway }}'
+  when: (poap_enabled == True and poap_switch_present == True)
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+  when: (poap_enabled == True and poap_switch_present == True)
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  when: (poap_enabled == True and poap_switch_present == True)
+  loop: '{{ result.response }}'
+
+- name: POAP MERGED - Poap, Pre-provision and discovered switch Configuration - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_poap
+  when: (poap_enabled == True and poap_switch_present == True)
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+  when: (poap_enabled == True and poap_switch_present == True)
+
+- name: POAP MERGED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+  when: (poap_enabled == True)
+
+#############################################
+#                QUERY                     ##
+#############################################
+
+- name: POAP QUERY - Pre-provision switch Configuration
+  cisco.dcnm.dcnm_inventory:
+    fabric: '{{ ansible_it_fabric }}'
+    state: merged # Only 2 options supported merged/query for poap config
+    config:
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: '{{ ansible_prepro_switch }}'
+        user_name: '{{ switch_username }}'
+        password: '{{ switch_password }}'
+        role: border_gateway
+        poap:
+          - preprovision_serial: '{{ ansible_prepro_serial }}'
+            model: '{{ ansible_prepro_model }}'
+            version: '{{ ansible_prepro_swversion }}'
+            hostname: '{{ ansible_prepro_hostname }}'
+            config_data:
+              modulesModel: '{{ ansible_modules_model }}'
+              gateway: '{{ ansible_bstrap_gateway }}'
+      - seed_ip: "{{ ansible_switch1 }}"
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                        # Super Spine, Border Super Spine, Border Gateway Super Spine]
+        preserve_config: False # boolean, default is  true
+  when: (poap_enabled == True)
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+  when: (poap_enabled == True)
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  when: (poap_enabled == True)
+  loop: '{{ result.response }}'
+
+- name: POAP QUERY - Query a Switch without a config element
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+  when: (poap_enabled == True)
+  register: result
+
+- assert:
+    that:
+    - '"{{ ansible_prepro_switch }}" or "{{ ansible_switch1 }}" in result.response[0].ipAddress'
+    - '"border gateway" or "leaf" in result.response[0].switchRole'
+    - '"{{ ansible_prepro_switch }}" or "{{ ansible_switch1 }}" in result.response[1].ipAddress'
+    - '"border gateway" or "leaf" in result.response[1].switchRole'
+  when: (poap_enabled == True)
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: POAP QUERY - cleanup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
