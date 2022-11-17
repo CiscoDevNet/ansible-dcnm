@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f interface.log
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -30,7 +30,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po333                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
@@ -40,7 +40,7 @@
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
               - "{{ ansible_switch2 }}"       # provide the switch information where the config is to be deployed
@@ -53,7 +53,7 @@
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config

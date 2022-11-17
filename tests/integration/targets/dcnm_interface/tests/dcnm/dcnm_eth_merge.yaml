@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f interface.log
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -30,7 +30,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -47,7 +47,7 @@
               description: "eth interface  acting as trunk"
 
           - name: "{{ ansible_eth_intf8 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -64,7 +64,7 @@
               description: "eth interface acting as access"
 
           - name: "{{ ansible_eth_intf9 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -82,7 +82,7 @@
               description: "eth interface acting as routed"
 
           - name: "{{ ansible_eth_intf10 }}"  # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -102,7 +102,7 @@
               description: "eth interface acting as epl_routed"
 
           - name: "{{ ansible_eth_intf11 }}"  # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]

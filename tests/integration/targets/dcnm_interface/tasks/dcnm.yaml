@@ -18,3 +18,33 @@
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
+
+- name: Final Cleanup - delete feature_interface_vlan and hsrp policies that we created during init
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # only choose form [merged, deleted, query]
+    config:
+      - name: my_interface_vlan
+      - name: my_hsrp
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+          - ip: "{{ ansible_switch2 }}"
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: Final Cleanup - delete all templates created during init
+  cisco.dcnm.dcnm_template:
+    state: deleted       # only choose form [merged, deleted, query]
+    config:
+      - name: my_interface_vlan
+      - name: my_hsrp
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'

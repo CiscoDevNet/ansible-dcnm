@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f interface.log
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -30,7 +30,7 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -38,7 +38,7 @@
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: po301                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -46,7 +46,7 @@
               mode: access                    # choose from [trunk, access, l3, monitor]
 
           - name: po302                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -54,7 +54,7 @@
               mode: l3                        # choose from [trunk, access, l3, monitor]
 
           - name: po303                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -62,7 +62,7 @@
               mode: monitor                   # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_eth_intf2 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -70,23 +70,15 @@
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
 
           - name: "{{ ansible_eth_intf3 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
 
-          - name: "{{ ansible_eth_intf4 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
-
           - name: "{{ ansible_eth_intf5 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -95,7 +87,7 @@
               ipv4_addr: 192.168.1.1          # ipv4 address for the interface
 
           - name: "{{ ansible_eth_intf6 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -103,7 +95,7 @@
               mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -114,7 +106,7 @@
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
@@ -148,7 +140,7 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config:
           - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -156,7 +148,7 @@
               mode: trunk                     # choose from [trunk, access, l3, monitor]
 
           - name: po301                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -164,7 +156,7 @@
               mode: access                    # choose from [trunk, access, l3, monitor]
 
           - name: po302                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -172,7 +164,7 @@
               mode: l3                        # choose from [trunk, access, l3, monitor]
 
           - name: po303                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -180,7 +172,7 @@
               mode: monitor                   # choose from [trunk, access, l3, monitor]
 
           - name: "{{ ansible_eth_intf2 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -188,23 +180,15 @@
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
 
           - name: "{{ ansible_eth_intf3 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
             profile:
               mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
 
-          - name: "{{ ansible_eth_intf4 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
-
           - name: "{{ ansible_eth_intf5 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -213,7 +197,7 @@
               ipv4_addr: 192.168.1.1          # ipv4 address for the interface
 
           - name: "{{ ansible_eth_intf6 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -221,7 +205,7 @@
               mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
 
           - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
             deploy: true                      # choose from [true, false]
@@ -232,7 +216,7 @@
               ipv4_mask_len: 24               # choose between [min:8, max:31]
 
           - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth]
+            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
             deploy: true                      # choose from [true, false]
