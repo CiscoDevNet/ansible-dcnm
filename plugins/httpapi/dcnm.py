@@ -42,6 +42,7 @@ class HttpApi(HttpApiBase):
         self.headers = {"Content-Type": "application/json"}
         self.txt_headers = {"Content-Type": "text/plain"}
         self.version = None
+        self.retrycnt = 5 # Retry count for send API
 
     def get_version(self):
         return self.version
@@ -271,6 +272,8 @@ class HttpApi(HttpApiBase):
 
         self.check_url_connection()
 
+        msg = '". Please verify your login credentials, access permissions and fabric details and try again '
+
         try:
             # Perform some very basic path input validation.
             path = str(path)
@@ -278,14 +281,17 @@ class HttpApi(HttpApiBase):
                 msg = "Value of <path> does not appear to be formated properly"
                 raise ConnectionError(self._return_info(None, method, path, msg))
             response, rdata = self.connection.send(
-                path, json, method=method, headers=self.headers, force_basic_auth=True
+                path, json, self.retrycnt, method=method, headers=self.headers, force_basic_auth=True
             )
             return self._verify_response(response, method, path, rdata)
         except Exception as e:
-            eargs = e.args[0]
+            if e.args:
+                eargs = e.args[0]
+            else:
+                eargs = e
             if isinstance(eargs, dict) and eargs.get("METHOD"):
                 return eargs
-            raise ConnectionError(str(e))
+            raise ConnectionError(str(e) + msg)
 
     def send_txt_request(self, method, path, txt=None):
         """This method handles all DCNM REST API requests other then login"""
@@ -293,6 +299,8 @@ class HttpApi(HttpApiBase):
             txt = ""
 
         self.check_url_connection()
+
+        msg = '". Please verify your login credentials, access permissions and fabric details and try again '
 
         try:
             # Perform some very basic path input validation.
@@ -303,16 +311,20 @@ class HttpApi(HttpApiBase):
             response, rdata = self.connection.send(
                 path,
                 txt,
+                self.retrycnt,
                 method=method,
                 headers=self.txt_headers,
                 force_basic_auth=True,
             )
             return self._verify_response(response, method, path, rdata)
         except Exception as e:
-            eargs = e.args[0]
+            if e.args:
+                eargs = e.args[0]
+            else:
+                eargs = e
             if isinstance(eargs, dict) and eargs.get("METHOD"):
                 return eargs
-            raise ConnectionError(str(e))
+            raise ConnectionError(str(e) + msg)
 
     def _verify_response(self, response, method, path, rdata):
         """Process the return code and response object from DCNM"""
