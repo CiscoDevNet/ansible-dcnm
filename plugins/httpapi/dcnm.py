@@ -42,7 +42,7 @@ class HttpApi(HttpApiBase):
         self.headers = {"Content-Type": "application/json"}
         self.txt_headers = {"Content-Type": "text/plain"}
         self.version = None
-        self.retrycnt = 5  # Retry count for send API
+        self.retrycnt = 5   #  Retry count for send API
 
     def get_version(self):
         return self.version
