@@ -43,7 +43,7 @@ class HttpApi(HttpApiBase):
         self.txt_headers = {"Content-Type": "text/plain"}
         self.version = None
         # Retry count for send API
-        self.retrycnt = 5
+        self.retrycount = 5
 
     def get_version(self):
         return self.version
@@ -282,10 +282,11 @@ class HttpApi(HttpApiBase):
                 msg = "Value of <path> does not appear to be formated properly"
                 raise ConnectionError(self._return_info(None, method, path, msg))
             response, rdata = self.connection.send(
-                path, json, self.retrycnt, method=method, headers=self.headers, force_basic_auth=True
+                path, json, self.retrycount, method=method, headers=self.headers, force_basic_auth=True
             )
             return self._verify_response(response, method, path, rdata)
         except Exception as e:
+            # In some cases netcommon raises execeptions without arguments, so check for exception args.
             if e.args:
                 eargs = e.args[0]
             else:
@@ -312,13 +313,14 @@ class HttpApi(HttpApiBase):
             response, rdata = self.connection.send(
                 path,
                 txt,
-                self.retrycnt,
+                self.retrycount,
                 method=method,
                 headers=self.txt_headers,
                 force_basic_auth=True,
             )
             return self._verify_response(response, method, path, rdata)
         except Exception as e:
+            # In some cases netcommon raises execeptions without arguments, so check for exception args.
             if e.args:
                 eargs = e.args[0]
             else:
