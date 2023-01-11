@@ -1074,6 +1074,520 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_svi</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Though the key shown here is &#x27;profile_svi&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_svi&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
+                        <div>Object profile which must be included for SVI interface configurations.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>admin_state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Administrative state of the interface.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>adv_subnet_in_underlay</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable/disable advertisements of subnets into underlay.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>cmds</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
+                </td>
+                <td>
+                        <div>Commands to be included in the configuration under this interface.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Description of the interface.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_server_addr1</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>DHCP relay server address.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_server_addr2</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>DHCP relay server address.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_server_addr3</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>DHCP relay server address.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_ip_redirects</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable/disable IP redirects.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_hsrp</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable/disable HSRP on the interface.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_netflow</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable netflow.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_group</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>HSRP group. This parameter is required if &quot;enable_hsrp&quot; is True.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_priority</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>HSRP priority.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>1</b>&nbsp;&larr;</div></li>
+                                    <li>2</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>HSRP protocol version.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_vip</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Virtual IP address for HSRP. This parameter is required if &quot;enable_hsrp&quot; is True.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_vmac</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>HSRP virtual MAC.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>int_vrf</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"default"</div>
+                </td>
+                <td>
+                        <div>Interface VRF name.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ipv4_addr</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>IPV4 address of the interface.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ipv4_mask_len</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>Min 1</li>
+                                    <li>Max 31</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>IPV4 address mask length. This parameter is required if &#x27;ipv4_addr&#x27; is included.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>vlan</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Interface mode.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mtu</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">9216</div>
+                </td>
+                <td>
+                        <div>Interface MTU.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>netflow_monitor</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Name of netflow monitor. This parameter is required if &quot;enable_netflow&quot; is True.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>preempt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable/disable overthrow of low priority active routers. This parameter is valid only if &quot;enable_hsrp&quot; is True.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>route_tag</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Route tag associated with the interface IP.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_dhcp1</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>VRF to reach DHCP server. This parameter is required if &quot;dhcp_server_addr1&quot; is included.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_dhcp2</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>VRF to reach DHCP server. This parameter is required if &quot;dhcp_server_addr2&quot; is included.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_dhcp3</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>VRF to reach DHCP server. This parameter is required if &quot;dhcp_server_addr3&quot; is included.</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_vpc</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1487,10 +2001,11 @@ Parameters
                                     <li>sub_int</li>
                                     <li>lo</li>
                                     <li>eth</li>
+                                    <li>svi</li>
                         </ul>
                 </td>
                 <td>
-                        <div>Interface type. Example, pc, vpc, sub_int, lo, eth</div>
+                        <div>Interface type. Example, pc, vpc, sub_int, lo, eth, svi</div>
                 </td>
             </tr>
 
@@ -2025,6 +2540,120 @@ Examples
                   - no shutdown
                   - no shutdown
 
+    # SVI INTERFACES
+
+    - name: Create SVI interfaces including optional parameters
+      cisco.dcnm.dcnm_interface: &svi_merge2
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vlan1001                              # should be of the form vlan<vlan-id>
+            type: svi                                   # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              int_vrf: blue                             # optional, Interface VRF name, default is "default"
+              ipv4_addr: 192.168.2.1                    # optional, Interfae IP, default is ""
+              ipv4_mask_len: 24                         # optional, IP mask length, default is ""
+              mtu: 9216                                 # optional, MTU default is ""
+              route_tag: 1001                           # optional, Routing TAG, default is ""
+              disable_ip_redirects: true                # optional, flag to enable/disable IP redirects, default is "false"
+              cmds:                                     # Freeform config
+                - no shutdown
+              admin_state: true                         # Flag to enable/disable Vlan interaface
+              enable_hsrp: true                         # optional, flag to enable/disable HSRP on the interface, default is "false"
+              hsrp_vip: 192.168.2.100                   # optional, Virtual IP address for HSRP, default is ""
+              hsrp_group: 10                            # optional, HSRP group, default is ""
+              hsrp_priority: 5                          # optional, HSRP priority, default is ""
+              hsrp_vmac: 0000.0101.ac0a                 # optional, HSRP virtual MAC, default is ""
+              dhcp_server_addr1: 192.200.1.1            # optional, DHCP relay server address, default is ""
+              vrf_dhcp1: blue                           # optional, VRF to reach DHCP server. default is ""
+              dhcp_server_addr2: 192.200.1.2            # optional, DHCP relay server address, default is ""
+              vrf_dhcp2: blue                           # optional, VRF to reach DHCP server. default is ""
+              dhcp_server_addr3: 192.200.1.3            # optional, DHCP relay server address, default is ""
+              vrf_dhcp3: blue                           # optional, VRF to reach DHCP server. default is ""
+              adv_subnet_in_underlay: true              # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
+              enable_netflow: false                     # optional, flag to enable netflow, default is "false"
+              netflow_monitor: svi1001                  # optional, name of netflow monitor, default is ""
+              hsrp_version: 1                           # optional, HSRP protocol version, default is 1
+              preempt: true                             # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
+              mode: vlan                                # choose from [vlan, vlan_admin_state], default is "vlan"
+              description: Switched vlan interface 1001 # optional, Interface description, default is ""
+
+    - name: Replace SVI interface
+      cisco.dcnm.dcnm_interface: &svi_replace
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: replaced                                       # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vlan1001                                    # should be of the form vlan<vlan-id>
+            type: svi                                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ ansible_switch1 }}"                       # provide the switch information where the config is to be deployed
+            deploy: true                                      # choose from [true, false]
+            profile:
+              int_vrf: red                                    # optional, Interface VRF name, default is "default"
+              ipv4_addr: 192.169.2.1                          # optional, Interfae IP, default is ""
+              ipv4_mask_len: 20                               # optional, IP mask length, default is ""
+              mtu: 9210                                       # optional, MTU default is ""
+              route_tag: 1002                                 # optional, Routing TAG, default is ""
+              disable_ip_redirects: false                     # optional, flag to enable/disable IP redirects, default is "false"
+              cmds:                                           # Freeform config
+                - no shutdown
+              admin_state: false                              # Flag to enable/disable Vlan interaface
+              enable_hsrp: true                               # optional, flag to enable/disable HSRP on the interface, default is "false"
+              hsrp_vip: 192.169.2.100                         # optional, Virtual IP address for HSRP, default is ""
+              hsrp_group: 11                                  # optional, HSRP group, default is ""
+              hsrp_priority: 5                                # optional, HSRP priority, default is ""
+              hsrp_vmac: 0000.0102.ac0a                       # optional, HSRP virtual MAC, default is ""
+              dhcp_server_addr1: 193.200.1.1                  # optional, DHCP relay server address, default is ""
+              vrf_dhcp1: green                                # optional, VRF to reach DHCP server. default is ""
+              dhcp_server_addr2: 193.200.1.2                  # optional, DHCP relay server address, default is ""
+              vrf_dhcp2: green                                # optional, VRF to reach DHCP server. default is ""
+              dhcp_server_addr3: 193.200.1.3                  # optional, DHCP relay server address, default is ""
+              vrf_dhcp3: green                                # optional, VRF to reach DHCP server. default is ""
+              adv_subnet_in_underlay: false                   # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
+              enable_netflow: false                           # optional, flag to enable netflow, default is "false"
+              netflow_monitor: svi1002                        # optional, name of netflow monitor, default is ""
+              hsrp_version: 2                                 # optional, HSRP protocol version, default is 1
+              preempt: false                                  # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
+              mode: vlan                                      # choose from [vlan, vlan_admin_state], default is "vlan"
+              description: Switched vlan interface 1001 - Rep # optional, Interface description, default is ""
+
+    - name: Delete SVI interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_svi_fabric }}"
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vlan1000                    # should be of the form vlan<vlan-id>
+            type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+          - name: vlan1001                    # should be of the form vlan<vlan-id>
+            type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+    - name: Override SVI interface
+      cisco.dcnm.dcnm_interface: &svi_override
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: overridden                                     # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vlan1002                                    # should be of the form vlan<vlan-id>
+            type: svi                                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ ansible_switch1 }}"                       # provide the switch information where the config is to be deployed
+            deploy: true                                      # choose from [true, false]
+            profile:
+              admin_state: true                               # Flag to enable/disable Vlan interaface
+              mode: vlan                                      # choose from [vlan, vlan_admin_state], default is "vlan"
+
+
     # QUERY
 
     - name: Query interface details
@@ -2033,22 +2662,22 @@ Examples
         state: query            # only choose from [merged, replaced, deleted, overridden, query]
         config:
           - switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"
           - name: po350
             switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"
           - name: lo450
             switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"
           - name: eth1/1
             switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"
           - name: eth1/15.2
             switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"
           - name: vpc750
             switch:
-              - "192.172.1.1"   # provide the switch information where the config is to be deployed
+              - "192.172.1.1"
 
 
 

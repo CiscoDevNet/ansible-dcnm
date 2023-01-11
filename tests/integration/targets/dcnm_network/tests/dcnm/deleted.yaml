@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: DELETED - Verify if fabric - Fabric1 is deployed.
@@ -22,16 +22,12 @@
 
 - name: DELETED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: DELETED - Create, Attach and Deploy Single Network with multiple switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -51,6 +47,16 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -67,17 +73,13 @@
     - 'result.diff[0].net_id == 7005'
     - 'result.diff[0].vrf_name == "Tenant-1"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 ###############################################
 ###                DELETED                   ##
 ###############################################
 
 - name: DELETED - Delete Single Network with deleted state
   cisco.dcnm.dcnm_network: &conf
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - net_name: ansible-net13
@@ -116,13 +118,9 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - Create, Attach and Deploy Multiple Network with single switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -170,13 +168,20 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
 
 - name: DELETED - Delete Single Network with deleted state and verify other network is still there
   cisco.dcnm.dcnm_network: &conf1
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - net_name: ansible-net12
@@ -214,7 +219,7 @@
 
 - name: DELETED - Delete the other Single Network with deleted state and verify no network is present now
   cisco.dcnm.dcnm_network: &conf2
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - net_name: ansible-net13
@@ -250,13 +255,9 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - Create, Attach and Deploy Multiple Network with single switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -284,6 +285,17 @@
       deploy: false
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -304,13 +316,9 @@
     - 'result.diff[1].net_id == 7002'
     - 'result.diff[1].vrf_name == "Tenant-2"'
 
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: DELETED - Delete all the networks
   cisco.dcnm.dcnm_network: &conf3
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
   register: result
 
@@ -347,7 +355,7 @@
 
 - name: DELETED - Create L2 only networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -374,6 +382,16 @@
       deploy: True
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -398,13 +416,9 @@
     - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[0].dhcp_srvr3_vrf == "three"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - setup - Clean up l2_only existing network
   cisco.dcnm.dcnm_network: &conf4
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - net_name: ansible-net13
@@ -453,7 +467,7 @@
 
 - name: DELETED - Create a L2 only and L3 networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - net_name: ansible-net13
@@ -463,7 +477,9 @@
       vlan_id: 3504
       gw_ip_subnet: '152.168.30.1/24'
       mtu_l3intf: 7600
-      arp_suppress: True
+      # Leave 'arp_suppress' this false to avoid TCAM issue
+      # Please configure TCAM region for Ingress ARP-Ether ACL before configuring ARP supression
+      arp_suppress: False
       int_desc: 'test interface'
       is_l2only: True
       vlan_name: testvlan
@@ -485,7 +501,9 @@
       vlan_id: 3505
       gw_ip_subnet: '162.168.30.1/24'
       mtu_l3intf: 7600
-      arp_suppress: True
+      # Leave 'arp_suppress' this false to avoid TCAM issue
+      # Please configure TCAM region for Ingress ARP-Ether ACL before configuring ARP supression
+      arp_suppress: False
       int_desc: 'test interface 1'
       vlan_name: testvlan1
       dhcp_srvr1_ip: '1.1.1.1'
@@ -501,6 +519,17 @@
       deploy: True
   register: result
 
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -515,7 +544,7 @@
     - 'result.diff[0].net_name == "ansible-net13"'
     - 'result.diff[0].net_id == 7009'
     - 'result.diff[0].vrf_name == "NA"'
-    - 'result.diff[0].arp_suppress == true'
+    - 'result.diff[0].arp_suppress == false'
     - 'result.diff[0].int_desc == "test interface"'
     - 'result.diff[0].is_l2only == true'
     - 'result.diff[0].mtu_l3intf == 7600'
@@ -530,7 +559,7 @@
     - 'result.diff[1].net_name == "ansible-net12"'
     - 'result.diff[1].net_id == 7010'
     - 'result.diff[1].vrf_name == "Tenant-2"'
-    - 'result.diff[1].arp_suppress == true'
+    - 'result.diff[1].arp_suppress == false'
     - 'result.diff[1].int_desc == "test interface 1"'
     - 'result.diff[1].mtu_l3intf == 7600'
     - 'result.diff[1].vlan_name == "testvlan1"'
@@ -541,13 +570,9 @@
     - 'result.diff[1].dhcp_srvr3_ip == "3.3.3.3"'
     - 'result.diff[1].dhcp_srvr3_vrf == "three"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - Delete all the networks
   cisco.dcnm.dcnm_network: &conf5
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
   register: result
 
@@ -584,7 +609,7 @@
 
 - name: DELETED - Delete Single Network with no network name
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - net_name:
@@ -603,7 +628,7 @@
 
 - name: DELETED - Delete Single Network with invalid network name which is not configured
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - net_name: network
@@ -626,5 +651,5 @@
 
 - name: DELETED - setup - remove any networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted

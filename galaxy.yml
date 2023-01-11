@@ -1,7 +1,7 @@
 ---
 namespace: cisco
 name: dcnm
-version: 2.3.0
+version: 2.4.0
 readme: README.md
 authors:
   - Shrishail Kariyappanavar <nkshrishail>
@@ -13,5 +13,5 @@ description: Ansible collection for the Cisco Nexus® Dashboard Fabric Controlle
 license_file: LICENSE 
 tags: [cisco, ndfc, dcnm, nxos, networking, vxlan]
 dependencies:
-  "ansible.netcommon": "*"
+  "ansible.netcommon": ">=2.6.1"
 repository: https://github.com/CiscoDevNet/ansible-dcnm
