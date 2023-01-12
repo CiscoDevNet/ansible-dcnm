@@ -2184,7 +2184,7 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4", default="239.1.1.0"),
+                multicast_group_address=dict(type="ipv4"),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2248,7 +2248,7 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4", default="239.1.1.0"),
+                multicast_group_address=dict(type="ipv4"),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
