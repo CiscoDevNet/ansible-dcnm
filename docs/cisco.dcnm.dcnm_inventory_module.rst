@@ -71,7 +71,7 @@ Parameters
                 </td>
                 <td>
                         <div>Name of the authentication protocol to be used.</div>
-                        <div>For POAP configurations authentication protocol should be <em>MD5</em>.</div>
+                        <div>For POAP and RMA configurations authentication protocol should be <em>MD5</em>.</div>
                 </td>
             </tr>
             <tr>
@@ -81,7 +81,7 @@ Parameters
                     <b>max_hops</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">string</span>
+                        <span style="color: purple">integer</span>
                     </div>
                 </td>
                 <td>
@@ -280,6 +280,137 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rma</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>RMA an existing switch with a new one</div>
+                        <div>Please note that the existing switch should be configured and deployed in maintenance mode</div>
+                        <div>Please note that the existing switch being replaced should be shutdown state or out of network</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>config_data</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Basic config data of switch to Bootstrap for RMA.</div>
+                        <div><code>modulesModel</code> and <code>gateway</code> are mandatory.</div>
+                        <div><code>modulesModel</code> is list of model of modules in switch to Bootstrap for RMA.</div>
+                        <div><code>gateway</code> is the gateway IP with mask for the switch to Bootstrap for RMA.</div>
+                        <div>For other supported config data please refer to NDFC/DCNM configuration guide.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>image_policy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the image policy to be applied on switch during Bootstrap for RMA.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>model</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Model of switch to Bootstrap for RMA.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>old_serial</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Serial number of switch to be replaced.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>serial_number</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Serial number of switch to Bootstrap for RMA.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Software version of switch to Bootstrap for RMA.</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>role</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -335,7 +466,7 @@ Parameters
                 </td>
                 <td>
                         <div>Login username to the switch.</div>
-                        <div>For POAP configurations username should be <em>admin</em></div>
+                        <div>For POAP and RMA configurations username should be <em>admin</em></div>
                 </td>
             </tr>
 
@@ -394,6 +525,7 @@ Parameters
                 <td>
                         <div>The state of DCNM after module completion.</div>
                         <div><em>merged</em> and <em>query</em> are the only states supported for POAP.</div>
+                        <div><em>merged</em> is the only state supported for RMA.</div>
                 </td>
             </tr>
     </table>
@@ -630,6 +762,27 @@ Examples
         fabric: vxlan-fabric
         state: query # merged / query
         query_poap: True
+
+    # The following switch which is part of fabric will be replaced with a new switch
+    # with same configurations through RMA.
+    # Please note that the existing switch should be configured in maintenance mode and in shutdown state
+    - name: Pre-provision switch Configuration
+      cisco.dcnm.dcnm_inventory:
+        fabric: vxlan-fabric
+        state: merged # Only merged is supported for rma config
+        config:
+        - seed_ip: 192.168.0.4
+          user_name: switch_username
+          password: switch_password
+          rma:
+            - serial_number: 2A3BCDEFJKL
+              old_serial: 2A3BCDEFGHI
+              model: 'N9K-C9300v'
+              version: '9.3(7)'
+              image_policy: "rma_image_policy"
+              config_data:
+                modulesModel: [N9K-X9364v, N9K-vSUP]
+                gateway: 192.168.0.1/24
 
 
 
