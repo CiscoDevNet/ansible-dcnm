@@ -167,7 +167,7 @@ options:
             required: true
           old_serial:
             description:
-            - Serial number of switch to be replaced.
+            - Serial number of switch to be replaced by RMA.
             type: str
             required: true
           model:
@@ -430,7 +430,7 @@ EXAMPLES = """
 # The following switch which is part of fabric will be replaced with a new switch
 # with same configurations through RMA.
 # Please note that the existing switch should be configured in maintenance mode and in shutdown state
-- name: Pre-provision switch Configuration
+- name: RMA switch Configuration
   cisco.dcnm.dcnm_inventory:
     fabric: vxlan-fabric
     state: merged # Only merged is supported for rma config
