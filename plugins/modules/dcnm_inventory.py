@@ -36,6 +36,7 @@ options:
     description:
     - The state of DCNM after module completion.
     - I(merged) and I(query) are the only states supported for POAP.
+    - I(merged) is the only state supported for RMA.
     type: str
     choices:
       - merged
@@ -58,7 +59,7 @@ options:
       auth_proto:
         description:
         - Name of the authentication protocol to be used.
-        - For POAP configurations authentication protocol should be I(MD5).
+        - For POAP and RMA configurations authentication protocol should be I(MD5).
         choices: ['MD5', 'SHA', 'MD5_DES', 'MD5_AES', 'SHA_DES', 'SHA_AES']
         type: str
         required: false
@@ -66,7 +67,7 @@ options:
       user_name:
         description:
         - Login username to the switch.
-        - For POAP configurations username should be I(admin)
+        - For POAP and RMA configurations username should be I(admin)
         type: str
         required: true
       password:
@@ -153,8 +154,9 @@ options:
             required: false
       rma:
         description:
-        - RMA a switch which is in maintainence mode
-        - Please note that the old switch being replaced should be shutdown state or out of network
+        - RMA an existing switch with a new one
+        - Please note that the existing switch should be configured and deployed in maintenance mode
+        - Please note that the existing switch being replaced should be shutdown state or out of network
         type: list
         elements: dict
         suboptions:
