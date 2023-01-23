@@ -81,6 +81,10 @@ class TestDcnmInvModule(TestDcnmModule):
     playbook_no_ip_deleted_switch_config = test_data.get("playbook_no_ip_deleted_switch_config")
     playbook_poap_no_merged_query_switch_config = test_data.get("playbook_poap_no_merged_query_switch_config")
     playbook_poap_swap_switch_config = test_data.get("playbook_poap_swap_switch_config")
+    playbook_rma_switch_noserial_config = test_data.get("playbook_rma_switch_noserial_config")
+    playbook_rma_switch_nooldserial_config = test_data.get("playbook_rma_switch_nooldserial_config")
+    playbook_rma_switch_config = test_data.get("playbook_rma_switch_config")
+    rma_inv_data = test_data.get("rma_inv_data")
 
     # initial merge switch success
     get_have_initial_success = test_data.get("get_have_initial_success")
@@ -216,11 +220,17 @@ class TestDcnmInvModule(TestDcnmModule):
         )
         self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
 
+        self.mock_dcnm_ip_sn = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_inventory.get_fabric_inventory_details"
+        )
+        self.run_dcnm_ip_sn = self.mock_dcnm_ip_sn.start()
+
     def tearDown(self):
         super(TestDcnmInvModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_fabric_details.stop()
+        self.mock_dcnm_ip_sn.stop()
 
     def load_fixtures(self, response=None, device=""):
 
@@ -232,6 +242,8 @@ class TestDcnmInvModule(TestDcnmModule):
         self.run_dcnm_fabric_details.return_value = {
             "nvPairs": {"GRFIELD_DEBUG_FLAG": "Enable"}
         }
+
+        self.run_dcnm_ip_sn.side_effect = [self.rma_inv_data]
 
         if "get_have_failure" in self._testMethodName:
             self.run_dcnm_send.side_effect = [
@@ -826,6 +838,30 @@ class TestDcnmInvModule(TestDcnmModule):
                 self.set_assign_bg_role_success,
                 self.set_assign_bg_role_success,
                 self.set_assign_bg_role_success,
+                self.get_fabric_id_success,
+                self.config_save_switch_success,
+                self.config_deploy_switch_success,
+            ]
+
+        elif "rma_no_ser_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "rma_no_oldser_switch" in self._testMethodName:
+            self.init_data()
+
+        elif "rma_switch" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.get_have_initial_success,
+                self.get_inventory_query_poap_success,
+                self.config_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.rediscover_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_inventory_poap_switch_success,
+                self.get_lan_switch_cred_success,
+                self.get_inventory_poap_switch_success,
                 self.get_fabric_id_success,
                 self.config_save_switch_success,
                 self.config_deploy_switch_success,
@@ -1573,6 +1609,53 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False)
 
         self.version = 11
+
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
+            self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_rma_no_ser_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_rma_switch_noserial_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "Please provide 'serial_number' and 'old_serial' for RMA",
+        )
+
+    def test_dcnm_inv_rma_no_oldser_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_rma_switch_nooldserial_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "Please provide 'serial_number' and 'old_serial' for RMA",
+        )
+
+    def test_dcnm_inv_rma_switch_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_rma_switch_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
 
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)

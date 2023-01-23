@@ -77,7 +77,7 @@ options:
       max_hops:
         description:
         - Maximum Hops to reach the switch
-        type: str
+        type: int
         required: false
         default: 0
       role:
@@ -151,6 +151,47 @@ options:
             - For other supported config data please refer to NDFC/DCNM configuration guide.
             type: dict
             required: false
+      rma:
+        description:
+        - RMA a switch which is in maintainence mode
+        - Please note that the old switch being replaced should be shutdown state or out of network
+        type: list
+        elements: dict
+        suboptions:
+          serial_number:
+            description:
+            - Serial number of switch to Bootstrap for RMA.
+            type: str
+            required: true
+          old_serial:
+            description:
+            - Serial number of switch to be replaced.
+            type: str
+            required: true
+          model:
+            description:
+            - Model of switch to Bootstrap for RMA.
+            type: str
+            required: true
+          version:
+            description:
+            - Software version of switch to Bootstrap for RMA.
+            type: str
+            required: true
+          image_policy:
+            description:
+            - Name of the image policy to be applied on switch during Bootstrap for RMA.
+            type: str
+            required: false
+          config_data:
+            description:
+            - Basic config data of switch to Bootstrap for RMA.
+            - C(modulesModel) and C(gateway) are mandatory.
+            - C(modulesModel) is list of model of modules in switch to Bootstrap for RMA.
+            - C(gateway) is the gateway IP with mask for the switch to Bootstrap for RMA.
+            - For other supported config data please refer to NDFC/DCNM configuration guide.
+            type: dict
+            required: true
   query_poap:
     description:
     - Query for Bootstrap(POAP) capable switches available.
@@ -383,6 +424,27 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query # merged / query
     query_poap: True
+
+# The following switch which is part of fabric will be replaced with a new switch
+# with same configurations through RMA.
+# Please note that the existing switch should be configured in maintenance mode and in shutdown state
+- name: Pre-provision switch Configuration
+  cisco.dcnm.dcnm_inventory:
+    fabric: vxlan-fabric
+    state: merged # Only merged is supported for rma config
+    config:
+    - seed_ip: 192.168.0.4
+      user_name: switch_username
+      password: switch_password
+      rma:
+        - serial_number: 2A3BCDEFJKL
+          old_serial: 2A3BCDEFGHI
+          model: 'N9K-C9300v'
+          version: '9.3(7)'
+          image_policy: "rma_image_policy"
+          config_data:
+            modulesModel: [N9K-X9364v, N9K-vSUP]
+            gateway: 192.168.0.1/24
 """
 
 import time
@@ -397,6 +459,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
     dcnm_version_supported,
     get_fabric_details,
+    get_fabric_inventory_details,
+    get_ip_sn_dict,
 )
 
 
@@ -412,6 +476,7 @@ class DcnmInventory:
         self.have_create = []
         self.want_create = []
         self.want_create_poap = []
+        self.want_create_rma = []
         self.diff_create = []
         self.diff_save = {}
         self.diff_delete = {}
@@ -424,6 +489,10 @@ class DcnmInventory:
 
         self.controller_version = dcnm_version_supported(self.module)
         self.fabric_details = get_fabric_details(self.module, self.fabric)
+        self.inventory_data = get_fabric_inventory_details(
+            self.module, self.fabric
+        )
+        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.nd = True if self.controller_version >= 12 else False
 
@@ -511,6 +580,65 @@ class DcnmInventory:
                 self.switch_snos.append(poap_upd["serialNumber"])
 
         return poap_upd
+
+    def discover_rma_params(self, rma_upd, rma):
+
+        method = "GET"
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(
+            self.fabric
+        )
+        if self.nd:
+            path = self.nd_prefix + path
+        response = dcnm_send(self.module, method, path)
+        self.result["response"].append(response)
+        fail, self.result["changed"] = self.handle_response(response, "query")
+
+        if fail:
+            self.module.fail_json(msg=response)
+
+        if "DATA" in response:
+            for resp in response["DATA"]:
+                if (resp["serialNumber"] == rma["serial_number"]):
+                    if self.nd:
+                        rma_upd.update({"publicKey": resp["publicKey"]})
+                        if rma["image_policy"]:
+                            rma_upd.update({"imagePolicy": rma["image_policy"]})
+                        else:
+                            rma_upd.update({"imagePolicy": ""})
+                    rma_upd.update({"hostname": list(self.hn_sn.keys())[list(self.hn_sn.values()).index(rma_upd["oldSerialNumber"])]})
+                    return rma_upd
+
+        msg = "Specified switch {0}".format(
+            rma["serial_number"] + " is not listed in bootstrap devices.")
+
+        self.module.fail_json(msg)
+
+    def update_rma_params(self, inv, rma):
+
+        s_ip = "None"
+        if inv["seed_ip"]:
+            s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
+
+        state = self.params["state"]
+
+        if state == "merged":
+            rma_upd = {
+                "ipAddress": s_ip,
+                "discoveryAuthProtocol": "0",
+                "password": inv["password"],
+                "model": rma["model"],
+                "newSerialNumber": rma["serial_number"],
+                "oldSerialNumber": rma["old_serial"],
+                "version": rma["version"],
+                "data": json.dumps(rma["config_data"]),
+            }
+
+            rma_upd = self.discover_rma_params(rma_upd, rma)
+
+            if rma_upd.get("newSerialNumber"):
+                self.switch_snos.append(rma_upd["newSerialNumber"])
+
+        return rma_upd
 
     def update_discover_params(self, inv):
 
@@ -635,6 +763,7 @@ class DcnmInventory:
 
         want_create = []
         want_create_poap = []
+        want_create_rma = []
 
         if not self.config:
             return
@@ -644,14 +773,19 @@ class DcnmInventory:
                 create_poap = self.update_poap_params(inv, inv["poap"][0])
                 if create_poap:
                     want_create_poap.append(create_poap)
+            elif inv.get("rma"):
+                create_rma = self.update_rma_params(inv, inv["rma"][0])
+                if create_rma:
+                    want_create_rma.append(create_rma)
             else:
                 want_create.append(self.update_create_params(inv))
 
-        if not want_create and not want_create_poap:
+        if not want_create and not want_create_poap and not want_create_rma:
             return
 
         self.want_create = want_create
         self.want_create_poap = want_create_poap
+        self.want_create_rma = want_create_rma
 
     def get_diff_override(self):
 
@@ -816,6 +950,7 @@ class DcnmInventory:
                 ),
                 preserve_config=dict(type="bool", default=False),
                 poap=dict(type="list"),
+                rma=dict(type="list"),
             )
 
             poap_spec = dict(
@@ -825,6 +960,15 @@ class DcnmInventory:
                 version=dict(type="str", default=""),
                 hostname=dict(type="str", default=""),
                 config_data=dict(type="dict", default={}),
+                image_policy=dict(type="str", default="")
+            )
+
+            rma_spec = dict(
+                serial_number=dict(type="str", required=True),
+                old_serial=dict(type="str", required=True),
+                model=dict(type="str", required=True),
+                version=dict(type="str", required=True),
+                config_data=dict(type="dict", required=True),
                 image_policy=dict(type="str", default="")
             )
 
@@ -854,6 +998,15 @@ class DcnmInventory:
                                 )
                         if inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") and not self.nd:
                             msg = "Serial number swap is not supported in DCNM version 11"
+                    if "rma" in inv:
+                        if state != "merged":
+                            msg = "'merged' is only supported states for RMA"
+                        if inv["user_name"] != "admin":
+                            msg = "For RMA, supported user_name is 'admin'"
+                        if inv["rma"][0].get("serial_number") is None or inv["rma"][0].get("old_serial") is None:
+                            msg = "Please provide 'serial_number' and 'old_serial' for RMA"
+                    if msg:
+                        self.module.fail_json(msg=msg)
             else:
                 if state == "merged":
                     msg = "config: element is mandatory for this state {0}".format(
@@ -875,6 +1028,13 @@ class DcnmInventory:
                         invalid_params.extend(invalid_poap)
                         inv["poap"] = valid_poap
 
+                    if inv.get("rma"):
+                        valid_rma, invalid_rma = validate_list_of_dicts(
+                            inv["rma"], rma_spec, self.module
+                        )
+                        invalid_params.extend(invalid_rma)
+                        inv["rma"] = valid_rma
+
                     self.validated.append(inv)
 
                 if invalid_params:
@@ -894,6 +1054,8 @@ class DcnmInventory:
                         msg = "seed ip is mandatory under inventory parameters for switch deletion"
                     if "poap" in inv:
                         msg = "'merged' and 'query' are only supported states for POAP"
+                    if "rma" in inv:
+                        msg = "'merged' is the only supported state for RMA"
 
             if msg:
                 self.module.fail_json(msg=msg)
@@ -1034,7 +1196,7 @@ class DcnmInventory:
                         # continue
                         return True
 
-            # We still have not detected a swich is reloading so return False
+            # We still have not detected a switch is reloading so return False
             return False
 
         def switches_managable(inv_data):
@@ -1121,6 +1283,19 @@ class DcnmInventory:
                 if snos == inv["serialNumber"] and inv["status"] != "ok":
                     all_ok = False
                     self.rediscover_switch(inv["serialNumber"])
+
+        # If the switches added through discovery itself has issues, then there is no
+        # point in checking rma switch status, so return false here.
+        if not all_ok:
+            return all_ok
+
+        # This is a special handling for RMA insertion, in case of RMA the new serial number
+        # will not be part of inventory data until the new switch comes up fully. So during RMA
+        # check for the new serial number in the inventory data, if not present return false
+        if self.want_create_rma:
+            for rma in self.want_create_rma:
+                if not any(inv["serialNumber"] == rma["newSerialNumber"] for inv in get_inv["DATA"]):
+                    return False
 
         return all_ok
 
@@ -1483,6 +1658,21 @@ class DcnmInventory:
             if fail:
                 self.failure(response)
 
+    def rma_config(self):
+
+        method = "POST"
+        path = "/rest/control/fabrics/{0}/rma".format(self.fabric)
+        if self.nd:
+            path = self.nd_prefix + path
+        if self.want_create_rma:
+            for rma in self.want_create_rma:
+                response = dcnm_send(self.module, method, path, json.dumps(rma))
+                self.result["response"].append(response)
+                fail, self.result["changed"] = self.handle_response(response, "create_rma")
+
+                if fail:
+                    self.failure(response)
+
     def handle_response(self, res, op):
 
         fail = False
@@ -1562,7 +1752,7 @@ def main():
             "response"
         ] = "The switch provided is not part of the fabric and cannot be deleted"
 
-    if not dcnm_inv.diff_create and module.params["state"] == "merged" and not dcnm_inv.want_create_poap:
+    if not dcnm_inv.diff_create and module.params["state"] == "merged" and not dcnm_inv.want_create_poap and not dcnm_inv.want_create_rma:
         dcnm_inv.result["changed"] = False
         dcnm_inv.result[
             "response"
@@ -1584,7 +1774,7 @@ def main():
             "response"
         ] = "The queried switch is not part of the fabric configured"
 
-    if dcnm_inv.diff_create or dcnm_inv.diff_delete or dcnm_inv.want_create_poap:
+    if dcnm_inv.diff_create or dcnm_inv.diff_delete or dcnm_inv.want_create_poap or dcnm_inv.want_create_rma:
         dcnm_inv.result["changed"] = True
     else:
         module.exit_json(**dcnm_inv.result)
@@ -1601,13 +1791,17 @@ def main():
 
     # Discover & Register Switch
     if not dcnm_inv.node_migration:
-        if dcnm_inv.diff_create or dcnm_inv.want_create_poap:
+        if dcnm_inv.diff_create or dcnm_inv.want_create_poap or dcnm_inv.want_create_rma:
 
             # Step 1
             # Import all switches
             dcnm_inv.import_switches()
 
+            # Import through POAP
             dcnm_inv.poap_config()
+
+            # Import through RMA
+            dcnm_inv.rma_config()
 
             # Step 2
             # Rediscover all switches
