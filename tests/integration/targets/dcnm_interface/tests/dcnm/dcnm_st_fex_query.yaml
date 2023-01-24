@@ -8,13 +8,13 @@
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     check_deploy: True
-    fabric: "{{ ansible_svi_fabric }}" 
+    fabric: "{{ ansible_svi_fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
 - assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -23,42 +23,50 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Create SVI interfaces w/o optional parameters
-      cisco.dcnm.dcnm_interface: &svi_merge
+    - name: Create ST FEX interfaces w/o optional parameters
+      cisco.dcnm.dcnm_interface: &fex_merge
         check_deploy: false
         fabric: "{{ ansible_svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan1000                                # should be of the form vlan<vlan-id>
-            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+          - name: po150                                   # should be of the form po<po_id>
+            type: st_fex                                  # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
             switch:
               - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
-              admin_state: true                           # Flag to enable/disable Vlan interaface
-              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"   
-          - name: vlan1001                                # should be of the form vlan<vlan-id>
-            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+              admin_state: true                           # Flag to enable/disable FEX interaface
+              mode: port_channel_st                       # choose from [port_channel_st], default is "port_channel_st"
+          - name: po151                                   # should be of the form po<po_id>
+            type: st_fex                                  # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
             switch:
               - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
-              admin_state: true                           # Flag to enable/disable Vlan interaface
-              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"   
+              admin_state: true                           # Flag to enable/disable FEX interaface
+              mode: port_channel_st                       # choose from [port_channel_st], default is "port_channel_st"
+          - name: po152                                   # should be of the form po<po_id>
+            type: st_fex                                  # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable FEX interaface
+              mode: port_channel_st                       # choose from [port_channel_st], default is "port_channel_st"
       register: result
 
     - assert:
         that:
           - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["merged"] | length) == 3'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 2'
+          - '(result["diff"][0]["deploy"] | length) == 3'
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -68,13 +76,44 @@
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
         check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}" 
+        fabric: "{{ ansible_svi_fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan1000
+          - name: po150
             switch:
                 - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: vlan1001
+          - name: po151
+            switch:
+                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+          - name: po152
+            switch:
+                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 3'
+
+    - assert:
+        that:
+          - '(result["response"] | length) != 0'
+
+    - name: Query interface details - Subset of Existing
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_svi_fabric }}"
+        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po150
+            switch:
+                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+          - name: po152
             switch:
                 - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
       register: result
@@ -93,13 +132,16 @@
         that:
           - '(result["response"] | length) != 0'
 
-    - name: Query interface details - Subset of Existing
+    - name: Query interface details - Existing and Non-Existing
       cisco.dcnm.dcnm_interface:
         check_deploy: True
         fabric: "{{ ansible_svi_fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan1000
+          - name: po151
+            switch:
+                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+          - name: po122
             switch:
                 - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
       register: result
@@ -118,44 +160,16 @@
         that:
           - '(result["response"] | length) != 0'
 
-    - name: Query interface details - Existing and Non-Existing
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: vlan1000
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: vlan1008
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-      register: result
-
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 1'
-
-    - assert:
-        that:
-          - '(result["response"] | length) == 1'
-
     - name: Query interface details - Non-Existing
       cisco.dcnm.dcnm_interface:
         check_deploy: True
         fabric: "{{ ansible_svi_fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan1009
+          - name: po121
             switch:
                 - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: vlan1008
+          - name: po122
             switch:
                 - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
       register: result

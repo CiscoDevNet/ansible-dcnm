@@ -1,0 +1,130 @@
+{
+	"aa_fex_merged_payloads_150" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=vPC150",
+      "DATA": [
+      {
+        "interfaceType": "AA_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "vPC150",
+          "interfaceType": "AA_FEX",
+          "nvPairs": {
+            "FEX_ID": "150",
+            "INTF_NAME": "vPC150",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "test_fabric",
+            "POLICY_ID": "POLICY-8928470",
+            "PEER1_PO_DESC": "FEX port channel",
+            "PEER2_PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 150",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "PEER1_MEMBER_INTERFACES": "e1/10",
+            "PEER2_MEMBER_INTERFACES": "e1/10",
+            "PEER1_PCID": "150",
+            "PEER2_PCID": "150",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "PEER1_PO_CONF": "no shutdown",
+            "PEER2_PO_CONF": "no shutdown"
+          },
+          "serialNumber": "FOX1821H035~SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_aa_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  },
+
+	"aa_fex_merged_payloads_151" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&vPC151",
+      "DATA": [
+      {
+        "interfaceType": "AA_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "vPC151",
+          "interfaceType": "AA_FEX",
+          "nvPairs": {
+            "FEX_ID": "151",
+            "INTF_NAME": "vPC151",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "test_fabric",
+            "POLICY_ID": "POLICY-8928470",
+            "PEER1_PO_DESC": "FEX port channel",
+            "PEER2_PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 151",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "PEER1_MEMBER_INTERFACES": "e1/11",
+            "PEER2_MEMBER_INTERFACES": "e1/11",
+            "PEER1_PCID": "151",
+            "PEER2_PCID": "151",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "PEER1_PO_CONF": "no shutdown",
+            "PEER2_PO_CONF": "no shutdown"
+          },
+          "serialNumber": "FOX1821H035~SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_aa_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  },
+
+	"aa_fex_merged_payloads_152" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&vPC152",
+      "DATA": [
+      {
+        "interfaceType": "AA_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "vPC152",
+          "interfaceType": "AA_FEX",
+          "nvPairs": {
+            "FEX_ID": "152",
+            "INTF_NAME": "vPC152",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "test_fabric",
+            "POLICY_ID": "POLICY-8928470",
+            "PEER1_PO_DESC": "FEX port channel",
+            "PEER2_PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 152",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "PEER1_MEMBER_INTERFACES": "e1/11",
+            "PEER2_MEMBER_INTERFACES": "e1/11",
+            "PEER1_PCID": "152",
+            "PEER2_PCID": "152",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "PEER1_PO_CONF": "no shutdown",
+            "PEER2_PO_CONF": "no shutdown"
+          },
+          "serialNumber": "FOX1821H035~SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_aa_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  }
+}
