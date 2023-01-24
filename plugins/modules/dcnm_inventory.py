@@ -988,7 +988,7 @@ class DcnmInventory:
                         if state != "merged":
                             msg = "'merged' and 'query' are only supported states for POAP"
                         if inv["user_name"] != "admin":
-                            msg = "For poap configuration, supported user_name is 'admin'"
+                            msg = "user_name must be 'admin' for POAP"
                         if inv["poap"][0].get("serial_number") is None and inv["poap"][0].get("preprovision_serial") is None:
                             msg = "Please provide 'serial_number' for bootstrap or 'preprovision_serial' for preprovision"
                         if ((inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") is None) or
@@ -1002,9 +1002,9 @@ class DcnmInventory:
                             msg = "Serial number swap is not supported in DCNM version 11"
                     if "rma" in inv:
                         if state != "merged":
-                            msg = "'merged' is only supported states for RMA"
+                            msg = "'merged' is only supported state for RMA"
                         if inv["user_name"] != "admin":
-                            msg = "For RMA, supported user_name is 'admin'"
+                            msg = "user_name must be 'admin' for RMA"
                         if inv["rma"][0].get("serial_number") is None or inv["rma"][0].get("old_serial") is None:
                             msg = "Please provide 'serial_number' and 'old_serial' for RMA"
                     if msg:

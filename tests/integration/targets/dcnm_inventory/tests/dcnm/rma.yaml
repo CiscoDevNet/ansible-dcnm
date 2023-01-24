@@ -39,6 +39,9 @@
 #    fabric: "{{ ansible_it_fabric }}"
 #    state: deleted
 
+- debug: msg="!!! WARNING !!! Skipping Test Because rma_enabled Setting is False"
+  when: rma_enabled == False
+
 - name: RMA - Query for POAP enabled swicthes
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
@@ -111,43 +114,41 @@
 #- name: RMA - sleep for 5 minute
 #  wait_for:
 #    timeout: 300
+- block:
+    - name: RMA - RMA the existing switch
+      cisco.dcnm.dcnm_inventory:
+        fabric: '{{ ansible_it_fabric }}'
+        state: merged
+        config:
+          - seed_ip: '{{ ansible_switch1 }}'
+            user_name: '{{ switch_username }}'
+            password: '{{ switch_password }}'
+            rma:
+              - serial_number: '{{ ansible_rma_serial }}'
+                old_serial: '{{ ansible_switch1_serial }}'
+                model: '{{ ansible_rma_model }}'
+                version: '{{ ansible_rma_swversion }}'
+                hostname: '{{ ansible_rma_hostname }}'
+                config_data:
+                  modulesModel: '{{ ansible_rma_modules }}'
+                  gateway: '{{ ansible_bstrap_gateway }}'
+      register: result
 
-- name: RMA - RMA the existing switch
-  cisco.dcnm.dcnm_inventory:
-    fabric: '{{ ansible_it_fabric }}'
-    state: merged
-    config:
-      - seed_ip: '{{ ansible_switch1 }}'
-        user_name: '{{ switch_username }}'
-        password: '{{ switch_password }}'
-        rma:
-          - serial_number: '{{ ansible_rma_serial }}'
-            old_serial: '{{ ansible_switch1_serial }}'
-            model: '{{ ansible_rma_model }}'
-            version: '{{ ansible_rma_swversion }}'
-            hostname: '{{ ansible_rma_hostname }}'
-            config_data:
-              modulesModel: '{{ ansible_rma_modules }}'
-              gateway: '{{ ansible_bstrap_gateway }}'
-  when: (rma_enabled == True and rma_switch_present == True)
-  register: result
+    - assert:
+        that:
+        - 'result.changed == true'
 
-- assert:
-    that:
-    - 'result.changed == true'
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
   when: (rma_enabled == True and rma_switch_present == True)
-
-- assert:
-    that:
-      - 'item["RETURN_CODE"] == 200'
-  when: (rma_enabled == True and rma_switch_present == True)
-  loop: '{{ result.response }}'
 
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################
 
-- name: POAP QUERY - cleanup - Clean up any existing devices
+- name: RMA - cleanup - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
