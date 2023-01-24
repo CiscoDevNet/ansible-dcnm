@@ -1365,7 +1365,7 @@ class TestDcnmInvModule(TestDcnmModule):
 
         self.assertEqual(
             result.get("msg"),
-            "For poap configuration, supported user_name is 'admin'",
+            "user_name must be 'admin' for POAP",
         )
 
     def test_dcnm_inv_poap_merge_multi_type_switch_fabric(self):
