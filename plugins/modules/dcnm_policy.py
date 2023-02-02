@@ -416,7 +416,11 @@ class DcnmPolicy:
         )
 
         # Get all switches which are managable. Will be required to check deploy status.
-        self.managable = [self.inventory_data[key]["serialNumber"] for key in self.inventory_data.keys() if self.inventory_data[key]["managable"]]
+        self.managable = [
+            self.inventory_data[key]["serialNumber"]
+            for key in self.inventory_data.keys()
+            if self.inventory_data[key]["managable"]
+        ]
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(changed=False, diff=[], response=[])
@@ -919,8 +923,10 @@ class DcnmPolicy:
         while retries < 3:
             resp = dcnm_send(self.module, command, path, json_payload)
 
-            if (resp.get("DATA", None) is not None) and (
-                resp["DATA"].get("failureList", None) is not None
+            if (
+                (resp.get("DATA", None) is not None)
+                and (isinstance(resp["DATA"], dict))
+                and (resp["DATA"].get("failureList", None) is not None)
             ):
                 if isinstance(resp["DATA"]["failureList"], list):
                     fl = resp["DATA"]["failureList"][0]
@@ -930,10 +936,6 @@ class DcnmPolicy:
                 if "is not unique" in fl.get("message", ""):
                     retries = retries + 1
                     continue
-
-                break
-
-            # Don't think we need two break statements here.  Test and remove.
             break
 
         self.result["response"].append(resp)
@@ -1036,7 +1038,11 @@ class DcnmPolicy:
                     # Get the SYNC status of the switch. After deploy, the status
                     # MUST be "In-Sync". If not keep retrying
                     path = self.paths["CONFIG_PREVIEW"].format(self.fabric)
-                    path = path + ",".join(del_snos) + "?forceShowRun=false&showBrief=true"
+                    path = (
+                        path
+                        + ",".join(del_snos)
+                        + "?forceShowRun=false&showBrief=true"
+                    )
 
                     cp_resp = dcnm_send(self.module, "GET", path, "")
 
