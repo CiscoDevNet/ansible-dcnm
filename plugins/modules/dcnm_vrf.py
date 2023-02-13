@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,6 +84,211 @@ options:
         - Service vrf template
         type: str
         default: None
+      vrf_vlan_name:
+        description:
+        - VRF Vlan Name
+        - if > 32 chars enable:system vlan long-name
+        type: str
+        required: false
+      vrf_intf_desc:
+        description:
+        - VRF Intf Description
+        type: str
+        required: false
+      vrf_description:
+        description:
+        - VRF Description
+        type: str
+        required: false
+      vrf_int_mtu:
+        description:
+        - VRF interface MTU
+        type: int
+        required: false
+        default: 9216
+      loopback_route_tag:
+        description:
+        - Loopback Routing Tag
+        type: int
+        required: false
+        default: 12345
+      redist_direct_rmap:
+        description:
+        - Redistribute Direct Route Map
+        type: str
+        required: false
+        default: 'FABRIC-RMAP-REDIST-SUBNET'
+      max_bgp_paths:
+        description:
+        - Max BGP Paths
+        type: int
+        required: false
+        default: 1
+      max_ibgp_paths:
+        description:
+        - Max iBGP Paths
+        type: int
+        required: false
+        default: 2
+      ipv6_linklocal_enable:
+        description:
+        - Enable IPv6 link-local Option
+        type: bool
+        required: false
+        default: true
+      trm_enable:
+        description:
+        - Enable Tenant Routed Multicast
+        type: bool
+        required: false
+        default: false
+      no_rp:
+        description:
+        - No RP, only SSM is used
+        - supported on NDFC only
+        type: bool
+        required: false
+        default: false
+      rp_external:
+        description:
+        - Specifies if RP is external to the fabric
+        - Can be configured only when TRM is enabled
+        type: bool
+        required: false
+        default: false
+      rp_address:
+        description:
+        - IPv4 Address of RP
+        - Can be configured only when TRM is enabled
+        type: str
+        required: false
+      rp_loopback_id:
+        description:
+        - loopback ID of RP
+        - Can be configured only when TRM is enabled
+        type: int
+        required: false
+      underlay_mcast_ip:
+        description:
+        - Underlay IPv4 Multicast Address
+        - Can be configured only when TRM is enabled
+        type: str
+        required: false
+      overlay_mcast_group:
+        description:
+        - Underlay IPv4 Multicast group (224.0.0.0/4 to 239.255.255.255/4)
+        - Can be configured only when TRM is enabled
+        type: str
+        required: false
+      trm_bgw_msite:
+        description:
+        - Enable TRM on Border Gateway Multisite
+        - Can be configured only when TRM is enabled
+        type: bool
+        required: false
+        default: false
+      adv_host_routes:
+        description:
+        - Flag to Control Advertisement of /32 and /128 Routes to Edge Routers
+        type: bool
+        required: false
+        default: false
+      adv_default_routes:
+        description:
+        - Flag to Control Advertisement of Default Route Internally
+        type: bool
+        required: false
+        default: true
+      static_default_route:
+        description:
+        - Flag to Control Static Default Route Configuration
+        type: bool
+        required: false
+        default: true
+      bgp_password:
+        description:
+        - VRF Lite BGP neighbor password
+        type: str
+        required: false
+      bgp_passwd_encrypt:
+        description:
+        - VRF Lite BGP Key Encryption Type
+        type: int
+        choices:
+          - 3 (3DES)
+          - 7 (Cisco)
+        required: false
+        default: 3
+      netflow_enable:
+        description:
+        - Enable netflow on VRF-LITE Sub-interface
+        - Netflow is supported only if it is enabled on fabric
+        - Netflow configs are supported on NDFC only
+        type: bool
+        required: false
+        default: false
+      nf_monitor:
+        description:
+        - Netflow Monitor
+        - Netflow configs are supported on NDFC only
+        type: str
+        required: false
+      disable_rt_auto:
+        description:
+        - Disable RT Auto-Generate
+        - supported on NDFC only
+        type: bool
+        required: false
+        default: false
+      import_vpn_rt:
+        description:
+        - VPN routes to import
+        - supported on NDFC only
+        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        type: list
+        required: false
+        default: []
+      export_vpn_rt:
+        description:
+        - VPN routes to export
+        - supported on NDFC only
+        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        type: str
+        required: false
+      import_evpn_rt:
+        description:
+        - EVPN routes to import
+        - supported on NDFC only
+        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        type: list
+        required: false
+        default: []
+      export_evpn_rt:
+        description:
+        - EVPN routes to export
+        - supported on NDFC only
+        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        type: list
+        required: false
+        default: []
+      import_mvpn_rt:
+        description:
+        - MVPN routes to import
+        - supported on NDFC only
+        - Can be configured only when TRM is enabled
+        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        type: list
+        required: false
+        default: []
+      export_mvpn_rt:
+        description:
+        - MVPN routes to export
+        - supported on NDFC only
+        - Can be configured only when TRM is enabled
+        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        type: list
+        required: false
+        default: []
       attach:
         description:
         - List of vrf attachment details
@@ -642,6 +847,7 @@ class DcnmVrf:
 
     def diff_for_create(self, want, have):
 
+        conf_changed = False
         if not have:
             return {}
 
@@ -650,8 +856,70 @@ class DcnmVrf:
         json_to_dict_want = json.loads(want["vrfTemplateConfig"])
         json_to_dict_have = json.loads(have["vrfTemplateConfig"])
 
-        vlanId_want = str(json_to_dict_want.get("vlanId", ""))
-        vlanId_have = json_to_dict_have.get("vlanId", "")
+        vlanId_want = str(json_to_dict_want.get("vrfVlanId", ""))
+        vlanId_have = json_to_dict_have.get("vrfVlanId", "")
+        vlanName_want = json_to_dict_want.get("vrfVlanName", "")
+        vlanName_have = json_to_dict_have.get("vrfVlanName", "")
+        vlanIntf_want = json_to_dict_want.get("vrfIntfDescription", "")
+        vlanIntf_have = json_to_dict_have.get("vrfIntfDescription", "")
+        vrfDesc_want = json_to_dict_want.get("vrfDescription", "")
+        vrfDesc_have = json_to_dict_have.get("vrfDescription", "")
+        vrfMtu_want = str(json_to_dict_want.get("mtu", ""))
+        vrfMtu_have = json_to_dict_have.get("mtu", "")
+        vrfTag_want = str(json_to_dict_want.get("tag", ""))
+        vrfTag_have = json_to_dict_have.get("tag", "")
+        redRmap_want = json_to_dict_want.get("vrfRouteMap", "")
+        redRmap_have = json_to_dict_have.get("vrfRouteMap", "")
+        maxBgp_want = str(json_to_dict_want.get("maxBgpPaths", ""))
+        maxBgp_have = json_to_dict_have.get("maxBgpPaths", "")
+        maxiBgp_want = str(json_to_dict_want.get("maxIbgpPaths", ""))
+        maxiBgp_have = json_to_dict_have.get("maxIbgpPaths", "")
+        ipv6ll_want = str(json_to_dict_want.get("ipv6LinkLocalFlag", "")).lower()
+        ipv6ll_have = json_to_dict_have.get("ipv6LinkLocalFlag", "")
+        trmen_want = str(json_to_dict_want.get("trmEnabled", "")).lower()
+        trmen_have = json_to_dict_have.get("trmEnabled", "")
+        norp_want = str(json_to_dict_want.get("isRPAbsent", "")).lower()
+        norp_have = json_to_dict_have.get("isRPAbsent", "")
+        rpext_want = str(json_to_dict_want.get("isRPExternal", "")).lower()
+        rpext_have = json_to_dict_have.get("isRPExternal", "")
+        rpadd_want = json_to_dict_want.get("rpAddress", "")
+        rpadd_have = json_to_dict_have.get("rpAddress", "")
+        rploid_want = str(json_to_dict_want.get("loopbackNumber", ""))
+        rploid_have = json_to_dict_have.get("loopbackNumber", "")
+        mcastadd_want = json_to_dict_want.get("L3VniMcastGroup", "")
+        mcastadd_have = json_to_dict_have.get("L3VniMcastGroup", "")
+        mcastgrp_want = json_to_dict_want.get("multicastGroup", "")
+        mcastgrp_have = json_to_dict_have.get("multicastGroup", "")
+        trmBgwms_want = str(json_to_dict_want.get("trmBGWMSiteEnabled", "")).lower()
+        trmBgwms_have = json_to_dict_have.get("trmBGWMSiteEnabled", "")
+        advhrt_want = str(json_to_dict_want.get("advertiseHostRouteFlag", "")).lower()
+        advhrt_have = json_to_dict_have.get("advertiseHostRouteFlag", "")
+        advdrt_want = str(json_to_dict_want.get("advertiseDefaultRouteFlag", "")).lower()
+        advdrt_have = json_to_dict_have.get("advertiseDefaultRouteFlag", "")
+        constd_want = str(json_to_dict_want.get("configureStaticDefaultRouteFlag", "")).lower()
+        constd_have = json_to_dict_have.get("configureStaticDefaultRouteFlag", "")
+        bgppass_want = json_to_dict_want.get("bgpPassword", "")
+        bgppass_have = json_to_dict_have.get("bgpPassword", "")
+        bgppasskey_want = str(json_to_dict_want.get("bgpPasswordKeyType", ""))
+        bgppasskey_have = json_to_dict_have.get("bgpPasswordKeyType", "")
+        nfen_want = str(json_to_dict_want.get("ENABLE_NETFLOW", "")).lower()
+        nfen_have = json_to_dict_have.get("ENABLE_NETFLOW", "")
+        nfmon_want = json_to_dict_want.get("NETFLOW_MONITOR", "")
+        nfmon_have = json_to_dict_have.get("NETFLOW_MONITOR", "")
+        disrtauto_want = str(json_to_dict_want.get("disableRtAuto", "")).lower()
+        disrtauto_have = json_to_dict_have.get("disableRtAuto", "")
+        rtvpnImp_want = json_to_dict_want.get("routeTargetImport", "")
+        rtvpnImp_have = json_to_dict_have.get("routeTargetImport", "")
+        rtvpnExp_want = json_to_dict_want.get("routeTargetExport", "")
+        rtvpnExp_have = json_to_dict_have.get("routeTargetExport", "")
+        rtevpnImp_want = json_to_dict_want.get("routeTargetImportEvpn", "")
+        rtevpnImp_have = json_to_dict_have.get("routeTargetImportEvpn", "")
+        rtevpnExp_want = json_to_dict_want.get("routeTargetExportEvpn", "")
+        rtevpnExp_have = json_to_dict_have.get("routeTargetExportEvpn", "")
+        rtmvpnImp_want = json_to_dict_want.get("routeTargetImportMvpn", "")
+        rtmvpnImp_have = json_to_dict_have.get("routeTargetImportMvpn", "")
+        rtmvpnExp_want = json_to_dict_want.get("routeTargetExportMvpn", "")
+        rtmvpnExp_have = json_to_dict_have.get("routeTargetExportMvpn", "")
 
         if vlanId_want != "0":
 
@@ -666,8 +934,40 @@ class DcnmVrf:
                 or have["vrfTemplate"] != want["vrfTemplate"]
                 or have["vrfExtensionTemplate"] != want["vrfExtensionTemplate"]
                 or vlanId_have != vlanId_want
+                or vlanName_have != vlanName_want
+                or vlanIntf_have != vlanIntf_want
+                or vrfDesc_have != vrfDesc_want
+                or vrfMtu_have != vrfMtu_want
+                or vrfTag_have != vrfTag_want
+                or redRmap_have != redRmap_want
+                or maxBgp_have != maxBgp_want
+                or maxiBgp_have != maxiBgp_want
+                or ipv6ll_have != ipv6ll_want
+                or trmen_have != trmen_want
+                or norp_have != norp_want
+                or rpext_have != rpext_want
+                or rpadd_have != rpadd_want
+                or rploid_have != rploid_want
+                or mcastadd_have != mcastadd_want
+                or mcastgrp_have != mcastgrp_want
+                or trmBgwms_have != trmBgwms_want
+                or advhrt_have != advhrt_want
+                or advdrt_have != advdrt_want
+                or constd_have != constd_want
+                or bgppass_have != bgppass_want
+                or bgppasskey_have != bgppasskey_want
+                or nfen_have != nfen_want
+                or nfmon_have != nfmon_want
+                or disrtauto_have != disrtauto_want
+                or rtvpnImp_have != rtvpnImp_want
+                or rtvpnExp_have != rtvpnExp_want
+                or rtevpnImp_have != rtevpnImp_want
+                or rtevpnExp_have != rtevpnExp_want
+                or rtmvpnImp_have != rtmvpnImp_want
+                or rtmvpnExp_have != rtmvpnExp_want
             ):
 
+                conf_changed = True
                 if want["vrfId"] is None:
                     # The vrf updates with missing vrfId will have to use existing
                     # vrfId from the instance of the same vrf on DCNM.
@@ -688,8 +988,40 @@ class DcnmVrf:
                 have["serviceVrfTemplate"] != want["serviceVrfTemplate"]
                 or have["vrfTemplate"] != want["vrfTemplate"]
                 or have["vrfExtensionTemplate"] != want["vrfExtensionTemplate"]
+                or vlanName_have != vlanName_want
+                or vlanIntf_have != vlanIntf_want
+                or vrfDesc_have != vrfDesc_want
+                or vrfMtu_have != vrfMtu_want
+                or vrfTag_have != vrfTag_want
+                or redRmap_have != redRmap_want
+                or maxBgp_have != maxBgp_want
+                or maxiBgp_have != maxiBgp_want
+                or ipv6ll_have != ipv6ll_want
+                or trmen_have != trmen_want
+                or norp_have != norp_want
+                or rpext_have != rpext_want
+                or rpadd_have != rpadd_want
+                or rploid_have != rploid_want
+                or mcastadd_have != mcastadd_want
+                or mcastgrp_have != mcastgrp_want
+                or trmBgwms_have != trmBgwms_want
+                or advhrt_have != advhrt_want
+                or advdrt_have != advdrt_want
+                or constd_have != constd_want
+                or bgppass_have != bgppass_want
+                or bgppasskey_have != bgppasskey_want
+                or nfen_have != nfen_want
+                or nfmon_have != nfmon_want
+                or disrtauto_have != disrtauto_want
+                or rtvpnImp_have != rtvpnImp_want
+                or rtvpnExp_have != rtvpnExp_want
+                or rtevpnImp_have != rtevpnImp_want
+                or rtevpnExp_have != rtevpnExp_want
+                or rtmvpnImp_have != rtmvpnImp_want
+                or rtmvpnExp_have != rtmvpnExp_want
             ):
 
+                conf_changed = True
                 if want["vrfId"] is None:
                     # The vrf updates with missing vrfId will have to use existing
                     # vrfId from the instance of the same vrf on DCNM.
@@ -698,7 +1030,7 @@ class DcnmVrf:
             else:
                 pass
 
-        return create
+        return create, conf_changed
 
     def update_create_params(self, vrf, vlanId=""):
 
@@ -726,8 +1058,41 @@ class DcnmVrf:
         template_conf = {
             "vrfSegmentId": vrf.get("vrf_id", None),
             "vrfName": vrf["vrf_name"],
-            "vlanId": vlanId,
+            "vrfVlanId": vlanId,
+            "vrfVlanName": vrf.get("vrf_vlan_name", ""),
+            "vrfIntfDescription": vrf.get("vrf_intf_desc", ""),
+            "vrfDescription": vrf.get("vrf_description", ""),
+            "mtu": vrf.get("vrf_int_mtu", ""),
+            "tag": vrf.get("loopback_route_tag", ""),
+            "vrfRouteMap": vrf.get("redist_direct_rmap", ""),
+            "maxBgpPaths": vrf.get("max_bgp_paths", ""),
+            "maxIbgpPaths": vrf.get("max_ibgp_paths", ""),
+            "ipv6LinkLocalFlag": vrf.get("ipv6_linklocal_enable", True),
+            "trmEnabled": vrf.get("trm_enable", False),
+            "isRPExternal": vrf.get("rp_external", False),
+            "rpAddress": vrf.get("rp_address", ""),
+            "loopbackNumber": vrf.get("rp_loopback_id", ""),
+            "L3VniMcastGroup": vrf.get("underlay_mcast_ip", ""),
+            "multicastGroup": vrf.get("overlay_mcast_group", ""),
+            "trmBGWMSiteEnabled": vrf.get("trm_bgw_msite", False),
+            "advertiseHostRouteFlag": vrf.get("adv_host_routes", False),
+            "advertiseDefaultRouteFlag": vrf.get("adv_default_routes", True),
+            "configureStaticDefaultRouteFlag": vrf.get("static_default_route", True),
+            "bgpPassword": vrf.get("bgp_password", ""),
+            "bgpPasswordKeyType": vrf.get("bgp_passwd_encrypt", ""),
         }
+        if self.dcnm_version > 11:
+            template_conf.update(isRPAbsent = vrf.get("no_rp", False))
+            template_conf.update(ENABLE_NETFLOW = vrf.get("netflow_enable", False))
+            template_conf.update(NETFLOW_MONITOR = vrf.get("nf_monitor", ""))
+            template_conf.update(disableRtAuto = vrf.get("disable_rt_auto", False))
+            template_conf.update(routeTargetImport = vrf.get("import_vpn_rt", ""))
+            template_conf.update(routeTargetExport = vrf.get("export_vpn_rt", ""))
+            template_conf.update(routeTargetImportEvpn = vrf.get("import_evpn_rt", ""))
+            template_conf.update(routeTargetExportEvpn = vrf.get("export_evpn_rt", ""))
+            template_conf.update(routeTargetImportMvpn = vrf.get("import_mvpn_rt", ""))
+            template_conf.update(routeTargetExportMvpn = vrf.get("export_mvpn_rt", ""))
+
         vrf_upd.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
         return vrf_upd
@@ -774,8 +1139,41 @@ class DcnmVrf:
             t_conf = {
                 "vrfSegmentId": vrf["vrfId"],
                 "vrfName": vrf["vrfName"],
-                "vlanId": json_to_dict.get("vlanId", 0),
+                "vrfVlanId": json_to_dict.get("vrfVlanId", 0),
+                "vrfVlanName": json_to_dict.get("vrfVlanName", ""),
+                "vrfIntfDescription": json_to_dict.get("vrfIntfDescription", ""),
+                "vrfDescription": json_to_dict.get("vrfDescription", ""),
+                "mtu": json_to_dict.get("mtu", 9216),
+                "tag": json_to_dict.get("tag", 12345),
+                "vrfRouteMap": json_to_dict.get("vrfRouteMap", ""),
+                "maxBgpPaths": json_to_dict.get("maxBgpPaths", 1),
+                "maxIbgpPaths": json_to_dict.get("maxIbgpPaths", 2),
+                "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag", True),
+                "trmEnabled": json_to_dict.get("trmEnabled", False),
+                "isRPExternal": json_to_dict.get("isRPExternal", False),
+                "rpAddress": json_to_dict.get("rpAddress", ""),
+                "loopbackNumber": json_to_dict.get("loopbackNumber", ""),
+                "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup", ""),
+                "multicastGroup": json_to_dict.get("multicastGroup", ""),
+                "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled", False),
+                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag", False),
+                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag", True),
+                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag", True),
+                "bgpPassword": json_to_dict.get("bgpPassword", ""),
+                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", ""),
             }
+
+            if self.dcnm_version > 11:
+                t_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent"))
+                t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW"))
+                t_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR"))
+                t_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto"))
+                t_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport"))
+                t_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport"))
+                t_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn"))
+                t_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn"))
+                t_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn"))
+                t_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn"))
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
             del vrf["vrfStatus"]
@@ -1175,6 +1573,7 @@ class DcnmVrf:
         diff_attach = []
         diff_deploy = {}
         prev_vrf_id_fetched = None
+        conf_changed = {}
 
         all_vrfs = ""
 
@@ -1185,7 +1584,8 @@ class DcnmVrf:
             for have_c in self.have_create:
                 if want_c["vrfName"] == have_c["vrfName"]:
                     vrf_found = True
-                    diff = self.diff_for_create(want_c, have_c)
+                    diff, conf_chg = self.diff_for_create(want_c, have_c)
+                    conf_changed.update({want_c["vrfName"]: conf_chg})
                     if diff:
                         diff_create_update.append(diff)
                     break
@@ -1235,10 +1635,46 @@ class DcnmVrf:
 
                         if vrf_id != prev_vrf_id_fetched:
                             want_c.update({"vrfId": vrf_id})
+                            json_to_dict = json.loads(vrf["vrfTemplateConfig"])
                             template_conf = {
                                 "vrfSegmentId": vrf_id,
                                 "vrfName": want_c["vrfName"],
+                                "vrfVlanId": json_to_dict.get("vrfVlanId"),
+                                "vrfVlanName": json_to_dict.get("vrfVlanName"),
+                                "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
+                                "vrfDescription": json_to_dict.get("vrfDescription"),
+                                "mtu": json_to_dict.get("mtu"),
+                                "tag": json_to_dict.get("tag"),
+                                "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                                "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
+                                "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
+                                "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                                "trmEnabled": json_to_dict.get("trmEnabled"),
+                                "isRPExternal": json_to_dict.get("isRPExternal"),
+                                "rpAddress": json_to_dict.get("rpAddress"),
+                                "loopbackNumber": json_to_dict.get("loopbackNumber"),
+                                "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
+                                "multicastGroup": json_to_dict.get("multicastGroup"),
+                                "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
+                                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
+                                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
+                                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
+                                "bgpPassword": json_to_dict.get("bgpPassword"),
+                                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
                             }
+
+                            if self.dcnm_version > 11:
+                                template_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent"))
+                                template_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW"))
+                                template_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR"))
+                                template_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto"))
+                                template_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport"))
+                                template_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport"))
+                                template_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn"))
+                                template_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn"))
+                                template_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn"))
+                                template_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn"))
+
                             want_c.update(
                                 {"vrfTemplateConfig": json.dumps(template_conf)}
                             )
@@ -1286,7 +1722,7 @@ class DcnmVrf:
                         diff_attach.append(base)
                         dep_vrf = want_a["vrfName"]
                     else:
-                        if vrf:
+                        if vrf or conf_changed.get(want_a["vrfName"], False):
                             dep_vrf = want_a["vrfName"]
 
             if not attach_found and want_a.get("lanAttachList"):
@@ -1349,6 +1785,7 @@ class DcnmVrf:
 
             found_c = want_d
 
+
             src = found_c["source"]
             found_c.update({"vrf_name": found_c["vrfName"]})
             found_c.update({"vrf_id": found_c["vrfId"]})
@@ -1358,6 +1795,40 @@ class DcnmVrf:
             found_c.update({"source": src})
             found_c.update({"service_vrf_template": found_c["serviceVrfTemplate"]})
             found_c.update({"attach": []})
+
+            json_to_dict = json.loads(found_c["vrfTemplateConfig"])
+            found_c.update({"vrf_vlan_name": json_to_dict.get("vrfVlanName", "")})
+            found_c.update({"vrf_intf_desc": json_to_dict.get("vrfIntfDescription", "")})
+            found_c.update({"vrf_description": json_to_dict.get("vrfDescription", "")})
+            found_c.update({"vrf_int_mtu": json_to_dict.get("mtu", "")})
+            found_c.update({"loopback_route_tag": json_to_dict.get("tag", "")})
+            found_c.update({"redist_direct_rmap": json_to_dict.get("vrfRouteMap", "")})
+            found_c.update({"max_bgp_paths": json_to_dict.get("maxBgpPaths", "")})
+            found_c.update({"max_ibgp_paths": json_to_dict.get("maxIbgpPaths", "")})
+            found_c.update({"ipv6_linklocal_enable": json_to_dict.get("ipv6LinkLocalFlag", True)})
+            found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
+            found_c.update({"rp_external": json_to_dict.get("isRPExternal", False)})
+            found_c.update({"rp_address": json_to_dict.get("rpAddress", "")})
+            found_c.update({"rp_loopback_id": json_to_dict.get("loopbackNumber", "")})
+            found_c.update({"underlay_mcast_ip": json_to_dict.get("L3VniMcastGroup", "")})
+            found_c.update({"overlay_mcast_group": json_to_dict.get("multicastGroup", "")})
+            found_c.update({"trm_bgw_msite": json_to_dict.get("trmBGWMSiteEnabled", False)})
+            found_c.update({"adv_host_routes": json_to_dict.get("advertiseHostRouteFlag", False)})
+            found_c.update({"adv_default_routes": json_to_dict.get("advertiseDefaultRouteFlag", True)})
+            found_c.update({"static_default_route": json_to_dict.get("configureStaticDefaultRouteFlag", True)})
+            found_c.update({"bgp_password": json_to_dict.get("bgpPassword", "")})
+            found_c.update({"bgp_passwd_encrypt": json_to_dict.get("bgpPasswordKeyType", "")})
+            if self.dcnm_version > 11:
+                found_c.update({"no_rp": json_to_dict.get("isRPAbsent", False)})
+                found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", True)})
+                found_c.update({"nf_monitor": json_to_dict.get("NETFLOW_MONITOR", "")})
+                found_c.update({"disable_rt_auto": json_to_dict.get("disableRtAuto", False)})
+                found_c.update({"import_vpn_rt": json_to_dict.get("routeTargetImport", "")})
+                found_c.update({"export_vpn_rt": json_to_dict.get("routeTargetExport", "")})
+                found_c.update({"import_evpn_rt": json_to_dict.get("routeTargetImportEvpn", "")})
+                found_c.update({"export_evpn_rt": json_to_dict.get("routeTargetExportEvpn", "")})
+                found_c.update({"import_mvpn_rt": json_to_dict.get("routeTargetImportMvpn", "")})
+                found_c.update({"export_mvpn_rt": json_to_dict.get("routeTargetExportMvpn", "")})
 
             del found_c["fabric"]
             del found_c["vrfName"]
@@ -1634,7 +2105,7 @@ class DcnmVrf:
 
             for vrf in self.diff_create:
                 json_to_dict = json.loads(vrf["vrfTemplateConfig"])
-                vlanId = json_to_dict.get("vlanId", "0")
+                vlanId = json_to_dict.get("vrfVlanId", "0")
 
                 if vlanId == 0:
                     vlan_path = self.paths["GET_VLAN"].format(self.fabric)
@@ -1649,10 +2120,43 @@ class DcnmVrf:
                     vlanId = vlan_data["DATA"]
 
                 t_conf = {
-                    "vrfSegmentId": json_to_dict.get("vrfId", ""),
+                    "vrfSegmentId": vrf["vrfId"],
                     "vrfName": json_to_dict.get("vrfName", ""),
-                    "vlanId": vlanId,
+                    "vrfVlanId": vlanId,
+                    "vrfVlanName": json_to_dict.get("vrfVlanName"),
+                    "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
+                    "vrfDescription": json_to_dict.get("vrfDescription"),
+                    "mtu": json_to_dict.get("mtu"),
+                    "tag": json_to_dict.get("tag"),
+                    "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                    "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
+                    "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
+                    "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                    "trmEnabled": json_to_dict.get("trmEnabled"),
+                    "isRPExternal": json_to_dict.get("isRPExternal"),
+                    "rpAddress": json_to_dict.get("rpAddress"),
+                    "loopbackNumber": json_to_dict.get("loopbackNumber"),
+                    "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
+                    "multicastGroup": json_to_dict.get("multicastGroup"),
+                    "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
+                    "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
+                    "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
+                    "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
+                    "bgpPassword": json_to_dict.get("bgpPassword"),
+                    "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
                 }
+
+                if self.dcnm_version > 11:
+                    t_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent"))
+                    t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW"))
+                    t_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR"))
+                    t_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto"))
+                    t_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport"))
+                    t_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport"))
+                    t_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn"))
+                    t_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn"))
+                    t_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn"))
+                    t_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn"))
 
                 vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
 
@@ -1668,6 +2172,7 @@ class DcnmVrf:
         if self.diff_attach:
             for d_a in self.diff_attach:
                 for v_a in d_a["lanAttachList"]:
+                    v_a.update(vlan = 0)
                     if v_a.get("vrf_lite"):
                         """Before apply the vrf_lite config, need double check if the switch role is started wth Border"""
                         r = re.search(r"\bborder\b", self.role.lower())
@@ -1878,6 +2383,37 @@ class DcnmVrf:
                 service_vrf_template=dict(type="str", default=None),
                 attach=dict(type="list"),
                 deploy=dict(type="bool", default=True),
+                vrf_vlan_name=dict(type="str", default=""),
+                vrf_intf_desc=dict(type="str", default=""),
+                vrf_description=dict(type="str", default=""),
+                vrf_int_mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
+                loopback_route_tag=dict(type="int", default=12345, range_max=4294967295),
+                redist_direct_rmap=dict(type="str", default="FABRIC-RMAP-REDIST-SUBNET"),
+                max_bgp_paths=dict(type="int", range_min=1, range_max=64, default=1),
+                max_ibgp_paths=dict(type="int", range_min=1, range_max=64, default=2),
+                ipv6_linklocal_enable=dict(type="bool", default=True),
+                trm_enable=dict(type="bool", default=False),
+                no_rp=dict(type="bool", default=False),
+                rp_external=dict(type="bool", default=False),
+                rp_address=dict(type="str", default=""),
+                rp_loopback_id=dict(type="int", range_max=1023, default=""),
+                underlay_mcast_ip=dict(type="str", default=""),
+                overlay_mcast_group=dict(type="str", default=""),
+                trm_bgw_msite=dict(type="bool", default=False),
+                adv_host_routes=dict(type="bool", default=False),
+                adv_default_routes=dict(type="bool", default=True),
+                static_default_route=dict(type="bool", default=True),
+                bgp_password=dict(type="str", default=""),
+                bgp_passwd_encrypt=dict(type="int", default=3, choices=[3, 7]),
+                netflow_enable=dict(type="bool", default=False),
+                nf_monitor=dict(type="str", default=""),
+                disable_rt_auto=dict(type="bool", default=False),
+                import_vpn_rt=dict(type="str", default=""),
+                export_vpn_rt=dict(type="str", default=""),
+                import_evpn_rt=dict(type="str", default=""),
+                export_evpn_rt=dict(type="str", default=""),
+                import_mvpn_rt=dict(type="str", default=""),
+                export_mvpn_rt=dict(type="str", default=""),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -1979,6 +2515,37 @@ class DcnmVrf:
                 service_vrf_template=dict(type="str", default=None),
                 attach=dict(type="list"),
                 deploy=dict(type="bool"),
+                vrf_vlan_name=dict(type="str", default=""),
+                vrf_intf_desc=dict(type="str", default=""),
+                vrf_description=dict(type="str", default=""),
+                vrf_int_mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
+                loopback_route_tag=dict(type="int", default=12345, range_max=4294967295),
+                redist_direct_rmap=dict(type="str", default="FABRIC-RMAP-REDIST-SUBNET"),
+                max_bgp_paths=dict(type="int", range_min=1, range_max=64, default=1),
+                max_ibgp_paths=dict(type="int", range_min=1, range_max=64, default=2),
+                ipv6_linklocal_enable=dict(type="bool", default=True),
+                trm_enable=dict(type="bool", default=False),
+                no_rp=dict(type="bool", default=False),
+                rp_external=dict(type="bool", default=False),
+                rp_address=dict(type="str", default=""),
+                rp_loopback_id=dict(type="int", range_max=1023, default=""),
+                underlay_mcast_ip=dict(type="str", default=""),
+                overlay_mcast_group=dict(type="str", default=""),
+                trm_bgw_msite=dict(type="bool", default=False),
+                adv_host_routes=dict(type="bool", default=False),
+                adv_default_routes=dict(type="bool", default=True),
+                static_default_route=dict(type="bool", default=True),
+                bgp_password=dict(type="str", default=""),
+                bgp_passwd_encrypt=dict(type="int", default=3, choices=[3, 7]),
+                netflow_enable=dict(type="bool", default=False),
+                nf_monitor=dict(type="str", default=""),
+                disable_rt_auto=dict(type="bool", default=False),
+                import_vpn_rt=dict(type="str", default=""),
+                export_vpn_rt=dict(type="str", default=""),
+                import_evpn_rt=dict(type="str", default=""),
+                export_evpn_rt=dict(type="str", default=""),
+                import_mvpn_rt=dict(type="str", default=""),
+                export_mvpn_rt=dict(type="str", default=""),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -165,6 +165,71 @@ options:
       multicast_group_address:
         description:
         - The multicast IP address for the network
+        type: str
+        required: false
+      gw_ipv6_subnet:
+        description:
+        - IPv6 Gateway with prefix for the network
+        type: str
+        required: false
+      secondary_ip_gw1:
+        description:
+        - IP address with subnet for secondary gateway 1
+        type: str
+        required: false
+      secondary_ip_gw2:
+        description:
+        - IP address with subnet for secondary gateway 2
+        type: str
+        required: false
+      secondary_ip_gw3:
+        description:
+        - IP address with subnet for secondary gateway 3
+        type: str
+        required: false
+      secondary_ip_gw4:
+        description:
+        - IP address with subnet for secondary gateway 4
+        type: str
+        required: false
+      trm_enable:
+        description:
+        - Enable Tenant Routed Multicast
+        type: bool
+        required: false
+        default: false
+      route_target_both:
+        description:
+        - Enable both L2 VNI Route-Target
+        type: bool
+        required: false
+        default: false
+      l3gw_on_border:
+        description:
+        - Enable L3 Gateway on Border
+        type: bool
+        required: false
+        default: false
+      netflow_enable:
+        description:
+        - Enable Netflow
+        - Netflow is supported only if it is enabled on fabric
+        - Netflow configs are supported on NDFC only
+        type: bool
+        required: false
+        default: false
+      intfvlan_nf_monitor:
+        description:
+        - Interface Vlan Netflow Monitor
+        - Applicable only if 'Layer 2 Only' is not enabled. Provide monitor name defined in fabric setting for Layer 3 Record
+        - Netflow configs are supported on NDFC only
+        type: str
+        required: false
+      vlan_nf_monitor:
+        description:
+        - Vlan Netflow Monitor
+        - Provide monitor name defined in fabric setting for Layer 3 Record
+        - Netflow configs are supported on NDFC only
         type: str
         required: false
       attach:
@@ -687,6 +752,17 @@ class DcnmNetwork:
         dhcp3_vrf_changed = False
         dhcp_loopback_changed = False
         multicast_group_address_changed = False
+        gwv6_changed = False
+        sec_gw1_changed = False
+        sec_gw2_changed = False
+        sec_gw3_changed = False
+        sec_gw4_changed = False
+        trm_en_changed = False
+        rt_both_changed = False
+        l3gw_onbd_changed = False
+        nf_en_changed = False
+        intvlan_nfmon_changed = False
+        vlan_nfmon_changed = False
 
         if want.get("networkId") and want["networkId"] != have["networkId"]:
             self.module.fail_json(
@@ -710,7 +786,7 @@ class DcnmNetwork:
         gw_ip_have = json_to_dict_have.get("gatewayIpAddress", "")
         vlanId_want = json_to_dict_want.get("vlanId", "")
         vlanId_have = json_to_dict_have.get("vlanId")
-        l2only_want = json_to_dict_want.get("isLayer2Only", "")
+        l2only_want = str(json_to_dict_want.get("isLayer2Only", "")).lower()
         l2only_have = json_to_dict_have.get("isLayer2Only", "")
         vlanName_want = json_to_dict_want.get("vlanName", "")
         vlanName_have = json_to_dict_have.get("vlanName", "")
@@ -718,7 +794,7 @@ class DcnmNetwork:
         intDesc_have = json_to_dict_have.get("intfDescription", "")
         mtu_want = json_to_dict_want.get("mtu", "")
         mtu_have = json_to_dict_have.get("mtu", "")
-        arpsup_want = json_to_dict_want.get("suppressArp", "")
+        arpsup_want = str(json_to_dict_want.get("suppressArp", "")).lower()
         arpsup_have = json_to_dict_have.get("suppressArp", "")
         dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
         dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
@@ -737,6 +813,29 @@ class DcnmNetwork:
         dhcp_loopback_have = json_to_dict_have.get("loopbackId", "")
         multicast_group_address_want = json_to_dict_want.get("mcastGroup", "")
         multicast_group_address_have = json_to_dict_have.get("mcastGroup", "")
+        gw_ipv6_want = json_to_dict_want.get("gatewayIpV6Address", "")
+        gw_ipv6_have = json_to_dict_have.get("gatewayIpV6Address", "")
+        secip_gw1_want = json_to_dict_want.get("secondaryGW1", "")
+        secip_gw1_have = json_to_dict_have.get("secondaryGW1", "")
+        secip_gw2_want = json_to_dict_want.get("secondaryGW2", "")
+        secip_gw2_have = json_to_dict_have.get("secondaryGW2", "")
+        secip_gw3_want = json_to_dict_want.get("secondaryGW3", "")
+        secip_gw3_have = json_to_dict_have.get("secondaryGW3", "")
+        secip_gw4_want = json_to_dict_want.get("secondaryGW4", "")
+        secip_gw4_have = json_to_dict_have.get("secondaryGW4", "")
+        trmen_want = str(json_to_dict_want.get("trmEnabled", "")).lower()
+        trmen_have = json_to_dict_have.get("trmEnabled", "")
+        rt_both_want = str(json_to_dict_want.get("rtBothAuto", "")).lower()
+        rt_both_have = json_to_dict_have.get("rtBothAuto", "")
+        l3gw_onbd_want = str(json_to_dict_want.get("enableL3OnBorder", "")).lower()
+        l3gw_onbd_have = json_to_dict_have.get("enableL3OnBorder", "")
+        nf_en_want = str(json_to_dict_want.get("ENABLE_NETFLOW", "")).lower()
+        nf_en_have = json_to_dict_have.get("ENABLE_NETFLOW", "")
+        intvlan_nfen_want = json_to_dict_want.get("SVI_NETFLOW_MONITOR", "")
+        intvlan_nfen_have = json_to_dict_have.get("SVI_NETFLOW_MONITOR", "")
+        vlan_nfen_want = json_to_dict_want.get("VLAN_NETFLOW_MONITOR", "")
+        vlan_nfen_have = json_to_dict_have.get("VLAN_NETFLOW_MONITOR", "")
+
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
         tag_want = json_to_dict_want.get("tag", "")
@@ -745,14 +844,6 @@ class DcnmNetwork:
             tag_have = int(tag_have)
         if mtu_have != "":
             mtu_have = int(mtu_have)
-        if arpsup_have == "true":
-            arpsup_have = True
-        elif arpsup_have == "false":
-            arpsup_have = False
-        if l2only_have == "true":
-            l2only_have = True
-        elif l2only_have == "false":
-            l2only_have = False
 
         if vlanId_want:
 
@@ -775,6 +866,17 @@ class DcnmNetwork:
                 or dhcp3_vrf_have != dhcp3_vrf_want
                 or dhcp_loopback_have != dhcp_loopback_want
                 or multicast_group_address_have != multicast_group_address_want
+                or gw_ipv6_have != gw_ipv6_want
+                or secip_gw1_have != secip_gw1_want
+                or secip_gw2_have != secip_gw2_want
+                or secip_gw3_have != secip_gw3_want
+                or secip_gw4_have != secip_gw4_want
+                or trmen_have != trmen_want
+                or rt_both_have != rt_both_want
+                or l3gw_onbd_have != l3gw_onbd_want
+                or nf_en_have != nf_en_want
+                or intvlan_nfen_have != intvlan_nfen_want
+                or vlan_nfen_have != vlan_nfen_want
             ):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -812,6 +914,29 @@ class DcnmNetwork:
                     dhcp_loopback_changed = True
                 if multicast_group_address_have != multicast_group_address_want:
                     multicast_group_address_changed = True
+                if gw_ipv6_have != gw_ipv6_want:
+                    gwv6_changed = True
+                if secip_gw1_have != secip_gw1_want:
+                    sec_gw1_changed = True
+                if secip_gw2_have != secip_gw2_want:
+                    sec_gw2_changed = True
+                if secip_gw3_have != secip_gw3_want:
+                    sec_gw3_changed = True
+                if secip_gw4_have != secip_gw4_want:
+                    sec_gw4_changed = True
+                if trmen_have != trmen_want:
+                    trm_en_changed = True
+                if rt_both_have != rt_both_want:
+                    rt_both_changed = True
+                if l3gw_onbd_have != l3gw_onbd_want:
+                    l3gw_onbd_changed = True
+                if self.dcnm_version > 11:
+                    if nf_en_have != nf_en_want:
+                        nf_en_changed = True
+                    if intvlan_nfen_have != intvlan_nfen_want:
+                        intvlan_nfmon_changed = True
+                    if vlan_nfen_have != vlan_nfen_want:
+                        vlan_nfmon_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -834,6 +959,19 @@ class DcnmNetwork:
                 or dhcp1_vrf_have != dhcp1_vrf_want
                 or dhcp2_vrf_have != dhcp2_vrf_want
                 or dhcp3_vrf_have != dhcp3_vrf_want
+                or dhcp_loopback_have != dhcp_loopback_want
+                or multicast_group_address_have != multicast_group_address_want
+                or gw_ipv6_have != gw_ipv6_want
+                or secip_gw1_have != secip_gw1_want
+                or secip_gw2_have != secip_gw2_want
+                or secip_gw3_have != secip_gw3_want
+                or secip_gw4_have != secip_gw4_want
+                or trmen_have != trmen_want
+                or rt_both_have != rt_both_want
+                or l3gw_onbd_have != l3gw_onbd_want
+                or nf_en_have != nf_en_want
+                or intvlan_nfen_have != intvlan_nfen_want
+                or vlan_nfen_have != vlan_nfen_want
             ):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -868,6 +1006,29 @@ class DcnmNetwork:
                     dhcp_loopback_changed = True
                 if multicast_group_address_have != multicast_group_address_want:
                     multicast_group_address_changed = True
+                if gw_ipv6_have != gw_ipv6_want:
+                    gwv6_changed = True
+                if secip_gw1_have != secip_gw1_want:
+                    sec_gw1_changed = True
+                if secip_gw2_have != secip_gw2_want:
+                    sec_gw2_changed = True
+                if secip_gw3_have != secip_gw3_want:
+                    sec_gw3_changed = True
+                if secip_gw4_have != secip_gw4_want:
+                    sec_gw4_changed = True
+                if trmen_have != trmen_want:
+                    trm_en_changed = True
+                if rt_both_have != rt_both_want:
+                    rt_both_changed = True
+                if l3gw_onbd_have != l3gw_onbd_want:
+                    l3gw_onbd_changed = True
+                if self.dcnm_version > 11:
+                    if nf_en_have != nf_en_want:
+                        nf_en_changed = True
+                    if intvlan_nfen_have != intvlan_nfen_want:
+                        intvlan_nfmon_changed = True
+                    if vlan_nfen_have != vlan_nfen_want:
+                        vlan_nfmon_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -890,6 +1051,17 @@ class DcnmNetwork:
             dhcp3_vrf_changed,
             dhcp_loopback_changed,
             multicast_group_address_changed,
+            gwv6_changed,
+            sec_gw1_changed,
+            sec_gw2_changed,
+            sec_gw3_changed,
+            sec_gw4_changed,
+            trm_en_changed,
+            rt_both_changed,
+            l3gw_onbd_changed,
+            nf_en_changed,
+            intvlan_nfmon_changed,
+            vlan_nfmon_changed
         )
 
     def update_create_params(self, net):
@@ -943,7 +1115,20 @@ class DcnmNetwork:
             "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
             "loopbackId": net.get("dhcp_loopback_id", ""),
             "mcastGroup": net.get("multicast_group_address", ""),
+            "gatewayIpV6Address": net.get("gw_ipv6_subnet", ""),
+            "secondaryGW1": net.get("secondary_ip_gw1", ""),
+            "secondaryGW2": net.get("secondary_ip_gw2", ""),
+            "secondaryGW3": net.get("secondary_ip_gw3", ""),
+            "secondaryGW4": net.get("secondary_ip_gw4", ""),
+            "trmEnabled": net.get("trm_enable", False),
+            "rtBothAuto": net.get("route_target_both", False),
+            "enableL3OnBorder": net.get("l3gw_on_border", False),
         }
+
+        if self.dcnm_version > 11:
+            template_conf.update(ENABLE_NETFLOW = net.get("netflow_enable", False))
+            template_conf.update(SVI_NETFLOW_MONITOR = net.get("intfvlan_nf_monitor", ""))
+            template_conf.update(VLAN_NETFLOW_MONITOR = net.get("vlan_nf_monitor", ""))
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -965,6 +1150,21 @@ class DcnmNetwork:
             template_conf["loopbackId"] = ""
         if template_conf["mcastGroup"] is None:
             template_conf["mcastGroup"] = ""
+        if template_conf["gatewayIpV6Address"] is None:
+            template_conf["gatewayIpV6Address"] = ""
+        if template_conf["secondaryGW1"] is None:
+            template_conf["secondaryGW1"] = ""
+        if template_conf["secondaryGW2"] is None:
+            template_conf["secondaryGW2"] = ""
+        if template_conf["secondaryGW3"] is None:
+            template_conf["secondaryGW3"] = ""
+        if template_conf["secondaryGW4"] is None:
+            template_conf["secondaryGW4"] = ""
+        if self.dcnm_version > 11:
+            if template_conf["SVI_NETFLOW_MONITOR"] is None:
+                template_conf["SVI_NETFLOW_MONITOR"] = ""
+            if template_conf["VLAN_NETFLOW_MONITOR"] is None:
+                template_conf["VLAN_NETFLOW_MONITOR"] = ""
 
         net_upd.update({"networkTemplateConfig": json.dumps(template_conf)})
 
@@ -1049,7 +1249,20 @@ class DcnmNetwork:
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
+                    "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
+                    "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
+                    "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
+                    "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
+                    "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
+                    "trmEnabled": json_to_dict.get("trmEnabled", False),
+                    "rtBothAuto": json_to_dict.get("rtBothAuto", False),
+                    "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
                 }
+
+                if self.dcnm_version > 11:
+                    t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
+                    t_conf.update(SVI_NETFLOW_MONITOR = json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+                    t_conf.update(VLAN_NETFLOW_MONITOR = json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
                 del net["displayName"]
@@ -1085,7 +1298,20 @@ class DcnmNetwork:
                             "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
                             "mcastGroup": json_to_dict.get("mcastGroup", ""),
+                            "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
+                            "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
+                            "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
+                            "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
+                            "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
+                            "trmEnabled": json_to_dict.get("trmEnabled", False),
+                            "rtBothAuto": json_to_dict.get("rtBothAuto", False),
+                            "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
                         }
+
+                        if self.dcnm_version > 11:
+                            t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
+                            t_conf.update(SVI_NETFLOW_MONITOR = json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+                            t_conf.update(VLAN_NETFLOW_MONITOR = json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
                         l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
                         del l2net["displayName"]
@@ -1513,6 +1739,18 @@ class DcnmNetwork:
         dhcp3_vrf_changed = {}
         dhcp_loopback_changed = {}
         multicast_group_address_changed = {}
+        gwv6_changed = {}
+        sec_gw1_changed = {}
+        sec_gw2_changed = {}
+        sec_gw3_changed = {}
+        sec_gw4_changed = {}
+        trm_en_changed = {}
+        rt_both_changed = {}
+        l3gw_onbd_changed = {}
+        nf_en_changed = {}
+        intvlan_nfmon_changed = {}
+        vlan_nfmon_changed = {}
+
 
         for want_c in self.want_create:
             found = False
@@ -1538,6 +1776,17 @@ class DcnmNetwork:
                         dhcp3_vrf_chg,
                         dhcp_loopbk_chg,
                         mcast_grp_chg,
+                        gwv6_chg,
+                        sec_gw1_chg,
+                        sec_gw2_chg,
+                        sec_gw3_chg,
+                        sec_gw4_chg,
+                        trm_en_chg,
+                        rt_both_chg,
+                        l3gw_onbd_chg,
+                        nf_en_chg,
+                        intvlan_nfmon_chg,
+                        vlan_nfmon_chg
                     ) = self.diff_for_create(want_c, have_c)
                     gw_changed.update({want_c["networkName"]: gw_chg})
                     tg_changed.update({want_c["networkName"]: tg_chg})
@@ -1558,6 +1807,17 @@ class DcnmNetwork:
                     multicast_group_address_changed.update(
                         {want_c["networkName"]: mcast_grp_chg}
                     )
+                    gwv6_changed.update({want_c["networkName"]: gwv6_chg})
+                    sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
+                    sec_gw2_changed.update({want_c["networkName"]: sec_gw2_chg})
+                    sec_gw3_changed.update({want_c["networkName"]: sec_gw3_chg})
+                    sec_gw4_changed.update({want_c["networkName"]: sec_gw4_chg})
+                    trm_en_changed.update({want_c["networkName"]: trm_en_chg})
+                    rt_both_changed.update({want_c["networkName"]: rt_both_chg})
+                    l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
+                    nf_en_changed.update({want_c["networkName"]: nf_en_chg})
+                    intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
+                    vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
                     if diff:
                         diff_create_update.append(diff)
                     break
@@ -1673,6 +1933,17 @@ class DcnmNetwork:
                             or dhcp3_vrf_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
                             or multicast_group_address_changed.get(want_a["networkName"], False)
+                            or gwv6_changed.get(want_a["networkName"], False)
+                            or sec_gw1_changed.get(want_a["networkName"], False)
+                            or sec_gw2_changed.get(want_a["networkName"], False)
+                            or sec_gw3_changed.get(want_a["networkName"], False)
+                            or sec_gw4_changed.get(want_a["networkName"], False)
+                            or trm_en_changed.get(want_a["networkName"], False)
+                            or rt_both_changed.get(want_a["networkName"], False)
+                            or l3gw_onbd_changed.get(want_a["networkName"], False)
+                            or nf_en_changed.get(want_a["networkName"], False)
+                            or intvlan_nfmon_changed.get(want_a["networkName"], False)
+                            or vlan_nfmon_changed.get(want_a["networkName"], False)
                         ):
                             dep_net = want_a["networkName"]
 
@@ -1763,6 +2034,18 @@ class DcnmNetwork:
             found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
             found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
             found_c.update({"multicast_group_address": json_to_dict.get("mcastGroup", "")})
+            found_c.update({"gw_ipv6_subnet": json_to_dict.get("gatewayIpV6Address", "")})
+            found_c.update({"secondary_ip_gw1": json_to_dict.get("secondaryGW1", "")})
+            found_c.update({"secondary_ip_gw2": json_to_dict.get("secondaryGW2", "")})
+            found_c.update({"secondary_ip_gw3": json_to_dict.get("secondaryGW3", "")})
+            found_c.update({"secondary_ip_gw4": json_to_dict.get("secondaryGW4", "")})
+            found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
+            found_c.update({"route_target_both": json_to_dict.get("rtBothAuto", False)})
+            found_c.update({"l3gw_on_border": json_to_dict.get("enableL3OnBorder", False)})
+            if self.dcnm_version > 11:
+                found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
+                found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
+                found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -2091,7 +2374,20 @@ class DcnmNetwork:
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
+                    "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
+                    "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
+                    "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
+                    "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
+                    "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
+                    "trmEnabled": json_to_dict.get("trmEnabled", False),
+                    "rtBothAuto": json_to_dict.get("rtBothAuto", False),
+                    "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
                 }
+
+                if self.dcnm_version > 11:
+                    t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
+                    t_conf.update(SVI_NETFLOW_MONITOR = json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+                    t_conf.update(VLAN_NETFLOW_MONITOR = json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
@@ -2159,6 +2455,11 @@ class DcnmNetwork:
 
         if state == "query":
 
+            if self.dcnm_version > 11:
+                mcast_group_addr = "239.1.1.1"
+            else:
+                mcast_group_addr = "239.1.1.0"
+
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
                 net_id=dict(type="int", range_max=16777214),
@@ -2184,7 +2485,18 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4"),
+                multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
+                gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
+                secondary_ip_gw1=dict(type="ipv4", default=""),
+                secondary_ip_gw2=dict(type="ipv4", default=""),
+                secondary_ip_gw3=dict(type="ipv4", default=""),
+                secondary_ip_gw4=dict(type="ipv4", default=""),
+                trm_enable=dict(type="bool", default=False),
+                route_target_both=dict(type="bool", default=False),
+                l3gw_on_border=dict(type="bool", default=False),
+                netflow_enable=dict(type="bool", default=False),
+                intfvlan_nf_monitor=dict(type="str"),
+                vlan_nf_monitor=dict(type="str"),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2223,6 +2535,11 @@ class DcnmNetwork:
 
         else:
 
+            if self.dcnm_version > 11:
+                mcast_group_addr = "239.1.1.1"
+            else:
+                mcast_group_addr = "239.1.1.0"
+
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
                 net_id=dict(type="int", range_max=16777214),
@@ -2248,7 +2565,18 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4"),
+                multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
+                gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
+                secondary_ip_gw1=dict(type="ipv4", default=""),
+                secondary_ip_gw2=dict(type="ipv4", default=""),
+                secondary_ip_gw3=dict(type="ipv4", default=""),
+                secondary_ip_gw4=dict(type="ipv4", default=""),
+                trm_enable=dict(type="bool", default=False),
+                route_target_both=dict(type="bool", default=False),
+                l3gw_on_border=dict(type="bool", default=False),
+                netflow_enable=dict(type="bool", default=False),
+                intfvlan_nf_monitor=dict(type="str"),
+                vlan_nf_monitor=dict(type="str"),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2316,6 +2644,12 @@ class DcnmNetwork:
                             invalid_params.append(
                                 "DHCP server IP should be specified along with DHCP server VRF"
                             )
+
+                        if self.dcnm_version == 11:
+                            if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
+                                invalid_params.append(
+                                    "Netflow configurations are supported only on NDFC"
+                                )
 
                     self.validated.append(net)
 
@@ -2505,6 +2839,56 @@ class DcnmNetwork:
 
         if cfg.get("multicast_group_address", None) is None:
             json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
+
+        if cfg.get("gw_ipv6_subnet", None) is None:
+            json_to_dict_want["gatewayIpV6Address"] = json_to_dict_have["gatewayIpV6Address"]
+
+        if cfg.get("secondary_ip_gw1", None) is None:
+            json_to_dict_want["secondaryGW1"] = json_to_dict_have["secondaryGW1"]
+
+        if cfg.get("secondary_ip_gw2", None) is None:
+            json_to_dict_want["secondaryGW2"] = json_to_dict_have["secondaryGW2"]
+
+        if cfg.get("secondary_ip_gw3", None) is None:
+            json_to_dict_want["secondaryGW3"] = json_to_dict_have["secondaryGW3"]
+
+        if cfg.get("secondary_ip_gw4", None) is None:
+            json_to_dict_want["secondaryGW4"] = json_to_dict_have["secondaryGW4"]
+
+        if cfg.get("trm_enable", None) is None:
+            json_to_dict_want["trmEnabled"] = json_to_dict_have["trmEnabled"]
+            if str(json_to_dict_want["trmEnabled"]).lower() == "true":
+                json_to_dict_want["trmEnabled"] = True
+            else:
+                json_to_dict_want["trmEnabled"] = False
+
+        if cfg.get("route_target_both", None) is None:
+            json_to_dict_want["rtBothAuto"] = json_to_dict_have["rtBothAuto"]
+            if str(json_to_dict_want["rtBothAuto"]).lower() == "true":
+                json_to_dict_want["rtBothAuto"] = True
+            else:
+                json_to_dict_want["rtBothAuto"] = False
+
+        if cfg.get("l3gw_on_border", None) is None:
+            json_to_dict_want["enableL3OnBorder"] = json_to_dict_have["enableL3OnBorder"]
+            if str(json_to_dict_want["enableL3OnBorder"]).lower() == "true":
+                json_to_dict_want["enableL3OnBorder"] = True
+            else:
+                json_to_dict_want["enableL3OnBorder"] = False
+
+        if self.dcnm_version > 11:
+            if cfg.get("netflow_enable", None) is None:
+                json_to_dict_want["ENABLE_NETFLOW"] = json_to_dict_have["ENABLE_NETFLOW"]
+                if str(json_to_dict_want["ENABLE_NETFLOW"]).lower() == "true":
+                    json_to_dict_want["ENABLE_NETFLOW"] = True
+                else:
+                    json_to_dict_want["ENABLE_NETFLOW"] = False
+
+            if cfg.get("intfvlan_nf_monitor", None) is None:
+                json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have["SVI_NETFLOW_MONITOR"]
+
+            if cfg.get("vlan_nf_monitor", None) is None:
+                json_to_dict_want["VLAN_NETFLOW_MONITOR"] = json_to_dict_have["VLAN_NETFLOW_MONITOR"]
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
