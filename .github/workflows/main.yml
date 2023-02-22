@@ -26,10 +26,10 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
     
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -53,10 +53,10 @@ jobs:
       matrix:
         ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.10, 2.13.7, 2.14.2]
     steps:
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -84,10 +84,10 @@ jobs:
       matrix:
         ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.10, 2.13.7, 2.14.2]
     steps:
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
