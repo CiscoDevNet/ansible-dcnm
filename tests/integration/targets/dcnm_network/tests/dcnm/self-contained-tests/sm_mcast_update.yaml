@@ -4,7 +4,7 @@
     state: deleted
 
 - name: Create network with initial DEFAULT mcast parameter value
-  cisco.dcnm.dcnm_network:
+  cisco.dcnm.dcnm_network: &create
     fabric: "{{ test_fabric }}"
     state: merged
     config:
@@ -29,18 +29,27 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: query
-  register: result
+  register: query_result
   until:
-    - "result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
 
 - assert:
     that:
-    - "result.response[0].parent.networkTemplateConfig.mcastGroup is search('239.1.1.1|239.1.1.0')"
+    - 'result.changed == true'
+    - "query_result.response[0].parent.networkTemplateConfig.mcastGroup is search('239.1.1.1|239.1.1.0')"
+
+- name: Idempotence Check - Create network with initial DEFAULT mcast parameter value
+  cisco.dcnm.dcnm_network: *create
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
 
 - name: Change mcast parameter values
-  cisco.dcnm.dcnm_network:
+  cisco.dcnm.dcnm_network: &change
     fabric: "{{ test_fabric }}"
     state: merged
     config:
@@ -65,12 +74,21 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: query
-  register: result
+  register: query_result
   until:
-    - "result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
 
 - assert:
     that:
-    - "result.response[0].parent.networkTemplateConfig.mcastGroup is search('230.55.24.155')"
+    - 'result.changed == true'
+    - "query_result.response[0].parent.networkTemplateConfig.mcastGroup is search('230.55.24.155')"
+
+- name: Idempotence Check - Change mcast parameter values
+  cisco.dcnm.dcnm_network: *change
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'

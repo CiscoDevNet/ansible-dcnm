@@ -1,0 +1,154 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rma_enabled: False
+
+- set_fact:
+    rma_switch_present: False
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    mode_maintenance: "/rest/control/fabrics/test_net/switches/{{ ansible_switch1_serial }}/maintenance-mode"
+    mode_deploy: "/rest/control/fabrics/test_net/switches/{{ ansible_switch1_serial }}/deploy-maintenance-mode"  
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    mode_maintenance: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/test_net/switches/{{ ansible_switch1_serial }}/maintenance-mode"
+    mode_deploy: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/test_net/switches/{{ ansible_switch1_serial }}/deploy-maintenance-mode"  
+  when: controller_version >= "12"
+
+- name: RMA - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- set_fact:
+    rma_enabled: True
+  when: result.response.DATA.nvPairs["BOOTSTRAP_ENABLE"] == "true"
+
+#- name: RMA - setup - Clean up any existing devices
+#  cisco.dcnm.dcnm_inventory:
+#    fabric: "{{ ansible_it_fabric }}"
+#    state: deleted
+
+- debug: msg="!!! WARNING !!! Skipping Test Because rma_enabled Setting is False"
+  when: rma_enabled == False
+
+- name: RMA - Query for POAP enabled swicthes
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    query_poap: True
+    state: query
+  when: rma_enabled == True
+  register: result
+
+- assert:
+    that:
+    - 'result.response != None'
+  when: rma_enabled == True
+
+- name: RMA - Check poap query for switches
+  set_fact:
+    rma_switch_present: True
+  when: (rma_enabled == True and (item['serialNumber'] == '{{ ansible_rma_serial }}'))
+  loop: '{{ result.response }}'
+  ignore_errors: yes
+
+##############################################
+##                RMA TEST                  ##
+##############################################
+
+# Sample plays to add a switch to fabric and to configure and deploy
+# the switch in maintenance mode
+#
+# Please note that the switch should be shutdown after configuring it
+# in maintenance mode
+#
+#- name: RMA - Add switch to the fabric
+#  cisco.dcnm.dcnm_inventory:
+#    fabric: '{{ ansible_it_fabric }}'
+#    state: merged
+#    config:
+#      - seed_ip: '{{ ansible_switch1 }}'
+#        user_name: '{{ switch_username }}'
+#        password: '{{ switch_password }}'
+#        auth_proto: MD5
+#        max_hops: 0
+#        preserve_config: False
+#  when: (rma_enabled == True and rma_switch_present == True)
+#  register: result
+#
+#- assert:
+#    that:
+#    - 'result.changed == true'
+#  when: (rma_enabled == True and rma_switch_present == True)
+#
+#- assert:
+#    that:
+#      - 'item["RETURN_CODE"] == 200'
+#  when: (rma_enabled == True and rma_switch_present == True)
+#  loop: '{{ result.response }}'
+#
+#- name: RMA - Configure maintenance mode in switch.
+#  cisco.dcnm.dcnm_rest:
+#    method: POST
+#    path: "{{ mode_maintenance }}"
+#  when: (rma_enabled == True and rma_switch_present == True)
+#  register: result
+#
+#- name: RMA - Configure maintenance mode in switch.
+#  cisco.dcnm.dcnm_rest:
+#    method: POST
+#    path: "{{ mode_deploy }}"
+#  when: (rma_enabled == True and rma_switch_present == True)
+#  register: result
+#
+#- name: RMA - sleep for 5 minute
+#  wait_for:
+#    timeout: 300
+- block:
+    - name: RMA - RMA the existing switch
+      cisco.dcnm.dcnm_inventory:
+        fabric: '{{ ansible_it_fabric }}'
+        state: merged
+        config:
+          - seed_ip: '{{ ansible_switch1 }}'
+            user_name: '{{ switch_username }}'
+            password: '{{ switch_password }}'
+            rma:
+              - serial_number: '{{ ansible_rma_serial }}'
+                old_serial: '{{ ansible_switch1_serial }}'
+                model: '{{ ansible_rma_model }}'
+                version: '{{ ansible_rma_swversion }}'
+                hostname: '{{ ansible_rma_hostname }}'
+                config_data:
+                  modulesModel: '{{ ansible_rma_modules }}'
+                  gateway: '{{ ansible_bstrap_gateway }}'
+      register: result
+
+    - assert:
+        that:
+        - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+  when: (rma_enabled == True and rma_switch_present == True)
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: RMA - cleanup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted

@@ -376,6 +376,58 @@
       }
     ],
 
+    "playbook_rma_switch_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.101",
+        "user_name": "admin",
+        "rma": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_rma",
+            "model": "N9K-C9300v",
+            "serial_number": "9D2DAUJJFQQ",
+            "old_serial": "9D2DAUJJFRR",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
+    "playbook_rma_switch_noserial_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.101",
+        "user_name": "admin",
+        "rma": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_rma",
+            "model": "N9K-C9300v",
+            "old_serial": "9D2DAUJJFRR",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
+    "playbook_rma_switch_nooldserial_config" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.101",
+        "user_name": "admin",
+        "rma": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_rma",
+            "model": "N9K-C9300v",
+            "old_serial": "9D2DAUJJFRR",
+            "version": "9.3(7)"
+          }
+        ]
+      }
+    ],
+
     "playbook_no_user_switch_config" : [
       {
         "password": "password",
@@ -3809,6 +3861,14 @@
     "METHOD": "GET",
     "REQUEST_PATH": "https://192.168.10.8:443/rest/control/fabrics/kharicha-fabric/inventory",
     "RETURN_CODE": 200
-  }
+  },
 
+  "rma_inv_data": {
+    "10.10.10.224":{
+      "ipAddress": "10.10.10.101",
+      "logicalName": "test_rma",
+      "serialNumber": "9D2DAUJJFRR",
+      "switchRole": "leaf"
+    }
+  }
 }
