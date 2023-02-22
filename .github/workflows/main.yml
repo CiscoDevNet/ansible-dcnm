@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.7]
+        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.10, 2.13.7, 2.14.2]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.7]
+        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.10, 2.13.7, 2.14.2]
     steps:
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.7]
+        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.10, 2.13.7, 2.14.2]
     steps:
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
