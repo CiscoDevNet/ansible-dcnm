@@ -416,7 +416,11 @@ class DcnmPolicy:
         )
 
         # Get all switches which are managable. Will be required to check deploy status.
-        self.managable = [self.inventory_data[key]["serialNumber"] for key in self.inventory_data.keys() if self.inventory_data[key]["managable"]]
+        self.managable = [
+            self.inventory_data[key]["serialNumber"]
+            for key in self.inventory_data.keys()
+            if self.inventory_data[key]["managable"]
+        ]
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
         self.result = dict(changed=False, diff=[], response=[])
@@ -919,8 +923,10 @@ class DcnmPolicy:
         while retries < 3:
             resp = dcnm_send(self.module, command, path, json_payload)
 
-            if (resp.get("DATA", None) is not None) and (
-                resp["DATA"].get("failureList", None) is not None
+            if (
+                (resp.get("DATA", None) is not None)
+                and (isinstance(resp["DATA"], dict))
+                and (resp["DATA"].get("failureList", None) is not None)
             ):
                 if isinstance(resp["DATA"]["failureList"], list):
                     fl = resp["DATA"]["failureList"][0]
@@ -930,10 +936,6 @@ class DcnmPolicy:
                 if "is not unique" in fl.get("message", ""):
                     retries = retries + 1
                     continue
-
-                break
-
-            # Don't think we need two break statements here.  Test and remove.
             break
 
         self.result["response"].append(resp)
@@ -1015,68 +1017,64 @@ class DcnmPolicy:
                 self.result["response"].append(resp)
                 self.module.fail_json(msg=resp)
 
-        # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
-        # switch
-        if (snos != []) and (mark_delete_flag is True):
+        # Even for delete cases check the deploy flag and proceed
+        if self.deploy is True:
+            # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
+            # switch
+            if (snos != []) and (mark_delete_flag is True):
 
-            # make a copy of snos. We will be updating snos in the following loop. But snos will be required
-            # further down
-            del_snos = snos.copy()
-            retries = 0
-            while retries < 50:
+                # make a copy of snos. We will be updating snos in the following loop. But snos will be required
+                # further down
+                del_snos = snos.copy()
+                retries = 0
+                while retries < 50:
 
-                retries += 1
-                resp = self.dcnm_policy_deploy_to_switches(del_snos)
+                    retries += 1
+                    resp = self.dcnm_policy_deploy_to_switches(del_snos)
 
-                if resp and (resp["RETURN_CODE"] != 200):
-                    self.module.fail_json(msg=resp)
+                    if resp and (resp["RETURN_CODE"] != 200):
+                        self.module.fail_json(msg=resp)
 
-                # Get the SYNC status of the switch. After deploy, the status
-                # MUST be "In-Sync". If not keep retrying
-                path = self.paths["CONFIG_PREVIEW"].format(self.fabric)
-                path = path + ",".join(del_snos) + "?forceShowRun=false&showBrief=true"
+                    # Get the SYNC status of the switch. After deploy, the status
+                    # MUST be "In-Sync". If not keep retrying
+                    path = self.paths["CONFIG_PREVIEW"].format(self.fabric)
+                    path = (
+                        path
+                        + ",".join(del_snos)
+                        + "?forceShowRun=false&showBrief=true"
+                    )
 
-                cp_resp = dcnm_send(self.module, "GET", path, "")
+                    cp_resp = dcnm_send(self.module, "GET", path, "")
 
-                if cp_resp.get("RETURN_CODE", 0) == 200:
-                    match_data = [
-                        item
-                        for item in cp_resp.get("DATA", [])
-                        if item["switchId"] in del_snos
-                    ]
-                else:
-                    self.module.fail_json(msg=cp_resp)
-
-                retry = False
-                for item in match_data:
-                    if item["status"].lower() != "in-sync":
-                        retry = True
+                    if cp_resp.get("RETURN_CODE", 0) == 200:
+                        match_data = [
+                            item
+                            for item in cp_resp.get("DATA", [])
+                            if item["switchId"] in del_snos
+                        ]
                     else:
-                        # remove the sno which is in "in-sync" from del_snos list
-                        del_snos.remove(item["switchId"])
-                if retry:
-                    time.sleep(1)
-                else:
-                    break
+                        self.module.fail_json(msg=cp_resp)
 
-        # Now use 'DELETE' command to delete the policies on the DCNM server
-        for ditem in delete:
-            # First check if the policy to be deleted exist.
-            path = self.paths["POLICY_WITH_POLICY_ID"].format(ditem)
+                    retry = False
+                    for item in match_data:
+                        if item["status"].lower() != "in-sync":
+                            retry = True
+                        else:
+                            # remove the sno which is in "in-sync" from del_snos list
+                            del_snos.remove(item["switchId"])
+                    if retry:
+                        time.sleep(1)
+                    else:
+                        break
 
-            resp = dcnm_send(self.module, "GET", path, "")
+            # Now use 'DELETE' command to delete the policies on the DCNM server
+            for ditem in delete:
+                # First check if the policy to be deleted exist.
+                path = self.paths["POLICY_WITH_POLICY_ID"].format(ditem)
 
-            if resp and isinstance(resp, list):
-                resp = resp[0]
-            if (
-                resp
-                and (resp.get("DATA", None) is not None)
-                and (resp["RETURN_CODE"] == 200)
-                and resp["MESSAGE"] == "OK"
-            ):
-                resp = self.dcnm_policy_delete_policy(ditem, False)
+                resp = dcnm_send(self.module, "GET", path, "")
 
-                if isinstance(resp, list):
+                if resp and isinstance(resp, list):
                     resp = resp[0]
                 if (
                     resp
@@ -1084,16 +1082,26 @@ class DcnmPolicy:
                     and (resp["RETURN_CODE"] == 200)
                     and resp["MESSAGE"] == "OK"
                 ):
-                    if "Deleted successfully" in resp["DATA"]["message"]:
-                        delete_flag = True
-                        self.result["response"].append(resp)
+                    resp = self.dcnm_policy_delete_policy(ditem, False)
 
-        # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
-        # switch
-        if (snos != []) and (delete_flag is True):
-            self.dcnm_policy_deploy_to_switches(snos)
-            if resp and (resp["RETURN_CODE"] != 200):
-                self.module.fail_json(msg=resp)
+                    if isinstance(resp, list):
+                        resp = resp[0]
+                    if (
+                        resp
+                        and (resp.get("DATA", None) is not None)
+                        and (resp["RETURN_CODE"] == 200)
+                        and resp["MESSAGE"] == "OK"
+                    ):
+                        if "Deleted successfully" in resp["DATA"]["message"]:
+                            delete_flag = True
+                            self.result["response"].append(resp)
+
+            # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
+            # switch
+            if (snos != []) and (delete_flag is True):
+                self.dcnm_policy_deploy_to_switches(snos)
+                if resp and (resp["RETURN_CODE"] != 200):
+                    self.module.fail_json(msg=resp)
 
         for policy in self.diff_create:
             # POP the 'create_additional_policy' object before sending create
@@ -1136,11 +1144,7 @@ class DcnmPolicy:
                 and (resp["MESSAGE"] == "OK")
                 and (resp.get("DATA", None) is not None)
             ):
-                if resp["DATA"].get("successList", None) is not None:
-                    if "is created successfully" in resp["DATA"][
-                        "successList"
-                    ][0].get("message"):
-                        create_flag = True
+                create_flag = True
             else:
                 self.module.fail_json(msg=resp)
 

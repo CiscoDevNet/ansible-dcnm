@@ -393,6 +393,94 @@
       loop_control:
         index_var: my_idx
 
+    - name: Create policy for a template - to check for delete without deploy
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: merged
+        config:
+          - name: template_101  # name is mandatory
+            create_additional_policy: false  # Create a policy even if it already exists
+
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    # Assert for Create responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+      when: (my_idx < (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    # Assert for deploy responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
+      when: (my_idx == (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    - name: Delete policy using template name - without deploy
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: false
+        state: deleted                     # only choose form [merged, deleted, query]
+        config:
+          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
+          - switch:
+             - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["response"] | length) == 1'
+
+    - assert:
+        that:
+          - 'result["response"][0]["RETURN_CODE"] == 200'
+          - 'result["response"][0]["MESSAGE"] == "OK"'
+
+    - name: Delete policy using template name - with deploy
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # only choose form [merged, deleted, query]
+        config:
+          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
+          - switch:
+             - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["response"] | length) == 2'
+
+    - assert:
+        that:
+          - 'result["response"][0]["RETURN_CODE"] == 200'
+          - 'result["response"][0]["MESSAGE"] == "OK"'
+
 ##############################################
 ##                CLEANUP                   ##
 ##############################################
