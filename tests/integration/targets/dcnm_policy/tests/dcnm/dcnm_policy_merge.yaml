@@ -408,6 +408,74 @@
       loop_control:
         index_var: my_idx
 
+    - name: Delete all created policies
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # only choose form [merged, deleted, query]
+        config:
+          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_102  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_103  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
+          - switch:
+             - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+
+
+    - name: Create policies - checking for policies under switch block
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: false
+        config:
+          - name: template_101  # This must be a valid template name
+            description: create template_101
+            priority: 101
+
+          - name: template_102  # This must be a valid template name
+            description: create template_102
+            priority: 102
+
+          - name: template_103  # This must be a valid template name
+            description: create template_103
+            priority: 103
+
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+                policies:
+                  - name: template_101  # This must be a valid template name
+                    description: create template_101
+                    priority: 101
+
+                  - name: template_102  # This must be a valid template name
+                    description: create template_102 - with changes
+                    priority: 202
+
+              - ip: "{{ ansible_switch2 }}"
+                policies:
+                  - name: template_104  # This must be a valid template name
+                    description: create template_104 - with changes
+                    priority: 104
+
+                  - name: template_105  # This must be a valid template name
+                    description: create template_105 - with changes
+                    priority: 105
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 6'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
 ##############################################
 ##                CLEANUP                   ##
 ##############################################

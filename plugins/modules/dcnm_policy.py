@@ -1096,13 +1096,6 @@ class DcnmPolicy:
                             delete_flag = True
                             self.result["response"].append(resp)
 
-            # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
-            # switch
-            if (snos != []) and (delete_flag is True):
-                self.dcnm_policy_deploy_to_switches(snos)
-                if resp and (resp["RETURN_CODE"] != 200):
-                    self.module.fail_json(msg=resp)
-
         for policy in self.diff_create:
             # POP the 'create_additional_policy' object before sending create
             policy.pop("create_additional_policy")
@@ -1199,7 +1192,7 @@ class DcnmPolicy:
 
         sw_dict = config.pop(pos)
 
-        # 'switches' contaions the switches related configuration items from playbook. Process these
+        # 'switches' contains the switches related configuration items from playbook. Process these
         # and add the same to individual policy items as appropriate
 
         new_config = []
@@ -1211,7 +1204,7 @@ class DcnmPolicy:
 
             if sw.get("policies", None) is not None:
 
-                # 'policies are specified at switch level. Add eachj of these policies to 'config' object
+                # 'policies are specified at switch level. Add each of these policies to 'config' object
                 # along with the switch information
 
                 for pol in sw["policies"]:
@@ -1220,21 +1213,26 @@ class DcnmPolicy:
                         pol["switch"] = []
                     if sw["ip"] not in pol["switch"]:
                         pol["switch"].append(sw["ip"])
-                    # if (pol not in new_config):
+
                     new_config.append(pol)
-            else:
 
-                # This switch does not have any policies included. Add this switch to all policies in the
-                # playbook config
+            for cfg in config:
 
+                if cfg.get("switch", None) is None:
+                    cfg["switch"] = []
+                if sw["ip"] not in cfg["switch"]:
+                    cfg["switch"].append(sw["ip"])
+
+        if config:
+            for ncfg in new_config:
                 for cfg in config:
-
-                    if cfg.get("switch", None) is None:
-                        cfg["switch"] = []
-                    if sw["ip"] not in cfg["switch"]:
-                        cfg["switch"].append(sw["ip"])
-        if new_config != []:
-            config.extend(new_config)
+                    if cfg["name"] == ncfg["name"]:
+                        cfg.update(ncfg)
+                        break
+                else:
+                    config.append(ncfg)
+        else:
+            config = new_config
 
         return config
 
