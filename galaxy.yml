@@ -10,7 +10,7 @@ authors:
   - Mike Wiebe <mikewiebe>
   - Praveen Ramoorthy <praveenramoorthy>
 description: Ansible collection for the Cisco Nexus® Dashboard Fabric Controller (NDFC) - formerly DCNM
-license: LICENSE 
+license: Apache-2.0
 tags: [cisco, ndfc, dcnm, nxos, networking, vxlan]
 dependencies:
   "ansible.netcommon": ">=2.6.1"
