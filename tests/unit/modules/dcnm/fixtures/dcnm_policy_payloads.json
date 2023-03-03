@@ -20,114 +20,114 @@
       "10.10.10.226": "XYZKSJHSMK3"
   },
 
-    "success_create_response_101" : 
+    "success_create_response_101" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK1", 
-          "message": "POLICY-123810 is created successfully", "status": "Success"
+          "name": "XYZKSJHSMK1",
+          "message": "POLICY-101101 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_101_sw2" : 
+    "success_create_response_101_sw2" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK2", 
+          "name": "XYZKSJHSMK2",
           "message": "POLICY-153810 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_101_sw3" : 
+    "success_create_response_101_sw3" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK3", 
+          "name": "XYZKSJHSMK3",
           "message": "POLICY-125810 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_102" : 
+    "success_create_response_102" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK1", 
+          "name": "XYZKSJHSMK1",
           "message": "POLICY-123820 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_102_sw2" : 
+    "success_create_response_102_sw2" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK2", 
+          "name": "XYZKSJHSMK2",
           "message": "POLICY-173810 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_102_sw3" : 
+    "success_create_response_102_sw3" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK3", 
+          "name": "XYZKSJHSMK3",
           "message": "POLICY-195810 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_103" : 
+    "success_create_response_103" :
     {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
-      "MESSAGE": "OK", 
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
       "DATA": {
         "successList": [
         {
-          "name": "XYZKSJHSMK1", 
+          "name": "XYZKSJHSMK1",
           "message": "POLICY-123830 is created successfully", "status": "Success"
         }]
       }
     },
 
-    "success_create_response_103_sw2" : 
+    "success_create_response_103_sw2" :
     {
-      "RETURN_CODE": 200, 
+      "RETURN_CODE": 200,
       "METHOD": "POST", 
       "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
       "MESSAGE": "OK", 
@@ -165,7 +165,7 @@
         "successList": [
         {
           "name": "XYZKSJHSMK1", 
-          "message": "POLICY-123840 is created successfully", "status": "Success"
+          "message": "POLICY-104104 is created successfully", "status": "Success"
         }]
       }
     },
@@ -392,20 +392,7 @@
       ]
     },
 
-    "success_deploy_response_104" : 
-    {
-      "RETURN_CODE": 200, 
-      "METHOD": "POST", 
-      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
-      "MESSAGE": "OK", 
-      "DATA": [
-      {
-        "switchSN": "XYZKSJHSMK1", 
-        "successPTIList": "POLICY-776850"
-      }]
-    },
-
-    "success_deploy_response_104_105" : 
+    "success_deploy_response_104_105" :
     {
       "RETURN_CODE": 200, 
       "METHOD": "POST", 
@@ -415,6 +402,19 @@
       {
         "switchSN": "XYZKSJHSMK1", 
         "successPTIList": "POLICY-123840,POLICY-123850"
+      }]
+    },
+
+    "success_deploy_response_101_101_1" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123990"
       }]
     },
 
@@ -428,6 +428,19 @@
       {
         "switchSN": "XYZKSJHSMK1", 
         "successPTIList": "POLICY-123990,POLICY-125850"
+      }]
+    },
+
+    "success_deploy_response_104" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-104104"
       }]
     },
 

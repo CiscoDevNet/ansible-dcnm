@@ -740,6 +740,7 @@ class DcnmPolicy:
                     if policy not in self.diff_create:
                         self.changed_dict[0]["merged"].append(policy)
                         self.diff_create.append(policy)
+                        policy_id = None
             elif rc == "DCNM_POLICY_DONT_ADD":
                 # A policy exists and there is no difference between the one that exists and the one that is
                 # is requested to be created. Check the 'create_additional_policy' flag and create it if it is
@@ -762,15 +763,15 @@ class DcnmPolicy:
 
             # Check the 'deploy' flag and decide if this policy is to be deployed
             if self.deploy is True:
-                deploy = {}
-                deploy["name"] = policy["templateName"]
-                deploy["serialNo"] = policy["serialNumber"]
-                self.changed_dict[0]["deploy"].append(deploy)
-
                 if (policy_id is not None) and (
                     policy_id not in self.deploy_payload
                 ):
                     self.deploy_payload.append(policy_id)
+                    deploy = {}
+                    deploy["name"] = policy["templateName"]
+                    deploy["serialNo"] = policy["serialNumber"]
+                    deploy["policyId"] = policy_id
+                    self.changed_dict[0]["deploy"].append(deploy)
 
     def dcnm_policy_get_delete_payload(self, policy):
 
@@ -954,7 +955,6 @@ class DcnmPolicy:
             command = "DELETE"
 
         resp = dcnm_send(self.module, command, path, json_payload)
-
         return resp
 
     def dcnm_policy_deploy_policy(self, policy):
@@ -1100,7 +1100,9 @@ class DcnmPolicy:
             # POP the 'create_additional_policy' object before sending create
             policy.pop("create_additional_policy")
             policy.pop("policy_id_given")
+
             resp = self.dcnm_policy_create_policy(policy, "POST")
+
             if isinstance(resp, list):
                 resp = resp[0]
             if (
@@ -1121,6 +1123,12 @@ class DcnmPolicy:
                             policy_id[0] not in self.deploy_payload
                         ):
                             self.deploy_payload.append(policy_id[0])
+                            deploy = {}
+                            deploy["name"] = policy["templateName"]
+                            deploy["serialNo"] = policy["serialNumber"]
+                            deploy["policyId"] = policy_id[0]
+                            if deploy not in self.changed_dict[0]["deploy"]:
+                                self.changed_dict[0]["deploy"].append(deploy)
                         create_flag = True
             else:
                 self.module.fail_json(msg=resp)
@@ -1224,16 +1232,21 @@ class DcnmPolicy:
                     cfg["switch"].append(sw["ip"])
 
         if config:
+
             for ncfg in new_config:
+                ncfg_replaced = False
+
+                ind = 0
                 for cfg in config:
+
                     if cfg["name"] == ncfg["name"]:
-                        cfg.update(ncfg)
-                        break
-                else:
+                        config[ind] = ncfg
+                        ncfg_replaced = True
+                    ind = ind + 1
+                if ncfg_replaced is False:
                     config.append(ncfg)
         else:
             config = new_config
-
         return config
 
 
