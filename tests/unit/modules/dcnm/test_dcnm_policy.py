@@ -119,7 +119,6 @@ class TestDcnmPolicyModule(TestDcnmModule):
                 deploy_succ_resp,
             ]
 
-
         if "test_dcnm_policy_merged_same_template" == self._testMethodName:
 
             have_101_105_resp = self.payloads_data.get("have_response_101_105")
