@@ -370,6 +370,19 @@
       }]
     },
 
+    "success_deploy_response_101_105_11" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123810,POLICY-123820,POLICY-123830,POLICY-123840,POLICY-123850, POLICY-123860,POLICY-123870,POLICY-123880,POLICY-123890,POLICY-123900, POLICY-123910"
+      }]
+    },
+
     "success_deploy_response_101_105_multi_switch" : 
     {
       "RETURN_CODE": 200, 
@@ -415,6 +428,19 @@
       {
         "switchSN": "XYZKSJHSMK1",
         "successPTIList": "POLICY-123990"
+      }]
+    },
+
+    "success_deploy_response_101_101_2" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123990, POLICY-129867"
       }]
     },
 

@@ -176,6 +176,76 @@
     ]
   }],
 
+  "create_policy_101_105_5": [
+  {
+    "create_additional_policy": false,
+    "name": "template_101",
+    "priority": 101
+  },
+  {
+    "create_additional_policy": false,
+    "description": "102 - No piority given",
+    "name": "template_102"
+  },
+  {
+    "create_additional_policy": false,
+    "description": "Both description and priority given",
+    "name": "template_103",
+    "priority": 500
+  },
+  {
+    "switch": [
+    {
+      "ip": "10.10.10.224",
+      "policies": [
+      {
+        "create_additional_policy": false,
+        "name": "template_101",
+        "description": "Description override - 10.10.10.225"
+      },
+      {
+        "create_additional_policy": false,
+        "name": "template_102",
+        "description": "Description override - 10.10.10.225"
+      }
+      ]
+    },
+    {
+      "ip": "10.10.10.225",
+      "policies": [
+      {
+        "create_additional_policy": false,
+        "name": "template_101",
+        "description": "Description override - 10.10.10.225"
+      },
+      {
+        "create_additional_policy": false,
+        "name": "template_102",
+        "description": "Description override - 10.10.10.225"
+      }
+      ]
+    },
+    {
+      "ip": "10.10.10.226",
+      "policies": [
+      {
+        "create_additional_policy": false,
+        "name": "template_104",
+        "description": "Description override - 10.10.10.225"
+      },
+      {
+        "create_additional_policy": false,
+        "name": "template_105",
+        "description": "Description override - 10.10.10.225"
+      }
+      ]
+    },
+    {
+      "ip": "10.10.10.226"
+    }
+    ]
+  }],
+
   "create_policy_without_state_104_105": [
   {
     "switch": [
@@ -193,7 +263,7 @@
       ]
     },
     {
-      "ip": "10.10.10.224"
+      "ip": "10.10.10.225"
     }
     ]
   }],

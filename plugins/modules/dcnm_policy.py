@@ -1203,7 +1203,7 @@ class DcnmPolicy:
         # 'switches' contains the switches related configuration items from playbook. Process these
         # and add the same to individual policy items as appropriate
 
-        new_config = []
+        override_config = []
         for sw in sw_dict["switch"]:
 
             # Check if policies are included in the switch config. If so these policies will override
@@ -1222,7 +1222,7 @@ class DcnmPolicy:
                     if sw["ip"] not in pol["switch"]:
                         pol["switch"].append(sw["ip"])
 
-                    new_config.append(pol)
+                    override_config.append(pol)
 
             for cfg in config:
 
@@ -1232,21 +1232,26 @@ class DcnmPolicy:
                     cfg["switch"].append(sw["ip"])
 
         if config:
-
-            for ncfg in new_config:
-                ncfg_replaced = False
-
-                ind = 0
+            updated_config = []
+            for ovr_cfg in override_config:
                 for cfg in config:
-
-                    if cfg["name"] == ncfg["name"]:
-                        config[ind] = ncfg
-                        ncfg_replaced = True
-                    ind = ind + 1
-                if ncfg_replaced is False:
-                    config.append(ncfg)
+                    if cfg["name"] == ovr_cfg["name"]:
+                        # Have a matching policy in config which is overridden by a more specifc policy under 'switch'
+                        # Compare the switches under override policy with the switches in gobal config, and remove those switches from
+                        # global config if present.
+                        for sw in ovr_cfg["switch"]:
+                            if sw in cfg["switch"]:
+                                cfg["switch"].remove(sw)
+                    if ovr_cfg not in updated_config:
+                        updated_config.append(ovr_cfg)
+            # Now go over the global config list, and add those cpolicies which have a non empty 'switch' list.
+            for cfg in config:
+                if cfg["switch"] != []:
+                    updated_config.append(cfg)
+            config = updated_config
         else:
-            config = new_config
+            config = override_config
+
         return config
 
 
@@ -1304,6 +1309,7 @@ def main():
     if module.params["state"] != "query":
         # Translate the given playbook config to some convenient format. Each policy should
         # have the switches to be deployed.
+
         dcnm_policy.config = dcnm_policy.dcnm_translate_config(
             dcnm_policy.config
         )
