@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2021-2022 Cisco and/or its affiliates.
+# Copyright (c) 2021-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ options:
           - Reverse Nexthop IPV4 information, e.g., 192.169.1.100
           - This parameter is applicable only when 'deploy_mode' is either 'intra_tenant_fw'
             or 'one_arm_adc' or 'two_arm_adc'
-        type: int
+        type: str
         required: false
         default: ""
       inside_network:
@@ -174,7 +174,7 @@ options:
                 type: list
                 elements: dict
                 required: false
-                default: ''
+                default: []
                 suboptions:
                   subnet:
                     description:
@@ -236,7 +236,6 @@ options:
                   - Route Tag
                   - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
-                required: True
                 default: 12345
               neigh_int_descr:
                 description:
@@ -328,7 +327,7 @@ options:
                 type: list
                 elements: dict
                 required: false
-                default: ''
+                default: []
                 suboptions:
                   subnet:
                     description:
@@ -390,7 +389,6 @@ options:
                   - Route Tag
                   - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
-                required: True
                 default: 12345
               neigh_int_descr:
                 description:
@@ -481,7 +479,7 @@ options:
                 type: list
                 elements: dict
                 required: false
-                default: ''
+                default: []
                 suboptions:
                   subnet:
                     description:
@@ -543,7 +541,6 @@ options:
                   - Route Tag
                   - This parameter is applicable only when 'peering_option' is 'ebgp'
                 type: int
-                required: True
                 default: 12345
               neigh_int_descr:
                 description:
@@ -1606,7 +1603,7 @@ class DcnmServiceRoutePeering:
             vlan_name=dict(type="str", default=""),
             int_descr=dict(type="str", default=""),
             tag=dict(type="int", default=12345),
-            static_route=dict(type="list", default=""),
+            static_route=dict(type="list", default=[]),
         )
 
         srp_ebgp_prof_spec = dict(
@@ -1688,7 +1685,7 @@ class DcnmServiceRoutePeering:
             vlan_name=dict(type="str", default=""),
             int_descr=dict(type="str", default=""),
             tag=dict(type="int", default=12345),
-            static_route=dict(type="list", default=""),
+            static_route=dict(type="list", default=[]),
         )
 
         srp_ebgp_first_arm_prof_spec = dict(

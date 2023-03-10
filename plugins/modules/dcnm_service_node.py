@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2021-2022 Cisco and/or its affiliates.
+# Copyright (c) 2021-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,7 +68,6 @@ options:
           - firewall
           - load_balancer
           - virtual_network_function
-        required: true
         default: 'firewall'
       form_factor:
         description:
@@ -77,7 +76,6 @@ options:
         choices:
           - physical
           - virtual
-        required: true
         default: 'physical'
       svc_int_name:
         description:
@@ -88,6 +86,7 @@ options:
         description:
         - IP address of the switch where service node will be added/deleted
         type: list
+        elements: str
         required: true
       attach_interface:
         description:
