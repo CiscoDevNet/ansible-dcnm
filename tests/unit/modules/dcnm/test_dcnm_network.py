@@ -32,7 +32,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
     module = dcnm_network
 
-    test_data = loadPlaybookData("dcnm_net")
+    test_data = loadPlaybookData("dcnm_network")
 
     SUCCESS_RETURN_CODE = 200
 
