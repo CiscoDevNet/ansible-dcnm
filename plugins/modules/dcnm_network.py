@@ -1125,9 +1125,9 @@ class DcnmNetwork:
         }
 
         if self.dcnm_version > 11:
-            template_conf.update(ENABLE_NETFLOW = net.get("netflow_enable", False))
-            template_conf.update(SVI_NETFLOW_MONITOR = net.get("intfvlan_nf_monitor", ""))
-            template_conf.update(VLAN_NETFLOW_MONITOR = net.get("vlan_nf_monitor", ""))
+            template_conf.update(ENABLE_NETFLOW=net.get("netflow_enable", False))
+            template_conf.update(SVI_NETFLOW_MONITOR=net.get("intfvlan_nf_monitor", ""))
+            template_conf.update(VLAN_NETFLOW_MONITOR=net.get("vlan_nf_monitor", ""))
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -1259,9 +1259,9 @@ class DcnmNetwork:
                 }
 
                 if self.dcnm_version > 11:
-                    t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
-                    t_conf.update(SVI_NETFLOW_MONITOR = json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                    t_conf.update(VLAN_NETFLOW_MONITOR = json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
+                    t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+                    t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
                 del net["displayName"]
@@ -1308,9 +1308,9 @@ class DcnmNetwork:
                         }
 
                         if self.dcnm_version > 11:
-                            t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
-                            t_conf.update(SVI_NETFLOW_MONITOR = json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                            t_conf.update(VLAN_NETFLOW_MONITOR = json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
+                            t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+                            t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
                         l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
                         del l2net["displayName"]
@@ -1749,7 +1749,6 @@ class DcnmNetwork:
         nf_en_changed = {}
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
-
 
         for want_c in self.want_create:
             found = False
@@ -2384,9 +2383,9 @@ class DcnmNetwork:
                 }
 
                 if self.dcnm_version > 11:
-                    t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
-                    t_conf.update(SVI_NETFLOW_MONITOR = json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                    t_conf.update(VLAN_NETFLOW_MONITOR = json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
+                    t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+                    t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
@@ -2499,7 +2498,7 @@ class DcnmNetwork:
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
-                ports=dict(required=True, type="list"),
+                ports=dict(required=True, type="list", default=[]),
                 deploy=dict(type="bool", default=True),
             )
 

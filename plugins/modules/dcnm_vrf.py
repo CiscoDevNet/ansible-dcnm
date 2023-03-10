@@ -214,10 +214,11 @@ options:
       bgp_passwd_encrypt:
         description:
         - VRF Lite BGP Key Encryption Type
+        - Allowed values are 3 (3DES) and 7 (Cisco)
         type: int
         choices:
-          - 3 (3DES)
-          - 7 (Cisco)
+          - 3
+          - 7
         required: false
         default: 3
       netflow_enable:
@@ -245,51 +246,46 @@ options:
         description:
         - VPN routes to import
         - supported on NDFC only
-        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
-        type: list
+        - Use ',' to separate multiple route-targets
+        type: str
         required: false
-        default: []
       export_vpn_rt:
         description:
         - VPN routes to export
         - supported on NDFC only
-        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
+        - Use ',' to separate multiple route-targets
         type: str
         required: false
       import_evpn_rt:
         description:
         - EVPN routes to import
         - supported on NDFC only
-        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
-        type: list
+        - Use ',' to separate multiple route-targets
+        type: str
         required: false
-        default: []
       export_evpn_rt:
         description:
         - EVPN routes to export
         - supported on NDFC only
-        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
-        type: list
+        - Use ',' to separate multiple route-targets
+        type: str
         required: false
-        default: []
       import_mvpn_rt:
         description:
         - MVPN routes to import
         - supported on NDFC only
         - Can be configured only when TRM is enabled
-        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
-        type: list
+        - Use ',' to separate multiple route-targets
+        type: str
         required: false
-        default: []
       export_mvpn_rt:
         description:
         - MVPN routes to export
         - supported on NDFC only
         - Can be configured only when TRM is enabled
-        - Use ',' to separate multiple route-targets(eg: 1:1,2:2)
-        type: list
+        - Use ',' to separate multiple route-targets
+        type: str
         required: false
-        default: []
       attach:
         description:
         - List of vrf attachment details
@@ -1083,16 +1079,16 @@ class DcnmVrf:
             "bgpPasswordKeyType": vrf.get("bgp_passwd_encrypt", ""),
         }
         if self.dcnm_version > 11:
-            template_conf.update(isRPAbsent = vrf.get("no_rp", False))
-            template_conf.update(ENABLE_NETFLOW = vrf.get("netflow_enable", False))
-            template_conf.update(NETFLOW_MONITOR = vrf.get("nf_monitor", ""))
-            template_conf.update(disableRtAuto = vrf.get("disable_rt_auto", False))
-            template_conf.update(routeTargetImport = vrf.get("import_vpn_rt", ""))
-            template_conf.update(routeTargetExport = vrf.get("export_vpn_rt", ""))
-            template_conf.update(routeTargetImportEvpn = vrf.get("import_evpn_rt", ""))
-            template_conf.update(routeTargetExportEvpn = vrf.get("export_evpn_rt", ""))
-            template_conf.update(routeTargetImportMvpn = vrf.get("import_mvpn_rt", ""))
-            template_conf.update(routeTargetExportMvpn = vrf.get("export_mvpn_rt", ""))
+            template_conf.update(isRPAbsent=vrf.get("no_rp", False))
+            template_conf.update(ENABLE_NETFLOW=vrf.get("netflow_enable", False))
+            template_conf.update(NETFLOW_MONITOR=vrf.get("nf_monitor", ""))
+            template_conf.update(disableRtAuto=vrf.get("disable_rt_auto", False))
+            template_conf.update(routeTargetImport=vrf.get("import_vpn_rt", ""))
+            template_conf.update(routeTargetExport=vrf.get("export_vpn_rt", ""))
+            template_conf.update(routeTargetImportEvpn=vrf.get("import_evpn_rt", ""))
+            template_conf.update(routeTargetExportEvpn=vrf.get("export_evpn_rt", ""))
+            template_conf.update(routeTargetImportMvpn=vrf.get("import_mvpn_rt", ""))
+            template_conf.update(routeTargetExportMvpn=vrf.get("export_mvpn_rt", ""))
 
         vrf_upd.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
@@ -1165,16 +1161,16 @@ class DcnmVrf:
             }
 
             if self.dcnm_version > 11:
-                t_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent", False))
-                t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
-                t_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR", ""))
-                t_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto", False))
-                t_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport", ""))
-                t_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport", ""))
-                t_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn", ""))
-                t_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn", ""))
-                t_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn", ""))
-                t_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn", ""))
+                t_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent", False))
+                t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
+                t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR", ""))
+                t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto", False))
+                t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport", ""))
+                t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport", ""))
+                t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn", ""))
+                t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn", ""))
+                t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn", ""))
+                t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn", ""))
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
             del vrf["vrfStatus"]
@@ -1636,7 +1632,7 @@ class DcnmVrf:
 
                         if vrf_id != prev_vrf_id_fetched:
                             want_c.update({"vrfId": vrf_id})
-                            json_to_dict = json.loads(vrf["vrfTemplateConfig"])
+                            json_to_dict = json.loads(want_c["vrfTemplateConfig"])
                             template_conf = {
                                 "vrfSegmentId": vrf_id,
                                 "vrfName": want_c["vrfName"],
@@ -1665,16 +1661,16 @@ class DcnmVrf:
                             }
 
                             if self.dcnm_version > 11:
-                                template_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent"))
-                                template_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW"))
-                                template_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR"))
-                                template_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto"))
-                                template_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport"))
-                                template_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport"))
-                                template_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn"))
-                                template_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn"))
-                                template_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn"))
-                                template_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn"))
+                                template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                                template_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
+                                template_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
+                                template_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
+                                template_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
+                                template_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
+                                template_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
+                                template_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
+                                template_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
+                                template_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
 
                             want_c.update(
                                 {"vrfTemplateConfig": json.dumps(template_conf)}
@@ -1785,7 +1781,6 @@ class DcnmVrf:
             )
 
             found_c = want_d
-
 
             src = found_c["source"]
             found_c.update({"vrf_name": found_c["vrfName"]})
@@ -2148,16 +2143,16 @@ class DcnmVrf:
                 }
 
                 if self.dcnm_version > 11:
-                    t_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent"))
-                    t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW"))
-                    t_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR"))
-                    t_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto"))
-                    t_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport"))
-                    t_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport"))
-                    t_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn"))
-                    t_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn"))
-                    t_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn"))
-                    t_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn"))
+                    t_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
+                    t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
+                    t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
+                    t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
+                    t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
+                    t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
+                    t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
+                    t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
+                    t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
 
                 vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
 
@@ -2173,7 +2168,7 @@ class DcnmVrf:
         if self.diff_attach:
             for d_a in self.diff_attach:
                 for v_a in d_a["lanAttachList"]:
-                    v_a.update(vlan = 0)
+                    v_a.update(vlan=0)
                     if v_a.get("vrf_lite"):
                         """Before apply the vrf_lite config, need double check if the switch role is started wth Border"""
                         r = re.search(r"\bborder\b", self.role.lower())
