@@ -607,7 +607,7 @@ class DcnmNetwork:
                             havtoattach = copy.deepcopy(hav)
                             havtoattach.update({"switchPorts": ""})
                             del havtoattach["isAttached"]
-                            attach_list.append(havtoattach)  # pylint: disable=modified-iterating-list
+                            attach_list.append(havtoattach)
                             break
 
         return attach_list, dep_net
