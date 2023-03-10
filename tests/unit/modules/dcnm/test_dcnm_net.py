@@ -699,14 +699,14 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(result.get("response")[0]["parent"]["networkName"], "test_network")
         self.assertEqual(result.get("response")[0]["parent"]["networkId"], 9008011)
         self.assertTrue(
-            result.get("response")[0]["attach"][0][ "deployment"],
+            result.get("response")[0]["attach"][0]["deployment"],
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["vlan"],
             202,
         )
         self.assertTrue(
-            result.get("response")[0]["attach"][1][ "deployment"],
+            result.get("response")[0]["attach"][1]["deployment"],
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["vlan"],
@@ -722,17 +722,16 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(result.get("response")[0]["parent"]["networkName"], "test_network")
         self.assertEqual(result.get("response")[0]["parent"]["networkId"], 9008011)
         self.assertTrue(
-            result.get("response")[0]["attach"][0][ "deployment"],
+            result.get("response")[0]["attach"][0]["deployment"],
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["vlan"],
             202,
         )
         self.assertTrue(
-            result.get("response")[0]["attach"][1][ "deployment"],
+            result.get("response")[0]["attach"][1]["deployment"],
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["vlan"],
             202,
         )
-

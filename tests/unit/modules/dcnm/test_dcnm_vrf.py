@@ -171,7 +171,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         else:
             self.run_dcnm_version_supported.return_value = 11
 
-
         if "vrf_blank_fabric" in self._testMethodName:
             self.run_dcnm_ip_sn.side_effect = [{}]
         else:
