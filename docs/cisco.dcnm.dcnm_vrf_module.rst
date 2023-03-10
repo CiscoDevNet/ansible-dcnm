@@ -316,13 +316,13 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>3 (3DES)</li>
-                                    <li>7 (Cisco)</li>
+                                    <li><div style="color: blue"><b>3</b>&nbsp;&larr;</div></li>
+                                    <li>7</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">3</div>
                 </td>
                 <td>
                         <div>VRF Lite BGP Key Encryption Type</div>
+                        <div>Allowed values are 3 (3DES) and 7 (Cisco)</div>
                 </td>
             </tr>
             <tr>
@@ -339,6 +339,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF Lite BGP neighbor password</div>
+                        <div>Password should be in Hex string format</div>
                 </td>
             </tr>
             <tr>
@@ -393,16 +394,15 @@ Parameters
                     <b>export_evpn_rt</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">list</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>EVPN routes to export</div>
                         <div>supported on NDFC only</div>
-                        <div>{&quot;Use &#x27;,&#x27; to separate multiple route-targets(eg&quot;: &#x27;1:1,2:2)&#x27;}</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
                 </td>
             </tr>
             <tr>
@@ -412,17 +412,16 @@ Parameters
                     <b>export_mvpn_rt</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">list</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>MVPN routes to export</div>
                         <div>supported on NDFC only</div>
                         <div>Can be configured only when TRM is enabled</div>
-                        <div>{&quot;Use &#x27;,&#x27; to separate multiple route-targets(eg&quot;: &#x27;1:1,2:2)&#x27;}</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
                 </td>
             </tr>
             <tr>
@@ -440,7 +439,7 @@ Parameters
                 <td>
                         <div>VPN routes to export</div>
                         <div>supported on NDFC only</div>
-                        <div>{&quot;Use &#x27;,&#x27; to separate multiple route-targets(eg&quot;: &#x27;1:1,2:2)&#x27;}</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
                 </td>
             </tr>
             <tr>
@@ -450,16 +449,15 @@ Parameters
                     <b>import_evpn_rt</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">list</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>EVPN routes to import</div>
                         <div>supported on NDFC only</div>
-                        <div>{&quot;Use &#x27;,&#x27; to separate multiple route-targets(eg&quot;: &#x27;1:1,2:2)&#x27;}</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
                 </td>
             </tr>
             <tr>
@@ -469,17 +467,16 @@ Parameters
                     <b>import_mvpn_rt</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">list</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>MVPN routes to import</div>
                         <div>supported on NDFC only</div>
                         <div>Can be configured only when TRM is enabled</div>
-                        <div>{&quot;Use &#x27;,&#x27; to separate multiple route-targets(eg&quot;: &#x27;1:1,2:2)&#x27;}</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
                 </td>
             </tr>
             <tr>
@@ -489,16 +486,15 @@ Parameters
                     <b>import_vpn_rt</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">list</span>
+                        <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>VPN routes to import</div>
                         <div>supported on NDFC only</div>
-                        <div>{&quot;Use &#x27;,&#x27; to separate multiple route-targets(eg&quot;: &#x27;1:1,2:2)&#x27;}</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
                 </td>
             </tr>
             <tr>

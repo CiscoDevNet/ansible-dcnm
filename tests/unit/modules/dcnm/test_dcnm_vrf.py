@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ class TestDcnmVrfModule(TestDcnmModule):
     test_data = loadPlaybookData("dcnm_vrf")
 
     SUCCESS_RETURN_CODE = 200
+
+    version = 11
 
     mock_ip_sn = test_data.get("mock_ip_sn")
     vrf_inv_data = test_data.get("vrf_inv_data")
@@ -76,6 +78,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         # of the mock data.
 
         self.mock_vrf_object = copy.deepcopy(self.test_data.get("mock_vrf_object"))
+        self.mock_vrf12_object = copy.deepcopy(self.test_data.get("mock_vrf12_object"))
         self.mock_vrf_attach_object = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_object")
         )
@@ -163,7 +166,11 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def load_fixtures(self, response=None, device=""):
 
-        self.run_dcnm_version_supported.return_value = 11
+        if self.version == 12:
+            self.run_dcnm_version_supported.return_value = 12
+        else:
+            self.run_dcnm_version_supported.return_value = 11
+
 
         if "vrf_blank_fabric" in self._testMethodName:
             self.run_dcnm_ip_sn.side_effect = [{}]
@@ -543,6 +550,23 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object2_query,
                 self.mock_vrf_attach_get_ext_object_merge_att1_only,
                 self.mock_vrf_attach_get_ext_object_merge_att4_only,
+            ]
+
+        elif "_12check_mode" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf12_object,
+                self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                self.mock_vrf_attach_get_ext_object_merge_att2_only,
+            ]
+
+        elif "_12merged_new" in self._testMethodName:
+            self.run_dcnm_send.side_effect = [
+                self.blank_data,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
             ]
 
         else:
@@ -1248,3 +1272,43 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(
             result["msg"], "config: element is mandatory for this state merged"
         )
+
+    def test_dcnm_vrf_12check_mode(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                _ansible_check_mode=True,
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        self.version = 11
+        self.assertFalse(result.get("diff"))
+        self.assertFalse(result.get("response"))
+
+    def test_dcnm_vrf_12merged_new(self):
+        self.version = 12
+        set_module_args(
+            dict(state="merged", fabric="test_fabric", config=self.playbook_config)
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.version = 11
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][1]["ip_address"], "10.10.10.225"
+        )
+        self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
+        self.assertEqual(
+            result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+        )
+        self.assertEqual(
+            result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS"
+        )
+        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)

@@ -246,7 +246,7 @@ options:
           ports:
             description:
             - List of switch interfaces where the network will be attached
-            type: str
+            type: list
             required: true
           deploy:
             description:
@@ -483,7 +483,7 @@ class DcnmNetwork:
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
-            "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+            "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
         },
         12: {
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -492,7 +492,7 @@ class DcnmNetwork:
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
-            "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+            "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
         },
     }
 
@@ -502,7 +502,6 @@ class DcnmNetwork:
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
         self.check_mode = False
-        self.conn = Connection(module._socket_path)
         self.have_create = []
         self.want_create = []
         self.diff_create = []

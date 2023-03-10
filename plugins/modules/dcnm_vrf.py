@@ -208,6 +208,7 @@ options:
       bgp_password:
         description:
         - VRF Lite BGP neighbor password
+        - Password should be in Hex string format
         type: str
         required: false
       bgp_passwd_encrypt:
@@ -1164,16 +1165,16 @@ class DcnmVrf:
             }
 
             if self.dcnm_version > 11:
-                t_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent"))
-                t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW"))
-                t_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR"))
-                t_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto"))
-                t_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport"))
-                t_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport"))
-                t_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn"))
-                t_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn"))
-                t_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn"))
-                t_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn"))
+                t_conf.update(isRPAbsent = json_to_dict.get("isRPAbsent", False))
+                t_conf.update(ENABLE_NETFLOW = json_to_dict.get("ENABLE_NETFLOW", False))
+                t_conf.update(NETFLOW_MONITOR = json_to_dict.get("NETFLOW_MONITOR", ""))
+                t_conf.update(disableRtAuto = json_to_dict.get("disableRtAuto", False))
+                t_conf.update(routeTargetImport = json_to_dict.get("routeTargetImport", ""))
+                t_conf.update(routeTargetExport = json_to_dict.get("routeTargetExport", ""))
+                t_conf.update(routeTargetImportEvpn = json_to_dict.get("routeTargetImportEvpn", ""))
+                t_conf.update(routeTargetExportEvpn = json_to_dict.get("routeTargetExportEvpn", ""))
+                t_conf.update(routeTargetImportMvpn = json_to_dict.get("routeTargetImportMvpn", ""))
+                t_conf.update(routeTargetExportMvpn = json_to_dict.get("routeTargetExportMvpn", ""))
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
             del vrf["vrfStatus"]

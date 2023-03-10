@@ -65,6 +65,10 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
 - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
@@ -113,6 +117,10 @@
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
 
 - name: MERGED - conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -172,6 +180,10 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
+
 - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
   register: result
@@ -223,6 +235,10 @@
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+
+- name: MERGED - sleep for 40 seconds for DCNM to completely update the state
+  wait_for:
+    timeout: 40
 
 - name: MERGED - Create, Attach and Deploy new VRF - Update with incorrect VRF ID.
   cisco.dcnm.dcnm_vrf:

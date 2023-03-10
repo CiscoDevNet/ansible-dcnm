@@ -1,0 +1,555 @@
+{
+    "mock_ip_sn" : {
+      "10.10.10.217": "9NN7E41N16A",
+      "10.10.10.218": "9YO9A29F27U", 
+      "10.10.10.226": "XYZKSJHSMK3",
+      "10.10.10.227": "XYZKSJHSMK4",
+      "10.10.10.228": "XYZKSJHSMK5"
+    },
+    "playbook_config" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "202",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.217",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_incorrect_netid" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008012",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "202",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.217",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_incorrect_vrf" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int2",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "202",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.217",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_update" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "203",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.226",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.227",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_replace" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "203",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.226",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_replace_no_atch" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "202",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "deploy": true
+      }
+    ],
+    "playbook_config_override" : [
+      {
+	"net_name": "test_network1",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008012",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "303",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.226",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_novlan" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.217",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+  "mock_vrf_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+	"fabric": "test_network",
+	"vrfName": "ansible-vrf-int1",
+	"vrfTemplate": "Default_VRF_Universal",
+	"vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+	"vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008011\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"ansible-vrf-int1\"}",
+	"tenantName": null,
+	"vrfId": 9008011,
+	"serviceVrfTemplate": null,
+	"source": null,
+	"vrfStatus": "DEPLOYED"
+      }
+    ]
+  },
+  "mock_net_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "fabric": "test_network",
+        "networkName": "test_network",
+        "displayName": "test_network",
+        "networkId": 9008011,
+        "networkTemplate": "Default_Network_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "networkTemplateConfig": "{\"secondaryGW3\":\"\",\"suppressArp\":\"false\",\"secondaryGW2\":\"\",\"secondaryGW1\":\"\",\"loopbackId\":\"\",\"enableL3OnBorder\":\"false\",\"networkName\":\"test_network\",\"enableIR\":\"false\",\"rtBothAuto\":\"false\",\"isLayer2Only\":\"false\",\"vrfDhcp3\":\"\",\"segmentId\":\"9008011\",\"vrfDhcp2\":\"\",\"dhcpServerAddr3\":\"\",\"gatewayIpV6Address\":\"\",\"dhcpServerAddr2\":\"\",\"dhcpServerAddr1\":\"\",\"tag\":\"12345\",\"nveId\":\"1\",\"vrfDhcp\":\"\",\"secondaryGW4\":\"\",\"vlanId\":\"202\",\"gatewayIpAddress\":\"192.168.30.1/24\",\"vlanName\":\"\",\"mtu\":\"\",\"intfDescription\":\"\",\"mcastGroup\":\"239.1.1.0\",\"trmEnabled\":\"false\",\"vrfName\":\"ansible-vrf-int1\"}",
+        "vrf": "ansible-vrf-int1",
+        "tenantName": null,
+        "serviceNetworkTemplate": null,
+        "source": null,
+        "interfaceGroups": null,
+        "networkStatus": "NA"
+      }
+    ]
+  },
+  "mock_net_query_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA":
+      {
+        "fabric": "test_network",
+        "networkName": "test_network",
+        "displayName": "test_network",
+        "networkId": 9008011,
+        "networkTemplate": "Default_Network_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "networkTemplateConfig": "{\"secondaryGW3\":\"\",\"suppressArp\":\"false\",\"secondaryGW2\":\"\",\"secondaryGW1\":\"\",\"loopbackId\":\"\",\"enableL3OnBorder\":\"false\",\"networkName\":\"test_network\",\"enableIR\":\"false\",\"rtBothAuto\":\"false\",\"isLayer2Only\":\"false\",\"vrfDhcp3\":\"\",\"segmentId\":\"9008011\",\"vrfDhcp2\":\"\",\"dhcpServerAddr3\":\"\",\"gatewayIpV6Address\":\"\",\"dhcpServerAddr2\":\"\",\"dhcpServerAddr1\":\"\",\"tag\":\"12345\",\"nveId\":\"1\",\"vrfDhcp\":\"\",\"secondaryGW4\":\"\",\"vlanId\":\"202\",\"gatewayIpAddress\":\"192.168.30.1/24\",\"vlanName\":\"\",\"mtu\":\"\",\"intfDescription\":\"\",\"mcastGroup\":\"239.1.1.0\",\"trmEnabled\":\"false\",\"vrfName\":\"ansible-vrf-int1\"}",
+        "vrf": "ansible-vrf-int1",
+        "tenantName": null,
+        "serviceNetworkTemplate": null,
+        "source": null,
+        "interfaceGroups": null,
+        "networkStatus": "NA"
+      }
+  },
+  "mock_net_attach_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+	"networkName": "test_network",
+	"lanAttachList": [
+	  {
+	    "networkName": "test_network",
+	    "displayName": "test_network",
+	    "switchName": "n9kv-218",
+	    "switchRole": "leaf",
+	    "fabricName": "test_net",
+	    "lanAttachState": "DEPLOYED",
+	    "isLanAttached": true,
+	    "portNames": "Ethernet1/13,Ethernet1/14",
+	    "switchSerialNo": "9YO9A29F27U",
+	    "switchDbId": 4191270,
+	    "ipAddress": "10.10.10.218",
+	    "networkId": 9008011,
+	    "vlanId": 202,
+	    "interfaceGroups": null
+	  },
+	  {
+	    "networkName": "test_network",
+	    "displayName": "test_network",
+	    "switchName": "n9kv-217",
+	    "switchRole": "leaf",
+	    "fabricName": "test_net",
+	    "lanAttachState": "DEPLOYED",
+	    "isLanAttached": true,
+	    "portNames": "Ethernet1/13,Ethernet1/14",
+	    "switchSerialNo": "9NN7E41N16A",
+	    "switchDbId": 4195850,
+	    "ipAddress": "10.10.10.217",
+	    "networkId": 9008011,
+	    "vlanId": 202,
+	    "interfaceGroups": null
+	  }
+	]
+      }
+    ]
+  },
+  "mock_net_attach_object_pending" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+	"networkName": "test_network",
+	"lanAttachList": [
+	  {
+	    "networkName": "test_network",
+	    "displayName": "test_network",
+	    "switchName": "n9kv-218",
+	    "switchRole": "leaf",
+	    "fabricName": "test_net",
+	    "lanAttachState": "PENDING",
+	    "isLanAttached": true,
+	    "portNames": "Ethernet1/13,Ethernet1/14",
+	    "switchSerialNo": "9YO9A29F27U",
+	    "switchDbId": 4191270,
+	    "ipAddress": "10.10.10.218",
+	    "networkId": 9008011,
+	    "vlanId": 202,
+	    "interfaceGroups": null
+	  },
+	  {
+	    "networkName": "test_network",
+	    "displayName": "test_network",
+	    "switchName": "n9kv-217",
+	    "switchRole": "leaf",
+	    "fabricName": "test_net",
+	    "lanAttachState": "PENDING",
+	    "isLanAttached": true,
+	    "portNames": "Ethernet1/13,Ethernet1/14",
+	    "switchSerialNo": "9NN7E41N16A",
+	    "switchDbId": 4195850,
+	    "ipAddress": "10.10.10.217",
+	    "networkId": 9008011,
+	    "vlanId": 202,
+	    "interfaceGroups": null
+	  }
+	]
+      }
+    ]
+  },
+  "mock_net_attach_object_del_ready": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "networkName": "test_network",
+        "lanAttachList": [
+          {
+            "lanAttachState": "NA"
+          },
+          {
+            "lanAttachState": "NA"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_net_attach_object_del_not_ready": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "networkName": "test_network",
+        "lanAttachList": [
+          {
+            "lanAttachState": "DEPLOYED"
+          },
+          {
+            "lanAttachState": "DEPLOYED"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vlan_get": {
+    "DATA": "202",
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "attach_success_resp": {
+    "DATA": {
+      "test-network--9NN7E41N16A(leaf1)": "SUCCESS",
+      "test-network--9YO9A29F27U(leaf2)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "attach_success_resp2": {
+    "DATA": {
+      "test-network--9YO9A29F27U(leaf2)": "SUCCESS",
+      "test-network--XYZKSJHSMK3(leaf3)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "attach_success_resp3": {
+    "DATA": {
+      "test-network--9YO9A29F27U(leaf1)": "SUCCESS",
+      "test-network--XYZKSJHSMK3(leaf4)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "deploy_success_resp": {
+    "DATA": {"status": ""},
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "blank_data": {
+    "DATA": "",
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "get_have_failure": {
+    "DATA": "Invalid JSON response: Invalid Fabric: demo-fabric-123",
+    "ERROR": "Not Found",
+    "METHOD": "GET",
+    "RETURN_CODE": 404,
+    "MESSAGE": "OK"
+  },
+  "error1": {
+    "DATA": {
+      "test-network--9NN7E41N16A(leaf1)": "Invalid network"
+    },
+    "ERROR": "There is an error",
+    "METHOD": "POST",
+    "RETURN_CODE": 400,
+    "MESSAGE": "OK"
+  },
+  "error2": {
+    "DATA": {
+      "test-network--9NN7E41N16A(leaf1)": "Entered Network VLAN ID 203 is in use already",
+      "test-network--9YO9A29F27U(leaf2)": "SUCCESS"
+    },
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK"
+  },
+  "error3": {
+    "DATA": "No switches PENDING for deployment",
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK"
+  },
+  "delete_success_resp": {
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK"
+  },
+  "net_inv_data": {
+    "10.10.10.217":{
+      "ipAddress": "10.10.10.217",
+      "logicalName": "dt-n9k1",
+      "serialNumber": "9NN7E41N16A",
+      "switchRole": "leaf"
+    },
+    "10.10.10.218":{
+      "ipAddress": "10.10.10.218",
+      "logicalName": "dt-n9k2",
+      "serialNumber": "9YO9A29F27U",
+      "switchRole": "leaf"
+    },
+    "10.10.10.226":{
+      "ipAddress": "10.10.10.226",
+      "logicalName": "dt-n9k3",
+      "serialNumber": "XYZKSJHSMK3",
+      "switchRole": "leaf"
+    },
+    "10.10.10.227":{
+      "ipAddress": "10.10.10.227",
+      "logicalName": "dt-n9k4",
+      "serialNumber": "XYZKSJHSMK4",
+      "switchRole": "border spine"
+    },
+    "10.10.10.228":{
+      "ipAddress": "10.10.10.228",
+      "logicalName": "dt-n9k5",
+      "serialNumber": "XYZKSJHSMK5",
+      "switchRole": "border"
+    }
+  },
+  "fabric_details": {
+   "createdOn": 1613750822779,
+   "deviceType": "n9k",
+   "fabricId": "FABRIC-15",
+   "fabricName": "MS-fabric",
+   "fabricTechnology": "VXLANFabric",
+   "fabricTechnologyFriendly": "VXLAN Fabric",
+   "fabricType": "MFD",
+   "fabricTypeFriendly": "Multi-Fabric Domain",
+   "id": 15,
+   "modifiedOn": 1613750822779,
+   "networkExtensionTemplate": "Default_Network_Extension_Universal",
+   "networkTemplate": "Default_Network_Universal",
+   "nvPairs": {
+     "ANYCAST_GW_MAC": "2020.0000.00aa",
+     "BGP_RP_ASN": "",
+     "BORDER_GWY_CONNECTIONS": "Direct_To_BGWS",
+     "CLOUDSEC_ALGORITHM": "",
+     "CLOUDSEC_AUTOCONFIG": "false",
+     "CLOUDSEC_ENFORCEMENT": "",
+     "CLOUDSEC_KEY_STRING": "",
+     "DCI_SUBNET_RANGE": "10.10.1.0/24",
+     "DCI_SUBNET_TARGET_MASK": "30",
+     "DELAY_RESTORE": "300",
+     "FABRIC_NAME": "MS-fabric",
+     "FABRIC_TYPE": "MFD",
+     "FF": "MSD",
+     "L2_SEGMENT_ID_RANGE": "30000-49000",
+     "L3_PARTITION_ID_RANGE": "50000-59000",
+     "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+     "MS_LOOPBACK_ID": "100",
+     "MS_UNDERLAY_AUTOCONFIG": "true",
+     "RP_SERVER_IP": "",
+     "TOR_AUTO_DEPLOY": "false",
+     "default_network": "Default_Network_Universal",
+     "default_vrf": "Default_VRF_Universal",
+     "enableScheduledBackup": "false",
+     "network_extension_template": "Default_Network_Extension_Universal",
+     "scheduledTime": "",
+     "vrf_extension_template": "Default_VRF_Extension_Universal"
+   },
+   "provisionMode": "DCNMTopDown",
+   "replicationMode": "IngressReplication",
+   "templateName": "MSD_Fabric_11_1",
+   "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+   "vrfTemplate": "Default_VRF_Universal"
+  },
+  "mock_vrf12_object": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "fabric": "test_network",
+        "serviceVrfTemplate": "None",
+        "source": "None",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfId": 9008011,
+        "vrfName": "test_vrf_1",
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008013\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"routeTargetExportMvpn\":\"\",\"ENABLE_NETFLOW\":\"false\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"routeTargetExportEvpn\":\"\",\"NETFLOW_MONITOR\":\"\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"routeTargetImportMvpn\":\"\",\"isRPAbsent\":\"false\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"52125\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\",\"routeTargetImportEvpn\":\"\"}",
+        "vrfStatus": "DEPLOYED"
+      }
+    ]
+  }
+}
