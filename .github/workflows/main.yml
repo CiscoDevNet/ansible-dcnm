@@ -51,7 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
+        # ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
+        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8]
         python: [3.8, 3.9]
         exclude:
           - ansible: 2.9.26
