@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: OVERRIDDEN - Verify if fabric is deployed.
@@ -22,16 +22,12 @@
 
 - name: OVERRIDDEN - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: OVERRIDDEN - Create, Attach and Deploy new VRF - VLAN Provided by the User
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -47,6 +43,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -61,17 +67,13 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 ###############################################
 ###              OVERRIDDEN                  ##
 ###############################################
 
 - name: OVERRIDDEN - Update existing VRF using overridden - delete and create
   cisco.dcnm.dcnm_vrf: &conf
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int2
@@ -86,6 +88,16 @@
       - ip_address: "{{ ansible_switch2 }}"
       deploy: true
   register: result
+
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
 
 - assert:
     that:
@@ -107,10 +119,6 @@
     - 'result.diff[1].attach[1].deploy == false'
     - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: OVERRIDDEN - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
@@ -120,22 +128,14 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: OVERRIDDEN - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: OVERRIDDEN - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int2
@@ -159,6 +159,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -173,13 +183,9 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: OVERRIDDEN - Update existing VRF LITE using overridden - VRF stays Whereas Ext is modified/overridden
   cisco.dcnm.dcnm_vrf: &conf1
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int2
@@ -203,6 +209,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -211,10 +227,6 @@
     - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: OVERRIDDEN - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -225,13 +237,9 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: OVERRIDDEN - Update existing VRF LITE using overridden - VRF modified and Ext is modified - Old ones deleted
   cisco.dcnm.dcnm_vrf: &conf2
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int1
@@ -255,6 +263,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -276,10 +294,6 @@
     - 'result.diff[1].attach[1].deploy == false'
     - 'result.diff[1].vrf_name == "ansible-vrf-int2"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: OVERRIDDEN - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result
@@ -295,5 +309,5 @@
 
 - name: OVERRIDDEN - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted

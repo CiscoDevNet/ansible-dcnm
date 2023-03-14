@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: DELETED - Verify if fabric is deployed.
@@ -22,16 +22,12 @@
 
 - name: DELETED - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: DELETED - Create, Attach and Deploy new VRF - VLAN Provided by the User
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -47,6 +43,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -61,17 +67,13 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 ###############################################
 ###                 DELETED                  ##
 ###############################################
 
 - name: DELETED - Delete VRF using deleted state
   cisco.dcnm.dcnm_vrf: &conf
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - vrf_name: ansible-vrf-int1
@@ -95,10 +97,6 @@
     - 'result.diff[0].attach[0].deploy == false'
     - 'result.diff[0].attach[1].deploy == false'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-
-- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: DELETED - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
@@ -110,13 +108,9 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
-
 - name: DELETED - Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -140,6 +134,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -154,13 +158,9 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - Delete VRF/VRF LITE - VLAN/VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf: &conf1
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
     - vrf_name: ansible-vrf-int1
@@ -197,10 +197,6 @@
     - 'result.diff[0].attach[0].deploy == false'
     - 'result.diff[0].attach[1].deploy == false'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
 
 - name: DELETED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -212,13 +208,9 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
-
 - name: DELETED - Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -242,6 +234,16 @@
       deploy: true
   register: result
 
+- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
 - assert:
     that:
     - 'result.changed == true'
@@ -256,13 +258,9 @@
     - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - Delete VRF/VRF LITE - WITHOUT ANY CONFIG ELEMENT
   cisco.dcnm.dcnm_vrf: &conf2
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
     config:
   register: result
@@ -281,10 +279,6 @@
     - 'result.diff[0].attach[1].deploy == false'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 20
-
 - name: DELETED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result
@@ -295,15 +289,11 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
-- name: DELETED - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 10
-
 ################################################
 ####                 CLEAN-UP                 ##
 ################################################
 
 - name: DELETED - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted

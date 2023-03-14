@@ -115,14 +115,14 @@
       deploy: true
   register: result
 
-- name: Query fabric state until networkStatus transitions to DEPLOYED state
+- name: Query fabric state until networkStatus transitions to NA state
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: query
   register: query_result
   until:
-    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
-    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[0].parent.networkStatus is search('NA')"
+    - "query_result.response[1].parent.networkStatus is search('NA')"
   retries: 30
   delay: 2
 
@@ -354,14 +354,14 @@
       dhcp_srvr3_vrf: three
   register: result
 
-- name: Query fabric state until networkStatus transitions to DEPLOYED state
+- name: Query fabric state until networkStatus transitions to NA state
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: query
   register: query_result
   until:
-    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
-    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[0].parent.networkStatus is search('NA')"
+    - "query_result.response[1].parent.networkStatus is search('NA')"
   retries: 30
   delay: 2
 

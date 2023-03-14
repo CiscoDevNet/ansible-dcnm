@@ -3,11 +3,11 @@
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
 - name: SCALE - Verify if fabric is deployed.
@@ -22,12 +22,8 @@
 
 - name: SCALE - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: SCALE - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: Dummy set fact for leaf_attach_list
   set_fact:
@@ -40,19 +36,15 @@
 
 - name: Push all VRFs to DCNM
   cisco.dcnm.dcnm_vrf:
-    fabric: '{{ ansible_it_fabric }}'
+    fabric: '{{ test_fabric }}'
     state: merged
     config: '{{ vrfs_list }}'
   register: result
 
 - name: SCALE - Clean up existing vrfs
   cisco.dcnm.dcnm_vrf: &conf
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: SCALE - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: SCALE - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
@@ -70,5 +62,5 @@
 
 - name: SCALE - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_fabric }}"
     state: deleted
