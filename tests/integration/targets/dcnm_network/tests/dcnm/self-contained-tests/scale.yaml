@@ -25,10 +25,6 @@
     fabric: "{{ test_fabric }}"
     state: deleted
 
-- name: SCALE - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
-
 - name: Dummy set fact for leaf_attach_list
   set_fact:
     leaf_net_attach: []
@@ -49,10 +45,6 @@
   cisco.dcnm.dcnm_network: &conf
     fabric: "{{ test_fabric }}"
     state: deleted
-
-- name: SCALE - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
-    timeout: 40
 
 - name: SCALE - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf

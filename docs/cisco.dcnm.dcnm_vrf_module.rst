@@ -55,6 +55,46 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>adv_default_routes</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to Control Advertisement of Default Route Internally</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>adv_host_routes</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to Control Advertisement of /32 and /128 Routes to Edge Routers</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>attach</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -268,6 +308,44 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bgp_passwd_encrypt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>3</b>&nbsp;&larr;</div></li>
+                                    <li>7</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>VRF Lite BGP Key Encryption Type</div>
+                        <div>Allowed values are 3 (3DES) and 7 (Cisco)</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bgp_password</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VRF Lite BGP neighbor password</div>
+                        <div>Password should be in Hex string format</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -292,6 +370,357 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_rt_auto</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable RT Auto-Generate</div>
+                        <div>supported on NDFC only</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>export_evpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>EVPN routes to export</div>
+                        <div>supported on NDFC only</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>export_mvpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>MVPN routes to export</div>
+                        <div>supported on NDFC only</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>export_vpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VPN routes to export</div>
+                        <div>supported on NDFC only</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>import_evpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>EVPN routes to import</div>
+                        <div>supported on NDFC only</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>import_mvpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>MVPN routes to import</div>
+                        <div>supported on NDFC only</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>import_vpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VPN routes to import</div>
+                        <div>supported on NDFC only</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ipv6_linklocal_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable IPv6 link-local Option</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>loopback_route_tag</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">12345</div>
+                </td>
+                <td>
+                        <div>Loopback Routing Tag</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>max_bgp_paths</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">1</div>
+                </td>
+                <td>
+                        <div>Max BGP Paths</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>max_ibgp_paths</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">2</div>
+                </td>
+                <td>
+                        <div>Max iBGP Paths</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>netflow_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable netflow on VRF-LITE Sub-interface</div>
+                        <div>Netflow is supported only if it is enabled on fabric</div>
+                        <div>Netflow configs are supported on NDFC only</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>nf_monitor</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Netflow Monitor</div>
+                        <div>Netflow configs are supported on NDFC only</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_rp</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>No RP, only SSM is used</div>
+                        <div>supported on NDFC only</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>overlay_mcast_group</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Underlay IPv4 Multicast group (224.0.0.0/4 to 239.255.255.255/4)</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>redist_direct_rmap</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"FABRIC-RMAP-REDIST-SUBNET"</div>
+                </td>
+                <td>
+                        <div>Redistribute Direct Route Map</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rp_address</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IPv4 Address of RP</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rp_external</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Specifies if RP is external to the fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rp_loopback_id</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>loopback ID of RP</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>service_vrf_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -309,6 +738,84 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>static_default_route</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to Control Static Default Route Configuration</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>trm_bgw_msite</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable TRM on Border Gateway Multisite</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>trm_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable Tenant Routed Multicast</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>underlay_mcast_ip</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Underlay IPv4 Multicast Address</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -320,6 +827,22 @@ Parameters
                 <td>
                         <div>vlan ID for the vrf attachment</div>
                         <div>If not specified in the playbook, DCNM will auto-select an available vlan_id</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VRF Description</div>
                 </td>
             </tr>
             <tr>
@@ -359,6 +882,39 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_int_mtu</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">9216</div>
+                </td>
+                <td>
+                        <div>VRF interface MTU</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_intf_desc</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VRF Intf Description</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -387,6 +943,23 @@ Parameters
                 </td>
                 <td>
                         <div>Name of the config template to be used</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_vlan_name</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>VRF Vlan Name</div>
+                        <div>if &gt; 32 chars enable - system vlan long-name</div>
                 </td>
             </tr>
 
