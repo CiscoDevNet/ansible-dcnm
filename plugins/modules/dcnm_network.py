@@ -652,7 +652,7 @@ class DcnmNetwork:
                     del want["isAttached"]
                     attach_list.append(want)
 
-        for attach in attach_list:
+        for attach in attach_list[:]:
             for ip, ser in self.ip_sn.items():
                 if ser == attach["serialNumber"]:
                     ip_addr = ip

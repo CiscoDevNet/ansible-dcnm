@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,6 +73,7 @@ options:
           this list object will contain elements each of which is a list of
           pair of switches
         type: list
+        elements: str
         required: true
       type:
         description:
@@ -122,8 +123,8 @@ options:
           ipv4_mask_len:
             description:
             - IPV4 address mask length. This object is applicable only if the 'mode' is 'l3'
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices: [Min 1, Max 31]
             default: 8
           route_tag:
             description:
@@ -134,6 +135,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -162,16 +164,16 @@ options:
             description:
             - Port channel identifier of first peer. If this object is not included, then the value defaults to the
               vPC identifier. This value cannot be changed once vPC is created
+            - Minimum Value (1), Maximum Value (4096)
+            - Default value if not specified is the vPC port identifier
             type: int
-            choices: [Min 1, Max 4096]
-            default: Default value is the vPC port identifier
           peer2_pcid:
             description:
             - Port channel identifier of second peer. If this object is not included, then the value defaults to the
               vPC identifier. This value cannot be changed once vPC is created
+            - Minimum Value (1), Maximum Value (4096)
+            - Default value if not specified is the vPC port identifier
             type: int
-            choices: [Min 1, Max 4096]
-            default: Default value is the vPC port identifier
           peer1_members:
             description:
             - Member interfaces that are part of this port channel on first peer
@@ -195,7 +197,7 @@ options:
             - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
-            default: true
+            default: 'true'
           port_type_fast:
             description:
             - Spanning-tree edge port behavior
@@ -238,11 +240,13 @@ options:
             description:
             - Commands to be included in the configuration under this interface of first peer
             type: list
+            elements: str
             default: []
           peer2_cmds:
             description:
             - Commands to be included in the configuration under this interface of second peer
             type: list
+            elements: str
             default: []
           peer1_description:
             description:
@@ -285,8 +289,8 @@ options:
           ipv4_mask_len:
             description:
             - IPV4 address mask length.
+            - Minimum Value (8), Maximum Value (31)
             type: int
-            choices : [Min 8, Max 31]
             default: 8
           ipv6_addr:
             description:
@@ -296,25 +300,26 @@ options:
           ipv6_mask_len:
             description:
             - IPV6 address mask length.
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
             default: 8
           mtu:
             description:
             - Interface MTU
+            - Minimum Value (567), Maximum Value (9216)
             type: int
-            choices: [Min 576, Max 9216]
             default: 9216
           vlan:
             description:
             - DOT1Q vlan id for this interface
+            - Minimum Value (2), Maximum Value (3967)
             type: int
-            choices: [Min 2, Max 3967]
             default: 0
           cmds:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -363,6 +368,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -392,7 +398,7 @@ options:
             - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
-            default: true
+            default: 'true'
           port_type_fast:
             description:
             - Spanning-tree edge port behavior
@@ -440,8 +446,8 @@ options:
             description:
             - IPV4 address mask length. This object is applicable only if the 'mode' is 'routed' or
               'epl_routed'
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
             default: 8
           ipv6_addr:
             description:
@@ -451,8 +457,8 @@ options:
           ipv6_mask_len:
             description:
             - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
             default: 8
           route_tag:
             description:
@@ -464,6 +470,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -501,12 +508,13 @@ options:
           ipv4_mask_len:
             description:
             - IPV4 address mask length. This parameter is required if 'ipv4_addr' is included.
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
           cmds:
             description:
             - Commands to be included in the configuration under this interface.
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -1593,7 +1601,7 @@ class DcnmIntf:
 
         pc_spec = dict(
             name=dict(required=True, type="str"),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
             type=dict(required=True, type="str"),
             deploy=dict(type="bool", default=True),
             profile=dict(required=True, type="dict"),
@@ -1607,7 +1615,7 @@ class DcnmIntf:
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
             allowed_vlans=dict(type="str", default="none"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1620,7 +1628,7 @@ class DcnmIntf:
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
             access_vlan=dict(type="str", default=""),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1634,7 +1642,7 @@ class DcnmIntf:
             ipv4_mask_len=dict(type="int", default=8),
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1742,7 +1750,7 @@ class DcnmIntf:
                 type="int", range_min=64, range_max=127, default=64
             ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1765,7 +1773,7 @@ class DcnmIntf:
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
             route_tag=dict(type="str", default=""),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1776,7 +1784,7 @@ class DcnmIntf:
 
         eth_spec = dict(
             name=dict(required=True, type="str"),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
             type=dict(required=True, type="str"),
             deploy=dict(type="str", default=True),
             profile=dict(required=True, type="dict"),
@@ -1791,7 +1799,7 @@ class DcnmIntf:
             ),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1805,7 +1813,7 @@ class DcnmIntf:
             ),
             speed=dict(type="str", default="Auto"),
             access_vlan=dict(type="str", default=""),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1817,7 +1825,7 @@ class DcnmIntf:
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
             speed=dict(type="str", default="Auto"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1833,7 +1841,7 @@ class DcnmIntf:
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=1500, range_max=9216),
             speed=dict(type="str", default="Auto"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1861,7 +1869,7 @@ class DcnmIntf:
 
         svi_spec = dict(
             name=dict(required=True, type="str"),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
             type=dict(required=True, type="str"),
             deploy=dict(type="str", default=True),
             profile=dict(required=True, type="dict"),
@@ -1872,7 +1880,7 @@ class DcnmIntf:
             ipv4_addr=dict(type="ipv4", default=""),
             int_vrf=dict(type="str", default="default"),
             mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
-            cmds=dict(type="list", default=""),
+            cmds=dict(type="list", default="", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(required=True, type="bool", default=True),
             route_tag=dict(type=str, default=""),
@@ -1939,7 +1947,7 @@ class DcnmIntf:
 
         del_spec = dict(
             name=dict(required=False, type="str"),
-            switch=dict(required=False, type="list"),
+            switch=dict(required=False, type="list", elements="str"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, del_spec, None)
@@ -1948,7 +1956,7 @@ class DcnmIntf:
 
         query_spec = dict(
             name=dict(type="str", default=""),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, query_spec, None)
@@ -1957,7 +1965,7 @@ class DcnmIntf:
 
         overridden_spec = dict(
             name=dict(required=False, type="str", default=""),
-            switch=dict(required=False, type="list"),
+            switch=dict(required=False, type="list", elements="str"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, overridden_spec, None)

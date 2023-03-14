@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2022 Cisco and/or its affiliates.
+# Copyright (c) 2022-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -93,6 +93,7 @@ options:
         description:
         - IP address or DNS name of the management interface of the switch to which the allocated resource is assigned to.
         type: list
+        elements: str
         required: false
 """
 
@@ -575,7 +576,7 @@ class DcnmResManager:
         rm_spec = dict(
             entity_name=dict(type="str"),
             pool_name=dict(type="str"),
-            switch=dict(type="list"),
+            switch=dict(type="list", elements="str"),
         )
 
         rm_info, invalid_params = validate_list_of_dicts(cfg, rm_spec)
