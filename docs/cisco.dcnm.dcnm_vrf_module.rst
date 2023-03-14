@@ -959,7 +959,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF Vlan Name</div>
-                        <div>if &gt; 32 chars enable:system vlan long-name</div>
+                        <div>if &gt; 32 chars enable - system vlan long-name</div>
                 </td>
             </tr>
 

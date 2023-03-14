@@ -247,6 +247,7 @@ options:
             description:
             - List of switch interfaces where the network will be attached
             type: list
+            elements: str
             required: true
           deploy:
             description:
@@ -2533,6 +2534,7 @@ class DcnmNetwork:
 
         else:
 
+            # The default value for multicast group address is different for DCNM and NDFC.
             if self.dcnm_version > 11:
                 mcast_group_addr = "239.1.1.1"
             else:

@@ -87,7 +87,7 @@ options:
       vrf_vlan_name:
         description:
         - VRF Vlan Name
-        - if > 32 chars enable:system vlan long-name
+        - if > 32 chars enable - system vlan long-name
         type: str
         required: false
       vrf_intf_desc:
