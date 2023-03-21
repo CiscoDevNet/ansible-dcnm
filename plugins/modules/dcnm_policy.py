@@ -740,6 +740,7 @@ class DcnmPolicy:
                     if policy not in self.diff_create:
                         self.changed_dict[0]["merged"].append(policy)
                         self.diff_create.append(policy)
+                        policy_id = None
             elif rc == "DCNM_POLICY_DONT_ADD":
                 # A policy exists and there is no difference between the one that exists and the one that is
                 # is requested to be created. Check the 'create_additional_policy' flag and create it if it is
@@ -762,15 +763,15 @@ class DcnmPolicy:
 
             # Check the 'deploy' flag and decide if this policy is to be deployed
             if self.deploy is True:
-                deploy = {}
-                deploy["name"] = policy["templateName"]
-                deploy["serialNo"] = policy["serialNumber"]
-                self.changed_dict[0]["deploy"].append(deploy)
-
                 if (policy_id is not None) and (
                     policy_id not in self.deploy_payload
                 ):
                     self.deploy_payload.append(policy_id)
+                    deploy = {}
+                    deploy["name"] = policy["templateName"]
+                    deploy["serialNo"] = policy["serialNumber"]
+                    deploy["policyId"] = policy_id
+                    self.changed_dict[0]["deploy"].append(deploy)
 
     def dcnm_policy_get_delete_payload(self, policy):
 
@@ -954,7 +955,6 @@ class DcnmPolicy:
             command = "DELETE"
 
         resp = dcnm_send(self.module, command, path, json_payload)
-
         return resp
 
     def dcnm_policy_deploy_policy(self, policy):
@@ -1096,18 +1096,13 @@ class DcnmPolicy:
                             delete_flag = True
                             self.result["response"].append(resp)
 
-            # Once all policies are deleted, do a switch level deploy so that the deleted policies are removed from the
-            # switch
-            if (snos != []) and (delete_flag is True):
-                self.dcnm_policy_deploy_to_switches(snos)
-                if resp and (resp["RETURN_CODE"] != 200):
-                    self.module.fail_json(msg=resp)
-
         for policy in self.diff_create:
             # POP the 'create_additional_policy' object before sending create
             policy.pop("create_additional_policy")
             policy.pop("policy_id_given")
+
             resp = self.dcnm_policy_create_policy(policy, "POST")
+
             if isinstance(resp, list):
                 resp = resp[0]
             if (
@@ -1128,6 +1123,12 @@ class DcnmPolicy:
                             policy_id[0] not in self.deploy_payload
                         ):
                             self.deploy_payload.append(policy_id[0])
+                            deploy = {}
+                            deploy["name"] = policy["templateName"]
+                            deploy["serialNo"] = policy["serialNumber"]
+                            deploy["policyId"] = policy_id[0]
+                            if deploy not in self.changed_dict[0]["deploy"]:
+                                self.changed_dict[0]["deploy"].append(deploy)
                         create_flag = True
             else:
                 self.module.fail_json(msg=resp)
@@ -1199,10 +1200,10 @@ class DcnmPolicy:
 
         sw_dict = config.pop(pos)
 
-        # 'switches' contaions the switches related configuration items from playbook. Process these
+        # 'switches' contains the switches related configuration items from playbook. Process these
         # and add the same to individual policy items as appropriate
 
-        new_config = []
+        override_config = []
         for sw in sw_dict["switch"]:
 
             # Check if policies are included in the switch config. If so these policies will override
@@ -1211,7 +1212,7 @@ class DcnmPolicy:
 
             if sw.get("policies", None) is not None:
 
-                # 'policies are specified at switch level. Add eachj of these policies to 'config' object
+                # 'policies are specified at switch level. Add each of these policies to 'config' object
                 # along with the switch information
 
                 for pol in sw["policies"]:
@@ -1220,21 +1221,36 @@ class DcnmPolicy:
                         pol["switch"] = []
                     if sw["ip"] not in pol["switch"]:
                         pol["switch"].append(sw["ip"])
-                    # if (pol not in new_config):
-                    new_config.append(pol)
-            else:
 
-                # This switch does not have any policies included. Add this switch to all policies in the
-                # playbook config
+                    override_config.append(pol)
 
+            for cfg in config:
+
+                if cfg.get("switch", None) is None:
+                    cfg["switch"] = []
+                if sw["ip"] not in cfg["switch"]:
+                    cfg["switch"].append(sw["ip"])
+
+        if config:
+            updated_config = []
+            for ovr_cfg in override_config:
                 for cfg in config:
-
-                    if cfg.get("switch", None) is None:
-                        cfg["switch"] = []
-                    if sw["ip"] not in cfg["switch"]:
-                        cfg["switch"].append(sw["ip"])
-        if new_config != []:
-            config.extend(new_config)
+                    if cfg["name"] == ovr_cfg["name"]:
+                        # Have a matching policy in config which is overridden by a more specifc policy under 'switch'
+                        # Compare the switches under override policy with the switches in gobal config, and remove those switches from
+                        # global config if present.
+                        for sw in ovr_cfg["switch"]:
+                            if sw in cfg["switch"]:
+                                cfg["switch"].remove(sw)
+                    if ovr_cfg not in updated_config:
+                        updated_config.append(ovr_cfg)
+            # Now go over the global config list, and add those cpolicies which have a non empty 'switch' list.
+            for cfg in config:
+                if cfg["switch"] != []:
+                    updated_config.append(cfg)
+            config = updated_config
+        else:
+            config = override_config
 
         return config
 
@@ -1293,6 +1309,7 @@ def main():
     if module.params["state"] != "query":
         # Translate the given playbook config to some convenient format. Each policy should
         # have the switches to be deployed.
+
         dcnm_policy.config = dcnm_policy.dcnm_translate_config(
             dcnm_policy.config
         )

@@ -37,8 +37,8 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
     def log_msg(self, msg):
 
-        if fd is None:
-            fd = open("policy-ut.log", "w+")
+        if self.fd is None:
+            self.fd = open("policy-ut.log", "w+")
         self.fd.write(msg)
         self.fd.flush()
 
@@ -96,19 +96,39 @@ class TestDcnmPolicyModule(TestDcnmModule):
                 deploy_succ_resp,
             ]
 
+        if "test_dcnm_policy_merged_diff_templates" == self._testMethodName:
+
+            create_succ_resp1 = self.payloads_data.get("success_create_response_101")
+            deploy_succ_resp = self.payloads_data.get(
+                "success_deploy_response_101_105_11"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                [],
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                create_succ_resp1,
+                deploy_succ_resp,
+            ]
+
         if "test_dcnm_policy_merged_same_template" == self._testMethodName:
 
             have_101_105_resp = self.payloads_data.get("have_response_101_105")
             create_succ_resp1 = self.payloads_data.get("success_create_response_101")
             deploy_succ_resp = self.payloads_data.get(
-                "success_deploy_response_101_101_5"
+                "success_deploy_response_101_101_2"
             )
 
             self.run_dcnm_send.side_effect = [
                 have_101_105_resp,
-                create_succ_resp1,
-                create_succ_resp1,
-                create_succ_resp1,
                 create_succ_resp1,
                 create_succ_resp1,
                 deploy_succ_resp,
@@ -196,17 +216,26 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
         if "test_dcnm_policy_merge_multiple_switches" == self._testMethodName:
 
+            create_succ_resp11 = self.payloads_data.get(
+                "success_create_response_101"
+            )
             create_succ_resp12 = self.payloads_data.get(
                 "success_create_response_101_sw2"
             )
             create_succ_resp13 = self.payloads_data.get(
                 "success_create_response_101_sw3"
             )
+            create_succ_resp21 = self.payloads_data.get(
+                "success_create_response_102"
+            )
             create_succ_resp22 = self.payloads_data.get(
                 "success_create_response_102_sw2"
             )
             create_succ_resp23 = self.payloads_data.get(
                 "success_create_response_102_sw3"
+            )
+            create_succ_resp31 = self.payloads_data.get(
+                "success_create_response_103"
             )
             create_succ_resp32 = self.payloads_data.get(
                 "success_create_response_103_sw2"
@@ -222,10 +251,13 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
             self.run_dcnm_send.side_effect = [
                 [],
+                create_succ_resp11,
                 create_succ_resp12,
                 create_succ_resp13,
+                create_succ_resp21,
                 create_succ_resp22,
                 create_succ_resp23,
+                create_succ_resp31,
                 create_succ_resp32,
                 create_succ_resp33,
                 create_succ_resp4,
@@ -279,7 +311,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
             deploy_succ_resp = self.payloads_data.get("success_deploy_response_104")
             have_all_resp = self.payloads_data.get("have_response_101_105")
-            create_succ_resp1 = self.payloads_data.get("success_create_response_101")
+            create_succ_resp1 = self.payloads_data.get("success_create_response_104")
 
             self.run_dcnm_send.side_effect = [
                 have_all_resp,
@@ -573,6 +605,54 @@ class TestDcnmPolicyModule(TestDcnmModule):
                 )
             count = count + 1
 
+    def test_dcnm_policy_merged_diff_templates(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_policy_configs")
+        self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
+
+        # get mock ip_sn and fabric_inventory_details
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+
+        # load required config data
+        self.playbook_config = self.config_data.get("create_policy_101_105_5")
+
+        set_module_args(
+            dict(
+                state="merged",
+                deploy=True,
+                fabric="mmudigon",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 11)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["query"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 1)
+
+        # Validate create and deploy responses
+        count = 0
+        max_count = len(result["diff"][0]["merged"])
+        for resp in result["response"]:
+            if count < max_count:
+                self.assertEqual(resp["RETURN_CODE"], 200)
+                self.assertEqual(
+                    (
+                        "is created successfully"
+                        in resp["DATA"]["successList"][0]["message"]
+                    ),
+                    True,
+                )
+            elif count == max_count:
+                self.assertEqual(resp["RETURN_CODE"], 200)
+                self.assertEqual(
+                    (len(resp["DATA"][0]["successPTIList"].split(",")) == 11), True
+                )
+            count = count + 1
+
     def test_dcnm_policy_merged_same_template(self):
 
         # load the json from playbooks
@@ -596,10 +676,10 @@ class TestDcnmPolicyModule(TestDcnmModule):
         )
         result = self.execute_module(changed=True, failed=False)
 
-        self.assertEqual(len(result["diff"][0]["merged"]), 5)
+        self.assertEqual(len(result["diff"][0]["merged"]), 2)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"]), 5)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 1)
 
         # Validate create and deploy responses
         count = 0
@@ -617,7 +697,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
             elif count == max_count:
                 self.assertEqual(resp["RETURN_CODE"], 200)
                 self.assertEqual(
-                    (len(resp["DATA"][0]["successPTIList"].split(",")) == 5), True
+                    (len(resp["DATA"][0]["successPTIList"].split(",")) == 2), True
                 )
             count = count + 1
 
@@ -648,7 +728,7 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["merged"]), 5)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"]), 5)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
         self.assertEqual(len(result["response"]), 0)
 
     def test_dcnm_policy_merged_existing(self):
@@ -914,10 +994,10 @@ class TestDcnmPolicyModule(TestDcnmModule):
         )
         result = self.execute_module(changed=True, failed=False)
 
-        self.assertEqual(len(result["diff"][0]["merged"]), 8)
+        self.assertEqual(len(result["diff"][0]["merged"]), 11)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
-        self.assertEqual(len(result["diff"][0]["deploy"]), 8)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 11)
 
         # Validate create and deploy responses
         count = 0
