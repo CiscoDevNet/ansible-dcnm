@@ -649,7 +649,7 @@ class DcnmVrf:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
-    def diff_for_attach_deploy(self, want_a, have_a):
+    def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
         attach_list = []
 
@@ -753,7 +753,10 @@ class DcnmVrf:
                             want["extensionValues"] == ""
                             and have["extensionValues"] != ""
                         ):
-                            found = True
+                            if replace:
+                                found = False
+                            else:
+                                found = True
                         else:
                             found = True
 
@@ -1559,7 +1562,7 @@ class DcnmVrf:
 
         all_vrfs = ""
 
-        self.get_diff_merge()
+        self.get_diff_merge(replace=True)
         diff_create = self.diff_create
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
@@ -1640,7 +1643,7 @@ class DcnmVrf:
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
 
-    def get_diff_merge(self):
+    def get_diff_merge(self, replace=False):
 
         # Special cases:
         # 1. Auto generate vrfId if its not mentioned by user:
@@ -1792,7 +1795,7 @@ class DcnmVrf:
                 if want_a["vrfName"] == have_a["vrfName"]:
                     attach_found = True
                     diff, vrf = self.diff_for_attach_deploy(
-                        want_a["lanAttachList"], have_a["lanAttachList"]
+                        want_a["lanAttachList"], have_a["lanAttachList"], replace
                     )
                     if diff:
                         base = want_a.copy()
