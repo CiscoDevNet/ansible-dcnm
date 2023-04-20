@@ -253,6 +253,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -308,6 +309,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -446,11 +448,10 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>true</li>
+                                    <li><div style="color: blue"><b>true</b>&nbsp;&larr;</div></li>
                                     <li>false</li>
                                     <li>no</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">"yes"</div>
                 </td>
                 <td>
                         <div>Spanning-tree bpduguard</div>
@@ -465,6 +466,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -540,14 +542,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 31</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
                 <td>
                         <div>IPV4 address mask length. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
+                        <div>Minimum Value (1), Maximum Value (31)</div>
                 </td>
             </tr>
             <tr>
@@ -580,14 +579,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 31</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
                 <td>
                         <div>IPV6 address mask length. This object is applicable only if the &#x27;mode&#x27; is &#x27;epl_routed&#x27;</div>
+                        <div>Minimum Value (1), Maximum Value (31)</div>
                 </td>
             </tr>
             <tr>
@@ -747,6 +743,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -933,6 +930,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -1008,14 +1006,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 31</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
                 <td>
                         <div>IPV4 address mask length. This object is applicable only if the &#x27;mode&#x27; is &#x27;l3&#x27;</div>
+                        <div>Minimum Value (1), Maximum Value (31)</div>
                 </td>
             </tr>
             <tr>
@@ -1127,6 +1122,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -1320,6 +1316,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -1395,14 +1392,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 8</li>
-                                    <li>Max 31</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
                 <td>
                         <div>IPV4 address mask length.</div>
+                        <div>Minimum Value (8), Maximum Value (31)</div>
                 </td>
             </tr>
             <tr>
@@ -1435,14 +1429,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 31</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">8</div>
                 </td>
                 <td>
                         <div>IPV6 address mask length.</div>
+                        <div>Minimum Value (1), Maximum Value (31)</div>
                 </td>
             </tr>
             <tr>
@@ -1478,14 +1469,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 576</li>
-                                    <li>Max 9216</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">9216</div>
                 </td>
                 <td>
                         <div>Interface MTU</div>
+                        <div>Minimum Value (567), Maximum Value (9216)</div>
                 </td>
             </tr>
             <tr>
@@ -1500,14 +1488,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 2</li>
-                                    <li>Max 3967</li>
-                        </ul>
                         <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>DOT1Q vlan id for this interface</div>
+                        <div>Minimum Value (2), Maximum Value (3967)</div>
                 </td>
             </tr>
 
@@ -1580,6 +1565,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -1865,13 +1851,10 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 31</li>
-                        </ul>
                 </td>
                 <td>
                         <div>IPV4 address mask length. This parameter is required if &#x27;ipv4_addr&#x27; is included.</div>
+                        <div>Minimum Value (1), Maximum Value (31)</div>
                 </td>
             </tr>
             <tr>
@@ -2076,11 +2059,10 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>true</li>
+                                    <li><div style="color: blue"><b>true</b>&nbsp;&larr;</div></li>
                                     <li>false</li>
                                     <li>no</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">"yes"</div>
                 </td>
                 <td>
                         <div>Spanning-tree bpduguard</div>
@@ -2200,6 +2182,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -2258,14 +2241,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 4096</li>
-                        </ul>
-                        <b>Default:</b><br/><div style="color: blue">"Default value is the vPC port identifier"</div>
                 </td>
                 <td>
                         <div>Port channel identifier of first peer. If this object is not included, then the value defaults to the vPC identifier. This value cannot be changed once vPC is created</div>
+                        <div>Minimum Value (1), Maximum Value (4096)</div>
+                        <div>Default value if not specified is the vPC port identifier</div>
                 </td>
             </tr>
             <tr>
@@ -2317,6 +2297,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -2375,14 +2356,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>Min 1</li>
-                                    <li>Max 4096</li>
-                        </ul>
-                        <b>Default:</b><br/><div style="color: blue">"Default value is the vPC port identifier"</div>
                 </td>
                 <td>
                         <div>Port channel identifier of second peer. If this object is not included, then the value defaults to the vPC identifier. This value cannot be changed once vPC is created</div>
+                        <div>Minimum Value (1), Maximum Value (4096)</div>
+                        <div>Default value if not specified is the vPC port identifier</div>
                 </td>
             </tr>
             <tr>
@@ -2415,6 +2393,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                          / <span style="color: red">required</span>
                     </div>
                 </td>
