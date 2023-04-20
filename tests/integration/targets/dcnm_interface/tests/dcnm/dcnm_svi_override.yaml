@@ -25,7 +25,7 @@
 
     - name: Create SVI interfaces including optional parameters
       cisco.dcnm.dcnm_interface:
-        check_deploy: true
+        check_deploy: True
         fabric: "{{ ansible_svi_fabric }}"
         state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -84,7 +84,7 @@
 
     - name: Override SVI interface 
       cisco.dcnm.dcnm_interface: &svi_override
-        check_deploy: true
+        check_deploy: True
         fabric: "{{ ansible_svi_fabric }}"
         state: overridden                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:

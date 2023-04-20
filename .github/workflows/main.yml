@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.7]
+        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
     
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -51,12 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.7]
+        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
+        python: [3.8, 3.9]
+        exclude:
+          - ansible: 2.9.26
+            python: 3.9
     steps:
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -71,7 +75,7 @@ jobs:
       run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
 
     - name: Run sanity tests
-      run: ansible-test sanity --docker --python 3.8 -v --color --truncate 0
+      run: ansible-test sanity --docker --python ${{matrix.python}} -v --color --truncate 0
       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
 
 
@@ -82,12 +86,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.27, 2.10.17, 2.11.12, 2.12.7]
+        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
     steps:
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check

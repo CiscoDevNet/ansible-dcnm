@@ -1421,9 +1421,9 @@ class DcnmInventory:
         success = False
         no_of_tries = 3
 
-        # NDFC/DCNM return error when we config-save a fabric with single Pre-provisioned switch.
-        if not self.have_create and not self.want_create:
-            if len(self.want_create_poap) == 1 and not self.switch_snos:
+        # NDFC/DCNM return error when we config-save a fabric with just Pre-provisioned switches.
+        if not self.want_create:
+            if not self.switch_snos:
                 return
 
         for x in range(0, no_of_tries):

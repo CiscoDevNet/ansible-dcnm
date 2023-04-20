@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,13 +73,14 @@ options:
           this list object will contain elements each of which is a list of
           pair of switches
         type: list
+        elements: str
         required: true
       type:
         description:
         - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -122,8 +123,8 @@ options:
           ipv4_mask_len:
             description:
             - IPV4 address mask length. This object is applicable only if the 'mode' is 'l3'
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices: [Min 1, Max 31]
             default: 8
           route_tag:
             description:
@@ -134,6 +135,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -162,16 +164,16 @@ options:
             description:
             - Port channel identifier of first peer. If this object is not included, then the value defaults to the
               vPC identifier. This value cannot be changed once vPC is created
+            - Minimum Value (1), Maximum Value (4096)
+            - Default value if not specified is the vPC port identifier
             type: int
-            choices: [Min 1, Max 4096]
-            default: Default value is the vPC port identifier
           peer2_pcid:
             description:
             - Port channel identifier of second peer. If this object is not included, then the value defaults to the
               vPC identifier. This value cannot be changed once vPC is created
+            - Minimum Value (1), Maximum Value (4096)
+            - Default value if not specified is the vPC port identifier
             type: int
-            choices: [Min 1, Max 4096]
-            default: Default value is the vPC port identifier
           peer1_members:
             description:
             - Member interfaces that are part of this port channel on first peer
@@ -195,7 +197,7 @@ options:
             - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
-            default: true
+            default: 'true'
           port_type_fast:
             description:
             - Spanning-tree edge port behavior
@@ -238,11 +240,13 @@ options:
             description:
             - Commands to be included in the configuration under this interface of first peer
             type: list
+            elements: str
             default: []
           peer2_cmds:
             description:
             - Commands to be included in the configuration under this interface of second peer
             type: list
+            elements: str
             default: []
           peer1_description:
             description:
@@ -285,8 +289,8 @@ options:
           ipv4_mask_len:
             description:
             - IPV4 address mask length.
+            - Minimum Value (8), Maximum Value (31)
             type: int
-            choices : [Min 8, Max 31]
             default: 8
           ipv6_addr:
             description:
@@ -296,25 +300,26 @@ options:
           ipv6_mask_len:
             description:
             - IPV6 address mask length.
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
             default: 8
           mtu:
             description:
             - Interface MTU
+            - Minimum Value (567), Maximum Value (9216)
             type: int
-            choices: [Min 576, Max 9216]
             default: 9216
           vlan:
             description:
             - DOT1Q vlan id for this interface
+            - Minimum Value (2), Maximum Value (3967)
             type: int
-            choices: [Min 2, Max 3967]
             default: 0
           cmds:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -363,6 +368,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -392,7 +398,7 @@ options:
             - Spanning-tree bpduguard
             type: str
             choices: ['true', 'false', 'no']
-            default: true
+            default: 'true'
           port_type_fast:
             description:
             - Spanning-tree edge port behavior
@@ -440,8 +446,8 @@ options:
             description:
             - IPV4 address mask length. This object is applicable only if the 'mode' is 'routed' or
               'epl_routed'
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
             default: 8
           ipv6_addr:
             description:
@@ -451,8 +457,8 @@ options:
           ipv6_mask_len:
             description:
             - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
             default: 8
           route_tag:
             description:
@@ -464,6 +470,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -501,12 +508,13 @@ options:
           ipv4_mask_len:
             description:
             - IPV4 address mask length. This parameter is required if 'ipv4_addr' is included.
+            - Minimum Value (1), Maximum Value (31)
             type: int
-            choices : [Min 1, Max 31]
           cmds:
             description:
             - Commands to be included in the configuration under this interface.
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -614,6 +622,134 @@ options:
             - Flag to enable/disable overthrow of low priority active routers. This parameter is valid only if "enable_hsrp" is True.
             type: bool
             default: false
+      profile_st_fex:
+        description:
+        - Though the key shown here is 'profile_st_fex' the actual key to be used in playbook
+          is 'profile'. The key 'profile_st_fex' is used here to logically segregate the interface objects applicable for this profile
+        - Object profile which must be included for straigth-through FEX interface configurations.
+        suboptions:
+          mode:
+            description:
+            - Interface mode
+            choices: ['port_channel_st']
+            type: str
+            required: true
+          mtu:
+            description:
+            - Interface MTU.
+            type: str
+            choices: ['default', 'jumbo']
+            default: 'jumbo'
+          members:
+            description:
+            - Member interfaces that are part of this FEX
+            type: list
+            elements: str
+            required: true
+          cmds:
+            description:
+            - Commands to be included in the configuration under this interface
+            type: list
+            elements: str
+            default: []
+          description:
+            description:
+            - Description of the FEX interface
+            type: str
+            default: ""
+          po_description:
+            description:
+            - Description of the port-channel which is part of the FEX interface
+            type: str
+            default: ""
+          admin_state:
+            description:
+            - Administrative state of the interface
+            type: bool
+            default: true
+          enable_netflow:
+            description:
+            - Flag to enable netflow.
+            type: bool
+            default: false
+          netflow_monitor:
+            description:
+            - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
+            type: str
+            default: ""
+      profile_aa_fex:
+        description:
+        - Though the key shown here is 'profile_aa_fex' the actual key to be used in playbook
+          is 'profile'. The key 'profile_aa_fex' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for active-active FEX inetrface configurations.
+        suboptions:
+          description:
+            description:
+            - Description of the FEX interface
+            type: str
+            default: ""
+          mode:
+            description:
+            -  Interface mode
+            choices: ['port_channel_aa']
+            type: str
+            required: true
+          peer1_members:
+            description:
+            - Member interfaces that are part of this port channel on first peer
+            type: list
+            elements: str
+            required: true
+          peer2_members:
+            description:
+            - Member interfaces that are part of this port channel on second peer
+            type: list
+            elements: str
+            required: true
+          mtu:
+            description:
+            - Interface MTU
+            type: str
+            choices: ['default', 'jumbo']
+            default: 'jumbo'
+          peer1_cmds:
+            description:
+            - Commands to be included in the configuration under this interface of first peer
+            type: list
+            elements: str
+            default: []
+          peer2_cmds:
+            description:
+            - Commands to be included in the configuration under this interface of second peer
+            type: list
+            elements: str
+            default: []
+          peer1_po_description:
+            description:
+            - Description of the port-channel interface of first peer
+            type: str
+            default: ""
+          peer2_po_description:
+            description:
+            - Description of the port-channel interface of second peer
+            type: str
+            default: ""
+          admin_state:
+            description:
+            - Administrative state of the interface
+            type: bool
+            default: true
+          enable_netflow:
+            description:
+            - Flag to enable netflow.
+            type: bool
+            default: false
+          netflow_monitor:
+            description:
+            - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
+            type: str
+            default: ""
 
 """
 
@@ -1104,7 +1240,7 @@ EXAMPLES = """
 # SVI INTERFACES
 
 - name: Create SVI interfaces including optional parameters
-  cisco.dcnm.dcnm_interface: &svi_merge2
+  cisco.dcnm.dcnm_interface:
     check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
@@ -1144,7 +1280,7 @@ EXAMPLES = """
           description: Switched vlan interface 1001 # optional, Interface description, default is ""
 
 - name: Replace SVI interface
-  cisco.dcnm.dcnm_interface: &svi_replace
+  cisco.dcnm.dcnm_interface:
     check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: replaced                                       # only choose form [merged, replaced, deleted, overridden, query]
@@ -1200,7 +1336,7 @@ EXAMPLES = """
           - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
 
 - name: Override SVI interface
-  cisco.dcnm.dcnm_interface: &svi_override
+  cisco.dcnm.dcnm_interface:
     check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: overridden                                     # only choose form [merged, replaced, deleted, overridden, query]
@@ -1214,6 +1350,184 @@ EXAMPLES = """
           admin_state: true                               # Flag to enable/disable Vlan interaface
           mode: vlan                                      # choose from [vlan, vlan_admin_state], default is "vlan"
 
+# AA FEX INTERFACES
+
+- name: Create AA FEX interfaces including optional parameters
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_svi_fabric }}"
+    state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vpc151                                # should be of the form vpc<id>
+        type: aa_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          description: "AA FEX interface 151"       # optional, description of FEX interface, default is ""
+          peer1_members:                            # optional, member interfaces, default is []
+            - e1/10
+          peer2_members:                            # optional, member interfaces, default is []
+            - e1/10
+          mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+          peer1_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+          peer2_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+          peer1_cmds:                               # optional, freeform config, default is []
+            - no shutdown
+          peer2_cmds:                               # optional, freeform config, default is []
+            - no shutdown
+          admin_state: true                         # Flag to enable/disable FEX interface.
+          enable_netflow: false                     # optional, flag to enable netflow, default is false
+          mode: port_channel_aa                     # choose from [port_channel_aa], default is "port_channel_aa"
+
+- name: Replace AA FEX interface
+  cisco.dcnm.dcnm_interface:
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: replaced                                 # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vpc150                                # should be of the form vpc<id>
+        type: aa_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          peer1_members:                            # optional, member interfaces, default is []
+            - e1/11
+          peer2_members:                            # optional, member interfaces, default is []
+            - e1/11
+          mtu: "default"                            # optional, MTU for the interface, default is "jumbo"
+          peer1_po_description: "PC 150 for AA FEX - REP" # optional, description of PC interface, default is ""
+          peer2_po_description: "PC 150 for AA FEX - REP" # optional, description of PC interface, default is ""
+          admin_state: false                        # Flag to enable/disable FEX interface.
+          enable_netflow: false                     # optional, flag to enable netflow, default is false
+          mode: port_channel_aa                     # choose from [port_channel_aa], default is "port_channel_aa"
+
+          peer1_cmds:                               # optional, freeform config, default is []
+            - ip arp inspection trust
+          peer2_cmds:                               # optional, freeform config, default is []
+            - ip arp inspection trust
+
+- name: Delete AA FEX interfaces
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_svi_fabric }}"
+    state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vpc151                      # should be of the form vpc<id>
+        switch:
+          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+
+- name: Overide AA FEX interface with a new one
+  cisco.dcnm.dcnm_interface:
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: overridden                               # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: vpc151                                # should be of the form vpc<id>
+        type: aa_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          description: "AA FEX interface 151"       # optional, description of FEX interface, default is ""
+          peer1_members:                            # optional, member interfaces, default is []
+            - e1/10
+          peer2_members:                            # optional, member interfaces, default is []
+            - e1/10
+          mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+          peer1_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+          peer2_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+          peer1_cmds:                               # optional, freeform config, default is []
+            - no shutdown
+          peer2_cmds:                               # optional, freeform config, default is []
+            - no shutdown
+          admin_state: true                         # Flag to enable/disable FEX interface.
+          enable_netflow: false                     # optional, flag to enable netflow, default is false
+          mode: port_channel_aa                     # choose from [port_channel_aa], default is "port_channel_aa"
+
+# STRAIGHT-THROUGH FEX INTERFACES
+
+- name: Create ST FEX interfaces including optional parameters
+  cisco.dcnm.dcnm_interface:
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: po151                                 # should be of the form po<po-id>
+        type: st_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          description: "ST FEX interface 151"       # optional, description of FEX interface, default is ""
+          members:                                  # optional, member interfaces, default is []
+            - e1/10
+          mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+          po_description: "PC 151 for ST FEX"       # optional, description of PC interface, default is ""
+          cmds:                                     # optional, freeform config, default is []
+            - no shutdown
+          admin_state: true                         # Flag to enable/disable FEX interface.
+          enable_netflow: false                     # optional, flag to enable netflow, default is false
+          mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
+
+- name: Replace ST FEX interface
+  cisco.dcnm.dcnm_interface:
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: replaced                                 # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: po160                                 # should be of the form po<po-id>
+        type: st_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+          - "{{ ansible_switch2 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          members:                                  # optional, member interfaces, default is []
+            - e1/11
+          mtu: "default"                            # optional, MTU for the interface, default is "jumbo"
+          po_description: "PC 160 for ST FEX - REP" # optional, description of PC interface, default is ""
+          cmds:                                     # optional, freeform config, default is []
+            - ip arp inspection trust
+          admin_state: false                        # Flag to enable/disable FEX interface.
+          enable_netflow: false                     # optional, flag to enable netflow, default is false
+          mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
+
+- name: Delete ST FEX interfaces
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_svi_fabric }}"
+    state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: po159                       # should be of the form po<po-id>
+        switch:
+          - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+          - "{{ ansible_switch2 }}"       # provide the switch where to deploy the config
+
+- name: Overide ST FEX interface with a new one
+  cisco.dcnm.dcnm_interface:
+    check_deploy: true
+    fabric: "{{ ansible_svi_fabric }}"
+    state: overridden                               # only choose form [merged, replaced, deleted, overridden, query]
+    config:
+      - name: po151                                 # should be of the form po<po-id>
+        type: st_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+        switch:
+          - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+        deploy: true                                # choose from [true, false]
+        profile:
+          description: "ST FEX interface 151"       # optional, description of FEX interface, default is ""
+          members:                                  # optional, member interfaces, default is []
+            - e1/10
+          mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+          po_description: "PC 151 for ST FEX"       # optional, description of PC interface, default is ""
+          cmds:                                     # optional, freeform config, default is []
+            - no shutdown
+          admin_state: true                         # Flag to enable/disable FEX interface.
+          enable_netflow: false                     # optional, flag to enable netflow, default is false
+          mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
 
 # QUERY
 
@@ -1269,7 +1583,7 @@ class DcnmIntf:
             "GLOBAL_IF": "/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/rest/globalInterface/deploy",
             "INTERFACE": "/rest/interface",
-            "IF_MARK_DELETE": "/rest/globalInterface",
+            "IF_MARK_DELETE": "/rest/interface/markdelete",
         },
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
@@ -1296,8 +1610,8 @@ class DcnmIntf:
         self.have_all_list = []
         self.diff_create = []
         self.diff_replace = []
-        self.diff_delete = [[], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
         self.log_verbosity = 0
@@ -1382,6 +1696,7 @@ class DcnmIntf:
             "PEER2_MEMBER_INTERFACES": "peer2_members",
             "PEER1_ALLOWED_VLANS": "peer1_allowed_vlans",
             "PEER2_ALLOWED_VLANS": "peer2_allowed_vlans",
+            "PO_DESC": "po_description",
             "PEER1_PO_DESC": "peer1_description",
             "PEER2_PO_DESC": "peer2_description",
             "PEER1_PO_CONF": "peer1_cmds",
@@ -1408,6 +1723,8 @@ class DcnmIntf:
                 "vpc_access": "int_vpc_access_host_11_1",
                 "svi_vlan": "int_vlan",
                 "svi_vlan_admin_state": "int_vlan_admin_state",
+                "st_fex_port_channel_st": "int_port_channel_fex_11_1",
+                "aa_fex_port_channel_aa": "int_port_channel_aa_fex_11_1",
             },
             12: {
                 "pc_monitor": "int_monitor_port_channel",
@@ -1425,6 +1742,8 @@ class DcnmIntf:
                 "vpc_access": "int_vpc_access_host",
                 "svi_vlan": "int_vlan",
                 "svi_vlan_admin_state": "int_vlan_admin_state",
+                "st_fex_port_channel_st": "int_port_channel_fex",
+                "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
             },
         }
 
@@ -1436,6 +1755,8 @@ class DcnmIntf:
             "lo": "INTERFACE_LOOPBACK",
             "eth": "INTERFACE_ETHERNET",
             "svi": "INTERFACE_VLAN",
+            "st_fex": "STRAIGHT_TROUGH_FEX",
+            "aa_fex": "AA_FEX",
         }
 
         # New Interfaces
@@ -1446,6 +1767,8 @@ class DcnmIntf:
             "INTERFACE_LOOPBACK": 3,
             "SUBINTERFACE": 4,
             "INTERFACE_VLAN": 5,
+            "STRAIGHT_TROUGH_FEX": 6,
+            "AA_FEX": 7,
         }
 
     def log_msg(self, msg):
@@ -1478,6 +1801,12 @@ class DcnmIntf:
         if "svi" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vlan" + str(port_id[0]), port_id[0])
+        if "st_fex" == if_type:
+            port_id = re.findall(r"\d+", name)
+            return ("Port-channel" + str(port_id[0]), port_id[0])
+        if "aa_fex" == if_type:
+            port_id = re.findall(r"\d+", name)
+            return ("vPC" + str(port_id[0]), port_id[0])
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
@@ -1516,7 +1845,7 @@ class DcnmIntf:
                             )
 
                         c[ck]["fabric"] = self.dcnm_intf_facts["fabric"]
-                        if cfg["type"] == "vpc":
+                        if cfg["type"] == "vpc" or cfg["type"] == "aa_fex":
                             if self.vpc_ip_sn.get(sw, None) is None:
                                 self.module.fail_json(
                                     msg="Switch '{0}' is not part of VPC pair, but given I/F '{1}' is of type VPC".format(
@@ -1593,7 +1922,7 @@ class DcnmIntf:
 
         pc_spec = dict(
             name=dict(required=True, type="str"),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
             type=dict(required=True, type="str"),
             deploy=dict(type="bool", default=True),
             profile=dict(required=True, type="dict"),
@@ -1607,7 +1936,7 @@ class DcnmIntf:
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
             allowed_vlans=dict(type="str", default="none"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1620,7 +1949,7 @@ class DcnmIntf:
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
             access_vlan=dict(type="str", default=""),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1634,7 +1963,7 @@ class DcnmIntf:
             ipv4_mask_len=dict(type="int", default=8),
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1742,7 +2071,7 @@ class DcnmIntf:
                 type="int", range_min=64, range_max=127, default=64
             ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1765,7 +2094,7 @@ class DcnmIntf:
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
             route_tag=dict(type="str", default=""),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1776,7 +2105,7 @@ class DcnmIntf:
 
         eth_spec = dict(
             name=dict(required=True, type="str"),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
             type=dict(required=True, type="str"),
             deploy=dict(type="str", default=True),
             profile=dict(required=True, type="dict"),
@@ -1791,7 +2120,7 @@ class DcnmIntf:
             ),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1805,7 +2134,7 @@ class DcnmIntf:
             ),
             speed=dict(type="str", default="Auto"),
             access_vlan=dict(type="str", default=""),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1817,7 +2146,7 @@ class DcnmIntf:
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
             speed=dict(type="str", default="Auto"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1833,7 +2162,7 @@ class DcnmIntf:
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=1500, range_max=9216),
             speed=dict(type="str", default="Auto"),
-            cmds=dict(type="list"),
+            cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
@@ -1861,7 +2190,7 @@ class DcnmIntf:
 
         svi_spec = dict(
             name=dict(required=True, type="str"),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
             type=dict(required=True, type="str"),
             deploy=dict(type="str", default=True),
             profile=dict(required=True, type="dict"),
@@ -1872,7 +2201,7 @@ class DcnmIntf:
             ipv4_addr=dict(type="ipv4", default=""),
             int_vrf=dict(type="str", default="default"),
             mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
-            cmds=dict(type="list", default=""),
+            cmds=dict(type="list", default="", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(required=True, type="bool", default=True),
             route_tag=dict(type=str, default=""),
@@ -1935,11 +2264,66 @@ class DcnmIntf:
 
         self.dcnm_intf_validate_interface_input(cfg, svi_spec, svi_prof_spec)
 
+    def dcnm_intf_validate_aa_fex_interface_input(self, cfg):
+
+        fex_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        fex_prof_spec = dict(
+            mode=dict(required=True, type="str"),
+            description=dict(type="str", default=""),
+            peer1_members=dict(type="list", default=[], elements="str"),
+            peer2_members=dict(type="list", default=[], elements="str"),
+            mtu=dict(type="str", default="jumbo"),
+            peer1_cmds=dict(type="list", default=[], elements="str"),
+            peer2_cmds=dict(type="list", default=[], elements="str"),
+            peer1_description=dict(type="str", default=""),
+            peer2_description=dict(type="str", default=""),
+            admin_state=dict(required=True, type="bool", default=True),
+            enable_netflow=dict(type="bool", default=False),
+        )
+
+        if cfg[0]["profile"].get("enable_netflow", False) is True:
+            fex_prof_spec["netflow_monitor"] = dict(required=True, type="str")
+
+        self.dcnm_intf_validate_interface_input(cfg, fex_spec, fex_prof_spec)
+
+    def dcnm_intf_validate_st_fex_interface_input(self, cfg):
+
+        fex_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        fex_prof_spec = dict(
+            mode=dict(required=True, type="str"),
+            description=dict(type="str", default=""),
+            members=dict(type="list", default=[], elements="str"),
+            mtu=dict(type="str", default="jumbo"),
+            cmds=dict(type="list", default=[], elements="str"),
+            po_description=dict(type="str", default=""),
+            admin_state=dict(required=True, type="bool", default=True),
+            enable_netflow=dict(type="bool", default=False),
+        )
+
+        if cfg[0]["profile"].get("enable_netflow", False) is True:
+            fex_prof_spec["netflow_monitor"] = dict(required=True, type="str")
+
+        self.dcnm_intf_validate_interface_input(cfg, fex_spec, fex_prof_spec)
+
     def dcnm_intf_validate_delete_state_input(self, cfg):
 
         del_spec = dict(
             name=dict(required=False, type="str"),
-            switch=dict(required=False, type="list"),
+            switch=dict(required=False, type="list", elements="str"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, del_spec, None)
@@ -1948,7 +2332,7 @@ class DcnmIntf:
 
         query_spec = dict(
             name=dict(type="str", default=""),
-            switch=dict(required=True, type="list"),
+            switch=dict(required=True, type="list", elements="str"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, query_spec, None)
@@ -1957,7 +2341,7 @@ class DcnmIntf:
 
         overridden_spec = dict(
             name=dict(required=False, type="str", default=""),
-            switch=dict(required=False, type="list"),
+            switch=dict(required=False, type="list", elements="str"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, overridden_spec, None)
@@ -2013,6 +2397,10 @@ class DcnmIntf:
                     self.dcnm_intf_validate_ethernet_interface_input(cfg)
                 if item["type"] == "svi":
                     self.dcnm_intf_validate_vlan_interface_input(cfg)
+                if item["type"] == "st_fex":
+                    self.dcnm_intf_validate_st_fex_interface_input(cfg)
+                if item["type"] == "aa_fex":
+                    self.dcnm_intf_validate_aa_fex_interface_input(cfg)
             cfg.remove(citem)
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
@@ -2439,9 +2827,119 @@ class DcnmIntf:
                 delem[profile]["admin_state"]
             ).lower()
 
-    def dcnm_intf_get_svi_payload(self, delem, intf, profile):
+    def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
         # Extract port id from the given name, which is of the form 'po300'
+
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
+        intf["interfaces"][0].update({"ifName": ifname})
+
+        if delem[profile]["members"] is None:
+            intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ",".join(
+                delem[profile]["members"]
+            )
+
+        intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
+        intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+        intf["interfaces"][0]["nvPairs"]["FEX_ID"] = port_id
+        intf["interfaces"][0]["nvPairs"]["DESC"] = delem["profile"][
+            "description"
+        ]
+        intf["interfaces"][0]["nvPairs"]["PO_DESC"] = delem["profile"][
+            "po_description"
+        ]
+        if delem[profile]["cmds"] is None:
+            intf["interfaces"][0]["nvPairs"]["CONF"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(
+                delem[profile]["cmds"]
+            )
+        intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
+            delem[profile]["admin_state"]
+        ).lower()
+
+        intf["interfaces"][0]["nvPairs"]["ENABLE_NETFLOW"] = str(
+            delem[profile]["enable_netflow"]
+        ).lower()
+
+        if str(delem[profile]["enable_netflow"]).lower() == "true":
+            intf["interfaces"][0]["nvPairs"]["NETFLOW_MONITOR"] = str(
+                delem[profile]["netflow_monitor"]
+            )
+
+    def dcnm_intf_get_aa_fex_payload(self, delem, intf, profile):
+
+        # Extract port id from the given name, which is of the form 'vPC300'
+
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
+        intf["interfaces"][0].update({"ifName": ifname})
+
+        if delem[profile]["peer1_members"] is None:
+            intf["interfaces"][0]["nvPairs"]["PEER1_MEMBER_INTERFACES"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"][
+                "PEER1_MEMBER_INTERFACES"
+            ] = ",".join(delem[profile]["peer1_members"])
+
+        if delem[profile]["peer2_members"] is None:
+            intf["interfaces"][0]["nvPairs"]["PEER2_MEMBER_INTERFACES"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"][
+                "PEER2_MEMBER_INTERFACES"
+            ] = ",".join(delem[profile]["peer2_members"])
+
+        intf["interfaces"][0]["nvPairs"]["MTU"] = str(delem[profile]["mtu"])
+        intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = port_id
+        intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = port_id
+        intf["interfaces"][0]["nvPairs"]["FEX_ID"] = port_id
+        intf["interfaces"][0]["nvPairs"]["DESC"] = delem["profile"][
+            "description"
+        ]
+        intf["interfaces"][0]["nvPairs"]["PEER1_PO_DESC"] = delem["profile"][
+            "peer1_description"
+        ]
+        intf["interfaces"][0]["nvPairs"]["PEER2_PO_DESC"] = delem["profile"][
+            "peer2_description"
+        ]
+
+        if delem[profile]["peer1_cmds"] is None:
+            intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = "\n".join(
+                delem[profile]["peer1_cmds"]
+            )
+
+        if delem[profile]["peer2_cmds"] is None:
+            intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = "\n".join(
+                delem[profile]["peer2_cmds"]
+            )
+
+        intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
+            delem[profile]["admin_state"]
+        ).lower()
+
+        intf["interfaces"][0]["nvPairs"]["ENABLE_NETFLOW"] = str(
+            delem[profile]["enable_netflow"]
+        ).lower()
+
+        if str(delem[profile]["enable_netflow"]).lower() == "true":
+            intf["interfaces"][0]["nvPairs"]["NETFLOW_MONITOR"] = str(
+                delem[profile]["netflow_monitor"]
+            )
+
+        intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+    def dcnm_intf_get_svi_payload(self, delem, intf, profile):
+
+        # Extract port id from the given name, which is of the form 'vlan300'
 
         ifname, port_id = self.dcnm_intf_get_if_name(
             delem["name"], delem["type"]
@@ -2578,9 +3076,7 @@ class DcnmIntf:
         # Each type of interface and mode will have a different set of params.
         # First fill in the params common to all interface types and modes
 
-        # intf.update ({"interfaceType"  : self.int_types[delem['type']]})
-
-        if "vpc" == delem["type"]:
+        if "vpc" == delem["type"] or "aa_fex" == delem["type"]:
             intf["interfaces"][0].update(
                 {"serialNumber": str(self.vpc_ip_sn[sw])}
             )
@@ -2626,6 +3122,12 @@ class DcnmIntf:
         if "svi" == delem["type"]:
             self.dcnm_intf_get_svi_payload(delem, intf, "profile")
 
+        if "st_fex" == delem["type"]:
+            self.dcnm_intf_get_st_fex_payload(delem, intf, "profile")
+
+        if "aa_fex" == delem["type"]:
+            self.dcnm_intf_get_aa_fex_payload(delem, intf, "profile")
+
         return intf
 
     def dcnm_intf_merge_intf_info(self, intf_info, if_head):
@@ -2660,10 +3162,10 @@ class DcnmIntf:
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
-        # For VPC interfaces the serialNumber will be a combibed one. But GET on interface cannot
+        # For VPC and AA_FEX interfaces the serialNumber will be a combined one. But GET on interface cannot
         # pass this combined serial number. We will have to pass individual ones
 
-        if ifType == "INTERFACE_VPC":
+        if ifType == "INTERFACE_VPC" or ifType == "AA_FEX":
             sno = serialNumber.split("~")[0]
         else:
             sno = serialNumber
@@ -2890,7 +3392,6 @@ class DcnmIntf:
             intf_changed = False
 
             want.pop("deploy")
-
             match_have = [
                 d
                 for d in self.have
@@ -3082,8 +3583,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_replaced(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -3099,7 +3600,7 @@ class DcnmIntf:
     def dcnm_intf_get_diff_merge(self):
 
         self.diff_create = []
-        self.diff_delete_deploy = [[], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -3234,8 +3735,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_overridden(self, cfg):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -3328,6 +3829,8 @@ class DcnmIntf:
                 or (have["ifType"] == "SUBINTERFACE")
                 or (have["ifType"] == "INTERFACE_VPC")
                 or (have["ifType"] == "INTERFACE_VLAN")
+                or (have["ifType"] == "STRAIGHT_TROUGH_FEX")
+                or (have["ifType"] == "AA_FEX")
                 or (
                     (have["ifType"] == "INTERFACE_ETHERNET")
                     and (
@@ -3384,7 +3887,7 @@ class DcnmIntf:
                             self.int_index[have["ifType"]]
                         ].append(delem)
 
-                        # For INTERFACE_VLAN the "mode" argment is not set in have_all.
+                        # For INTERFACE_VLAN the "mode" argument is not set in have_all.
                         # if have["mode"] is not None or have["ifType"] == "INTERFACE_VLAN":
                         self.diff_delete_deploy[
                             self.int_index[have["ifType"]]
@@ -3431,8 +3934,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_deleted(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -3577,11 +4080,8 @@ class DcnmIntf:
                             )
 
                             if intf_payload != []:
-                                delem["interfaceDbId"] = 0
-                                delem["interfaceType"] = if_type
                                 delem["ifName"] = if_name
                                 delem["serialNumber"] = intf["serialNumber"]
-                                delem["fabricName"] = self.fabric
 
                                 self.diff_delete[
                                     self.int_index[if_type]
@@ -3798,6 +4298,7 @@ class DcnmIntf:
                         resp = dcnm_send(
                             self.module, "POST", path, json_payload
                         )
+
                     time.sleep(5)
                     self.have_all = []
                     self.dcnm_intf_get_have_all_with_sno(sno)
@@ -3841,28 +4342,19 @@ class DcnmIntf:
             if delem == []:
                 continue
 
-            if self.dcnm_version < 12:
-                json_payload = json.dumps(delem)
-            else:
-                send_payload = copy.deepcopy(delem)
-                [
-                    [
-                        item.pop("interfaceType"),
-                        item.pop("fabricName"),
-                        item.pop("interfaceDbId"),
-                    ]
-                    for item in send_payload
-                ]
-                json_payload = json.dumps(send_payload)
+            json_payload = json.dumps(delem)
 
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
 
             if resp.get("RETURN_CODE") != 200:
-                deploy_failed = False
+                if resp["DATA"]:
+                    delete_failed = False
+                else:
+                    delete_failed = True
                 for item in resp["DATA"]:
                     if "No Commands to execute" not in item["message"]:
-                        deploy_failed = True
-                if deploy_failed is False:
+                        delete_failed = True
+                if delete_failed is False:
                     resp["RETURN_CODE"] = 200
                     resp["MESSAGE"] = "OK"
 
@@ -3902,35 +4394,19 @@ class DcnmIntf:
         index = -1
         for delem in self.diff_delete_deploy:
 
-            index = index + 1
+            # index = index + 1
             if delem == []:
                 continue
-
-            if index != self.int_index["INTERFACE_VPC"]:
-                # Deploy just requires ifName and serialNumber
-                if self.dcnm_version < 12:
-                    [
-                        [
-                            item.pop("interfaceType"),
-                            item.pop("fabricName"),
-                            item.pop("interfaceDbId"),
-                        ]
-                        for item in delem
-                    ]
-                else:
-                    [[item.pop("interfaceDbId")] for item in delem]
-            else:
-                [
-                    [item.pop("interfaceType"), item.pop("interfaceDbId")]
-                    for item in delem
-                ]
 
             json_payload = json.dumps(delem)
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
             if resp.get("RETURN_CODE") != 200:
-                deploy_failed = False
+                if resp["DATA"]:
+                    deploy_failed = False
+                else:
+                    deploy_failed = True
                 for item in resp["DATA"]:
                     if "No Commands to execute" not in item["message"]:
                         deploy_failed = True
@@ -4142,6 +4618,8 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["SUBINTERFACE"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_LOOPBACK"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
+        or dcnm_intf.diff_delete[dcnm_intf.int_index["STRAIGHT_TROUGH_FEX"]]
+        or dcnm_intf.diff_delete[dcnm_intf.int_index["AA_FEX"]]
     ):
         dcnm_intf.result["changed"] = True
     else:

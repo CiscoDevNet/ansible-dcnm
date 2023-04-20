@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2022 Cisco and/or its affiliates.
+# Copyright (c) 2022-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ options:
       src_device:
         description:
           - IP address or DNS name of the source switch which is part of the link being configured.
-        type: list
+        type: str
         required: true
       dst_device:
         description:
@@ -216,11 +216,12 @@ options:
               - BGP Key Encryption Type.
               - This parameter is required only if template is 'ext_multisite_underlay_setup' or 'ext_evpn_multisite_overlay_setup'.
               - This parameter is required only if inherit_from_msd is false.
+              - Choices are 3 (3DES) or 7 (Cisco)
             type: int
             required: true
             choices:
-              - 3 (3DES)
-              - 7 (Cisco)
+              - 3
+              - 7
           route_tag:
             description:
               - Routing tag associated with interface IP.
@@ -283,6 +284,7 @@ options:
               - Commands to be included in the configuration under the source interface.
               - This parameter is not required if template is  'ext_evpn_multisite_overlay_setup'.
             type: list
+            elements: str
             required: false
             default: []
           peer2_cmds:
@@ -290,6 +292,7 @@ options:
               - Commands to be included in the configuration under the destination interface.
               - This parameter is not required if template is 'ext_evpn_multisite_overlay_setup'.
             type: list
+            elements: str
             required: false
             default: []
           enable_macsec:

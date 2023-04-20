@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ __metaclass__ = type
 
 DOCUMENTATION = """
 ---
-author: Mike Wiebe (mikewiebe)
-httpapi: dcnm
+author: Mike Wiebe (@mikewiebe)
+name: dcnm
 short_description: Ansible DCNM HTTPAPI Plugin.
 description:
   - This DCNM plugin provides the HTTPAPI transport methods needed to initiate

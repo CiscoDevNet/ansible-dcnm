@@ -131,7 +131,7 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">500</div>
+                        <b>Default:</b><br/><div style="color: blue">"500"</div>
                 </td>
                 <td>
                         <div>Priority associated with the policy</div>
@@ -283,7 +283,7 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">500</div>
+                        <b>Default:</b><br/><div style="color: blue">"500"</div>
                 </td>
                 <td>
                         <div>Priority associated with the policy</div>
@@ -373,7 +373,7 @@ Examples
     #
     # Deleted:
     #   Policies defined in the playbook will be deleted in the target fabric.
-    #   
+    #
     #   WARNING: Deleting a policy will deploy all pending configurations on the impacted switches.
     #
     # Query:

@@ -400,6 +400,8 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_eth_intf = self.payloads_data.get("eth_payload")
             playbook_sub_intf = self.payloads_data.get("subint_payload")
             playbook_vpc_intf = self.payloads_data.get("vpc_payload")
+            playbook_svi_intf = self.payloads_data.get("svi_payload")
+            playbook_st_fex_intf = self.payloads_data.get("st_fex_payload")
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -413,6 +415,8 @@ class TestDcnmIntfModule(TestDcnmModule):
                 playbook_eth_intf,
                 playbook_sub_intf,
                 playbook_vpc_intf,
+                playbook_svi_intf,
+                playbook_st_fex_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -448,16 +452,6 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
             ]
 
         if "_svi_merged_idempotent" in self._testMethodName:
@@ -471,16 +465,6 @@ class TestDcnmIntfModule(TestDcnmModule):
                 playbook_svi_intf1,
                 playbook_have_all_data,
                 playbook_have_all_data,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -499,12 +483,6 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
             ]
 
         if "_svi_deleted_non_existing" in self._testMethodName:
@@ -516,17 +494,24 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [
                 self.playbook_mock_vpc_resp,
                 playbook_svi_intf1,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
+            ]
+        if "_svi_replaced_existing" in self._testMethodName:
+            playbook_svi_intf1 = self.payloads_data.get("svi_merged_payloads")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_svi_intf1,
+                playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
-        if "_svi_replaced_existing" in self._testMethodName:
+
+        if "_svi_overridden_existing" in self._testMethodName:
+
             playbook_svi_intf1 = self.payloads_data.get("svi_merged_payloads")
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
@@ -549,18 +534,337 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
             ]
 
-        if "_svi_overridden_existing" in self._testMethodName:
+    # -------------------------- AA-FEX-FIXTURES --------------------------
 
-            playbook_svi_intf1 = self.payloads_data.get("svi_merged_payloads")
+    def load_aa_fex_fixtures(self):
+
+        if "_aa_fex_merged_new" in self._testMethodName:
+            # No I/F exists case
+            playbook_aa_fex_intf1 = []
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
 
             self.run_dcnm_send.side_effect = [
                 self.playbook_mock_vpc_resp,
-                playbook_svi_intf1,
+                playbook_aa_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_aa_fex_merged_idempotent" in self._testMethodName:
+            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_aa_fex_merged_existing" in self._testMethodName:
+            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_aa_fex_merged_multi" in self._testMethodName:
+            # No I/F exists case
+            playbook_aa_fex_intf1 = []
+            playbook_aa_fex_intf2 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                playbook_aa_fex_intf2,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        # Use the same payloads that we use for creating new.
+        if "_aa_fex_deleted_existing" in self._testMethodName:
+            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_aa_fex_deleted_non_existing" in self._testMethodName:
+            playbook_aa_fex_intf1 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+            ]
+
+        if "_aa_fex_replaced_existing" in self._testMethodName:
+            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_aa_fex_overridden_existing" in self._testMethodName:
+
+            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_aa_fex_overridden_modify_existing" in self._testMethodName:
+
+            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_aa_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+    # -------------------------- ST-FEX-FIXTURES --------------------------
+
+    def load_st_fex_fixtures(self):
+
+        if "_st_fex_merged_new" in self._testMethodName:
+            # No I/F exists case
+            playbook_st_fex_intf1 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_st_fex_merged_idempotent" in self._testMethodName:
+            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_st_fex_merged_existing" in self._testMethodName:
+            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_st_fex_merged_multi" in self._testMethodName:
+            # No I/F exists case
+            playbook_st_fex_intf1 = []
+            playbook_st_fex_intf2 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                playbook_st_fex_intf2,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        # Use the same payloads that we use for creating new.
+        if "_st_fex_deleted_existing" in self._testMethodName:
+            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_st_fex_deleted_non_existing" in self._testMethodName:
+            playbook_st_fex_intf1 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+            ]
+        if "_st_fex_replaced_existing" in self._testMethodName:
+            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_st_fex_overridden_existing" in self._testMethodName:
+
+            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_st_fex_overridden_modify_existing" in self._testMethodName:
+
+            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.playbook_mock_vpc_resp,
+                playbook_st_fex_intf1,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1641,6 +1945,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.run_dcnm_fabric_details.side_effect = [self.mock_fab_inv]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, []]]
         self.run_dcnm_version_supported.side_effect = [11]
+
+        # Load AA_FEX fixtures
+        self.load_aa_fex_fixtures()
+
+        # Load ST_FEX fixtures
+        self.load_st_fex_fixtures()
 
         # Load SVI fixtures
         self.load_svi_fixtures()
@@ -3432,6 +3742,718 @@ class TestDcnmIntfModule(TestDcnmModule):
                     (intf["ifName"].lower() in ovr_if_names), True
                 )
 
+    # -------------------------- AA-FEX --------------------------
+
+    def test_dcnm_intf_aa_fex_merged_new(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_merged_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["vPC150"]), True)
+
+    def test_dcnm_intf_aa_fex_merged_idempotent(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_merged_config")
+
+        for cfg in self.playbook_config:
+            cfg["deploy"] = "False"
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 0)
+
+    def test_dcnm_intf_aa_fex_merged_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_merge_existing_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["vPC150"]), True)
+
+    def test_dcnm_intf_aa_fex_merged_multi_switches(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_merge_multi_switches_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["vPC155"]), True)
+
+    def test_dcnm_intf_aa_fex_deleted_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "aa_fex_deleted_existing_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 1)
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"] in ["vPC150"]), True)
+
+    def test_dcnm_intf_aa_fex_deleted_non_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "aa_fex_deleted_non_existing_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+
+    def test_dcnm_intf_aa_fex_replaced_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_replaced_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+
+        changed_objs = [
+            "FEX_ID",
+            "MTU",
+            "DESC",
+            "PEER1_PO_DESC",
+            "PEER2_PO_DESC",
+            "ADMIN_STATE",
+            "SPEED",
+            "PEER1_MEMBER_INTERFACES",
+            "PEER2_MEMBER_INTERFACES",
+            "PEER1_PO_CONF",
+            "PEER2_PO_CONF",
+            "ENABLE_NETFLOW",
+            "INTF_NAME",
+            "NETFLOW_MONITOR",
+        ]
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                if_keys = list(intf["nvPairs"].keys())
+                self.assertEqual(
+                    (set(if_keys).issubset(set(changed_objs))), True
+                )
+        # Monitor port wil not be deployes
+        self.assertEqual(len(result["diff"][0]["deploy"]), 1)
+
+    def test_dcnm_intf_aa_fex_overridden_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_overridden_new_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 8)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+            "ethernet1/3.2",
+            "loopback200",
+            "vpc300",
+            "vlan2001",
+        ]
+
+        rep_if_names = [
+            "ethernet1/3.2",
+            "ethernet1/1",
+            "ethernet1/2",
+            "ethernet3/2",
+        ]
+
+        ovr_if_names = ["vpc159"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in rep_if_names), True
+                )
+
+        for d in result["diff"][0]["overridden"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in ovr_if_names), True
+                )
+
+    def test_dcnm_intf_aa_fex_overridden_modify_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_aa_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_aa_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("aa_fex_overridden_modify_existing_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 8)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+            "ethernet1/3.2",
+            "loopback200",
+            "vpc300",
+            "vlan2001",
+        ]
+
+        rep_if_names = [
+            "ethernet1/3.2",
+            "ethernet1/1",
+            "ethernet1/2",
+            "ethernet3/2",
+        ]
+
+        ovr_if_names = ["vpc150"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in rep_if_names), True
+                )
+
+        for d in result["diff"][0]["overridden"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in ovr_if_names), True
+                )
+
+    # -------------------------- ST-FEX --------------------------
+
+    def test_dcnm_intf_st_fex_merged_new(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_merged_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["Port-channel150"]), True)
+
+    def test_dcnm_intf_st_fex_merged_idempotent(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_merged_config")
+
+        for cfg in self.playbook_config:
+            cfg["deploy"] = "False"
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 0)
+
+    def test_dcnm_intf_st_fex_merged_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_merge_existing_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["Port-channel150"]), True)
+
+    def test_dcnm_intf_st_fex_merged_multi_switches(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_merge_multi_switches_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 2)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["Port-channel155"]), True)
+
+    def test_dcnm_intf_st_fex_deleted_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "st_fex_deleted_existing_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 1)
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"] in ["Port-channel150"]), True)
+
+    def test_dcnm_intf_st_fex_deleted_non_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "st_fex_deleted_non_existing_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+
+    def test_dcnm_intf_st_fex_replaced_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_replaced_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+
+        changed_objs = [
+            "FEX_ID",
+            "MTU",
+            "DESC",
+            "PO_DESC",
+            "PO_ID",
+            "ADMIN_STATE",
+            "SPEED",
+            "MEMBER_INTERFACES",
+            "CONF",
+            "ENABLE_NETFLOW",
+            "INTF_NAME",
+            "NETFLOW_MONITOR",
+        ]
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                if_keys = list(intf["nvPairs"].keys())
+                self.assertEqual(
+                    (set(if_keys).issubset(set(changed_objs))), True
+                )
+        # Monitor port wil not be deployes
+        self.assertEqual(len(result["diff"][0]["deploy"]), 1)
+
+    def test_dcnm_intf_st_fex_overridden_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_overridden_new_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 8)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+            "ethernet1/3.2",
+            "loopback200",
+            "vpc300",
+            "vlan2001",
+        ]
+
+        rep_if_names = [
+            "ethernet1/3.2",
+            "ethernet1/1",
+            "ethernet1/2",
+            "ethernet3/2",
+        ]
+
+        ovr_if_names = ["port-channel159"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in rep_if_names), True
+                )
+
+        for d in result["diff"][0]["overridden"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in ovr_if_names), True
+                )
+
+    def test_dcnm_intf_st_fex_overridden_modify_existing(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_st_fex_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_st_fex_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("st_fex_overridden_modify_existing_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 8)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+            "ethernet1/3.2",
+            "loopback200",
+            "vpc300",
+            "vlan2001",
+        ]
+
+        rep_if_names = [
+            "ethernet1/3.2",
+            "ethernet1/1",
+            "ethernet1/2",
+            "ethernet3/2",
+        ]
+
+        ovr_if_names = ["port-channel150"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in rep_if_names), True
+                )
+
+        for d in result["diff"][0]["overridden"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (intf["ifName"].lower() in ovr_if_names), True
+                )
+
     # -------------------------- GENERAL --------------------------
 
     def test_dcnm_intf_gen_missing_ip_sn(self):
@@ -3672,4 +4694,4 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 0)
         self.assertEqual(len(result["diff"][0]["deploy"]), 0)
-        self.assertEqual(len(result["diff"][0]["query"]), 6)
+        self.assertEqual(len(result["diff"][0]["query"]), 8)
