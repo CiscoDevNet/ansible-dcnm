@@ -36,7 +36,7 @@ Status
 Authors
 ~~~~~~~
 
-- Mike Wiebe (mikewiebe)
+- Mike Wiebe (@mikewiebe)
 
 
 .. hint::

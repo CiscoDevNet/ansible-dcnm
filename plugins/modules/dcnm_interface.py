@@ -639,7 +639,7 @@ options:
             - Interface MTU.
             type: str
             choices: ['default', 'jumbo']
-            default: jumbo
+            default: 'jumbo'
           members:
             description:
             - Member interfaces that are part of this FEX
@@ -650,6 +650,7 @@ options:
             description:
             - Commands to be included in the configuration under this interface
             type: list
+            elements: str
             default: []
           description:
             description:
@@ -711,16 +712,18 @@ options:
             - Interface MTU
             type: str
             choices: ['default', 'jumbo']
-            default: jumbo
+            default: 'jumbo'
           peer1_cmds:
             description:
             - Commands to be included in the configuration under this interface of first peer
             type: list
+            elements: str
             default: []
           peer2_cmds:
             description:
             - Commands to be included in the configuration under this interface of second peer
             type: list
+            elements: str
             default: []
           peer1_po_description:
             description:
@@ -2274,11 +2277,11 @@ class DcnmIntf:
         fex_prof_spec = dict(
             mode=dict(required=True, type="str"),
             description=dict(type="str", default=""),
-            peer1_members=dict(type="list", default=[]),
-            peer2_members=dict(type="list", default=[]),
+            peer1_members=dict(type="list", default=[], elements="str"),
+            peer2_members=dict(type="list", default=[], elements="str"),
             mtu=dict(type="str", default="jumbo"),
-            peer1_cmds=dict(type="list", default=[]),
-            peer2_cmds=dict(type="list", defaul=[]),
+            peer1_cmds=dict(type="list", default=[], elements="str"),
+            peer2_cmds=dict(type="list", default=[], elements="str"),
             peer1_description=dict(type="str", default=""),
             peer2_description=dict(type="str", default=""),
             admin_state=dict(required=True, type="bool", default=True),
@@ -2303,9 +2306,9 @@ class DcnmIntf:
         fex_prof_spec = dict(
             mode=dict(required=True, type="str"),
             description=dict(type="str", default=""),
-            members=dict(type="list", default=[]),
+            members=dict(type="list", default=[], elements="str"),
             mtu=dict(type="str", default="jumbo"),
-            cmds=dict(type="list", default=[]),
+            cmds=dict(type="list", default=[], elements="str"),
             po_description=dict(type="str", default=""),
             admin_state=dict(required=True, type="bool", default=True),
             enable_netflow=dict(type="bool", default=False),
