@@ -25,7 +25,7 @@
 
     - name: Create SVI interfaces w/o optional parameters
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+        check_deploy: True
         fabric: "{{ ansible_svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
@@ -98,12 +98,10 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan1000                    # should be of the form vlan<vlan-id>
-            type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
 
           - name: vlan1001                    # should be of the form vlan<vlan-id>
-            type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
       register: result
@@ -129,12 +127,10 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan1000                    # should be of the form vlan<vlan-id>
-            type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
 
           - name: vlan1001                    # should be of the form vlan<vlan-id>
-            type: svi                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
       register: result

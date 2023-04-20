@@ -111,6 +111,254 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_aa_fex</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Though the key shown here is &#x27;profile_aa_fex&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_aa_fex&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
+                        <div>Object profile which must be included for active-active FEX inetrface configurations.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>admin_state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Administrative state of the interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Description of the FEX interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_netflow</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable netflow.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>port_channel_aa</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Interface mode</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mtu</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>default</li>
+                                    <li><div style="color: blue"><b>jumbo</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Interface MTU</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>netflow_monitor</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Name of netflow monitor. This parameter is required if &quot;enable_netflow&quot; is True.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer1_cmds</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
+                </td>
+                <td>
+                        <div>Commands to be included in the configuration under this interface of first peer</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer1_members</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Member interfaces that are part of this port channel on first peer</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer1_po_description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Description of the port-channel interface of first peer</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer2_cmds</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
+                </td>
+                <td>
+                        <div>Commands to be included in the configuration under this interface of second peer</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer2_members</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Member interfaces that are part of this port channel on second peer</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer2_po_description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Description of the port-channel interface of second peer</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_eth</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -829,6 +1077,199 @@ Parameters
                 </td>
                 <td>
                         <div>Route tag associated with the interface IP. This object is applicable only if the &#x27;mode&#x27; is &#x27;l3&#x27;</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_st_fex</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Though the key shown here is &#x27;profile_st_fex&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_st_fex&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
+                        <div>Object profile which must be included for straigth-through FEX interface configurations.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>admin_state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Administrative state of the interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>cmds</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
+                </td>
+                <td>
+                        <div>Commands to be included in the configuration under this interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Description of the FEX interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_netflow</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable netflow.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>members</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Member interfaces that are part of this FEX</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>port_channel_st</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Interface mode</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mtu</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>default</li>
+                                    <li><div style="color: blue"><b>jumbo</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Interface MTU.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>netflow_monitor</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Name of netflow monitor. This parameter is required if &quot;enable_netflow&quot; is True.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>po_description</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Description of the port-channel which is part of the FEX interface</div>
                 </td>
             </tr>
 
@@ -2002,6 +2443,8 @@ Parameters
                                     <li>lo</li>
                                     <li>eth</li>
                                     <li>svi</li>
+                                    <li>st-fex</li>
+                                    <li>aa-fex</li>
                         </ul>
                 </td>
                 <td>
@@ -2543,7 +2986,7 @@ Examples
     # SVI INTERFACES
 
     - name: Create SVI interfaces including optional parameters
-      cisco.dcnm.dcnm_interface: &svi_merge2
+      cisco.dcnm.dcnm_interface:
         check_deploy: true
         fabric: "{{ ansible_svi_fabric }}"
         state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
@@ -2583,7 +3026,7 @@ Examples
               description: Switched vlan interface 1001 # optional, Interface description, default is ""
 
     - name: Replace SVI interface
-      cisco.dcnm.dcnm_interface: &svi_replace
+      cisco.dcnm.dcnm_interface:
         check_deploy: true
         fabric: "{{ ansible_svi_fabric }}"
         state: replaced                                       # only choose form [merged, replaced, deleted, overridden, query]
@@ -2639,7 +3082,7 @@ Examples
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
 
     - name: Override SVI interface
-      cisco.dcnm.dcnm_interface: &svi_override
+      cisco.dcnm.dcnm_interface:
         check_deploy: true
         fabric: "{{ ansible_svi_fabric }}"
         state: overridden                                     # only choose form [merged, replaced, deleted, overridden, query]
@@ -2653,6 +3096,184 @@ Examples
               admin_state: true                               # Flag to enable/disable Vlan interaface
               mode: vlan                                      # choose from [vlan, vlan_admin_state], default is "vlan"
 
+    # AA FEX INTERFACES
+
+    - name: Create AA FEX interfaces including optional parameters
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_svi_fabric }}"
+        state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc151                                # should be of the form vpc<id>
+            type: aa_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              description: "AA FEX interface 151"       # optional, description of FEX interface, default is ""
+              peer1_members:                            # optional, member interfaces, default is []
+                - e1/10
+              peer2_members:                            # optional, member interfaces, default is []
+                - e1/10
+              mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+              peer1_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+              peer2_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+              peer1_cmds:                               # optional, freeform config, default is []
+                - no shutdown
+              peer2_cmds:                               # optional, freeform config, default is []
+                - no shutdown
+              admin_state: true                         # Flag to enable/disable FEX interface.
+              enable_netflow: false                     # optional, flag to enable netflow, default is false
+              mode: port_channel_aa                     # choose from [port_channel_aa], default is "port_channel_aa"
+
+    - name: Replace AA FEX interface
+      cisco.dcnm.dcnm_interface:
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: replaced                                 # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc150                                # should be of the form vpc<id>
+            type: aa_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              peer1_members:                            # optional, member interfaces, default is []
+                - e1/11
+              peer2_members:                            # optional, member interfaces, default is []
+                - e1/11
+              mtu: "default"                            # optional, MTU for the interface, default is "jumbo"
+              peer1_po_description: "PC 150 for AA FEX - REP" # optional, description of PC interface, default is ""
+              peer2_po_description: "PC 150 for AA FEX - REP" # optional, description of PC interface, default is ""
+              admin_state: false                        # Flag to enable/disable FEX interface.
+              enable_netflow: false                     # optional, flag to enable netflow, default is false
+              mode: port_channel_aa                     # choose from [port_channel_aa], default is "port_channel_aa"
+
+              peer1_cmds:                               # optional, freeform config, default is []
+                - ip arp inspection trust
+              peer2_cmds:                               # optional, freeform config, default is []
+                - ip arp inspection trust
+
+    - name: Delete AA FEX interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_svi_fabric }}"
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc151                      # should be of the form vpc<id>
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+
+
+    - name: Overide AA FEX interface with a new one
+      cisco.dcnm.dcnm_interface:
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: overridden                               # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: vpc151                                # should be of the form vpc<id>
+            type: aa_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              description: "AA FEX interface 151"       # optional, description of FEX interface, default is ""
+              peer1_members:                            # optional, member interfaces, default is []
+                - e1/10
+              peer2_members:                            # optional, member interfaces, default is []
+                - e1/10
+              mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+              peer1_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+              peer2_po_description: "PC 151 for AA FEX" # optional, description of PC interface, default is ""
+              peer1_cmds:                               # optional, freeform config, default is []
+                - no shutdown
+              peer2_cmds:                               # optional, freeform config, default is []
+                - no shutdown
+              admin_state: true                         # Flag to enable/disable FEX interface.
+              enable_netflow: false                     # optional, flag to enable netflow, default is false
+              mode: port_channel_aa                     # choose from [port_channel_aa], default is "port_channel_aa"
+
+    # STRAIGHT-THROUGH FEX INTERFACES
+
+    - name: Create ST FEX interfaces including optional parameters
+      cisco.dcnm.dcnm_interface:
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po151                                 # should be of the form po<po-id>
+            type: st_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              description: "ST FEX interface 151"       # optional, description of FEX interface, default is ""
+              members:                                  # optional, member interfaces, default is []
+                - e1/10
+              mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+              po_description: "PC 151 for ST FEX"       # optional, description of PC interface, default is ""
+              cmds:                                     # optional, freeform config, default is []
+                - no shutdown
+              admin_state: true                         # Flag to enable/disable FEX interface.
+              enable_netflow: false                     # optional, flag to enable netflow, default is false
+              mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
+
+    - name: Replace ST FEX interface
+      cisco.dcnm.dcnm_interface:
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: replaced                                 # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po160                                 # should be of the form po<po-id>
+            type: st_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+              - "{{ ansible_switch2 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              members:                                  # optional, member interfaces, default is []
+                - e1/11
+              mtu: "default"                            # optional, MTU for the interface, default is "jumbo"
+              po_description: "PC 160 for ST FEX - REP" # optional, description of PC interface, default is ""
+              cmds:                                     # optional, freeform config, default is []
+                - ip arp inspection trust
+              admin_state: false                        # Flag to enable/disable FEX interface.
+              enable_netflow: false                     # optional, flag to enable netflow, default is false
+              mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
+
+    - name: Delete ST FEX interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_svi_fabric }}"
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po159                       # should be of the form po<po-id>
+            switch:
+              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
+              - "{{ ansible_switch2 }}"       # provide the switch where to deploy the config
+
+    - name: Overide ST FEX interface with a new one
+      cisco.dcnm.dcnm_interface:
+        check_deploy: true
+        fabric: "{{ ansible_svi_fabric }}"
+        state: overridden                               # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po151                                 # should be of the form po<po-id>
+            type: st_fex                                # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+            switch:
+              - "{{ ansible_switch1 }}"                 # provide the switch information where the config is to be deployed
+            deploy: true                                # choose from [true, false]
+            profile:
+              description: "ST FEX interface 151"       # optional, description of FEX interface, default is ""
+              members:                                  # optional, member interfaces, default is []
+                - e1/10
+              mtu: "jumbo"                              # optional, MTU for the interface, default is "jumbo"
+              po_description: "PC 151 for ST FEX"       # optional, description of PC interface, default is ""
+              cmds:                                     # optional, freeform config, default is []
+                - no shutdown
+              admin_state: true                         # Flag to enable/disable FEX interface.
+              enable_netflow: false                     # optional, flag to enable netflow, default is false
+              mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
 
     # QUERY
 
