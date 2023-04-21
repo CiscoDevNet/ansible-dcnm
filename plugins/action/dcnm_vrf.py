@@ -45,11 +45,11 @@ class ActionModule(ActionNetworkModule):
                                         not vl.get("interface")
                                     ):
                                         msg = (
-                                                "'interface' parameter is not specified in playbook under 'vrf_lite' config. "
-                                                "Idempotence check will happen based on first available best match. "
-                                                "While attaching, first available extension will be attached for VRF LITE. "
-                                                "For best results specify all possible vrf_lite parameters."
-                                              )
+                                            "'interface' parameter is not specified in playbook under 'vrf_lite' config. "
+                                            "Idempotence check will happen based on first available best match. "
+                                            "While attaching, first available extension will be attached for VRF LITE. "
+                                            "For best results specify all possible vrf_lite parameters."
+                                        )
                                         display.warning(msg)
                             except TypeError:
                                 msg = "Please specifiy atleast one VRF LITE parameter in attach"
