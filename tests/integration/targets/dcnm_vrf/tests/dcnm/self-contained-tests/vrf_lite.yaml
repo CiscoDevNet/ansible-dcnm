@@ -284,4 +284,3 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: deleted
-
