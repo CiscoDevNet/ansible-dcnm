@@ -124,7 +124,7 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
@@ -174,7 +174,7 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
@@ -208,6 +208,13 @@
     - 'result.response|length == 0'
     - 'result.diff|length == 0'
 
+- name: QUERY - sleep for 40 seconds for DCNM to completely update the state
+  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
+  # the profile so wait for some time before creating a new vrf, else the switch goes into
+  # OUT-OF-SYNC state
+  wait_for:
+    timeout: 40
+
 - name: DELETED - Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
@@ -224,7 +231,7 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional

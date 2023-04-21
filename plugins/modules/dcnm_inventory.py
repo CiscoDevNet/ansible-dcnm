@@ -1316,7 +1316,6 @@ class DcnmInventory:
 
     def lancred_all_switches(self):
 
-        want_list = []
         # Get Fabric Inventory Details
         method = "GET"
         path = "/fm/fmrest/lanConfig/getLanSwitchCredentials"
@@ -1356,7 +1355,6 @@ class DcnmInventory:
 
     def assign_role(self):
 
-        want_list = []
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
         if self.nd:
@@ -1484,7 +1482,6 @@ class DcnmInventory:
     def config_deploy(self):
 
         # config-deploy
-        sernos = []
         method = "POST"
         path = "/rest/control/fabrics/{0}".format(self.fabric)
         if self.nd:

@@ -278,7 +278,6 @@ EXAMPLES = """
 
 """
 
-import time
 import json
 import copy
 import ipaddress

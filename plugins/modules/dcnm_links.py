@@ -776,8 +776,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
 )
 
-from datetime import datetime
-
 
 # Resource Class object which includes all the required methods and data to configure and maintain Links
 class DcnmLinks:

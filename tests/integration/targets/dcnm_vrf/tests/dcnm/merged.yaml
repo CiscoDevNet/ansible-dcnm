@@ -156,7 +156,7 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
@@ -204,7 +204,14 @@
     fabric: "{{ test_fabric }}"
     state: deleted
 
-- name: MERGED - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the DCNM - Only Mandatory option - Rest are populated from DCNM
+- name: QUERY - sleep for 40 seconds for DCNM to completely remove lite profile
+  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
+  # the profile so wait for some time before creating a new vrf, else the switch goes into
+  # OUT-OF-SYNC state
+  wait_for:
+    timeout: 40
+
+- name: MERGED - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the DCNM - one optional - Rest are populated from DCNM
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -220,7 +227,7 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - peer_vrf: ansible-vrf-int1 # optional
       deploy: true
   register: result
 
@@ -294,7 +301,7 @@
     - 'result.changed == false'
     - '"The item exceeds the allowed range of max" in result.msg'
 
-- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without mandatory parameter
+- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without any parameter
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -310,7 +317,6 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - interface: "{{ ansible_int1 }}"
       deploy: true
   register: result
   ignore_errors: yes
@@ -318,7 +324,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"peer_vrf is mandatory under attach VRF LITE parameters" in result.msg'
+    - '"Please specifiy atleast one VRF LITE parameter in attach" in result.msg'
 
 - name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE to a non border switch
   cisco.dcnm.dcnm_vrf:
@@ -335,7 +341,7 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ ansible_int1 }}" # optional
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional

@@ -674,75 +674,77 @@ class DcnmVrf:
                             want_e = ast.literal_eval(want_ext_values["VRF_LITE_CONN"])
                             have_e = ast.literal_eval(have_ext_values["VRF_LITE_CONN"])
 
-                            if want_e["VRF_LITE_CONN"][0]["IF_NAME"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["IF_NAME"]
-                                    == have_e["VRF_LITE_CONN"][0]["IF_NAME"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                            for wlite in want_e["VRF_LITE_CONN"]:
+                                for hlite in have_e["VRF_LITE_CONN"]:
+                                    if wlite["IF_NAME"]:
+                                        if (
+                                            wlite["IF_NAME"]
+                                            == hlite["IF_NAME"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
-                            if want_e["VRF_LITE_CONN"][0]["DOT1Q_ID"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["DOT1Q_ID"]
-                                    == have_e["VRF_LITE_CONN"][0]["DOT1Q_ID"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                                    if wlite["DOT1Q_ID"]:
+                                        if (
+                                            wlite["DOT1Q_ID"]
+                                            == hlite["DOT1Q_ID"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
-                            if want_e["VRF_LITE_CONN"][0]["IP_MASK"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["IP_MASK"]
-                                    == have_e["VRF_LITE_CONN"][0]["IP_MASK"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                                    if wlite["IP_MASK"]:
+                                        if (
+                                            wlite["IP_MASK"]
+                                            == hlite["IP_MASK"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
-                            if want_e["VRF_LITE_CONN"][0]["NEIGHBOR_IP"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["NEIGHBOR_IP"]
-                                    == have_e["VRF_LITE_CONN"][0]["NEIGHBOR_IP"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                                    if wlite["NEIGHBOR_IP"]:
+                                        if (
+                                            wlite["NEIGHBOR_IP"]
+                                            == hlite["NEIGHBOR_IP"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
-                            if want_e["VRF_LITE_CONN"][0]["IPV6_MASK"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["IPV6_MASK"]
-                                    == have_e["VRF_LITE_CONN"][0]["IPV6_MASK"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                                    if wlite["IPV6_MASK"]:
+                                        if (
+                                            wlite["IPV6_MASK"]
+                                            == hlite["IPV6_MASK"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
-                            if want_e["VRF_LITE_CONN"][0]["IPV6_NEIGHBOR"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["IPV6_NEIGHBOR"]
-                                    == have_e["VRF_LITE_CONN"][0]["IPV6_NEIGHBOR"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                                    if wlite["IPV6_NEIGHBOR"]:
+                                        if (
+                                            wlite["IPV6_NEIGHBOR"]
+                                            == hlite["IPV6_NEIGHBOR"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
-                            if want_e["VRF_LITE_CONN"][0]["PEER_VRF_NAME"]:
-                                if (
-                                    want_e["VRF_LITE_CONN"][0]["PEER_VRF_NAME"]
-                                    == have_e["VRF_LITE_CONN"][0]["PEER_VRF_NAME"]
-                                ):
-                                    found = True
-                                else:
-                                    found = False
-                                    continue
+                                    if wlite["PEER_VRF_NAME"]:
+                                        if (
+                                            wlite["PEER_VRF_NAME"]
+                                            == hlite["PEER_VRF_NAME"]
+                                        ):
+                                            found = True
+                                        else:
+                                            found = False
+                                            continue
 
                         elif (
                             want["extensionValues"] != ""
