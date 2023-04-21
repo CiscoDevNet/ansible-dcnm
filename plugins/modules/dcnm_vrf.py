@@ -1370,7 +1370,7 @@ class DcnmVrf:
                                         extension_values["VRF_LITE_CONN"] = vrflite_con
 
                                 extension_values["VRF_LITE_CONN"] = json.dumps(
-                                   extension_values["VRF_LITE_CONN"] 
+                                    extension_values["VRF_LITE_CONN"]
                                 )
 
                                 ms_con = {}
