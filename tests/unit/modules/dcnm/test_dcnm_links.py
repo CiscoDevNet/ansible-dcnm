@@ -111,6 +111,134 @@ class TestDcnmLinksModule(TestDcnmModule):
         ):
             self.run_dcnm_fabric_info.side_effect = [self.mock_ipv6_fab_info]
 
+        # -------------------------- INTER-MISC --------------------------------------
+
+        if "test_dcnm_inter_links_src_fab_ro" in self._testMethodName:
+            self.run_dcnm_send.side_effect = [self.mock_monitor_true_resp, self.mock_monitor_true_resp]
+
+        if "test_dcnm_inter_links_dst_fab_ro_dst_sw_non_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_true_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_ro_src_sw_non_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_true_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_ro_src_dst_sw_non_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_true_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_ro_src_dst_sw_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_true_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_rw_dst_sw_non_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_false_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_rw_src_sw_non_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_false_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_rw_src_dst_sw_non_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_false_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              config_preview_resp]
+
+        if "test_dcnm_inter_links_dst_fab_rw_src_dst_sw_mgbl" in self._testMethodName:
+
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [self.mock_monitor_false_resp,
+                                              self.mock_monitor_false_resp,
+                                              [],
+                                              merge_links_resp,
+                                              deploy_resp,
+                                              deploy_resp,
+                                              config_preview_resp,
+                                              config_preview_resp,
+                                              config_preview_resp]
+
         # -------------------------- INTRA-FABRIC-UNNUMBERED --------------------------
 
         if (
@@ -125,6 +253,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 merge_links_resp,
@@ -145,6 +274,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 merge_links_resp,
@@ -163,6 +293,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             )
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 merge_links_resp,
@@ -187,6 +318,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 deploy_resp,
@@ -205,6 +337,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 merge_links_resp,
@@ -235,6 +368,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 merge_links_resp,
@@ -260,6 +394,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 merge_links_resp,
@@ -285,6 +420,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 merge_links_resp,
@@ -310,6 +446,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 [],
@@ -336,6 +473,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 [],
                 [],
@@ -351,7 +489,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             == self._testMethodName
         ):
 
-            self.run_dcnm_send.side_effect = [[], [], [], [], []]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                [], [], [], [], []]
 
         if (
             "test_dcnm_intra_links_unnumbered_template_change"
@@ -368,6 +508,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 merge_links_resp,
                 deploy_resp,
@@ -379,7 +520,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             query_links_resp = self.payloads_data.get(
                 "intra_query_links_unnum_fabric_response"
             )
-            self.run_dcnm_send.side_effect = [query_links_resp]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                query_links_resp]
 
         # -------------------------- INTRA-FABRIC-IPV6 ----------------------------------
 
@@ -395,6 +538,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -414,6 +558,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -445,6 +590,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -464,6 +610,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -494,6 +641,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -523,6 +671,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -553,6 +702,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -583,6 +733,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -614,6 +765,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -630,14 +782,18 @@ class TestDcnmLinksModule(TestDcnmModule):
             == self._testMethodName
         ):
 
-            self.run_dcnm_send.side_effect = [[], [], [], [], []]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                [], [], [], [], []]
 
         if "test_dcnm_intra_links_ipv6_query" in self._testMethodName:
 
             query_links_resp = self.payloads_data.get(
                 "intra_query_links_ipv6_fabric_response"
             )
-            self.run_dcnm_send.side_effect = [query_links_resp]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                query_links_resp]
 
         # -------------------------- INTRA-FABRIC-NUMBERED --------------------------
 
@@ -653,6 +809,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -672,6 +829,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -703,6 +861,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -722,6 +881,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -751,6 +911,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -780,6 +941,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -810,6 +972,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -840,6 +1003,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -871,6 +1035,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -887,7 +1052,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             == self._testMethodName
         ):
 
-            self.run_dcnm_send.side_effect = [[], [], [], [], []]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                [], [], [], [], []]
 
         if (
             "test_dcnm_intra_links_numbered_template_change"
@@ -904,6 +1071,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 merge_links_resp,
                 deploy_resp,
@@ -915,7 +1083,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             query_links_resp = self.payloads_data.get(
                 "intra_query_links_num_fabric_response"
             )
-            self.run_dcnm_send.side_effect = [query_links_resp]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                query_links_resp]
 
         # ------------------------------ INTRA-FABRIC-VPC ---------------------------
 
@@ -931,6 +1101,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 merge_links_resp,
                 deploy_resp,
@@ -946,6 +1117,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 merge_links_resp,
                 deploy_resp,
@@ -964,6 +1136,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 deploy_resp,
                 config_preview_resp,
@@ -981,6 +1154,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 [],
                 merge_links_resp,
                 deploy_resp,
@@ -1001,6 +1175,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 merge_links_resp,
                 deploy_resp,
@@ -1019,6 +1194,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 merge_links_resp,
                 deploy_resp,
@@ -1040,6 +1216,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 merge_links_resp,
                 deploy_resp,
@@ -1058,10 +1235,11 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                [],
+                [],
+                [],
                 have_links_resp1,
-                [],
-                [],
-                [],
                 [],
                 delete_links_resp,
                 deploy_resp,
@@ -1083,10 +1261,11 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                [],
+                [],
+                [],
                 have_links_resp1,
-                [],
-                [],
-                [],
                 [],
                 delete_links_resp,
                 deploy_resp,
@@ -1098,14 +1277,18 @@ class TestDcnmLinksModule(TestDcnmModule):
             == self._testMethodName
         ):
 
-            self.run_dcnm_send.side_effect = [[], [], [], [], []]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                [], [], [], [], []]
 
         if "test_dcnm_intra_links_vpc_query" in self._testMethodName:
 
             query_links_resp = self.payloads_data.get(
                 "intra_query_links_vpc_response"
             )
-            self.run_dcnm_send.side_effect = [query_links_resp]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                query_links_resp]
 
         # -------------------------- INTER-FABRIC-NUMBERED --------------------------
 
@@ -1121,6 +1304,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -1150,6 +1336,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -1200,6 +1389,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -1226,6 +1418,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 [],
                 [],
                 [],
@@ -1271,6 +1466,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -1318,6 +1516,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -1368,6 +1569,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -1418,6 +1622,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -1464,6 +1671,9 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 have_links_resp2,
                 have_links_resp3,
@@ -1487,7 +1697,11 @@ class TestDcnmLinksModule(TestDcnmModule):
             == self._testMethodName
         ):
 
-            self.run_dcnm_send.side_effect = [[], [], [], [], [], []]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                [], [], [], [], [], []]
 
         if (
             "test_dcnm_inter_links_numbered_template_change"
@@ -1504,6 +1718,8 @@ class TestDcnmLinksModule(TestDcnmModule):
             config_preview_resp = self.payloads_data.get("config_preview_resp")
 
             self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
                 have_links_resp1,
                 merge_links_resp,
                 deploy_resp,
@@ -1512,12 +1728,23 @@ class TestDcnmLinksModule(TestDcnmModule):
                 config_preview_resp,
             ]
 
-        if "test_dcnm_inter_links_numbered_query" in self._testMethodName:
+        if "test_dcnm_inter_links_numbered_query_no_config" in self._testMethodName:
 
             query_links_resp = self.payloads_data.get(
                 "inter_query_links_num_fabric_response"
             )
-            self.run_dcnm_send.side_effect = [query_links_resp]
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                query_links_resp]
+        elif "test_dcnm_inter_links_numbered_query" in self._testMethodName:
+
+            query_links_resp = self.payloads_data.get(
+                "inter_query_links_num_fabric_response"
+            )
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.mock_monitor_false_resp,
+                query_links_resp]
 
     def load_fixtures(self, response=None, device=""):
 
@@ -1549,6 +1776,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1583,6 +1812,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1617,6 +1848,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1651,6 +1884,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1685,6 +1920,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1722,6 +1959,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1757,6 +1996,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1792,6 +2033,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1827,6 +2070,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1862,6 +2107,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1897,6 +2144,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1932,6 +2181,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1967,6 +2218,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -1998,6 +2251,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2029,6 +2284,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2060,6 +2317,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2091,6 +2350,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2122,6 +2383,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2151,6 +2414,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2186,6 +2451,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_umnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2222,6 +2489,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2258,6 +2527,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2293,6 +2564,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2329,6 +2602,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2365,6 +2640,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2404,6 +2681,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2443,6 +2722,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2482,6 +2763,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2521,6 +2804,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2562,6 +2847,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2601,6 +2888,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2638,6 +2927,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2677,6 +2968,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2708,6 +3001,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2741,6 +3036,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2774,6 +3071,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2807,6 +3106,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2840,6 +3141,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2873,6 +3176,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2904,6 +3209,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2937,6 +3244,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -2971,6 +3280,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3005,6 +3316,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3039,6 +3352,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3073,6 +3388,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3108,6 +3425,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3143,6 +3462,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3180,6 +3501,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3215,6 +3538,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3250,6 +3575,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3285,6 +3612,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3318,6 +3647,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3349,6 +3680,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3380,6 +3713,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3411,6 +3746,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3442,6 +3779,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3473,6 +3812,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3502,6 +3843,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3533,6 +3876,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3566,6 +3911,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3598,6 +3945,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3630,6 +3979,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3662,6 +4013,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3694,6 +4047,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3727,6 +4082,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3760,6 +4117,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3793,6 +4152,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3826,6 +4187,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3859,6 +4222,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3892,6 +4257,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3925,6 +4292,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3956,6 +4325,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -3987,6 +4358,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4018,6 +4391,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4049,6 +4424,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4080,6 +4457,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4109,6 +4488,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4146,6 +4527,8 @@ class TestDcnmLinksModule(TestDcnmModule):
             "mock_unnum_fab_data"
         )
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4182,6 +4565,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4222,6 +4607,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4262,6 +4649,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4302,6 +4691,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4345,6 +4736,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4386,6 +4779,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4427,6 +4822,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4468,6 +4865,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4509,6 +4908,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4550,6 +4951,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4589,6 +4992,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4629,6 +5034,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4664,6 +5071,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4699,6 +5108,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4734,6 +5145,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4769,6 +5182,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4804,6 +5219,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4837,6 +5254,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4872,6 +5291,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_unnum_fab_info = self.payloads_data.get(
             "mock_unnum_fab_data"
         )
@@ -4909,6 +5330,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -4940,6 +5363,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(dict(state="merged", config=self.playbook_config))
 
@@ -4967,6 +5392,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5000,6 +5427,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5034,6 +5463,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5068,6 +5499,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5101,6 +5534,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5134,6 +5569,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5167,6 +5604,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -5202,6 +5641,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -5237,6 +5678,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5271,6 +5714,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5303,6 +5748,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5336,6 +5783,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5371,6 +5820,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5402,6 +5853,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(dict(state="merged", config=self.playbook_config))
 
@@ -5429,6 +5882,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5462,6 +5917,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5496,6 +5953,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5530,6 +5989,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5563,6 +6024,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5596,6 +6059,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5629,6 +6094,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -5663,6 +6130,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
         self.mock_ipv6_fab_info = self.payloads_data.get("mock_ipv6_fab_data")
 
         set_module_args(
@@ -5697,6 +6166,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5730,6 +6201,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5763,6 +6236,8 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
 
         set_module_args(
             dict(
@@ -5781,3 +6256,307 @@ class TestDcnmLinksModule(TestDcnmModule):
             self.assertEqual(
                 ("ipv4_addr : Required parameter not found" in str(e)), True
             )
+
+    # ---------------------- INTER-FABRIC MISC ----------------------------
+
+    def test_dcnm_inter_links_src_fab_ro(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_src_fab_ro_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-src-fab-ro",
+                config=self.playbook_config,
+            )
+        )
+
+        result = None
+
+        try:
+            result = self.execute_module(changed=False, failed=False)
+        except Exception as e:
+            self.assertEqual(result, None)
+            self.assertEqual(
+                ("is in Monitoring mode" in str(e)), True
+            )
+            self.assertEqual(
+                ("No changes are allowed on the fabric" in str(e)), True
+            )
+
+    def test_dcnm_inter_links_dst_fab_ro_dst_sw_non_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_ro_dst_sw_non_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-ro"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_ro_src_sw_non_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_ro_src_sw_non_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-ro"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_ro_src_dst_sw_non_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_ro_src_dst_sw_non_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-ro"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_ro_src_dst_sw_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_ro_src_dst_sw_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-ro"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_rw_dst_sw_non_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_rw_dst_sw_non_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-rw"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_rw_src_sw_non_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_rw_src_sw_non_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-rw"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_rw_src_dst_sw_non_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_rw_src_dst_sw_non_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-rw"]), 0)
+
+    def test_dcnm_inter_links_dst_fab_rw_src_dst_sw_mgbl(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "inter_dst_fab_rw_src_dst_sw_mgbl_config"
+        )
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 1)
+        self.assertEqual(len(result["diff"][0]["deploy"][0]["mmudigon-dst-fab-rw"]), 1)
