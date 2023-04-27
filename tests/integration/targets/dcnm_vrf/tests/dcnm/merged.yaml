@@ -39,8 +39,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -94,8 +92,6 @@
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -150,8 +146,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -221,8 +215,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -264,8 +256,6 @@
         vrf_id: 9008012
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        source: null
-        service_vrf_template: null
         attach:
           - ip_address: "{{ ansible_switch1 }}"
           - ip_address: "{{ ansible_switch2 }}"
@@ -287,8 +277,6 @@
         vrf_id: 9008012000000000
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        source: null
-        service_vrf_template: null
         attach:
           - ip_address: "{{ ansible_switch1 }}"
           - ip_address: "{{ ansible_switch2 }}"
@@ -311,8 +299,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -324,7 +310,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"Please specifiy atleast one VRF LITE parameter in attach" in result.msg'
+    - '"Please specifiy at least one VRF LITE parameter in attach" in result.msg'
 
 - name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE to a non border switch
   cisco.dcnm.dcnm_vrf:
@@ -336,8 +322,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         vrf_lite:

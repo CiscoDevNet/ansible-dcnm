@@ -1099,6 +1099,8 @@ Examples
           - ip_address: 192.168.1.225
             vrf_lite:
              # All parameters under vrf_lite are optional
+             # For best results in VRF LITE idempotence checks and
+             # configurations specify all possible vrf_lite parameters
               - peer_vrf: test_vrf_1 # optional
                 interface: Ethernet1/16 # optional
                 ipv4_addr: 10.33.0.2/30 # optional

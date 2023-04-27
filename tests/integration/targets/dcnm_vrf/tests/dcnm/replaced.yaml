@@ -35,8 +35,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -79,8 +77,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -122,8 +118,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -176,8 +170,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -233,8 +225,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       deploy: true
@@ -277,8 +267,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"

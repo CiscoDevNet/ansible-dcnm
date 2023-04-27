@@ -52,7 +52,7 @@ class ActionModule(ActionNetworkModule):
                                         )
                                         display.warning(msg)
                             except TypeError:
-                                msg = "Please specifiy atleast one VRF LITE parameter in attach"
+                                msg = "Please specifiy at least one VRF LITE parameter in attach"
                                 return {"failed": True, "msg": msg}
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)
