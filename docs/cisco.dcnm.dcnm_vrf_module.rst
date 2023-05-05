@@ -197,6 +197,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -1098,18 +1099,15 @@ Examples
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
             vrf_lite:
-             # All parameters under vrf_lite are optional
-             # For best results in VRF LITE idempotence checks and
-             # configurations specify all possible vrf_lite parameters
               - peer_vrf: test_vrf_1 # optional
-                interface: Ethernet1/16 # optional
+                interface: Ethernet1/16 # mandatory
                 ipv4_addr: 10.33.0.2/30 # optional
                 neighbor_ipv4: 10.33.0.1 # optional
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # dot1q can be got from dcnm/optional
               - peer_vrf: test_vrf_2 # optional
-                interface: Ethernet1/17 # optional
+                interface: Ethernet1/17 # mandatory
                 ipv4_addr: 20.33.0.2/30 # optional
                 neighbor_ipv4: 20.33.0.1 # optional
                 ipv6_addr: 3010::10:34:0:7/64 # optional

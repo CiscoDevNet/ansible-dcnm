@@ -314,7 +314,7 @@ options:
                     description:
                     - Interface of the switch which is connected to the edge router
                     type: str
-                    required: false
+                    required: true
                   ipv4_addr:
                     description:
                     - IP address of the interface which is connected to the edge router
@@ -448,18 +448,15 @@ EXAMPLES = """
       - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
         vrf_lite:
-         # All parameters under vrf_lite are optional
-         # For best results in VRF LITE idempotence checks and
-         # configurations specify all possible vrf_lite parameters
           - peer_vrf: test_vrf_1 # optional
-            interface: Ethernet1/16 # optional
+            interface: Ethernet1/16 # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm/optional
           - peer_vrf: test_vrf_2 # optional
-            interface: Ethernet1/17 # optional
+            interface: Ethernet1/17 # mandatory
             ipv4_addr: 20.33.0.2/30 # optional
             neighbor_ipv4: 20.33.0.1 # optional
             ipv6_addr: 3010::10:34:0:7/64 # optional
@@ -605,9 +602,6 @@ class DcnmVrf:
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
         self.check_mode = False
-        self.vrf_ext = False
-        self.role = ""
-        self.serial = ""
         self.have_create = []
         self.want_create = []
         self.diff_create = []
@@ -632,7 +626,6 @@ class DcnmVrf:
         self.diff_deploy = {}
         self.diff_undeploy = {}
         self.diff_delete = {}
-        self.vrflitevalues = {}
         self.diff_input_format = []
         self.query = []
         self.dcnm_version = dcnm_version_supported(self.module)
@@ -661,6 +654,7 @@ class DcnmVrf:
         dep_vrf = False
         for want in want_a:
             found = False
+            interface_match = False
             if have_a:
                 for have in have_a:
                     if want["serialNumber"] == have["serialNumber"]:
@@ -676,77 +670,87 @@ class DcnmVrf:
                             want_e = ast.literal_eval(want_ext_values["VRF_LITE_CONN"])
                             have_e = ast.literal_eval(have_ext_values["VRF_LITE_CONN"])
 
+                            if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
+                                # In case of replace/override if the length of want and have lite attach of a switch
+                                # is not same then we have to push the want to NDFC. No further check is reauired for
+                                # this switch
+                                break
+
                             for wlite in want_e["VRF_LITE_CONN"]:
                                 for hlite in have_e["VRF_LITE_CONN"]:
-                                    if wlite["IF_NAME"]:
-                                        if (
-                                            wlite["IF_NAME"]
-                                            == hlite["IF_NAME"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                    found = False
+                                    interface_match = False
+                                    if wlite["IF_NAME"] == hlite["IF_NAME"]:
+                                        found = True
+                                        interface_match = True
+                                        if wlite["DOT1Q_ID"]:
+                                            if (
+                                                wlite["DOT1Q_ID"]
+                                                == hlite["DOT1Q_ID"]
+                                            ):
+                                                found = True
+                                            else:
+                                                found = False
+                                                break
 
-                                    if wlite["DOT1Q_ID"]:
-                                        if (
-                                            wlite["DOT1Q_ID"]
-                                            == hlite["DOT1Q_ID"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                        if wlite["IP_MASK"]:
+                                            if (
+                                                wlite["IP_MASK"]
+                                                == hlite["IP_MASK"]
+                                            ):
+                                                found = True
+                                            else:
+                                                found = False
+                                                break
 
-                                    if wlite["IP_MASK"]:
-                                        if (
-                                            wlite["IP_MASK"]
-                                            == hlite["IP_MASK"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                        if wlite["NEIGHBOR_IP"]:
+                                            if (
+                                                wlite["NEIGHBOR_IP"]
+                                                == hlite["NEIGHBOR_IP"]
+                                            ):
+                                                found = True
+                                            else:
+                                                found = False
+                                                break
 
-                                    if wlite["NEIGHBOR_IP"]:
-                                        if (
-                                            wlite["NEIGHBOR_IP"]
-                                            == hlite["NEIGHBOR_IP"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                        if wlite["IPV6_MASK"]:
+                                            if (
+                                                wlite["IPV6_MASK"]
+                                                == hlite["IPV6_MASK"]
+                                            ):
+                                                found = True
+                                            else:
+                                                found = False
+                                                break
 
-                                    if wlite["IPV6_MASK"]:
-                                        if (
-                                            wlite["IPV6_MASK"]
-                                            == hlite["IPV6_MASK"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                        if wlite["IPV6_NEIGHBOR"]:
+                                            if (
+                                                wlite["IPV6_NEIGHBOR"]
+                                                == hlite["IPV6_NEIGHBOR"]
+                                            ):
+                                                found = True
+                                            else:
+                                                found = False
+                                                break
 
-                                    if wlite["IPV6_NEIGHBOR"]:
-                                        if (
-                                            wlite["IPV6_NEIGHBOR"]
-                                            == hlite["IPV6_NEIGHBOR"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                        if wlite["PEER_VRF_NAME"]:
+                                            if (
+                                                wlite["PEER_VRF_NAME"]
+                                                == hlite["PEER_VRF_NAME"]
+                                            ):
+                                                found = True
+                                            else:
+                                                found = False
+                                                break
 
-                                    if wlite["PEER_VRF_NAME"]:
-                                        if (
-                                            wlite["PEER_VRF_NAME"]
-                                            == hlite["PEER_VRF_NAME"]
-                                        ):
-                                            found = True
-                                        else:
-                                            found = False
-                                            continue
+                                        if found:
+                                            break
+
+                                    if interface_match and not found:
+                                        break
+
+                                if interface_match and not found:
+                                    break
 
                         elif (
                             want["extensionValues"] != ""
@@ -780,6 +784,9 @@ class DcnmVrf:
                         if found:
                             break
 
+                    if interface_match and not found:
+                        break
+
             if not found:
                 if bool(want["isAttached"]):
                     del want["isAttached"]
@@ -788,6 +795,8 @@ class DcnmVrf:
         return attach_list, dep_vrf
 
     def update_attach_params(self, attach, vrf_name, deploy, vlanId):
+
+        vrf_ext = False
 
         if not attach:
             return {}
@@ -799,7 +808,6 @@ class DcnmVrf:
         for ip, ser in self.ip_sn.items():
             if ip == attach["ip_address"]:
                 serial = ser
-                self.serial = ser
 
         if not serial:
             self.module.fail_json(
@@ -809,7 +817,6 @@ class DcnmVrf:
             )
 
         role = self.inventory_data[attach["ip_address"]].get("switchRole")
-        self.role = role
 
         if role.lower() == "spine" or role.lower() == "super spine":
             msg = "VRFs cannot be attached to switch {0} with role {1}".format(
@@ -898,8 +905,7 @@ class DcnmVrf:
 
             ext_values["VRF_LITE_CONN"] = json.dumps(ext_values["VRF_LITE_CONN"])
 
-            self.vrflitevalues = ext_values
-            self.vrf_ext = True
+            vrf_ext = True
 
         attach.update({"fabric": self.fabric})
         attach.update({"vrfName": vrf_name})
@@ -907,7 +913,7 @@ class DcnmVrf:
         attach.update({"deployment": deploy})
         attach.update({"isAttached": True})
         attach.update({"serialNumber": serial})
-        if self.vrf_ext:
+        if vrf_ext:
             attach.update({"extensionValues": json.dumps(ext_values).replace(" ", "")})
             attach.update(
                 {
@@ -2260,15 +2266,16 @@ class DcnmVrf:
                 for v_a in d_a["lanAttachList"]:
                     v_a.update(vlan=0)
                     if v_a.get("vrf_lite"):
-                        """Before apply the vrf_lite config, need double check if the switch role is started wth Border"""
-                        r = re.search(r"\bborder\b", self.role.lower())
-                        if not r:
-                            for ip, ser in self.ip_sn.items():
-                                if ser == v_a["serialNumber"]:
+                        for ip, ser in self.ip_sn.items():
+                            if ser == v_a["serialNumber"]:
+                                """Before apply the vrf_lite config, need double check if the switch role is started wth Border"""
+                                role = self.inventory_data[ip].get("switchRole")
+                                r = re.search(r"\bborder\b", role.lower())
+                                if not r:
                                     msg = "VRF LITE cannot be attached to switch {0} with role {1}".format(
-                                        ip, self.role
+                                        ip, role
                                     )
-                            self.module.fail_json(msg=msg)
+                                    self.module.fail_json(msg=msg)
 
                         """Get the IP/Interface that is connected to edge router can be get from below query"""
                         method = "GET"
@@ -2294,95 +2301,91 @@ class DcnmVrf:
                                 ext_values = ext_l["extensionValues"]
                                 ext_values = ast.literal_eval(ext_values)
                                 for ad_l in v_a.get("vrf_lite"):
-                                    vrflite_con = {}
-                                    vrflite_con["VRF_LITE_CONN"] = []
-                                    vrflite_con["VRF_LITE_CONN"].append({})
-                                    if ad_l["interface"]:
+                                    if ad_l["interface"] == ext_values["IF_NAME"]:
+                                        vrflite_con = {}
+                                        vrflite_con["VRF_LITE_CONN"] = []
+                                        vrflite_con["VRF_LITE_CONN"].append({})
                                         vrflite_con["VRF_LITE_CONN"][0][
                                             "IF_NAME"
                                         ] = ad_l["interface"]
-                                    else:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "IF_NAME"
-                                        ] = ext_values["IF_NAME"]
 
-                                    if ad_l["dot1q"]:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "DOT1Q_ID"
-                                        ] = str(ad_l["dot1q"])
-                                    else:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "DOT1Q_ID"
-                                        ] = str(ext_values["DOT1Q_ID"])
+                                        if ad_l["dot1q"]:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "DOT1Q_ID"
+                                            ] = str(ad_l["dot1q"])
+                                        else:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "DOT1Q_ID"
+                                            ] = str(ext_values["DOT1Q_ID"])
 
-                                    if ad_l["ipv4_addr"]:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "IP_MASK"
-                                        ] = ad_l["ipv4_addr"]
-                                    else:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "IP_MASK"
-                                        ] = ext_values["IP_MASK"]
+                                        if ad_l["ipv4_addr"]:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "IP_MASK"
+                                            ] = ad_l["ipv4_addr"]
+                                        else:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "IP_MASK"
+                                            ] = ext_values["IP_MASK"]
 
-                                    if ad_l["neighbor_ipv4"]:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "NEIGHBOR_IP"
-                                        ] = ad_l["neighbor_ipv4"]
-                                    else:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "NEIGHBOR_IP"
-                                        ] = ext_values["NEIGHBOR_IP"]
+                                        if ad_l["neighbor_ipv4"]:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "NEIGHBOR_IP"
+                                            ] = ad_l["neighbor_ipv4"]
+                                        else:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "NEIGHBOR_IP"
+                                            ] = ext_values["NEIGHBOR_IP"]
 
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "NEIGHBOR_ASN"
-                                    ] = ext_values["NEIGHBOR_ASN"]
-
-                                    if ad_l["ipv6_addr"]:
                                         vrflite_con["VRF_LITE_CONN"][0][
-                                            "IPV6_MASK"
-                                        ] = ad_l["ipv6_addr"]
-                                    else:
+                                            "NEIGHBOR_ASN"
+                                        ] = ext_values["NEIGHBOR_ASN"]
+
+                                        if ad_l["ipv6_addr"]:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "IPV6_MASK"
+                                            ] = ad_l["ipv6_addr"]
+                                        else:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "IPV6_MASK"
+                                            ] = ext_values["IPV6_MASK"]
+
+                                        if ad_l["neighbor_ipv6"]:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "IPV6_NEIGHBOR"
+                                            ] = ad_l["neighbor_ipv6"]
+                                        else:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "IPV6_NEIGHBOR"
+                                            ] = ext_values["IPV6_NEIGHBOR"]
+
                                         vrflite_con["VRF_LITE_CONN"][0][
-                                            "IPV6_MASK"
-                                        ] = ext_values["IPV6_MASK"]
+                                            "AUTO_VRF_LITE_FLAG"
+                                        ] = ext_values["AUTO_VRF_LITE_FLAG"]
 
-                                    if ad_l["neighbor_ipv6"]:
+                                        if ad_l["peer_vrf"]:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "PEER_VRF_NAME"
+                                            ] = ad_l["peer_vrf"]
+                                        else:
+                                            vrflite_con["VRF_LITE_CONN"][0][
+                                                "PEER_VRF_NAME"
+                                            ] = ext_values["PEER_VRF_NAME"]
+
                                         vrflite_con["VRF_LITE_CONN"][0][
-                                            "IPV6_NEIGHBOR"
-                                        ] = ad_l["neighbor_ipv6"]
-                                    else:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "IPV6_NEIGHBOR"
-                                        ] = ext_values["IPV6_NEIGHBOR"]
+                                            "VRF_LITE_JYTHON_TEMPLATE"
+                                        ] = "Ext_VRF_Lite_Jython"
+                                        if (extension_values["VRF_LITE_CONN"]):
+                                            extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
+                                        else:
+                                            extension_values["VRF_LITE_CONN"] = vrflite_con
 
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "AUTO_VRF_LITE_FLAG"
-                                    ] = ext_values["AUTO_VRF_LITE_FLAG"]
+                                        ms_con = {}
+                                        ms_con["MULTISITE_CONN"] = []
+                                        extension_values["MULTISITE_CONN"] = json.dumps(
+                                            ms_con
+                                        )
 
-                                    if ad_l["peer_vrf"]:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "PEER_VRF_NAME"
-                                        ] = ad_l["peer_vrf"]
-                                    else:
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "PEER_VRF_NAME"
-                                        ] = ext_values["PEER_VRF_NAME"]
-
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "VRF_LITE_JYTHON_TEMPLATE"
-                                    ] = "Ext_VRF_Lite_Jython"
-                                    if (extension_values["VRF_LITE_CONN"]):
-                                        extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
-                                    else:
-                                        extension_values["VRF_LITE_CONN"] = vrflite_con
-
-                                    ms_con = {}
-                                    ms_con["MULTISITE_CONN"] = []
-                                    extension_values["MULTISITE_CONN"] = json.dumps(
-                                        ms_con
-                                    )
-
-                                    del v_a["vrf_lite"][0]
+                                        del ad_l
 
                         if ext_values is None:
                             for ip, ser in self.ip_sn.items():
@@ -2528,7 +2531,7 @@ class DcnmVrf:
                 vrf_lite=dict(type="list"),
             )
             lite_spec = dict(
-                interface=dict(type="str"),
+                interface=dict(required=True, type="str"),
                 peer_vrf=dict(type="str"),
                 ipv4_addr=dict(type="ipv4_subnet"),
                 neighbor_ipv4=dict(type="ipv4"),
