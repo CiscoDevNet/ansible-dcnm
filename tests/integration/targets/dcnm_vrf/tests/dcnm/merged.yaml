@@ -289,7 +289,7 @@
     - 'result.changed == false'
     - '"The item exceeds the allowed range of max" in result.msg'
 
-- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without any parameter
+- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without required parameter
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
