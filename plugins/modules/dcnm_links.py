@@ -788,6 +788,7 @@ class DcnmLinks:
             "LINKS_GET_BY_FABRIC": "/rest/control/links/fabrics/{}",
             "LINKS_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
             "CONFIG_PREVIEW": "/rest/control/fabrics/{}/config-preview/",
+            "FABRIC_ACCESS_MODE": "/rest/control/fabrics/{}/accessmode",
         },
         12: {
             "LINKS_GET_BY_SWITCH_PAIR": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links",
@@ -797,6 +798,7 @@ class DcnmLinks:
             "LINKS_GET_BY_FABRIC": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/fabrics/{}",
             "LINKS_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
             "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/",
+            "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
         },
     }
 
@@ -863,6 +865,8 @@ class DcnmLinks:
         self.diff_modify = []
         self.diff_delete = []
         self.diff_deploy = {}
+        self.monitoring = []
+        self.meta_switches = []
         self.fd = None
         self.changed_dict = [
             {
@@ -898,6 +902,46 @@ class DcnmLinks:
             self.fd.write(msg)
             self.fd.write("\n")
             self.fd.flush()
+
+    def dcnm_dump_have_db(self):
+
+        lhave = []
+
+        for have in self.have:
+            lhave.append(
+                {
+                    "UUID": have["link-uuid"],
+                    "SRC FABRIC": have["sw1-info"]["fabric-name"],
+                    "SRC IF NAME": have["sw1-info"]["if-name"],
+                    "SRC SNO": have["sw1-info"]["sw-serial-number"],
+                    "SRC SYS NAME": have["sw1-info"]["sw-sys-name"],
+                    "DST FABRIC": have["sw2-info"]["fabric-name"],
+                    "DST IF NAME": have["sw2-info"]["if-name"],
+                    "DST SNO": have["sw2-info"]["sw-serial-number"],
+                    "DST SYS NAME": have["sw2-info"]["sw-sys-name"],
+                }
+            )
+        self.log_msg(f"HAVE = {lhave}\n")
+
+    def dcnm_print_have(self, have):
+
+        lhave = []
+
+        lhave.append(
+            {
+                "UUID": have["link-uuid"],
+                "SRC FABRIC": have["sw1-info"]["fabric-name"],
+                "SRC IF NAME": have["sw1-info"]["if-name"],
+                "SRC SNO": have["sw1-info"]["sw-serial-number"],
+                "SRC SYS NAME": have["sw1-info"]["sw-sys-name"],
+                "DST FABRIC": have["sw2-info"]["fabric-name"],
+                "DST IF NAME": have["sw2-info"]["if-name"],
+                "DST SNO": have["sw2-info"]["sw-serial-number"],
+                "DST SYS NAME": have["sw2-info"]["sw-sys-name"],
+            }
+        )
+
+        self.log_msg(f"have = {lhave}\n")
 
     def dcnm_links_compare_ip_addresses(self, addr1, addr2):
 
@@ -1373,19 +1417,44 @@ class DcnmLinks:
             "destinationFabric": link.get("dst_fabric"),
             "sourceInterface": link.get("src_interface"),
             "destinationInterface": link.get("dst_interface"),
-            "sourceDevice": self.ip_sn[link.get("src_device")],
-            "destinationDevice": self.ip_sn[link.get("dst_device")],
         }
+
+        if link.get("src_device") in self.ip_sn:
+            link_payload["sourceDevice"] = self.ip_sn[link.get("src_device")]
+        else:
+            link_payload["sourceDevice"] = self.hn_sn.get(
+                link["src_device"], ""
+            )
+
+        if link.get("dst_device") in self.ip_sn:
+            link_payload["destinationDevice"] = self.ip_sn[
+                link.get("dst_device")
+            ]
+        else:
+            link_payload["destinationDevice"] = self.hn_sn.get(
+                link["dst_device"], ""
+            )
+
+        # At this point link_payload will have sourceDevice set to proper SNO and destinationDevice is either
+        # set to a proper SNO or "".
+
+        if link_payload["sourceDevice"] in self.sn_hn:
+            link_payload["sourceSwitchName"] = self.sn_hn.get(
+                link_payload["sourceDevice"], "Switch1"
+            )
+        else:
+            link_payload["sourceSwitchName"] = link.get("src_device")
+
+        if link_payload["destinationDevice"] in self.sn_hn:
+            link_payload["destinationSwitchName"] = self.sn_hn.get(
+                link_payload["destinationDevice"], "Switch2"
+            )
+        else:
+            link_payload["destinationSwitchName"] = link.get("dst_device")
 
         if self.module.params["state"] == "deleted":
             return link_payload
 
-        link_payload["sourceSwitchName"] = self.sn_hn.get(
-            link_payload["sourceDevice"], "Switch1"
-        )
-        link_payload["destinationSwitchName"] = self.sn_hn.get(
-            link_payload["destinationDevice"], "Switch2"
-        )
         link_payload["templateName"] = link.get("template")
 
         # Intra and Inter fabric payloads are different. Build them separately
@@ -1916,10 +1985,27 @@ class DcnmLinks:
                     and (cfg["dst_fabric"] == want["destinationFabric"])
                     and (cfg["src_interface"] == want["sourceInterface"])
                     and (cfg["dst_interface"] == want["destinationInterface"])
-                    and (self.ip_sn[cfg["src_device"]] == want["sourceDevice"])
                     and (
-                        self.ip_sn[cfg["dst_device"]]
-                        == want["destinationDevice"]
+                        cfg["src_device"] in self.ip_sn
+                        and self.ip_sn[cfg["src_device"]]
+                        == want["sourceDevice"]
+                    )
+                    or (
+                        cfg["src_device"] in self.hn_sn
+                        and self.hn_sn[cfg["src_device"]]
+                        == want["sourceDevice"]
+                    )
+                    and (
+                        (
+                            cfg["dst_device"] in self.ip_sn
+                            and self.ip_sn[cfg["dst_device"]]
+                            == want["destinationDevice"]
+                        )
+                        or (
+                            cfg["dst_device"] in self.hn_sn
+                            and self.hn_sn[cfg["dst_device"]]
+                            == want["destinationDevice"]
+                        )
                     )
                     and (cfg["template"] == want["templateName"])
                 )
@@ -1976,14 +2062,22 @@ class DcnmLinks:
         """
 
         # link object is from self.want. These objets would have translated devices to serial numbers already.
-        path = self.paths[
-            "LINKS_GET_BY_SWITCH_PAIR"
-        ] + "?switch1Sn={0}&switch2Sn={1}".format(
-            link["sourceDevice"], link["destinationDevice"]
-        )
-        path = path + "&switch1IfName={0}&switch2IfName={1}".format(
-            link["sourceInterface"], link["destinationInterface"]
-        )
+
+        if (
+            link["sourceDevice"] in self.ip_sn.values()
+            and link["destinationDevice"] in self.ip_sn.values()
+        ):
+            path = self.paths[
+                "LINKS_GET_BY_SWITCH_PAIR"
+            ] + "?switch1Sn={0}&switch2Sn={1}".format(
+                link["sourceDevice"], link["destinationDevice"]
+            )
+            path = path + "&switch1IfName={0}&switch2IfName={1}".format(
+                link["sourceInterface"], link["destinationInterface"]
+            )
+        else:
+            # If devices are not managable, the path should not include them
+            path = self.paths["LINKS_GET_BY_SWITCH_PAIR"]
 
         resp = dcnm_send(self.module, "GET", path)
 
@@ -2012,6 +2106,31 @@ class DcnmLinks:
                     and (
                         link_elem["sw2-info"]["fabric-name"]
                         == link["destinationFabric"]
+                    )
+                    and (
+                        link["sourceDevice"]
+                        == link_elem["sw1-info"]["sw-serial-number"]
+                    )
+                    and (
+                        (
+                            link["destinationDevice"] in self.ip_sn.values()
+                            and link["destinationDevice"]
+                            == link_elem["sw2-info"]["sw-serial-number"]
+                        )
+                        or (
+                            link["destinationSwitchName"]
+                            + "-"
+                            + link["destinationFabric"]
+                            == link_elem["sw2-info"]["sw-serial-number"]
+                        )
+                    )
+                    and (
+                        link["sourceInterface"]
+                        == link_elem["sw1-info"]["if-name"]
+                    )
+                    and (
+                        link["destinationInterface"]
+                        == link_elem["sw2-info"]["if-name"]
                     )
                 )
             ]
@@ -2745,12 +2864,15 @@ class DcnmLinks:
                 )
                 and (
                     have["sw2-info"]["sw-serial-number"]
-                    == want["destinationDevice"]
+                    == want["destinationDevice"] or
+                    have["sw2-info"]["sw-serial-number"]
+                    == want["destinationSwitchName"] + "-" + want["destinationFabric"]
                 )
             )
         ]
 
         for mlink in match_have:
+
             if want["sourceFabric"] == want["destinationFabric"]:
                 return self.dcnm_links_compare_intra_fabric_link_params(
                     want, mlink
@@ -2814,7 +2936,7 @@ class DcnmLinks:
         if self.diff_deploy.get(fabric, "") == "":
             self.diff_deploy[fabric] = []
 
-        if device not in self.diff_deploy[fabric]:
+        if device != "" and device not in self.diff_deploy[fabric]:
             self.diff_deploy[fabric].append(device)
 
     def dcnm_links_get_diff_merge(self):
@@ -2865,12 +2987,37 @@ class DcnmLinks:
             #       If "deploy" flag is set to "true", then all pending configurations on the source and
             #       destination devices will be deployed.
             if self.deploy:
-                self.dcnm_links_update_diff_deploy(
-                    self.fabric, link["sourceDevice"]
-                )
-                self.dcnm_links_update_diff_deploy(
-                    link["destinationFabric"], link["destinationDevice"]
-                )
+
+                if (
+                    self.fabric not in self.monitoring
+                    and link["sourceDevice"] in self.managable.values()
+                ):
+                    self.dcnm_links_update_diff_deploy(
+                        self.fabric, link["sourceDevice"]
+                    )
+                else:
+                    self.dcnm_links_update_diff_deploy(self.fabric, "")
+
+                # If source swithces are not manageable, then do not deploy anything on destination fabric to
+                # avoid inconsitencies.
+                if link["sourceDevice"] in self.managable.values():
+                    if (
+                        link["destinationFabric"] not in self.monitoring
+                        and link["destinationDevice"]
+                        in self.managable.values()
+                    ):
+                        self.dcnm_links_update_diff_deploy(
+                            link["destinationFabric"],
+                            link["destinationDevice"],
+                        )
+                    else:
+                        self.dcnm_links_update_diff_deploy(
+                            link["destinationFabric"], ""
+                        )
+                else:
+                    self.dcnm_links_update_diff_deploy(
+                        link["destinationFabric"], ""
+                    )
 
         if self.diff_deploy != {}:
             self.changed_dict[0]["deploy"].append(
@@ -2891,6 +3038,7 @@ class DcnmLinks:
             None
         """
 
+        match_links = []
         for link in self.links_info:
 
             match_links = [
@@ -2902,12 +3050,18 @@ class DcnmLinks:
                     and (have["sw1-info"]["if-name"] == link["src_interface"])
                     and (have["sw2-info"]["if-name"] == link["dst_interface"])
                     and (
-                        have["sw1-info"]["sw-serial-number"]
-                        == self.ip_sn[link["src_device"]]
+                        link["src_device"] in self.ip_sn
+                        and have["sw1-info"]["sw-serial-number"]
+                        == self.ip_sn.get(link["src_device"], "")
+                        or have["sw1-info"]["sw-serial-number"]
+                        == self.hn_sn.get(link["src_device"], "")
                     )
                     and (
-                        have["sw2-info"]["sw-serial-number"]
-                        == self.ip_sn[link["dst_device"]]
+                        link["dst_device"] in self.ip_sn
+                        and have["sw2-info"]["sw-serial-number"]
+                        == self.ip_sn.get(link["dst_device"], "")
+                        or have["sw2-info"]["sw-serial-number"]
+                        == self.hn_sn.get(link["dst_device"], "")
                     )
                 )
             ]
@@ -2926,12 +3080,28 @@ class DcnmLinks:
                     }
                 )
 
-                self.dcnm_links_update_diff_deploy(
-                    self.fabric, self.ip_sn[link["src_device"]]
-                )
-                self.dcnm_links_update_diff_deploy(
-                    link["dst_fabric"], self.ip_sn[link["dst_device"]]
-                )
+                if self.deploy:
+                    if (
+                        self.fabric not in self.monitoring
+                        and link["src_device"] in self.managable
+                    ):
+                        self.dcnm_links_update_diff_deploy(
+                            self.fabric, self.ip_sn[link["src_device"]]
+                        )
+                    else:
+                        self.dcnm_links_update_diff_deploy(self.fabric, "")
+
+                    if (
+                        link["dst_fabric"] not in self.monitoring
+                        and link["dst_device"] in self.managable
+                    ):
+                        self.dcnm_links_update_diff_deploy(
+                            link["dst_fabric"], self.ip_sn[link["dst_device"]]
+                        )
+                    else:
+                        self.dcnm_links_update_diff_deploy(
+                            link["dst_fabric"], ""
+                        )
 
         if self.diff_deploy != {}:
             self.changed_dict[0]["deploy"].append(
@@ -2996,15 +3166,27 @@ class DcnmLinks:
                         and (
                             (link["src_device"] == "")
                             or (
-                                rlink["sw1-info"]["sw-serial-number"]
+                                link["src_device"] in self.ip_sn
+                                and rlink["sw1-info"]["sw-serial-number"]
                                 == self.ip_sn[link["src_device"]]
+                            )
+                            or (
+                                link["src_device"] in self.hn_sn
+                                and rlink["sw1-info"]["sw-serial-number"]
+                                == self.hn_sn[link["src_device"]]
                             )
                         )
                         and (
                             (link["dst_device"] == "")
                             or (
-                                rlink["sw2-info"]["sw-serial-number"]
+                                link["dst_device"] in self.ip_sn
+                                and rlink["sw2-info"]["sw-serial-number"]
                                 == self.ip_sn[link["dst_device"]]
+                            )
+                            or (
+                                link["dst_device"] in self.hn_sn
+                                and rlink["sw2-info"]["sw-serial-number"]
+                                == self.hn_sn[link["dst_device"]]
                             )
                         )
                         and (
@@ -3026,7 +3208,7 @@ class DcnmLinks:
         resp = {}
         resp["RETURN_CODE"] = 200
 
-        for fabric in self.diff_deploy.keys():
+        for fabric in self.diff_deploy:
             if self.diff_deploy[fabric] != []:
 
                 deploy_path = self.paths["LINKS_CFG_DEPLOY"].format(fabric)
@@ -3046,7 +3228,7 @@ class DcnmLinks:
 
         retry = False
 
-        for fabric in self.diff_deploy.keys():
+        for fabric in self.diff_deploy:
 
             if self.diff_deploy[fabric] != []:
 
@@ -3196,7 +3378,6 @@ class DcnmLinks:
         processed_fabrics.append(self.fabric)
 
         for cfg in self.config:
-
             # For every fabric included in the playbook, get the inventory details. This info is required
             # to get ip_sn, hn_sn and sn_hn details
             if cfg.get("dst_fabric", "") != "":
@@ -3207,9 +3388,51 @@ class DcnmLinks:
                     )
                     self.inventory_data.update(inv_data)
 
+        # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
+        managable_ip = [
+            (key, self.inventory_data[key]["serialNumber"])
+            for key in self.inventory_data
+            if str(self.inventory_data[key]["managable"]).lower() == "true"
+        ]
+        managable_hosts = [
+            (
+                self.inventory_data[key]["logicalName"],
+                self.inventory_data[key]["serialNumber"],
+            )
+            for key in self.inventory_data
+            if str(self.inventory_data[key]["managable"]).lower() == "true"
+        ]
+        self.managable = dict(managable_ip + managable_hosts)
+
+        self.meta_switches = [
+            self.inventory_data[key]["logicalName"]
+            for key in self.inventory_data
+            if self.inventory_data[key]["switchRoleEnum"] is None
+        ]
+
+        # Get all fabrics which are in monitoring mode. Deploy must be avoided to all fabrics which are part of this list
+        for fabric in processed_fabrics:
+            path = self.paths["FABRIC_ACCESS_MODE"].format(fabric)
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp and resp["RETURN_CODE"] == 200:
+                if str(resp["DATA"]["readonly"]).lower() == "true":
+                    self.monitoring.append(fabric)
+
+        # Checkif source fabric is in monitoring mode. If so return an error, since fabrics in monitoring mode do not allow
+        # create/modify/delete and deploy operations.
+        if self.fabric in self.monitoring:
+            self.module.fail_json(
+                msg="Error: Source Fabric '{0}' is in Monitoring mode, No changes are allowed on the fabric\n".format(
+                    self.fabric
+                )
+            )
+
         # Based on the updated inventory_data, update ip_sn, hn_sn and sn_hn objects
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
-        self.sn_hn = dict([(value, key) for key, value in self.hn_sn.items()])
+        self.sn_hn = dict(
+            [(value, key) for key, value in self.hn_sn.items() if value != ""]
+        )
 
     def dcnm_links_translate_playbook_info(self, config, ip_sn, hn_sn):
 
@@ -3234,13 +3457,22 @@ class DcnmLinks:
         for cfg in config:
 
             if cfg.get("src_device", "") != "":
-                cfg["src_device"] = dcnm_get_ip_addr_info(
-                    self.module, cfg["src_device"], ip_sn, hn_sn
-                )
+                if (
+                    cfg["src_device"] in self.ip_sn
+                    or cfg["src_device"] in self.hn_sn
+                ):
+                    cfg["src_device"] = dcnm_get_ip_addr_info(
+                        self.module, cfg["src_device"], ip_sn, hn_sn
+                    )
             if cfg.get("dst_device", "") != "":
-                cfg["dst_device"] = dcnm_get_ip_addr_info(
-                    self.module, cfg["dst_device"], ip_sn, hn_sn
-                )
+                if (
+                    cfg["dst_device"] in self.ip_sn
+                    or cfg["dst_device"] in self.hn_sn
+                    and cfg["dst_device"] not in self.meta_switches
+                ):
+                    cfg["dst_device"] = dcnm_get_ip_addr_info(
+                        self.module, cfg["dst_device"], ip_sn, hn_sn
+                    )
 
             if cfg.get("template", None) is not None:
                 cfg["template"] = self.templates.get(
@@ -3280,7 +3512,6 @@ def main():
             )
 
     dcnm_links.dcnm_links_update_inventory_data()
-
     dcnm_links.dcnm_links_translate_playbook_info(
         dcnm_links.config, dcnm_links.ip_sn, dcnm_links.hn_sn
     )
@@ -3310,6 +3541,12 @@ def main():
         dcnm_links.dcnm_links_get_diff_query()
 
     dcnm_links.result["diff"] = dcnm_links.changed_dict
+    dcnm_links.changed_dict[0]["debugs"].append(
+        {"Managable": dcnm_links.managable}
+    )
+    dcnm_links.changed_dict[0]["debugs"].append(
+        {"Monitoring": dcnm_links.monitoring}
+    )
 
     if dcnm_links.diff_create or dcnm_links.diff_delete:
         dcnm_links.result["changed"] = True
