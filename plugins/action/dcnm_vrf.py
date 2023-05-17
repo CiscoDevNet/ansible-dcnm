@@ -43,7 +43,7 @@ class ActionModule(ActionNetworkModule):
                                 for vl in at["vrf_lite"]:
                                     continue
                             except TypeError:
-                                msg = "Please specifiy interface for VRF LITE in attach"
+                                msg = "Please specify interface parameter under vrf_lite section in the playbook"
                                 return {"failed": True, "msg": msg}
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)

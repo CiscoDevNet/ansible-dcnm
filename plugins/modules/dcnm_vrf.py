@@ -672,7 +672,7 @@ class DcnmVrf:
 
                             if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
                                 # In case of replace/override if the length of want and have lite attach of a switch
-                                # is not same then we have to push the want to NDFC. No further check is reauired for
+                                # is not same then we have to push the want to NDFC. No further check is required for
                                 # this switch
                                 break
 
@@ -686,60 +686,48 @@ class DcnmVrf:
                                         if wlite["DOT1Q_ID"]:
                                             if (
                                                 wlite["DOT1Q_ID"]
-                                                == hlite["DOT1Q_ID"]
+                                                != hlite["DOT1Q_ID"]
                                             ):
-                                                found = True
-                                            else:
                                                 found = False
                                                 break
 
                                         if wlite["IP_MASK"]:
                                             if (
                                                 wlite["IP_MASK"]
-                                                == hlite["IP_MASK"]
+                                                != hlite["IP_MASK"]
                                             ):
-                                                found = True
-                                            else:
                                                 found = False
                                                 break
 
                                         if wlite["NEIGHBOR_IP"]:
                                             if (
                                                 wlite["NEIGHBOR_IP"]
-                                                == hlite["NEIGHBOR_IP"]
+                                                != hlite["NEIGHBOR_IP"]
                                             ):
-                                                found = True
-                                            else:
                                                 found = False
                                                 break
 
                                         if wlite["IPV6_MASK"]:
                                             if (
                                                 wlite["IPV6_MASK"]
-                                                == hlite["IPV6_MASK"]
+                                                != hlite["IPV6_MASK"]
                                             ):
-                                                found = True
-                                            else:
                                                 found = False
                                                 break
 
                                         if wlite["IPV6_NEIGHBOR"]:
                                             if (
                                                 wlite["IPV6_NEIGHBOR"]
-                                                == hlite["IPV6_NEIGHBOR"]
+                                                != hlite["IPV6_NEIGHBOR"]
                                             ):
-                                                found = True
-                                            else:
                                                 found = False
                                                 break
 
                                         if wlite["PEER_VRF_NAME"]:
                                             if (
                                                 wlite["PEER_VRF_NAME"]
-                                                == hlite["PEER_VRF_NAME"]
+                                                != hlite["PEER_VRF_NAME"]
                                             ):
-                                                found = True
-                                            else:
                                                 found = False
                                                 break
 
