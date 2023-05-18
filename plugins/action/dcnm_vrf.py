@@ -41,18 +41,9 @@ class ActionModule(ActionNetworkModule):
                         if "vrf_lite" in at:
                             try:
                                 for vl in at["vrf_lite"]:
-                                    if (
-                                        not vl.get("interface")
-                                    ):
-                                        msg = (
-                                            "'interface' parameter is not specified in playbook under 'vrf_lite' config. "
-                                            "Idempotence check will happen based on first available best match. "
-                                            "While attaching, first available extension will be attached for VRF LITE. "
-                                            "For best results specify all possible vrf_lite parameters."
-                                        )
-                                        display.warning(msg)
+                                    continue
                             except TypeError:
-                                msg = "Please specifiy at least one VRF LITE parameter in attach"
+                                msg = "Please specify interface parameter under vrf_lite section in the playbook"
                                 return {"failed": True, "msg": msg}
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)
