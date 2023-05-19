@@ -85,7 +85,8 @@ options:
         description:
         - Role which needs to be assigned to the switch
         choices: ['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
-                 'super_spine', 'border_super_spine', 'border_gateway_super_spine']
+                 'super_spine', 'border_super_spine', 'border_gateway_super_spine', 'access', 'aggregation',
+                 'edge_router', 'core_router', 'tor']
         type: str
         required: false
         default: leaf
@@ -947,6 +948,11 @@ class DcnmInventory:
                         "super_spine",
                         "border_super_spine",
                         "border_gateway_super_spine",
+                        "access",
+                        "aggregation",
+                        "edge_router",
+                        "core_router",
+                        "tor"
                     ],
                     default="leaf",
                 ),
@@ -1091,6 +1097,11 @@ class DcnmInventory:
                         "super_spine",
                         "border_super_spine",
                         "border_gateway_super_spine",
+                        "access",
+                        "aggregation",
+                        "edge_router",
+                        "core_router",
+                        "tor",
                         "None",
                     ],
                     default="None",
