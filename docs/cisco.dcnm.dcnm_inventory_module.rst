@@ -428,6 +428,11 @@ Parameters
                                     <li>super_spine</li>
                                     <li>border_super_spine</li>
                                     <li>border_gateway_super_spine</li>
+                                    <li>access</li>
+                                    <li>aggregation</li>
+                                    <li>edge_router</li>
+                                    <li>core_router</li>
+                                    <li>tor</li>
                         </ul>
                 </td>
                 <td>
