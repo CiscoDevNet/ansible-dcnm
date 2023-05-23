@@ -197,6 +197,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -292,7 +293,6 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
@@ -1099,15 +1099,20 @@ Examples
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
             vrf_lite:
-             # All parameters under vrf_lite except peer_vrf are optional and
-             # will be supplied by DCNM when omitted in the playbook
-              - peer_vrf: test_vrf_1 # peer_vrf is mandatory
-                interface: Ethernet1/16 # optional
+              - peer_vrf: test_vrf_1 # optional
+                interface: Ethernet1/16 # mandatory
                 ipv4_addr: 10.33.0.2/30 # optional
                 neighbor_ipv4: 10.33.0.1 # optional
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # dot1q can be got from dcnm/optional
+              - peer_vrf: test_vrf_2 # optional
+                interface: Ethernet1/17 # mandatory
+                ipv4_addr: 20.33.0.2/30 # optional
+                neighbor_ipv4: 20.33.0.1 # optional
+                ipv6_addr: 3010::10:34:0:7/64 # optional
+                neighbor_ipv6: 3010::10:34:0:3 # optional
+                dot1q: 3 # dot1q can be got from dcnm/optional
 
     # The two VRFs below will be replaced in the target fabric.
     - name: Replace vrfs

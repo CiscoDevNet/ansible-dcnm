@@ -19,60 +19,178 @@
 
     "mock_fab_inv_data": {
       "192.168.123.150": {
+        "logicalName": "n9kv-100",
+        "serialNumber": "9M99N34RDED",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.151": {
+        "logicalName": "n9kv-200",
+        "serialNumber": "9NXHSNTEO6C",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.156": {
+        "logicalName": "n9kv-ipv6-1",
+        "serialNumber": "9BH0813WFWT",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.157": {
+        "logicalName": "n9kv-ipv6-2",
+        "serialNumber": "9ITWBH9OIAH",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.160": {
+        "logicalName": "n9kv-num-1",
+        "serialNumber": "9IF87L089SZ",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.161": {
+        "logicalName": "n9kv-num-2",
+        "serialNumber": "9FX7O3TU2QM",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.170": {
+        "logicalName": "n9kv-unnum-1",
+        "serialNumber": "9EFX823RUL3",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "192.168.123.171": {
+        "logicalName": "n9kv-unnum-2",
+        "serialNumber": "9AF3VNZYAKS",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "10.64.78.225": {
+        "logicalName": "n9kv-test1",
+        "serialNumber": "98YWRN9WCSC",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "10.64.78.226": {
+        "logicalName": "n9kv-test2",
+        "serialNumber": "94UTIRVSX58",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "10.64.78.227": {
+        "logicalName": "n9kv-227",
+        "serialNumber": "953E68OKK1L",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "10.64.78.228": {
+        "logicalName": "n9kv-228",
+        "serialNumber": "9WCPR0JUV6M",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "10.64.78.230": {
+        "logicalName": "test11",
+        "serialNumber": "9XLP8I4TPPM",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
       },
       "10.64.78.231": {
+        "logicalName": "test22",
+        "serialNumber": "9E15XSEM5MS",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.2": {
+        "logicalName": "n9kv-2",
+        "serialNumber": "TEST-SNO-2",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.3": {
+        "logicalName": "n9kv-3",
+        "serialNumber": "TEST-SNO-3",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.4": {
+        "logicalName": "n9kv-4",
+        "serialNumber": "TEST-SNO-4",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.5": {
+        "logicalName": "n9kv-5",
+        "serialNumber": "TEST-SNO-5",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.6": {
+        "logicalName": "n9kv-6",
+        "serialNumber": "TEST-SNO-6",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      }
+    },
+
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
       }
     },
 
@@ -211,6 +329,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-num-2",
           "sw-serial-number": "9FX7O3TU2QM"
         },
         "link-dbid": 1856090,
@@ -241,6 +360,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-num-1",
           "sw-serial-number": "9IF87L089SZ"
         },
         "fabricName": "mmudigon-numbered"
@@ -258,6 +378,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-num-2",
           "sw-serial-number": "9FX7O3TU2QM"
         },
         "link-dbid": 1856250,
@@ -268,6 +389,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-num-1",
           "sw-serial-number": "9IF87L089SZ"
         },
         "fabricName": "mmudigon-numbered"
@@ -285,6 +407,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/3",
+          "sw-sys-name": "n9kv-num-2",
           "sw-serial-number": "9FX7O3TU2QM"
         },
         "nvPairs": {
@@ -309,6 +432,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/3",
+          "sw-sys-name": "n9kv-num-1",
           "sw-serial-number": "9IF87L089SZ"
         },
         "fabricName": "mmudigon-numbered"
@@ -326,6 +450,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-unnumbered",
           "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-unnum-2",
           "sw-serial-number": "9AF3VNZYAKS"
         },
         "nvPairs": {
@@ -351,6 +476,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-unnumbered",
           "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-unnum-1",
           "sw-serial-number": "9EFX823RUL3"
         },
         "fabricName": "mmudigon-unnumbered"
@@ -368,6 +494,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-unnumbered",
           "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-unnum-2",
           "sw-serial-number": "9AF3VNZYAKS"
         },
         "nvPairs": {
@@ -376,6 +503,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-unnumbered",
           "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-unnum-1",
           "sw-serial-number": "9EFX823RUL3"
         },
         "fabricName": "mmudigon-unnumbered"
@@ -393,6 +521,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
           "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-ipv6-2",
           "sw-serial-number": "9ITWBH9OIAH"
         },
         "nvPairs": {
@@ -418,6 +547,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
           "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-ipv6-1",
           "sw-serial-number": "9BH0813WFWT"
         },
         "fabricName": "mmudigon-ipv6-underlay"
@@ -435,6 +565,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
           "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-ipv6-2",
           "sw-serial-number": "9ITWBH9OIAH"
         },
         "link-dbid": 1859550,
@@ -444,6 +575,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
           "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-ipv6-1",
           "sw-serial-number": "9BH0813WFWT"
         },
         "fabricName": "mmudigon-ipv6-underlay"
@@ -461,6 +593,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
           "if-name": "Ethernet1/3",
+          "sw-sys-name": "n9kv-ipv6-2",
           "sw-serial-number": "9ITWBH9OIAH"
         },
         "nvPairs": {
@@ -491,6 +624,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
           "if-name": "Ethernet1/3",
+          "sw-sys-name": "n9kv-ipv6-1",
           "sw-serial-number": "9BH0813WFWT"
         },
         "fabricName": "mmudigon-ipv6-underlay"
@@ -508,6 +642,7 @@
         "sw2-info": {
           "fabric-name": "mmudigon",
           "if-name": "Ethernet1/4",
+          "sw-sys-name": "n9kv-200",
           "sw-serial-number": "9NXHSNTEO6C"
         },
         "link-dbid": 1862750,
@@ -535,6 +670,7 @@
         "sw1-info": {
           "fabric-name": "mmudigon",
           "if-name": "Ethernet1/4",
+          "sw-sys-name": "n9kv-100",
           "sw-serial-number": "9M99N34RDED"
         },
         "fabricName": "mmudigon"
@@ -552,12 +688,14 @@
         "templateName": "ext_fabric_setup",
         "sw2-info": {
           "if-name": "Ethernet1/3",
+          "sw-sys-name": "test22",
           "sw-serial-number": "9E15XSEM5MS",
           "fabric-name": "test_net"
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
           "if-name": "Ethernet1/3",
+          "sw-sys-name": "n9kv-227",
           "sw-serial-number": "953E68OKK1L"
         },
         "nvPairs": {

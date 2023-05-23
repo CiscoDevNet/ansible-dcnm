@@ -38,6 +38,13 @@ class ActionModule(ActionNetworkModule):
                         if "vlan_id" in at:
                             msg = "Playbook parameter vlan_id should not be specified under the attach: block. Please specify this under the config: block instead"  # noqa
                             return {"failed": True, "msg": msg}
+                        if "vrf_lite" in at:
+                            try:
+                                for vl in at["vrf_lite"]:
+                                    continue
+                            except TypeError:
+                                msg = "Please specify interface parameter under vrf_lite section in the playbook"
+                                return {"failed": True, "msg": msg}
 
         self.result = super(ActionModule, self).run(task_vars=task_vars)
         return self.result

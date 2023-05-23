@@ -39,8 +39,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -94,8 +92,6 @@
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
@@ -150,14 +146,12 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # optional
+          - peer_vrf: ansible-vrf-int1 # optional
+            interface: "{{ ansible_int1 }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
@@ -204,7 +198,14 @@
     fabric: "{{ test_fabric }}"
     state: deleted
 
-- name: MERGED - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the DCNM - Only Mandatory option - Rest are populated from DCNM
+- name: MERGED - sleep for 40 seconds for DCNM to completely remove lite profile
+  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
+  # the profile so wait for some time before creating a new vrf, else the switch goes into
+  # OUT-OF-SYNC state
+  wait_for:
+    timeout: 40
+
+- name: MERGED - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the DCNM - one optional - Rest are populated from DCNM
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -214,13 +215,11 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
+          - interface: "{{ ansible_int1 }}" # mandatory
+      - ip_address: "{{ ansible_switch1 }}"
       deploy: true
   register: result
 
@@ -244,8 +243,8 @@
     - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: MERGED - Create, Attach and Deploy new VRF - Update with incorrect VRF ID.
@@ -257,8 +256,6 @@
         vrf_id: 9008012
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        source: null
-        service_vrf_template: null
         attach:
           - ip_address: "{{ ansible_switch1 }}"
           - ip_address: "{{ ansible_switch2 }}"
@@ -280,8 +277,6 @@
         vrf_id: 9008012000000000
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        source: null
-        service_vrf_template: null
         attach:
           - ip_address: "{{ ansible_switch1 }}"
           - ip_address: "{{ ansible_switch2 }}"
@@ -294,7 +289,7 @@
     - 'result.changed == false'
     - '"The item exceeds the allowed range of max" in result.msg'
 
-- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without mandatory parameter
+- name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE without required parameter
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -304,13 +299,11 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
         vrf_lite:
-          - interface: "{{ ansible_int1 }}"
+          - peer_vrf: ansible-vrf-int1 # optional
       deploy: true
   register: result
   ignore_errors: yes
@@ -318,7 +311,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"peer_vrf is mandatory under attach VRF LITE parameters" in result.msg'
+    - '"Invalid parameters in playbook: interface : Required parameter not found" in result.msg'
 
 - name: MERGED - Create, Attach and Deploy new VRF - Try configuring VRF LITE to a non border switch
   cisco.dcnm.dcnm_vrf:
@@ -330,13 +323,11 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
-      source: null
-      service_vrf_template: null
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # optional
+          - peer_vrf: ansible-vrf-int1 # optional
+            interface: "{{ ansible_int1 }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional

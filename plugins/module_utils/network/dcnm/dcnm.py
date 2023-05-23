@@ -42,11 +42,15 @@ def validate_ip_address_format(type, item, invalid_params):
                 subnet = item.split("/")[1]
                 if not subnet or int(subnet) > mask_len:
                     invalid_params.append(
-                        "{0} : Invalid {1} gw/subnet syntax".format(item, addr_type)
+                        "{0} : Invalid {1} gw/subnet syntax".format(
+                            item, addr_type
+                        )
                     )
             else:
                 invalid_params.append(
-                    "{0} : Invalid {1} gw/subnet syntax".format(item, addr_type)
+                    "{0} : Invalid {1} gw/subnet syntax".format(
+                        item, addr_type
+                    )
                 )
         try:
             socket.inet_pton(addr_family, address)
@@ -138,7 +142,9 @@ def validate_list_of_dicts(param_list, spec, module=None):
                         module.no_log_values.add(item)
                     else:
                         msg = "\n\n'{0}' is a no_log parameter".format(param)
-                        msg += "\nAnsible module object must be passed to this "
+                        msg += (
+                            "\nAnsible module object must be passed to this "
+                        )
                         msg += "\nfunction to ensure it is not logged\n\n"
                         raise Exception(msg)
 
@@ -158,6 +164,7 @@ def get_fabric_inventory_details(module, fabric):
     conn = Connection(module._socket_path)
     if conn.get_version() == 12:
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
+        path += "/switchesByFabric"
 
     count = 1
     while rc is False:
@@ -188,10 +195,13 @@ def get_fabric_inventory_details(module, fabric):
             raise Exception(response)
 
         for device_data in response.get("DATA"):
-            key = device_data.get("ipAddress")
+
+            if device_data.get("ipAddress", "") != "":
+                key = device_data.get("ipAddress")
+            else:
+                key = device_data.get("logicalName")
             inventory_data[key] = device_data
         rc = True
-
     return inventory_data
 
 
@@ -204,7 +214,9 @@ def get_ip_sn_dict(inventory_data):
         ip = inventory_data[device_key].get("ipAddress")
         sn = inventory_data[device_key].get("serialNumber")
         hn = inventory_data[device_key].get("logicalName")
-        ip_sn.update({ip: sn})
+
+        if ip != "":
+            ip_sn.update({ip: sn})
         hn_sn.update({hn: sn})
 
     return ip_sn, hn_sn
@@ -247,9 +259,7 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 
     msg_dict = {"Error": ""}
     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
-    msg1 = (
-        'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
-    )
+    msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
 
     # Check if the given sw_elem is a v4 ip_addr
     try:
@@ -377,7 +387,9 @@ def dcnm_reset_connection(module):
     conn = Connection(module._socket_path)
 
     conn.logout()
-    return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
+    return conn.login(
+        conn.get_option("remote_user"), conn.get_option("password")
+    )
 
 
 def dcnm_version_supported(module):
@@ -395,7 +407,10 @@ def dcnm_version_supported(module):
     supported = None
     data = None
 
-    paths = ["/fm/fmrest/about/version", "/appcenter/cisco/ndfc/api/about/version"]
+    paths = [
+        "/fm/fmrest/about/version",
+        "/appcenter/cisco/ndfc/api/about/version",
+    ]
     for path in paths:
         response = dcnm_send(module, method, path)
         if response["RETURN_CODE"] == 200:
@@ -476,7 +491,9 @@ def dcnm_get_url(module, fabric, path, items, module_name):
             )
             url = path.format(fabric, itemstr)
         else:
-            itemstr = ",".join(itemlist[iter * (len(itemlist) // send_count):])
+            itemstr = ",".join(
+                itemlist[iter * (len(itemlist) // send_count):]
+            )
             url = path.format(fabric, itemstr)
 
         att_objects = dcnm_send(module, method, url)

@@ -127,6 +127,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_vrf_attach_lite_object = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_lite_object")
         )
+        self.mock_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_vrf_lite_obj"))
 
     def setUp(self):
         super(TestDcnmVrfModule, self).setUp()
@@ -199,9 +200,11 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "_merged_lite_new" in self._testMethodName:
+            self.init_data()
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
+                self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
             ]
@@ -270,18 +273,6 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.deploy_success_resp,
             ]
 
-        elif "_merged_lite_update_vlan" in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
-            self.run_dcnm_send.side_effect = [
-                self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att2_only,
-                self.blank_data,
-                self.attach_success_resp,
-                self.deploy_success_resp,
-            ]
-
         elif "_merged_lite_update" in self._testMethodName:
             self.init_data()
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
@@ -289,6 +280,20 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_merge_att1_only,
                 self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                self.mock_vrf_lite_obj,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_lite_vlan_update" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_vrf_attach_get_ext_object_merge_att1_only,
+                self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                self.blank_data,
+                self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
             ]
@@ -307,6 +312,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.init_data()
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
+                self.mock_vrf_lite_obj,
                 self.mock_vrf_attach_object_pending,
                 self.blank_data,
                 self.mock_vrf_attach_get_ext_object_merge_att1_only,
@@ -360,6 +366,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_merge_att1_only,
                 self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.delete_success_resp,
@@ -384,9 +391,11 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "lite_override_with_additions" in self._testMethodName:
+            self.init_data()
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
+                self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
             ]
@@ -406,6 +415,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_merge_att1_only,
                 self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
@@ -772,7 +782,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][2]["DATA"]["status"], "")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
-    def test_dcnm_vrf_merged_lite_update_vlan(self):
+    def test_dcnm_vrf_merged_lite_vlan_update(self):
         set_module_args(
             dict(
                 state="merged",

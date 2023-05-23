@@ -470,7 +470,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_version_supported,
     dcnm_get_url,
 )
-from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 
 

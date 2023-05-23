@@ -2199,5 +2199,149 @@
     "src_interface": "Ethernet1/1",
     "template": "ext_evpn_multisite_overlay_setup"
   }
-  ]
+  ],
+
+  "inter_src_fab_ro_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-num-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_src_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_src_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_src_dst_sw_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-unnum-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-num-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_src_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_src_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_src_dst_sw_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-unnum-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }]
 }

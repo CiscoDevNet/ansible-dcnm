@@ -85,7 +85,8 @@ options:
         description:
         - Role which needs to be assigned to the switch
         choices: ['leaf', 'spine', 'border', 'border_spine', 'border_gateway', 'border_gateway_spine',
-                 'super_spine', 'border_super_spine', 'border_gateway_super_spine']
+                 'super_spine', 'border_super_spine', 'border_gateway_super_spine', 'access', 'aggregation',
+                 'edge_router', 'core_router', 'tor']
         type: str
         required: false
         default: leaf
@@ -947,6 +948,11 @@ class DcnmInventory:
                         "super_spine",
                         "border_super_spine",
                         "border_gateway_super_spine",
+                        "access",
+                        "aggregation",
+                        "edge_router",
+                        "core_router",
+                        "tor"
                     ],
                     default="leaf",
                 ),
@@ -1091,6 +1097,11 @@ class DcnmInventory:
                         "super_spine",
                         "border_super_spine",
                         "border_gateway_super_spine",
+                        "access",
+                        "aggregation",
+                        "edge_router",
+                        "core_router",
+                        "tor",
                         "None",
                     ],
                     default="None",
@@ -1316,7 +1327,6 @@ class DcnmInventory:
 
     def lancred_all_switches(self):
 
-        want_list = []
         # Get Fabric Inventory Details
         method = "GET"
         path = "/fm/fmrest/lanConfig/getLanSwitchCredentials"
@@ -1356,7 +1366,6 @@ class DcnmInventory:
 
     def assign_role(self):
 
-        want_list = []
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
         if self.nd:
@@ -1484,7 +1493,6 @@ class DcnmInventory:
     def config_deploy(self):
 
         # config-deploy
-        sernos = []
         method = "POST"
         path = "/rest/control/fabrics/{0}".format(self.fabric)
         if self.nd:

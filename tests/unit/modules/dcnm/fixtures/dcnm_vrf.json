@@ -1075,5 +1075,48 @@
         "vrfStatus": "DEPLOYED"
       }
     ]
+  },
+  "mock_vrf_lite_obj": {
+   "RETURN_CODE":200,
+   "METHOD":"GET",
+   "MESSAGE":"OK",
+   "DATA": [
+      {
+        "vrfName":"test_vrf",
+        "templateName":"Default_VRF_Extension_Universal",
+        "switchDetailsList":[
+          {
+             "switchName":"poap_test",
+             "vlan":2001,
+             "serialNumber":"9D2DAUJJFQQ",
+             "peerSerialNumber":"None",
+             "extensionValues":"None",
+             "extensionPrototypeValues":[
+               {
+                 "interfaceName":"Ethernet1/3",
+                 "extensionType":"VRF_LITE",
+                 "extensionValues":"{\"PEER_VRF_NAME\": \"\", \"NEIGHBOR_IP\": \"10.33.0.1\", \"VRF_LITE_JYTHON_TEMPLATE\": \"Ext_VRF_Lite_Jython\", \"enableBorderExtension\": \"VRF_LITE\", \"AUTO_VRF_LITE_FLAG\":\"false\", \"IP_MASK\": \"10.33.0.2/30\", \"MTU\": \"9216\", \"NEIGHBOR_ASN\": \"23132\", \"IF_NAME\": \"Ethernet1/3\", \"IPV6_NEIGHBOR\": \"\", \"IPV6_MASK\": \"\", \"DOT1Q_ID\": \"2\", \"asn\": \"52125\"}",
+                 "destInterfaceName":"Ethernet1/1",
+                 "destSwitchName":"poap-import-static"
+               },
+               {
+                 "interfaceName":"Ethernet1/2",
+                 "extensionType":"VRF_LITE",
+                 "extensionValues":"{\"PEER_VRF_NAME\": \"\", \"NEIGHBOR_IP\": \"20.33.0.1\", \"VRF_LITE_JYTHON_TEMPLATE\": \"Ext_VRF_Lite_Jython\", \"enableBorderExtension\": \"VRF_LITE\", \"AUTO_VRF_LITE_FLAG\": \"false\", \"IP_MASK\": \"20.33.0.2/30\", \"MTU\": \"9216\", \"NEIGHBOR_ASN\": \"23132\", \"IF_NAME\": \"Ethernet1/2\", \"IPV6_NEIGHBOR\": \"\", \"IPV6_MASK\": \"\", \"DOT1Q_ID\": \"2\", \"asn\": \"52125\"}",
+                 "destInterfaceName":"Ethernet1/2",
+                 "destSwitchName":"poap-import-static"
+               }
+             ],
+             "islanAttached":false,
+             "lanAttachedState":"NA",
+             "errorMessage":"None",
+             "instanceValues":"None",
+             "freeformConfig":"None",
+             "role":"border gateway",
+             "vlanModifiable":true
+          }
+        ]
+      }
+    ]
   }
 }
