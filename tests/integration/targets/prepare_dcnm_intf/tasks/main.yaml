@@ -1,9 +1,19 @@
     # SVI interfaces require interface-vlan and hsrp features to be enabled
     
-    - name: Create templates for interface-vlan and hsrp features
+    - name: Create templates for lacp, interface-vlan and hsrp features
       cisco.dcnm.dcnm_template:
         state: merged        # only choose form [merged, deleted, query]
         config:
+          - name: my_lacp
+            tags: "lacp"
+            description: "internal template for enabling LACP feature"
+            content: |
+              ##
+              ##template content
+
+              feature lacp
+
+              ##
           - name: my_interface_vlan
             tags: "interface_vlan"
             description: "internal template for enabling interface-vlan feature"
@@ -26,8 +36,8 @@
               ##
       register: result
 
-# Create the policy to deploy interface-vlan and hsrp features on the switches
-    - name: Create interface-vlan and hsrp policies
+# Create the policy to deploy lacp, interface-vlan and hsrp features on the switches
+    - name: Create lacp, interface-vlan and hsrp policies
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
         config:
@@ -35,6 +45,9 @@
             create_additional_policy: false  # Do not create a policy if it already exists
             priority: 101
           - name: my_hsrp  # This must be a valid template name
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
+          - name: my_lacp  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
             priority: 101
 

@@ -1112,9 +1112,10 @@ class DcnmPolicy:
                 and (resp.get("DATA", None) is not None)
             ):
                 if resp["DATA"].get("successList", None) is not None:
-                    if "is created successfully" in resp["DATA"][
-                        "successList"
-                    ][0].get("message"):
+                    if (
+                        resp["DATA"]["successList"][0].get("status").lower()
+                        == "success"
+                    ):
                         policy_id = re.findall(
                             r"POLICY-\d+",
                             resp["DATA"]["successList"][0].get("message"),
