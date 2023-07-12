@@ -40,10 +40,8 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
-        deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -54,8 +52,7 @@
       attach:
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
-      deploy: false
+      deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -135,7 +132,7 @@
     - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
     - '(result.response[0].DATA|dict2items)[2].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == false'
-    - 'result.diff[0].attach[1].deploy == false'
+    - 'result.diff[1].attach[1].deploy == false'
     - '"{{ ansible_switch1 }}" or "{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
     - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.diff[1].attach[1].ip_address'
     - '"ansible-net13" or "ansible-net12" in result.diff[1].net_name'
@@ -167,10 +164,9 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
-        deploy: true
+      deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -181,8 +177,7 @@
       attach:
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
-      deploy: false
+      deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -251,10 +246,9 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
-        deploy: true
+      deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -274,8 +268,7 @@
       attach:
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
-      deploy: false
+      deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -415,10 +408,9 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
-        deploy: true
+      deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -438,8 +430,7 @@
       attach:
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
-      deploy: false
+      deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state

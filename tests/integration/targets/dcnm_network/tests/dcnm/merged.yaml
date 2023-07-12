@@ -157,7 +157,7 @@
     fabric: "{{ test_fabric }}"
     state: deleted
 
-- name: MERGED - Create New Network with Attach specific deploy and no global deploy
+- name: MERGED - Create New Network with no deploy
   cisco.dcnm.dcnm_network: &conf
     fabric: "{{ test_fabric }}"
     state: merged
@@ -172,11 +172,10 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: True
       deploy: False
   register: result
 
-- name: Query fabric state until networkStatus transitions to DEPLOYED state
+- name: Query fabric state until networkStatus transitions to PENDING state
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: query
@@ -191,7 +190,6 @@
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
     - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
@@ -228,7 +226,7 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
+      deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -239,7 +237,6 @@
       attach:
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
       deploy: false
   register: result
 
@@ -303,11 +300,9 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
-      deploy: false
+      deploy: True
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -364,10 +359,8 @@
       attach:
         - ip_address: "{{ ansible_switch1 }}"
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-          deploy: true
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
-          deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -378,11 +371,9 @@
       attach:
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-          deploy: true
         - ip_address: "{{ ansible_switch1 }}"
           ports: ["{{ ansible_sw1_int3 }}", "{{ ansible_sw1_int4 }}"]
-          deploy: true
-      deploy: false
+      deploy: True
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -448,11 +439,9 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       - ip_address: "{{ ansible_switch2 }}"
         ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: true
-      deploy: false
+      deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -511,7 +500,6 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: True
       deploy: True
   register: result
 
@@ -590,7 +578,6 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: True
       deploy: True
   register: result
 
@@ -847,7 +834,6 @@
       attach:
       - ip_address:
         ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
       deploy: false
   register: result
   ignore_errors: yes
@@ -872,7 +858,6 @@
       attach:
       - ip_address: "{{ ansible_switch1 }}"
         ports:
-        deploy: true
       deploy: false
   register: result
   ignore_errors: yes
@@ -967,11 +952,6 @@
     that:
     - 'result.changed == false'
     - '"Invalid parameters in playbook: DHCP server IP should be specified along with DHCP server VRF" in result.msg'
-
-- name: MERGED - setup - Clean up any existing network
-  cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
-    state: deleted
 
 ##############################################
 ##                 CLEAN-UP                 ##

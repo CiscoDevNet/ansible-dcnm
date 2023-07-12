@@ -613,6 +613,8 @@ class DcnmNetwork:
 
                                         del want["isAttached"]
                                         attach_list.append(want)
+                                        if bool(want["is_deploy"]):
+                                            dep_net = True
 
                                         continue
 
@@ -625,6 +627,8 @@ class DcnmNetwork:
                                     )
                                     del want["isAttached"]
                                     attach_list.append(want)
+                                    if bool(want["is_deploy"]):
+                                        dep_net = True
                                     continue
 
                             if bool(have["isAttached"]) is not bool(want["isAttached"]):
@@ -635,21 +639,34 @@ class DcnmNetwork:
                                     del have["isAttached"]
                                     have.update({"deployment": False})
                                     attach_list.append(have)
+                                    if bool(want["is_deploy"]):
+                                        dep_net = True
                                     continue
                                 del want["isAttached"]
+                                want.update({"deployment": True})
                                 attach_list.append(want)
+                                if bool(want["is_deploy"]):
+                                    dep_net = True
                                 continue
 
                         if bool(have["deployment"]) is not bool(want["deployment"]):
                             # We hit this section when attachment is successful, but, deployment is stuck in PENDING or
                             # OUT-OF-SYNC. In such cases, we just add the object to deploy list only. have['deployment']
                             # is set to False when deployment is PENDING or OUT-OF-SYNC - ref - get_have()
-                            dep_net = True
+                            if bool(want["is_deploy"]):
+                                dep_net = True
+
+                        if bool(want["is_deploy"]) is not bool(have["is_deploy"]):
+                            if bool(want["is_deploy"]):
+                                dep_net = True
 
             if not found:
                 if bool(want["isAttached"]):
                     del want["isAttached"]
+                    want["deployment"] = True
                     attach_list.append(want)
+                    if bool(want["is_deploy"]):
+                        dep_net = True
 
         for attach in attach_list[:]:
             for ip, ser in self.ip_sn.items():
@@ -671,6 +688,7 @@ class DcnmNetwork:
                             havtoattach = copy.deepcopy(hav)
                             havtoattach.update({"switchPorts": ""})
                             del havtoattach["isAttached"]
+                            havtoattach["deployment"] = True
                             attach_list.append(havtoattach)
                             break
 
@@ -713,11 +731,12 @@ class DcnmNetwork:
         attach.update({"vlan": 0})
         attach.update({"dot1QVlan": 0})
         attach.update({"untagged": False})
-        attach.update({"deployment": deploy})
+        attach.update({"deployment": True})
         attach.update({"isAttached": True})
         attach.update({"extensionValues": ""})
         attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
+        attach.update({"is_deploy": deploy})
         if "deploy" in attach:
             del attach["deploy"]
         del attach["ports"]
@@ -1384,7 +1403,7 @@ class DcnmNetwork:
                 attach.update({"fabric": self.fabric})
                 attach.update({"vlan": vlan})
                 attach.update({"serialNumber": sn})
-                attach.update({"deployment": deployed})
+                attach.update({"deployment": deploy})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": ""})
                 attach.update({"freeformConfig": ""})
@@ -1393,6 +1412,7 @@ class DcnmNetwork:
                 attach.update({"detachSwitchPorts": ""})
                 attach.update({"switchPorts": ports})
                 attach.update({"untagged": False})
+                attach.update({"is_deploy": deployed})
 
             if dep_net:
                 dep_networks.append(dep_net)
@@ -1428,7 +1448,7 @@ class DcnmNetwork:
             if not net.get("attach"):
                 continue
             for attach in net["attach"]:
-                deploy = net_deploy if "deploy" not in attach else attach["deploy"]
+                deploy = net_deploy
                 networks.append(
                     self.update_attach_params(attach, net["net_name"], deploy)
                 )
@@ -1912,7 +1932,8 @@ class DcnmNetwork:
                         del base["lanAttachList"]
                         base.update({"lanAttachList": diff})
                         diff_attach.append(base)
-                        dep_net = want_a["networkName"]
+                        if net:
+                            dep_net = want_a["networkName"]
                     else:
                         if (
                             net
@@ -1957,8 +1978,11 @@ class DcnmNetwork:
                     del base["lanAttachList"]
                     base.update({"lanAttachList": atch_list})
                     diff_attach.append(base)
-                    if bool(attach["deployment"]):
+                    if bool(attach["is_deploy"]):
                         dep_net = want_a["networkName"]
+
+                for atch in atch_list:
+                    atch["deployment"] = True
 
             if dep_net:
                 all_nets.append(dep_net)
@@ -2278,6 +2302,10 @@ class DcnmNetwork:
             # Update the fabric name to specific fabric which the switches are part of.
             self.update_ms_fabric(self.diff_detach)
 
+            for d_a in self.diff_detach:
+                for v_a in d_a["lanAttachList"]:
+                    del v_a["is_deploy"]
+
             resp = dcnm_send(
                 self.module, method, detach_path, json.dumps(self.diff_detach)
             )
@@ -2405,6 +2433,10 @@ class DcnmNetwork:
 
             # Update the fabric name to specific fabric which the switches are part of.
             self.update_ms_fabric(self.diff_attach)
+
+            for d_a in self.diff_attach:
+                for v_a in d_a["lanAttachList"]:
+                    del v_a["is_deploy"]
 
             for attempt in range(0, 50):
                 resp = dcnm_send(
@@ -2553,7 +2585,7 @@ class DcnmNetwork:
                 net_id=dict(type="int", range_max=16777214),
                 vrf_name=dict(type="str", length_max=32),
                 attach=dict(type="list"),
-                deploy=dict(type="bool"),
+                deploy=dict(type="bool", default=True),
                 gw_ip_subnet=dict(type="ipv4_subnet", default=""),
                 vlan_id=dict(type="int", range_max=4094),
                 routing_tag=dict(type="int", default=12345, range_max=4294967295),
@@ -2605,6 +2637,7 @@ class DcnmNetwork:
                         )
                         net["attach"] = valid_att
                         for attach in net["attach"]:
+                            attach["deploy"] = net["deploy"]
                             if attach.get("ports"):
                                 attach["ports"] = [port.capitalize() for port in attach["ports"]]
                         invalid_params.extend(invalid_att)
