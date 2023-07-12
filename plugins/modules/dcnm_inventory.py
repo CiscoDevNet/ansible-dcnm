@@ -466,13 +466,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_ip_sn_dict,
 )
 
-import datetime
-def logit(msg):
-    with open('/tmp/alog.txt', 'a') as of:
-        d = datetime.datetime.now().replace(microsecond=0).isoformat()
-        of.write("---- %s ----\n%s\n" % (d,msg))
-
-
 class DcnmInventory:
     def __init__(self, module):
         self.switches = {}
@@ -570,7 +563,6 @@ class DcnmInventory:
         state = self.params["state"]
 
         if state == "merged":
-            logit('update_poap_params')
             poap_upd = {
                 "ipAddress": s_ip,
                 "discoveryAuthProtocol": "0",
@@ -588,8 +580,6 @@ class DcnmInventory:
             if poap.get("discovery_username"):
                 poap_upd['discoveryUsername'] = poap["discovery_username"]
                 poap_upd['discoveryPassword'] = poap["discovery_password"]
-
-            logit(poap_upd)
 
             poap_upd = self.discover_poap_params(poap_upd, poap)
 
@@ -640,7 +630,6 @@ class DcnmInventory:
         state = self.params["state"]
 
         if state == "merged":
-            logit('update_rma_params')
             rma_upd = {
                 "ipAddress": s_ip,
                 "discoveryAuthProtocol": "0",
@@ -716,7 +705,6 @@ class DcnmInventory:
             else:
                 pro = 0
 
-            logit('update_create_params')
             inv_upd = {
                 "seedIP": s_ip,
                 "snmpV3AuthProtocol": pro,
@@ -731,7 +719,6 @@ class DcnmInventory:
             resp = self.update_discover_params(inv_upd)
 
             inv_upd["switches"] = resp
-            logit(inv_upd)
 
 
         return inv_upd
@@ -1010,7 +997,6 @@ class DcnmInventory:
 
             msg = None
             if self.config:
-                logit('validate input')
                 for inv in self.config:
                     if (
                         "seed_ip" not in inv
@@ -1390,7 +1376,6 @@ class DcnmInventory:
                     )
                     self.module.fail_json(msg=msg)
                 if lan["ipAddress"] == create["switches"][0]["ipaddr"]:
-                    logit('lancred all switches')
                     set_lan = {
                         "switchIds": lan["switchDbID"],
                         "userName": create["username"],
@@ -1667,7 +1652,6 @@ class DcnmInventory:
 
         if "DATA" in response:
             for resp in response["DATA"]:
-                logit('swap serial')
                 if (resp["serialNumber"] == poap["serialNumber"]):
                     resp.update({"password": poap["password"]})
                     resp.update({"discoveryAuthProtocol": "0"})
@@ -1763,8 +1747,6 @@ class DcnmInventory:
 
 def main():
     """main entry point for module execution"""
-
-    logit('Calling dcnm_inventory module')
 
     element_spec = dict(
         fabric=dict(required=True, type="str"),
