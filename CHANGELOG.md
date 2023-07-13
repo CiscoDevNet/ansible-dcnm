@@ -12,7 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * https://github.com/CiscoDevNet/ansible-dcnm/issues/231
 * https://github.com/CiscoDevNet/ansible-dcnm/issues/232
 * https://github.com/CiscoDevNet/ansible-dcnm/issues/197
-  
+
 ## [3.3.0] - 2023-05-23
 
 ### Added
