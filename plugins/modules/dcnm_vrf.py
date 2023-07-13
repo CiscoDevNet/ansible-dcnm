@@ -420,9 +420,7 @@ EXAMPLES = """
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        deploy: true
       - ip_address: 192.168.1.225
-        deploy: false
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
@@ -477,13 +475,10 @@ EXAMPLES = """
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        deploy: true
       # Delete this attachment
       # - ip_address: 192.168.1.225
-      # deploy: true
       # Create the following attachment
       - ip_address: 192.168.1.226
-        deploy: true
     # Dont touch this if its present on DCNM
     # - vrf_name: ansible-vrf-r2
     #   vrf_id: 9008012
@@ -507,13 +502,10 @@ EXAMPLES = """
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        deploy: true
       # Delete this attachment
       # - ip_address: 192.168.1.225
-      #   deploy: true
       # Create the following attachment
       - ip_address: 192.168.1.226
-        deploy: true
     # Delete this vrf
     # - vrf_name: ansible-vrf-r2
     #   vrf_id: 9008012
@@ -756,18 +748,21 @@ class DcnmVrf:
                         else:
                             found = True
 
-                            # When the attachment is to be detached and undeployed, ignore any changes
-                            # to the attach section in the want(i.e in the playbook).
                             if want.get("isAttached") is not None:
                                 if bool(have["isAttached"]) is not bool(
                                     want["isAttached"]
                                 ):
                                     del want["isAttached"]
+                                    want["deployment"] = True
                                     attach_list.append(want)
+                                    if bool(want["is_deploy"]):
+                                        dep_vrf = True
                                     continue
 
-                            if bool(have["deployment"]) is not bool(want["deployment"]):
-                                dep_vrf = True
+                            if ((bool(want["deployment"]) is not bool(have["deployment"])) or
+                               (bool(want["is_deploy"]) is not bool(have["is_deploy"]))):
+                                if bool(want["is_deploy"]):
+                                    dep_vrf = True
 
                         if found:
                             break
@@ -778,7 +773,10 @@ class DcnmVrf:
             if not found:
                 if bool(want["isAttached"]):
                     del want["isAttached"]
+                    want["deployment"] = True
                     attach_list.append(want)
+                    if bool(want["is_deploy"]):
+                        dep_vrf = True
 
         return attach_list, dep_vrf
 
@@ -898,9 +896,13 @@ class DcnmVrf:
         attach.update({"fabric": self.fabric})
         attach.update({"vrfName": vrf_name})
         attach.update({"vlan": vlanId})
-        attach.update({"deployment": deploy})
+        # This flag is not to be confused for deploy of attachment.
+        # "deployment" should be set True for attaching an attachment
+        # and set to False for detaching an attachment
+        attach.update({"deployment": True})
         attach.update({"isAttached": True})
         attach.update({"serialNumber": serial})
+        attach.update({"is_deploy": deploy})
         if vrf_ext:
             attach.update({"extensionValues": json.dumps(ext_values).replace(" ", "")})
             attach.update(
@@ -1295,11 +1297,12 @@ class DcnmVrf:
                 attach.update({"fabric": self.fabric})
                 attach.update({"vlan": vlan})
                 attach.update({"serialNumber": sn})
-                attach.update({"deployment": deployed})
+                attach.update({"deployment": deploy})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": ""})
                 attach.update({"freeformConfig": ""})
                 attach.update({"isAttached": attach_state})
+                attach.update({"is_deploy": deployed})
 
                 """ Get the VRF LITE extension template and update it to the attach['extensionvalues']"""
 
@@ -1418,7 +1421,7 @@ class DcnmVrf:
             if not vrf.get("attach"):
                 continue
             for attach in vrf["attach"]:
-                deploy = vrf_deploy if "deploy" not in attach else attach["deploy"]
+                deploy = vrf_deploy
                 vrfs.append(
                     self.update_attach_params(attach, vrf["vrf_name"], deploy, vlanId)
                 )
@@ -1801,7 +1804,8 @@ class DcnmVrf:
                         base.update({"lanAttachList": diff})
 
                         diff_attach.append(base)
-                        dep_vrf = want_a["vrfName"]
+                        if vrf:
+                            dep_vrf = want_a["vrfName"]
                     else:
                         if vrf or conf_changed.get(want_a["vrfName"], False):
                             dep_vrf = want_a["vrfName"]
@@ -1817,8 +1821,11 @@ class DcnmVrf:
                     del base["lanAttachList"]
                     base.update({"lanAttachList": atch_list})
                     diff_attach.append(base)
-                    if bool(attach["deployment"]):
+                    if bool(attach["is_deploy"]):
                         dep_vrf = want_a["vrfName"]
+
+                for atch in atch_list:
+                    atch["deployment"] = True
 
             if dep_vrf:
                 all_vrfs += dep_vrf + ","
@@ -1826,11 +1833,7 @@ class DcnmVrf:
         if all_vrfs:
             diff_deploy.update({"vrfNames": all_vrfs[:-1]})
 
-        if vrf_found and not attach_found:
-            self.diff_create = []
-        else:
-            self.diff_create = diff_create
-
+        self.diff_create = diff_create
         self.diff_create_update = diff_create_update
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
@@ -1918,7 +1921,7 @@ class DcnmVrf:
             del found_c["serviceVrfTemplate"]
             del found_c["vrfTemplateConfig"]
 
-            if diff_deploy:
+            if diff_deploy and found_c["vrf_name"] in diff_deploy:
                 diff_deploy.remove(found_c["vrf_name"])
             if not found_a:
                 diff.append(found_c)
@@ -2131,6 +2134,11 @@ class DcnmVrf:
                     for node in elem["lanAttachList"]:
                         node["fabric"] = self.sn_fab[node["serialNumber"]]
 
+            for d_a in self.diff_detach:
+                for v_a in d_a["lanAttachList"]:
+                    if "is_deploy" in v_a.keys():
+                        del v_a["is_deploy"]
+
             resp = dcnm_send(
                 self.module, method, detach_path, json.dumps(self.diff_detach)
             )
@@ -2253,6 +2261,8 @@ class DcnmVrf:
             for d_a in self.diff_attach:
                 for v_a in d_a["lanAttachList"]:
                     v_a.update(vlan=0)
+                    if "is_deploy" in v_a.keys():
+                        del v_a["is_deploy"]
                     if v_a.get("vrf_lite"):
                         for ip, ser in self.ip_sn.items():
                             if ser == v_a["serialNumber"]:
@@ -2396,7 +2406,7 @@ class DcnmVrf:
                                 del v_a["vrf_lite"]
 
                     else:
-                        if v_a.get("vrf_lite", None) is not None:
+                        if "vrf_lite" in v_a.keys():
                             del v_a["vrf_lite"]
 
             path = self.paths["GET_VRF"].format(self.fabric)
@@ -2561,18 +2571,8 @@ class DcnmVrf:
                 )
                 for vrf in valid_vrf:
                     if vrf.get("attach"):
-                        # The deploy setting provided in the user parameters
-                        # has the following behavior:
-                        # (1) By default deploy is true
-                        # (2) The global 'deploy' option for the vrf applies to
-                        #     any attachments that don't have the 'deploy'
-                        #     option explicity set.
                         for entry in vrf.get("attach"):
-                            if "deploy" not in entry.keys() and "deploy" in vrf:
-                                # This attach entry does not have a deploy key
-                                # but the vrf global deploy flag is set so set
-                                # it to the global 'deploy' value
-                                entry["deploy"] = vrf["deploy"]
+                            entry["deploy"] = vrf["deploy"]
                         valid_att, invalid_att = validate_list_of_dicts(
                             vrf["attach"], att_spec
                         )
