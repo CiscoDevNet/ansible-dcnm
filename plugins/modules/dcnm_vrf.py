@@ -420,9 +420,7 @@ EXAMPLES = """
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        deploy: true
       - ip_address: 192.168.1.225
-        deploy: false
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
@@ -477,13 +475,10 @@ EXAMPLES = """
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        deploy: true
       # Delete this attachment
       # - ip_address: 192.168.1.225
-      # deploy: true
       # Create the following attachment
       - ip_address: 192.168.1.226
-        deploy: true
     # Dont touch this if its present on DCNM
     # - vrf_name: ansible-vrf-r2
     #   vrf_id: 9008012
@@ -507,13 +502,10 @@ EXAMPLES = """
       service_vrf_template: null
       attach:
       - ip_address: 192.168.1.224
-        deploy: true
       # Delete this attachment
       # - ip_address: 192.168.1.225
-      #   deploy: true
       # Create the following attachment
       - ip_address: 192.168.1.226
-        deploy: true
     # Delete this vrf
     # - vrf_name: ansible-vrf-r2
     #   vrf_id: 9008012
@@ -904,6 +896,9 @@ class DcnmVrf:
         attach.update({"fabric": self.fabric})
         attach.update({"vrfName": vrf_name})
         attach.update({"vlan": vlanId})
+        # This flag is not to be confused for deploy of attachment.
+        # "deployment" should be set True for attaching an attachment
+        # and set to False for detaching an attachment
         attach.update({"deployment": True})
         attach.update({"isAttached": True})
         attach.update({"serialNumber": serial})

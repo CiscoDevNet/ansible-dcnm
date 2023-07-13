@@ -1071,9 +1071,7 @@ Examples
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            deploy: true
           - ip_address: 192.168.1.225
-            deploy: false
         - vrf_name: ansible-vrf-r2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
@@ -1128,13 +1126,10 @@ Examples
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            deploy: true
           # Delete this attachment
           # - ip_address: 192.168.1.225
-          # deploy: true
           # Create the following attachment
           - ip_address: 192.168.1.226
-            deploy: true
         # Dont touch this if its present on DCNM
         # - vrf_name: ansible-vrf-r2
         #   vrf_id: 9008012
@@ -1158,13 +1153,10 @@ Examples
           service_vrf_template: null
           attach:
           - ip_address: 192.168.1.224
-            deploy: true
           # Delete this attachment
           # - ip_address: 192.168.1.225
-          #   deploy: true
           # Create the following attachment
           - ip_address: 192.168.1.226
-            deploy: true
         # Delete this vrf
         # - vrf_name: ansible-vrf-r2
         #   vrf_id: 9008012

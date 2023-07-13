@@ -804,10 +804,8 @@ Examples
           attach:
           - ip_address: 192.168.1.224
             ports: [Ethernet1/13, Ethernet1/14]
-            deploy: true
           - ip_address: 192.168.1.225
             ports: [Ethernet1/13, Ethernet1/14]
-            deploy: true
           deploy: true
         - net_name: ansible-net12
           vrf_name: Tenant-2
@@ -819,10 +817,8 @@ Examples
           attach:
           - ip_address: 192.168.1.224
             ports: [Ethernet1/11, Ethernet1/12]
-            deploy: true
           - ip_address: 192.168.1.225
             ports: [Ethernet1/11, Ethernet1/12]
-            deploy: true
           deploy: false
 
     - name: Replace networks
@@ -842,11 +838,9 @@ Examples
               # Replace the ports with new ports
               # ports: [Ethernet1/13, Ethernet1/14]
               ports: [Ethernet1/16, Ethernet1/17]
-              deploy: true
               # Delete this attachment
             # - ip_address: 192.168.1.225
             #   ports: [Ethernet1/13, Ethernet1/14]
-            #   deploy: true
             deploy: true
             # Dont touch this if its present on DCNM
             # - net_name: ansible-net12
@@ -859,10 +853,8 @@ Examples
             #   attach:
             #     - ip_address: 192.168.1.224
             #       ports: [Ethernet1/11, Ethernet1/12]
-            #       deploy: true
             #     - ip_address: 192.168.1.225
             #       ports: [Ethernet1/11, Ethernet1/12]
-            #       deploy: true
             #   deploy: false
 
     - name: Override networks
@@ -882,11 +874,9 @@ Examples
             # Replace the ports with new ports
             # ports: [Ethernet1/13, Ethernet1/14]
             ports: [Ethernet1/16, Ethernet1/17]
-            deploy: true
             # Delete this attachment
             # - ip_address: 192.168.1.225
             #   ports: [Ethernet1/13, Ethernet1/14]
-            #   deploy: true
           deploy: true
           # Delete this network
           # - net_name: ansible-net12
@@ -899,10 +889,8 @@ Examples
           #   attach:
           #   - ip_address: 192.168.1.224
           #     ports: [Ethernet1/11, Ethernet1/12]
-          #     deploy: true
           #   - ip_address: 192.168.1.225
           #     ports: [Ethernet1/11, Ethernet1/12]
-          #     deploy: true
           #   deploy: false
 
     - name: Delete selected networks

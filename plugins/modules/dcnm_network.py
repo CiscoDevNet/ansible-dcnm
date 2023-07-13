@@ -319,10 +319,8 @@ EXAMPLES = """
       attach:
       - ip_address: 192.168.1.224
         ports: [Ethernet1/13, Ethernet1/14]
-        deploy: true
       - ip_address: 192.168.1.225
         ports: [Ethernet1/13, Ethernet1/14]
-        deploy: true
       deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
@@ -334,10 +332,8 @@ EXAMPLES = """
       attach:
       - ip_address: 192.168.1.224
         ports: [Ethernet1/11, Ethernet1/12]
-        deploy: true
       - ip_address: 192.168.1.225
         ports: [Ethernet1/11, Ethernet1/12]
-        deploy: true
       deploy: false
 
 - name: Replace networks
@@ -357,11 +353,9 @@ EXAMPLES = """
           # Replace the ports with new ports
           # ports: [Ethernet1/13, Ethernet1/14]
           ports: [Ethernet1/16, Ethernet1/17]
-          deploy: true
           # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
-        #   deploy: true
         deploy: true
         # Dont touch this if its present on DCNM
         # - net_name: ansible-net12
@@ -374,10 +368,8 @@ EXAMPLES = """
         #   attach:
         #     - ip_address: 192.168.1.224
         #       ports: [Ethernet1/11, Ethernet1/12]
-        #       deploy: true
         #     - ip_address: 192.168.1.225
         #       ports: [Ethernet1/11, Ethernet1/12]
-        #       deploy: true
         #   deploy: false
 
 - name: Override networks
@@ -397,11 +389,9 @@ EXAMPLES = """
         # Replace the ports with new ports
         # ports: [Ethernet1/13, Ethernet1/14]
         ports: [Ethernet1/16, Ethernet1/17]
-        deploy: true
         # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
-        #   deploy: true
       deploy: true
       # Delete this network
       # - net_name: ansible-net12
@@ -414,10 +404,8 @@ EXAMPLES = """
       #   attach:
       #   - ip_address: 192.168.1.224
       #     ports: [Ethernet1/11, Ethernet1/12]
-      #     deploy: true
       #   - ip_address: 192.168.1.225
       #     ports: [Ethernet1/11, Ethernet1/12]
-      #     deploy: true
       #   deploy: false
 
 - name: Delete selected networks
@@ -731,6 +719,9 @@ class DcnmNetwork:
         attach.update({"vlan": 0})
         attach.update({"dot1QVlan": 0})
         attach.update({"untagged": False})
+        # This flag is not to be confused for deploy of attachment.
+        # "deployment" should be set True for attaching an attachment
+        # and set to False for detaching an attachment
         attach.update({"deployment": True})
         attach.update({"isAttached": True})
         attach.update({"extensionValues": ""})
