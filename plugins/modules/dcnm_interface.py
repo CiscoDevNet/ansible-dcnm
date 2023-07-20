@@ -48,12 +48,7 @@ options:
     description:
     - The required state of the configuration after module completion.
     type: str
-    choices:
-      - merged
-      - replaced
-      - overridden
-      - deleted
-      - query
+    choices: ['merged', 'replaced', 'overridden', 'deleted', 'query']
     default: merged
   deploy:
     description:
@@ -62,9 +57,9 @@ options:
     - In 'overridden' state this flag will be used to deploy deleted interfaces.
     - In 'deleted' state this flag will be used to deploy deleted interfaces when a specific 'config' block is not
       included.
-    - 'deploy' flags included with individual interface configuration elements under the 'config' block will take precedence
+    - The 'deploy' flags included with individual interface configuration elements under the 'config' block will take precedence
        over this global flag.
-     type: bool
+    type: bool
     default: true
   config:
     description:
