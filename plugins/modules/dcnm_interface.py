@@ -62,7 +62,9 @@ options:
     - In 'overridden' state this flag will be used to deploy deleted interfaces.
     - In 'deleted' state this flag will be used to deploy deleted interfaces when a specific 'config' block is not
       included.
-    type: bool
+    - 'deploy' flags included with individual interface configuration elements under the 'config' block will take precedence
+       over this global flag.
+     type: bool
     default: true
   config:
     description:
