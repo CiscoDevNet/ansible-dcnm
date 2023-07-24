@@ -1,12 +1,28 @@
 {
   "mock_fab_inv_data": {
     "192.168.1.108": {
-      "isVpcConfigured": "True",
-        "vpcDomain": 1
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
     },
       "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
       }
   },
 
@@ -18,6 +34,20 @@
     "mock_vpc_sno" : {
       "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
       "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+    },
+
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
     },
 
     "mock_vpc_resp" : {

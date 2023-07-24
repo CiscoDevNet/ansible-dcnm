@@ -158,7 +158,7 @@
               mode: lo                        # choose from [lo]
               ipv4_addr: 193.168.2.1          # ipv4 address for the loopback interface
 
-          - name: vpc100                      # should be of the form vpc<port-id>
+          - name: vpc101                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
@@ -265,7 +265,7 @@
               mode: lo                        # choose from [lo]
               ipv4_addr: 193.168.2.1          # ipv4 address for the loopback interface
 
-          - name: vpc100                      # should be of the form vpc<port-id>
+          - name: vpc102                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:                           # provide switches of vPC pair
               - "{{ ansible_switch1 }}"
@@ -323,7 +323,7 @@
           - name: lo100                       # should be of the form lo<port-id>
             switch:
               - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
-          - name: vpc100                      # should be of the form vpc<port-id>
+          - name: vpc102                      # should be of the form vpc<port-id>
             switch:
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"       # provide the switch where to deploy the config

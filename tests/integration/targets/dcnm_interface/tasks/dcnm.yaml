@@ -19,13 +19,14 @@
   loop_control:
     loop_var: test_case_to_run
 
-- name: Final Cleanup - delete feature_interface_vlan and hsrp policies that we created during init
+- name: Final Cleanup - delete my_lacp my_interface_vlan and my_hsrp policies that we created during init
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted                     # only choose form [merged, deleted, query]
     config:
       - name: my_interface_vlan
       - name: my_hsrp
+      - name: my_lacp
       - switch:
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
@@ -42,6 +43,7 @@
     config:
       - name: my_interface_vlan
       - name: my_hsrp
+      - name: my_lacp
   register: result
 
 - assert:

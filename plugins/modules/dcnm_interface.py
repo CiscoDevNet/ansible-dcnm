@@ -48,13 +48,19 @@ options:
     description:
     - The required state of the configuration after module completion.
     type: str
-    choices:
-      - merged
-      - replaced
-      - overridden
-      - deleted
-      - query
+    choices: ['merged', 'replaced', 'overridden', 'deleted', 'query']
     default: merged
+  deploy:
+    description:
+    - Flag indicating if the configuration must be pushed to the switch. This flag is used to decide the deploy behavior in
+      'deleted' and 'overridden' states as mentioned below
+    - In 'overridden' state this flag will be used to deploy deleted interfaces.
+    - In 'deleted' state this flag will be used to deploy deleted interfaces when a specific 'config' block is not
+      included.
+    - The 'deploy' flags included with individual interface configuration elements under the 'config' block will take precedence
+       over this global flag.
+    type: bool
+    default: true
   config:
     description:
     - A dictionary of interface operations
@@ -1584,6 +1590,7 @@ class DcnmIntf:
             "GLOBAL_IF_DEPLOY": "/rest/globalInterface/deploy",
             "INTERFACE": "/rest/interface",
             "IF_MARK_DELETE": "/rest/interface/markdelete",
+            "FABRIC_ACCESS_MODE": "/rest/control/fabrics/{}/accessmode",
         },
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
@@ -1593,6 +1600,7 @@ class DcnmIntf:
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
+            "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
         },
     }
 
@@ -1617,6 +1625,10 @@ class DcnmIntf:
         self.log_verbosity = 0
         self.fd = None
         self.vpc_ip_sn = {}
+        self.ip_sn = {}
+        self.hn_sn = {}
+        self.monitoring = []
+
         self.changed_dict = [
             {
                 "merged": [],
@@ -1626,15 +1638,14 @@ class DcnmIntf:
                 "deploy": [],
                 "query": [],
                 "debugs": [],
+                "delete_deploy": [],
             }
         ]
 
         self.dcnm_version = dcnm_version_supported(self.module)
 
-        self.inventory_data = get_fabric_inventory_details(
-            self.module, self.fabric
-        )
-        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        self.inventory_data = {}
+
         self.paths = self.dcnm_intf_paths[self.dcnm_version]
 
         self.dcnm_intf_facts = {
@@ -1780,6 +1791,28 @@ class DcnmIntf:
             self.fd.write("\n")
             self.fd.flush()
 
+    def dcnm_intf_dump_have_all(self):
+
+        lhave_all = []
+        for have in self.have_all:
+            lhave_all.append(
+                {
+                    "COMPLIANCE": have["complianceStatus"],
+                    "FABRIC": have["fabricName"],
+                    "IF_NAME": have["ifName"],
+                    "IF_TYPE": have["ifType"],
+                    "IP": have["ipAddress"],
+                    "SNO": have["serialNo"],
+                    "SYS NAME": have["sysName"],
+                    "DELETABLE": have["deletable"],
+                    "MARKED DELETE": have["markDeleted"],
+                    "ALIAS": have["alias"],
+                    "IS PHYSICAL": have["isPhysical"],
+                    "UNDERLAY POLICIES": have["underlayPolicies"],
+                }
+            )
+        self.log_msg(f"HAVE ALL = {lhave_all}")
+
     # New Interfaces
     def dcnm_intf_get_if_name(self, name, if_type):
 
@@ -1823,12 +1856,9 @@ class DcnmIntf:
     # messing up the incoming config make a copy of it.
     def dcnm_intf_copy_config(self):
 
-        if None is self.config:
-            return
-
         for cfg in self.config:
 
-            if None is cfg.get("switch", None):
+            if cfg.get("switch", None) is None:
                 continue
             for sw in cfg["switch"]:
 
@@ -1856,6 +1886,7 @@ class DcnmIntf:
                                 c[ck]["sno"] = self.vpc_ip_sn[sw]
                         else:
                             c[ck]["sno"] = self.ip_sn[sw]
+
                         ifname, port_id = self.dcnm_intf_get_if_name(
                             c["name"], c["type"]
                         )
@@ -2324,6 +2355,7 @@ class DcnmIntf:
         del_spec = dict(
             name=dict(required=False, type="str"),
             switch=dict(required=False, type="list", elements="str"),
+            deploy=dict(required=False, type="bool", default=True),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, del_spec, None)
@@ -2349,9 +2381,6 @@ class DcnmIntf:
     # New Interfaces
     def dcnm_intf_validate_input(self):
         """Parse the playbook values, validate to param specs."""
-
-        if None is self.config:
-            return
 
         # Inputs will vary for each type of interface and for each state. Make specific checks
         # for each case.
@@ -3145,14 +3174,13 @@ class DcnmIntf:
 
     def dcnm_intf_get_want(self):
 
-        if None is self.config:
+        if self.config == []:
             return
 
-        if not self.intf_info:
+        if self.intf_info == []:
             return
 
         # self.intf_info is a list of directories each having config related to a particular interface
-
         for delem in self.intf_info:
             if any("profile" in key for key in delem):
                 for sw in delem["switch"]:
@@ -3171,9 +3199,22 @@ class DcnmIntf:
             sno = serialNumber
 
         path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
-        resp = dcnm_send(self.module, "GET", path)
 
-        if "DATA" in resp and resp["DATA"]:
+        retry_count = 0
+        while retry_count < 3:
+            retry_count += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp == [] or resp["RETURN_CODE"] == 200:
+                break
+            time.sleep(1)
+
+        if (
+            resp
+            and "DATA" in resp
+            and resp["DATA"]
+            and resp["RETURN_CODE"] == 200
+        ):
             return resp["DATA"][0]
         else:
             return []
@@ -3191,7 +3232,7 @@ class DcnmIntf:
         path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
         resp = dcnm_send(self.module, "GET", path)
 
-        if "DATA" in resp and resp["DATA"]:
+        if resp and "DATA" in resp and resp["DATA"]:
             self.have_all.extend(resp["DATA"])
 
     def dcnm_intf_get_have_all(self, sw):
@@ -3223,7 +3264,7 @@ class DcnmIntf:
             for intf in elem["interfaces"]:
                 # For each interface present here, get the information that is already available
                 # in DCNM. Based on this information, we will create the required payloads to be sent
-                # to the DCNM controller based on the requested
+                # to the DCNM controller.
 
                 # Fetch the information from DCNM w.r.t to the interafce that we have in self.want
                 intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
@@ -3552,7 +3593,7 @@ class DcnmIntf:
                 intf_changed = True
 
             # if deploy flag is set to True, add the information so that this interface will be deployed
-            if str(deploy) == "True":
+            if str(deploy).lower() == "true":
                 # Add to diff_deploy,
                 #   1. if intf_changed is True
                 #   2. if intf_changed is Flase, then if 'complianceStatus is
@@ -3714,7 +3755,7 @@ class DcnmIntf:
 
         processed = []
 
-        if None is cfg.get("switch", None):
+        if cfg.get("switch", None) is None:
             return
         for sw in cfg["switch"]:
 
@@ -3734,15 +3775,18 @@ class DcnmIntf:
 
     def dcnm_intf_get_diff_overridden(self, cfg):
 
+        deploy = False
         self.diff_create = []
         self.diff_delete = [[], [], [], [], [], [], [], []]
         self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
-        if (cfg is not None) and (cfg != []):
-            self.dcnm_intf_process_config(cfg)
-        elif [] == cfg:
+        # If no config is included, delete/default all interfaces
+        if cfg == []:
+            # Since there is no 'config' block, then the 'deploy' flag at top level will be
+            # used to determine the deploy behaviour
+            deploy = self.module.params["deploy"]
             for address in self.ip_sn.keys():
                 # the given switch may be part of a VPC pair. In that case we
                 # need to get interface information using one switch which returns interfaces
@@ -3752,9 +3796,17 @@ class DcnmIntf:
                     for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(address)
-        elif self.config:
-            # compute have_all for every switch
-            for config in self.config:
+        else:
+            # compute have_all for every switch included in 'cfg'.
+            # 'deploy' flag will be picked from 'cfg' in case of state 'deleted' and from
+            # top level in case of state 'overridden'
+
+            if self.module.params["state"] == "overridden":
+                deploy = self.module.params["deploy"]
+            if self.module.params["state"] == "deleted":
+                # NOTE: in case of state 'deleted' 'cfg' will have a single entry only.
+                deploy = cfg[0].get("deploy")
+            for config in cfg:
                 self.dcnm_intf_process_config(config)
 
         del_list = []
@@ -3771,6 +3823,8 @@ class DcnmIntf:
                 (str(have["isPhysical"]).lower() != "none")
                 and (str(have["isPhysical"]).lower() == "true")
             ):
+                if have["alias"] != "" and have["deleteReason"] is not None:
+                    continue
 
                 if str(have["deletable"]).lower() == "false":
                     # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
@@ -3787,7 +3841,6 @@ class DcnmIntf:
                 intf = self.dcnm_intf_get_intf_info(
                     have["ifName"], have["serialNo"], have["ifType"]
                 )
-
                 if intf == []:
                     # In case of LANClassic fabrics, a GET on policy details for Ethernet interfaces will return [] since
                     # these interfaces dont have any policies configured by default. In that case there is nothing to be done
@@ -3798,7 +3851,6 @@ class DcnmIntf:
                     == "DCNM_INTF_MATCH"
                 ):
                     continue
-
                 if uelem is not None:
                     # Before defaulting ethernet interfaces, check if they are
                     # member of any port-channel. If so, do not default that
@@ -3817,7 +3869,6 @@ class DcnmIntf:
                         self.changed_dict[0]["deploy"].append(
                             copy.deepcopy(delem)
                         )
-
             # Sub-interafces are returned as INTERFACE_ETHERNET in have_all. So do an
             # additional check to see if it is physical. If not assume it to be sub-interface
             # for now. We will have to re-visit this check if there are additional non-physical
@@ -3840,12 +3891,18 @@ class DcnmIntf:
                 )
             ):
 
-                # Certain interfaces cannot be deleted, so check before deleting.
-                if str(have["deletable"]).lower() == "true":
-
+                # Certain interfaces cannot be deleted, so check before deleting. But if the interface has been marked for delete,
+                # we still go in and check if need to deploy.
+                if (
+                    str(have["deletable"]).lower() == "true"
+                    or str(have["markDeleted"]).lower() == "true"
+                ):
                     # Port-channel which are created as part of VPC peer link should not be deleted
                     if have["ifType"] == "INTERFACE_PORT_CHANNEL":
-                        if have["alias"] == '"vpc-peer-link"':
+                        if (
+                            have["alias"] is not None
+                            and "vpc-peer-link" in have["alias"]
+                        ):
                             continue
 
                     # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have
@@ -3872,7 +3929,6 @@ class DcnmIntf:
                             and (fabric == d["interfaces"][0]["fabricName"])
                         )
                     ]
-
                     if not match_want:
 
                         delem = {}
@@ -3883,19 +3939,23 @@ class DcnmIntf:
                         delem["serialNumber"] = sno
                         delem["fabricName"] = fabric
 
-                        self.diff_delete[
-                            self.int_index[have["ifType"]]
-                        ].append(delem)
+                        # have_all will include interfaces which are marked for DELETE too. Do not delete them again.
+                        if str(have["markDeleted"]).lower() == "false":
+                            self.diff_delete[
+                                self.int_index[have["ifType"]]
+                            ].append(delem)
+                            self.changed_dict[0]["deleted"].append(
+                                copy.deepcopy(delem)
+                            )
+                            del_list.append(have)
 
-                        # For INTERFACE_VLAN the "mode" argument is not set in have_all.
-                        # if have["mode"] is not None or have["ifType"] == "INTERFACE_VLAN":
-                        self.diff_delete_deploy[
-                            self.int_index[have["ifType"]]
-                        ].append(delem)
-                        self.changed_dict[0]["deleted"].append(
-                            copy.deepcopy(delem)
-                        )
-                        del_list.append(have)
+                        if str(deploy).lower() == "true":
+                            self.diff_delete_deploy[
+                                self.int_index[have["ifType"]]
+                            ].append(delem)
+                            self.changed_dict[0]["delete_deploy"].append(
+                                copy.deepcopy(delem)
+                            )
 
         for intf in defer_list:
             # Check if the 'source' for the ethernet interface is one of the interfaces that is already deleted.
@@ -3939,26 +3999,10 @@ class DcnmIntf:
         self.diff_deploy = []
         self.diff_replace = []
 
-        if (None is self.config) or (self.config is []):
-            # If no config is specified, then it means we need to delete or
-            # reset all interfaces in the fabric.
-
-            # Get the IP addresses from ip_sn. For every IP, get all interfaces
-            # and delete/reset all
-
-            for address in self.ip_sn.keys():
-                # the given switch may be part of a VPC pair. In that case we
-                # need to get interface information using one switch which returns interfaces
-                # from both the switches
-                if not any(
-                    d.get("serialNo", None) == self.ip_sn[address]
-                    for d in self.have_all
-                ):
-                    self.dcnm_intf_get_have_all(address)
-
+        if self.config == []:
             # Now that we have all the interface information we can run override
             # and delete or reset interfaces.
-            self.dcnm_intf_get_diff_overridden(None)
+            self.dcnm_intf_get_diff_overridden(self.config)
         elif self.config:
             for cfg in self.config:
                 if cfg.get("name", None) is not None:
@@ -3975,6 +4019,7 @@ class DcnmIntf:
                         switches = cfg["switch"]
 
                     for sw in switches:
+
                         intf = {}
                         delem = {}
 
@@ -4086,15 +4131,70 @@ class DcnmIntf:
                                 self.diff_delete[
                                     self.int_index[if_type]
                                 ].append(delem)
-                                if "monitor" not in intf_payload["policy"]:
-                                    self.diff_delete_deploy[
-                                        self.int_index[if_type]
-                                    ].append(delem)
                                 self.changed_dict[0]["deleted"].append(
                                     copy.deepcopy(delem)
                                 )
+
+                                if "monitor" not in intf_payload["policy"]:
+                                    if (
+                                        str(cfg.get("deploy", "true")).lower()
+                                        == "true"
+                                    ):
+                                        self.diff_delete_deploy[
+                                            self.int_index[if_type]
+                                        ].append(delem)
+                                        self.changed_dict[0][
+                                            "delete_deploy"
+                                        ].append(copy.deepcopy(delem))
+                            else:
+                                # Get Interface details which will include even interfaces that are marked for delete.
+                                if sw not in have_all:
+                                    have_all.append(sw)
+                                    self.dcnm_intf_get_have_all(sw)
+
+                                # Get the matching interface from have_all
+                                match_have = [
+                                    have
+                                    for have in self.have_all
+                                    if (
+                                        (
+                                            intf["ifName"].lower()
+                                            == have["ifName"].lower()
+                                        )
+                                        and (
+                                            intf["serialNumber"]
+                                            == have["serialNo"]
+                                        )
+                                    )
+                                ]
+
+                                if match_have:
+                                    # Matching interface found. Check 'complianceStatus' and deploy if necessary
+                                    if (
+                                        match_have[0]["complianceStatus"]
+                                        == "In-Sync"
+                                    ) or (
+                                        match_have[0]["complianceStatus"]
+                                        == "Pending"
+                                    ):
+                                        if (
+                                            str(
+                                                cfg.get("deploy", "true")
+                                            ).lower()
+                                            == "true"
+                                        ):
+                                            delem["ifName"] = if_name
+                                            delem["serialNumber"] = intf[
+                                                "serialNumber"
+                                            ]
+                                            self.diff_delete_deploy[
+                                                self.int_index[if_type]
+                                            ].append(delem)
+                                            self.changed_dict[0][
+                                                "delete_deploy"
+                                            ].append(copy.deepcopy(delem))
                 else:
-                    self.dcnm_intf_get_diff_overridden(cfg)
+                    self.dcnm_intf_get_diff_overridden([cfg])
 
     def dcnm_extract_if_name(self, cfg):
 
@@ -4284,6 +4384,7 @@ class DcnmIntf:
                     )
                 ]
                 if match_have:
+
                     if match_have[0]["complianceStatus"] == "In-Sync":
                         break
 
@@ -4328,6 +4429,7 @@ class DcnmIntf:
         changed = False
 
         delete = False
+        delete_deploy = False
         create = False
         deploy = False
         replace = False
@@ -4387,9 +4489,6 @@ class DcnmIntf:
 
         resp = None
 
-        # In 11.4 version of DCNM, sometimes interfaces don't get deleted
-        # completely, but only marked for deletion. They get removed only after a
-        # deploy. So we will do a deploy on the deleted elements
         path = self.paths["GLOBAL_IF_DEPLOY"]
         index = -1
         for delem in self.diff_delete_deploy:
@@ -4408,11 +4507,17 @@ class DcnmIntf:
                 else:
                     deploy_failed = True
                 for item in resp["DATA"]:
-                    if "No Commands to execute" not in item["message"]:
+                    if (
+                        "No Commands to execute" not in item["message"]
+                        and "In-Sync" not in item["message"]
+                    ):
                         deploy_failed = True
                 if deploy_failed is False:
                     resp["RETURN_CODE"] = 200
                     resp["MESSAGE"] = "OK"
+                    delete_deploy = True
+            else:
+                delete_deploy = True
             self.result["response"].append(resp)
 
         resp = None
@@ -4422,6 +4527,7 @@ class DcnmIntf:
 
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "PUT", path, json_payload)
+
             self.result["response"].append(resp)
 
             if (resp.get("MESSAGE") != "OK") or (
@@ -4439,6 +4545,7 @@ class DcnmIntf:
 
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
+
             self.result["response"].append(resp)
 
             if (resp.get("MESSAGE") != "OK") or (
@@ -4498,38 +4605,109 @@ class DcnmIntf:
         if (self.module.params["state"] == "overridden") or (
             self.module.params["state"] == "deleted"
         ):
-            self.result["changed"] = delete or create or deploy
+            self.result["changed"] = (
+                delete or create or deploy or delete_deploy
+            )
         else:
-            if delete or create or replace or deploy:
+            if delete or create or replace or deploy or delete_deploy:
                 self.result["changed"] = True
             else:
                 self.result["changed"] = False
 
-    def dcnm_translate_switch_info(self, config, ip_sn, hn_sn):
+    def dcnm_intf_update_inventory_data(self):
 
-        if None is config:
-            return
+        """
+        Routine to update inventory data for all fabrics included in the playbook. This routine
+        also updates ip_sn, sn_hn and hn_sn objetcs from the updated inventory data.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        inv_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.inventory_data.update(inv_data)
+
+        if self.module.params["state"] != "query":
+
+            # Get all switches which are managable. Changes must be avoided to all switches which are not part of this list
+            managable_ip = [
+                (key, self.inventory_data[key]["serialNumber"])
+                for key in self.inventory_data
+                if str(self.inventory_data[key]["managable"]).lower() == "true"
+            ]
+            managable_hosts = [
+                (
+                    self.inventory_data[key]["logicalName"],
+                    self.inventory_data[key]["serialNumber"],
+                )
+                for key in self.inventory_data
+                if str(self.inventory_data[key]["managable"]).lower() == "true"
+            ]
+
+            managable = dict(managable_ip + managable_hosts)
+
+            # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
+            ronly_sw_list = []
+            for cfg in self.config:
+                # Check if there are any switches which are not managable in the config.
+                if cfg.get("switch", None) is not None:
+                    for sw in cfg["switch"]:
+                        if sw not in managable:
+                            if sw not in ronly_sw_list:
+                                ronly_sw_list.append(sw)
+
+            # Deploy must be avoided to fabrics which are in monitoring mode
+            path = self.paths["FABRIC_ACCESS_MODE"].format(self.fabric)
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp and resp["RETURN_CODE"] == 200:
+                if str(resp["DATA"]["readonly"]).lower() == "true":
+                    self.monitoring.append(self.fabric)
+
+            # Check if source fabric is in monitoring mode. If so return an error, since fabrics in monitoring mode do not allow
+            # create/modify/delete and deploy operations.
+            if self.fabric in self.monitoring:
+                self.module.fail_json(
+                    msg="Error: Source Fabric '{0}' is in Monitoring mode, No changes are allowed on the fabric\n".format(
+                        self.fabric
+                    )
+                )
+
+            if ronly_sw_list:
+                self.module.fail_json(
+                    msg="Error: Switches {0} are not managable in Fabric '{1}', No changes are allowed on these switches\n".format(
+                        ronly_sw_list, self.fabric
+                    )
+                )
+
+        # Based on the updated inventory_data, update ip_sn, hn_sn and sn_hn objects
+        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+
+    def dcnm_translate_playbook_info(self, config, ip_sn, hn_sn):
 
         for cfg in config:
-
             index = 0
-
-            if None is cfg.get("switch", None):
+            if cfg.get("switch", None) is None:
                 continue
-            for sw_elem in cfg["switch"]:
-                addr_info = dcnm_get_ip_addr_info(
-                    self.module, sw_elem, ip_sn, hn_sn
-                )
-                cfg["switch"][index] = addr_info
+            for sw_elem in cfg["switch"][:]:
+                if sw_elem in self.ip_sn or sw_elem in self.hn_sn:
+                    addr_info = dcnm_get_ip_addr_info(
+                        self.module, sw_elem, ip_sn, hn_sn
+                    )
+                    cfg["switch"][index] = addr_info
+
+                    # Check if the VPC serial number information is already present. If not fetch that
+                    if self.vpc_ip_sn.get(addr_info, None) is None:
+                        sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
+                        if "~" in sno:
+                            # This switch is part of VPC pair. Populate the VPC serial number DB
+                            self.vpc_ip_sn[addr_info] = sno
+                else:
+                    cfg["switch"].remove(sw_elem)
                 index = index + 1
-
-                # Check if the VPC serial number information is already present. If not fetch that
-
-                if self.vpc_ip_sn.get(addr_info, None) is None:
-                    sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
-                    if "~" in sno:
-                        # This switch is part of VPC pair. Populate the VPC serial number DB
-                        self.vpc_ip_sn[addr_info] = sno
 
 
 def main():
@@ -4537,7 +4715,8 @@ def main():
     """main entry point for module execution"""
     element_spec = dict(
         fabric=dict(required=True, type="str"),
-        config=dict(required=False, type="list", elements="dict"),
+        config=dict(required=False, type="list", elements="dict", default=[]),
+        deploy=dict(required=False, type="bool", default=True),
         state=dict(
             type="str",
             default="merged",
@@ -4552,6 +4731,17 @@ def main():
 
     dcnm_intf = DcnmIntf(module)
 
+    state = module.params["state"]
+    if not dcnm_intf.config:
+        if state == "merged" or state == "replaced" or state == "query":
+            module.fail_json(
+                msg="'config' element is mandatory for state '{0}', given = '{1}'".format(
+                    state, dcnm_intf.config
+                )
+            )
+
+    dcnm_intf.dcnm_intf_update_inventory_data()
+
     if not dcnm_intf.ip_sn:
         dcnm_intf.result[
             "msg"
@@ -4564,16 +4754,7 @@ def main():
             )
         )
 
-    state = module.params["state"]
-    if not dcnm_intf.config:
-        if state == "merged" or state == "replaced" or state == "query":
-            module.fail_json(
-                msg="'config' element is mandatory for state '{0}', given = '{1}'".format(
-                    state, dcnm_intf.config
-                )
-            )
-
-    dcnm_intf.dcnm_translate_switch_info(
+    dcnm_intf.dcnm_translate_playbook_info(
         dcnm_intf.config, dcnm_intf.ip_sn, dcnm_intf.hn_sn
     )
 
@@ -4595,10 +4776,7 @@ def main():
         dcnm_intf.dcnm_intf_get_diff_replaced()
 
     if module.params["state"] == "overridden":
-        if dcnm_intf.config is None:
-            dcnm_intf.dcnm_intf_get_diff_overridden([])
-        else:
-            dcnm_intf.dcnm_intf_get_diff_overridden(None)
+        dcnm_intf.dcnm_intf_get_diff_overridden(dcnm_intf.config)
 
     if module.params["state"] == "deleted":
         dcnm_intf.dcnm_intf_get_diff_deleted()
@@ -4620,6 +4798,7 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["STRAIGHT_TROUGH_FEX"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["AA_FEX"]]
+        or dcnm_intf.diff_delete_deploy
     ):
         dcnm_intf.result["changed"] = True
     else:
@@ -4630,7 +4809,6 @@ def main():
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
-
     module.exit_json(**dcnm_intf.result)
 
 

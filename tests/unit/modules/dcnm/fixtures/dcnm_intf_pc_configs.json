@@ -1,12 +1,41 @@
 {
-    "mock_fab_inv_data": {
-      "192.168.1.108": {
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
-      },
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+    },
       "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
         "isVpcConfigured": "True",
-        "vpcDomain": 1
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      }
+  },
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
       }
     },
 
@@ -135,6 +164,37 @@
       "deploy": "False"
     }],
 
+    "pc_unmanagable_merged_config" : [
+    {
+      "switch": [
+        "n9kv-1"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    }
+  ],
+
     "pc_merged_config" : [
     {
       "switch": [
@@ -235,6 +295,24 @@
       "type": "pc",
       "name": "po303",
       "deploy": "True"
+    }],
+
+    "pc_deleted_config_deploy" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "name": "po999",
+      "deploy": "True"
+    }],
+
+    "pc_deleted_config_no_deploy" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "name": "po300",
+      "deploy": "False"
     }],
 
     "pc_deleted_config" : [

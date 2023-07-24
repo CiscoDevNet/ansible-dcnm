@@ -2434,6 +2434,28 @@ Parameters
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>deploy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag indicating if the configuration must be pushed to the switch. This flag is used to decide the deploy behavior in &#x27;deleted&#x27; and &#x27;overridden&#x27; states as mentioned below</div>
+                        <div>In &#x27;overridden&#x27; state this flag will be used to deploy deleted interfaces.</div>
+                        <div>In &#x27;deleted&#x27; state this flag will be used to deploy deleted interfaces when a specific &#x27;config&#x27; block is not included.</div>
+                        <div>The &#x27;deploy&#x27; flags included with individual interface configuration elements under the &#x27;config&#x27; block will take precedence over this global flag.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
