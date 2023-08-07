@@ -106,6 +106,16 @@ options:
         type: list
         elements: dict
         suboptions:
+          discovery_username:
+            description:
+            - Username for device discovery during POAP and RMA discovery
+            type: str
+            required: false
+          discovery_password:
+            description:
+            - Password for device discovery during POAP and RMA discovery
+            type: str
+            required: false
           serial_number:
             description:
             - Serial number of switch to Bootstrap.
@@ -161,6 +171,16 @@ options:
         type: list
         elements: dict
         suboptions:
+          discovery_username:
+            description:
+            - Username for device discovery during POAP and RMA discovery
+            type: str
+            required: false
+          discovery_password:
+            description:
+            - Password for device discovery during POAP and RMA discovery
+            type: str
+            required: false
           serial_number:
             description:
             - Serial number of switch to Bootstrap for RMA.
