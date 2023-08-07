@@ -1639,6 +1639,8 @@ class DcnmIntf:
                 "query": [],
                 "debugs": [],
                 "delete_deploy": [],
+                "skipped": [],
+                "deferred": [],
             }
         ]
 
@@ -3823,12 +3825,27 @@ class DcnmIntf:
                 (str(have["isPhysical"]).lower() != "none")
                 and (str(have["isPhysical"]).lower() == "true")
             ):
+
                 if have["alias"] != "" and have["deleteReason"] is not None:
+                    self.changed_dict[0]["skipped"].append(
+                        {
+                            "Name": name,
+                            "Alias": have["alias"],
+                            "Delete Reason": have["deleteReason"],
+                        }
+                    )
                     continue
 
                 if str(have["deletable"]).lower() == "false":
                     # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
                     defer_list.append(have)
+                    self.changed_dict[0]["deferred"].append(
+                        {
+                            "Name": name,
+                            "Deletable": have["deletable"],
+                            "Underlay Policies": have["underlayPolicies"],
+                        }
+                    )
                     continue
 
                 uelem = self.dcnm_intf_get_default_eth_payload(
@@ -3903,12 +3920,25 @@ class DcnmIntf:
                             have["alias"] is not None
                             and "vpc-peer-link" in have["alias"]
                         ):
+                            self.changed_dict[0]["skipped"].append(
+                                {"Name": name, "Alias": have["alias"]}
+                            )
                             continue
+                        else:
+                            self.changed_dict[0]["debugs"].append(
+                                {"Name": name, "Alias": have["alias"]}
+                            )
 
                     # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have
                     # underlayPolicies set to "None". Such interfaces need not be deleted again
 
                     if have["underlayPolicies"] is None:
+                        self.changed_dict[0]["skipped"].append(
+                            {
+                                "Name": name,
+                                "Underlay Policies": have["underlayPolicies"],
+                            }
+                        )
                         continue
 
                     # For interfaces that are matching, leave them alone. We will overwrite the config anyway
