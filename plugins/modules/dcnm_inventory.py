@@ -44,6 +44,18 @@ options:
       - deleted
       - query
     default: merged
+  save:
+    description:
+    - Save/Recalculate the configuration of the fabric after the inventory is updated
+    type: bool
+    required: false
+    default: true
+  deploy:
+    description:
+    - Deploy the pending configuration of the fabric after inventory is updated
+    type: bool
+    required: false
+    default: true
   config:
     description:
     - List of switches being managed. Not required for state deleted
@@ -901,10 +913,12 @@ class DcnmInventory:
                                 break
 
                         # Config-save all switches
-                        self.config_save()
+                        if self.params["save"]:
+                            self.config_save()
 
                         # Config-deploy all switches
-                        self.config_deploy()
+                        if self.params["deploy"]:
+                            self.config_deploy()
 
             if not found:
                 self.switch_snos.append(serial_num)
@@ -1732,7 +1746,9 @@ def main():
         state=dict(
             default="merged", choices=["merged", "overridden", "deleted", "query"]
         ),
-        query_poap=dict(type="bool", default=False)
+        query_poap=dict(type="bool", default=False),
+        save=dict(type="bool", default=True),
+        deploy=dict(type="bool", default=True),
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
@@ -1844,11 +1860,13 @@ def main():
 
             # Step 7
             # Config-save all switches
-            dcnm_inv.config_save()
+            if module.params["save"]:
+                dcnm_inv.config_save()
 
             # Step 8
             # Config-deploy all switches
-            dcnm_inv.config_deploy()
+            if module.params["deploy"]:
+                dcnm_inv.config_deploy()
 
     module.exit_json(**dcnm_inv.result)
 
