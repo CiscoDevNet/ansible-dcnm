@@ -605,7 +605,7 @@ class DcnmInventory:
 
             if poap_upd.get("serialNumber"):
                 self.switch_snos.append(poap_upd["serialNumber"])
-            
+
 
         return poap_upd
 
