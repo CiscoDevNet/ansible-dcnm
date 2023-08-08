@@ -486,6 +486,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_ip_sn_dict,
 )
 
+
 class DcnmInventory:
     def __init__(self, module):
         self.switches = {}
@@ -605,7 +606,6 @@ class DcnmInventory:
 
             if poap_upd.get("serialNumber"):
                 self.switch_snos.append(poap_upd["serialNumber"])
-
 
         return poap_upd
 
@@ -739,7 +739,6 @@ class DcnmInventory:
             resp = self.update_discover_params(inv_upd)
 
             inv_upd["switches"] = resp
-
 
         return inv_upd
 
