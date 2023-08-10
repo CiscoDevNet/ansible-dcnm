@@ -118,6 +118,16 @@ options:
         type: list
         elements: dict
         suboptions:
+          discovery_username:
+            description:
+            - Username for device discovery during POAP and RMA discovery
+            type: str
+            required: false
+          discovery_password:
+            description:
+            - Password for device discovery during POAP and RMA discovery
+            type: str
+            required: false
           serial_number:
             description:
             - Serial number of switch to Bootstrap.
@@ -173,6 +183,16 @@ options:
         type: list
         elements: dict
         suboptions:
+          discovery_username:
+            description:
+            - Username for device discovery during POAP and RMA discovery
+            type: str
+            required: false
+          discovery_password:
+            description:
+            - Password for device discovery during POAP and RMA discovery
+            type: str
+            required: false
           serial_number:
             description:
             - Serial number of switch to Bootstrap for RMA.
@@ -589,6 +609,11 @@ class DcnmInventory:
                 "preprovisionSerial": poap["preprovision_serial"],
             }
 
+            # Add discovery credentials if set in the playbook
+            if poap.get("discovery_username"):
+                poap_upd['discoveryUsername'] = poap["discovery_username"]
+                poap_upd['discoveryPassword'] = poap["discovery_password"]
+
             poap_upd = self.discover_poap_params(poap_upd, poap)
 
             if poap_upd.get("serialNumber"):
@@ -647,6 +672,11 @@ class DcnmInventory:
                 "version": rma["version"],
                 "data": json.dumps(rma["config_data"]),
             }
+
+            # Add discovery credentials if set in the playbook
+            if rma.get("discovery_username"):
+                rma_upd['discoveryUsername'] = rma["discovery_username"]
+                rma_upd['discoveryPassword'] = rma["discovery_password"]
 
             rma_upd = self.discover_rma_params(rma_upd, rma)
 
@@ -976,6 +1006,8 @@ class DcnmInventory:
             )
 
             poap_spec = dict(
+                discovery_username=dict(type="str", no_log=True, length_max=32),
+                discovery_password=dict(type="str", no_log=True, length_max=32),
                 serial_number=dict(type="str", default=""),
                 preprovision_serial=dict(type="str", default=""),
                 model=dict(type="str", default=""),
@@ -986,6 +1018,8 @@ class DcnmInventory:
             )
 
             rma_spec = dict(
+                discovery_username=dict(type="str", no_log=True, length_max=32),
+                discovery_password=dict(type="str", no_log=True, length_max=32),
                 serial_number=dict(type="str", required=True),
                 old_serial=dict(type="str", required=True),
                 model=dict(type="str", required=True),
@@ -1020,6 +1054,13 @@ class DcnmInventory:
                                 )
                         if inv["poap"][0].get("serial_number") and inv["poap"][0].get("preprovision_serial") and not self.nd:
                             msg = "Serial number swap is not supported in DCNM version 11"
+                        if inv["poap"][0].get("discovery_username"):
+                            if inv["poap"][0].get("discovery_password") is None:
+                                msg = "discovery_password must be set when discovery_username is specified"
+                        if inv["poap"][0].get("discovery_password"):
+                            if inv["poap"][0].get("discovery_username") is None:
+                                msg = "discovery_username must be set when discovery_password is specified"
+
                     if "rma" in inv:
                         if state != "merged":
                             msg = "'merged' is only supported state for RMA"
@@ -1027,6 +1068,12 @@ class DcnmInventory:
                             msg = "user_name must be 'admin' for RMA"
                         if inv["rma"][0].get("serial_number") is None or inv["rma"][0].get("old_serial") is None:
                             msg = "Please provide 'serial_number' and 'old_serial' for RMA"
+                        if inv["rma"][0].get("discovery_username"):
+                            if inv["rma"][0].get("discovery_password") is None:
+                                msg = "discovery_password must be set when discovery_username is specified"
+                        if inv["rma"][0].get("discovery_password"):
+                            if inv["rma"][0].get("discovery_username") is None:
+                                msg = "discovery_username must be set when discovery_password is specified"
                     if msg:
                         self.module.fail_json(msg=msg)
             else:

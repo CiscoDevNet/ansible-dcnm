@@ -190,7 +190,9 @@
             "hostname": "test_poap_test",
             "model": "N9K-C9300v",
             "serial_number": "9D2DAUJJFQQ",
-            "version": "9.3(7)"
+            "version": "9.3(7)",
+            "discovery_username": "aaa_username",
+            "discovery_password": "aaa_password"
           }
         ]
       }
@@ -342,6 +344,40 @@
       }
     ],
 
+    "playbook_poap_missing_credentials_password" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "poap": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "model": "N9K-C9300v",
+            "version": "9.3(7)",
+            "discovery_username": "aaa_username"
+          }
+        ]
+      }
+    ],
+
+    "playbook_poap_missing_credentials_username" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "poap": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "model": "N9K-C9300v",
+            "version": "9.3(7)",
+            "discovery_password": "aaa_password"
+          }
+        ]
+      }
+    ],
+
     "playbook_poap_no_model_switch_config" : [
       {
         "password": "password",
@@ -388,7 +424,45 @@
             "model": "N9K-C9300v",
             "serial_number": "9D2DAUJJFQQ",
             "old_serial": "9D2DAUJJFRR",
-            "version": "9.3(7)"
+            "version": "9.3(7)",
+            "discovery_username": "aaa_username",
+            "discovery_password": "aaa_password"
+          }
+        ]
+      }
+    ],
+
+    "playbook_rma_missing_credentials_password" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "rma": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "model": "N9K-C9300v",
+            "version": "9.3(7)",
+            "old_serial": "9D2DAUJJFRR",
+            "discovery_username": "aaa_username"
+          }
+        ]
+      }
+    ],
+
+    "playbook_rma_missing_credentials_username" : [
+      {
+        "password": "password",
+        "seed_ip": "192.168.1.223",
+        "user_name": "admin",
+        "rma": [
+          {
+            "config_data": "{\"modulesModel\": [\"N9K-C9300v\"], \"gateway\": \"192.168.1.1/24\"}",
+            "hostname": "test_poap_test",
+            "model": "N9K-C9300v",
+            "version": "9.3(7)",
+            "old_serial": "9D2DAUJJFRR",
+            "discovery_password": "aaa_password"
           }
         ]
       }
