@@ -1054,6 +1054,12 @@ class DcnmInventory:
                             msg = "user_name must be 'admin' for RMA"
                         if inv["rma"][0].get("serial_number") is None or inv["rma"][0].get("old_serial") is None:
                             msg = "Please provide 'serial_number' and 'old_serial' for RMA"
+                        if inv["rma"][0].get("discovery_username"):
+                            if inv["rma"][0].get("discovery_password") is None:
+                                msg = "discovery_password must be set when discovery_username is specified"
+                        if inv["rma"][0].get("discovery_password"):
+                            if inv["rma"][0].get("discovery_username") is None:
+                                msg = "discovery_username must be set when discovery_password is specified"
                     if msg:
                         self.module.fail_json(msg=msg)
             else:
