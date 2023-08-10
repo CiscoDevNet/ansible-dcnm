@@ -22,6 +22,41 @@ Synopsis
 
 
 
+Parameters
+----------
+
+.. raw:: html
+
+    <table  border=0 cellpadding=0 class="documentation-table">
+        <tr>
+            <th colspan="1">Parameter</th>
+            <th>Choices/<font color="blue">Defaults</font></th>
+                <th>Configuration</th>
+            <th width="100%">Comments</th>
+        </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>login_domain</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                    <td>
+                                <div>env:ANSIBLE_HTTPAPI_LOGIN_DOMAIN</div>
+                                <div>var: ansible_httpapi_login_domain</div>
+                    </td>
+                <td>
+                        <div>The login domain name to use for user authentication</div>
+                        <div>Only needed for NDFC</div>
+                </td>
+            </tr>
+    </table>
+    <br/>
+
 
 
 

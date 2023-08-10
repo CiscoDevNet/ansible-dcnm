@@ -26,6 +26,16 @@ description:
     a connection to the DCNM controller, send API requests and process the
     respsonse from the controller.
 version_added: "0.9.0"
+options:
+  login_domain:
+    description:
+    - The login domain name to use for user authentication
+    - Only needed for NDFC
+    type: string
+    env:
+    - name: ANSIBLE_HTTPAPI_LOGIN_DOMAIN
+    vars:
+    - name: ansible_httpapi_login_domain
 """
 
 import json
@@ -85,14 +95,12 @@ class HttpApi(HttpApiBase):
                 )
             )
 
-    def _login_latestv1(self, username, password, method, path):
+    def _login_latestv1(self, username, password, login_domain, method, path):
         """Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later."""
-        login_domain = "DefaultAuth"
-        # login_domain = 'local'
         payload = {
-            "username": self.connection.get_option("remote_user"),
-            "password": self.connection.get_option("password"),
-            "domain": login_domain,
+            "username": username,
+            "password": password,
+            "domain": login_domain
         }
         data = json.dumps(payload)
         try:
@@ -123,14 +131,12 @@ class HttpApi(HttpApiBase):
                 )
             )
 
-    def _login_latestv2(self, username, password, method, path):
+    def _login_latestv2(self, username, password, login_domain, method, path):
         """Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later."""
-        login_domain = "DefaultAuth"
-        # login_domain = 'local'
         payload = {
-            "userName": self.connection.get_option("remote_user"),
-            "userPasswd": self.connection.get_option("password"),
-            "domain": login_domain,
+            "userName": username,
+            "userPasswd": password,
+            "domain": login_domain
         }
         data = json.dumps(payload)
         try:
@@ -168,6 +174,7 @@ class HttpApi(HttpApiBase):
         """
         self.login_succeeded = False
         self.login_fail_msg = []
+        login_domain = "local"  # default login domain of Nexus Dashboard
         method = "POST"
         path = {"dcnm": "/rest/logon", "ndfc": "/login"}
         login12Func = [self._login_latestv2, self._login_latestv1]
@@ -176,9 +183,11 @@ class HttpApi(HttpApiBase):
         self._login_old(username, password, method, path["dcnm"])
 
         # If login attempt failed then try NDFC version 12
+        if self.get_option("login_domain") is not None:
+            login_domain = self.get_option("login_domain")
         if not self.login_succeeded:
             for func in login12Func:
-                func(username, password, method, path["ndfc"])
+                func(username, password, login_domain, method, path["ndfc"])
                 if self.login_succeeded:
                     break
 
