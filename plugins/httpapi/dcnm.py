@@ -32,6 +32,7 @@ options:
     - The login domain name to use for user authentication
     - Only needed for NDFC
     type: string
+    default: local
     env:
     - name: ANSIBLE_HTTPAPI_LOGIN_DOMAIN
     vars:

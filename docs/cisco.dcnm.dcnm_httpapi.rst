@@ -44,6 +44,7 @@ Parameters
                     </div>
                 </td>
                 <td>
+                        <b>Default:</b><br/><div style="color: blue">"local"</div>
                 </td>
                     <td>
                                 <div>env:ANSIBLE_HTTPAPI_LOGIN_DOMAIN</div>
