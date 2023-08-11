@@ -115,6 +115,22 @@
     vpc_vxlan_deploy_path: {}
     cxt_create_path: {}
     vpc_cxt_deploy_path: {}
+    vxlan_config_save_path: {}
+    cxt_config_save_path: {}
+
+- set_fact:
+    vxlan_config_save_path: "{{ vxlan_config_save_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save'}
+    - {'11': '/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save'}
+  when: (ansible_vxlan_fabric is defined)
+
+- set_fact:
+    cxt_config_save_path: "{{ cxt_config_save_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save'}
+    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save'}
+  when: (ansible_cxt_fabric is defined)
 
 - set_fact:
     vpc_create_path: "{{ vpc_create_path | combine (item) }}"
@@ -132,8 +148,8 @@
 - set_fact:
     vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine (item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_vxlan_fabric_sno1 }},{{ ansible_vxlan_fabric_sno2 }}'}
-    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_vxlan_fabric_sno1 }},{{ ansible_vxlan_fabric_sno2 }}'}
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_cxt_fabric_sno1 }},{{ ansible_cxt_fabric_sno2 }}'}
+    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_cxt_fabric_sno1 }},{{ ansible_cxt_fabric_sno2 }}'}
   when: (ansible_cxt_fabric is defined)
 
 - set_fact:
@@ -218,7 +234,7 @@
 - name: Config Save
   cisco.dcnm.dcnm_rest:
     method: POST
-    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save
+    path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
   when: (vxlan_vpc_create == True)
   ignore_errors: yes
@@ -269,7 +285,7 @@
 - name: Config Save
   cisco.dcnm.dcnm_rest:
     method: POST
-    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save
+    path: "{{ cxt_config_save_path[controller_version] }}"
   register: result
   when: (cxt_vpc_create == True)
   ignore_errors: yes

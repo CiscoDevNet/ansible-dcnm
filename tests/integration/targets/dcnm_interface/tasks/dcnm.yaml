@@ -34,7 +34,7 @@
 ##############################################
 ##          DELETE VXLAN VPC PAIR           ##
 ##############################################
-- name: Fianl Cleanup - Delete DCNM VXLAN Fabric VPC switch pair
+- name: Final Cleanup - Delete DCNM VXLAN Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: DELETE
     path: "{{ [vpc_delete_path[controller_version], ansible_vxlan_fabric_sno1] | join ('') }}"
@@ -48,13 +48,13 @@
   when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
 
 ##############################################
-##          CONFIG SAVE AND PREVIEW         ##
+##          CONFIG SAVE                     ##
 ##############################################
 
 - name: Config Save
   cisco.dcnm.dcnm_rest:
     method: POST
-    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save
+    path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
   when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
   ignore_errors: yes
@@ -63,7 +63,7 @@
 ##          DEPLOY VXLAN VPC PAIR           ##
 ##############################################
 
-- name: Fianl Cleanup - Deploy DCNM VXLAN Fabric VPC switch pair
+- name: Final Cleanup - Deploy DCNM VXLAN Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: POST
     path: "{{ vpc_vxlan_deploy_path[controller_version] }}"
@@ -77,7 +77,7 @@
 ##############################################
 ##          DELETE CXT VPC PAIR             ##
 ##############################################
-- name: Fianl Cleanup - Delete DCNM CXT Fabric VPC switch pair
+- name: Final Cleanup - Delete DCNM CXT Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: DELETE
     path: "{{ [vpc_delete_path[controller_version], ansible_cxt_fabric_sno1] | join ('') }}"
@@ -91,10 +91,22 @@
   when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
 
 ##############################################
+##          CONFIG SAVE                     ##
+##############################################
+
+- name: Config Save
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ cxt_config_save_path[controller_version] }}"
+  register: result
+  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+  ignore_errors: yes
+
+##############################################
 ##          DEPLOY CXT VPC PAIR             ##
 ##############################################
 
-- name: Fianl Cleanup - Deploy DCNM CXT Fabric VPC switch pair
+- name: Final Cleanup - Deploy DCNM CXT Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: POST
     path: "{{ vpc_cxt_deploy_path[controller_version] }}"

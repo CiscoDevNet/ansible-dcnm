@@ -3907,7 +3907,6 @@ class DcnmIntf:
                     )
                 )
             ):
-
                 # Certain interfaces cannot be deleted, so check before deleting. But if the interface has been marked for delete,
                 # we still go in and check if need to deploy.
                 if (
@@ -3921,12 +3920,24 @@ class DcnmIntf:
                             and "vpc-peer-link" in have["alias"]
                         ):
                             self.changed_dict[0]["skipped"].append(
-                                {"Name": name, "Alias": have["alias"]}
+                                {
+                                    "Name": name,
+                                    "Alias": have["alias"],
+                                    "Underlay Policies": have[
+                                        "underlayPolicies"
+                                    ],
+                                }
                             )
                             continue
                         else:
                             self.changed_dict[0]["debugs"].append(
-                                {"Name": name, "Alias": have["alias"]}
+                                {
+                                    "Name": name,
+                                    "Alias": have["alias"],
+                                    "Underlay Policies": have[
+                                        "underlayPolicies"
+                                    ],
+                                }
                             )
 
                     # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have
@@ -3936,6 +3947,7 @@ class DcnmIntf:
                         self.changed_dict[0]["skipped"].append(
                             {
                                 "Name": name,
+                                "Alias": have["alias"],
                                 "Underlay Policies": have["underlayPolicies"],
                             }
                         )
