@@ -19,7 +19,105 @@
   loop_control:
     loop_var: test_case_to_run
 
-- name: Final Cleanup - delete my_lacp my_interface_vlan and my_hsrp policies that we created during init
+###############################################
+##                FACTS                      ##
+###############################################
+- set_fact:
+    vpc_delete_path: {}
+
+- set_fact:
+    vpc_delete_path: "{{ vpc_delete_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber='}
+    - {'11': '/rest/vpcpair?serialNumber='}
+
+##############################################
+##          DELETE VXLAN VPC PAIR           ##
+##############################################
+- name: Final Cleanup - Delete DCNM VXLAN Fabric VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: DELETE
+    path: "{{ [vpc_delete_path[controller_version], ansible_vxlan_fabric_sno1] | join ('') }}"
+  register: result
+  ignore_errors: yes
+  when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
+
+- name: Wait for 10 secs
+  wait_for:
+    timeout: 10
+  when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
+
+##############################################
+##          CONFIG SAVE                     ##
+##############################################
+
+- name: Config Save
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ vxlan_config_save_path[controller_version] }}"
+  register: result
+  when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
+  ignore_errors: yes
+
+##############################################
+##          DEPLOY VXLAN VPC PAIR           ##
+##############################################
+
+- name: Final Cleanup - Deploy DCNM VXLAN Fabric VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ vpc_vxlan_deploy_path[controller_version] }}"
+  register: result
+  with_sequence: count=1
+  loop_control:
+    pause: 5
+  ignore_errors: yes
+  when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
+
+##############################################
+##          DELETE CXT VPC PAIR             ##
+##############################################
+- name: Final Cleanup - Delete DCNM CXT Fabric VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: DELETE
+    path: "{{ [vpc_delete_path[controller_version], ansible_cxt_fabric_sno1] | join ('') }}"
+  register: result
+  ignore_errors: yes
+  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+
+- name: Wait for 10 secs
+  wait_for:
+    timeout: 10
+  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+
+##############################################
+##          CONFIG SAVE                     ##
+##############################################
+
+- name: Config Save
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ cxt_config_save_path[controller_version] }}"
+  register: result
+  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+  ignore_errors: yes
+
+##############################################
+##          DEPLOY CXT VPC PAIR             ##
+##############################################
+
+- name: Final Cleanup - Deploy DCNM CXT Fabric VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ vpc_cxt_deploy_path[controller_version] }}"
+  register: result
+  with_sequence: count=1
+  loop_control:
+    pause: 5
+  ignore_errors: yes
+  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+
+- name: Final Cleanup - delete my_vpc my_lacp my_interface_vlan and my_hsrp policies that we created during init
   cisco.dcnm.dcnm_policy:
     fabric: "{{ ansible_it_fabric }}"
     state: deleted                     # only choose form [merged, deleted, query]
@@ -27,6 +125,7 @@
       - name: my_interface_vlan
       - name: my_hsrp
       - name: my_lacp
+      - name: my_vpc
       - switch:
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
@@ -37,6 +136,9 @@
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
+##############################################
+##          DELETE ALL TEMPLATES            ##
+##############################################
 - name: Final Cleanup - delete all templates created during init
   cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
@@ -44,6 +146,7 @@
       - name: my_interface_vlan
       - name: my_hsrp
       - name: my_lacp
+      - name: my_vpc
   register: result
 
 - assert:
