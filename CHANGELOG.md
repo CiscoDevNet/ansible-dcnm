@@ -6,7 +6,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-* Support for save and deploy options in inventory module.
+* Support for save and deploy options in `dcnm_inventory` module.
+* Support for `discovery_username` and `discovery_password` in `dcnm_inventory` module.
 * Support for login domain in connection plugin.
 
 ### Fixed
