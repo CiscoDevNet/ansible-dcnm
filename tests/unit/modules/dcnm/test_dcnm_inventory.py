@@ -84,6 +84,10 @@ class TestDcnmInvModule(TestDcnmModule):
     playbook_rma_switch_noserial_config = test_data.get("playbook_rma_switch_noserial_config")
     playbook_rma_switch_nooldserial_config = test_data.get("playbook_rma_switch_nooldserial_config")
     playbook_rma_switch_config = test_data.get("playbook_rma_switch_config")
+    playbook_poap_missing_credentials_password = test_data.get("playbook_poap_missing_credentials_password")
+    playbook_poap_missing_credentials_username = test_data.get("playbook_poap_missing_credentials_username")
+    playbook_rma_missing_credentials_password = test_data.get("playbook_rma_missing_credentials_password")
+    playbook_rma_missing_credentials_username = test_data.get("playbook_rma_missing_credentials_username")
     rma_inv_data = test_data.get("rma_inv_data")
 
     # initial merge switch success
@@ -806,6 +810,9 @@ class TestDcnmInvModule(TestDcnmModule):
         elif "poap_overridden_switch" in self._testMethodName:
             self.init_data()
 
+        elif "poap_missing_credentials" in self._testMethodName:
+            self.init_data()
+
         elif "poap_idempotent_switch" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
@@ -1298,7 +1305,6 @@ class TestDcnmInvModule(TestDcnmModule):
                 config=self.playbook_poap_switch_config,
             )
         )
-
         result = self.execute_module(changed=True, failed=False)
 
         for resp in result["response"]:
@@ -1660,3 +1666,67 @@ class TestDcnmInvModule(TestDcnmModule):
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
             self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_poap_missing_credentials_password(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_missing_credentials_password,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "discovery_password must be set when discovery_username is specified",
+        )
+
+    def test_dcnm_inv_poap_missing_credentials_username(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_poap_missing_credentials_username,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "discovery_username must be set when discovery_password is specified",
+        )
+
+    def test_dcnm_inv_rma_missing_credentials_password(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_rma_missing_credentials_password,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "discovery_password must be set when discovery_username is specified",
+        )
+
+    def test_dcnm_inv_rma_missing_credentials_username(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_rma_missing_credentials_username,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(
+            result.get("msg"),
+            "discovery_username must be set when discovery_password is specified",
+        )

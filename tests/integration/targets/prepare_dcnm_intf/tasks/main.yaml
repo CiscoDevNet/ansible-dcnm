@@ -1,46 +1,311 @@
-    # SVI interfaces require interface-vlan and hsrp features to be enabled
-    
-    - name: Create templates for interface-vlan and hsrp features
-      cisco.dcnm.dcnm_template:
-        state: merged        # only choose form [merged, deleted, query]
-        config:
-          - name: my_interface_vlan
-            tags: "interface_vlan"
-            description: "internal template for enabling interface-vlan feature"
-            content: |
-              ##
-              ##template content
+# SVI interfaces require interface-vlan and hsrp features to be enabled
+- name: Create templates for vpc, lacp, interface-vlan and hsrp features
+  cisco.dcnm.dcnm_template:
+    state: merged        # only choose form [merged, deleted, query]
+    config:
+      - name: my_vpc
+        tags: "vpc"
+        description: "internal template for enabling VPC feature"
+        content: |
+          ##
+          ##template content
 
-              feature interface-vlan
+          feature vpc
 
-              ##
-          - name: my_hsrp
-            tags: "hsrp"
-            description: "internal template for enabling hsrp feature"
-            content: |
-              ##
-              ##template content
+          ##
+      - name: my_lacp
+        tags: "lacp"
+        description: "internal template for enabling LACP feature"
+        content: |
+          ##
+          ##template content
 
-              feature hsrp
+          feature lacp
 
-              ##
-      register: result
+          ##
+      - name: my_interface_vlan
+        tags: "interface_vlan"
+        description: "internal template for enabling interface-vlan feature"
+        content: |
+          ##
+          ##template content
 
-# Create the policy to deploy interface-vlan and hsrp features on the switches
-    - name: Create interface-vlan and hsrp policies
-      cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}"
-        config:
-          - name: my_interface_vlan  # This must be a valid template name
-            create_additional_policy: false  # Do not create a policy if it already exists
-            priority: 101
-          - name: my_hsrp  # This must be a valid template name
-            create_additional_policy: false  # Do not create a policy if it already exists
-            priority: 101
+          feature interface-vlan
 
-          - switch:
-              - ip: "{{ ansible_switch1 }}"
-              - ip: "{{ ansible_switch2 }}"
-        deploy: true
-        state: merged
-      register: result
+          ##
+      - name: my_hsrp
+        tags: "hsrp"
+        description: "internal template for enabling hsrp feature"
+        content: |
+          ##
+          ##template content
+
+          feature hsrp
+
+          ##
+  register: result
+
+# Create the policy to deploy lacp, interface-vlan and hsrp features on the switches
+- name: Create vpc, lacp, interface-vlan and hsrp policies
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    config:
+      - name: my_interface_vlan  # This must be a valid template name
+        create_additional_policy: false  # Do not create a policy if it already exists
+        priority: 101
+      - name: my_hsrp  # This must be a valid template name
+        create_additional_policy: false  # Do not create a policy if it already exists
+        priority: 101
+      - name: my_lacp  # This must be a valid template name
+        create_additional_policy: false  # Do not create a policy if it already exists
+        priority: 101
+      - name: my_vpc   # This must be a valid template name
+        create_additional_policy: false  # Do not create a policy if it already exists
+        priority: 101
+
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+          - ip: "{{ ansible_switch2 }}"
+    deploy: true
+    state: merged
+  register: result
+
+# Determine the version of Controller
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: '11'
+  when: ( result.response['DATA']['version'] == 'DEVEL' )
+  ignore_errors: yes
+
+###############################################
+##                FACTS                      ##
+###############################################
+- set_fact:
+    vpc_create_path: {}
+    vpc_vxlan_deploy_path: {}
+    cxt_create_path: {}
+    vpc_cxt_deploy_path: {}
+    vxlan_config_save_path: {}
+    cxt_config_save_path: {}
+
+- set_fact:
+    vxlan_config_save_path: "{{ vxlan_config_save_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save'}
+    - {'11': '/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save'}
+  when: (ansible_vxlan_fabric is defined)
+
+- set_fact:
+    cxt_config_save_path: "{{ cxt_config_save_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save'}
+    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save'}
+  when: (ansible_cxt_fabric is defined)
+
+- set_fact:
+    vpc_create_path: "{{ vpc_create_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair'}
+    - {'11': '/rest/vpcpair'}
+
+- set_fact:
+    vpc_vxlan_deploy_path: "{{ vpc_vxlan_deploy_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-deploy/{{ ansible_vxlan_fabric_sno1 }},{{ ansible_vxlan_fabric_sno2 }}'}
+    - {'11': '/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-deploy/{{ ansible_vxlan_fabric_sno1 }},{{ ansible_vxlan_fabric_sno2 }}'}
+  when: (ansible_vxlan_fabric is defined)
+
+- set_fact:
+    vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine (item) }}"
+  with_items:
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_cxt_fabric_sno1 }},{{ ansible_cxt_fabric_sno2 }}'}
+    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_cxt_fabric_sno1 }},{{ ansible_cxt_fabric_sno2 }}'}
+  when: (ansible_cxt_fabric is defined)
+
+- set_fact:
+    vxlan_vpc_create: False
+    vxlan_vpc_deploy: False
+    cxt_vpc_create: False
+    cxt_vpc_deploy: False
+
+- set_fact:
+    vpc_vxlan_data: {
+      "peerOneId": "{{ ansible_vxlan_fabric_sno1 }}",
+      "peerTwoId": "{{ ansible_vxlan_fabric_sno2 }}",
+      "useVirtualPeerlink": false
+    }
+    vxlan_vpc_create: True
+    vxlan_vpc_deploy: True
+  when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
+
+- set_fact:
+    vpc_cxt_data: {
+      "peerOneId": "{{ ansible_cxt_fabric_sno1 }}",
+      "peerTwoId": "{{ ansible_cxt_fabric_sno2 }}",
+      "useVirtualPeerlink": false,
+      "nvPairs": {
+        "DOMAIN_ID": "{{ ansible_cxt_vpc_domain_id }}",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "{{ ansible_cxt_fabric_sw1 }}",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "{{ ansible_cxt_fabric_sw2 }}",
+        "KEEP_ALIVE_VRF": "management",
+        "isVpcPlus": "false",
+        "fabricPath_switch_id": "",
+        "isVTEPS": "false",
+        "NVE_INTERFACE": "",
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "clear_policy": "false",
+        "FABRIC_NAME": "",
+        "PEER1_PCID": "{{ ansible_cxt_vpc_peer1_pcid }}",
+        "PEER2_PCID": "{{ ansible_cxt_vpc_peer2_pcid }}",
+        "PEER1_MEMBER_INTERFACES": "{{ ansible_cxt_vpc_peer1_member }}",
+        "PEER2_MEMBER_INTERFACES": "{{ ansible_cxt_vpc_peer2_member }}",
+        "PC_MODE": "active",
+        "PEER1_PO_DESC": "",
+        "PEER2_PO_DESC": "",
+        "ADMIN_STATE": "true",
+        "ALLOWED_VLANS": "all",
+        "PEER1_PO_CONF": "",
+        "PEER2_PO_CONF": ""
+      }
+    }
+    cxt_vpc_create: True
+    cxt_vpc_deploy: True
+  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+
+##############################################
+##          CREATE VXLAN VPC PAIR           ##
+##############################################
+
+- name: Create DCNM VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ vpc_create_path[controller_version] }}"
+    json_data:
+      "{{ vpc_vxlan_data | to_json}}"
+  register: result
+  when: (vxlan_vpc_create == True)
+  ignore_errors: yes
+
+- name: Wait for 10 secs
+  wait_for:
+    timeout: 10
+  when: (vxlan_vpc_create == True)
+
+##############################################
+##          CONFIG SAVE                     ##
+##############################################
+
+- name: Config Save
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ vxlan_config_save_path[controller_version] }}"
+  register: result
+  when: (vxlan_vpc_create == True)
+  ignore_errors: yes
+
+##############################################
+##          DEPLOY VXLAN VPC PAIR           ##
+##############################################
+
+- name: Deploy VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path:  "{{ vpc_vxlan_deploy_path[controller_version] }}"
+  register: result
+  with_sequence: count=1
+  loop_control:
+    pause: 5
+  when: (vxlan_vpc_deploy == True)
+  ignore_errors: yes
+
+- name: Wait for 30 secs
+  wait_for:
+    timeout: 30
+  when: (vxlan_vpc_deploy == True)
+
+##############################################
+##          CREATE CXT VPC PAIR             ##
+##############################################
+
+- name: Create DCNM VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ vpc_create_path[controller_version] }}"
+    json_data:
+      "{{ vpc_cxt_data | to_json}}"
+  register: result
+  when: (cxt_vpc_create == True)
+  ignore_errors: yes
+
+- name: Wait for 20 secs
+  wait_for:
+    timeout: 10
+  when: (cxt_vpc_create == True)
+
+##############################################
+##          CONFIG SAVE                     ##
+##############################################
+
+- name: Config Save
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "{{ cxt_config_save_path[controller_version] }}"
+  register: result
+  when: (cxt_vpc_create == True)
+  ignore_errors: yes
+
+##############################################
+##          DEPLOY CXT VPC PAIR             ##
+##############################################
+
+- name: Deploy VPC switch pair
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path:  "{{ vpc_cxt_deploy_path[controller_version] }}"
+  register: result
+  with_sequence: count=1
+  loop_control:
+    pause: 5
+  when: (cxt_vpc_deploy == True)
+  ignore_errors: yes
+
+- name: Wait for 30 secs
+  wait_for:
+    timeout: 30
+  when: (cxt_vpc_deploy == True)

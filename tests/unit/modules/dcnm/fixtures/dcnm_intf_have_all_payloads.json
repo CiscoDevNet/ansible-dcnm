@@ -15,6 +15,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -39,6 +40,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -63,6 +65,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -88,6 +91,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -112,6 +116,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -125,14 +130,14 @@
         }
         ]
       }
-      ],
-      "RETURN_CODE": 200,
-      "METHOD": "GET"
+    ],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
   },
 
-  "deployed_payloads" :  
-  {
-    "MESSAGE": "OK",
+    "deployed_payloads" :
+    {
+      "MESSAGE": "OK",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
       "DATA": [
       {
@@ -864,11 +869,45 @@
       ],
       "RETURN_CODE": 200,
       "METHOD": "GET"
-  },
+    },
 
-  "payloads" :  
-  {
-    "MESSAGE": "OK",
+    "deleted_intf_payloads" :
+    {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
+      "DATA": [
+      {
+        "ifName": "port-channel999",
+        "mode": "pc",
+        "serialNo": "SAL1819SAN8",
+        "fabricName": "test_fabric",
+        "ifType": "INTERFACE_PORT_CHANNEL",
+        "isPhysical": "False",
+        "deletable": "True",
+        "markDeleted": "True",
+        "alias": "",
+        "deleteReason": null,
+        "complianceStatus": "In-Sync",
+        "underlayPolicies": [
+        {
+          "source" : ""
+        }
+        ],
+        "interfaces": [
+        {
+          "nvPairs": {
+          }
+        }
+        ]
+      }
+      ],
+      "RETURN_CODE": 200,
+      "METHOD": "GET"
+    },
+
+    "payloads" :
+    {
+      "MESSAGE": "OK",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
       "DATA": [
       {
@@ -881,6 +920,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -904,6 +944,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -927,6 +968,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -950,6 +992,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -973,6 +1016,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -996,6 +1040,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1019,6 +1064,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1042,6 +1088,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1065,6 +1112,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1088,6 +1136,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1111,6 +1160,7 @@
         "deletable": "True",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1134,6 +1184,7 @@
         "deletable": "False",
         "markDeleted": "False",
         "alias": "",
+        "deleteReason": null,
         "complianceStatus": "In-Sync",
         "underlayPolicies": [
         {
@@ -1150,6 +1201,6 @@
       ],
       "RETURN_CODE": 200,
       "METHOD": "GET"
-  }
+    }
 
 }

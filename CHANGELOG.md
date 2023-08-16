@@ -27,7 +27,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-* Support to configure muliple interfaces for vrf_lite on a vrf
+* Support to configure multiple interfaces for vrf_lite on a vrf
 * Added support for more switch roles in inventory module.
 
 ### Fixed

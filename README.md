@@ -63,7 +63,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.3.1
+    version: 3.4.0
 ```
 ## Using this collection
 
@@ -140,6 +140,7 @@ ansible_ssh_pass=dcnm_password
 ansible_network_os=cisco.dcnm.dcnm
 ansible_httpapi_validate_certs=False
 ansible_httpapi_use_ssl=True
+ansible_httpapi_login_domain=local
 ```
 
 * Ansible YAML Format
@@ -152,6 +153,7 @@ all:
     ansible_python_interpreter: python
     ansible_httpapi_validate_certs: False
     ansible_httpapi_use_ssl: True
+    ansible_httpapi_login_domain: local
   children:
     dcnm_controllers:
       hosts:
@@ -195,5 +197,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
