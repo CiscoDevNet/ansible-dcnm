@@ -2,8 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [3.4.0] - 2023-08-16
 
+### Added
+
+* Support for save and deploy options in inventory module.
+* Support for login domain in connection plugin.
+
+### Fixed
+
+* Fix for deploy flag behaviour in infteface module. Config will not be deployed to switches if deploy flag is set to false. When deploy flag is set to true in task and if any of the switch in that task is not manageable or the fabric in task is read-only, then an error is returned without making any changes in the NDFC corresponding to that task.
+  
 ## [3.3.1] - 2023-07-13
 
 ### Fixed
@@ -273,6 +282,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 * cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 * cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+[3.4.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.1...3.4.0
 [3.3.1]: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.0...3.3.1
 [3.3.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.1.1...3.2.0
