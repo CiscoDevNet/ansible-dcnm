@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 * Fix for deploy flag behaviour in inferface module. Config will not be deployed to switches if deploy flag is set to false. When deploy flag is set to true in task and if any of the switch in that task is not manageable or the fabric in task is read-only, then an error is returned without making any changes in the NDFC corresponding to that task.
-  
+
 ## [3.3.1] - 2023-07-13
 
 ### Fixed
