@@ -347,7 +347,7 @@ options:
           mode:
             description:
             - Interface mode
-            choices: ['lo']
+            choices: ['lo', 'fabric']
             type: str
             required: true
           int_vrf:
@@ -357,12 +357,17 @@ options:
             default: default
           ipv4_addr:
             description:
-            - IPV4 address of the interface.
+            - IPv4 address of the interface.
+            type: str
+            default: ""
+          secondary_ipv4_addr:
+            description:
+            - Secondary IP address of the nve interface loopback
             type: str
             default: ""
           ipv6_addr:
             description:
-            - IPV6 address of the interface.
+            - IPv6 address of the interface.
             type: str
             default: ""
           route_tag:
@@ -1682,6 +1687,7 @@ class DcnmIntf:
             "serialNumber": "sno",
             "fabricName": "fabric",
             "IP": "ipv4_addr",
+            "SECONDARY_IP": "secondary_ipv4_addr",
             "INTF_VRF": "int_vrf",
             "V6IP": "ipv6_addr",
             "IPv6": "ipv6_addr",
@@ -1746,6 +1752,7 @@ class DcnmIntf:
                 "pc_l3": "int_l3_port_channel",
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
+                "lo_fabric": "int_fabric_loopback_11_1",
                 "eth_trunk": "int_trunk_host",
                 "eth_access": "int_access_host",
                 "eth_routed": "int_routed_host",
@@ -2124,6 +2131,7 @@ class DcnmIntf:
         lo_prof_spec = dict(
             mode=dict(required=True, type="str"),
             ipv4_addr=dict(required=True, type="ipv4"),
+            secondary_ipv4_addr=dict(type="ipv4", default=""),
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
             route_tag=dict(type="str", default=""),
@@ -2395,17 +2403,17 @@ class DcnmIntf:
             cfg.append(citem)
 
             if self.module.params["state"] == "deleted":
-                # config for delete state is different for all interafces. It may not have the profile
+                # config for delete state is different for all interfaces. It may not have the profile
                 # construct. So validate deleted state differently
                 self.dcnm_intf_validate_delete_state_input(cfg)
             elif self.module.params["state"] == "query":
-                # config for query state is different for all interafces. It may not have the profile
+                # config for query state is different for all interfaces. It may not have the profile
                 # construct. So validate query state differently
                 self.dcnm_intf_validate_query_state_input(cfg)
             elif (self.module.params["state"] == "overridden") and not (
                 any("profile" in key for key in item)
             ):
-                # config for overridden state is different for all interafces. It may not have the profile
+                # config for overridden state is different for all interfaces. It may not have the profile
                 # construct. So validate overridden state differently
                 self.dcnm_intf_validate_overridden_state_input(cfg)
             else:
@@ -2719,16 +2727,12 @@ class DcnmIntf:
 
     def dcnm_intf_get_loopback_payload(self, delem, intf, profile):
 
-        # Extract port id from the given name, which is of the form 'po300'
-
+        # Properties common for all loopback interface modes
         ifname, port_id = self.dcnm_intf_get_if_name(
             delem["name"], delem["type"]
         )
         intf["interfaces"][0].update({"ifName": ifname})
 
-        intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
-            "int_vrf"
-        ]
         intf["interfaces"][0]["nvPairs"]["IP"] = str(
             delem[profile]["ipv4_addr"]
         )
@@ -2751,6 +2755,20 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+
+        # Properties for mode 'lo' Loopback Interfaces
+        if delem[profile]["mode"] == "lo":
+
+            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+                "int_vrf"
+            ]
+
+        # Properties for mode 'fabric' Loopback Interfaces
+        if delem[profile]["mode"] == "fabric":
+
+            intf["interfaces"][0]["nvPairs"]["SECONDARY_IP"] = delem[profile][
+                "secondary_ipv4_addr"
+            ]
 
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
 
@@ -3159,6 +3177,8 @@ class DcnmIntf:
         if "aa_fex" == delem["type"]:
             self.dcnm_intf_get_aa_fex_payload(delem, intf, "profile")
 
+        # import epdb ; epdb.serve(port=8888)
+
         return intf
 
     def dcnm_intf_merge_intf_info(self, intf_info, if_head):
@@ -3469,8 +3489,8 @@ class DcnmIntf:
 
                     # First check if the policies are same for want and have. If they are different, we cannot compare
                     # the profiles because each profile will have different elements. As per PRD, if policies are different
-                    # we should not merge the information. For now we will assume we will oerwrite the same. Don't compare
-                    # rest of the structure. Overwrite with waht ever is in want
+                    # we should not merge the information. For now we will assume we will overwrite the same. Don't compare
+                    # rest of the structure. Overwrite with whatever is in want
 
                     if want["policy"] != d["policy"]:
                         action = "update"
@@ -4584,6 +4604,13 @@ class DcnmIntf:
 
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
+
+            # The 'int_fabric_loopback_11_1' policy is a special policy for
+            # managing fabric loopback interfaces.  These interfaces are created
+            # at fabric creation time and can only be manged by appening
+            # '/pti?isMultiEdit=false' to the path.
+            if payload.get('policy') == 'int_fabric_loopback_11_1':
+                path = path + '/pti?isMultiEdit=false'
 
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
