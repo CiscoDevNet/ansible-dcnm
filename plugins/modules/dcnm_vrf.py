@@ -566,6 +566,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_url,
 )
 from ansible.module_utils.basic import AnsibleModule
+import q
 
 
 class DcnmVrf:
@@ -656,6 +657,7 @@ class DcnmVrf:
                         ):
                             want_ext_values = want["extensionValues"]
                             want_ext_values = ast.literal_eval(want_ext_values)
+                            q(want_ext_values)
                             have_ext_values = have["extensionValues"]
                             have_ext_values = ast.literal_eval(have_ext_values)
 
@@ -2538,6 +2540,11 @@ class DcnmVrf:
                 dot1q=dict(type="int"),
             )
 
+            mpls_spec = dict(
+                rt_import_evpn=dict(type="str"),
+                rt_export_evpn=dict(type="str"),
+            )
+
             msg = None
             if self.config:
                 for vrf in self.config:
@@ -2642,6 +2649,9 @@ class DcnmVrf:
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
+                lo_id=dict(type="int"),
+                lo_ipv4=dict(type="ipv4"),
+                lo_ipv6=dict(type="ipv6"),
                 deploy=dict(type="bool", default=True),
                 vrf_lite=dict(type="list", default=[]),
             )
@@ -2655,6 +2665,11 @@ class DcnmVrf:
                 dot1q=dict(type="int"),
             )
 
+            mpls_spec = dict(
+                rt_import_evpn=dict(type="str"),
+                rt_export_evpn=dict(type="str"),
+            )
+
             if self.config:
                 valid_vrf, invalid_params = validate_list_of_dicts(
                     self.config, vrf_spec
@@ -2666,6 +2681,12 @@ class DcnmVrf:
                         )
                         vrf["attach"] = valid_att
                         invalid_params.extend(invalid_att)
+
+                        valid_mpls, invalid_mpls = validate_list_of_dicts(
+                            vrf["attatch"].get("mpls"), mpls_spec
+                        )
+                        invalid_params.extend(invalid_mpls)
+
                         for lite in vrf.get("attach"):
                             if lite.get("vrf_lite"):
                                 valid_lite, invalid_lite = validate_list_of_dicts(
