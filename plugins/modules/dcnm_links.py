@@ -171,7 +171,7 @@ options:
           src_asn:
             description:
               - BGP ASN number on the source fabric.
-              - Required for below templates:
+              - Required for below templates
               - ext_fabric_setup
               - ext_multisite_underlay_setup
               - ext_evpn_multisite_overlay_setup
@@ -2687,8 +2687,7 @@ class DcnmLinks:
                 "PEER1_SR_MPLS_INDEX",
                 "PEER2_SR_MPLS_INDEX",
                 "GB_BLOCK_RANGE",
-                "OSPF_AREA_ID"
-                ]
+                "OSPF_AREA_ID"]
             for nv_pair in mpls_underlay_spec_nvpairs:
                 if (
                     str(wlink["nvPairs"][nv_pair]).lower()

@@ -835,7 +835,7 @@ Parameters
                 </td>
                 <td>
                         <div>BGP ASN number on the source fabric.</div>
-                        <div>{&#x27;Required for below templates&#x27;: None}</div>
+                        <div>Required for below templates</div>
                         <div>ext_fabric_setup</div>
                         <div>ext_multisite_underlay_setup</div>
                         <div>ext_evpn_multisite_overlay_setup</div>
