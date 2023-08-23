@@ -239,8 +239,6 @@ class TestDcnmLinksModule(TestDcnmModule):
                                               config_preview_resp,
                                               config_preview_resp]
 
-        # -------------------------- INTRA-FABRIC-UNNUMBERED --------------------------
-
         if (
             "test_dcnm_intra_links_unnumbered_merged_new_no_opts"
             == self._testMethodName
@@ -951,6 +949,27 @@ class TestDcnmLinksModule(TestDcnmModule):
                 config_preview_resp,
             ]
 
+        if (
+            "test_dcnm_intra_links_modify_existing_no_template"
+            == self._testMethodName
+        ):
+
+            have_links_resp1 = self.payloads_data.get(
+                "intra_have_link7_num_fabric_response"
+            )
+            merge_links_resp = self.payloads_data.get(
+                "merge_links_fabric_response"
+            )
+            deploy_resp = self.payloads_data.get("deploy_resp")
+            config_preview_resp = self.payloads_data.get("config_preview_resp")
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                have_links_resp1,
+                merge_links_resp,
+                deploy_resp,
+                config_preview_resp,
+            ]
         if (
             "test_dcnm_intra_links_numbered_replace_existing"
             == self._testMethodName
@@ -2432,6 +2451,45 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual((len(result["response"]) == 3), True)
         self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+
+    # ------------------------- INTRA-FABRIC-MISC-----------------------------
+
+    def test_dcnm_intra_links_modify_existing_no_template(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_links_configs")
+        self.payloads_data = loadPlaybookData("dcnm_links_payloads")
+
+        # load required config data
+        self.playbook_config = self.config_data.get("intra_modify_number_no_template")
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+        self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
+        self.mock_num_fab_info = self.payloads_data.get("mock_num_fab_data")
+        self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                src_fabric="mmudigon-numbered",
+                config=self.playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+        print(result)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        self.assertEqual(len(result["diff"][0]["modified"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["query"]), 0)
+        self.assertEqual(
+            len(result["diff"][0]["deploy"][0]["mmudigon-numbered"]), 2
+        )
+
+        # Validate create responses
+        for resp in result["response"]:
+            self.assertEqual(resp["RETURN_CODE"], 200)
 
     # ------------------------- INTRA-FABRIC-UNNUMBERED -----------------------------
 
