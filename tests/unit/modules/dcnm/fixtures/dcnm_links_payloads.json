@@ -439,7 +439,7 @@
       }
     },
 
-    "intra_have_link1_unnum_fabric_response": 
+    "intra_have_link1_unnum_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -510,7 +510,7 @@
       }
     },
 
-    "intra_have_link1_ipv6_fabric_response": 
+    "intra_have_link1_ipv6_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -554,7 +554,7 @@
       }
     },
 
-    "intra_have_link2_ipv6_fabric_response": 
+    "intra_have_link2_ipv6_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -631,7 +631,7 @@
       }
     },
 
-    "intra_have_link1_vpc_num_fabric_response": 
+    "intra_have_link1_vpc_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -677,7 +677,7 @@
       }
     },
 
-    "inter_have_link1_num_fabric_response": 
+    "inter_have_link1_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -724,7 +724,7 @@
       }
     },
 
-    "inter_have_link2_num_fabric_response": 
+    "inter_have_link2_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -775,7 +775,7 @@
       }
     },
 
-    "inter_have_link3_num_fabric_response": 
+    "inter_have_link3_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -820,7 +820,7 @@
       }
     },
 
-    "inter_have_link4_num_fabric_response": 
+    "inter_have_link4_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -866,7 +866,7 @@
       }
     },
 
-    "inter_have_link5_num_fabric_response": 
+    "inter_have_link5_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -917,7 +917,7 @@
       }
     },
 
-    "inter_have_link6_num_fabric_response": 
+    "inter_have_link6_num_fabric_response":
     {
       "RETURN_CODE": 200,
       "METHOD": "GET",
@@ -958,6 +958,28 @@
           "BGP_PASSWORD_ENABLE": "true",
           "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
           "asn": "1600"
+        }
+      }
+    },
+    "inter_have_link7_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=98YWRN9WCSC&switch1IfName=Ethernet1/9&switch2IfName=Ethernet1/9",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "sw2-info": {
+          "if-name": "Ethernet1/9",
+          "sw-serial-number": "98YWRN9WCSC",
+          "fabric-name": "test_net1",
+          "sw-sys-name": "n9kv-test1"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/9",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
         }
       }
     },
@@ -1062,7 +1084,7 @@
       ]
     },
 
-    "intra_query_links_unnum_fabric_response": 
+    "intra_query_links_unnum_fabric_response":
     {
       "MESSAGE": "OK",
       "METHOD": "GET",
@@ -1121,7 +1143,7 @@
 
     },
 
-    "intra_query_links_ipv6_fabric_response": 
+    "intra_query_links_ipv6_fabric_response":
     {
       "MESSAGE": "OK",
       "METHOD": "GET",
@@ -1220,7 +1242,7 @@
       }]
     },
 
-    "intra_query_links_vpc_response": 
+    "intra_query_links_vpc_response":
     {
       "MESSAGE": "OK",
       "METHOD": "GET",
@@ -1263,7 +1285,7 @@
       }]
     },
 
-    "inter_query_links_num_fabric_response": 
+    "inter_query_links_num_fabric_response":
     {
       "MESSAGE": "OK",
       "METHOD": "GET",
