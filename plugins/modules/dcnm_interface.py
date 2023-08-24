@@ -853,6 +853,26 @@ EXAMPLES = """
             - no shutdown
           description: "loopback interface 100 configuration - replaced"
 
+## Loopback Interfaces Created During Fabric Creation
+- name: Mange Fabric loopback interfaces
+  cisco.dcnm.dcnm_interface:
+    fabric: mmudigon-fabric
+    state: merged
+    config:
+      - name: lo1                           # This is usually lo0 or lo1 created during fabric creation
+        type: lo
+        switch:
+          - "192.172.1.1"                   # provide the switch where to deploy the config
+        deploy: true                        # choose from [true, false]
+        profile:
+          admin_state: false                # choose from [true, false]
+          mode: fabric                      # This must be set to 'fabric' for fabric loopback interfaces
+          secondary_ipv4_addr: 172.16.5.1   # secondary ipv4 address for loopback interface
+          route_tag: "100"                  # Routing Tag for the interface
+          cmds:                             # Freeform config
+            - no shutdown
+          description: "Fabric interface managed by Ansible"
+
 # To delete or reset all interfaces on all switches in the fabric
 - name: Delete loopback interfaces
   cisco.dcnm.dcnm_interface:
