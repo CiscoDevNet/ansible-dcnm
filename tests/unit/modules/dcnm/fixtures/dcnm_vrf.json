@@ -1,7 +1,7 @@
 {
     "mock_ip_sn" : {
       "10.10.10.224": "XYZKSJHSMK1",
-      "10.10.10.225": "XYZKSJHSMK2", 
+      "10.10.10.225": "XYZKSJHSMK2",
       "10.10.10.226": "XYZKSJHSMK3",
       "10.10.10.227": "XYZKSJHSMK4",
       "10.10.10.228": "XYZKSJHSMK5"
@@ -37,14 +37,29 @@
         "attach": [
           {
             "ip_address": "10.10.10.224",
+            "export_evpn_rt": "5000:100",
+            "import_evpn_rt": "5000:100",
             "deploy": true
           },
           {
             "ip_address": "10.10.10.225",
+            "export_evpn_rt": "5000:100",
+            "import_evpn_rt": "5000:100",
             "deploy": true
           }
         ],
         "deploy": true
+      }
+    ],
+    "playbook_no_attach_config" : [
+      {
+        "vrf_name": "test_vrf_1",
+        "vrf_id": "9008011",
+        "vrf_template": "Default_VRF_Universal",
+        "vrf_extension_template": "Default_VRF_Extension_Universal",
+        "vlan_id": "202",
+        "source": "None",
+        "service_vrf_template": "None"
       }
     ],
     "playbook_vrf_lite_config" : [
@@ -59,10 +74,14 @@
         "attach": [
           {
             "ip_address": "10.10.10.224",
+            "export_evpn_rt": "5000:100",
+            "import_evpn_rt": "5000:100",
             "deploy": true
           },
           {
             "ip_address": "10.10.10.227",
+            "export_evpn_rt": "5000:100",
+            "import_evpn_rt": "5000:100",
               "vrf_lite": [
                 {
                   "interface": "Ethernet1/16",
@@ -413,6 +432,7 @@
             "vrfName": "test_vrf_1",
             "switchName": "n9kv_leaf1",
             "lanAttachState": "DEPLOYED",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
             "isLanAttached": true,
             "switchSerialNo": "XYZKSJHSMK1",
             "switchRole": "leaf",
@@ -425,6 +445,7 @@
             "vrfName": "test_vrf_1",
             "switchName": "n9kv_leaf2",
             "lanAttachState": "DEPLOYED",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
             "isLanAttached": true,
             "switchSerialNo": "XYZKSJHSMK2",
             "switchRole": "leaf",
@@ -569,7 +590,7 @@
             "extensionValues": "{\"VRF_LITE_CONN\":\"{\\\"VRF_LITE_CONN\\\":[{\\\"IF_NAME\\\":\\\"Ethernet1/16\\\",\\\"DOT1Q_ID\\\":\\\"2\\\",\\\"IP_MASK\\\":\\\"10.33.0.2/30\\\",\\\"NEIGHBOR_IP\\\":\\\"10.33.0.1\\\",\\\"NEIGHBOR_ASN\\\":\\\"65535\\\",\\\"IPV6_MASK\\\":\\\"2010::10:34:0:7/64\\\",\\\"IPV6_NEIGHBOR\\\":\\\"2010::10:34:0:3\\\",\\\"AUTO_VRF_LITE_FLAG\\\":\\\"false\\\",\\\"PEER_VRF_NAME\\\":\\\"ansible-vrf-int1\\\",\\\"VRF_LITE_JYTHON_TEMPLATE\\\":\\\"Ext_VRF_Lite_Jython\\\"}]}\",\"MULTISITE_CONN\":\"{\\\"MULTISITE_CONN\\\":[]}\"}",
             "fabric": "test_fabric",
             "freeformConfig": "",
-            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\"}",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
             "serialNumber": "XYZKSJHSMK4",
             "vlan": 202,
             "vrfName": "test_vrf_1"
@@ -680,7 +701,7 @@
                 "extensionPrototypeValues": [],
                 "extensionValues": "",
                 "freeformConfig": "",
-                "instanceValues": "",
+                "instanceValues": "{\"loopbackId\":\"10\",\"loopbackIpAddress\":\"11.1.1.1\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
                 "islanAttached": true,
                 "lanAttachedState": "DEPLOYED",
                 "peerSerialNumber": null,
@@ -708,7 +729,7 @@
                 "extensionPrototypeValues": [],
                 "extensionValues": "",
                 "freeformConfig": "",
-                "instanceValues": "",
+                "instanceValues": "{\"loopbackId\":\"10\",\"loopbackIpAddress\":\"11.1.1.1\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
                 "islanAttached": true,
                 "lanAttachedState": "DEPLOYED",
                 "peerSerialNumber": null,
@@ -880,7 +901,7 @@
                         "destInterfaceName": "Ethernet1/16",
                         "destSwitchName": "dt-n9k2-1",
                         "extensionType": "VRF_LITE",
-                        "extensionValues": "{\"PEER_VRF_NAME\": \"\", \"NEIGHBOR_IP\": \"10.33.0.1\", \"VRF_LITE_JYTHON_TEMPLATE\": \"Ext_VRF_Lite_Jython\", \"enableBorderExtension\": \"VRF_LITE\", \"AUTO_VRF_LITE_FLAG\": \"false\", \"IP_MASK\": \"10.33.0.2/30\", \"MTU\": \"9216\", \"NEIGHBOR_ASN\": \"65535\", \"IF_NAME\": \"Ethernet1/16\", \"IPV6_NEIGHBOR\": \"\", \"IPV6_MASK\": \"\", \"DOT1Q_ID\": \"2\", \"asn\": \"65535\"}",
+                        "extensionValues": "{\"PEER_VRF_NAME\": \"\", \"NEIGHBOR_IP\": \"10.33.0.1\", \"VRF_LITE_JYTHON_TEMPLATE\": \"Ext_VRF_Lite_Jython\", \"enableBorderExtension\": \"VRF_LITE\", \"AUTO_VRF_LITE_FLAG\": \"false\", \"IP_MASK\": \"10.33.0.2/30\", \"MTU\": \"9216\", \"NEIGHBOR_ASN\": \"65535\", \"IF_NAME\": \"Ethernet1/16\", \"IPV6_NEIGHBOR\": \"\", \"IPV6_MASK\": \"\", \"DOT1Q_ID\": \"3\", \"asn\": \"65535\"}",
                         "interfaceName": "Ethernet1/16"
                     }
                 ],

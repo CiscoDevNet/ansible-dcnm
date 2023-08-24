@@ -340,6 +340,20 @@ options:
                     - DOT1Q Id
                     type: str
                     required: false
+          import_evpn_rt:
+            description:
+            - import evpn route-target
+            - supported on NDFC only
+            - Use ',' to separate multiple route-targets
+            type: str
+            required: false
+          export_evpn_rt:
+            description:
+            - export evpn route-target
+            - supported on NDFC only
+            - Use ',' to separate multiple route-targets
+            type: str
+            required: false
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
@@ -650,6 +664,22 @@ class DcnmVrf:
             if have_a:
                 for have in have_a:
                     if want["serialNumber"] == have["serialNumber"]:
+                        # handle instanceValues first
+                        want.update({"freeformConfig": have["freeformConfig"]})  # copy freeformConfig from have as module is not managing it
+                        want_inst_values = {}
+                        have_inst_values = {}
+                        if (
+                            want["instanceValues"] is not None
+                            and have["instanceValues"] is not None
+                        ):
+                            want_inst_values = ast.literal_eval(want["instanceValues"])
+                            have_inst_values = ast.literal_eval(have["instanceValues"])
+
+                            # update unsupported paramters using using have
+                            want_inst_values.update({"loopbackId": have_inst_values["loopbackId"]})
+                            want_inst_values.update({"loopbackIpAddress": have_inst_values["loopbackIpAddress"]})
+                            want_inst_values.update({"loopbackIpV6Address": have_inst_values["loopbackIpV6Address"]})
+                            want.update({"instanceValues": json.dumps(want_inst_values)})
                         if (
                             want["extensionValues"] != ""
                             and have["extensionValues"] != ""
@@ -763,6 +793,10 @@ class DcnmVrf:
                                (bool(want["is_deploy"]) is not bool(have["is_deploy"]))):
                                 if bool(want["is_deploy"]):
                                     dep_vrf = True
+
+                        for k, v in want_inst_values.items():
+                            if v != have_inst_values.get(k, ""):
+                                found = False
 
                         if found:
                             break
@@ -905,15 +939,21 @@ class DcnmVrf:
         attach.update({"is_deploy": deploy})
         if vrf_ext:
             attach.update({"extensionValues": json.dumps(ext_values).replace(" ", "")})
-            attach.update(
-                {
-                    "instanceValues": '{"loopbackId":"","loopbackIpAddress":"","loopbackIpV6Address":""}'
-                }
-            )
         else:
             attach.update({"extensionValues": ""})
-            attach.update({"instanceValues": ""})
+        # freeformConfig, loopbackId. loopbackIpAddress, and loopbackIpV6Address will be copied from have
         attach.update({"freeformConfig": ""})
+        inst_values = {
+            "loopbackId": "",
+            "loopbackIpAddress": "",
+            "loopbackIpV6Address": "",
+        }
+        if self.dcnm_version > 11:
+            inst_values.update({
+                "switchRouteTargetImportEvpn": attach["import_evpn_rt"],
+                "switchRouteTargetExportEvpn": attach["export_evpn_rt"],
+            })
+        attach.update({"instanceValues": json.dumps(inst_values).replace(" ", "")})
         if "deploy" in attach:
             del attach["deploy"]
         del attach["ip_address"]
@@ -1278,6 +1318,7 @@ class DcnmVrf:
 
                 sn = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
+                inst_values = attach.get("instanceValues", None)
 
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
@@ -1299,8 +1340,7 @@ class DcnmVrf:
                 attach.update({"serialNumber": sn})
                 attach.update({"deployment": deploy})
                 attach.update({"extensionValues": ""})
-                attach.update({"instanceValues": ""})
-                attach.update({"freeformConfig": ""})
+                attach.update({"instanceValues": inst_values})
                 attach.update({"isAttached": attach_state})
                 attach.update({"is_deploy": deployed})
 
@@ -1382,6 +1422,9 @@ class DcnmVrf:
                                 )
 
                                 attach.update({"extensionValues": e_values})
+
+                        ff_config = epv.get("freeformConfig", "")
+                        attach.update({"freeformConfig": ff_config})
 
             if dep_vrf:
                 upd_vrfs += dep_vrf + ","
@@ -1532,7 +1575,6 @@ class DcnmVrf:
                 ),
                 None,
             )
-
             to_del = []
             if not found:
                 atch_h = have_a["lanAttachList"]
@@ -2399,9 +2441,6 @@ class DcnmVrf:
                             v_a["extensionValues"] = json.dumps(
                                 extension_values
                             ).replace(" ", "")
-                            v_a[
-                                "instanceValues"
-                            ] = '{"loopbackId":"","loopbackIpAddress":"","loopbackIpV6Address":""}'
                             if v_a.get("vrf_lite", None) is not None:
                                 del v_a["vrf_lite"]
 
@@ -2418,7 +2457,6 @@ class DcnmVrf:
                 for elem in self.diff_attach:
                     for node in elem["lanAttachList"]:
                         node["fabric"] = self.sn_fab[node["serialNumber"]]
-
             resp = dcnm_send(
                 self.module, method, attach_path, json.dumps(self.diff_attach)
             )
@@ -2527,6 +2565,8 @@ class DcnmVrf:
                 ip_address=dict(required=True, type="str"),
                 deploy=dict(type="bool", default=True),
                 vrf_lite=dict(type="list"),
+                import_evpn_rt=dict(type="str", default=""),
+                export_evpn_rt=dict(type="str", default=""),
             )
             lite_spec = dict(
                 interface=dict(required=True, type="str"),
@@ -2644,6 +2684,8 @@ class DcnmVrf:
                 ip_address=dict(required=True, type="str"),
                 deploy=dict(type="bool", default=True),
                 vrf_lite=dict(type="list", default=[]),
+                import_evpn_rt=dict(type="str", default=""),
+                export_evpn_rt=dict(type="str", default=""),
             )
             lite_spec = dict(
                 interface=dict(type="str"),
