@@ -165,7 +165,7 @@
             admin_state: true
             mode: fabric
             ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
-            # secondary_ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['SECONDARY_IP'] }}"
+            secondary_ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['SECONDARY_IP'] }}"
             ipv6_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['V6IP'] }}"
             route_tag: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['ROUTE_MAP_TAG'] }}"
             description: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
@@ -179,7 +179,7 @@
             admin_state: true
             mode: fabric
             ipv4_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
-            # secondary_ipv4_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['SECONDARY_IP'] }}"
+            secondary_ipv4_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['SECONDARY_IP'] }}"
             ipv6_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['V6IP'] }}"
             route_tag: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['ROUTE_MAP_TAG'] }}"
             description: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
