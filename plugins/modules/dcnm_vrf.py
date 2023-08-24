@@ -2441,9 +2441,6 @@ class DcnmVrf:
                             v_a["extensionValues"] = json.dumps(
                                 extension_values
                             ).replace(" ", "")
-                            # v_a[
-                            # "instanceValues"
-                            # ] = '{"loopbackId":"","loopbackIpAddress":"","loopbackIpV6Address":""}'
                             if v_a.get("vrf_lite", None) is not None:
                                 del v_a["vrf_lite"]
 
