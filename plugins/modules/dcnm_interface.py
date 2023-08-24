@@ -3177,8 +3177,6 @@ class DcnmIntf:
         if "aa_fex" == delem["type"]:
             self.dcnm_intf_get_aa_fex_payload(delem, intf, "profile")
 
-        # import epdb ; epdb.serve(port=8888)
-
         return intf
 
     def dcnm_intf_merge_intf_info(self, intf_info, if_head):

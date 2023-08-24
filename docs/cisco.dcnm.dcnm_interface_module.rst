@@ -804,7 +804,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>IPV4 address of the interface.</div>
+                        <div>IPv4 address of the interface.</div>
                 </td>
             </tr>
             <tr>
@@ -822,7 +822,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>IPV6 address of the interface.</div>
+                        <div>IPv6 address of the interface.</div>
                 </td>
             </tr>
             <tr>
@@ -840,6 +840,7 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>lo</li>
+                                    <li>fabric</li>
                         </ul>
                 </td>
                 <td>
@@ -862,6 +863,24 @@ Parameters
                 </td>
                 <td>
                         <div>Route tag associated with the interface IP.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>secondary_ipv4_addr</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Secondary IP address of the nve interface loopback</div>
                 </td>
             </tr>
 
