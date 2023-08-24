@@ -67,8 +67,7 @@
             profile:
               admin_state: true
               mode: fabric                        # This mode is needed to manage fabric lpbk interfaces
-              ipv4_addr: 192.168.5.1              # ipv4 address for the loopback interface
-              # secondary_ipv4_addr: 192.168.2.1  # secondary ipv4 address for loopback interface 
+              ipv4_addr: 192.168.2.1              # ipv4 address for the loopback interface
               ipv6_addr: fd08::0201               # ipV6 address for the loopback interface
               route_tag: "55"                     # Routing Tag for the interface
               cmds:                               # Freeform config
@@ -83,8 +82,8 @@
             profile:
               admin_state: true
               mode: fabric                      # This mode is needed to manage fabric lpbk interfaces
-              ipv4_addr: 192.168.7.1            # ipv4 address for the loopback interface
-              # secondary_ipv4_addr: 192.168.4.1  # secondary ipv4 address for loopback interface 
+              ipv4_addr: 192.168.5.1            # ipv4 address for the loopback interface
+              secondary_ipv4_addr: 172.16.5.1   # secondary ipv4 address for loopback interface 
               ipv6_addr: fd08::0301             # ipV6 address for the loopback interface
               route_tag: "77"                   # Routing Tag for the interface
               cmds:                             # Freeform config
@@ -135,9 +134,28 @@
               - "{{ ansible_switch2 }}"
       register: lpk0_data_new
 
+    - name: Query and save new data for loopback1
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: query
+        config:
+          - name: lo1
+            switch:
+              - "{{ ansible_switch2 }}"
+      register: lpk1_data_new
+
     - assert:
         that:
-          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.5.1"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.2.1"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["V6IP"] == "fd08::0201"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] == "55"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == "Fabric Lpk0 Configured By Ansible"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.5.1"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["SECONDARY_IP"] == "172.16.5.1"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["V6IP"] == "fd08::0301"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] == "77"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == "Fabric Lpk1 Configured By Ansible"'
 
   # Only execute this test if loopback0 and 1 are fabric loopbacks
   when:
@@ -165,7 +183,6 @@
             admin_state: true
             mode: fabric
             ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
-            secondary_ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['SECONDARY_IP'] }}"
             ipv6_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['V6IP'] }}"
             route_tag: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['ROUTE_MAP_TAG'] }}"
             description: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
@@ -183,6 +200,9 @@
             ipv6_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['V6IP'] }}"
             route_tag: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['ROUTE_MAP_TAG'] }}"
             description: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
+    when:
+      - lpk0_data.response[0]['policy'] == 'int_fabric_loopback_11_1'
+      - lpk1_data.response[0]['policy'] == 'int_fabric_loopback_11_1'
 
   - name: Put fabric to default state
     cisco.dcnm.dcnm_interface:
