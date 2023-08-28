@@ -841,10 +841,15 @@ Parameters
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>lo</li>
                                     <li>fabric</li>
+                                    <li>mpls</li>
                         </ul>
                 </td>
                 <td>
-                        <div>Interface mode</div>
+                        <div>There are several modes for loopback interfaces.</div>
+                        <div>Mode &#x27;lo&#x27; is used to create, modify and delete non fabric loopback interfaces using policy &#x27;int_loopback&#x27;.</div>
+                        <div>Mode &#x27;fabric&#x27; is used to modify loopbacks created when the fabric is first created using policy &#x27;int_fabric_loopback_11_1&#x27;</div>
+                        <div>Mode &#x27;mpls&#x27; is used to modify loopbacks created when the fabric is first created using policy &#x27;int_mpls_loopback&#x27;</div>
+                        <div>Mode &#x27;fabric&#x27; and &#x27;mpls&#x27; interfaces can be modified but not created or deleted.</div>
                 </td>
             </tr>
             <tr>

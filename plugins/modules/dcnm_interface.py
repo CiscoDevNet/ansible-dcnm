@@ -346,8 +346,15 @@ options:
         suboptions:
           mode:
             description:
-            - Interface mode
-            choices: ['lo', 'fabric']
+            - There are several modes for loopback interfaces.
+            - Mode 'lo' is used to create, modify and delete non fabric loopback
+              interfaces using policy 'int_loopback'.
+            - Mode 'fabric' is used to modify loopbacks created when the fabric is first
+              created using policy 'int_fabric_loopback_11_1'
+            - Mode 'mpls' is used to modify loopbacks created when the fabric is first
+              created using policy 'int_mpls_loopback'
+            - Mode 'fabric' and 'mpls' interfaces can be modified but not created or deleted.
+            choices: ['lo', 'fabric', 'mpls']
             type: str
             required: true
           int_vrf:
@@ -1773,6 +1780,7 @@ class DcnmIntf:
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
                 "lo_fabric": "int_fabric_loopback_11_1",
+                "lo_mpls": "int_mpls_loopback",
                 "eth_trunk": "int_trunk_host",
                 "eth_access": "int_access_host",
                 "eth_routed": "int_routed_host",
@@ -2756,12 +2764,6 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["IP"] = str(
             delem[profile]["ipv4_addr"]
         )
-        intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
-            delem[profile]["ipv6_addr"]
-        )
-        intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
-            "route_tag"
-        ]
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
             "description"
@@ -2782,12 +2784,24 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
             ]
+            intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
+                delem[profile]["ipv6_addr"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
+                "route_tag"
+            ]
 
         # Properties for mode 'fabric' Loopback Interfaces
         if delem[profile]["mode"] == "fabric":
 
             intf["interfaces"][0]["nvPairs"]["SECONDARY_IP"] = delem[profile][
                 "secondary_ipv4_addr"
+            ]
+            intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
+                delem[profile]["ipv6_addr"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
+                "route_tag"
             ]
 
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
@@ -4605,6 +4619,16 @@ class DcnmIntf:
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
 
+            if payload.get('policy') == 'int_mpls_loopback':
+                # Fabric mpls interfaces have two read_only properties that
+                # must be added to the payload from the self.have dictionary
+                # before attempting to modify the interface
+                drp = self.have[0]["interfaces"][0]["nvPairs"]["DCI_ROUTING_PROTO"]
+                drt = self.have[0]["interfaces"][0]["nvPairs"]["DCI_ROUTING_TAG"]
+                payload['interfaces'][0]["nvPairs"]["DCI_ROUTING_PROTO"] = drp
+                payload['interfaces'][0]["nvPairs"]["DCI_ROUTING_TAG"] = drt
+
+            self.log_msg("diff_replace payload: {0}".format(payload))
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "PUT", path, json_payload)
 
@@ -4622,13 +4646,6 @@ class DcnmIntf:
 
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
-
-            # The 'int_fabric_loopback_11_1' policy is a special policy for
-            # managing fabric loopback interfaces.  These interfaces are created
-            # at fabric creation time and can only be manged by appening
-            # '/pti?isMultiEdit=false' to the path.
-            if payload.get('policy') == 'int_fabric_loopback_11_1':
-                path = path + '/pti?isMultiEdit=false'
 
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
