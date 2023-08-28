@@ -345,6 +345,7 @@ options:
         - Object profile which must be included for loopback interface configurations.
         suboptions:
           mode:
+            choices: ['lo', 'fabric', 'mpls']
             description:
             - There are several modes for loopback interfaces.
             - Mode 'lo' is used to create, modify and delete non fabric loopback
@@ -354,7 +355,6 @@ options:
             - Mode 'mpls' is used to modify loopbacks created when the fabric is first
               created using policy 'int_mpls_loopback'
             - Mode 'fabric' and 'mpls' interfaces can be modified but not created or deleted.
-            choices: ['lo', 'fabric', 'mpls']
             type: str
             required: true
           int_vrf:
@@ -4628,7 +4628,6 @@ class DcnmIntf:
                 payload['interfaces'][0]["nvPairs"]["DCI_ROUTING_PROTO"] = drp
                 payload['interfaces'][0]["nvPairs"]["DCI_ROUTING_TAG"] = drt
 
-            self.log_msg("diff_replace payload: {0}".format(payload))
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "PUT", path, json_payload)
 
