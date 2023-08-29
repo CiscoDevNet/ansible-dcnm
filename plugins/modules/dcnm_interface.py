@@ -1749,6 +1749,8 @@ class DcnmIntf:
             "PEER2_PO_CONF": "peer2_cmds",
             "PEER1_ACCESS_VLAN": "peer1_access_vlan",
             "PEER2_ACCESS_VLAN": "peer2_access_vlan",
+            "DCI_ROUTING_PROTO": "dci_routing_proto",
+            "DCI_ROUTING_TAG": "dci_routing_tag",
         }
 
         # New Interfaces
@@ -2804,6 +2806,16 @@ class DcnmIntf:
                 "route_tag"
             ]
 
+        # Properties for mode 'mpls' Loopback Interfaces
+        if delem[profile]["mode"] == "mpls":
+
+            # These properties are read_only properties and are not exposed as
+            # properties that can be modified.  They will be updated from the
+            # self.have dictionary to reflect the actual values later in the
+            # code workflow that walks the want values and compares to have values.
+            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_PROTO"] = "PLACE_HOLDER"
+            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_TAG"] = "PLACE_HOLDER"
+
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
 
         # Extract port id from the given name, which is of the form 'po300'
@@ -3418,6 +3430,11 @@ class DcnmIntf:
         if t_e1 != t_e2:
 
             if (state == "replaced") or (state == "overridden"):
+                # Special handling is required for mode 'mpls' loopback interfaces.
+                # They will contain either of the following two read_only properties.
+                if k == 'DCI_ROUTING_PROTO' or k == 'DCI_ROUTING_TAG':
+                    return "copy_and_add"
+
                 return "add"
             elif state == "merged":
                 # If the key is included in config, then use the value from want.
@@ -4618,15 +4635,6 @@ class DcnmIntf:
 
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
-
-            if payload.get('policy') == 'int_mpls_loopback':
-                # Fabric mpls interfaces have two read_only properties that
-                # must be added to the payload from the self.have dictionary
-                # before attempting to modify the interface
-                drp = self.have[0]["interfaces"][0]["nvPairs"]["DCI_ROUTING_PROTO"]
-                drt = self.have[0]["interfaces"][0]["nvPairs"]["DCI_ROUTING_TAG"]
-                payload['interfaces'][0]["nvPairs"]["DCI_ROUTING_PROTO"] = drp
-                payload['interfaces'][0]["nvPairs"]["DCI_ROUTING_TAG"] = drt
 
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "PUT", path, json_payload)
