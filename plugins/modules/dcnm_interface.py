@@ -3432,7 +3432,7 @@ class DcnmIntf:
             if (state == "replaced") or (state == "overridden"):
                 # Special handling is required for mode 'mpls' loopback interfaces.
                 # They will contain either of the following two read_only properties.
-                if k == 'DCI_ROUTING_PROTO' or k == 'DCI_ROUTING_TAG':
+                if k in ['DCI_ROUTING_PROTO', 'DCI_ROUTING_TAG']:
                     return "copy_and_add"
 
                 return "add"
