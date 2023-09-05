@@ -1607,7 +1607,6 @@ class DcnmLinks:
         Returns:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
         """
-
         link_payload["nvPairs"] = {}
         if (
             link["template"] == self.templates["ext_multisite_underlay_setup"]
@@ -1871,16 +1870,20 @@ class DcnmLinks:
         if (
             wlink["templateName"]
             == self.templates["ext_multisite_underlay_setup"]
-        ) or (wlink["templateName"] == self.templates["ext_fabric_setup"]):
+        ) or (
+            wlink["templateName"] == self.templates["ext_fabric_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_vxlan_mpls_underlay_setup"]
+        ):
             if cfg["profile"].get("ipv4_subnet", None) is None:
                 wlink["nvPairs"]["IP_MASK"] = hlink["nvPairs"]["IP_MASK"]
 
             if cfg["profile"].get("mtu", None) is None:
                 wlink["nvPairs"]["MTU"] = hlink["nvPairs"]["MTU"]
 
-            if cfg["profile"].get("peer1_decription", None) is None:
+            if cfg["profile"].get("peer1_description", None) is None:
                 wlink["nvPairs"]["PEER1_DESC"] = hlink["nvPairs"]["PEER1_DESC"]
-            if cfg["profile"].get("peer2_decription", None) is None:
+            if cfg["profile"].get("peer2_description", None) is None:
                 wlink["nvPairs"]["PEER2_DESC"] = hlink["nvPairs"]["PEER2_DESC"]
 
             # Note down that 'want' is updated with information from 'have'. We will need
@@ -1891,7 +1894,7 @@ class DcnmLinks:
             if cfg["profile"].get("peer2_cmds", None) is None:
                 wlink["nvPairs"]["PEER2_CONF"] = hlink["nvPairs"]["PEER2_CONF"]
                 wlink["peer2_conf_defaulted"] = True
-        else:
+        elif wlink["templateName"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
             if cfg["profile"].get("ipv4_addr", None) is None:
                 wlink["nvPairs"]["SOURCE_IP"] = hlink["nvPairs"]["SOURCE_IP"]
 
@@ -1902,10 +1905,18 @@ class DcnmLinks:
 
         if cfg["profile"].get("neighbor_ip", None) is None:
             wlink["nvPairs"]["NEIGHBOR_IP"] = hlink["nvPairs"]["NEIGHBOR_IP"]
-        if cfg["profile"].get("src_asn", None) is None:
-            wlink["nvPairs"]["asn"] = hlink["nvPairs"]["asn"]
-        if cfg["profile"].get("dst_asn", None) is None:
-            wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"]["NEIGHBOR_ASN"]
+
+        if (
+            wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_fabric_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
+            if cfg["profile"].get("src_asn", None) is None:
+                wlink["nvPairs"]["asn"] = hlink["nvPairs"]["asn"]
+            if cfg["profile"].get("dst_asn", None) is None:
+                wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"]["NEIGHBOR_ASN"]
 
         if wlink["templateName"] == self.templates["ext_fabric_setup"]:
             if cfg["profile"].get("auto_deploy", None) is None:
