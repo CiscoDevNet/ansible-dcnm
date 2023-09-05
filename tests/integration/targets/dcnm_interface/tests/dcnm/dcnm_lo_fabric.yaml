@@ -1,0 +1,219 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+# This test file specfically validates fabric loopback
+# interfaces that are created at fabric creation time.
+# Typically they are loopback0 or loopback1 and use
+# the ndfc profile 'int_fabric_loopback_11_1'
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_intf.log
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_it_fabric }}" 
+    state: overridden
+  register: result  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'  
+  loop: '{{ result.response }}'
+
+- name: Save Data For Loopback0
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_it_fabric }}" 
+    state: query
+    config:
+      - name: lo0
+        switch:
+          - "{{ ansible_switch2 }}"
+  register: lpk0_data
+
+- name: Save Data For Loopback1
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_it_fabric }}" 
+    state: query
+    config:
+      - name: lo1
+        switch:
+          - "{{ ansible_switch2 }}"
+  register: lpk1_data
+
+- debug: msg="Loopback 0 Data - {{ lpk0_data.response[0]['interfaces'][0]['nvPairs'] }}"
+- debug: msg="Loopback 1 Data - {{ lpk1_data.response[0]['interfaces'][0]['nvPairs'] }}"
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Modify fabric loopback interfaces
+      cisco.dcnm.dcnm_interface: &lo_merge
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: merged
+        config:
+          - name: lo0
+            type: lo
+            switch:
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              admin_state: true
+              mode: fabric                        # This mode is needed to manage fabric lpbk interfaces
+              ipv4_addr: 192.168.2.1              # ipv4 address for the loopback interface
+              ipv6_addr: fd08::0201               # ipV6 address for the loopback interface
+              route_tag: "55"                     # Routing Tag for the interface
+              cmds:                               # Freeform config
+                - no shutdown
+              description: "Fabric Lpk0 Configured By Ansible"
+
+          - name: lo1
+            type: lo
+            switch:
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              admin_state: true
+              mode: fabric                      # This mode is needed to manage fabric lpbk interfaces
+              ipv4_addr: 192.168.5.1            # ipv4 address for the loopback interface
+              secondary_ipv4_addr: 172.16.5.1   # secondary ipv4 address for loopback interface 
+              ipv6_addr: fd08::0301             # ipV6 address for the loopback interface
+              route_tag: "77"                   # Routing Tag for the interface
+              cmds:                             # Freeform config
+                - no shutdown
+              description: "Fabric Lpk1 Configured By Ansible"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Modify fabric loopback interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *lo_merge
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+    - name: Query and save new data for loopback0
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: query
+        config:
+          - name: lo0
+            switch:
+              - "{{ ansible_switch2 }}"
+      register: lpk0_data_new
+
+    - name: Query and save new data for loopback1
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}" 
+        state: query
+        config:
+          - name: lo1
+            switch:
+              - "{{ ansible_switch2 }}"
+      register: lpk1_data_new
+
+    - assert:
+        that:
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.2.1"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["V6IP"] == "fd08::0201"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] == "55"'
+          - 'lpk0_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == "Fabric Lpk0 Configured By Ansible"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.5.1"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["SECONDARY_IP"] == "172.16.5.1"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["V6IP"] == "fd08::0301"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] == "77"'
+          - 'lpk1_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == "Fabric Lpk1 Configured By Ansible"'
+
+  # Only execute this test if loopback0 and 1 are fabric loopbacks
+  when:
+    - lpk0_data.response[0]['policy'] == 'int_fabric_loopback_11_1'
+    - lpk1_data.response[0]['policy'] == 'int_fabric_loopback_11_1'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+  - name: Set Loopback0 and Loopback1 back to inital state
+    cisco.dcnm.dcnm_interface:
+      check_deploy: True
+      fabric: "{{ ansible_it_fabric }}" 
+      state: merged
+      config:
+        - name: lo0
+          type: lo
+          switch:
+            - "{{ ansible_switch2 }}"
+          deploy: true
+          profile:
+            admin_state: true
+            mode: fabric
+            ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
+            ipv6_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['V6IP'] }}"
+            route_tag: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['ROUTE_MAP_TAG'] }}"
+            description: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
+
+        - name: lo1
+          type: lo
+          switch:
+            - "{{ ansible_switch2 }}"
+          deploy: true
+          profile:
+            admin_state: true
+            mode: fabric
+            ipv4_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
+            secondary_ipv4_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['SECONDARY_IP'] }}"
+            ipv6_addr: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['V6IP'] }}"
+            route_tag: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['ROUTE_MAP_TAG'] }}"
+            description: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
+    when:
+      - lpk0_data.response[0]['policy'] == 'int_fabric_loopback_11_1'
+      - lpk1_data.response[0]['policy'] == 'int_fabric_loopback_11_1'
+
+  - name: Put fabric to default state
+    cisco.dcnm.dcnm_interface:
+      check_deploy: True
+      fabric: "{{ ansible_it_fabric }}" 
+      state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+    register: result
+    when: IT_CONTEXT is not defined
+
+  - assert:
+      that:
+        - 'item["RETURN_CODE"] == 200'  
+    loop: '{{ result.response }}'
+    when: IT_CONTEXT is not defined
