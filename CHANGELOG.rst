@@ -6,16 +6,20 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
-.. contents:: Topics
+.. contents:: ``Release Versions``
 
-`3.4.1`_ - 2023-08-17
+`3.4.1`_
 =====================
+
+**Release Date:** ``2023-08-17``
                                               
 There is no functional difference between collection version ``3.4.0`` and collection version ``3.4.1``.  This version is only being published as a hotfix to resolve a problem where the wrong
 version was inadvertently published to Ansible galaxy.
 
-`3.4.0`_ - 2023-08-16
+`3.4.0`_
 =====================
+
+**Release Date:** ``2023-08-16``
 
 Added
 -----
@@ -29,8 +33,10 @@ Fixed
 
 - Fix for deploy flag behaviour in inferface module. Config will not be deployed to switches if deploy flag is set to false. When deploy flag is set to true in task and if any of the switch in that task is not manageable or the fabric in task is read-only, then an error is returned without making any changes in the NDFC corresponding to that task.
 
-`3.3.1`_ - 2023-07-13
+`3.3.1`_
 =====================
+
+**Release Date:** ``2023-07-13``
 
 Fixed
 -----
@@ -40,8 +46,10 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/232
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/197
 
-`3.3.0`_ - 2023-05-23
+`3.3.0`_
 =====================
+
+**Release Date:** ``2023-05-23``
 
 Added
 -----
@@ -57,8 +65,10 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/206
 - Removed the restriction on netcommon version supported by DCNM collection. The restriction was introduced as fix for https://github.com/CiscoDevNet/ansible-dcnm/issues/209. Netcommon versions ``>=2.6.1`` is supported.
 
-`3.2.0`_ - 2023-04-20
+`3.2.0`_
 =====================
+
+**Release Date:** ``2023-04-20``
 
 Added
 -----
@@ -70,16 +80,20 @@ Fixed
 
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/212
 
-`3.1.1`_ - 2023-03-17
+`3.1.1`_
 =====================
+
+**Release Date:** ``2023-03-17``
 
 Fixed
 -----
 
 - Restrict installs of netcommon to versions ``>=2.6.1,<=4.1.0`` due to issue: https://github.com/CiscoDevNet/ansible-dcnm/issues/209
 
-`3.1.0`_ - 2023-03-14
+`3.1.0`_
 =====================
+
+**Release Date:** ``2023-03-14``
 
 Added
 -----
@@ -94,8 +108,10 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/194
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/185
 
-`3.0.0`_ - 2023-02-22
+`3.0.0`_
 =====================
+
+**Release Date:** ``2023-02-22``
 
 Added
 -----
@@ -110,8 +126,10 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/157
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/192
 
-`2.4.0`_ - 2022-11-17
+`2.4.0`_
 =====================
+
+**Release Date:** ``2022-11-17``
 
 Added
 -----
@@ -125,16 +143,20 @@ Fixed
 - Fix for a problem where networks cannot be deleted when detach/undeploy fails and network is in an out of sync state.
 - Fix default value for ``multicast_group_address`` property in ``dcnm_network``
 
-`2.3.0`_ - 2022-10-28
+`2.3.0`_
 =====================
+
+**Release Date:** ``2022-10-28``
 
 Added
 -----
 
 - Added the ability to configure the ``multicast_group_address`` to the ``dcnm_network`` module
 
-`2.2.0`_ - 2022-10-14
+`2.2.0`_
 =====================
+
+**Release Date:** ``2022-10-14``
 
 Added
 -----
@@ -148,16 +170,20 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/155
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/169
 
-`2.1.1`_ - 2022-08-18
+`2.1.1`_
 =====================
+
+**Release Date:** ``2022-08-18``
 
 Fixed
 -----
 
 - Changed the deploy mechanism of policy module for delete state.
 
-`2.1.0`_ - 2022-07-19
+`2.1.0`_
 =====================
+
+**Release Date:** ``2022-07-19``
 
 Added
 -----
@@ -187,13 +213,17 @@ Deprecated
 
 - Deploy knob for individual attachments in vrf and network modules has been marked for deprecation.
 
-`2.0.1`_ - 2022-01-28
+`2.0.1`_
 =====================
+
+**Release Date:** ``2022-01-28``
 
 Fixed httpapi plugin issue preventing connections to latest version of NDFC (Version: ``12.0.2f``)
 
-`2.0.0`_ - 2021-12-13
+`2.0.0`_
 =====================
+
+**Release Date:** ``2021-12-13``
 
 Added
 -----
@@ -215,8 +245,10 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/86
 - Fix ``dcnm_policy`` module configuration deploy issues
 
-`1.2.4`_ - 2021-12-03
+`1.2.4`_
 =====================
+
+**Release Date:** ``2021-12-03``
 
 Added
 -----
@@ -224,32 +256,40 @@ Added
 - Added support for configuring the loopback ID for DHCP Relay interface.
 - The feature is configured using the ``dhcp_loopback_id`` parameter in the ``dcnm_network`` module
 
-`1.2.3`_ - 2021-11-16
+`1.2.3`_
 =====================
+
+**Release Date:** ``2021-11-16``
 
 Fixed
 -----
 
 Fixed a problem with ``dcnm_interface`` module where VPCID resource was not being created and then reserved properly
 
-`1.2.2`_ - 2021-10-21
+`1.2.2`_
 =====================
+
+**Release Date:** ``2021-10-21``
 
 Fixed
 -----
 
 Fixed error code handling that was causing an error during authentication
 
-`1.2.1`_ - 2021-10
+`1.2.1`_
 =====================
+
+**Release Date:** ``2021-10``
 
 Added
 -----
 
 Added support for plain text payloads to ``dcnm_rest`` module
 
-`1.2.0`_ - 2021-07
+`1.2.0`_
 =====================
+
+**Release Date:** ``2021-07``
 
 Added
 -----
@@ -268,8 +308,10 @@ The following parameters were added to the ``cisco.dcnm.dcnm_network`` module:
   - New parameter ``dhcp_srvr3_ip:``
   - New parameter ``dhcp_srvr3_vrf:``
 
-`1.1.1`_ - 2021-05
+`1.1.1`_ 
 =====================
+
+**Release Date:** ``2021-05``
 
 Fixed
 -----
@@ -281,8 +323,10 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/60
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/57
 
-`1.1.0`_ - 2021-04
+`1.1.0`_
 =====================
+
+**Release Date:** ``2021-04``
 
 Added
 -----
@@ -299,8 +343,10 @@ Fixed
 - Bug fixes
 - Support for DCNM ``11.5(1)`` release
 
-`1.0.0`_ - 2020-09
+`1.0.0`_
 =====================
+
+**Release Date:** ``2020-09``
 
 Added
 -----
@@ -311,23 +357,27 @@ Added
 Changed
 -------
 
-* cisco.dcnm.dcnm_network:
-    * The ``vlan_id:`` parameter must be configured under the ``config:`` block instead of the ``attach:`` block.
-    * A warning will be generated informing the user to move the ``vlan_id:`` under the ``config:`` block.
-    * If the user does not specify the ``vlan_id`` it will be auto generated by DCNM.
-* cisco.dcnm_dcnm_interface:
-    * The various ``profile_*:`` parameters have now been modified to just ``profile:``.
-    * The playbook with the old ``profile_*:`` names will still be accepted but a warning message will be generated to change the playbook.
-    * When specifying switches for a ``vpc`` interface type the switches should be a flat yaml list instead of a nested yaml list.  Both formats will still be accepted.
+- cisco.dcnm.dcnm_network:
+    - The ``vlan_id:`` parameter must be configured under the ``config:`` block instead of the ``attach:`` block.
+    - A warning will be generated informing the user to move the ``vlan_id:`` under the ``config:`` block.
+    - If the user does not specify the ``vlan_id`` it will be auto generated by DCNM.
+- cisco.dcnm_dcnm_interface:
+    - The various ``profile_*:`` parameters have now been modified to just ``profile:``.
+    - The playbook with the old ``profile_*:`` names will still be accepted but a warning message will be generated to change the playbook.
+    - When specifying switches for a ``vpc`` interface type the switches should be a flat yaml list instead of a nested yaml list.  Both formats will still be accepted.
 
       Proper Format:
-      .. code-block:: YAML
-            switch:                           # provide switches of vPC pair
-              - "{{ ansible_switch1 }}"
-              - "{{ ansible_switch2 }}"
+
+      .. code-block:: yaml
+      
+          switch:                           # provide switches of vPC pair
+            - "{{ ansible_switch1 }}"
+            - "{{ ansible_switch2 }}"
 
       Incorrect Format:
-      ``
+
+      .. code-block:: yaml
+
             switch:                           # provide switches of vPC pair
               - ["{{ ansible_switch1 }}",
                  "{{ ansible_switch2 }}"]
@@ -339,8 +389,10 @@ Fixed
 - cisco.dcnm.dcnm_rest:
   - Module will return a failure now if the return code from DCNM is ``400`` or greater.
 
-0.9.0 - 2020-07
+0.9.0
 =====================
+
+**Release Date:** ``2020-07``
 
 - Initial release of the Ansible DCNM collection, supporting DCNM release 11.4
 
