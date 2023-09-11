@@ -15,6 +15,7 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 Added
 -----
+
 - Support for following parameters in ``dcnm_links`` module
     - ``mpls_fabric``
     - ``peer1_sr_mpls_index``
