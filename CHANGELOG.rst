@@ -428,6 +428,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.4.2: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.1...3.4.2
 .. _3.4.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.0...3.4.1
 .. _3.4.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.1...3.4.0
 .. _3.3.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.0...3.3.1
