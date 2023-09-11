@@ -15,7 +15,14 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 Added
 -----
-
+- Support for following parameters in ``dcnm_links`` module
+    - ``mpls_fabric``
+    - ``peer1_sr_mpls_index``
+    - ``peer2_sr_mpls_index``
+    - ``global_block_range``
+    - ``dci_routing_proto``
+    - ``ospf_area_id``
+    - ``dci_routing_tag``
 - Support for ``ext_vxlan_mpls_overlay_setup`` and ``ext_vxlan_mpls_underlay_setup`` templates in ``dcnm_links`` module
 - Support for ``secondary_ipv4_addr`` for loopback interfaces in ``dcnm_interface`` module
 - Support for fabric and mpls loopback interfaces in ``dcnm_interface`` module
