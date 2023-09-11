@@ -8,6 +8,27 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.4.2`_
+=====================
+
+**Release Date:** ``2023-09-11``
+
+Added
+-----
+
+- Support for ``ext_vxlan_mpls_overlay_setup`` and ``ext_vxlan_mpls_underlay_setup`` templates in ``dcnm_links`` module
+- Support for ``secondary_ipv4_addr`` for loopback interfaces in ``dcnm_interface`` module
+- Support for fabric and mpls loopback interfaces in ``dcnm_interface`` module
+- Support for ``import_evpn_rt`` and ``export_evpn_rt`` in ``dcnm_vrf`` module
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/236
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/244
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/248
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/177
+
 `3.4.1`_
 =====================
 
