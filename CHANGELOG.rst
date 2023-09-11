@@ -16,6 +16,14 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 Added
 -----
 
+- Support for following parameters in ``dcnm_links`` module
+    - ``mpls_fabric``
+    - ``peer1_sr_mpls_index``
+    - ``peer2_sr_mpls_index``
+    - ``global_block_range``
+    - ``dci_routing_proto``
+    - ``ospf_area_id``
+    - ``dci_routing_tag``
 - Support for ``ext_vxlan_mpls_overlay_setup`` and ``ext_vxlan_mpls_underlay_setup`` templates in ``dcnm_links`` module
 - Support for ``secondary_ipv4_addr`` for loopback interfaces in ``dcnm_interface`` module
 - Support for fabric and mpls loopback interfaces in ``dcnm_interface`` module
@@ -428,6 +436,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.4.2: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.1...3.4.2
 .. _3.4.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.0...3.4.1
 .. _3.4.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.1...3.4.0
 .. _3.3.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.0...3.3.1
