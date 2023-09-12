@@ -146,7 +146,9 @@ options:
           ipv4_subnet:
             description:
               - IPV4 address of the source interface with mask.
-              - This parameter is required only if template is 'ext_fabric_setup' or 'ext_multisite_underlay_setup'.
+              - Required for below templates
+              - ext_fabric_setup
+              - ext_multisite_underlay_setup
             type: str
             required: true
           ipv4_address:
@@ -158,22 +160,32 @@ options:
           neighbor_ip:
             description:
               - IPV4 address of the neighbor switch on the destination fabric.
-              - This parameter is required only if template is 'ext_fabric_setup' or 'ext_multisite_underlay_setup'
-                or "ext_evpn_multisite_overlay_setup"
+              - Required for below templates
+              - ext_fabric_setup
+              - ext_multisite_underlay_setup
+              - ext_evpn_multisite_overlay_setup
+              - ext_vxlan_mpls_underlay_setup
+              - ext_vxlan_mpls_overlay_setup
             type: str
             required: true
           src_asn:
             description:
               - BGP ASN number on the source fabric.
-              - This parameter is required only if template is 'ext_fabric_setup' or 'ext_multisite_underlay_setup'
-                or "ext_evpn_multisite_overlay_setup"
+              - Required for below templates
+              - ext_fabric_setup
+              - ext_multisite_underlay_setup
+              - ext_evpn_multisite_overlay_setup
+              - ext_vxlan_mpls_overlay_setup
             type: str
             required: true
           dst_asn:
             description:
               - BGP ASN number on the destination fabric.
-              - This parameter is required only if template is 'ext_fabric_setup' or 'ext_multisite_underlay_setup'.
-                or "ext_evpn_multisite_overlay_setup"
+              - Required for below templates
+              - ext_fabric_setup
+              - ext_multisite_underlay_setup
+              - ext_evpn_multisite_overlay_setup
+              - ext_vxlan_mpls_overlay_setup
             type: str
             required: true
           auto_deploy:
@@ -326,6 +338,54 @@ options:
             type: str
             required: false
             default: ""
+          mpls_fabric:
+            description:
+              - MPLS LDP or Segment-Routing
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup`.
+            type: str
+            default: "SR"
+            choices:
+              - SR
+              - LDP
+          peer1_sr_mpls_index:
+            description:
+              - Unique SR SID index for the source border
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`
+            type: int
+            default: "0"
+          peer2_sr_mpls_index:
+            description:
+              - Unique SR SID index for the destination border
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`
+            type: int
+            default: "0"
+          global_block_range:
+            description:
+              - For Segment Routing binding
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`
+            type: str
+            default: "16000-23999"
+          dci_routing_proto:
+            description:
+              - Routing protocol used on the DCI MPLS link
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`
+            type: str
+            default: "is-is"
+            choices:
+              - is-is
+              - ospf
+          ospf_area_id:
+            description:
+              - OSPF Area ID in IP address format
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `dci_routing_proto` is `ospf`
+            type: str
+            default: "0.0.0.0"
+          dci_routing_tag:
+            description:
+              - Routing Process Tag of DCI Underlay
+              - This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup`
+            type: str
+            default: "MPLS_UNDERLAY"
 """
 
 EXAMPLES = """
@@ -515,6 +575,30 @@ EXAMPLES = """
               ebpg_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
                                                                  # is false. Default is 3
                                                                  # choose from [3 - 3DES, 7 - Cisco ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+            template: ext_vxlan_mpls_underlay_setup              # Template of MPLS handoff underlay link
+            profile:
+              ipv4_subnet: 193.168.3.1/30                        # IP address of interface in src fabric with the mask
+              neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
+              mpls_fabric: LDP                                   # MPLS handoff protocol, choose from [LDP, SR]
+              dci_routing_proto: isis                            # Routing protocol used on the DCI MPLS link, choose from [is-is, ospf]
+
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface:  Loopback101                          # Loopback interface on the Source fabric
+            dst_interface:  Loopback1                            # Loopback interface on the Destination fabric
+            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+            template: ext_vxlan_mpls_overlay_setup               #Template of MPLS handoff overlay link
+            profile:
+              neighbor_ip: 2.2.2.2 .                             # IP address of the loopback interface of destination device
+              src_asn: 498278384                                 # BGP ASN in source fabric
+              dst_asn: 498278384                                 # BGP ASN in destination fabric
+
+
 
 # FABRIC WITH VPC PAIRED SWITCHES
 
@@ -813,6 +897,9 @@ class DcnmLinks:
             "ext_fabric_setup": "ext_fabric_setup_11_1",
             "ext_multisite_underlay_setup": "ext_multisite_underlay_setup_11_1",
             "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup",
+            "ext_vxlan_mpls_overlay_setup": "ext_vxlan_mpls_overlay_setup",
+            "ext_vxlan_mpls_underlay_setup": "ext_vxlan_mpls_underlay_setup"
+
         },
         12: {
             "int_intra_fabric_ipv6_link_local": "int_intra_fabric_ipv6_link_local",
@@ -824,6 +911,8 @@ class DcnmLinks:
             "ext_fabric_setup": "ext_fabric_setup",
             "ext_multisite_underlay_setup": "ext_multisite_underlay_setup",
             "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup",
+            "ext_vxlan_mpls_overlay_setup": "ext_vxlan_mpls_overlay_setup",
+            "ext_vxlan_mpls_underlay_setup": "ext_vxlan_mpls_underlay_setup"
         },
     }
 
@@ -838,6 +927,8 @@ class DcnmLinks:
             "ext_fabric_setup_11_1",
             "ext_multisite_underlay_setup_11_1",
             "ext_evpn_multisite_overlay_setup",
+            "ext_vxlan_mpls_overlay_setup",
+            "ext_vxlan_mpls_underlay_setup"
         ],
         12: [
             "int_intra_fabric_ipv6_link_local",
@@ -849,6 +940,8 @@ class DcnmLinks:
             "ext_fabric_setup",
             "ext_multisite_underlay_setup",
             "ext_evpn_multisite_overlay_setup",
+            "ext_vxlan_mpls_overlay_setup",
+            "ext_vxlan_mpls_underlay_setup"
         ],
     }
 
@@ -1213,7 +1306,7 @@ class DcnmLinks:
 
     def dcnm_links_get_inter_fabric_link_spec(self, cfg):
 
-        inter_fabric_choices = self.template_choices[6:9]
+        inter_fabric_choices = self.template_choices[6:11]
 
         link_spec = dict(
             dst_fabric=dict(required=True, type="str"),
@@ -1235,6 +1328,8 @@ class DcnmLinks:
             == self.templates["ext_multisite_underlay_setup"]
         ) or (
             cfg[0].get("template", "") == self.templates["ext_fabric_setup"]
+        ) or (
+            cfg[0].get("template", "") == self.templates["ext_vxlan_mpls_underlay_setup"]
         ):
             link_spec["profile"]["ipv4_subnet"] = dict(
                 required=True, type="ipv4_subnet"
@@ -1248,14 +1343,23 @@ class DcnmLinks:
             )
             link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
             link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
-        else:
+        elif cfg[0].get("template") != self.templates["ext_vxlan_mpls_overlay_setup"]:
             link_spec["profile"]["ipv4_addr"] = dict(
                 required=True, type="ipv4"
             )
 
         link_spec["profile"]["neighbor_ip"] = dict(required=True, type="ipv4")
-        link_spec["profile"]["src_asn"] = dict(required=True, type="int")
-        link_spec["profile"]["dst_asn"] = dict(required=True, type="int")
+        # src_asn and dst_asn are not common parameters
+        if (
+            cfg[0].get("template", "")
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            cfg[0].get("template", "") == self.templates["ext_fabric_setup"]
+        ) or (
+            cfg[0].get("template", "") == self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
+            link_spec["profile"]["src_asn"] = dict(required=True, type="int")
+            link_spec["profile"]["dst_asn"] = dict(required=True, type="int")
 
         if cfg[0].get("template", "") == self.templates["ext_fabric_setup"]:
             link_spec["profile"]["auto_deploy"] = dict(
@@ -1309,6 +1413,31 @@ class DcnmLinks:
                     link_spec["profile"]["ebgp_auth_key_type"] = dict(
                         type="int", default=3, choices=[3, 7]
                     )
+        if (
+            cfg[0].get("template", "")
+            == self.templates["ext_vxlan_mpls_underlay_setup"]
+        ):
+            link_spec["profile"]["mpls_fabric"] = dict(
+                type="str", default="SR", choice=["SR", "LDP"]
+            )
+            link_spec["profile"]["dci_routing_proto"] = dict(
+                type="str", default="is-is", choice=["is-is", "ospf"]
+            )
+            link_spec["profile"]["dci_routing_tag"] = dict(
+                type="str", default="MPLS_UNDERLAY", choice=["is-is", "ospf"]
+            )
+            link_spec["profile"]["peer1_sr_mpls_index"] = dict(
+                type="int", default=0
+            )
+            link_spec["profile"]["peer2_sr_mpls_index"] = dict(
+                type="int", default=0
+            )
+            link_spec["profile"]["global_block_range"] = dict(
+                type="str", default="16000-23999"
+            )
+            link_spec["profile"]["ospf_area_id"] = dict(
+                type="str", default="0.0.0.0"
+            )
 
         return link_spec
 
@@ -1478,11 +1607,12 @@ class DcnmLinks:
         Returns:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
         """
-
         link_payload["nvPairs"] = {}
         if (
             link["template"] == self.templates["ext_multisite_underlay_setup"]
-        ) or (link["template"] == self.templates["ext_fabric_setup"]):
+        ) or (
+            link["template"] == self.templates["ext_fabric_setup"]
+        ) or (link["template"] == self.templates["ext_vxlan_mpls_underlay_setup"]):
             ip_prefix = link["profile"]["ipv4_subnet"].split("/")
 
             link_payload["nvPairs"]["IP_MASK"] = (
@@ -1509,7 +1639,7 @@ class DcnmLinks:
                 link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(
                     link["profile"].get("peer2_cmds")
                 )
-        else:
+        elif link["template"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
             link_payload["nvPairs"]["SOURCE_IP"] = str(
                 ipaddress.ip_address(link["profile"]["ipv4_addr"])
             )
@@ -1517,8 +1647,13 @@ class DcnmLinks:
         link_payload["nvPairs"]["NEIGHBOR_IP"] = str(
             ipaddress.ip_address(link["profile"]["neighbor_ip"])
         )
-        link_payload["nvPairs"]["asn"] = link["profile"]["src_asn"]
-        link_payload["nvPairs"]["NEIGHBOR_ASN"] = link["profile"]["dst_asn"]
+        if (
+            link["template"] == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            link["template"] == self.templates["ext_fabric_setup"]
+        ) or (link["template"] == self.templates["ext_vxlan_mpls_overlay_setup"]):
+            link_payload["nvPairs"]["asn"] = link["profile"]["src_asn"]
+            link_payload["nvPairs"]["NEIGHBOR_ASN"] = link["profile"]["dst_asn"]
 
         if link["template"] == self.templates["ext_fabric_setup"]:
             link_payload["nvPairs"]["AUTO_VRF_LITE_FLAG"] = link["profile"][
@@ -1570,6 +1705,14 @@ class DcnmLinks:
                     link_payload["nvPairs"]["BGP_AUTH_KEY_TYPE"] = link[
                         "profile"
                     ]["ebgp_auth_key_type"]
+        if link["template"] == self.templates["ext_vxlan_mpls_underlay_setup"]:
+            link_payload["nvPairs"]["MPLS_FABRIC"] = link["profile"]["mpls_fabric"]
+            link_payload["nvPairs"]["DCI_ROUTING_PROTO"] = link["profile"]["dci_routing_proto"]
+            link_payload["nvPairs"]["DCI_ROUTING_TAG"] = link["profile"]["dci_routing_tag"]
+            link_payload["nvPairs"]["PEER1_SR_MPLS_INDEX"] = link["profile"]["peer1_sr_mpls_index"]
+            link_payload["nvPairs"]["PEER2_SR_MPLS_INDEX"] = link["profile"]["peer2_sr_mpls_index"]
+            link_payload["nvPairs"]["GB_BLOCK_RANGE"] = link["profile"]["global_block_range"]
+            link_payload["nvPairs"]["OSPF_AREA_ID"] = link["profile"]["ospf_area_id"]
 
     def dcnm_links_get_intra_fabric_links_payload(self, link, link_payload):
 
@@ -1727,16 +1870,20 @@ class DcnmLinks:
         if (
             wlink["templateName"]
             == self.templates["ext_multisite_underlay_setup"]
-        ) or (wlink["templateName"] == self.templates["ext_fabric_setup"]):
+        ) or (
+            wlink["templateName"] == self.templates["ext_fabric_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_vxlan_mpls_underlay_setup"]
+        ):
             if cfg["profile"].get("ipv4_subnet", None) is None:
                 wlink["nvPairs"]["IP_MASK"] = hlink["nvPairs"]["IP_MASK"]
 
             if cfg["profile"].get("mtu", None) is None:
                 wlink["nvPairs"]["MTU"] = hlink["nvPairs"]["MTU"]
 
-            if cfg["profile"].get("peer1_decription", None) is None:
+            if cfg["profile"].get("peer1_description", None) is None:
                 wlink["nvPairs"]["PEER1_DESC"] = hlink["nvPairs"]["PEER1_DESC"]
-            if cfg["profile"].get("peer2_decription", None) is None:
+            if cfg["profile"].get("peer2_description", None) is None:
                 wlink["nvPairs"]["PEER2_DESC"] = hlink["nvPairs"]["PEER2_DESC"]
 
             # Note down that 'want' is updated with information from 'have'. We will need
@@ -1747,7 +1894,7 @@ class DcnmLinks:
             if cfg["profile"].get("peer2_cmds", None) is None:
                 wlink["nvPairs"]["PEER2_CONF"] = hlink["nvPairs"]["PEER2_CONF"]
                 wlink["peer2_conf_defaulted"] = True
-        else:
+        elif wlink["templateName"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
             if cfg["profile"].get("ipv4_addr", None) is None:
                 wlink["nvPairs"]["SOURCE_IP"] = hlink["nvPairs"]["SOURCE_IP"]
 
@@ -1758,10 +1905,18 @@ class DcnmLinks:
 
         if cfg["profile"].get("neighbor_ip", None) is None:
             wlink["nvPairs"]["NEIGHBOR_IP"] = hlink["nvPairs"]["NEIGHBOR_IP"]
-        if cfg["profile"].get("src_asn", None) is None:
-            wlink["nvPairs"]["asn"] = hlink["nvPairs"]["asn"]
-        if cfg["profile"].get("dst_asn", None) is None:
-            wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"]["NEIGHBOR_ASN"]
+
+        if (
+            wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_fabric_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
+            if cfg["profile"].get("src_asn", None) is None:
+                wlink["nvPairs"]["asn"] = hlink["nvPairs"]["asn"]
+            if cfg["profile"].get("dst_asn", None) is None:
+                wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"]["NEIGHBOR_ASN"]
 
         if wlink["templateName"] == self.templates["ext_fabric_setup"]:
             if cfg["profile"].get("auto_deploy", None) is None:
@@ -2078,7 +2233,6 @@ class DcnmLinks:
         else:
             # If devices are not managable, the path should not include them
             path = self.paths["LINKS_GET_BY_SWITCH_PAIR"]
-
         resp = dcnm_send(self.module, "GET", path)
 
         if (
@@ -2201,7 +2355,9 @@ class DcnmLinks:
         if (
             wlink["templateName"]
             == self.templates["ext_multisite_underlay_setup"]
-        ) or (wlink["templateName"] == self.templates["ext_fabric_setup"]):
+        ) or (
+            wlink["templateName"] == self.templates["ext_fabric_setup"]
+        ) or (wlink["templateName"] == self.templates["ext_vxlan_mpls_underlay_setup"]):
             if (
                 self.dcnm_links_compare_ip_addresses(
                     wlink["nvPairs"]["IP_MASK"], hlink["nvPairs"]["IP_MASK"]
@@ -2277,7 +2433,7 @@ class DcnmLinks:
                         ]
                     }
                 )
-        else:
+        elif wlink["templateName"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
             if (
                 self.dcnm_links_compare_ip_addresses(
                     wlink["nvPairs"]["SOURCE_IP"],
@@ -2310,29 +2466,35 @@ class DcnmLinks:
                 }
             )
         if (
-            str(wlink["nvPairs"]["asn"]).lower()
-            != str(hlink["nvPairs"]["asn"]).lower()
-        ):
-            mismatch_reasons.append(
-                {
-                    "ASN_MISMATCH": [
-                        str(wlink["nvPairs"]["asn"]).lower(),
-                        str(hlink["nvPairs"]["asn"]).lower(),
-                    ]
-                }
-            )
-        if (
-            str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower()
-            != str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower()
-        ):
-            mismatch_reasons.append(
-                {
-                    "NEIGHBOR_ASN_MISMATCH": [
-                        str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower(),
-                        str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower(),
-                    ]
-                }
-            )
+            wlink["templateName"]
+            == self.templates["ext_multisite_underlay_setup"]
+        ) or (
+            wlink["templateName"] == self.templates["ext_fabric_setup"]
+        ) or (wlink["templateName"] == self.templates["ext_vxlan_mpls_overlay_setup"]):
+            if (
+                str(wlink["nvPairs"]["asn"]).lower()
+                != str(hlink["nvPairs"]["asn"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "ASN_MISMATCH": [
+                            str(wlink["nvPairs"]["asn"]).lower(),
+                            str(hlink["nvPairs"]["asn"]).lower(),
+                        ]
+                    }
+                )
+            if (
+                str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower()
+                != str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "NEIGHBOR_ASN_MISMATCH": [
+                            str(wlink["nvPairs"]["NEIGHBOR_ASN"]).lower(),
+                            str(hlink["nvPairs"]["NEIGHBOR_ASN"]).lower(),
+                        ]
+                    }
+                )
 
         if wlink["templateName"] == self.templates["ext_fabric_setup"]:
 
@@ -2525,6 +2687,35 @@ class DcnmLinks:
                                 ]
                             }
                         )
+        if (
+            wlink["templateName"]
+            == self.templates["ext_vxlan_mpls_underlay_setup"]
+        ):
+            mpls_underlay_spec_nvpairs = [
+                "MPLS_FABRIC",
+                "DCI_ROUTING_PROTO",
+                "DCI_ROUTING_TAG",
+                "PEER1_SR_MPLS_INDEX",
+                "PEER2_SR_MPLS_INDEX",
+                "GB_BLOCK_RANGE",
+                "OSPF_AREA_ID"]
+            for nv_pair in mpls_underlay_spec_nvpairs:
+                if (
+                    str(wlink["nvPairs"][nv_pair]).lower()
+                    != str(hlink["nvPairs"][nv_pair]).lower()
+                ):
+                    mismatch_reasons.append(
+                        {
+                            f"{nv_pair}_MISMATCH": [
+                                str(
+                                    wlink["nvPairs"][nv_pair]
+                                ).lower(),
+                                str(
+                                    hlink["nvPairs"][nv_pair]
+                                ).lower(),
+                            ]
+                        }
+                    )
 
         if mismatch_reasons != []:
             return "DCNM_LINK_MERGE", mismatch_reasons, hlink
@@ -2849,7 +3040,8 @@ class DcnmLinks:
             have
             for have in self.have
             if (
-                (have["sw1-info"]["fabric-name"] == want["sourceFabric"])
+                (have.get("templateName") is not None)  # if templateName is empty, link is autodicovered, consider link is new
+                and (have["sw1-info"]["fabric-name"] == want["sourceFabric"])
                 and (
                     have["sw2-info"]["fabric-name"]
                     == want["destinationFabric"]
@@ -2872,7 +3064,6 @@ class DcnmLinks:
         ]
 
         for mlink in match_have:
-
             if want["sourceFabric"] == want["destinationFabric"]:
                 return self.dcnm_links_compare_intra_fabric_link_params(
                     want, mlink
@@ -2953,7 +3144,6 @@ class DcnmLinks:
 
         if not self.want:
             return
-
         for link in self.want:
 
             rc, reasons, have = self.dcnm_links_compare_Links(link)
@@ -2975,7 +3165,7 @@ class DcnmLinks:
                     # ones in have. For replace, no need to merge them. They must be replaced with what is given.
                     if self.module.params["state"] == "merged":
                         # Check if the templates are same. If not dont try to merge want and have, because
-                        # the parameters in want anf have will be different. Since template has changed, go ahead
+                        # the parameters in want and have will be different. Since template has changed, go ahead
                         # and push MODIFY request with the new payload
 
                         if link["templateName"] == have["templateName"]:

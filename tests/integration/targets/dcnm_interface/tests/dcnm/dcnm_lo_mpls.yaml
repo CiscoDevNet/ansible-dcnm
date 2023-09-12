@@ -1,0 +1,232 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+# This test file specfically validates fabric loopback
+# interfaces that are created at fabric creation time
+# for VXLAN-EVPN to SR-MPLS and MPLS LDP interconnection
+
+# By default they are loopback101 as defined in the fabric
+# settings and use the ndfc profile 'int_mpls_loopback'
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_intf.log
+
+- name: Save Data For Loopback101
+  cisco.dcnm.dcnm_interface:
+    check_deploy: True
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+      - name: lo101
+        switch:
+          - "{{ ansible_switch1 }}"
+  register: lpk101_data
+
+- name: Set Test Control Flag
+  ansible.builtin.set_fact:
+    run_test: True
+
+- name: Test will not be run since Loopback101 does not appear to exist
+  ansible.builtin.set_fact:
+    run_test: False
+  when: lpk101_data.response == []
+
+- name: Access Policy Data If Loopack101 Data Is Available
+  ansible.builtin.set_fact:
+    loopback_policy: "{{ lpk101_data.response[0]['policy'] }}"
+  when: lpk101_data.response != []
+
+- name: Test will not be run since Loopback101 is not an MPLS Fabric Loopback
+  ansible.builtin.set_fact:
+    run_test: False
+  when: (loopback_policy is defined) and (loopback_policy != 'int_mpls_loopback')
+
+- debug: msg="Loopback 101 Data - {{ lpk101_data.response[0]['interfaces'][0]['nvPairs'] }}"
+  when: run_test
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Modify mpls fabric loopback interface using merge
+      cisco.dcnm.dcnm_interface: &lo_merge
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}"
+        state: merged
+        config:
+          - name: lo101
+            type: lo
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              admin_state: true
+              mode: mpls                          # This mode is needed to manage mpls fabric lpbk interfaces
+              ipv4_addr: 192.168.55.2              # ipv4 address for the loopback interface
+              cmds:                               # Freeform config
+                - no shutdown
+              description: "Fabric Lpk101 Configured By Ansible"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: Verify interface properties are modified using merge
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
+          - name: lo101
+            switch:
+              - "{{ ansible_switch1 }}"
+      register: lpk101_data_new
+      until:
+        - 'lpk101_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.55.2"'
+        - 'lpk101_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == "Fabric Lpk101 Configured By Ansible"'
+      retries: 5
+      delay: 2
+
+    - name: Modify mpls fabric loopback interface using merge - Idempotence
+      cisco.dcnm.dcnm_interface: *lo_merge
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: Modify mpls fabric loopback interface using replace
+      cisco.dcnm.dcnm_interface: &lo_replace
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}"
+        state: replaced
+        config:
+          - name: lo101
+            type: lo
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              admin_state: true
+              mode: mpls                          # This mode is needed to manage mpls fabric lpbk interfaces
+              ipv4_addr: 192.168.88.55            # ipv4 address for the loopback interface
+              cmds:                               # Freeform config
+                - no shutdown
+              description: "Fabric Lpk101 Replaced By Ansible"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 1'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: Modify mpls fabric loopback interface using replace - Idempotence
+      cisco.dcnm.dcnm_interface: *lo_replace
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: Verify interface properties are modified using replace
+      cisco.dcnm.dcnm_interface:
+        check_deploy: True
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
+          - name: lo101
+            switch:
+              - "{{ ansible_switch1 }}"
+      register: lpk101_data_new
+      until:
+        - 'lpk101_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == "192.168.88.55"'
+        - 'lpk101_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == "Fabric Lpk101 Replaced By Ansible"'
+      retries: 5
+      delay: 2
+
+  # Only execute this test if loopback101 is a fabric mpls loopback
+  when: run_test
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+  - name: Set Loopback101 back to inital state
+    cisco.dcnm.dcnm_interface:
+      check_deploy: True
+      fabric: "{{ ansible_it_fabric }}"
+      state: overridden
+      config:
+        - name: lo101
+          type: lo
+          switch:
+            - "{{ ansible_switch1 }}"
+          deploy: true
+          profile:
+            admin_state: true
+            mode: mpls
+            ipv4_addr: "{{ lpk101_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
+            description: "{{ lpk101_data.response[0]['interfaces'][0]['nvPairs']['DESC'] }}"
+    when: run_test
+
+  - name: Verify interface properties are restored to original values using overridden
+    cisco.dcnm.dcnm_interface:
+      check_deploy: True
+      fabric: "{{ ansible_it_fabric }}"
+      state: query
+      config:
+        - name: lo101
+          switch:
+            - "{{ ansible_switch1 }}"
+    register: lpk101_data_new
+    until:
+      - 'lpk101_data_new.response[0]["interfaces"][0]["nvPairs"]["IP"] == lpk101_data.response[0]["interfaces"][0]["nvPairs"]["IP"]'
+      - 'lpk101_data_new.response[0]["interfaces"][0]["nvPairs"]["DESC"] == lpk101_data.response[0]["interfaces"][0]["nvPairs"]["DESC"]'
+    retries: 5
+    delay: 2
+    when: run_test

@@ -182,6 +182,47 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dci_routing_proto</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>is-is</b>&nbsp;&larr;</div></li>
+                                    <li>ospf</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Routing protocol used on the DCI MPLS link</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dci_routing_tag</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"MPLS_UNDERLAY"</div>
+                </td>
+                <td>
+                        <div>Routing Process Tag of DCI Underlay</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup`</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy_dci_tracking</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -216,7 +257,11 @@ Parameters
                 </td>
                 <td>
                         <div>BGP ASN number on the destination fabric.</div>
-                        <div>This parameter is required only if template is &#x27;ext_fabric_setup&#x27; or &#x27;ext_multisite_underlay_setup&#x27;. or &quot;ext_evpn_multisite_overlay_setup&quot;</div>
+                        <div>Required for below templates</div>
+                        <div>ext_fabric_setup</div>
+                        <div>ext_multisite_underlay_setup</div>
+                        <div>ext_evpn_multisite_overlay_setup</div>
+                        <div>ext_vxlan_mpls_overlay_setup</div>
                 </td>
             </tr>
             <tr>
@@ -314,6 +359,25 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>global_block_range</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"16000-23999"</div>
+                </td>
+                <td>
+                        <div>For Segment Routing binding</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>inherit_from_msd</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -387,7 +451,9 @@ Parameters
                 </td>
                 <td>
                         <div>IPV4 address of the source interface with mask.</div>
-                        <div>This parameter is required only if template is &#x27;ext_fabric_setup&#x27; or &#x27;ext_multisite_underlay_setup&#x27;.</div>
+                        <div>Required for below templates</div>
+                        <div>ext_fabric_setup</div>
+                        <div>ext_multisite_underlay_setup</div>
                 </td>
             </tr>
             <tr>
@@ -407,6 +473,28 @@ Parameters
                 <td>
                         <div>Maximum number of iBGP/eBGP paths.</div>
                         <div>This parameter is required only if template is &#x27;ext_multisite_underlay_setup&#x27;.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>mpls_fabric</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>SR</b>&nbsp;&larr;</div></li>
+                                    <li>LDP</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>MPLS LDP or Segment-Routing</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup`.</div>
                 </td>
             </tr>
             <tr>
@@ -445,7 +533,31 @@ Parameters
                 </td>
                 <td>
                         <div>IPV4 address of the neighbor switch on the destination fabric.</div>
-                        <div>This parameter is required only if template is &#x27;ext_fabric_setup&#x27; or &#x27;ext_multisite_underlay_setup&#x27; or &quot;ext_evpn_multisite_overlay_setup&quot;</div>
+                        <div>Required for below templates</div>
+                        <div>ext_fabric_setup</div>
+                        <div>ext_multisite_underlay_setup</div>
+                        <div>ext_evpn_multisite_overlay_setup</div>
+                        <div>ext_vxlan_mpls_underlay_setup</div>
+                        <div>ext_vxlan_mpls_overlay_setup</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ospf_area_id</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"0.0.0.0"</div>
+                </td>
+                <td>
+                        <div>OSPF Area ID in IP address format</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `dci_routing_proto` is `ospf`</div>
                 </td>
             </tr>
             <tr>
@@ -554,6 +666,25 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer1_sr_mpls_index</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"0"</div>
+                </td>
+                <td>
+                        <div>Unique SR SID index for the source border</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_bfd_echo_disable</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -655,6 +786,25 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>peer2_sr_mpls_index</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"0"</div>
+                </td>
+                <td>
+                        <div>Unique SR SID index for the destination border</div>
+                        <div>This parameter is applicable only if template is `ext_vxlan_mpls_underlay_setup` and `mpls_fabric` is `SR`</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -685,7 +835,11 @@ Parameters
                 </td>
                 <td>
                         <div>BGP ASN number on the source fabric.</div>
-                        <div>This parameter is required only if template is &#x27;ext_fabric_setup&#x27; or &#x27;ext_multisite_underlay_setup&#x27; or &quot;ext_evpn_multisite_overlay_setup&quot;</div>
+                        <div>Required for below templates</div>
+                        <div>ext_fabric_setup</div>
+                        <div>ext_multisite_underlay_setup</div>
+                        <div>ext_evpn_multisite_overlay_setup</div>
+                        <div>ext_vxlan_mpls_overlay_setup</div>
                 </td>
             </tr>
             <tr>
@@ -1030,6 +1184,30 @@ Examples
                   ebpg_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
                                                                      # is false. Default is 3
                                                                      # choose from [3 - 3DES, 7 - Cisco ]
+              - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+                src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+                dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+                src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+                dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+                template: ext_vxlan_mpls_underlay_setup              # Template of MPLS handoff underlay link
+                profile:
+                  ipv4_subnet: 193.168.3.1/30                        # IP address of interface in src fabric with the mask
+                  neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
+                  mpls_fabric: LDP                                   # MPLS handoff protocol, choose from [LDP, SR]
+                  dci_routing_proto: isis                            # Routing protocol used on the DCI MPLS link, choose from [is-is, ospf]
+
+              - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+                src_interface:  Loopback101                          # Loopback interface on the Source fabric
+                dst_interface:  Loopback1                            # Loopback interface on the Destination fabric
+                src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+                dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+                template: ext_vxlan_mpls_overlay_setup               #Template of MPLS handoff overlay link
+                profile:
+                  neighbor_ip: 2.2.2.2 .                             # IP address of the loopback interface of destination device
+                  src_asn: 498278384                                 # BGP ASN in source fabric
+                  dst_asn: 498278384                                 # BGP ASN in destination fabric
+
+
 
     # FABRIC WITH VPC PAIRED SWITCHES
 

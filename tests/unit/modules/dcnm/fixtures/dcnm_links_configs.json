@@ -920,6 +920,35 @@
   }
   ],
 
+  "intra_modify_number_no_template": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/9",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1000,
+      "peer1_bfd_echo_disable": true,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "MOD - Description of source - 1",
+      "peer1_ipv4_addr": "193.168.1.1",
+      "peer1_ipv6_addr": "fe80:29::01",
+      "peer2_ipv6_addr": "fe80:29::02",
+      "peer2_bfd_echo_disable": true,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "MOD - Description of dest - 1",
+      "peer2_ipv4_addr": "193.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/9",
+    "template": "int_intra_fabric_num_link"
+  }],
+
   "inter_modify_num_config": [
   {
     "dst_device": "10.64.78.231",

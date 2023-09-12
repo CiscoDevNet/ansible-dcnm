@@ -345,9 +345,16 @@ options:
         - Object profile which must be included for loopback interface configurations.
         suboptions:
           mode:
+            choices: ['lo', 'fabric', 'mpls']
             description:
-            - Interface mode
-            choices: ['lo']
+            - There are several modes for loopback interfaces.
+            - Mode 'lo' is used to create, modify and delete non fabric loopback
+              interfaces using policy 'int_loopback'.
+            - Mode 'fabric' is used to modify loopbacks created when the fabric is first
+              created using policy 'int_fabric_loopback_11_1'
+            - Mode 'mpls' is used to modify loopbacks created when the fabric is first
+              created using policy 'int_mpls_loopback'
+            - Mode 'fabric' and 'mpls' interfaces can be modified but not created or deleted.
             type: str
             required: true
           int_vrf:
@@ -357,12 +364,17 @@ options:
             default: default
           ipv4_addr:
             description:
-            - IPV4 address of the interface.
+            - IPv4 address of the interface.
+            type: str
+            default: ""
+          secondary_ipv4_addr:
+            description:
+            - Secondary IP address of the nve interface loopback
             type: str
             default: ""
           ipv6_addr:
             description:
-            - IPV6 address of the interface.
+            - IPv6 address of the interface.
             type: str
             default: ""
           route_tag:
@@ -847,6 +859,26 @@ EXAMPLES = """
           cmds:                           # Freeform config
             - no shutdown
           description: "loopback interface 100 configuration - replaced"
+
+## Loopback Interfaces Created During Fabric Creation
+- name: Mange Fabric loopback interfaces
+  cisco.dcnm.dcnm_interface:
+    fabric: mmudigon-fabric
+    state: merged
+    config:
+      - name: lo1                           # This is usually lo0 or lo1 created during fabric creation
+        type: lo
+        switch:
+          - "192.172.1.1"                   # provide the switch where to deploy the config
+        deploy: true                        # choose from [true, false]
+        profile:
+          admin_state: false                # choose from [true, false]
+          mode: fabric                      # This must be set to 'fabric' for fabric loopback interfaces
+          secondary_ipv4_addr: 172.16.5.1   # secondary ipv4 address for loopback interface
+          route_tag: "100"                  # Routing Tag for the interface
+          cmds:                             # Freeform config
+            - no shutdown
+          description: "Fabric interface managed by Ansible"
 
 # To delete or reset all interfaces on all switches in the fabric
 - name: Delete loopback interfaces
@@ -1682,6 +1714,7 @@ class DcnmIntf:
             "serialNumber": "sno",
             "fabricName": "fabric",
             "IP": "ipv4_addr",
+            "SECONDARY_IP": "secondary_ipv4_addr",
             "INTF_VRF": "int_vrf",
             "V6IP": "ipv6_addr",
             "IPv6": "ipv6_addr",
@@ -1716,6 +1749,8 @@ class DcnmIntf:
             "PEER2_PO_CONF": "peer2_cmds",
             "PEER1_ACCESS_VLAN": "peer1_access_vlan",
             "PEER2_ACCESS_VLAN": "peer2_access_vlan",
+            "DCI_ROUTING_PROTO": "dci_routing_proto",
+            "DCI_ROUTING_TAG": "dci_routing_tag",
         }
 
         # New Interfaces
@@ -1746,6 +1781,8 @@ class DcnmIntf:
                 "pc_l3": "int_l3_port_channel",
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
+                "lo_fabric": "int_fabric_loopback_11_1",
+                "lo_mpls": "int_mpls_loopback",
                 "eth_trunk": "int_trunk_host",
                 "eth_access": "int_access_host",
                 "eth_routed": "int_routed_host",
@@ -2124,6 +2161,7 @@ class DcnmIntf:
         lo_prof_spec = dict(
             mode=dict(required=True, type="str"),
             ipv4_addr=dict(required=True, type="ipv4"),
+            secondary_ipv4_addr=dict(type="ipv4", default=""),
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
             route_tag=dict(type="str", default=""),
@@ -2395,17 +2433,17 @@ class DcnmIntf:
             cfg.append(citem)
 
             if self.module.params["state"] == "deleted":
-                # config for delete state is different for all interafces. It may not have the profile
+                # config for delete state is different for all interfaces. It may not have the profile
                 # construct. So validate deleted state differently
                 self.dcnm_intf_validate_delete_state_input(cfg)
             elif self.module.params["state"] == "query":
-                # config for query state is different for all interafces. It may not have the profile
+                # config for query state is different for all interfaces. It may not have the profile
                 # construct. So validate query state differently
                 self.dcnm_intf_validate_query_state_input(cfg)
             elif (self.module.params["state"] == "overridden") and not (
                 any("profile" in key for key in item)
             ):
-                # config for overridden state is different for all interafces. It may not have the profile
+                # config for overridden state is different for all interfaces. It may not have the profile
                 # construct. So validate overridden state differently
                 self.dcnm_intf_validate_overridden_state_input(cfg)
             else:
@@ -2719,25 +2757,15 @@ class DcnmIntf:
 
     def dcnm_intf_get_loopback_payload(self, delem, intf, profile):
 
-        # Extract port id from the given name, which is of the form 'po300'
-
+        # Properties common for all loopback interface modes
         ifname, port_id = self.dcnm_intf_get_if_name(
             delem["name"], delem["type"]
         )
         intf["interfaces"][0].update({"ifName": ifname})
 
-        intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
-            "int_vrf"
-        ]
         intf["interfaces"][0]["nvPairs"]["IP"] = str(
             delem[profile]["ipv4_addr"]
         )
-        intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
-            delem[profile]["ipv6_addr"]
-        )
-        intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
-            "route_tag"
-        ]
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
             "description"
@@ -2751,6 +2779,42 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+
+        # Properties for mode 'lo' Loopback Interfaces
+        if delem[profile]["mode"] == "lo":
+
+            intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
+                "int_vrf"
+            ]
+            intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
+                delem[profile]["ipv6_addr"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
+                "route_tag"
+            ]
+
+        # Properties for mode 'fabric' Loopback Interfaces
+        if delem[profile]["mode"] == "fabric":
+
+            intf["interfaces"][0]["nvPairs"]["SECONDARY_IP"] = delem[profile][
+                "secondary_ipv4_addr"
+            ]
+            intf["interfaces"][0]["nvPairs"]["V6IP"] = str(
+                delem[profile]["ipv6_addr"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
+                "route_tag"
+            ]
+
+        # Properties for mode 'mpls' Loopback Interfaces
+        if delem[profile]["mode"] == "mpls":
+
+            # These properties are read_only properties and are not exposed as
+            # properties that can be modified.  They will be updated from the
+            # self.have dictionary to reflect the actual values later in the
+            # code workflow that walks the want values and compares to have values.
+            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_PROTO"] = "PLACE_HOLDER"
+            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_TAG"] = "PLACE_HOLDER"
 
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
 
@@ -3366,6 +3430,11 @@ class DcnmIntf:
         if t_e1 != t_e2:
 
             if (state == "replaced") or (state == "overridden"):
+                # Special handling is required for mode 'mpls' loopback interfaces.
+                # They will contain either of the following two read_only properties.
+                if k in ['DCI_ROUTING_PROTO', 'DCI_ROUTING_TAG']:
+                    return "copy_and_add"
+
                 return "add"
             elif state == "merged":
                 # If the key is included in config, then use the value from want.
@@ -3469,8 +3538,8 @@ class DcnmIntf:
 
                     # First check if the policies are same for want and have. If they are different, we cannot compare
                     # the profiles because each profile will have different elements. As per PRD, if policies are different
-                    # we should not merge the information. For now we will assume we will oerwrite the same. Don't compare
-                    # rest of the structure. Overwrite with waht ever is in want
+                    # we should not merge the information. For now we will assume we will overwrite the same. Don't compare
+                    # rest of the structure. Overwrite with whatever is in want
 
                     if want["policy"] != d["policy"]:
                         action = "update"

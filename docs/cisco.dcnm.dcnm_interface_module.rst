@@ -804,7 +804,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>IPV4 address of the interface.</div>
+                        <div>IPv4 address of the interface.</div>
                 </td>
             </tr>
             <tr>
@@ -822,7 +822,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>IPV6 address of the interface.</div>
+                        <div>IPv6 address of the interface.</div>
                 </td>
             </tr>
             <tr>
@@ -840,10 +840,16 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>lo</li>
+                                    <li>fabric</li>
+                                    <li>mpls</li>
                         </ul>
                 </td>
                 <td>
-                        <div>Interface mode</div>
+                        <div>There are several modes for loopback interfaces.</div>
+                        <div>Mode &#x27;lo&#x27; is used to create, modify and delete non fabric loopback interfaces using policy &#x27;int_loopback&#x27;.</div>
+                        <div>Mode &#x27;fabric&#x27; is used to modify loopbacks created when the fabric is first created using policy &#x27;int_fabric_loopback_11_1&#x27;</div>
+                        <div>Mode &#x27;mpls&#x27; is used to modify loopbacks created when the fabric is first created using policy &#x27;int_mpls_loopback&#x27;</div>
+                        <div>Mode &#x27;fabric&#x27; and &#x27;mpls&#x27; interfaces can be modified but not created or deleted.</div>
                 </td>
             </tr>
             <tr>
@@ -862,6 +868,24 @@ Parameters
                 </td>
                 <td>
                         <div>Route tag associated with the interface IP.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>secondary_ipv4_addr</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Secondary IP address of the nve interface loopback</div>
                 </td>
             </tr>
 
@@ -2588,6 +2612,26 @@ Examples
               cmds:                           # Freeform config
                 - no shutdown
               description: "loopback interface 100 configuration - replaced"
+
+    ## Loopback Interfaces Created During Fabric Creation
+    - name: Mange Fabric loopback interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: merged
+        config:
+          - name: lo1                           # This is usually lo0 or lo1 created during fabric creation
+            type: lo
+            switch:
+              - "192.172.1.1"                   # provide the switch where to deploy the config
+            deploy: true                        # choose from [true, false]
+            profile:
+              admin_state: false                # choose from [true, false]
+              mode: fabric                      # This must be set to 'fabric' for fabric loopback interfaces
+              secondary_ipv4_addr: 172.16.5.1   # secondary ipv4 address for loopback interface
+              route_tag: "100"                  # Routing Tag for the interface
+              cmds:                             # Freeform config
+                - no shutdown
+              description: "Fabric interface managed by Ansible"
 
     # To delete or reset all interfaces on all switches in the fabric
     - name: Delete loopback interfaces
