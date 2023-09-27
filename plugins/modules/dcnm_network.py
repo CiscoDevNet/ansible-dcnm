@@ -350,6 +350,9 @@ EXAMPLES = """
       attach:
       - ip_address: 192.168.1.224
         ports: [Ethernet1/11, Ethernet1/12]
+        tor_ports:
+        - ip_address: 192.168.1.120
+          ports: [Ethernet1/14, Ethernet1/15]
       - ip_address: 192.168.1.225
         ports: [Ethernet1/11, Ethernet1/12]
       deploy: false
