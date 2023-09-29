@@ -626,7 +626,8 @@ class DcnmNetwork:
                                         want.update({"torPorts": torconfig})
                                     del have["torports"]
 
-                                del want["torports"]
+                                if want.get("torports"):
+                                    del want["torports"]
 
                                 h_sw_ports = (
                                     have["switchPorts"].split(",")
