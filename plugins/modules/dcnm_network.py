@@ -259,6 +259,7 @@ options:
           tor_ports:
             description:
             - List of interfaces in the paired TOR switch for this leaf where the network will be attached
+            - Please attach the same set of TOR ports to both the VPC paired switches.
             type: list
             elements: dict
             required: false
@@ -578,35 +579,36 @@ class DcnmNetwork:
                                 if want.get("torports"):
                                     for tor_w in want["torports"]:
                                         torports_present = False
-                                        for tor_h in have.get("torports"):
-                                            if tor_w["switch"] is tor_h["switch"]:
-                                                torports_present = True
-                                                h_tor_ports = (
-                                                    tor_h["torPorts"].split(",")
-                                                    if have["torPorts"]
-                                                    else []
-                                                )
-                                                w_tor_ports = (
-                                                    tor_w["torPorts"].split(",")
-                                                    if want["torPorts"]
-                                                    else []
-                                                )
-
-                                                if sorted(h_tor_ports) != sorted(w_tor_ports):
-                                                    atch_tor_ports = list(
-                                                        set(w_tor_ports) - set(h_tor_ports)
+                                        if have.get("torports"):
+                                            for tor_h in have["torports"]:
+                                                if tor_w["switch"] is tor_h["switch"]:
+                                                    torports_present = True
+                                                    h_tor_ports = (
+                                                        tor_h["torPorts"].split(",")
+                                                        if have["torPorts"]
+                                                        else []
+                                                    )
+                                                    w_tor_ports = (
+                                                        tor_w["torPorts"].split(",")
+                                                        if want["torPorts"]
+                                                        else []
                                                     )
 
-                                                if replace:
-                                                    atch_tor_ports = w_tor_ports
-                                                else:
-                                                    atch_tor_ports.extend(h_tor_ports)
+                                                    if sorted(h_tor_ports) != sorted(w_tor_ports):
+                                                        atch_tor_ports = list(
+                                                            set(w_tor_ports) - set(h_tor_ports)
+                                                        )
 
-                                                torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
-                                                want.update({"torPorts": torconfig})
-                                                # Update torports_configured to True. If there is no other config change for attach
-                                                # We will still append this attach to attach_list as there is tor port change
-                                                torports_configured = True
+                                                    if replace:
+                                                        atch_tor_ports = w_tor_ports
+                                                    else:
+                                                        atch_tor_ports.extend(h_tor_ports)
+
+                                                    torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
+                                                    want.update({"torPorts": torconfig})
+                                                    # Update torports_configured to True. If there is no other config change for attach
+                                                    # We will still append this attach to attach_list as there is tor port change
+                                                    torports_configured = True
 
                                         if not torports_present:
                                             torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
@@ -1497,15 +1499,15 @@ class DcnmNetwork:
                 vlan = attach["vlanId"]
 
                 if attach["portNames"] and re.match("\S+\(\S+\d+\/\d+\)", attach["portNames"]):
-                    for idx, s in enumerate(re.findall("\S+\(\S+\d+\/\d+\)", attach["portNames"])):
+                    for idx, sw_list in enumerate(re.findall("\S+\(\S+\d+\/\d+\)", attach["portNames"])):
                         torports = {}
-                        t = s.split("(")
-                        k = t[1].split(")")
+                        sw = sw_list.split("(")
+                        eth_list = sw[1].split(")")
                         if idx == 0:
-                            ports = k[0]
+                            ports = eth_list[0]
                             continue
-                        torports.update({"switch": t[0]})
-                        torports.update({"torPorts": k[0]})
+                        torports.update({"switch": sw[0]})
+                        torports.update({"torPorts": eth_list[0]})
                         torlist.append(torports)
                     attach.update({"torports": torlist})
                 else:
@@ -2785,9 +2787,9 @@ class DcnmNetwork:
                                 attach["ports"] = [port.capitalize() for port in attach["ports"]]
                             if attach.get("tor_ports"):
                                 if self.dcnm_version == 11:
-                                        invalid_params.append(
-                                            "tor_port configurations are supported only on NDFC"
-                                        )
+                                    msg = "Invalid parameters in playbook: tor_ports configurations are supported only on NDFC"
+                                    self.module.fail_json(msg=msg)
+
                                 valid_tor_att, invalid_tor_att = validate_list_of_dicts(
                                     attach["tor_ports"], tor_att_spec
                                 )
