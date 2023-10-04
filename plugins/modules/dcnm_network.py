@@ -581,16 +581,17 @@ class DcnmNetwork:
                                         torports_present = False
                                         if have.get("torports"):
                                             for tor_h in have["torports"]:
-                                                if tor_w["switch"] is tor_h["switch"]:
+                                                if tor_w["switch"] == tor_h["switch"]:
+                                                    atch_tor_ports = []
                                                     torports_present = True
                                                     h_tor_ports = (
                                                         tor_h["torPorts"].split(",")
-                                                        if have["torPorts"]
+                                                        if tor_h["torPorts"]
                                                         else []
                                                     )
                                                     w_tor_ports = (
                                                         tor_w["torPorts"].split(",")
-                                                        if want["torPorts"]
+                                                        if tor_w["torPorts"]
                                                         else []
                                                     )
 
@@ -608,7 +609,8 @@ class DcnmNetwork:
                                                     want.update({"torPorts": torconfig})
                                                     # Update torports_configured to True. If there is no other config change for attach
                                                     # We will still append this attach to attach_list as there is tor port change
-                                                    torports_configured = True
+                                                    if atch_tor_ports != h_tor_ports:
+                                                        torports_configured = True
 
                                         if not torports_present:
                                             torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
@@ -2241,6 +2243,8 @@ class DcnmNetwork:
                     found_c["attach"].append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
+                if a_w["torPorts"]:
+                    attach_d.update({"tor_ports": a_w["torPorts"]})
                 found_c["attach"].append(attach_d)
 
             diff.append(found_c)
@@ -2267,6 +2271,8 @@ class DcnmNetwork:
                     new_attach_list.append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
+                if a_w["torPorts"]:
+                    attach_d.update({"tor_ports": a_w["torPorts"]})
                 new_attach_list.append(attach_d)
 
             if new_attach_list:
