@@ -2243,7 +2243,7 @@ class DcnmNetwork:
                     found_c["attach"].append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
-                if a_w["torPorts"]:
+                if a_w.get("torPorts"):
                     attach_d.update({"tor_ports": a_w["torPorts"]})
                 found_c["attach"].append(attach_d)
 
@@ -2271,7 +2271,7 @@ class DcnmNetwork:
                     new_attach_list.append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
-                if a_w["torPorts"]:
+                if a_w.get("torPorts"):
                     attach_d.update({"tor_ports": a_w["torPorts"]})
                 new_attach_list.append(attach_d)
 
