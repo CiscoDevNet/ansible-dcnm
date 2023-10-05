@@ -851,7 +851,6 @@ class DcnmNetwork:
                 )
                 self.module.fail_json(msg=msg)
             for tor in attach.get("tor_ports"):
-                #torports.update({"ip_address": tor["ip_address"]})
                 torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
                 torports.update({"torPorts": ",".join(tor["ports"])})
                 torlist.append(torports)
@@ -863,7 +862,6 @@ class DcnmNetwork:
         del attach["ports"]
         del attach["ip_address"]
 
-        #self.module.fail_json(msg="attach done")
         return attach
 
     def diff_for_create(self, want, have):
@@ -1500,8 +1498,8 @@ class DcnmNetwork:
                 sn = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
 
-                if attach["portNames"] and re.match("\S+\(\S+\d+\/\d+\)", attach["portNames"]):
-                    for idx, sw_list in enumerate(re.findall("\S+\(\S+\d+\/\d+\)", attach["portNames"])):
+                if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
+                    for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
                         torports = {}
                         sw = sw_list.split("(")
                         eth_list = sw[1].split(")")

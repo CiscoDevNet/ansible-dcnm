@@ -1,7 +1,9 @@
 {
     "mock_ip_sn" : {
       "10.10.10.217": "9NN7E41N16A",
-      "10.10.10.218": "9YO9A29F27U", 
+      "10.10.10.218": "9YO9A29F27U",
+      "10.10.10.219": "9YO9A29F28C",
+      "10.10.10.220": "9YO9A29F29D",
       "10.10.10.226": "XYZKSJHSMK3",
       "10.10.10.227": "XYZKSJHSMK4",
       "10.10.10.228": "XYZKSJHSMK5"
@@ -17,7 +19,7 @@
 	"gw_ip_subnet": "192.168.30.1/24",
         "attach": [
           {
-            "ip_address": "10.10.10.217",
+	    "ip_address": "10.10.10.217",
 	    "ports": ["Ethernet1/13", "Ethernet1/14"],
             "deploy": true
           },
@@ -25,6 +27,68 @@
             "ip_address": "10.10.10.218",
 	    "ports": ["Ethernet1/13", "Ethernet1/14"],
             "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_tor_config" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "202",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.217",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+	    "tor_ports": [
+	      {
+            	"ip_address": "10.10.10.219",
+	    	"ports": ["Ethernet1/13", "Ethernet1/14"]
+	      }
+	    ]
+          },
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+	    "tor_ports": [
+	      {
+            	"ip_address": "10.10.10.220",
+	    	"ports": ["Ethernet1/15", "Ethernet1/16"]
+	      }
+	    ]
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_tor_roleerr_config" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "202",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.228",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+	    "tor_ports": [
+	      {
+            	"ip_address": "10.10.10.220",
+	    	"ports": ["Ethernet1/13", "Ethernet1/14"]
+	      }
+	    ]
+          },
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"]
           }
         ],
         "deploy": true
@@ -97,6 +161,42 @@
             "ip_address": "10.10.10.227",
 	    "ports": ["Ethernet1/13", "Ethernet1/14"],
             "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_tor_config_update" : [
+      {
+	"net_name": "test_network",
+        "vrf_name": "ansible-vrf-int1",
+        "net_id": "9008011",
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "vlan_id": "203",
+	"gw_ip_subnet": "192.168.30.1/24",
+        "attach": [
+          {
+            "ip_address": "10.10.10.218",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true,
+            "tor_ports": [
+	      {
+            	"ip_address": "10.10.10.219",
+	    	"ports": ["Ethernet1/13", "Ethernet1/14"]
+	      }
+	    ]
+          },
+          {
+            "ip_address": "10.10.10.217",
+	    "ports": ["Ethernet1/13", "Ethernet1/14"],
+            "deploy": true,
+            "tor_ports": [
+	      {
+            	"ip_address": "10.10.10.220",
+	    	"ports": ["Ethernet1/13", "Ethernet1/14"]
+	      }
+	    ]
           }
         ],
         "deploy": true
@@ -335,6 +435,50 @@
       }
     ]
   },
+  "mock_net_attach_tor_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+	"networkName": "test_network",
+	"lanAttachList": [
+	  {
+	    "networkName": "test_network",
+	    "displayName": "test_network",
+	    "switchName": "n9kv-218",
+	    "switchRole": "leaf",
+	    "fabricName": "test_net",
+	    "lanAttachState": "DEPLOYED",
+	    "isLanAttached": true,
+	    "portNames": "dt-n9k2(Ethernet1/13,Ethernet1/14) dt-n9k6(Ethernet1/12)",
+	    "switchSerialNo": "9YO9A29F27U",
+	    "switchDbId": 4191270,
+	    "ipAddress": "10.10.10.218",
+	    "networkId": 9008011,
+	    "vlanId": 202,
+	    "interfaceGroups": null
+	  },
+	  {
+	    "networkName": "test_network",
+	    "displayName": "test_network",
+	    "switchName": "n9kv-217",
+	    "switchRole": "leaf",
+	    "fabricName": "test_net",
+	    "lanAttachState": "DEPLOYED",
+	    "isLanAttached": true,
+	    "portNames": "dt-n9k1(Ethernet1/13,Ethernet1/14) dt-n9k7(Ethernet1/12)",
+	    "switchSerialNo": "9NN7E41N16A",
+	    "switchDbId": 4195850,
+	    "ipAddress": "10.10.10.217",
+	    "networkId": 9008011,
+	    "vlanId": 202,
+	    "interfaceGroups": null
+	  }
+	]
+      }
+    ]
+  },
   "mock_net_attach_object_del_ready": {
     "ERROR": "",
     "RETURN_CODE": 200,
@@ -467,6 +611,18 @@
       "logicalName": "dt-n9k2",
       "serialNumber": "9YO9A29F27U",
       "switchRole": "leaf"
+    },
+    "10.10.10.219":{
+      "ipAddress": "10.10.10.219",
+      "logicalName": "dt-n9k6",
+      "serialNumber": "9YO9A29F28C",
+      "switchRole": "tor"
+    },
+    "10.10.10.220":{
+      "ipAddress": "10.10.10.220",
+      "logicalName": "dt-n9k7",
+      "serialNumber": "9YO9A29F29D",
+      "switchRole": "tor"
     },
     "10.10.10.226":{
       "ipAddress": "10.10.10.226",
