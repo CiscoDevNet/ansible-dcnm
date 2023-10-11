@@ -72,7 +72,7 @@ jobs:
         path: .cache/collection-tarballs
 
     - name: Install the collection tarball
-      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz --no-cache
 
     - name: Run sanity tests
       run: ansible-test sanity --docker --python ${{matrix.python}} -v --color --truncate 0
@@ -109,7 +109,7 @@ jobs:
         path: .cache/collection-tarballs
 
     - name: Install the collection tarball
-      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz --no-cache
 
     - name: Run DCNM Unit tests
       run: coverage run --source=. -m pytest tests/unit/modules/dcnm/. -vvvv
