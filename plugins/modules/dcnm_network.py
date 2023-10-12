@@ -609,7 +609,7 @@ class DcnmNetwork:
                                                     want.update({"torPorts": torconfig})
                                                     # Update torports_configured to True. If there is no other config change for attach
                                                     # We will still append this attach to attach_list as there is tor port change
-                                                    if atch_tor_ports != h_tor_ports:
+                                                    if sorted(atch_tor_ports) != sorted(h_tor_ports):
                                                         torports_configured = True
 
                                         if not torports_present:
@@ -623,11 +623,19 @@ class DcnmNetwork:
                                         del have["torports"]
 
                                 elif have.get("torports"):
-                                    # Dont update torports_configured to True.
-                                    # If at all there is any other config change, this attach to will be appended attach_list there
-                                    for tor_h in have.get("torports"):
-                                        torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
-                                        want.update({"torPorts": torconfig})
+                                    if replace:
+                                        # There are tor ports configured, but it has to be removed as want tor ports are not present
+                                        # and state is replaced/overridden. Update torports_configured to True to remove tor ports
+                                        want.update({"torPorts": ""})
+                                        torports_configured = True
+
+                                    else:
+                                        # Dont update torports_configured to True.
+                                        # If at all there is any other config change, this attach to will be appended attach_list there
+                                        for tor_h in have.get("torports"):
+                                            torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
+                                            want.update({"torPorts": torconfig})
+
                                     del have["torports"]
 
                                 if want.get("torports"):
