@@ -256,6 +256,25 @@ options:
               There will not be any functional impact if specified in playbook.
             type: bool
             default: true
+          tor_ports:
+            description:
+            - List of interfaces in the paired TOR switch for this leaf where the network will be attached
+            - Please attach the same set of TOR ports to both the VPC paired switches.
+            type: list
+            elements: dict
+            required: false
+            suboptions:
+              ip_address:
+                description:
+                - IP address of the TOR switch where the network will be attached
+                type: str
+                required: true
+              ports:
+                description:
+                - List of TOR switch interfaces where the network will be attached
+                type: list
+                elements: str
+                required: true
       deploy:
         description:
         - Global knob to control whether to deploy the attachment
@@ -332,6 +351,9 @@ EXAMPLES = """
       attach:
       - ip_address: 192.168.1.224
         ports: [Ethernet1/11, Ethernet1/12]
+        tor_ports:
+        - ip_address: 192.168.1.120
+          ports: [Ethernet1/14, Ethernet1/15]
       - ip_address: 192.168.1.225
         ports: [Ethernet1/11, Ethernet1/12]
       deploy: false
@@ -551,6 +573,74 @@ class DcnmNetwork:
 
                         if want.get("isAttached") is not None:
                             if bool(have["isAttached"]) and bool(want["isAttached"]):
+                                torports_configured = False
+
+                                # Handle tor ports first if configured.
+                                if want.get("torports"):
+                                    for tor_w in want["torports"]:
+                                        torports_present = False
+                                        if have.get("torports"):
+                                            for tor_h in have["torports"]:
+                                                if tor_w["switch"] == tor_h["switch"]:
+                                                    atch_tor_ports = []
+                                                    torports_present = True
+                                                    h_tor_ports = (
+                                                        tor_h["torPorts"].split(",")
+                                                        if tor_h["torPorts"]
+                                                        else []
+                                                    )
+                                                    w_tor_ports = (
+                                                        tor_w["torPorts"].split(",")
+                                                        if tor_w["torPorts"]
+                                                        else []
+                                                    )
+
+                                                    if sorted(h_tor_ports) != sorted(w_tor_ports):
+                                                        atch_tor_ports = list(
+                                                            set(w_tor_ports) - set(h_tor_ports)
+                                                        )
+
+                                                    if replace:
+                                                        atch_tor_ports = w_tor_ports
+                                                    else:
+                                                        atch_tor_ports.extend(h_tor_ports)
+
+                                                    torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
+                                                    want.update({"torPorts": torconfig})
+                                                    # Update torports_configured to True. If there is no other config change for attach
+                                                    # We will still append this attach to attach_list as there is tor port change
+                                                    if sorted(atch_tor_ports) != sorted(h_tor_ports):
+                                                        torports_configured = True
+
+                                        if not torports_present:
+                                            torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                            want.update({"torPorts": torconfig})
+                                            # Update torports_configured to True. If there is no other config change for attach
+                                            # We will still append this attach to attach_list as there is tor port change
+                                            torports_configured = True
+
+                                    if have.get("torports"):
+                                        del have["torports"]
+
+                                elif have.get("torports"):
+                                    if replace:
+                                        # There are tor ports configured, but it has to be removed as want tor ports are not present
+                                        # and state is replaced/overridden. Update torports_configured to True to remove tor ports
+                                        want.update({"torPorts": ""})
+                                        torports_configured = True
+
+                                    else:
+                                        # Dont update torports_configured to True.
+                                        # If at all there is any other config change, this attach to will be appended attach_list there
+                                        for tor_h in have.get("torports"):
+                                            torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
+                                            want.update({"torPorts": torconfig})
+
+                                    del have["torports"]
+
+                                if want.get("torports"):
+                                    del want["torports"]
+
                                 h_sw_ports = (
                                     have["switchPorts"].split(",")
                                     if have["switchPorts"]
@@ -580,6 +670,12 @@ class DcnmNetwork:
                                         )
 
                                         if not atch_sw_ports and not dtach_sw_ports:
+                                            if torports_configured:
+                                                del want["isAttached"]
+                                                attach_list.append(want)
+                                                if bool(want["is_deploy"]):
+                                                    dep_net = True
+
                                             continue
 
                                         want.update(
@@ -608,11 +704,25 @@ class DcnmNetwork:
 
                                     if not atch_sw_ports:
                                         # The attachments in the have consist of attachments in want and more.
-                                        continue
+                                        if torports_configured:
+                                            del want["isAttached"]
+                                            attach_list.append(want)
+                                            if bool(want["is_deploy"]):
+                                                dep_net = True
 
-                                    want.update(
-                                        {"switchPorts": ",".join(atch_sw_ports)}
-                                    )
+                                        continue
+                                    else:
+                                        want.update(
+                                            {"switchPorts": ",".join(atch_sw_ports)}
+                                        )
+
+                                    del want["isAttached"]
+                                    attach_list.append(want)
+                                    if bool(want["is_deploy"]):
+                                        dep_net = True
+                                    continue
+
+                                elif torports_configured:
                                     del want["isAttached"]
                                     attach_list.append(want)
                                     if bool(want["is_deploy"]):
@@ -631,6 +741,11 @@ class DcnmNetwork:
                                         dep_net = True
                                     continue
                                 del want["isAttached"]
+                                if want.get("torports"):
+                                    for tor_w in want["torports"]:
+                                        torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                        want.update({"torPorts": torconfig})
+                                del want["torports"]
                                 want.update({"deployment": True})
                                 attach_list.append(want)
                                 if bool(want["is_deploy"]):
@@ -650,6 +765,11 @@ class DcnmNetwork:
 
             if not found:
                 if bool(want["isAttached"]):
+                    if want.get("torports"):
+                        for tor_w in want["torports"]:
+                            torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                            want.update({"torPorts": torconfig})
+                    del want["torports"]
                     del want["isAttached"]
                     want["deployment"] = True
                     attach_list.append(want)
@@ -680,10 +800,13 @@ class DcnmNetwork:
                             attach_list.append(havtoattach)
                             break
 
+        # self.module.fail_json(msg="attach done")
+
         return attach_list, dep_net
 
     def update_attach_params(self, attach, net_name, deploy):
 
+        torlist = []
         if not attach:
             return {}
 
@@ -728,6 +851,20 @@ class DcnmNetwork:
         attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
+        if attach.get("tor_ports"):
+            torports = {}
+            if role.lower() != "leaf":
+                msg = "tor_ports for Networks cannot be attached to switch {0} with role {1}".format(
+                    attach["ip_address"], role
+                )
+                self.module.fail_json(msg=msg)
+            for tor in attach.get("tor_ports"):
+                torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
+                torports.update({"torPorts": ",".join(tor["ports"])})
+                torlist.append(torports)
+            del attach["tor_ports"]
+        attach.update({"torports": torlist})
+
         if "deploy" in attach:
             del attach["deploy"]
         del attach["ports"]
@@ -1351,6 +1488,7 @@ class DcnmNetwork:
             attach_list = net_attach["lanAttachList"]
             dep_net = ""
             for attach in attach_list:
+                torlist = []
                 attach_state = False if attach["lanAttachState"] == "NA" else True
                 deploy = attach["isLanAttached"]
                 deployed = False
@@ -1367,7 +1505,21 @@ class DcnmNetwork:
 
                 sn = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
-                ports = attach["portNames"]
+
+                if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
+                    for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
+                        torports = {}
+                        sw = sw_list.split("(")
+                        eth_list = sw[1].split(")")
+                        if idx == 0:
+                            ports = eth_list[0]
+                            continue
+                        torports.update({"switch": sw[0]})
+                        torports.update({"torPorts": eth_list[0]})
+                        torlist.append(torports)
+                    attach.update({"torports": torlist})
+                else:
+                    ports = attach["portNames"]
 
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
@@ -1962,6 +2114,11 @@ class DcnmNetwork:
                 for attach in want_a["lanAttachList"]:
                     # Saftey check
                     if attach.get("isAttached"):
+                        if attach.get("torports"):
+                            for tor_w in attach["torports"]:
+                                torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                attach.update({"torPorts": torconfig})
+                        del attach["torports"]
                         del attach["isAttached"]
                         atch_list.append(attach)
                 if atch_list:
@@ -2092,6 +2249,8 @@ class DcnmNetwork:
                     found_c["attach"].append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
+                if a_w.get("torPorts"):
+                    attach_d.update({"tor_ports": a_w["torPorts"]})
                 found_c["attach"].append(attach_d)
 
             diff.append(found_c)
@@ -2118,6 +2277,8 @@ class DcnmNetwork:
                     new_attach_list.append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
+                if a_w.get("torPorts"):
+                    attach_d.update({"tor_ports": a_w["torPorts"]})
                 new_attach_list.append(attach_d)
 
             if new_attach_list:
@@ -2613,6 +2774,11 @@ class DcnmNetwork:
                 ip_address=dict(required=True, type="str"),
                 ports=dict(required=True, type="list"),
                 deploy=dict(type="bool", default=True),
+                tor_ports=dict(required=False, type="list", elements="dict"),
+            )
+            tor_att_spec = dict(
+                ip_address=dict(required=True, type="str"),
+                ports=dict(required=False, type="list", default=[]),
             )
 
             if self.config:
@@ -2631,6 +2797,19 @@ class DcnmNetwork:
                             attach["deploy"] = net["deploy"]
                             if attach.get("ports"):
                                 attach["ports"] = [port.capitalize() for port in attach["ports"]]
+                            if attach.get("tor_ports"):
+                                if self.dcnm_version == 11:
+                                    msg = "Invalid parameters in playbook: tor_ports configurations are supported only on NDFC"
+                                    self.module.fail_json(msg=msg)
+
+                                valid_tor_att, invalid_tor_att = validate_list_of_dicts(
+                                    attach["tor_ports"], tor_att_spec
+                                )
+                                attach["tor_ports"] = valid_tor_att
+                                for tor in attach["tor_ports"]:
+                                    if tor.get("ports"):
+                                        tor["ports"] = [port.capitalize() for port in tor["ports"]]
+                                invalid_params.extend(invalid_tor_att)
                         invalid_params.extend(invalid_att)
 
                     if state != "deleted":

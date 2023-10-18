@@ -1,0 +1,366 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- block:
+  - set_fact:
+      rest_path: "/rest/control/fabrics/{{ test_fabric }}"
+    when: controller_version == "11"
+  
+  - set_fact:
+      rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+    when: controller_version >= "12"
+  
+  - name: TOR - Verify if fabric is deployed.
+    cisco.dcnm.dcnm_rest:
+      method: GET
+      path: "{{ rest_path }}"
+    register: result
+  
+  - assert:
+      that:
+      - 'result.response.DATA != None'
+  
+  - name: TOR - Clean up any existing networks
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: deleted
+  
+##############################################
+##                TESTS                     ##
+##############################################
+  
+  - name: TOR - Create, Attach and Deploy Single Network with Multiple Switch and TOR Attach
+    cisco.dcnm.dcnm_network: &conf1
+      fabric: "{{ test_fabric }}"
+      state: merged
+      config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+          tor_ports:
+            - ip_address: "{{ ansible_tor_switch1 }}"
+              ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
+        - ip_address: "{{ ansible_switch2 }}"
+          ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        deploy: True
+    register: result
+  
+  - name: Query fabric state until networkStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: query
+    register: query_result
+    until:
+      - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+    retries: 30
+    delay: 2
+  
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ ansible_tor_int1 }}" in result.diff[0].attach[0].tor_ports'
+      - '"{{ ansible_tor_int2 }}" in result.diff[0].attach[0].tor_ports'
+      - 'result.diff[0].attach[1].deploy == true'
+      - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+      - 'result.diff[0].net_name == "ansible-net13"'
+      - 'result.diff[0].net_id == 7005'
+      - 'result.diff[0].vrf_name == "Tenant-1"'
+  
+  - name: TOR - conf1 - Idempotence
+    cisco.dcnm.dcnm_network: *conf1
+    register: result
+  
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+  
+  - name: TOR - Attach new TOR ports to already Attached TOR ports
+    cisco.dcnm.dcnm_network: &conf2
+      fabric: "{{ test_fabric }}"
+      state: merged
+      config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+          tor_ports:
+            - ip_address: "{{ ansible_tor_switch1 }}"
+              ports: ["{{ ansible_tor_int3 }}"]
+        - ip_address: "{{ ansible_switch2 }}"
+          ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        deploy: True
+    register: result
+  
+  - name: Query fabric state until networkStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: query
+    register: query_result
+    until:
+      - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+    retries: 30
+    delay: 2
+  
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ ansible_tor_int1 }}" in result.diff[0].attach[0].tor_ports'
+      - '"{{ ansible_tor_int2 }}" in result.diff[0].attach[0].tor_ports'
+      - '"{{ ansible_tor_int3 }}" in result.diff[0].attach[0].tor_ports'
+      - 'result.diff[0].net_name == "ansible-net13"'
+  
+  - name: TOR - conf2 - Idempotence
+    cisco.dcnm.dcnm_network: *conf2
+    register: result
+  
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+  
+  - name: TOR - setup - Clean up any existing network
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: deleted
+  
+  - name: TOR - Create, Attach and Deploy Single Network with Multiple Switch Attach
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: merged
+      config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        - ip_address: "{{ ansible_switch2 }}"
+          ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        deploy: True
+    register: result
+  
+  - name: Query fabric state until networkStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: query
+    register: query_result
+    until:
+      - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+    retries: 30
+    delay: 2
+  
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+      - 'result.diff[0].attach[1].deploy == true'
+      - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+      - 'result.diff[0].net_name == "ansible-net13"'
+      - 'result.diff[0].net_id == 7005'
+      - 'result.diff[0].vrf_name == "Tenant-1"'
+  
+  - name: TOR - Attach new TOR ports to already Attached network ports
+    cisco.dcnm.dcnm_network: &conf3
+      fabric: "{{ test_fabric }}"
+      state: merged
+      config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+          tor_ports:
+            - ip_address: "{{ ansible_tor_switch1 }}"
+              ports: ["{{ ansible_tor_int3 }}"]
+        - ip_address: "{{ ansible_switch2 }}"
+          ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        deploy: True
+    register: result
+  
+  - name: Query fabric state until networkStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: query
+    register: query_result
+    until:
+      - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+    retries: 30
+    delay: 2
+  
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ ansible_tor_int3 }}" in result.diff[0].attach[0].tor_ports'
+      - 'result.diff[0].net_name == "ansible-net13"'
+  
+  - name: TOR - conf3 - Idempotence
+    cisco.dcnm.dcnm_network: *conf3
+    register: result
+  
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+  
+  - name: TOR - Replace new TOR ports to already Attached network ports
+    cisco.dcnm.dcnm_network: &conf4
+      fabric: "{{ test_fabric }}"
+      state: replaced
+      config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+          tor_ports:
+            - ip_address: "{{ ansible_tor_switch1 }}"
+              ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
+        - ip_address: "{{ ansible_switch2 }}"
+          ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        deploy: True
+    register: result
+  
+  - name: Query fabric state until networkStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: query
+    register: query_result
+    until:
+      - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+    retries: 30
+    delay: 2
+  
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ ansible_tor_int1 }}" in result.diff[0].attach[0].tor_ports'
+      - '"{{ ansible_tor_int2 }}" in result.diff[0].attach[0].tor_ports'
+      - 'result.diff[0].net_name == "ansible-net13"'
+  
+  - name: TOR - conf4 - Idempotence
+    cisco.dcnm.dcnm_network: *conf4
+    register: result
+  
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+  
+  - name: TOR - Override new TOR ports to already Attached network ports
+    cisco.dcnm.dcnm_network: &conf5
+      fabric: "{{ test_fabric }}"
+      state: overridden
+      config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+        - ip_address: "{{ ansible_switch1 }}"
+          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+          tor_ports:
+            - ip_address: "{{ ansible_tor_switch1 }}"
+              ports: ["{{ ansible_tor_int3 }}", "{{ ansible_tor_int4 }}"]
+        deploy: True
+    register: result
+  
+  - name: Query fabric state until networkStatus transitions to DEPLOYED state
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: query
+    register: query_result
+    until:
+      - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+    retries: 30
+    delay: 2
+  
+  - assert:
+      that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ ansible_tor_int3 }}" in result.diff[0].attach[0].tor_ports'
+      - '"{{ ansible_tor_int4 }}" in result.diff[0].attach[0].tor_ports'
+      - 'result.diff[0].net_name == "ansible-net13"'
+  
+  - name: TOR - conf5 - Idempotence
+    cisco.dcnm.dcnm_network: *conf5
+    register: result
+  
+  - assert:
+      that:
+      - 'result.changed == false'
+      - 'result.response|length == 0'
+  
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+  
+  - name: TOR - setup - remove any networks
+    cisco.dcnm.dcnm_network:
+      fabric: "{{ test_fabric }}"
+      state: deleted
+  when: test_tor_pair is defined

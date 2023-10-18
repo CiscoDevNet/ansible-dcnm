@@ -30,12 +30,12 @@ Parameters
 
     <table  border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="3">Parameter</th>
+            <th colspan="4">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -52,7 +52,7 @@ Parameters
             </tr>
                                 <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>arp_suppress</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -73,7 +73,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>attach</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -91,7 +91,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -113,7 +113,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ip_address</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -131,7 +131,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ports</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -147,10 +147,69 @@ Parameters
                         <div>List of switch interfaces where the network will be attached</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>tor_ports</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of interfaces in the paired TOR switch for this leaf where the network will be attached</div>
+                        <div>Please attach the same set of TOR ports to both the VPC paired switches.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ip_address</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IP address of the TOR switch where the network will be attached</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ports</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of TOR switch interfaces where the network will be attached</div>
+                </td>
+            </tr>
+
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -174,7 +233,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_loopback_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -191,7 +250,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr1_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -207,7 +266,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr1_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -223,7 +282,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr2_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -239,7 +298,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr2_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -255,7 +314,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr3_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -271,7 +330,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr3_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -287,7 +346,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>gw_ip_subnet</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -303,7 +362,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>gw_ipv6_subnet</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -319,7 +378,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>int_desc</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -335,7 +394,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>intfvlan_nf_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -353,7 +412,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>is_l2only</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -374,7 +433,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>l3gw_on_border</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -394,7 +453,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu_l3intf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -411,7 +470,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>multicast_group_address</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -427,7 +486,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>net_extension_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -444,7 +503,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>net_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -461,7 +520,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>net_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -478,7 +537,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>net_template</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -495,7 +554,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>netflow_enable</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -517,7 +576,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_target_both</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -537,7 +596,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>routing_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -554,7 +613,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>secondary_ip_gw1</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -570,7 +629,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>secondary_ip_gw2</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -586,7 +645,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>secondary_ip_gw3</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -602,7 +661,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>secondary_ip_gw4</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -618,7 +677,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>trm_enable</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -638,7 +697,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -655,7 +714,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -672,7 +731,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan_nf_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -690,7 +749,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -707,7 +766,7 @@ Parameters
             </tr>
 
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -723,7 +782,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -817,6 +876,9 @@ Examples
           attach:
           - ip_address: 192.168.1.224
             ports: [Ethernet1/11, Ethernet1/12]
+            tor_ports:
+            - ip_address: 192.168.1.120
+              ports: [Ethernet1/14, Ethernet1/15]
           - ip_address: 192.168.1.225
             ports: [Ethernet1/11, Ethernet1/12]
           deploy: false

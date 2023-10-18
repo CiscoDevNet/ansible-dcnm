@@ -47,6 +47,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
     playbook_config_incorrect_vrf = test_data.get("playbook_config_incorrect_vrf")
     playbook_config_update = test_data.get("playbook_config_update")
     playbook_config_novlan = test_data.get("playbook_config_novlan")
+    playbook_tor_config = test_data.get("playbook_tor_config")
+    playbook_tor_roleerr_config = test_data.get("playbook_tor_roleerr_config")
+    playbook_tor_config_update = test_data.get("playbook_tor_config_update")
 
     playbook_config_replace = test_data.get("playbook_config_replace")
     playbook_config_replace_no_atch = test_data.get("playbook_config_replace_no_atch")
@@ -79,6 +82,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         )
         self.mock_net_query_object = copy.deepcopy(self.test_data.get("mock_net_query_object"))
         self.mock_vlan_get = copy.deepcopy(self.test_data.get("mock_vlan_get"))
+        self.mock_net_attach_tor_object = copy.deepcopy(self.test_data.get("mock_net_attach_tor_object"))
 
     def setUp(self):
         super(TestDcnmNetworkModule, self).setUp()
@@ -370,6 +374,54 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.mock_net_attach_object
             ]
 
+        elif "_merged_torport_new" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.blank_data,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_torport_vererror" in self._testMethodName:
+            self.init_data()
+
+        elif "_merged_torport_roleerror" in self._testMethodName:
+            self.init_data()
+
+        elif "_merged_tor_with_update" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_replace_tor_ports" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_override_tor_ports" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
         else:
             pass
 
@@ -735,3 +787,107 @@ class TestDcnmNetworkModule(TestDcnmModule):
             result.get("response")[0]["attach"][1]["vlan"],
             202,
         )
+
+    def test_dcnm_net_merged_torport_new(self):
+        self.version = 12
+        set_module_args(
+            dict(state="merged", fabric="test_network", config=self.playbook_tor_config)
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.version = 11
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.217"
+        )
+
+    def test_dcnm_net_merged_torport_vererror(self):
+        set_module_args(
+            dict(state="merged", fabric="test_network", config=self.playbook_tor_config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertEqual(
+            result.get("msg"),
+            "Invalid parameters in playbook: tor_ports configurations are supported only on NDFC",
+        )
+
+    def test_dcnm_net_merged_torport_roleerror(self):
+        self.version = 12
+        set_module_args(
+            dict(state="merged", fabric="test_network", config=self.playbook_tor_roleerr_config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.version = 11
+        self.assertEqual(
+            result.get("msg"),
+            "tor_ports for Networks cannot be attached to switch 10.10.10.228 with role border",
+        )
+
+    def test_dcnm_net_merged_tor_with_update(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged", fabric="test_network", config=self.playbook_tor_config_update
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.version = 11
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.218"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][1]["ip_address"], "10.10.10.217"
+        )
+        self.assertEqual(result.get("diff")[0]["vrf_name"], "ansible-vrf-int1")
+
+    def test_dcnm_net_replace_tor_ports(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="replaced", fabric="test_network", config=self.playbook_tor_config_update
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.version = 11
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.218"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][1]["ip_address"], "10.10.10.217"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["tor_ports"], "dt-n9k6(Ethernet1/13,Ethernet1/14)"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][1]["tor_ports"], "dt-n9k7(Ethernet1/13,Ethernet1/14)"
+        )
+        self.assertEqual(result.get("diff")[0]["vrf_name"], "ansible-vrf-int1")
+
+    def test_dcnm_net_override_tor_ports(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="overridden", fabric="test_network", config=self.playbook_tor_config_update
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.version = 11
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.218"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][1]["ip_address"], "10.10.10.217"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["tor_ports"], "dt-n9k6(Ethernet1/13,Ethernet1/14)"
+        )
+        self.assertEqual(
+            result.get("diff")[0]["attach"][1]["tor_ports"], "dt-n9k7(Ethernet1/13,Ethernet1/14)"
+        )
+        self.assertEqual(result.get("diff")[0]["vrf_name"], "ansible-vrf-int1")
