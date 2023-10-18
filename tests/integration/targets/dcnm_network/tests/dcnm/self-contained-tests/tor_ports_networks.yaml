@@ -11,7 +11,7 @@
       rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
     when: controller_version >= "12"
   
-  - name: SCALE - Verify if fabric is deployed.
+  - name: TOR - Verify if fabric is deployed.
     cisco.dcnm.dcnm_rest:
       method: GET
       path: "{{ rest_path }}"
@@ -21,7 +21,7 @@
       that:
       - 'result.response.DATA != None'
   
-  - name: SCALE - Clean up any existing networks
+  - name: TOR - Clean up any existing networks
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_fabric }}"
       state: deleted
@@ -359,7 +359,7 @@
 ##                 CLEAN-UP                 ##
 ##############################################
   
-  - name: MERGED - setup - remove any networks
+  - name: TOR - setup - remove any networks
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_fabric }}"
       state: deleted
