@@ -8,6 +8,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.4.3`_
+=====================
+
+**Release Date:** ``2023-10-26``
+
+Added
+-----
+
+- Support to attach network to TOR switches paired with leaf and its interfaces
+
 `3.4.2`_
 =====================
 
@@ -436,6 +446,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.4.3: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.2...3.4.3
 .. _3.4.2: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.1...3.4.2
 .. _3.4.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.0...3.4.1
 .. _3.4.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.3.1...3.4.0
