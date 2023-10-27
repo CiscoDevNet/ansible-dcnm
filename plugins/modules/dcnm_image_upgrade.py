@@ -618,11 +618,11 @@ class NdfcAnsibleImageUpgradeCommon:
             - True otherwise
         """
         result = {}
-        if response.get("MESSAGE") != "OK":
+        if response.get("MESSAGE") != "OK" and response.get("MESSAGE") is not None:
             result["success"] = False
             result["changed"] = False
             return result
-        if response.get("ERROR"):
+        if response.get("ERROR") is not None:
             result["success"] = False
             result["changed"] = False
             return result
