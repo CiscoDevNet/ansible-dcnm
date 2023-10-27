@@ -5,14 +5,13 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
     NdfcAnsibleImageUpgradeCommon, NdfcEndpoints)
+
 from .fixture import load_fixture
 
 """
 ndfc_version: 12
 description: Verify functionality of class NdfcAnsibleImageUpgradeCommon
 """
-class_name = "NdfcAnsibleImageUpgradeCommon"
-response_file = f"dcnm_image_upgrade_responses_{class_name}"
 
 
 class MockAnsibleModule:
@@ -27,7 +26,8 @@ def module():
     return NdfcAnsibleImageUpgradeCommon(MockAnsibleModule)
 
 
-def response_data(key: str) -> Dict[str, str]:
+def responses_ndfc_ansible_image_upgrade_common(key: str) -> Dict[str, str]:
+    response_file = f"dcnm_image_upgrade_responses_NdfcAnsibleImageUpgradeCommon"
     response = load_fixture(response_file).get(key)
     verb = response.get("METHOD")
     print(f"{key} : {verb} : {response}")
@@ -65,7 +65,7 @@ def test_handle_response_post(module, key, expected) -> None:
     verify _handle_reponse() return values for 200/OK response
     to POST request
     """
-    data = response_data(key)
+    data = responses_ndfc_ansible_image_upgrade_common(key)
     result = module._handle_response(data.get("response"), data.get("verb"))
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
@@ -87,7 +87,7 @@ def test_handle_response_get(module, key, expected) -> None:
     """
     verify _handle_reponse() return values for GET requests
     """
-    data = response_data(key)
+    data = responses_ndfc_ansible_image_upgrade_common(key)
     result = module._handle_response(data.get("response"), data.get("verb"))
     # TODO: We could assert on the dictionary, with a less granular error message
     # assert result == expected
@@ -99,7 +99,7 @@ def test_handle_response_unknown_response_verb(module) -> None:
     """
     verify that fail_json() is called if a unknown request verb is provided
     """
-    data = response_data("mock_unknown_response_verb")
+    data = responses_ndfc_ansible_image_upgrade_common("mock_unknown_response_verb")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
         module._handle_response(data.get("response"), data.get("verb"))
 
@@ -122,7 +122,7 @@ def test_handle_get_response(module, key, expected) -> None:
 
     NOTE: Adding this test increases coverage by 2% according to pytest-cov
     """
-    data = response_data(key)
+    data = responses_ndfc_ansible_image_upgrade_common(key)
     result = module._handle_get_response(data.get("response"))
 
     assert result.get("success") == expected.get("success")
@@ -149,7 +149,7 @@ def test_handle_post_put_delete_response(module, key, expected) -> None:
     NOTE: This method is covered in test_handle_response_post() above, but...
     NOTE: Adding this test increases coverage by 2% according to pytest-cov
     """
-    data = response_data(key)
+    data = responses_ndfc_ansible_image_upgrade_common(key)
     result = module._handle_post_put_delete_response(data.get("response"))
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
