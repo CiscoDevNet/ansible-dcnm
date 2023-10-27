@@ -29,16 +29,6 @@ import json
 from time import sleep
 
 from ansible.module_utils.basic import AnsibleModule
-# from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_image_upgrade_lib import (
-#     NdfcAnsibleImageUpgradeCommon,
-#     NdfcImageValidate,
-#     NdfcImagePolicies,
-#     NdfcImagePolicyAction,
-#     NdfcImageInstallOptions,
-#     NdfcImageUpgrade,
-#     NdfcSwitchDetails,
-#     NdfcSwitchIssuDetailsByIpAddress
-# )
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
