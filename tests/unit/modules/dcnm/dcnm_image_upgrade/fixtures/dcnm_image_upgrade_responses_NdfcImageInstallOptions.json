@@ -1,0 +1,38 @@
+{
+    "imageupgrade_install_options_post_return_code_200": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "MESSAGE": "OK",
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "deviceName": "cvd-1314-leaf",
+                    "ipAddress": "172.22.150.105",
+                    "policyName": "KR5M",
+                    "platform": "N9K/N3K",
+                    "version": "10.2.5",
+                    "osType": "64bit",
+                    "status": "Success",
+                    "installOption": "disruptive",
+                    "compDisp": "show install all impact nxos bootflash:nxos64-cs.10.2.5.M.bin",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "timestamp": "NA"
+                }
+            ],
+            "epldModules": "null",
+            "installPacakges": "null",
+            "errMessage": ""
+        }
+    },
+    "imageupgrade_install_options_post_return_code_500": {
+        "RETURN_CODE": 500,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "MESSAGE": "Internal Server Error",
+        "DATA": {
+            "error": "null"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+   "query_config":{
+        "policy": "KMR5",
+        "switches": [
+            {
+                "ip_address": "172.22.150.102",
+                "policy": "OR1F"
+            }
+        ]
+    }
+}

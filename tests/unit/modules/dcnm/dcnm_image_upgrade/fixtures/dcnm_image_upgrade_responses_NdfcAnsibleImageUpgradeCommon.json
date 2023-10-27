@@ -1,0 +1,58 @@
+{
+    "mock_get_return_code_200_MESSAGE_OK": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "mock_get_return_code_200_MESSAGE_not_OK": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "not OK",
+        "DATA": {}
+    },
+    "mock_get_return_code_404_MESSAGE_not_found": {
+        "RETURN_CODE": 404,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "Not Found",
+        "DATA": {}
+    },
+    "mock_get_return_code_500_MESSAGE_OK": {
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "mock_post_return_code_200_MESSAGE_OK": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "mock_post_return_code_400_MESSAGE_NOT_OK": {
+        "RETURN_CODE": 400,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "error: image not found",
+        "DATA": {}
+    },
+    "mock_post_return_code_200_ERROR_key_present": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "ERROR": "image not found",
+        "DATA": {}
+    },
+    "mock_unknown_response_verb": {
+        "RETURN_CODE": 200,
+        "METHOD": "FOO",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "not OK",
+        "DATA": {}
+    }
+}
