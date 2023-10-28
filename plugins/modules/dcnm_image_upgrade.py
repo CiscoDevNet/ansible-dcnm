@@ -618,11 +618,11 @@ class NdfcAnsibleImageUpgradeCommon:
             - True otherwise
         """
         result = {}
-        if response.get("MESSAGE") != "OK" and response.get("MESSAGE") is not None:
+        if response.get("ERROR") is not None:
             result["success"] = False
             result["changed"] = False
             return result
-        if response.get("ERROR") is not None:
+        if response.get("MESSAGE") != "OK" and response.get("MESSAGE") is not None:
             result["success"] = False
             result["changed"] = False
             return result
@@ -1516,13 +1516,13 @@ class NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon):
     Usage (where module is an instance of AnsibleModule):
 
     instance = NdfcSwitchDetails(module)
+    instance.refresh()
     instance.ip_address = 10.1.1.1
     fabric_name = instance.fabric_name
     serial_number = instance.serial_number
     etc...
 
-    Switch details are retrieved on instantiation of this class.
-    Switch details can be refreshed by calling instance.refresh().
+    Switch details are retrieved by calling instance.refresh().
 
     Endpoint:
     /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches
@@ -1532,7 +1532,6 @@ class NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon):
         super().__init__(module)
         self.class_name = self.__class__.__name__
         self._init_properties()
-        # self.refresh()
 
     def _init_properties(self):
         self.properties = {}
@@ -1552,11 +1551,12 @@ class NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon):
         self.log_msg(f"REMOVE: {self.class_name}.refresh: path: {path}")
         self.log_msg(f"REMOVE: {self.class_name}.refresh: verb: {verb}")
         self.properties["ndfc_response"] = dcnm_send(self.module, verb, path)
-        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_response_1 {self.ndfc_response}"
-        self.log_msg(msg)
-        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_response_2 {self.ndfc_response}"
+        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_response {self.ndfc_response}"
         self.log_msg(msg)
         self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
+        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_result {self.ndfc_result}"
+        self.log_msg(msg)
+
         if self.ndfc_response["RETURN_CODE"] != 200:
             msg = "Unable to retrieve switch information from NDFC. "
             msg += f"Got response {self.ndfc_response}"
@@ -1567,12 +1567,19 @@ class NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon):
         for switch in data:
             self.properties["ndfc_data"][switch["ipAddress"]] = switch
 
+        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_data {self.ndfc_data}"
+        self.log_msg(msg)
+
     def _get(self, item):
         if self.ip_address is None:
             msg = f"{self.class_name}: set instance.ip_address "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg)
-        return self.properties["ndfc_data"][self.ip_address].get(item)
+        return self.make_boolean(
+            self.make_none(
+                self.properties["ndfc_data"][self.ip_address].get(item)
+            )
+        )
 
     @property
     def ip_address(self):
@@ -1626,8 +1633,10 @@ class NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon):
     @property
     def ndfc_data(self):
         """
-        Return the parsed data from the GET request.
+        Return parsed data from the GET request.
         Return None otherwise
+
+        NOTE: Keyed on ip_address
         """
         return self.properties["ndfc_data"]
 
@@ -1652,6 +1661,8 @@ class NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon):
         """
         Return the platform of the switch with ip_address, if it exists.
         Return None otherwise
+
+        NOTE: This is derived from "model" and is not in the NDFC response
         """
         model = self._get("model")
         if model is None:
