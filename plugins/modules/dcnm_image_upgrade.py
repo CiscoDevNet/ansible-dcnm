@@ -905,7 +905,7 @@ class NdfcAnsibleImageUpgrade(NdfcAnsibleImageUpgradeCommon):
 
         Caller: _validate_input_for_merged_state()
         Return: params_spec, a dictionary containing the set of
-                parameter specifications.
+                playbook parameter specifications.
         """
         params_spec = {}
         params_spec["policy"] = {}
@@ -3541,6 +3541,9 @@ class NdfcImageStage(NdfcAnsibleImageUpgradeCommon):
         self._init_properties()
         self.serial_numbers_done = set()
         self.ndfc_version = None
+        self.path = None
+        self.verb = None
+        self.payload = None
         self.issu_detail = NdfcSwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self):
@@ -3618,20 +3621,22 @@ class NdfcImageStage(NdfcAnsibleImageUpgradeCommon):
         self.validate_serial_numbers()
         self._wait_for_current_actions_to_complete()
 
-        path = self.endpoints.image_stage.get("path")
-        verb = self.endpoints.image_stage.get("verb")
+        self.path = self.endpoints.image_stage.get("path")
+        self.verb = self.endpoints.image_stage.get("verb")
 
-        payload = {}
+        self.log_msg(f"REMOVE: {self.class_name}.commit() path: {self.path}")
+        self.log_msg(f"REMOVE: {self.class_name}.commit() verb: {self.verb}")
+        self.payload = {}
         self._populate_ndfc_version()
         if self.ndfc_version == "12.1.2e":
-            # Yes, NDFC wants serialNum to be misspelled
-            payload["sereialNum"] = self.serial_numbers
+            # Yes, NDFC 12.1.2e wants serialNum to be misspelled
+            self.payload["sereialNum"] = self.serial_numbers
         else:
-            payload["serialNumbers"] = self.serial_numbers
+            self.payload["serialNumbers"] = self.serial_numbers
         self.properties["ndfc_response"] = dcnm_send(
-            self.module, verb, path, data=json.dumps(payload)
+            self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
-        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
+        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, self.verb)
         self.log_msg(
             f"REMOVE: {self.class_name}.commit() response: {self.ndfc_response}"
         )
