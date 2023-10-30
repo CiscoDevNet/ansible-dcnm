@@ -1,10 +1,10 @@
 """
 ndfc_version: 12
 description: Verify functionality of NdfcImageStage
-TODO:2 NdfcImageStage._populate_ndfc_version unit test
 TODO:2 NdfcImageStage.commit unit test
 """
 
+from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
@@ -13,9 +13,19 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
     NdfcEndpoints, NdfcImageStage, NdfcSwitchIssuDetailsBySerialNumber,
     NdfcVersion)
+
 from .fixture import load_fixture
 
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+
+@contextmanager
+def does_not_raise():
+    yield
+
+
+dcnm_send_patch = (
+    "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+)
+
 
 def response_data_issu_details(key: str) -> Dict[str, str]:
     response_file = f"dcnm_image_upgrade_responses_NdfcSwitchIssuDetails"
@@ -28,13 +38,6 @@ def response_data_ndfc_version(key: str) -> Dict[str, str]:
     response_file = f"dcnm_image_upgrade_responses_NdfcVersion"
     response = load_fixture(response_file).get(key)
     print(f"response_data_ndfc_version: {key} : {response}")
-    return response
-
-
-def response_data_ndfc_image_stage(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcImageStage"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_ndfc_image_stage: {key} : {response}")
     return response
 
 
@@ -68,6 +71,9 @@ def test_init(module) -> None:
     assert isinstance(module.properties, dict)
     assert isinstance(module.serial_numbers_done, set)
     assert module.ndfc_version == None
+    assert module.path == None
+    assert module.verb == None
+    assert module.payload == None
     assert isinstance(module.issu_detail, NdfcSwitchIssuDetailsBySerialNumber)
     assert isinstance(module.endpoints, NdfcEndpoints)
 
@@ -87,6 +93,40 @@ def test_init_properties(module) -> None:
     assert module.properties.get("serial_numbers") == None
     assert module.properties.get("check_interval") == 10
     assert module.properties.get("check_timeout") == 1800
+
+
+# test_populate_ndfc_version
+
+
+@pytest.mark.parametrize(
+    "key, expected",
+    [
+        ("NdfcImageStage_12_1_2e", "12.1.2e"),
+        ("NdfcImageStage_12_1_3b", "12.1.3b"),
+    ],
+)
+def test_populate_ndfc_version(monkeypatch, module, key, expected) -> None:
+    """
+    _populate_ndfc_version retrieves the controller version from NDFC.
+    This is used in commit() to populate the payload with either a misspelled
+    "sereialNum" key/value (12.1.2e) or a correctly-spelled "serialNumbers"
+    key/value (12.1.3b).
+
+    Expectations:
+    1. module.ndfc_version should be set
+
+    Expected results:
+    1. NdfcImageStage_12_1_2e -> module.ndfc_version == "12.1.2e"
+    2. NdfcImageStage_12_1_3b -> module.ndfc_version == "12.1.3b"
+    """
+
+    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
+        return response_data_ndfc_version(key)
+
+    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+
+    module._populate_ndfc_version()
+    assert module.ndfc_version == expected
 
 
 # test_prune_serial_numbers
@@ -158,6 +198,118 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
     error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.validate_serial_numbers()
+
+
+# test_commit_serial_numbers
+
+match = r"NdfcImageStage.commit\(\) call instance.serial_numbers "
+match += r"before calling commit\(\)."
+
+
+@pytest.mark.parametrize(
+    "serial_numbers_is_set, expected",
+    [
+        (True, does_not_raise()),
+        (False, pytest.raises(AnsibleFailJson, match=match)),
+    ],
+)
+def test_commit_serial_numbers(
+    monkeypatch, module, serial_numbers_is_set, expected
+) -> None:
+    """
+    fail_json is called when NdfcImageStage.commit() is called without
+    setting instance.serial_numbers.
+
+    Expectations:
+
+    1. fail_json is called when serial_numbers is None
+    2. fail_json is not called when serial_numbers is set
+    """
+
+    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
+        key = "NdfcImageStage_test_validate_serial_numbers"
+        return response_data_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+
+    if serial_numbers_is_set:
+        module.serial_numbers = ["FDO21120U5D"]
+    with expected:
+        module.commit()
+
+
+# test_commit_path_verb
+
+
+def test_commit_path_verb(monkeypatch, module) -> None:
+    """
+    NdfcImageStage.path should be set to:
+    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
+
+    NdfcImageStage.verb should be set to:
+    POST
+
+    Expectations:
+
+    1. both self.path and self.verb should be set, per above
+    """
+
+    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
+        key = "NdfcImageStage_test_validate_serial_numbers"
+        return response_data_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+
+    module.serial_numbers = ["FDO21120U5D"]
+    module.commit()
+    assert (
+        module.path
+        == "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image"
+    )
+    assert module.verb == "POST"
+
+
+# test_commit_payload_serial_number_key_name
+
+
+@pytest.mark.parametrize(
+    "ndfc_version, expected_serial_number_key",
+    [
+        ("12.1.2e", "sereialNum"),
+        ("12.1.3b", "serialNumbers"),
+    ],
+)
+def test_commit_payload_serial_number_key_name(
+    monkeypatch, module, ndfc_version, expected_serial_number_key
+) -> None:
+    """
+    commit() will set the payload key name for the serial number
+    based on the NDFC version, per Expected Results below:
+
+    Expectations:
+    1. The correct serial number key name should be used based on NDFC version
+
+    Expected results:
+    ndfc_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
+    ndfc_version 12.1.3b -> key name "serialNumbers
+    """
+
+    def mock_ndfc_version(*args, **kwargs) -> None:
+        module.ndfc_version = ndfc_version
+
+    ndfc_version_patch = "ansible_collections.cisco.dcnm.plugins.modules."
+    ndfc_version_patch += "dcnm_image_upgrade.NdfcImageStage._populate_ndfc_version"
+    monkeypatch.setattr(ndfc_version_patch, mock_ndfc_version)
+
+    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
+        key = "NdfcImageStage_test_commit_payload_serial_number_key_name"
+        return response_data_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+
+    module.serial_numbers = ["FDO21120U5D"]
+    module.commit()
+    assert expected_serial_number_key in module.payload.keys()
 
 
 # test_wait_for_image_stage_to_complete
