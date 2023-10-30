@@ -12,6 +12,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
     NdfcImagePolicies, NdfcImagePolicyAction,
     NdfcSwitchIssuDetailsBySerialNumber)
+
 from .fixture import load_fixture
 
 
@@ -19,26 +20,16 @@ from .fixture import load_fixture
 def does_not_raise():
     yield
 
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+
+dcnm_send_patch = (
+    "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+)
+
 
 def response_data_issu_details(key: str) -> Dict[str, str]:
     response_file = f"dcnm_image_upgrade_responses_NdfcSwitchIssuDetails"
     response = load_fixture(response_file).get(key)
     print(f"response_data_issu_details: {key} : {response}")
-    return response
-
-
-def response_data_ndfc_image_policies(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcImagePolicies"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_ndfc_image_policies: {key} : {response}")
-    return response
-
-
-def response_data_ndfc_image_policy_actioin(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcImagePolicyAction"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_ndfc_image_policy_action: {key} : {response}")
     return response
 
 
@@ -57,11 +48,6 @@ def module():
 @pytest.fixture
 def mock_issu_details() -> NdfcSwitchIssuDetailsBySerialNumber:
     return NdfcSwitchIssuDetailsBySerialNumber(MockAnsibleModule)
-
-
-@pytest.fixture
-def mock_ndfc_image_policies() -> NdfcImagePolicies:
-    return NdfcImagePolicies(MockAnsibleModule)
 
 
 # test_init
@@ -163,7 +149,7 @@ def test_build_attach_payload_fail_json(monkeypatch, module, mock_issu_details) 
 # test_validate_request_policy_name_none
 
 
-def test_validate_request_action_none(monkeypatch, module, mock_issu_details) -> None:
+def test_validate_request_action_none(module, mock_issu_details) -> None:
     """
     validate_request performs a number of validations prior to calling commit
     If any of these validations fail, the function calls fail_json with a
@@ -172,12 +158,6 @@ def test_validate_request_action_none(monkeypatch, module, mock_issu_details) ->
     Expected results:
     1. module.fail_json should be called because module.action is None
     """
-
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImagePolicyAction_test_build_attach_payload_fail_json"
-        return response_data_issu_details(key)
-
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
 
     module.switch_issu_details = mock_issu_details
     module.policy_name = "KR5M"
@@ -205,7 +185,7 @@ match += "instance.policy_name must be set before calling commit()"
     ],
 )
 def test_validate_request_policy_name_none(
-    monkeypatch, action, expected, module, mock_issu_details
+    action, expected, module, mock_issu_details
 ) -> None:
     """
     validate_request performs a number of validations prior to calling commit
@@ -215,12 +195,6 @@ def test_validate_request_policy_name_none(
     Expected results:
     1. module.fail_json should be called because module.policy_name is None
     """
-
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImagePolicyAction_test_build_attach_payload_fail_json"
-        return response_data_issu_details(key)
-
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
 
     module.switch_issu_details = mock_issu_details
     module.action = action
@@ -247,7 +221,7 @@ match += "instance.serial_numbers must be set before calling commit()"
     ],
 )
 def test_validate_request_serial_numbers_none(
-    monkeypatch, action, expected, module, mock_issu_details
+    action, expected, module, mock_issu_details
 ) -> None:
     """
     validate_request performs a number of validations prior to calling commit
@@ -259,12 +233,6 @@ def test_validate_request_serial_numbers_none(
     2.  action == detach module.fail_json should be called
     3.  action == query module.fail_json should NOT be called
     """
-
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImagePolicyAction_test_build_attach_payload_fail_json"
-        return response_data_issu_details(key)
-
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
 
     module.switch_issu_details = mock_issu_details
     module.action = action

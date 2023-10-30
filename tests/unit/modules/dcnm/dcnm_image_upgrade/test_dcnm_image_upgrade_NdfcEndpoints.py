@@ -1,6 +1,5 @@
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
     NdfcEndpoints
-)
 
 """
 ndfc_version: 12
@@ -217,25 +216,3 @@ def test_dcnm_image_upgrade_endpoints_switches_info() -> None:
         endpoints.switches_info.get("path")
         == "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches"
     )
-
-
-# Example of using monkeypatch if we need to patch a property
-# Not needed in this case, but keep this around for reference
-# def test_dcnm_image_upgrade_endpoints_image_stage_monkeypatch(monkeypatch) -> None:
-#     """
-#     :param monkeypatch:
-#     :return: None
-#     """
-#     @property
-#     def mock_image_stage(self) -> dict:
-#         path = f"/stage-image"
-#         endpoint = {}
-#         endpoint["path"] = path
-#         endpoint["verb"] = "POST"
-#         return endpoint
-
-#     monkeypatch.setattr("dcnm_image_upgrade.dcnm_image_upgrade.NdfcEndpoints.image_stage", mock_image_stage)
-
-#     endpoints = NdfcEndpoints()
-#     assert endpoints.image_stage.get("verb") == "POST"
-#     assert endpoints.image_stage.get("path") == "/stage-image"
