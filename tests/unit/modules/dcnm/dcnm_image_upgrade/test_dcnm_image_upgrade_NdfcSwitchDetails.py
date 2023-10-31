@@ -61,22 +61,17 @@ def test_init_properties(module) -> None:
     assert module.properties.get("ndfc_result") == None
 
 
-def test_ip_address_not_set(module) -> None:
-    """
-    Function description:
-
-    NdfcSwitchDetails.ip_address returns:
-        - IP Address, if the user has set ip_address
-        - None, if the user has not already set ip_address
-
-    Expected results:
-
-    1. instance.ip_address will return None
-    """
-    assert module.ip_address == None
+# test_ip_address
 
 
-def test_ip_address_is_set(module) -> None:
+@pytest.mark.parametrize(
+    "ip_address_is_set, expected",
+    [
+        (True, "1.2.3.4"),
+        (False, None),
+    ],
+)
+def test_ip_address(module, ip_address_is_set, expected) -> None:
     """
     Function description:
 
@@ -87,9 +82,11 @@ def test_ip_address_is_set(module) -> None:
     Expected results:
 
     1. instance.ip_address will return the value set by the user
+    2. instance.ip_address will return None
     """
-    module.ip_address = "1.2.3.4"
-    assert module.ip_address == "1.2.3.4"
+    if ip_address_is_set:
+        module.ip_address = "1.2.3.4"
+    assert module.ip_address == expected
 
 
 def test_refresh(monkeypatch, module) -> None:
@@ -105,7 +102,7 @@ def test_refresh(monkeypatch, module) -> None:
 
     1. instance.ndfc_data is a dictionary
     2. instance.ndfc_response is a dictionary
-    3. instance.ndfc_data is a list
+    3. instance.ndfc_data is a dictionary
     """
 
     def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
