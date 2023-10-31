@@ -4311,9 +4311,7 @@ class NdfcImageUpgrade(NdfcAnsibleImageUpgradeCommon):
 
         self._init_defaults()
         self._init_properties()
-        self._populate_ndfc_version()
         self.issu_detail = NdfcSwitchIssuDetailsByIpAddress(self.module)
-        self.issu_detail.refresh()
 
     def _init_defaults(self):
         self.defaults = {}
@@ -4365,27 +4363,16 @@ class NdfcImageUpgrade(NdfcAnsibleImageUpgradeCommon):
         self.properties["reboot"] = False
         self.properties["write_erase"] = False
 
+        self.valid_epld_module = set()
+        self.valid_epld_module.add("ALL")
+        for module in range(1, self.max_module_number + 1):
+            self.valid_epld_module.add(str(module))
+
         self.valid_nxos_mode = set()
         self.valid_nxos_mode.add("disruptive")
         self.valid_nxos_mode.add("non_disruptive")
         self.valid_nxos_mode.add("force_non_disruptive")
 
-        self.valid_epld_module = set()
-        self.valid_epld_module.add("ALL")
-        for module in range(1, self.max_module_number):
-            self.valid_epld_module.add(str(module))
-
-    def _populate_ndfc_version(self):
-        """
-        Populate self.ndfc_version with the NDFC version.
-
-        Notes:
-        1.  This cannot go into NdfcAnsibleImageUpgradeCommon() due to circular
-            imports resulting in RecursionError
-        """
-        instance = NdfcVersion(self.module)
-        instance.refresh()
-        self.ndfc_version = instance.version
 
     # def prune_devices(self):
     #     """
