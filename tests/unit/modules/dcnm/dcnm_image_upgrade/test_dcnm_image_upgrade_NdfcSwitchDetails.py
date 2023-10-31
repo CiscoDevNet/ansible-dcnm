@@ -8,14 +8,21 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import NdfcSwitchDetails, NdfcVersion, NdfcAnsibleImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
+    NdfcAnsibleImageUpgradeCommon, NdfcSwitchDetails, NdfcVersion)
+
 from .fixture import load_fixture
+
 
 @contextmanager
 def does_not_raise():
     yield
 
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+
+dcnm_send_patch = (
+    "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+)
+
 
 def responses_ndfc_switch_details(key: str) -> Dict[str, str]:
     response_file = f"dcnm_image_upgrade_responses_NdfcSwitchDetails"
@@ -34,18 +41,13 @@ class MockAnsibleModule:
 @pytest.fixture
 def module():
     return NdfcSwitchDetails(MockAnsibleModule)
-    # return NdfcSwitchDetails(NdfcAnsibleImageUpgradeCommon(MockAnsibleModule))
-
-
-@pytest.fixture
-def mock_ndfc_version() -> NdfcVersion:
-    return NdfcVersion(MockAnsibleModule)
 
 
 def test_init(module) -> None:
     module.__init__(MockAnsibleModule)
     assert isinstance(module, NdfcSwitchDetails)
     assert module.class_name == "NdfcSwitchDetails"
+
 
 def test_init_properties(module) -> None:
     """
@@ -57,6 +59,7 @@ def test_init_properties(module) -> None:
     assert module.properties.get("ndfc_data") == None
     assert module.properties.get("ndfc_response") == None
     assert module.properties.get("ndfc_result") == None
+
 
 def test_ip_address_not_set(module) -> None:
     """
@@ -72,6 +75,7 @@ def test_ip_address_not_set(module) -> None:
     """
     assert module.ip_address == None
 
+
 def test_ip_address_is_set(module) -> None:
     """
     Function description:
@@ -86,6 +90,7 @@ def test_ip_address_is_set(module) -> None:
     """
     module.ip_address = "1.2.3.4"
     assert module.ip_address == "1.2.3.4"
+
 
 def test_refresh(monkeypatch, module) -> None:
     """
@@ -150,13 +155,21 @@ def test_refresh_ndfc_data(monkeypatch, module) -> None:
 
 
 match = "Unable to retrieve switch information from NDFC. "
+
+
 @pytest.mark.parametrize(
     "key,expected",
     [
         ("NdfcSwitchDetails_get_return_code_200", does_not_raise()),
-        ("NdfcSwitchDetails_get_return_code_404", pytest.raises(AnsibleFailJson, match=match)),
-        ("NdfcSwitchDetails_get_return_code_500", pytest.raises(AnsibleFailJson, match=match)),
-    ]
+        (
+            "NdfcSwitchDetails_get_return_code_404",
+            pytest.raises(AnsibleFailJson, match=match),
+        ),
+        (
+            "NdfcSwitchDetails_get_return_code_500",
+            pytest.raises(AnsibleFailJson, match=match),
+        ),
+    ],
 )
 def test_ndfc_result(monkeypatch, module, key, expected) -> None:
     """
@@ -175,7 +188,7 @@ def test_ndfc_result(monkeypatch, module, key, expected) -> None:
 
     3.  500 RETURN_CODE, MESSAGE ~= "Internal Server Error",
         NdfcSwitchDetails.ndfc_result == {'found': False, 'success': False}
-        
+
     Expected results:
 
     1. NdfcSwitchDetails_result_200 == {'found': True, 'success': True}
@@ -193,7 +206,8 @@ def test_ndfc_result(monkeypatch, module, key, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "item, expected", [
+    "item, expected",
+    [
         ("fabricName", "easy"),
         ("hostName", "cvd-1111-bgw"),
         ("licenseViolation", False),
@@ -239,5 +253,3 @@ def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
     module.refresh()
     module.ip_address = "172.22.150.110"
     assert module._get(item) == expected
-
-
