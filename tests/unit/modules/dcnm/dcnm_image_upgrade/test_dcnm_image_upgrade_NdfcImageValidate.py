@@ -21,20 +21,6 @@ def response_data_issu_details(key: str) -> Dict[str, str]:
     return response
 
 
-def response_data_ndfc_version(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcVersion"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_ndfc_version: {key} : {response}")
-    return response
-
-
-def response_data_ndfc_image_validate(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcImageValidate"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_ndfc_image_validate: {key} : {response}")
-    return response
-
-
 class MockAnsibleModule:
     params = {}
 
