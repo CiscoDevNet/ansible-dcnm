@@ -1,5 +1,7 @@
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
-    NdfcEndpoints
+# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
+#     NdfcEndpoints
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
 
 """
 ndfc_version: 12

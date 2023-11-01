@@ -3,8 +3,10 @@ from typing import Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-    NdfcAnsibleImageUpgradeCommon, NdfcEndpoints)
+# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
+#     NdfcAnsibleImageUpgradeCommon, NdfcEndpoints)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
 
 from .fixture import load_fixture
 
@@ -23,8 +25,8 @@ class MockAnsibleModule:
 
 @pytest.fixture
 def module():
-    return NdfcAnsibleImageUpgradeCommon(MockAnsibleModule)
-
+    # return NdfcAnsibleImageUpgradeCommon(MockAnsibleModule)
+    return NdfcCommon(MockAnsibleModule)
 
 def responses_ndfc_ansible_image_upgrade_common(key: str) -> Dict[str, str]:
     response_file = f"dcnm_image_upgrade_responses_NdfcAnsibleImageUpgradeCommon"
@@ -42,8 +44,9 @@ def test_init_(module) -> None:
     assert module.params == {}
     assert module.debug == True
     assert module.fd == None
-    assert module.logfile == "/tmp/dcnm_image_upgrade.log"
-    assert isinstance(module.endpoints, NdfcEndpoints)
+    # assert module.logfile == "/tmp/dcnm_image_upgrade.log"
+    assert module.logfile == "/tmp/ndfc.log"
+    # assert isinstance(module.endpoints, NdfcEndpoints)
 
 
 @pytest.mark.parametrize(

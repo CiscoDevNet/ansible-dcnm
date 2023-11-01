@@ -3,9 +3,11 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-    NdfcImagePolicies
-)
+# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
+#     NdfcImagePolicies
+# )
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import NdfcImagePolicies
+
 from .fixture import load_fixture
 
 """
@@ -13,8 +15,8 @@ ndfc_version: 12
 description: Verify functionality of class NdfcImagePolicies
 """
 
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-
+#dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies.dcnm_send"
 class MockAnsibleModule:
     params = {}
 

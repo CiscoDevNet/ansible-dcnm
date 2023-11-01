@@ -9,9 +9,13 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-    NdfcImagePolicies, NdfcImagePolicyAction,
-    NdfcSwitchIssuDetailsBySerialNumber)
+# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
+#     NdfcImagePolicies, NdfcImagePolicyAction,
+#     NdfcSwitchIssuDetailsBySerialNumber)
+
+# from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import NdfcImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import NdfcImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
@@ -21,10 +25,10 @@ def does_not_raise():
     yield
 
 
-dcnm_send_patch = (
-    "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-)
-
+# dcnm_send_patch = (
+#     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+# )
+dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details.dcnm_send"
 
 def response_data_issu_details(key: str) -> Dict[str, str]:
     response_file = f"dcnm_image_upgrade_responses_NdfcSwitchIssuDetails"

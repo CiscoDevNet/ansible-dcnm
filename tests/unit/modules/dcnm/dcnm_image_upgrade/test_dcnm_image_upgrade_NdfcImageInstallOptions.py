@@ -3,9 +3,11 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-    NdfcImageInstallOptions
-)
+# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
+#     NdfcImageInstallOptions
+# )
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import NdfcImageInstallOptions
+
 from .fixture import load_fixture
 
 """
@@ -15,8 +17,8 @@ description: Verify functionality of class NdfcImageInstallOptions
 class_name = "NdfcImageInstallOptions"
 response_file = f"dcnm_image_upgrade_responses_{class_name}"
 
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-
+#dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options.dcnm_send"
 class MockAnsibleModule:
     params = {}
 
