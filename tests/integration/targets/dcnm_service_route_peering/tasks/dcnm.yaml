@@ -5,19 +5,23 @@
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
+  tags: sanity
 
 - set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
+  tags: sanity
 
 - name: set test_items
   set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  tags: sanity
 
 - name: run test cases (connection=httpapi)
   include: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
+  tags: sanity
 
 - name: Cleanup - Delete route peerings
   cisco.dcnm.dcnm_service_route_peering: 
@@ -25,11 +29,13 @@
     service_fabric: "{{ ansible_it_service_fabric }}" 
     state: deleted
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Cleanup - Delete Service Nodes
   cisco.dcnm.dcnm_service_node: &conf
@@ -52,15 +58,18 @@
       switches:
         - "{{ ansible_switch1 }}"
   register: result
+  tags: sanity
 
 - assert:
     that:
     - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
   wait_for:
     timeout: 40
+  tags: sanity
 
 - name: Cleanup - Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -124,8 +133,10 @@
             - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
   register: result  
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'  
   loop: '{{ result.response }}'
+  tags: sanity

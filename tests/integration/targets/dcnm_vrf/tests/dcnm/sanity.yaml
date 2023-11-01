@@ -1,0 +1,555 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
+  when: controller_version == "11"
+  tags:
+    - sanity
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+  when: controller_version >= "12"
+  tags:
+    - sanity
+
+- name: SANITY- MERGED - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+  tags: sanity
+
+- name: SANITY- MERGED - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity
+
+- name: SANITY- Pause for 20 seconds for NDFC to sync
+  ansible.builtin.pause:
+    seconds: 20
+  tags: sanity
+
+###############################################
+###                MERGED                    ##
+###############################################
+
+- name: SANITY- MERGED - Create, Attach and Deploy new VRF - VLAN Provided by the User
+  cisco.dcnm.dcnm_vrf: &conf
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- MERGED - conf1 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+  tags: sanity
+
+- name: SANITY- MERGED - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity
+
+- name: SANITY- Pause for 20 seconds for NDFC to sync
+  ansible.builtin.pause:
+    seconds: 20
+  tags: sanity
+
+###############################################
+###                REPLACED                  ##
+###############################################
+
+- name: SANITY- REPLACED - Create, Attach and Deploy new VRF - VLAN Provided by the User
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- REPLACED - Update existing VRF using replace - delete attachments
+  cisco.dcnm.dcnm_vrf: &conf1
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('NA')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - 'result.diff[0].attach[1].deploy == false'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- REPLACED - conf1 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf1
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+  tags: sanity
+
+- name: SANITY- REPLACED - Update existing VRF using replace - create attachments
+  cisco.dcnm.dcnm_vrf: &conf2
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result.diff[0].attach[0].vlan_id == 500'
+    - 'result.diff[0].attach[1].vlan_id == 500'
+  tags: sanity
+
+- name: SANITY- REPLACED - conf2 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf2
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+  tags: sanity
+
+- name: SANITY- REPLACED - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity
+
+- name: SANITY- Pause for 20 seconds for NDFC to sync
+  ansible.builtin.pause:
+    seconds: 20
+  tags: sanity
+
+###############################################
+###              OVERRIDDEN                  ##
+###############################################
+
+- name: SANITY- OVERRIDDEN - Create, Attach and Deploy new VRF - VLAN Provided by the User
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- OVERRIDDEN - Update existing VRF using overridden - delete and create
+  cisco.dcnm.dcnm_vrf: &conf3
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-vrf-int2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - '(result.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[4].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
+    - 'result.diff[1].attach[0].deploy == false'
+    - 'result.diff[1].attach[1].deploy == false'
+    - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- OVERRIDDEN - conf - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf3
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+  tags: sanity
+
+- name: SANITY- OVERRIDDEN - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity
+
+- name: SANITY- Pause for 20 seconds for NDFC to sync
+  ansible.builtin.pause:
+    seconds: 20
+  tags: sanity
+
+###############################################
+###                QUERY                     ##
+###############################################
+
+- name: SANITY- QUERY - Create, Attach and Deploy new VRF - VLAN Provided by the User
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- QUERY - Query the VRF
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
+        deploy: true
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].parent.vrfName == "ansible-vrf-int1"'
+    - 'result.response[0].parent.vrfId == 9008011'
+    - 'result.response[0].parent.vrfStatus == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[0].switchDetailsList[0].vlan == 500'
+    - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result.response[0].attach[1].switchDetailsList[0].vlan == 500'
+  tags: sanity
+
+- name: SANITY- QUERY - Clean up existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  register: result
+  tags: sanity
+
+- name: SANITY- Pause for 20 seconds for NDFC to sync
+  ansible.builtin.pause:
+    seconds: 20
+  tags: sanity
+
+###############################################
+###                 DELETED                  ##
+###############################################
+
+- name: SANITY- DELETED - Create, Attach and Deploy new VRF - VLAN Provided by the User
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - 'result.diff[0].attach[1].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- DELETED - Delete VRF using deleted state
+  cisco.dcnm.dcnm_vrf: &conf4
+    fabric: "{{ test_fabric }}"
+    state: deleted
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[1].MESSAGE == "OK"'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[2].METHOD == "DELETE"'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - 'result.diff[0].attach[1].deploy == false'
+    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+  tags: sanity
+
+- name: SANITY- DELETED - conf - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf4
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+  tags: sanity
+    - 'result.diff|length == 0'

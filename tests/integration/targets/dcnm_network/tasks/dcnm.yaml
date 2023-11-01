@@ -5,16 +5,26 @@
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
+  tags: sanity
 
 - set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
+  tags: sanity
 
 - name: set test_items
   set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  tags: sanity
 
 - name: run test cases (connection=httpapi)
   include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
+  tags: sanity
+
+- name: DELETED - Clean up any existing vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity

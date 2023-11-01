@@ -18,15 +18,18 @@
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Initialize the setup - delete all templates
   cisco.dcnm.dcnm_template:
@@ -41,11 +44,13 @@
       - name: my_feature_telemetry
 
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - block:
 
@@ -142,18 +147,22 @@
                   dst-grp 5
                   snsr-grp 5 sample-interval 50000
       register: result
+      tags: sanity
+
     - assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
+      tags: sanity
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
+      tags: sanity
 
     - name: Create templates with arguments
       cisco.dcnm.dcnm_template:
@@ -185,18 +194,21 @@
 
               ##
       register: result
+      tags: sanity
     - assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
+      tags: sanity
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
+      tags: sanity
 
 # Policy IT cases depend on telemetry feature being enabled on the switches. So create a policy for
 # deploying the telemetry feature on the switches before starting the tests
@@ -216,18 +228,21 @@
 
               ##
       register: result
+      tags: sanity
     - assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
+      tags: sanity
 
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
+      tags: sanity
 
 # Create the policy to deploy telemetry feature on the switches
     - name: Create telemetry policy
@@ -244,6 +259,7 @@
         deploy: true
         state: merged
       register: result
+      tags: sanity
 
     - assert:
         that:
@@ -252,16 +268,18 @@
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
+      tags: sanity
 
     # Assert for Create responses
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
+      tags: sanity
 
     # Assert for deploy responses
     - assert:
@@ -272,3 +290,4 @@
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
+      tags: sanity

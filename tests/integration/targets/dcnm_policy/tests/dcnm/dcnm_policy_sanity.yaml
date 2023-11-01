@@ -1,0 +1,249 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: SANITY- Remove local log file
+  local_action: command rm -f policy.log
+  tags: sanity
+
+- name: SANITY- Put the fabric to default state
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # only choose form [merged, deleted, query]
+    config:
+      - name: template_101  # name is mandatory
+      - name: template_102  # name is mandatory
+      - name: template_103  # name is mandatory
+      - name: template_104  # name is mandatory
+      - name: template_105  # name is mandatory
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  tags: sanity
+
+
+- tags: sanity
+  block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: SANITY- Create different non-existing policies
+      cisco.dcnm.dcnm_policy: &dcnm_pol
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: true
+        state: merged
+        config:
+          - name: template_101  # This must be a valid template name
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
+
+          - name: template_102  # This must be a valid template name
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: 102 - No piority given
+
+          - name: template_103  # This must be a valid template name
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: Both description and priority given
+            priority: 500
+
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+                policies:
+                  - name: template_104  # This must be a valid template name
+                    create_additional_policy: false  # Do not create a policy if it already exists
+
+                  - name: template_105  # This must be a valid template name
+                    create_additional_policy: false  # Do not create a policy if it already exists
+              - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 5'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 5'
+
+    # Assert for Create responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
+      when: (my_idx < (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    # Assert for deploy responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+      when: (my_idx == (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    - name: SANITY- Setting fact
+      set_fact:
+        modify_policy_list: "{{ ( modify_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
+      when: (my_idx < (result["diff"][0]["merged"] | length))
+      loop: '{{ result.response }}'
+      loop_control:
+        index_var: my_idx
+
+    - name: SANITY- Show the policy_list information
+      debug:
+        var: modify_policy_list
+
+    - name: SANITY- Setting fact
+      set_fact:
+        list_len: "{{ modify_policy_list | length }}"
+
+##############################################
+##                QUERY                     ##
+##############################################
+    - name: SANITY- Query all policies from the specified switches
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) != 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["response"] | length) != 0'
+
+    - name: SANITY- Query specific policies
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: query
+        config:
+          - name: template_101
+          - name: template_102
+          - name: template_103
+          - name: template_104
+          - name: template_105
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 5'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["response"] | length) == 5'
+
+##############################################
+##               MODIFY                     ##
+##############################################
+
+    - name: SANITY- Modify existing policy using template name - should create the policy
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        deploy: true
+        state: merged
+        config:
+          - name: template_101  # This must be a valid template name
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: Trying to modify existing policy using templateName
+            priority: 1000
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+    - name: SANITY- Modify policies - using policy IDs
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: merged
+        config:
+          - name: "{{ item }}"  # Pick the policy Ids from the facts
+            description: Modified the policy "{{ item }}" using policy ID
+            priority: "{{ 100 + my_idx }}"
+          - switch:
+              - ip: "{{ ansible_switch1 }}"
+      loop: '{{ modify_policy_list }}'
+      loop_control:
+        index_var: my_idx
+      register: result
+
+    # Assert for description being non-empty
+    - assert:
+        that:
+          - 'item["description"] != ""'
+      when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
+      loop: '{{ result.results[0]["diff"][0]["merged"] }}'
+      loop_control:
+        index_var: my_idx
+
+    # Assert for Create responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
+      loop: '{{ result.results[0].response }}'
+      loop_control:
+        index_var: my_idx
+
+    # Assert for deploy responses
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
+      when: (my_idx == (result.results[0]["diff"][0]["merged"] | length))
+      loop: '{{ result.results[0].response }}'
+      loop_control:
+        index_var: my_idx
+
+##############################################
+##                CLEANUP                   ##
+##############################################
+
+  always:
+
+    - name: SANITY- Delete all created policies
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # only choose form [merged, deleted, query]
+        config:
+          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_102  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_103  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
+          - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
+          - switch:
+             - ip: "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'

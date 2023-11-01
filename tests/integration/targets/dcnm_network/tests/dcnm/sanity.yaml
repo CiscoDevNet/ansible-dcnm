@@ -1,0 +1,321 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
+  when: controller_version == "11"
+  tags: sanity
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+  when: controller_version >= "12"
+  tags: sanity
+
+- name: SANITY- Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+  tags: sanity
+
+- name: SANITY- DELETED - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity
+
+- name: SANITY- MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 151
+      gw_ip_subnet: '192.168.40.1/24'
+      attach:
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+      deploy: true
+  register: result
+  tags: sanity
+
+- name: SANITY- Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  #tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7005'
+    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - 'result.diff[1].attach[0].deploy == true'
+    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[1].net_name == "ansible-net12"'
+    - 'result.diff[1].net_id == 7002'
+    - 'result.diff[1].vrf_name == "Tenant-2"'
+  #tags: sanity
+
+##############################################
+##                OVERRIDDEN                ##
+##############################################
+
+- name: SANITY- OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
+  cisco.dcnm.dcnm_network: &conf1
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 150
+      gw_ip_subnet: '192.168.30.1/24'
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        # Replace the ports with new ports
+        # ports: [Ethernet1/1, Ethernet1/2]
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int4 }}"]
+      deploy: true
+      # delete the second network
+  register: result
+  #tags: sanity
+
+- name: SANITY- Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  #tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[4].RETURN_CODE == 200'
+    - 'result.response[5].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[4].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.response[3].METHOD == "DELETE"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - 'result.diff[0].attach[1].deploy == true'
+    - 'result.diff[0].attach[2].deploy == false'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[1].ip_address'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[2].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7005'
+    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - 'result.diff[1].attach[0].deploy == false'
+    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[1].net_name == "ansible-net12"'    
+  #tags: sanity
+
+- name: OVERRIDDEN - conf1 - Idempotence
+  cisco.dcnm.dcnm_network: *conf1
+  register: result
+  #tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+  #tags: sanity
+
+- name: SANITY- OVERRIDDEN - setup - remove any networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  #tags: sanity
+
+
+- name: SANITY- REPLACED - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  #tags: sanity
+
+- name: SANITY- REPLACED - Create, Attach and Deploy Multiple Network with Single Switch Attach
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 151
+      gw_ip_subnet: '192.168.40.1/24'
+      attach:
+      - ip_address: "{{ ansible_switch2 }}"
+        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+      deploy: true
+  register: result
+  #tags: sanity
+
+- name: SANITY- Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+  #tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == true'
+    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
+    - 'result.diff[0].net_name == "ansible-net13"'
+    - 'result.diff[0].net_id == 7005'
+    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - 'result.diff[1].attach[0].deploy == true'
+    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - 'result.diff[1].net_name == "ansible-net12"'
+    - 'result.diff[1].net_id == 7002'
+    - 'result.diff[1].vrf_name == "Tenant-2"'
+  #tags: sanity
+
+##############################################
+##                REPLACED                  ##
+##############################################
+
+- name: SANITY- REPLACED - Update Network using replace - Delete Attachments
+  cisco.dcnm.dcnm_network: &conf2
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 151
+      gw_ip_subnet: '192.168.40.1/24'
+      deploy: true
+  register: result
+  #tags: sanity
+
+- name: Query fabric state until networkStatus transitions to NA state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('NA')"
+    - "query_result.response[1].parent.networkStatus is search('NA')"
+  retries: 30
+  delay: 2
+  #tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[2].value == "SUCCESS"'
+    - 'result.diff[0].attach[0].deploy == false'
+    - '"{{ ansible_switch1 }}" or "{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
+    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.diff[1].attach[1].ip_address'
+    - '"ansible-net13" or "ansible-net12" in result.diff[1].net_name'
+    - 'result.diff[1].attach[1].deploy == false'
+    - 'result.diff[1].attach[0].deploy == false'
+    - '"{{ ansible_switch2 }}" in result.diff[0].attach[0].ip_address'
+    - '"ansible-net13" or "ansible-net12" in result.diff[0].net_name'
+  #tags: sanity
+
+- name: SANITY - REPLACED - conf1 - Idempotence
+  cisco.dcnm.dcnm_network: *conf2
+  register: result
+  #tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+  #tags: sanity
+
+- name: SANITY - DELETED - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity

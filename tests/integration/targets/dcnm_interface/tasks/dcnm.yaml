@@ -5,19 +5,23 @@
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
+  tags: sanity
 
 - set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
+  tags: sanity
 
 - name: set test_items
   set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  tags: sanity
 
 - name: run test cases (connection=httpapi)
   include: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
+  tags: sanity
 
 ###############################################
 ##                FACTS                      ##
@@ -130,11 +134,13 @@
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 ##############################################
 ##          DELETE ALL TEMPLATES            ##
@@ -148,8 +154,10 @@
       - name: my_lacp
       - name: my_vpc
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
