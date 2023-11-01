@@ -1,6 +1,6 @@
-class NdfcEndpoints:
+class ApiEndpoints:
     """
-    Endpoints for NDFC image management API calls
+    Endpoints for image management API calls
     """
     def __init__(self):
         self.endpoint_api_v1 = "/appcenter/cisco/ndfc/api/v1"
@@ -73,7 +73,7 @@ class NdfcEndpoints:
         return endpoint
     
     @property
-    def ndfc_version(self):
+    def controller_version(self):
         path = f"{self.endpoint_feature_manager}/about/version"
         endpoint = {}
         endpoint["path"] = path

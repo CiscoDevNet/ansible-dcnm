@@ -5,11 +5,11 @@ from time import sleep
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsByIpAddress
 
-class NdfcImageUpgrade(NdfcCommon):
+class ImageUpgrade(ImageUpgradeCommon):
     """
     Endpoint:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image
@@ -17,7 +17,7 @@ class NdfcImageUpgrade(NdfcCommon):
 
     Usage (where module is an instance of AnsibleModule):
 
-    upgrade = NdfcImageUpgrade(module)
+    upgrade = ImageUpgrade(module)
     upgrade.devices = devices
     upgrade.commit()
     data = upgrade.data
@@ -105,13 +105,13 @@ class NdfcImageUpgrade(NdfcCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         # Maximum number of modules/linecards in a switch
         self.max_module_number = 9
 
         self._init_defaults()
         self._init_properties()
-        self.issu_detail = NdfcSwitchIssuDetailsByIpAddress(self.module)
+        self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
 
     def _init_defaults(self):
         self.defaults = {}
@@ -154,9 +154,9 @@ class NdfcImageUpgrade(NdfcCommon):
         self.properties["epld_module"] = "ALL"
         self.properties["epld_upgrade"] = False
         self.properties["force_non_disruptive"] = False
-        self.properties["ndfc_data"] = None
-        self.properties["ndfc_result"] = None
-        self.properties["ndfc_response"] = None
+        self.properties["response_data"] = None
+        self.properties["result"] = None
+        self.properties["response"] = None
         self.properties["non_disruptive"] = False
         self.properties["package_install"] = False
         self.properties["package_uninstall"] = False
@@ -183,9 +183,9 @@ class NdfcImageUpgrade(NdfcCommon):
     #     TODO:1 This prunes devices only based on the image upgrade state.
     #     TODO:1 It does not check other image states and EPLD states.
     #     """
-    #     # issu = NdfcSwitchIssuDetailsBySerialNumber(self.module)
+    #     # issu = SwitchIssuDetailsBySerialNumber(self.module)
     #     pruned_devices = set()
-    #     instance = NdfcSwitchIssuDetailsByIpAddress(self.module)
+    #     instance = SwitchIssuDetailsByIpAddress(self.module)
     #     instance.refresh()
     #     for device in self.devices:
     #         msg = f"REMOVE: {self.class_name}.prune_devices() device: {device}"
@@ -395,19 +395,19 @@ class NdfcImageUpgrade(NdfcCommon):
         for device in self.devices:
             self.build_payload(device)
             self.log_msg(f"REMOVE: {self.class_name}.commit() upgrade payload: {self.payload}")
-            self.properties["ndfc_response"] = dcnm_send(
+            self.properties["response"] = dcnm_send(
                 self.module, verb, path, data=json.dumps(self.payload)
             )
-            self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
+            self.properties["result"] = self._handle_response(self.response, verb)
             self.log_msg(
-                f"REMOVE: {self.class_name}.commit() response: {self.ndfc_response}"
+                f"REMOVE: {self.class_name}.commit() response: {self.response}"
             )
-            self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.ndfc_result}")
-            if not self.ndfc_result["success"]:
-                msg = f"{self.class_name}.commit() failed: {self.ndfc_result}. "
-                msg += f"NDFC response was: {self.ndfc_response}"
+            self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.result}")
+            if not self.result["success"]:
+                msg = f"{self.class_name}.commit() failed: {self.result}. "
+                msg += f"NDFC response was: {self.response}"
                 self.module.fail_json(msg)
-            self.properties["ndfc_data"] = self.ndfc_response.get("DATA")
+            self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_upgrade_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
@@ -768,32 +768,32 @@ class NdfcImageUpgrade(NdfcCommon):
         return self.properties.get("check_timeout")
 
     @property
-    def ndfc_data(self):
+    def response_data(self):
         """
         Return the data retrieved from NDFC for the image upgrade request.
 
         instance.devices must be set first.
         instance.commit() must be called first.
         """
-        return self.properties.get("ndfc_data")
+        return self.properties.get("response_data")
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
         Return the POST result from NDFC
         instance.devices must be set first.
         instance.commit() must be called first.
         """
-        return self.properties.get("ndfc_result")
+        return self.properties.get("result")
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
         Return the POST response from NDFC
         instance.devices must be set first.
         instance.commit() must be called first.
         """
-        return self.properties.get("ndfc_response")
+        return self.properties.get("response")
 
     @property
     def serial_numbers(self):

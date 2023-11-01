@@ -1,7 +1,7 @@
 """
-ndfc_version: 12
-description: Verify functionality of NdfcImageStage
-TODO:2 NdfcImageStage.commit unit test
+controller_version: 12
+description: Verify functionality of ImageStage
+TODO:2 ImageStage.commit unit test
 """
 
 from contextlib import contextmanager
@@ -10,13 +10,9 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     NdfcEndpoints, NdfcImageStage, NdfcSwitchIssuDetailsBySerialNumber,
-#     NdfcVersion)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import NdfcImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsBySerialNumber
-#from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import NdfcVersion
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import ImageStage
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
@@ -25,26 +21,25 @@ from .fixture import load_fixture
 def does_not_raise():
     yield
 
+patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
+patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_common = patch_module_utils + "common."
 
-# dcnm_send_patch = (
-#     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-# )
+dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
+dcnm_send_image_stage = patch_image_mgmt + "image_stage.dcnm_send"
+dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
-dcnm_send_issu_details = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details.dcnm_send"
-dcnm_send_ndfc_version = "ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version.dcnm_send"
-dcnm_send_image_stage = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage.dcnm_send"
-
-def response_data_issu_details(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcSwitchIssuDetails"
+def responses_issu_details(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
-    print(f"response_data_issu_details: {key} : {response}")
+    print(f"responses_issu_details: {key} : {response}")
     return response
 
 
-def response_data_ndfc_version(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcVersion"
+def responses_controller_version(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_ControllerVersion"
     response = load_fixture(response_file).get(key)
-    print(f"response_data_ndfc_version: {key} : {response}")
+    print(f"responses_controller_version: {key} : {response}")
     return response
 
 
@@ -57,12 +52,12 @@ class MockAnsibleModule:
 
 @pytest.fixture
 def module():
-    return NdfcImageStage(MockAnsibleModule)
+    return ImageStage(MockAnsibleModule)
 
 
 @pytest.fixture
-def mock_issu_details() -> NdfcSwitchIssuDetailsBySerialNumber:
-    return NdfcSwitchIssuDetailsBySerialNumber(MockAnsibleModule)
+def mock_issu_details() -> SwitchIssuDetailsBySerialNumber:
+    return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
 
 
 # test_init
@@ -74,15 +69,15 @@ def test_init(module) -> None:
     """
     module.__init__(MockAnsibleModule)
     assert module.module == MockAnsibleModule
-    assert module.class_name == "NdfcImageStage"
+    assert module.class_name == "ImageStage"
     assert isinstance(module.properties, dict)
     assert isinstance(module.serial_numbers_done, set)
-    assert module.ndfc_version == None
+    assert module.controller_version == None
     assert module.path == None
     assert module.verb == None
     assert module.payload == None
-    assert isinstance(module.issu_detail, NdfcSwitchIssuDetailsBySerialNumber)
-    assert isinstance(module.endpoints, NdfcEndpoints)
+    assert isinstance(module.issu_detail, SwitchIssuDetailsBySerialNumber)
+    assert isinstance(module.endpoints, ApiEndpoints)
 
 
 # test_init_properties
@@ -94,46 +89,46 @@ def test_init_properties(module) -> None:
     """
     module._init_properties()
     assert isinstance(module.properties, dict)
-    assert module.properties.get("ndfc_data") == None
-    assert module.properties.get("ndfc_response") == None
-    assert module.properties.get("ndfc_result") == None
+    assert module.properties.get("response_data") == None
+    assert module.properties.get("response") == None
+    assert module.properties.get("result") == None
     assert module.properties.get("serial_numbers") == None
     assert module.properties.get("check_interval") == 10
     assert module.properties.get("check_timeout") == 1800
 
 
-# test_populate_ndfc_version
+# test_populate_controller_version
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("NdfcImageStage_12_1_2e", "12.1.2e"),
-        ("NdfcImageStage_12_1_3b", "12.1.3b"),
+        ("ImageStage_12_1_2e", "12.1.2e"),
+        ("ImageStage_12_1_3b", "12.1.3b"),
     ],
 )
-def test_populate_ndfc_version(monkeypatch, module, key, expected) -> None:
+def test_populate_controller_version(monkeypatch, module, key, expected) -> None:
     """
-    _populate_ndfc_version retrieves the controller version from NDFC.
+    _populate_controller_version retrieves the controller version from NDFC.
     This is used in commit() to populate the payload with either a misspelled
     "sereialNum" key/value (12.1.2e) or a correctly-spelled "serialNumbers"
     key/value (12.1.3b).
 
     Expectations:
-    1. module.ndfc_version should be set
+    1. module.controller_version should be set
 
     Expected results:
-    1. NdfcImageStage_12_1_2e -> module.ndfc_version == "12.1.2e"
-    2. NdfcImageStage_12_1_3b -> module.ndfc_version == "12.1.3b"
+    1. ImageStage_12_1_2e -> module.controller_version == "12.1.2e"
+    2. ImageStage_12_1_3b -> module.controller_version == "12.1.3b"
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        return response_data_ndfc_version(key)
+    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
+        return responses_controller_version(key)
 
-    monkeypatch.setattr(dcnm_send_ndfc_version, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_controller_version, mock_dcnm_send_controller_version)
 
-    module._populate_ndfc_version()
-    assert module.ndfc_version == expected
+    module._populate_controller_version()
+    assert module.controller_version == expected
 
 
 # test_prune_serial_numbers
@@ -155,11 +150,11 @@ def test_prune_serial_numbers(monkeypatch, module, mock_issu_details) -> None:
     2. module.serial_numbers != ["FDO211218FV", "FDO211218GC"]
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_prune_serial_numbers"
-        return response_data_issu_details(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImageStage_test_prune_serial_numbers"
+        return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.issu_detail = mock_issu_details
     module.serial_numbers = [
@@ -192,11 +187,11 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
     FDO2112189M should fail since imageStaged == "Failed"
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_validate_serial_numbers"
-        return response_data_issu_details(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImageStage_test_validate_serial_numbers"
+        return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.issu_detail = mock_issu_details
     module.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
@@ -209,7 +204,7 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
 
 # test_commit_serial_numbers
 
-match = r"NdfcImageStage.commit\(\) call instance.serial_numbers "
+match = r"ImageStage.commit\(\) call instance.serial_numbers "
 match += r"before calling commit\(\)."
 
 
@@ -224,7 +219,7 @@ def test_commit_serial_numbers(
     monkeypatch, module, serial_numbers_is_set, expected
 ) -> None:
     """
-    fail_json is called when NdfcImageStage.commit() is called without
+    fail_json is called when ImageStage.commit() is called without
     setting instance.serial_numbers.
 
     Expectations:
@@ -233,21 +228,21 @@ def test_commit_serial_numbers(
     2. fail_json is not called when serial_numbers is set
     """
 
-    def mock_dcnm_send_ndfc_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcVersion_get_return_code_200"
-        return response_data_ndfc_version(key)
+    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
+        key = "ControllerVersion_get_return_code_200"
+        return responses_controller_version(key)
 
     def mock_dcnm_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_validate_serial_numbers"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_validate_serial_numbers"
+        return responses_issu_details(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_validate_serial_numbers"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_validate_serial_numbers"
+        return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_image_stage, mock_dcnm_send_image_stage)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(dcnm_send_ndfc_version, mock_dcnm_send_ndfc_version)
+    monkeypatch.setattr(dcnm_send_controller_version, mock_dcnm_send_controller_version)
 
     if serial_numbers_is_set:
         module.serial_numbers = ["FDO21120U5D"]
@@ -260,10 +255,10 @@ def test_commit_serial_numbers(
 
 def test_commit_path_verb(monkeypatch, module) -> None:
     """
-    NdfcImageStage.path should be set to:
+    ImageStage.path should be set to:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
 
-    NdfcImageStage.verb should be set to:
+    ImageStage.verb should be set to:
     POST
 
     Expectations:
@@ -271,21 +266,21 @@ def test_commit_path_verb(monkeypatch, module) -> None:
     1. both self.path and self.verb should be set, per above
     """
 
-    def mock_dcnm_send_ndfc_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcVersion_get_return_code_200"
-        return response_data_ndfc_version(key)
+    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
+        key = "ControllerVersion_get_return_code_200"
+        return responses_controller_version(key)
 
     def mock_dcnm_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_validate_serial_numbers"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_validate_serial_numbers"
+        return responses_issu_details(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_validate_serial_numbers"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_validate_serial_numbers"
+        return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_image_stage, mock_dcnm_send_image_stage)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(dcnm_send_ndfc_version, mock_dcnm_send_ndfc_version)
+    monkeypatch.setattr(dcnm_send_controller_version, mock_dcnm_send_controller_version)
 
     module.serial_numbers = ["FDO21120U5D"]
     module.commit()
@@ -300,14 +295,14 @@ def test_commit_path_verb(monkeypatch, module) -> None:
 
 
 @pytest.mark.parametrize(
-    "ndfc_version, expected_serial_number_key",
+    "controller_version, expected_serial_number_key",
     [
         ("12.1.2e", "sereialNum"),
         ("12.1.3b", "serialNumbers"),
     ],
 )
 def test_commit_payload_serial_number_key_name(
-    monkeypatch, module, ndfc_version, expected_serial_number_key
+    monkeypatch, module, controller_version, expected_serial_number_key
 ) -> None:
     """
     commit() will set the payload key name for the serial number
@@ -317,24 +312,25 @@ def test_commit_payload_serial_number_key_name(
     1. The correct serial number key name should be used based on NDFC version
 
     Expected results:
-    ndfc_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
-    ndfc_version 12.1.3b -> key name "serialNumbers
+    controller_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
+    controller_version 12.1.3b -> key name "serialNumbers
     """
 
-    def mock_ndfc_version(*args, **kwargs) -> None:
-        module.ndfc_version = ndfc_version
+    def mock_controller_version(*args, **kwargs) -> None:
+        module.controller_version = controller_version
 
-    ndfc_version_patch = "ansible_collections.cisco.dcnm.plugins.modules."
-    ndfc_version_patch += "dcnm_image_upgrade.NdfcImageStage._populate_ndfc_version"
-    monkeypatch.setattr(ndfc_version_patch, mock_ndfc_version)
+    controller_version_patch = "ansible_collections.cisco.dcnm.plugins."
+    controller_version_patch += "modules.dcnm_image_upgrade."
+    controller_version_patch += "ImageStage._populate_controller_version"
+    monkeypatch.setattr(controller_version_patch, mock_controller_version)
 
     def mock_dcnm_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_validate_serial_numbers"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_validate_serial_numbers"
+        return responses_issu_details(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_commit_payload_serial_number_key_name"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_commit_payload_serial_number_key_name"
+        return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_image_stage, mock_dcnm_send_image_stage)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -363,8 +359,8 @@ def test_wait_for_image_stage_to_complete(
     4. The module should return without calling fail_json.
     """
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_wait_for_image_stage_to_complete"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_wait_for_image_stage_to_complete"
+        return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
@@ -400,8 +396,8 @@ def test_wait_for_image_stage_to_complete_stage_failed(
     4. Call fail_json on serial number FDO2112189M, imageStaged is "Failed"
     """
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_wait_for_image_stage_to_complete_fail_json"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_wait_for_image_stage_to_complete_fail_json"
+        return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
@@ -440,8 +436,8 @@ def test_wait_for_image_stage_to_complete_timout(
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_wait_for_image_stage_to_complete_timeout"
-        return response_data_issu_details(key)
+        key = "ImageStage_test_wait_for_image_stage_to_complete_timeout"
+        return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
@@ -453,7 +449,7 @@ def test_wait_for_image_stage_to_complete_timout(
     module.check_interval = 1
     module.check_timeout = 1
 
-    error_message = "NdfcImageStage._wait_for_image_stage_to_complete: "
+    error_message = "ImageStage._wait_for_image_stage_to_complete: "
     error_message += "Timed out waiting for image stage to complete. "
     error_message += "serial_numbers_done: FDO21120U5D, "
     error_message += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
@@ -474,7 +470,7 @@ def test_wait_for_current_actions_to_complete(
     """
     _wait_for_current_actions_to_complete waits until staging, validation,
     and upgrade actions are complete for all serial numbers.  It calls
-    NdfcSwitchIssuDetailsBySerialNumber.actions_in_progress() and expects
+    SwitchIssuDetailsBySerialNumber.actions_in_progress() and expects
     this to return False.  actions_in_progress() returns True until none of
     the following keys has a value of "In-Progress":
 
@@ -488,11 +484,11 @@ def test_wait_for_current_actions_to_complete(
     4.  The function should return without calling fail_json.
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_wait_for_current_actions_to_complete"
-        return response_data_issu_details(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImageStage_test_wait_for_current_actions_to_complete"
+        return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.issu_detail = mock_issu_details
     module.serial_numbers = [
@@ -524,11 +520,11 @@ def test_wait_for_current_actions_to_complete_timout(
     4.  The function should call fail_json due to timeout
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImageStage_test_wait_for_current_actions_to_complete_timeout"
-        return response_data_issu_details(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImageStage_test_wait_for_current_actions_to_complete_timeout"
+        return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.issu_detail = mock_issu_details
     module.serial_numbers = [
@@ -538,7 +534,7 @@ def test_wait_for_current_actions_to_complete_timout(
     module.check_interval = 1
     module.check_timeout = 1
 
-    error_message = "NdfcImageStage._wait_for_current_actions_to_complete: "
+    error_message = "ImageStage._wait_for_current_actions_to_complete: "
     error_message += "Timed out waiting for actions to complete. "
     error_message += "serial_numbers_done: FDO21120U5D, "
     error_message += "serial_numbers_todo: FDO21120U5D,FDO2112189M"

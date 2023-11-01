@@ -57,7 +57,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "packagemgnt_issu_get_return_code_200_ndfc_switch_issu_info_length_0": {
+    "packagemgnt_issu_get_return_code_200_switch_issu_info_length_0": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -755,7 +755,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_prune_serial_numbers": {
+    "ImageStage_test_prune_serial_numbers": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -962,7 +962,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_validate_serial_numbers": {
+    "ImageStage_test_validate_serial_numbers": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1052,7 +1052,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_wait_for_image_stage_to_complete": {
+    "ImageStage_test_wait_for_image_stage_to_complete": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1142,7 +1142,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_wait_for_image_stage_to_complete_fail_json": {
+    "ImageStage_test_wait_for_image_stage_to_complete_fail_json": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1232,7 +1232,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_wait_for_image_stage_to_complete_timeout": {
+    "ImageStage_test_wait_for_image_stage_to_complete_timeout": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1322,7 +1322,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_wait_for_current_actions_to_complete": {
+    "ImageStage_test_wait_for_current_actions_to_complete": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1412,7 +1412,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_wait_for_current_actions_to_complete_timeout": {
+    "ImageStage_test_wait_for_current_actions_to_complete_timeout": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1502,7 +1502,7 @@
             "message": ""
         }
     },
-    "NdfcImageStage_test_commit_payload_serial_number_key_name": {
+    "ImageStage_test_commit_payload_serial_number_key_name": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1592,7 +1592,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_prune_serial_numbers": {
+    "ImageValidate_test_prune_serial_numbers": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1799,7 +1799,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_validate_serial_numbers": {
+    "ImageValidate_test_validate_serial_numbers": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1889,7 +1889,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_wait_for_image_validate_to_complete": {
+    "ImageValidate_test_wait_for_image_validate_to_complete": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1979,7 +1979,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_wait_for_image_validate_to_complete_fail_json": {
+    "ImageValidate_test_wait_for_image_validate_to_complete_fail_json": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2069,7 +2069,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_wait_for_image_validate_to_complete_timeout": {
+    "ImageValidate_test_wait_for_image_validate_to_complete_timeout": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2159,7 +2159,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_wait_for_current_actions_to_complete": {
+    "ImageValidate_test_wait_for_current_actions_to_complete": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2249,7 +2249,7 @@
             "message": ""
         }
     },
-    "NdfcImageValidate_test_wait_for_current_actions_to_complete_timeout": {
+    "ImageValidate_test_wait_for_current_actions_to_complete_timeout": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2339,7 +2339,7 @@
             "message": ""
         }
     },
-    "NdfcImagePolicyAction_test_build_attach_payload": {
+    "ImagePolicyAction_test_build_attach_payload": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2546,7 +2546,7 @@
             "message": ""
         }
     },
-    "NdfcImagePolicyAction_test_build_attach_payload_fail_json": {
+    "ImagePolicyAction_test_build_attach_payload_fail_json": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",

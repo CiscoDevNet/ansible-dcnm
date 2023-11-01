@@ -3,21 +3,23 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
-    NdfcSwitchIssuDetailsByDeviceName
+# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
+#     SwitchIssuDetailsByDeviceName
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsByDeviceName
+
 from .fixture import load_fixture
 
 """
-ndfc_version: 12
-description: Verify functionality of subclass NdfcSwitchIssuDetailsByDeviceName
+controller_version: 12
+description: Verify functionality of subclass SwitchIssuDetailsByDeviceName
 """
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
+#dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
 
-# Here, we are using the superclass name, since we are sharing the
-# same response file across all subclasses.
-class_name = "NdfcSwitchIssuDetails"
-response_file = f"dcnm_image_upgrade_responses_{class_name}"
+patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
+patch_image_mgmt  = patch_module_utils + "image_mgmt."
 
+dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
 class MockAnsibleModule:
     params = {}
@@ -26,15 +28,16 @@ class MockAnsibleModule:
         raise AnsibleFailJson(msg)
 
 
-def response_data(key: str) -> Dict[str, str]:
+def responses_switch_issu_details(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
-    print(f"response_data: {key} : {response}")
+    print(f"responses_switch_issu_details: {key} : {response}")
     return response
 
 
 @pytest.fixture
 def module():
-    return NdfcSwitchIssuDetailsByDeviceName(MockAnsibleModule)
+    return SwitchIssuDetailsByDeviceName(MockAnsibleModule)
 
 
 def test_init_properties(module) -> None:
@@ -47,9 +50,9 @@ def test_init_properties(module) -> None:
     assert isinstance(module.properties, dict)
     assert isinstance(module.properties.get("action_keys"), set)
     assert module.properties.get("action_keys") == action_keys
-    assert module.properties.get("ndfc_data") == None
-    assert module.properties.get("ndfc_response") == None
-    assert module.properties.get("ndfc_result") == None
+    assert module.properties.get("response_data") == None
+    assert module.properties.get("response") == None
+    assert module.properties.get("result") == None
     assert module.properties.get("device_name") == None
 
 
@@ -61,15 +64,15 @@ def test_refresh_return_code_200(monkeypatch, module) -> None:
     """
     key = "packagemgnt_issu_get_return_code_200_one_switch"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send: {response_data(key)}")
-        return response_data(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
+        return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.refresh()
-    assert isinstance(module.ndfc_response, dict)
-    assert isinstance(module.ndfc_data, list)
+    assert isinstance(module.response, dict)
+    assert isinstance(module.response_data, list)
 
 
 def test_properties_are_set_to_expected_values(monkeypatch, module) -> None:
@@ -79,11 +82,11 @@ def test_properties_are_set_to_expected_values(monkeypatch, module) -> None:
     """
     key = "packagemgnt_issu_get_return_code_200_many_switch"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send: {response_data(key)}")
-        return response_data(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
+        return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.refresh()
     module.device_name = "leaf1"
@@ -137,63 +140,63 @@ def test_properties_are_set_to_expected_values(monkeypatch, module) -> None:
     assert module.vpc_role == None
 
 
-def test_ndfc_result_return_code_200(monkeypatch, module) -> None:
+def test_result_return_code_200(monkeypatch, module) -> None:
     """
-    ndfc_result contains expected key/values on 200 response from endpoint.
+    result contains expected key/values on 200 response from endpoint.
     endpoint: .../api/v1/imagemanagement/rest/packagemgnt/issu
     """
     key = "packagemgnt_issu_get_return_code_200_one_switch"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send: {response_data(key)}")
-        return response_data(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
+        return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.refresh()
-    assert isinstance(module.ndfc_result, dict)
-    assert module.ndfc_result.get("found") == True
-    assert module.ndfc_result.get("success") == True
+    assert isinstance(module.result, dict)
+    assert module.result.get("found") == True
+    assert module.result.get("success") == True
 
 
-def test_ndfc_result_return_code_404(monkeypatch, module) -> None:
+def test_result_return_code_404(monkeypatch, module) -> None:
     """
     fail_json is called on 404 response from malformed endpoint.
     endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
     """
     key = "packagemgnt_issu_get_return_code_404"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send: {response_data(key)}")
-        return response_data(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
+        return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     error_message = "Bad result when retriving switch information from NDFC"
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()
 
 
-def test_ndfc_result_return_code_200_empty_data(monkeypatch, module) -> None:
+def test_result_return_code_200_empty_data(monkeypatch, module) -> None:
     """
     fail_json is called on 200 response with empty DATA key.
     endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
     """
     key = "packagemgnt_issu_get_return_code_200_empty_DATA"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send: {response_data(key)}")
-        return response_data(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
+        return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    error_message = "NdfcSwitchIssuDetailsByDeviceName.refresh: "
+    error_message = "SwitchIssuDetailsByDeviceName.refresh: "
     error_message += "NDFC has no switch ISSU information."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()
 
 
-def test_ndfc_result_return_code_200_ndfc_switch_issu_info_length_0(
+def test_result_return_code_200_switch_issu_info_length_0(
     monkeypatch, module
 ) -> None:
     """
@@ -201,15 +204,15 @@ def test_ndfc_result_return_code_200_ndfc_switch_issu_info_length_0(
     endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
     """
     key = "packagemgnt_issu_get_return_code_200"
-    key += "_ndfc_switch_issu_info_length_0"
+    key += "_switch_issu_info_length_0"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send: {response_data(key)}")
-        return response_data(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
+        return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    error_message = "NdfcSwitchIssuDetailsByDeviceName.refresh: "
+    error_message = "SwitchIssuDetailsByDeviceName.refresh: "
     error_message += "NDFC has no switch ISSU information."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()

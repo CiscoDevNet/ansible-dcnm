@@ -28,15 +28,16 @@ import copy
 import json
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import NdfcImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import NdfcImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import NdfcImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import NdfcImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import NdfcImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import NdfcSwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import ImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import ImageStage
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import ImageUpgrade
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import ImageValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import ImageInstallOptions
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsByIpAddress
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
@@ -56,7 +57,7 @@ author: Cisco Systems, Inc.
 options:
     state:
         description:
-        - The state of DCNM after module completion.
+        - The state of the feature or object after module completion.
         - I(merged) and I(query) are the only states supported.
         type: str
         choices:
@@ -404,7 +405,7 @@ EXAMPLES = """
 
 """
 
-class NdfcAnsibleImageUpgrade(NdfcCommon):
+class ImageUpgradeTask(ImageUpgradeCommon):
     """
     Ansible support for image policy attach, detach, and query.
     """
@@ -413,7 +414,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         super().__init__(module)
         self.params = self.module.params
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self.log_msg(f"{self.class_name}.__init__")
         # populated in self._build_policy_attach_payload()
         self.payloads = []
@@ -457,10 +458,10 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
                 msg += f"got {switch.keys()}"
                 self.module.fail_json(msg)
 
-        self.log_msg(f"{self.class_name}.__init__: instantiate NdfcSwitchDetails")
-        self.switch_details = NdfcSwitchDetails(self.module)
-        self.log_msg(f"{self.class_name}.__init__: instantiate NdfcImagePolicies")
-        self.image_policies = NdfcImagePolicies(self.module)
+        self.log_msg(f"{self.class_name}.__init__: instantiate SwitchDetails")
+        self.switch_details = SwitchDetails(self.module)
+        self.log_msg(f"{self.class_name}.__init__: instantiate ImagePolicies")
+        self.image_policies = ImagePolicies(self.module)
 
     def get_have(self):
         """
@@ -468,7 +469,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
 
         Determine current switch ISSU state on NDFC
         """
-        self.have = NdfcSwitchIssuDetailsByIpAddress(self.module)
+        self.have = SwitchIssuDetailsByIpAddress(self.module)
         self.have.refresh()
 
     def get_want(self):
@@ -488,7 +489,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         """
         Return an itempotent want item based on the have item contents.
 
-        The have item is obtained from an instance of NdfcSwitchIssuDetails
+        The have item is obtained from an instance of SwitchIssuDetails
         created in self.get_have().
         
         want structure passed to this method:
@@ -517,7 +518,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         The returned idempotent_want structure is identical to the
         above structure, except that the policy_changed key is added,
         and values are modified based on results from the have item,
-        and the information returned by NdfcImageInstallOptions. 
+        and the information returned by ImageInstallOptions. 
 
         Caller: self.get_need_merged()
         """
@@ -556,10 +557,10 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
 
         # Get relevant install options from NDFC based on the
         # options in our want item
-        instance = NdfcImageInstallOptions(self.module)
+        instance = ImageInstallOptions(self.module)
         instance.policy_name = want["policy"]
         msg = f"REMOVE: {self.class_name}._get_idempotent_want() "
-        msg += f"calling NdfcImageInstallOptions.refresh() with "
+        msg += f"calling ImageInstallOptions.refresh() with "
         msg += f"serial_number {self.have.serial_number} "
         msg += f"ip_address {self.have.ip_address} "
         msg += f"device_name {self.have.device_name}"
@@ -883,7 +884,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
 
         NOTES:
         1.  Final application of missing default parameters is done in
-            NdfcImageUpgrade.commit()
+            ImageUpgrade.commit()
 
         Callers:
             - self.get_want
@@ -981,7 +982,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         Callers:
         - handle_merged_state
         """
-        instance = NdfcImageStage(self.module)
+        instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
 
@@ -992,11 +993,11 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         Callers:
         - handle_merged_state
         """
-        instance = NdfcImageValidate(self.module)
+        instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
-        # TODO:2 Discuss with Mike/Shangxin - NdfcImageValidate.non_disruptive
+        # TODO:2 Discuss with Mike/Shangxin - ImageValidate.non_disruptive
         # Should we add this option to the playbook?
-        # It's supported in NdfcImageValidate with default of False
+        # It's supported in ImageValidate with default of False
         # instance.non_disruptive = False
         instance.commit()
 
@@ -1035,7 +1036,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         """
         if len(devices) == 0:
             return
-        install_options = NdfcImageInstallOptions(self.module)
+        install_options = ImageInstallOptions(self.module)
         # TODO:2 Need a way to call refresh() once in __init__() and mock in unit tests
         self.switch_details.refresh()
         for device in devices:
@@ -1067,10 +1068,10 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         - handle_merged_state
         """
         self.log_msg(f"REMOVE: {self.class_name}._upgrade_images: devices: {devices}")
-        upgrade = NdfcImageUpgrade(self.module)
+        upgrade = ImageUpgrade(self.module)
         upgrade.devices = devices
         # TODO:2 Discuss with Mike/Shangxin. Upgrade option handling mutex options.
-        # I'm leaning toward doing this in NdfcImageUpgrade().validate_options()
+        # I'm leaning toward doing this in ImageUpgrade().validate_options()
         # which would cover the various scenarios and fail_json() on invalid
         # combinations.
         # For epld upgrade disrutive must be True and non_disruptive must be False
@@ -1089,13 +1090,13 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
 
         Caller: main()
         """
-        # TODO:1 Replace these with NdfcImagePolicyAction
+        # TODO:1 Replace these with ImagePolicyAction
         # See commented code below
         self._build_policy_attach_payload()
         self._send_policy_attach_payload()
 
         # Use (or not) below for policy attach/detach
-        # instance = NdfcImagePolicyAction(self.module)
+        # instance = ImagePolicyAction(self.module)
         # instance.policy_name = "NR3F"
         # instance.action = "attach" # or detach
         # instance.serial_numbers = ["FDO211218GC", "FDO211218HH"]
@@ -1172,7 +1173,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
         if len(detach_policy_devices) == 0:
             self.result = dict(changed=False, diff=[], response=[])
             return
-        instance = NdfcImagePolicyAction(self.module)
+        instance = ImagePolicyAction(self.module)
         for policy_name in detach_policy_devices:
             msg = f"REMOVE: {self.class_name}.handle_deleted_state: "
             msg += f"detach policy_name: {policy_name}"
@@ -1189,7 +1190,7 @@ class NdfcAnsibleImageUpgrade(NdfcCommon):
 
         Caller: main()
         """
-        instance = NdfcSwitchIssuDetailsByIpAddress(self.module)
+        instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
         msg = f"REMOVE: {self.class_name}.handle_query_state: "
         msg += f"Entered. self.need {self.need}"
@@ -1251,40 +1252,40 @@ def main():
         state=dict(default="merged", choices=["merged", "deleted", "query"]),
     )
 
-    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
-    dcnm_module = NdfcAnsibleImageUpgrade(module)
-    dcnm_module.validate_input()
-    dcnm_module.get_have()
-    dcnm_module.get_want()
+    ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+    task_module = ImageUpgradeTask(ansible_module)
+    task_module.validate_input()
+    task_module.get_have()
+    task_module.get_want()
 
-    if module.params["state"] == "merged":
-        dcnm_module.get_need_merged()
-    elif module.params["state"] == "deleted":
-        dcnm_module.get_need_deleted()
-    elif module.params["state"] == "query":
-        dcnm_module.get_need_query()
+    if ansible_module.params["state"] == "merged":
+        task_module.get_need_merged()
+    elif ansible_module.params["state"] == "deleted":
+        task_module.get_need_deleted()
+    elif ansible_module.params["state"] == "query":
+        task_module.get_need_query()
 
-    if module.params["state"] == "query":
-        dcnm_module.result["changed"] = False
-    if module.params["state"] in ["merged", "deleted"]:
-        if dcnm_module.need:
-            dcnm_module.result["changed"] = True
+    if ansible_module.params["state"] == "query":
+        task_module.result["changed"] = False
+    if ansible_module.params["state"] in ["merged", "deleted"]:
+        if task_module.need:
+            task_module.result["changed"] = True
         else:
-            module.exit_json(**dcnm_module.result)
+            ansible_module.exit_json(**task_module.result)
 
-    if module.check_mode:
-        dcnm_module.result["changed"] = False
-        module.exit_json(**dcnm_module.result)
+    if ansible_module.check_mode:
+        task_module.result["changed"] = False
+        ansible_module.exit_json(**task_module.result)
 
-    if dcnm_module.need:
-        if module.params["state"] == "merged":
-            dcnm_module.handle_merged_state()
-        elif module.params["state"] == "deleted":
-            dcnm_module.handle_deleted_state()
-        elif module.params["state"] == "query":
-            dcnm_module.handle_query_state()
+    if task_module.need:
+        if ansible_module.params["state"] == "merged":
+            task_module.handle_merged_state()
+        elif ansible_module.params["state"] == "deleted":
+            task_module.handle_deleted_state()
+        elif ansible_module.params["state"] == "query":
+            task_module.handle_query_state()
 
-    module.exit_json(**dcnm_module.result)
+    ansible_module.exit_json(**task_module.result)
 
 
 if __name__ == "__main__":

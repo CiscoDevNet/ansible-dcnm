@@ -3,22 +3,20 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     NdfcImageInstallOptions
-# )
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import NdfcImageInstallOptions
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import ImageInstallOptions
 
 from .fixture import load_fixture
 
 """
-ndfc_version: 12
-description: Verify functionality of class NdfcImageInstallOptions
+controller_version: 12
+description: Verify functionality of class ImageInstallOptions
 """
-class_name = "NdfcImageInstallOptions"
-response_file = f"dcnm_image_upgrade_responses_{class_name}"
 
-#dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options.dcnm_send"
+patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
+patch_image_mgmt  = patch_module_utils + "image_mgmt."
+
+dcnm_send_install_options = patch_image_mgmt + "install_options.dcnm_send"
+
 class MockAnsibleModule:
     params = {}
 
@@ -26,7 +24,8 @@ class MockAnsibleModule:
         raise AnsibleFailJson(msg)
 
 
-def response_data(key: str) -> Dict[str, str]:
+def responses_image_install_options(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_ImageInstallOptions"
     response = load_fixture(response_file).get(key)
     print(f"{key} : : {response}")
     return response
@@ -34,7 +33,7 @@ def response_data(key: str) -> Dict[str, str]:
 
 @pytest.fixture
 def module():
-    return NdfcImageInstallOptions(MockAnsibleModule)
+    return ImageInstallOptions(MockAnsibleModule)
 
 
 def test_policy_name_not_defined(module) -> None:
@@ -42,7 +41,7 @@ def test_policy_name_not_defined(module) -> None:
     fail_json() is called if policy_name is not set when refresh() is called.
     """
     module.serial_number = "FOO"
-    error_message = "NdfcImageInstallOptions.refresh: "
+    error_message = "ImageInstallOptions.refresh: "
     error_message += "instance.policy_name must be set before "
     error_message += r"calling refresh\(\)"
     with pytest.raises(AnsibleFailJson, match=error_message):
@@ -54,7 +53,7 @@ def test_serial_number_not_defined(module) -> None:
     fail_json() is called if serial_number is not set when refresh() is called.
     """
     module.policy_name = "FOO"
-    error_message = "NdfcImageInstallOptions.refresh: "
+    error_message = "ImageInstallOptions.refresh: "
     error_message += "instance.serial_number must be set before "
     error_message += r"calling refresh\(\)"
     with pytest.raises(AnsibleFailJson, match=error_message):
@@ -68,15 +67,15 @@ def test_refresh_return_code_200(monkeypatch, module) -> None:
     """
     key = "imageupgrade_install_options_post_return_code_200"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        return response_data(key)
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_install_options(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
 
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
     module.refresh()
-    assert isinstance(module.ndfc_response, dict)
+    assert isinstance(module.response, dict)
     assert module.device_name == "cvd-1314-leaf"
     assert module.err_message == ""
     assert module.epld_modules is None
@@ -88,7 +87,7 @@ def test_refresh_return_code_200(monkeypatch, module) -> None:
     assert module.version == "10.2.5"
     comp_disp = "show install all impact nxos bootflash:nxos64-cs.10.2.5.M.bin"
     assert module.comp_disp == comp_disp
-    assert module.ndfc_result.get("success") == True
+    assert module.result.get("success") == True
 
 
 def test_refresh_return_code_500(monkeypatch, module) -> None:
@@ -97,14 +96,14 @@ def test_refresh_return_code_500(monkeypatch, module) -> None:
     """
     key = "imageupgrade_install_options_post_return_code_500"
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        return response_data(key)
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_install_options(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
 
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
-    error_message = "NdfcImageInstallOptions.refresh: "
+    error_message = "ImageInstallOptions.refresh: "
     error_message += "Bad result when retrieving install-options from NDFC"
     with pytest.raises(AnsibleFailJson, match=rf"{error_message}"):
         module.refresh()
@@ -147,7 +146,7 @@ def test_invalid_value_issu(module) -> None:
     """
     fail_json() is called if issu is not a boolean.
     """
-    error_message = "NdfcImageInstallOptions.issu.setter: issu must be a "
+    error_message = "ImageInstallOptions.issu.setter: issu must be a "
     error_message += "boolean value"
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.issu = "FOO"
@@ -157,7 +156,7 @@ def test_invalid_value_epld(module) -> None:
     """
     fail_json() is called if epld is not a boolean.
     """
-    error_message = "NdfcImageInstallOptions.epld.setter: epld must be a "
+    error_message = "ImageInstallOptions.epld.setter: epld must be a "
     error_message += "boolean value"
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.epld = "FOO"
@@ -167,7 +166,7 @@ def test_invalid_value_package_install(module) -> None:
     """
     fail_json() is called if package_install is not a boolean.
     """
-    error_message = "NdfcImageInstallOptions.package_install.setter: "
+    error_message = "ImageInstallOptions.package_install.setter: "
     error_message += "package_install must be a boolean value"
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.package_install = "FOO"

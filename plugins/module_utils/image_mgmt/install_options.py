@@ -3,10 +3,10 @@ import json
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
 
-class NdfcImageInstallOptions(NdfcCommon):
+class ImageInstallOptions(ImageUpgradeCommon):
     """
     Retrieve install-options details for ONE switch from NDFC and
     provide property accessors for the policy attributes.
@@ -18,7 +18,7 @@ class NdfcImageInstallOptions(NdfcCommon):
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcImageInstallOptions(module)
+    instance = ImageInstallOptions(module)
     # Mandatory
     instance.policy_name = "NR3F"
     instance.serial_number = "FDO211218GC"
@@ -114,16 +114,16 @@ class NdfcImageInstallOptions(NdfcCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
         self.properties = {}
         self.properties["epld"] = False
         self.properties["issu"] = True
-        self.properties["ndfc_data"] = None
-        self.properties["ndfc_response"] = None
-        self.properties["ndfc_result"] = None
+        self.properties["response_data"] = None
+        self.properties["response"] = None
+        self.properties["result"] = None
         self.properties["package_install"] = False
         self.properties["policy_name"] = None
         self.properties["serial_number"] = None
@@ -150,22 +150,22 @@ class NdfcImageInstallOptions(NdfcCommon):
         msg = f"REMOVE: {self.class_name}.refresh: "
         msg += f"payload: {self.payload}"
         self.log_msg(msg)
-        self.properties["ndfc_response"] = dcnm_send(
+        self.properties["response"] = dcnm_send(
             self.module, verb, path, data=json.dumps(self.payload)
         )
         msg = f"REMOVE: {self.class_name}.refresh: "
-        msg += f"ndfc_response: {self.ndfc_response}"
+        msg += f"response: {self.response}"
         self.log_msg(msg)
-        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
+        self.properties["result"] = self._handle_response(self.response, verb)
         # TODO:2 should error message contain full response or just DATA.error?
-        if self.ndfc_result["success"] is False:
+        if self.result["success"] is False:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad result when retrieving install-options from NDFC. "
-            msg += f"NDFC response: {self.ndfc_response}"
+            msg += f"NDFC response: {self.response}"
             self.module.fail_json(msg)
 
-        self.properties["ndfc_data"] = self.ndfc_response.get("DATA")
-        self.data = self.properties["ndfc_data"]
+        self.properties["response_data"] = self.response.get("DATA")
+        self.data = self.properties["response_data"]
         if self.data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
         else:
@@ -356,25 +356,25 @@ class NdfcImageInstallOptions(NdfcCommon):
         return self.compatibility_status.get("ipAddress")
 
     @property
-    def ndfc_data(self):
+    def response_data(self):
         """
         Return the raw data from the NDFC response.
         """
-        return self.properties.get("ndfc_data")
+        return self.properties.get("response_data")
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
         Return the response from NDFC of the query.
         """
-        return self.properties.get("ndfc_response")
+        return self.properties.get("response")
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
         Return the result from NDFC of the query.
         """
-        return self.properties.get("ndfc_result")
+        return self.properties.get("result")
 
     @property
     def os_type(self):

@@ -1,20 +1,20 @@
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
 
-class NdfcImagePolicies(NdfcCommon):
+class ImagePolicies(ImageUpgradeCommon):
     """
-    Retrieve image policy details from NDFC and provide property accessors
-    for the policy attributes.
+    Retrieve image policy details from the controller and provide
+    property accessors for the policy attributes.
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcImagePolicies(module).refresh()
+    instance = ImagePolicies(module).refresh()
     instance.policy_name = "NR3F"
     if instance.name is None:
-        print("policy NR3F does not exist on NDFC")
+        print("policy NR3F does not exist on the controller")
         exit(1)
     policy_name = instance.name
     platform = instance.platform
@@ -31,7 +31,7 @@ class NdfcImagePolicies(NdfcCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self.log_msg(f"{self.class_name}.__init__ entered")
         self._init_properties()
         # TODO:2 Need a way to call refresh() in __init__ with unit-tests being able to mock it
@@ -40,49 +40,49 @@ class NdfcImagePolicies(NdfcCommon):
     def _init_properties(self):
         self.properties = {}
         self.properties["policy_name"] = None
-        self.properties["ndfc_data"] = None
-        self.properties["ndfc_response"] = None
-        self.properties["ndfc_result"] = None
+        self.properties["response_data"] = None
+        self.properties["response"] = None
+        self.properties["result"] = None
 
     def refresh(self):
         """
-        Refresh self.image_policies with current image policies from NDFC
+        Refresh self.image_policies with current image policies from the controller
         """
         path = self.endpoints.policies_info.get("path")
         verb = self.endpoints.policies_info.get("verb")
 
-        self.properties["ndfc_response"] = dcnm_send(self.module, verb, path)
-        self.log_msg(f"{self.class_name}.refresh: ndfc_response: {self.ndfc_response}")
+        self.properties["response"] = dcnm_send(self.module, verb, path)
+        self.log_msg(f"{self.class_name}.refresh: response: {self.response}")
 
-        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
-        self.log_msg(f"{self.class_name}.refresh: ndfc_result: {self.ndfc_result}")
+        self.properties["result"] = self._handle_response(self.response, verb)
+        self.log_msg(f"{self.class_name}.refresh: result: {self.result}")
 
         msg = f"REMOVE: {self.class_name}.refresh: "
-        msg += f"result: {self.ndfc_result}"
-        if not self.ndfc_result["success"]:
+        msg += f"result: {self.result}"
+        if not self.result["success"]:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad result when retriving image policy "
-            msg += "information from NDFC."
+            msg += "information from the controller."
             self.module.fail_json(msg)
 
-        data = self.ndfc_response.get("DATA").get("lastOperDataObject")
+        data = self.response.get("DATA").get("lastOperDataObject")
         if data is None:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad response when retrieving image policy "
-            msg += "information from NDFC."
+            msg += "information from the controller."
             self.module.fail_json(msg)
         if len(data) == 0:
             msg = f"{self.class_name}.refresh: "
-            msg += "NDFC has no defined image policies."
+            msg += "the controller has no defined image policies."
             self.module.fail_json(msg)
-        self.properties["ndfc_data"] = {}
+        self.properties["response_data"] = {}
         for policy in data:
             policy_name = policy.get("policyName")
             if policy_name is None:
                 msg = f"{self.class_name}.refresh: "
-                msg += "Cannot parse NDFC policy information"
+                msg += "Cannot parse policy information from the controller."
                 self.module.fail_json(msg)
-            self.properties["ndfc_data"][policy_name] = policy
+            self.properties["response_data"][policy_name] = policy
 
     def _get(self, item):
         if self.policy_name is None:
@@ -90,11 +90,12 @@ class NdfcImagePolicies(NdfcCommon):
             msg += f"instance.policy_name must be set before "
             msg += f"accessing property {item}."
             self.module.fail_json(msg)
-        if self.properties['ndfc_data'].get(self.policy_name) is None:
+        if self.properties['response_data'].get(self.policy_name) is None:
             msg = f"{self.class_name}._get: "
-            msg += f"policy_name {self.policy_name} is not defined in NDFC"
+            msg += f"policy_name {self.policy_name} is not defined on "
+            msg += "the controller."
             self.module.fail_json(msg)
-        return_item = self.make_boolean(self.properties["ndfc_data"][self.policy_name].get(item))
+        return_item = self.make_boolean(self.properties["response_data"][self.policy_name].get(item))
         return_item = self.make_none(return_item)
         return return_item
 
@@ -126,26 +127,26 @@ class NdfcImagePolicies(NdfcCommon):
         return self._get("policyName")
 
     @property
-    def ndfc_data(self):
+    def response_data(self):
         """
-        Return the parsed data from the NDFC response as a dictionary,
+        Return the parsed data from the response as a dictionary,
         keyed on policy_name.
         """
-        return self.properties["ndfc_data"]
+        return self.properties["response_data"]
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
-        Return the raw response from the NDFC response.
+        Return the raw response from the controller.
         """
-        return self.properties["ndfc_response"]
+        return self.properties["response"]
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
-        Return the raw result from the NDFC response.
+        Return the raw result.
         """
-        return self.properties["ndfc_result"]
+        return self.properties["result"]
 
     @property
     def policy_name(self):

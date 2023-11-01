@@ -1,5 +1,5 @@
 {
-    "ndfc_image_install_options": {
+    "image_install_options": {
         "devices": [
             {
                 "serialNumber": "FDO21120U5D",
@@ -10,7 +10,7 @@
         "epld": "false",
         "packageInstall": "false"
     },
-    "ndfc_image_install_options_epld_true": {
+    "image_install_options_epld_true": {
         "devices": [
             {
                 "serialNumber": "FDO21120U5D",

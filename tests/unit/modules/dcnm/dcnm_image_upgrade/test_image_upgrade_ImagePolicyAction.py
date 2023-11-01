@@ -1,6 +1,6 @@
 """
-ndfc_version: 12
-description: Verify functionality of NdfcImageStage
+controller_version: 12
+description: Verify functionality of ImageStage
 """
 
 from contextlib import contextmanager
@@ -9,13 +9,9 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     NdfcImagePolicies, NdfcImagePolicyAction,
-#     NdfcSwitchIssuDetailsBySerialNumber)
 
-# from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import NdfcImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import NdfcImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import ImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
@@ -25,15 +21,15 @@ def does_not_raise():
     yield
 
 
-# dcnm_send_patch = (
-#     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-# )
-dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details.dcnm_send"
+patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
+patch_image_mgmt  = patch_module_utils + "image_mgmt."
 
-def response_data_issu_details(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcSwitchIssuDetails"
+dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
+
+def responses_issu_details(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
-    print(f"response_data_issu_details: {key} : {response}")
+    print(f"responses_issu_details: {key} : {response}")
     return response
 
 
@@ -46,12 +42,12 @@ class MockAnsibleModule:
 
 @pytest.fixture
 def module():
-    return NdfcImagePolicyAction(MockAnsibleModule)
+    return ImagePolicyAction(MockAnsibleModule)
 
 
 @pytest.fixture
-def mock_issu_details() -> NdfcSwitchIssuDetailsBySerialNumber:
-    return NdfcSwitchIssuDetailsBySerialNumber(MockAnsibleModule)
+def mock_issu_details() -> SwitchIssuDetailsBySerialNumber:
+    return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
 
 
 # test_init
@@ -59,8 +55,8 @@ def mock_issu_details() -> NdfcSwitchIssuDetailsBySerialNumber:
 
 def test_init(module) -> None:
     module.__init__(MockAnsibleModule)
-    assert isinstance(module, NdfcImagePolicyAction)
-    assert isinstance(module.switch_issu_details, NdfcSwitchIssuDetailsBySerialNumber)
+    assert isinstance(module, ImagePolicyAction)
+    assert isinstance(module.switch_issu_details, SwitchIssuDetailsBySerialNumber)
     assert module.valid_actions == {"attach", "detach", "query"}
 
 
@@ -74,8 +70,8 @@ def test_init_properties(module) -> None:
     module._init_properties()
     assert isinstance(module.properties, dict)
     assert module.properties.get("action") == None
-    assert module.properties.get("ndfc_response") == None
-    assert module.properties.get("ndfc_result") == None
+    assert module.properties.get("response") == None
+    assert module.properties.get("result") == None
     assert module.properties.get("policy_name") == None
     assert module.properties.get("query_result") == None
     assert module.properties.get("serial_numbers") == None
@@ -98,11 +94,11 @@ def test_build_attach_payload(monkeypatch, module, mock_issu_details) -> None:
     3. module.payloads should have length 5
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImagePolicyAction_test_build_attach_payload"
-        return response_data_issu_details(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImagePolicyAction_test_build_attach_payload"
+        return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.switch_issu_details = mock_issu_details
     module.policy_name = "KR5M"
@@ -132,11 +128,11 @@ def test_build_attach_payload_fail_json(monkeypatch, module, mock_issu_details) 
     1. module.fail_json should be called because deviceName is None in the issu_details response
     """
 
-    def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-        key = "NdfcImagePolicyAction_test_build_attach_payload_fail_json"
-        return response_data_issu_details(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImagePolicyAction_test_build_attach_payload_fail_json"
+        return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     module.switch_issu_details = mock_issu_details
     module.policy_name = "KR5M"
@@ -168,7 +164,7 @@ def test_validate_request_action_none(module, mock_issu_details) -> None:
     module.serial_numbers = [
         "FDO2112189M",
     ]
-    match = "NdfcImagePolicyAction.validate_request: "
+    match = "ImagePolicyAction.validate_request: "
     match += "instance.action must be set before calling commit()"
     with pytest.raises(AnsibleFailJson, match=match):
         module.validate_request()
@@ -176,7 +172,7 @@ def test_validate_request_action_none(module, mock_issu_details) -> None:
 
 # test_validate_request_policy_name_none
 
-match = "NdfcImagePolicyAction.validate_request: "
+match = "ImagePolicyAction.validate_request: "
 match += "instance.policy_name must be set before calling commit()"
 
 
@@ -212,7 +208,7 @@ def test_validate_request_policy_name_none(
 
 # test_validate_request_serial_numbers_none
 
-match = "NdfcImagePolicyAction.validate_request: "
+match = "ImagePolicyAction.validate_request: "
 match += "instance.serial_numbers must be set before calling commit()"
 
 

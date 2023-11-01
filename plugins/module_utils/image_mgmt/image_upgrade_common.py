@@ -1,10 +1,10 @@
-class NdfcCommon:
+class ImageUpgradeCommon:
     """
     Base class for the other NDFC classes
 
     Usage (where module is an instance of AnsibleModule):
 
-    class MyNdfcClass(NdfcCommon):
+    class MyClass(ImageUpgradeCommon):
         def __init__(self, module):
             super().__init__(module)
         ...

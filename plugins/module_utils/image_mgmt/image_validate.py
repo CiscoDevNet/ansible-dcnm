@@ -1,13 +1,14 @@
 import copy
+import json
 from time import sleep
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
 
-class NdfcImageValidate(NdfcCommon):
+class ImageValidate(ImageUpgradeCommon):
     """
     Endpoint:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
@@ -16,12 +17,12 @@ class NdfcImageValidate(NdfcCommon):
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcImageValidate(module)
+    instance = ImageValidate(module)
     instance.serial_numbers = ["FDO211218HH", "FDO211218GC"]
     # non_disruptive is optional
     instance.non_disruptive = True
     instance.commit()
-    data = instance.ndfc_data
+    data = instance.response_data
 
     Request body:
     {
@@ -37,39 +38,39 @@ class NdfcImageValidate(NdfcCommon):
 
     The response is not JSON, nor is it very useful.
     Instead, we poll for validation status using
-    NdfcSwitchIssuDetailsBySerialNumber.
+    SwitchIssuDetailsBySerialNumber.
     """
 
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self._init_properties()
-        self.issu_detail = NdfcSwitchIssuDetailsBySerialNumber(self.module)
+        self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self):
         self.properties = {}
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
-        self.properties["ndfc_data"] = None
-        self.properties["ndfc_result"] = None
-        self.properties["ndfc_response"] = None
+        self.properties["response_data"] = None
+        self.properties["result"] = None
+        self.properties["response"] = None
         self.properties["non_disruptive"] = False
         self.properties["serial_numbers"] = None
 
-    # def _populate_ndfc_version(self):
+    # def _populate_controller_version(self):
     #     """
-    #     Populate self.ndfc_version with the NDFC version.
+    #     Populate self.controller_version with the NDFC version.
 
     #     TODO:3 Remove if 12.1.3b works with no changes to request/response payloads.
 
     #     Notes:
-    #     1.  This cannot go into NdfcAnsibleImageUpgradeCommon() due to circular
+    #     1.  This cannot go into ImageUpgradeCommon() due to circular
     #         imports resulting in RecursionError
     #     """
-    #     instance = NdfcVersion(self.module)
+    #     instance = ControllerVersion(self.module)
     #     instance.refresh()
-    #     self.ndfc_version = instance.version
+    #     self.controller_version = instance.version
 
     def prune_serial_numbers(self):
         """
@@ -137,19 +138,19 @@ class NdfcImageValidate(NdfcCommon):
         path = self.endpoints.image_validate.get("path")
         verb = self.endpoints.image_validate.get("verb")
         self.build_payload()
-        self.properties["ndfc_response"] = dcnm_send(
+        self.properties["response"] = dcnm_send(
             self.module, verb, path, data=json.dumps(self.payload)
         )
-        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
+        self.properties["result"] = self._handle_response(self.response, verb)
         self.log_msg(
-            f"REMOVE: {self.class_name}.commit() response: {self.ndfc_response}"
+            f"REMOVE: {self.class_name}.commit() response: {self.response}"
         )
-        self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.ndfc_result}")
-        if not self.ndfc_result["success"]:
-            msg = f"{self.class_name}.commit() failed: {self.ndfc_result}. "
-            msg += f"NDFC response was: {self.ndfc_response}"
+        self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.result}")
+        if not self.result["success"]:
+            msg = f"{self.class_name}.commit() failed: {self.result}. "
+            msg += f"NDFC response was: {self.response}"
             self.module.fail_json(msg)
-        self.properties["ndfc_data"] = self.ndfc_response.get("DATA")
+        self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_validate_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
@@ -318,28 +319,28 @@ class NdfcImageValidate(NdfcCommon):
         self.properties["non_disruptive"] = value
 
     @property
-    def ndfc_data(self):
+    def response_data(self):
         """
         Return the result of the image staging request
         for serial_numbers.
 
         instance.serial_numbers must be set first.
         """
-        return self.properties.get("ndfc_data")
+        return self.properties.get("response_data")
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
         Return the POST result from NDFC
         """
-        return self.properties.get("ndfc_result")
+        return self.properties.get("result")
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
         Return the POST response from NDFC
         """
-        return self.properties.get("ndfc_response")
+        return self.properties.get("response")
 
     @property
     def check_interval(self):

@@ -2,15 +2,15 @@ import json
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import NdfcImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import NdfcSwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
 
 
-class NdfcImagePolicyAction(NdfcCommon):
+class ImagePolicyAction(ImageUpgradeCommon):
     """
-    Perform image policy actions on NDFC on one or more switches.
+    Perform image policy actions on the controller for one or more switches.
 
     Support for the following actions:
         - attach
@@ -19,7 +19,7 @@ class NdfcImagePolicyAction(NdfcCommon):
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcImagePolicyAction(module)
+    instance = ImagePolicyAction(module)
     instance.policy_name = "NR3F"
     instance.action = "attach" # or detach, or query
     instance.serial_numbers = ["FDO211218GC", "FDO211218HH"]
@@ -39,17 +39,17 @@ class NdfcImagePolicyAction(NdfcCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self._init_properties()
-        self.image_policies = NdfcImagePolicies(self.module)
-        self.switch_issu_details = NdfcSwitchIssuDetailsBySerialNumber(self.module)
+        self.image_policies = ImagePolicies(self.module)
+        self.switch_issu_details = SwitchIssuDetailsBySerialNumber(self.module)
         self.valid_actions = {"attach", "detach", "query"}
 
     def _init_properties(self):
         self.properties = {}
         self.properties["action"] = None
-        self.properties["ndfc_response"] = None
-        self.properties["ndfc_result"] = None
+        self.properties["response"] = None
+        self.properties["result"] = None
         self.properties["policy_name"] = None
         self.properties["query_result"] = None
         self.properties["serial_numbers"] = None
@@ -146,7 +146,7 @@ class NdfcImagePolicyAction(NdfcCommon):
 
         NOTES:
         1. This method creates a list of responses and results which
-        are accessible via properties ndfc_response and ndfc_result,
+        are accessible via properties response and result,
         respectively.
         """
         self.build_attach_payload()
@@ -164,8 +164,8 @@ class NdfcImagePolicyAction(NdfcCommon):
                 self.module.fail_json(msg)
             responses.append(response)
             results.append(result)
-        self.properties["ndfc_response"] = responses
-        self.properties["ndfc_result"] = results
+        self.properties["response"] = responses
+        self.properties["result"] = results
 
     def _detach_policy(self):
         """
@@ -182,8 +182,8 @@ class NdfcImagePolicyAction(NdfcCommon):
         result = self._handle_response(response, verb)
         if not result["success"]:
             self._failure(response)
-        self.properties["ndfc_response"] = response
-        self.properties["ndfc_result"] = result
+        self.properties["response"] = response
+        self.properties["result"] = result
 
     def _query_policy(self):
         """
@@ -199,8 +199,8 @@ class NdfcImagePolicyAction(NdfcCommon):
         if not result["success"]:
             self._failure(response)
         self.properties["query_result"] = response.get("DATA")
-        self.properties["ndfc_response"] = response
-        self.properties["ndfc_result"] = result
+        self.properties["response"] = response
+        self.properties["result"] = result
 
     @property
     def query_result(self):
@@ -227,22 +227,26 @@ class NdfcImagePolicyAction(NdfcCommon):
         self.properties["action"] = value
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
-        Return the raw response from NDFC after calling commit().
+        Return the raw response from the controller.
+
+        Assumes that commit() has been called.
 
         In the case of attach, this is a list of responses.
         """
-        return self.properties.get("ndfc_response")
+        return self.properties.get("response")
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
-        Return the raw result from NDFC after calling commit().
+        Return the raw result.
+
+        Assumes that commit() has been called.
 
         In the case of attach, this is a list of results.
         """
-        return self.properties.get("ndfc_result")
+        return self.properties.get("result")
 
     @property
     def policy_name(self):

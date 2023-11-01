@@ -4,15 +4,15 @@ import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 # from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     NdfcAnsibleImageUpgradeCommon, NdfcEndpoints)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
+#     ImageUpgradeCommon, ApiEndpoints)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
 
 from .fixture import load_fixture
 
 """
-ndfc_version: 12
-description: Verify functionality of class NdfcAnsibleImageUpgradeCommon
+controller_version: 12
+description: Verify functionality of class ImageUpgradeCommon
 """
 
 
@@ -25,11 +25,11 @@ class MockAnsibleModule:
 
 @pytest.fixture
 def module():
-    # return NdfcAnsibleImageUpgradeCommon(MockAnsibleModule)
-    return NdfcCommon(MockAnsibleModule)
+    # return ImageUpgradeCommon(MockAnsibleModule)
+    return ImageUpgradeCommon(MockAnsibleModule)
 
-def responses_ndfc_ansible_image_upgrade_common(key: str) -> Dict[str, str]:
-    response_file = f"dcnm_image_upgrade_responses_NdfcAnsibleImageUpgradeCommon"
+def responses_image_upgrade_common(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_ImageUpgradeCommon"
     response = load_fixture(response_file).get(key)
     verb = response.get("METHOD")
     print(f"{key} : {verb} : {response}")
@@ -46,7 +46,7 @@ def test_init_(module) -> None:
     assert module.fd == None
     # assert module.logfile == "/tmp/dcnm_image_upgrade.log"
     assert module.logfile == "/tmp/ndfc.log"
-    # assert isinstance(module.endpoints, NdfcEndpoints)
+    # assert isinstance(module.endpoints, ApiEndpoints)
 
 
 @pytest.mark.parametrize(
@@ -68,7 +68,7 @@ def test_handle_response_post(module, key, expected) -> None:
     verify _handle_reponse() return values for 200/OK response
     to POST request
     """
-    data = responses_ndfc_ansible_image_upgrade_common(key)
+    data = responses_image_upgrade_common(key)
     result = module._handle_response(data.get("response"), data.get("verb"))
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
@@ -90,7 +90,7 @@ def test_handle_response_get(module, key, expected) -> None:
     """
     verify _handle_reponse() return values for GET requests
     """
-    data = responses_ndfc_ansible_image_upgrade_common(key)
+    data = responses_image_upgrade_common(key)
     result = module._handle_response(data.get("response"), data.get("verb"))
     # TODO: We could assert on the dictionary, with a less granular error message
     # assert result == expected
@@ -102,7 +102,7 @@ def test_handle_response_unknown_response_verb(module) -> None:
     """
     verify that fail_json() is called if a unknown request verb is provided
     """
-    data = responses_ndfc_ansible_image_upgrade_common("mock_unknown_response_verb")
+    data = responses_image_upgrade_common("mock_unknown_response_verb")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
         module._handle_response(data.get("response"), data.get("verb"))
 
@@ -125,7 +125,7 @@ def test_handle_get_response(module, key, expected) -> None:
 
     NOTE: Adding this test increases coverage by 2% according to pytest-cov
     """
-    data = responses_ndfc_ansible_image_upgrade_common(key)
+    data = responses_image_upgrade_common(key)
     result = module._handle_get_response(data.get("response"))
 
     assert result.get("success") == expected.get("success")
@@ -152,7 +152,7 @@ def test_handle_post_put_delete_response(module, key, expected) -> None:
     NOTE: This method is covered in test_handle_response_post() above, but...
     NOTE: Adding this test increases coverage by 2% according to pytest-cov
     """
-    data = responses_ndfc_ansible_image_upgrade_common(key)
+    data = responses_image_upgrade_common(key)
     result = module._handle_post_put_delete_response(data.get("response"))
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")

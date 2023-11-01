@@ -1,9 +1,9 @@
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import dcnm_send
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
 
 
-class NdfcSwitchIssuDetails(NdfcCommon):
+class SwitchIssuDetails(ImageUpgradeCommon):
     """
     Retrieve switch issu details from NDFC and provide property accessors
     for the switch attributes.
@@ -64,14 +64,14 @@ class NdfcSwitchIssuDetails(NdfcCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
         self.properties = {}
-        self.properties["ndfc_response"] = None
-        self.properties["ndfc_result"] = None
-        self.properties["ndfc_data"] = None
+        self.properties["response"] = None
+        self.properties["result"] = None
+        self.properties["response_data"] = None
         # action_keys is used in subclasses to determine if any actions
         # are in progress.
         # Property actions_in_progress returns True if so, False otherwise
@@ -88,23 +88,23 @@ class NdfcSwitchIssuDetails(NdfcCommon):
         path = self.endpoints.issu_info.get("path")
         verb = self.endpoints.issu_info.get("verb")
 
-        self.properties["ndfc_response"] = dcnm_send(self.module, verb, path)
-        self.log_msg(f"{self.class_name}.refresh: ndfc_response: {self.ndfc_response}")
+        self.properties["response"] = dcnm_send(self.module, verb, path)
+        self.log_msg(f"{self.class_name}.refresh: response: {self.response}")
 
-        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
-        self.log_msg(f"{self.class_name}.refresh: ndfc_result: {self.ndfc_result}")
+        self.properties["result"] = self._handle_response(self.response, verb)
+        self.log_msg(f"{self.class_name}.refresh: result: {self.result}")
 
         msg = f"REMOVE: {self.class_name}.refresh: "
-        msg += f"result: {self.ndfc_result}"
-        # ndfc_result for 404 response
+        msg += f"result: {self.result}"
+        # result for 404 response
         # {'found': False, 'success': True}
-        if self.ndfc_result["success"] == False or self.ndfc_result["found"] == False:
+        if self.result["success"] == False or self.result["found"] == False:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad result when retriving switch "
             msg += "information from NDFC"
             self.module.fail_json(msg)
 
-        data = self.ndfc_response.get("DATA").get("lastOperDataObject")
+        data = self.response.get("DATA").get("lastOperDataObject")
         if data is None:
             msg = f"{self.class_name}.refresh: "
             msg += "NDFC has no switch ISSU information."
@@ -114,10 +114,10 @@ class NdfcSwitchIssuDetails(NdfcCommon):
             msg += "NDFC has no switch ISSU information."
             self.module.fail_json(msg)
 
-        self.properties["ndfc_data"] = self.ndfc_response.get("DATA", {}).get(
+        self.properties["response_data"] = self.response.get("DATA", {}).get(
             "lastOperDataObject", []
         )
-        self.log_msg(f"{self.class_name}.refresh: ndfc_response: {self.ndfc_response}")
+        self.log_msg(f"{self.class_name}.refresh: response: {self.response}")
 
     @property
     def actions_in_progress(self):
@@ -137,27 +137,27 @@ class NdfcSwitchIssuDetails(NdfcCommon):
         pass
 
     @property
-    def ndfc_data(self):
+    def response_data(self):
         """
         Return the raw data retrieved from NDFC
         """
-        return self.properties["ndfc_data"]
+        return self.properties["response_data"]
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
         Return the raw response from the GET request.
         Return None otherwise
         """
-        return self.properties["ndfc_response"]
+        return self.properties["response"]
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
         Return the raw result of the GET request.
         Return None otherwise
         """
-        return self.properties["ndfc_result"]
+        return self.properties["result"]
 
     @property
     def device_name(self):
@@ -613,14 +613,14 @@ class NdfcSwitchIssuDetails(NdfcCommon):
         return self._get("vpcRole")
 
 
-class NdfcSwitchIssuDetailsByIpAddress(NdfcSwitchIssuDetails):
+class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     """
     Retrieve switch issu details from NDFC and provide property accessors
     for the switch attributes retrieved by ip address.
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcSwitchIssuDetailsByIpAddress(module)
+    instance = SwitchIssuDetailsByIpAddress(module)
     instance.refresh()
     instance.ip_address = 10.1.1.1
     image_staged = instance.image_staged
@@ -628,7 +628,7 @@ class NdfcSwitchIssuDetailsByIpAddress(NdfcSwitchIssuDetails):
     serial_number = instance.serial_number
     etc...
 
-    See NdfcSwitchIssuDetails for more details.
+    See SwitchIssuDetails for more details.
     """
 
     def __init__(self, module):
@@ -647,7 +647,7 @@ class NdfcSwitchIssuDetailsByIpAddress(NdfcSwitchIssuDetails):
         """
         super().refresh()
         self.data_subclass = {}
-        for switch in self.ndfc_data:
+        for switch in self.response_data:
             msg = f"{self.class_name}.refresh: "
             msg += f"switch {switch}"
             self.data_subclass[switch["ipAddress"]] = switch
@@ -685,14 +685,14 @@ class NdfcSwitchIssuDetailsByIpAddress(NdfcSwitchIssuDetails):
         self.properties["ip_address"] = value
 
 
-class NdfcSwitchIssuDetailsBySerialNumber(NdfcSwitchIssuDetails):
+class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
     """
     Retrieve switch issu details from NDFC and provide property accessors
     for the switch attributes retrieved by serial_number.
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcSwitchIssuDetailsBySerialNumber(module)
+    instance = SwitchIssuDetailsBySerialNumber(module)
     instance.refresh()
     instance.serial_number = "FDO211218GC"
     instance.refresh()
@@ -701,7 +701,7 @@ class NdfcSwitchIssuDetailsBySerialNumber(NdfcSwitchIssuDetails):
     ip_address = instance.ip_address
     etc...
 
-    See NdfcSwitchIssuDetails for more details.
+    See SwitchIssuDetails for more details.
 
     """
 
@@ -721,7 +721,7 @@ class NdfcSwitchIssuDetailsBySerialNumber(NdfcSwitchIssuDetails):
         """
         super().refresh()
         self.data_subclass = {}
-        for switch in self.ndfc_data:
+        for switch in self.response_data:
             self.data_subclass[switch["serialNumber"]] = switch
 
     def _get(self, item):
@@ -757,14 +757,14 @@ class NdfcSwitchIssuDetailsBySerialNumber(NdfcSwitchIssuDetails):
         self.properties["serial_number"] = value
 
 
-class NdfcSwitchIssuDetailsByDeviceName(NdfcSwitchIssuDetails):
+class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
     """
     Retrieve switch issu details from NDFC and provide property accessors
     for the switch attributes retrieved by device_name.
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcSwitchIssuDetailsByDeviceName(module)
+    instance = SwitchIssuDetailsByDeviceName(module)
     instance.refresh()
     instance.device_name = "leaf_1"
     image_staged = instance.image_staged
@@ -772,7 +772,7 @@ class NdfcSwitchIssuDetailsByDeviceName(NdfcSwitchIssuDetails):
     ip_address = instance.ip_address
     etc...
 
-    See NdfcSwitchIssuDetails for more details.
+    See SwitchIssuDetails for more details.
 
     """
 
@@ -792,7 +792,7 @@ class NdfcSwitchIssuDetailsByDeviceName(NdfcSwitchIssuDetails):
         """
         super().refresh()
         self.data_subclass = {}
-        for switch in self.ndfc_data:
+        for switch in self.response_data:
             self.data_subclass[switch["deviceName"]] = switch
 
     def _get(self, item):

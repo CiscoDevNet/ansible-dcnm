@@ -1,17 +1,17 @@
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ndfc_common import NdfcCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.endpoints import NdfcEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
 
-class NdfcSwitchDetails(NdfcCommon):
+class SwitchDetails(ImageUpgradeCommon):
     """
     Retrieve switch details from NDFC and provide property accessors
     for the switch attributes.
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = NdfcSwitchDetails(module)
+    instance = SwitchDetails(module)
     instance.refresh()
     instance.ip_address = 10.1.1.1
     fabric_name = instance.fabric_name
@@ -27,15 +27,15 @@ class NdfcSwitchDetails(NdfcCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.endpoints = NdfcEndpoints()
+        self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
         self.properties = {}
         self.properties["ip_address"] = None
-        self.properties["ndfc_data"] = None
-        self.properties["ndfc_response"] = None
-        self.properties["ndfc_result"] = None
+        self.properties["response_data"] = None
+        self.properties["response"] = None
+        self.properties["result"] = None
 
     def refresh(self):
         """
@@ -47,24 +47,24 @@ class NdfcSwitchDetails(NdfcCommon):
         verb = self.endpoints.switches_info.get("verb")
         self.log_msg(f"REMOVE: {self.class_name}.refresh: path: {path}")
         self.log_msg(f"REMOVE: {self.class_name}.refresh: verb: {verb}")
-        self.properties["ndfc_response"] = dcnm_send(self.module, verb, path)
-        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_response {self.ndfc_response}"
+        self.properties["response"] = dcnm_send(self.module, verb, path)
+        msg = f"REMOVE: {self.class_name}.refresh: self.response {self.response}"
         self.log_msg(msg)
-        self.properties["ndfc_result"] = self._handle_response(self.ndfc_response, verb)
-        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_result {self.ndfc_result}"
+        self.properties["result"] = self._handle_response(self.response, verb)
+        msg = f"REMOVE: {self.class_name}.refresh: self.result {self.result}"
         self.log_msg(msg)
 
-        if self.ndfc_response["RETURN_CODE"] != 200:
+        if self.response["RETURN_CODE"] != 200:
             msg = "Unable to retrieve switch information from NDFC. "
-            msg += f"Got response {self.ndfc_response}"
+            msg += f"Got response {self.response}"
             self.module.fail_json(msg)
 
-        data = self.ndfc_response.get("DATA")
-        self.properties["ndfc_data"] = {}
+        data = self.response.get("DATA")
+        self.properties["response_data"] = {}
         for switch in data:
-            self.properties["ndfc_data"][switch["ipAddress"]] = switch
+            self.properties["response_data"][switch["ipAddress"]] = switch
 
-        msg = f"REMOVE: {self.class_name}.refresh: self.ndfc_data {self.ndfc_data}"
+        msg = f"REMOVE: {self.class_name}.refresh: self.response_data {self.response_data}"
         self.log_msg(msg)
 
     def _get(self, item):
@@ -74,7 +74,7 @@ class NdfcSwitchDetails(NdfcCommon):
             self.module.fail_json(msg)
         return self.make_boolean(
             self.make_none(
-                self.properties["ndfc_data"][self.ip_address].get(item)
+                self.properties["response_data"][self.ip_address].get(item)
             )
         )
 
@@ -128,30 +128,30 @@ class NdfcSwitchDetails(NdfcCommon):
         return self._get("model")
 
     @property
-    def ndfc_data(self):
+    def response_data(self):
         """
         Return parsed data from the GET request.
         Return None otherwise
 
         NOTE: Keyed on ip_address
         """
-        return self.properties["ndfc_data"]
+        return self.properties["response_data"]
 
     @property
-    def ndfc_response(self):
+    def response(self):
         """
         Return the raw response from the GET request.
         Return None otherwise
         """
-        return self.properties["ndfc_response"]
+        return self.properties["response"]
 
     @property
-    def ndfc_result(self):
+    def result(self):
         """
         Return the raw result of the GET request.
         Return None otherwise
         """
-        return self.properties["ndfc_result"]
+        return self.properties["result"]
 
     @property
     def platform(self):

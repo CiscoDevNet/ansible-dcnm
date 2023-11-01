@@ -46,7 +46,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "policymgnt_policies_get_return_code_200_ndfc_has_no_defined_image_policies": {
+    "policymgnt_policies_get_return_code_200_controller_has_no_defined_image_policies": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
