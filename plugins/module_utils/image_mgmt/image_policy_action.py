@@ -1,3 +1,4 @@
+import inspect
 import json
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
@@ -39,7 +40,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.method_name = "__init__"
+        self.method_name = inspect.stack()[0][3]
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.image_policies = ImagePolicies(self.module)
@@ -47,7 +48,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.valid_actions = {"attach", "detach", "query"}
 
     def _init_properties(self):
-        self.method_name = "_init_properties"
+        self.method_name = inspect.stack()[0][3]
         self.properties = {}
         self.properties["action"] = None
         self.properties["response"] = None
@@ -63,7 +64,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         caller _attach_policy()
         """
-        self.method_name = "build_attach_payload"
+        self.method_name = inspect.stack()[0][3]
         self.payloads = []
 
         self.switch_issu_details.refresh()
@@ -91,7 +92,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         validations prior to commit() should be added here.
         """
-        self.method_name = "validate_request"
+        self.method_name = inspect.stack()[0][3]
 
         if self.action is None:
             msg = f"{self.class_name}.{self.method_name}: "
@@ -105,23 +106,14 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += "calling commit()"
             self.module.fail_json(msg)
 
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg = f"action {self.action}"
-        self.log_msg(msg)
-
         if self.action == "query":
             return
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg = f"serial_numbers {self.serial_numbers}"
-        self.log_msg(msg)
 
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
-
 
         self.image_policies.refresh()
         self.switch_issu_details.refresh()
@@ -139,7 +131,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
                 self.module.fail_json(msg)
 
     def commit(self):
-        self.method_name = "commit"
+        self.method_name = inspect.stack()[0][3]
 
         self.validate_request()
         if self.action == "attach":
@@ -162,16 +154,19 @@ class ImagePolicyAction(ImageUpgradeCommon):
         are accessible via properties response and result,
         respectively.
         """
-        self.method_name = "_attach_policy"
+        self.method_name = inspect.stack()[0][3]
 
         self.build_attach_payload()
-        path = self.endpoints.policy_attach.get("path")
-        verb = self.endpoints.policy_attach.get("verb")
+
+        self.path = self.endpoints.policy_attach.get("path")
+        self.verb = self.endpoints.policy_attach.get("verb")
+
         responses = []
         results = []
+
         for payload in self.payloads:
-            response = dcnm_send(self.module, verb, path, data=json.dumps(payload))
-            result = self._handle_response(response, verb)
+            response = dcnm_send(self.module, self.verb, self.path, data=json.dumps(payload))
+            result = self._handle_response(response, self.verb)
 
             if not result["success"]:
                 msg = f"{self.class_name}.{self.method_name}: "
@@ -192,18 +187,19 @@ class ImagePolicyAction(ImageUpgradeCommon):
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
         query_params: ?serialNumber=FDO211218GC,FDO21120U5D
         """
-        self.method_name = "_detach_policy"
+        self.method_name = inspect.stack()[0][3]
 
-        path = self.endpoints.policy_detach.get("path")
-        verb = self.endpoints.policy_detach.get("verb")
+        self.path = self.endpoints.policy_detach.get("path")
+        self.verb = self.endpoints.policy_detach.get("verb")
+
         query_params = ",".join(self.serial_numbers)
-        path += f"?serialNumber={query_params}"
-        response = dcnm_send(self.module, verb, path)
-        result = self._handle_response(response, verb)
-        if not result["success"]:
-            self._failure(response)
-        self.properties["response"] = response
-        self.properties["result"] = result
+        self.path += f"?serialNumber={query_params}"
+
+        self.properties["response"] =  dcnm_send(self.module, self.verb, self.path)
+        self.properties["result"] =  self._handle_response(self.response, self.verb)
+
+        if not self.result["success"]:
+            self._failure(self.response)
 
     def _query_policy(self):
         """
@@ -213,16 +209,18 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         self.method_name = "_query_policy"
 
-        path = self.endpoints.policy_info.get("path")
-        verb = self.endpoints.policy_info.get("verb")
-        path = path.replace("__POLICY_NAME__", self.policy_name)
-        response = dcnm_send(self.module, verb, path)
-        result = self._handle_response(response, verb)
-        if not result["success"]:
-            self._failure(response)
-        self.properties["query_result"] = response.get("DATA")
-        self.properties["response"] = response
-        self.properties["result"] = result
+        self.path = self.endpoints.policy_info.get("path")
+        self.verb = self.endpoints.policy_info.get("verb")
+
+        self.path = self.path.replace("__POLICY_NAME__", self.policy_name)
+
+        self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
+        self.properties["result"] = self._handle_response(self.response, self.verb)
+
+        if not self.result["success"]:
+            self._failure(self.response)
+
+        self.properties["query_result"] = self.response.get("DATA")
 
     @property
     def query_result(self):
