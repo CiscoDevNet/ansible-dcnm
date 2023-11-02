@@ -433,17 +433,26 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
+        self.method_name = "__init__"
         self.params = self.module.params
         self.class_name = self.__class__.__name__
         self.endpoints = ApiEndpoints()
-        self.log_msg(f"{self.class_name}.__init__")
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: entered"
+        self.log_msg(msg)
+
         # populated in self._build_policy_attach_payload()
         self.payloads = []
 
         self.config = module.params.get("config")
-        self.log_msg(f"{self.class_name}.__init__() self.config {self.config}")
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"self.config: {self.config}"
+        self.log_msg(msg)
+
         if not isinstance(self.config, dict):
-            msg = "expected dict type for self.config. "
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "expected dict type for self.config. "
             msg = +f"got {type(self.config).__name__}"
             self.module.fail_json(msg)
 
@@ -460,28 +469,26 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.mandatory_switch_keys = {"ip_address"}
 
         if not self.mandatory_global_keys.issubset(self.config):
-            msg = f"{self.class_name}.__init__: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "Missing mandatory key(s) in playbook global config. "
             msg += f"expected {self.mandatory_global_keys}, "
             msg += f"got {self.config.keys()}"
             self.module.fail_json(msg)
 
         if self.config["switches"] is None:
-            msg = f"{self.class_name}.__init__: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "missing list of switches in playbook config."
             self.module.fail_json(msg)
 
         for switch in self.config["switches"]:
             if not self.mandatory_switch_keys.issubset(switch):
-                msg = f"{self.class_name}.__init__: "
+                msg = f"{self.class_name}.{self.method_name}: "
                 msg += f"missing mandatory key(s) in playbook switch config. "
                 msg += f"expected {self.mandatory_switch_keys}, "
                 msg += f"got {switch.keys()}"
                 self.module.fail_json(msg)
 
-        self.log_msg(f"{self.class_name}.__init__: instantiate SwitchDetails")
         self.switch_details = SwitchDetails(self.module)
-        self.log_msg(f"{self.class_name}.__init__: instantiate ImagePolicies")
         self.image_policies = ImagePolicies(self.module)
 
     def get_have(self):
@@ -490,6 +497,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Determine current switch ISSU state on NDFC
         """
+        self.method_name = "get_have"
         self.have = SwitchIssuDetailsByIpAddress(self.module)
         self.have.refresh()
 
@@ -499,13 +507,16 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Update self.want_create for all switches defined in the playbook
         """
+        self.method_name = "get_want"
         self._merge_global_and_switch_configs(self.config)
         self._validate_switch_configs()
         if not self.switch_configs:
             return
-        self.log_msg(
-            f"{self.class_name}.get_want() self.switch_configs: {self.switch_configs}"
-        )
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"self.switch_configs: {self.switch_configs}"
+        self.log_msg(msg)
+
         self.want_create = self.switch_configs
 
     def _get_idempotent_want(self, want):
@@ -545,24 +556,30 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: self.get_need_merged()
         """
-        self.log_msg(f"{self.class_name}._get_idempotent_want() want: {want}")
+        self.method_name = "_get_idempotent_want"
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"want: {want}"
+        self.log_msg(msg)
+
         self.have.ip_address = want["ip_address"]
 
         want["policy_changed"] = True
         # The switch does not have an image policy attached.
         # Return the want item as-is with policy_changed = True
         if self.have.serial_number is None:
-            self.log_msg(
-                f"{self.class_name}._get_idempotent_want() no serial_number. returning want: {want}"
-            )
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+            msg += f"no serial_number. return want: {want}"
+            self.log_msg(msg)
             return want
+
         # The switch has an image policy attached which is
         # different from the want policy.
         # Return the want item as-is with policy_changed = True
         if want["policy"] != self.have.policy:
-            self.log_msg(
-                f"{self.class_name}._get_idempotent_want() different policy attached. returning want: {want}"
-            )
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+            msg += f"different policy attached. return want: {want}"
+            self.log_msg(msg)
             return want
 
         # start with a copy of the want item
@@ -590,12 +607,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         # options in our want item
         instance = ImageInstallOptions(self.module)
         instance.policy_name = want["policy"]
-        msg = f"REMOVE: {self.class_name}._get_idempotent_want() "
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"calling ImageInstallOptions.refresh() with "
         msg += f"serial_number {self.have.serial_number} "
         msg += f"ip_address {self.have.ip_address} "
         msg += f"device_name {self.have.device_name}"
         self.log_msg(msg)
+
         instance.serial_number = self.have.serial_number
         instance.epld = want["upgrade"]["epld"]
         instance.issu = want["upgrade"]["nxos"]
@@ -603,9 +622,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         if instance.epld_modules is None:
             idempotent_want["upgrade"]["epld"] = False
-        self.log_msg(
-            f"REMOVE: {self.class_name}._get_idempotent_want() returned idempotent_want: {idempotent_want}"
-        )
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f" return {idempotent_want}"
+        self.log_msg(msg)
+
         return idempotent_want
 
     def get_need_merged(self):
@@ -613,9 +634,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Caller: main()
 
         For merged state, populate self.need list() with items from
-        our want list that are not in our have list.  These items will be sent
-        to NDFC.
+        our want list that are not in our have list.  These items will
+        be sent to the controller.
         """
+        self.method_name = "get_need_merged"
         need = []
 
         for want_create in self.want_create:
@@ -631,7 +653,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                     continue
                 need.append(idempotent_want)
         self.need = need
-        msg = f"REMOVE: {self.class_name}.get_need_merged: "
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"need: {self.need}"
         self.log_msg(msg)
 
@@ -640,8 +663,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Caller: main()
 
         For deleted state, populate self.need list() with items from our want
-        list that are not in our have list.  These items will be sent to NDFC.
+        list that are not in our have list.  These items will be sent to
+        the controller.
         """
+        self.method_name = "get_need_deleted"
         need = []
         for want in self.want_create:
             self.have.ip_address = want["ip_address"]
@@ -656,9 +681,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         Caller: main()
 
-        For query state, populate self.need list() with all items from our want
-        list.  These items will be sent to NDFC.
+        For query state, populate self.need list() with all items from
+        our want list.  These items will be sent to the controller.
         """
+        self.method_name = "get_need_query"
         need = []
         for want in self.want_create:
             need.append(want)
@@ -771,17 +797,16 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Validate the playbook parameters
         """
+        self.method_name = "validate_input"
         state = self.params["state"]
-        self.log_msg(f"{self.class_name}.validate_input: state: {state}")
 
         if state not in ["merged", "deleted", "query"]:
-            msg = f"This module supports deleted, merged, and query states. Got state {state}"
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "This module supports deleted, merged, and query states. "
+            msg += f"Got state {state}"
             self.module.fail_json(msg)
 
         if state == "merged":
-            self.log_msg(
-                f"{self.class_name}.validate_input: call _validate_input_for_merged_state()"
-            )
             self._validate_input_for_merged_state()
             return
         if state == "deleted":
@@ -797,18 +822,23 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Validate that self.config contains appropriate values for merged state
         """
+        self.method_name = "_validate_input_for_merged_state"
+
         if not self.config:
-            msg = "config: element is mandatory for state merged"
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "config: element is mandatory for state merged"
             self.module.fail_json(msg)
 
         params_spec = self._build_params_spec_for_merged_state()
 
-        self.log_msg(
-            f"{self.class_name}._validate_input_for_merged_state: params_spec: {params_spec}"
-        )
-        self.log_msg(
-            f"{self.class_name}._validate_input_for_merged_state: self.config: {self.config}"
-        )
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"params_spec: {params_spec}"
+        self.log_msg(msg)
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"self.config: {self.config}"
+        self.log_msg(msg)
+
         valid_params, invalid_params = validate_list_of_dicts(
             self.config.get("switches"), params_spec, self.module
         )
@@ -817,7 +847,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.validated = copy.deepcopy(valid_params)
 
         if invalid_params:
-            msg = "Invalid parameters in playbook: "
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
 
@@ -831,9 +862,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         1. This is currently identical to _validate_input_for_merged_state()
         2. Adding in case there are differences in the future
         """
+        self.method_name = "_validate_input_for_deleted_state"
+
         params_spec = self._build_params_spec_for_merged_state()
         if not self.config:
-            msg = "config: element is mandatory for state deleted"
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "config: element is mandatory for state deleted"
             self.module.fail_json(msg)
 
         valid_params, invalid_params = validate_list_of_dicts(
@@ -844,7 +878,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.validated = copy.deepcopy(valid_params)
 
         if invalid_params:
-            msg = "Invalid parameters in playbook: "
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
 
@@ -858,9 +893,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         1. This is currently identical to _validate_input_for_merged_state()
         2. Adding in case there are differences in the future
         """
+        self.method_name = "_validate_input_for_query_state"
         params_spec = self._build_params_spec_for_merged_state()
+
         if not self.config:
-            msg = "config: element is mandatory for state query"
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "config: element is mandatory for state query"
             self.module.fail_json(msg)
 
         valid_params, invalid_params = validate_list_of_dicts(
@@ -871,7 +909,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.validated = copy.deepcopy(valid_params)
 
         if invalid_params:
-            msg = "Invalid parameters in playbook: "
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
 
@@ -890,30 +929,36 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         5.  If global_config and switch_config are both missing a
             mandatory parameter, fail.
         """
+        self.method_name = "_merge_global_and_switch_configs"
+
         if not config.get("switches"):
-            msg = f"{self.class_name}._merge_global_and_switch_configs: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "playbook is missing list of switches"
             self.module.fail_json(msg)
 
-        msg = f"REMOVE: {self.class_name}._merge_global_and_switch_configs: "
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"config: {config}"
         self.log_msg(msg)
+
         global_config = {}
         global_config["policy"] = config.get("policy")
         global_config["stage"] = config.get("stage")
         global_config["upgrade"] = config.get("upgrade")
         global_config["options"] = config.get("options")
         global_config["validate"] = config.get("validate")
-        msg = f"REMOVE: {self.class_name}._merge_global_and_switch_configs: "
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"global_config: {global_config}"
         self.log_msg(msg)
+
         self.switch_configs = []
         for switch in config["switches"]:
             switch_config = global_config.copy() | switch.copy()
-            msg = f"REMOVE: {self.class_name}._merge_global_and_switch_configs: "
+            self.switch_configs.append(switch_config)
+
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
             msg += f"merged switch_config: {switch_config}"
             self.log_msg(msg)
-            self.switch_configs.append(switch_config)
 
     def _validate_switch_configs(self):
         """
@@ -928,34 +973,40 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.get_want
         """
+        self.method_name = "_validate_switch_configs"
         for switch in self.switch_configs:
-            msg = f"REMOVE: {self.class_name}._validate_switch_configs: "
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
             msg += f"switch: {switch}"
             self.log_msg(msg)
+
             if not switch.get("ip_address"):
+                msg = f"{self.class_name}.{self.method_name}: "
                 msg = "playbook is missing ip_address for at least one switch"
                 self.module.fail_json(msg)
+
             # for query state, the only mandatory parameter is ip_address
             # so skip the remaining checks
             if self.params.get("state") == "query":
                 continue
+
             if switch.get("policy") is None:
-                msg = "playbook is missing image policy for switch "
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += "playbook is missing image policy for switch "
                 msg += f"{switch.get('ip_address')} "
                 msg += "and global image policy is not defined."
                 self.module.fail_json(msg)
 
     def _build_policy_attach_payload(self):
         """
-        Build the payload for the policy attach request to NDFC
-        Verify that the image policy exists on NDFC
+        Build the payload for the policy attach request
+        Verify that the image policy exists on the controller
         Verify that the image policy supports the switch platform
 
         Callers:
             - self.handle_merged_state
         """
+        self.method_name = "_build_policy_attach_payload"
         self.payloads = []
-        # TODO:2 Need a way to call refresh() once in __init__() and mock in unit tests
         self.switch_details.refresh()
         self.image_policies.refresh()
         for switch in self.need:
@@ -967,13 +1018,17 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             # Fail if the image policy does not exist.
             # Image policy creation is handled by a different module.
             if self.image_policies.name is None:
-                msg = f"policy {switch.get('policy')} does not exist on NDFC"
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += f"policy {switch.get('policy')} does not exist on "
+                msg += "the controller"
                 self.module.fail_json(msg)
 
             # Fail if the image policy does not support the switch platform
             if self.switch_details.platform not in self.image_policies.platform:
-                msg = f"policy {switch.get('policy')} does not support platform "
-                msg += f"{self.switch_details.platform}. {switch.get('policy')} "
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += f"policy {switch.get('policy')} does not support "
+                msg += f"platform {self.switch_details.platform}. "
+                msg += f"Policy {switch.get('policy')} "
                 msg += "supports the following platform(s): "
                 msg += f"{self.image_policies.platform}"
                 self.module.fail_json(msg)
@@ -990,8 +1045,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
             for item in payload:
                 if payload[item] is None:
-                    msg = f"Unable to determine {item} for switch {switch.get('ip_address')}. "
-                    msg += "Please verify that the switch is managed by NDFC."
+                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg += f"Unable to determine {item} for switch "
+                    msg += f"{switch.get('ip_address')}. "
+                    msg += "Please verify that the switch is managed by "
+                    msg += "the controller."
                     self.module.fail_json(msg)
             self.payloads.append(payload)
 
@@ -1002,8 +1060,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.handle_merged_state
         """
+        self.method_name = "_send_policy_attach_payload"
         if len(self.payloads) == 0:
             return
+
         path = self.endpoints.policy_attach.get("path")
         verb = self.endpoints.policy_attach.get("verb")
         payload = {}
@@ -1016,11 +1076,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def _stage_images(self, serial_numbers):
         """
-        Initiate image staging to the switch(es) associated with serial_numbers
+        Initiate image staging to the switch(es) associated
+        with serial_numbers
 
         Callers:
         - handle_merged_state
         """
+        self.method_name = "_stage_images"
         instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
@@ -1032,6 +1094,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
+        self.method_name = "_validate_images"
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
         # TODO:2 Discuss with Mike/Shangxin - ImageValidate.non_disruptive
@@ -1073,15 +1136,16 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - self.handle_merged_state
         """
+        self.method_name = "_verify_install_options"
         if len(devices) == 0:
             return
         install_options = ImageInstallOptions(self.module)
-        # TODO:2 Need a way to call refresh() once in __init__() and mock in unit tests
         self.switch_details.refresh()
         for device in devices:
-            self.log_msg(
-                f"REMOVE: {self.class_name}._verify_install_options: device: {device}"
-            )
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+            msg += f"device: {device}"
+            self.log_msg(msg)
+
             self.switch_details.ip_address = device.get("ip_address")
             install_options.serial_number = self.switch_details.serial_number
             install_options.policy_name = device["policy"]
@@ -1092,7 +1156,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 install_options.status not in ["Success", "Skipped"]
                 and device["upgrade"]["nxos"] is True
             ):
-                msg = f"NXOS upgrade is set to True for switch  "
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += f"NXOS upgrade is set to True for switch  "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += f"NX-OS image"
@@ -1101,6 +1166,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 install_options.epld_modules is None
                 and device["upgrade"]["epld"] is True
             ):
+                msg = f"{self.class_name}.{self.method_name}: "
                 msg = f"EPLD upgrade is set to True for switch "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
@@ -1114,18 +1180,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        self.log_msg(f"REMOVE: {self.class_name}._upgrade_images: devices: {devices}")
+        self.method_name = "_upgrade_images"
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"devices: {devices}"
+        self.log_msg(msg)
+
         upgrade = ImageUpgrade(self.module)
         upgrade.devices = devices
-        # TODO:2 Discuss with Mike/Shangxin. Upgrade option handling mutex options.
-        # I'm leaning toward doing this in ImageUpgrade().validate_options()
-        # which would cover the various scenarios and fail_json() on invalid
-        # combinations.
-        # For epld upgrade disrutive must be True and non_disruptive must be False
-        # upgrade.epld_upgrade = True
-        # upgrade.disruptive = True
-        # upgrade.non_disruptive = False
-        # upgrade.epld_module = "ALL"
         upgrade.commit()
 
     def handle_merged_state(self):
@@ -1137,6 +1199,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
+        self.method_name = "handle_merged_state"
         # TODO:1 Replace these with ImagePolicyAction
         # See commented code below
         self._build_policy_attach_payload()
@@ -1155,11 +1218,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         validate_devices = []
         upgrade_devices = []
 
-        # TODO:2 Need a way to call refresh() once in __init__() and mock in unit tests
         self.switch_details.refresh()
         for switch in self.need:
-            msg = f"REMOVE: {self.class_name}.handle_merged_state: switch: {switch}"
+
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+            msg += f"switch: {switch}"
             self.log_msg(msg)
+
             self.switch_details.ip_address = switch.get("ip_address")
             device = {}
             device["serial_number"] = self.switch_details.serial_number
@@ -1176,18 +1241,20 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             ):
                 upgrade_devices.append(switch)
 
-        msg = f"REMOVE: {self.class_name}.handle_merged_state: stage_devices: {stage_devices}"
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"stage_devices: {stage_devices}"
         self.log_msg(msg)
         self._stage_images(stage_devices)
 
-        self.log_msg(
-            f"REMOVE: {self.class_name}.handle_merged_state: validate_devices: {validate_devices}"
-        )
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"validate_devices: {validate_devices}"
+        self.log_msg(msg)
         self._validate_images(validate_devices)
 
-        self.log_msg(
-            f"REMOVE: {self.class_name}.handle_merged_state: upgrade_devices: {upgrade_devices}"
-        )
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"upgrade_devices: {upgrade_devices}"
+        self.log_msg(msg)
+
         self._verify_install_options(upgrade_devices)
         self._upgrade_images(upgrade_devices)
 
@@ -1197,11 +1264,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        msg = f"REMOVE: {self.class_name}.handle_deleted_state: "
+        self.method_name = "handle_deleted_state"
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"Entered with self.need {self.need}"
         self.log_msg(msg)
+
         detach_policy_devices = {}
-        # TODO:2 Need a way to call refresh() once in __init__() and mock in unit tests
         self.switch_details.refresh()
         self.image_policies.refresh()
         for switch in self.need:
@@ -1214,7 +1283,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             detach_policy_devices[self.image_policies.policy_name].append(
                 self.switch_details.serial_number
             )
-        msg = f"REMOVE: {self.class_name}.handle_deleted_state: "
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"detach_policy_devices: {detach_policy_devices}"
         self.log_msg(msg)
 
@@ -1223,10 +1292,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             return
         instance = ImagePolicyAction(self.module)
         for policy_name in detach_policy_devices:
-            msg = f"REMOVE: {self.class_name}.handle_deleted_state: "
+            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
             msg += f"detach policy_name: {policy_name}"
             msg += f" from devices: {detach_policy_devices[policy_name]}"
             self.log_msg(msg)
+
             instance.policy_name = policy_name
             instance.action = "detach"
             instance.serial_numbers = detach_policy_devices[policy_name]
@@ -1238,20 +1308,25 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
+        self.method_name = "handle_query_state"
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
-        msg = f"REMOVE: {self.class_name}.handle_query_state: "
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"Entered. self.need {self.need}"
         self.log_msg(msg)
+
         query_devices = []
         for switch in self.need:
             instance.ip_address = switch.get("ip_address")
             if instance.filtered_data is None:
                 continue
             query_devices.append(instance.filtered_data)
-        msg = f"REMOVE: {self.class_name}.handle_query_state: "
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
         msg += f"query_policies: {query_devices}"
         self.log_msg(msg)
+
         self.result["response"] = query_devices
         self.result["diff"] = []
         self.result["changed"] = False
