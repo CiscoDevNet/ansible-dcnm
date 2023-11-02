@@ -24,7 +24,9 @@ class ImageUpgradeCommon:
         self.module = module
 
     def _handle_response(self, response, verb):
-        self.method_name = inspect.stack()[0][3]
+        # don't add self.method_name to this method since
+        # it is called by other methods and we want their
+        # method_names in the log
 
         if verb == "GET":
             return self._handle_get_response(response)
@@ -52,7 +54,9 @@ class ImageUpgradeCommon:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"
             - True otherwise
         """
-        self.method_name = inspect.stack()[0][3]
+        # don't add self.method_name to this method since
+        # it is called by other methods and we want their
+        # method_names in the log
 
         result = {}
         success_return_codes = {200, 404}
@@ -89,7 +93,9 @@ class ImageUpgradeCommon:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"
             - True otherwise
         """
-        self.method_name = inspect.stack()[0][3]
+        # don't add self.method_name to this method since
+        # it is called by other methods and we want their
+        # method_names in the log
 
         result = {}
         if response.get("ERROR") is not None:
