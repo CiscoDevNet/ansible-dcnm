@@ -71,8 +71,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.class_name = self.__class__.__name__
         self.method_name = inspect.stack()[0][3]
         self.endpoints = ApiEndpoints()
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: entered"
-        self.log_msg(msg)
         self._init_properties()
 
     def _init_properties(self):
@@ -101,14 +99,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"response: {self.response}"
-        self.log_msg(msg)
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"result: {self.result}"
-        self.log_msg(msg)
-
         if self.result["success"] == False or self.result["found"] == False:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retriving switch "
@@ -130,7 +120,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.properties["response_data"] = self.response.get("DATA", {}).get(
             "lastOperDataObject", []
         )
-        self.log_msg(f"{self.class_name}.refresh: response: {self.response}")
 
     @property
     def actions_in_progress(self):
