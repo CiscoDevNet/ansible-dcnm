@@ -210,8 +210,8 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
 
 # test_commit_serial_numbers
 
-match = r"ImageStage.commit\(\) call instance.serial_numbers "
-match += r"before calling commit\(\)."
+match = r"ImageStage.commit: call instance.serial_numbers "
+match += r"before calling commit."
 
 
 @pytest.mark.parametrize(

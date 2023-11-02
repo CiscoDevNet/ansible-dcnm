@@ -1,13 +1,19 @@
 import copy
+import inspect
 import json
 from time import sleep
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import ControllerVersion
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
+    ControllerVersion
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
+
 
 class ImageStage(ImageUpgradeCommon):
     """
@@ -75,6 +81,7 @@ class ImageStage(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
+        self.method_name = inspect.stack()[0][3]
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.serial_numbers_done = set()
@@ -85,6 +92,7 @@ class ImageStage(ImageUpgradeCommon):
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self):
+        self.method_name = inspect.stack()[0][3]
         self.properties = {}
         self.properties["serial_numbers"] = None
         self.properties["response_data"] = None
@@ -101,6 +109,7 @@ class ImageStage(ImageUpgradeCommon):
         1.  This cannot go into ImageUpgradeCommon() due to circular
             imports resulting in RecursionError
         """
+        self.method_name = inspect.stack()[0][3]
         instance = ControllerVersion(self.module)
         instance.refresh()
         self.controller_version = instance.version
@@ -110,28 +119,33 @@ class ImageStage(ImageUpgradeCommon):
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
         """
+        self.method_name = inspect.stack()[0][3]
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
             self.issu_detail.serial_number = serial_number
             self.issu_detail.refresh()
             if self.issu_detail.image_staged == "Success":
-                msg = f"REMOVE: {self.class_name}.prune_serial_numbers: "
+                self.serial_numbers.remove(serial_number)
+
+                msg = f"REMOVE: {self.class_name}.{self.method_name}: "
                 msg += "image already staged for "
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
                 msg += f"{self.issu_detail.serial_number}."
                 self.log_msg(msg)
-                self.serial_numbers.remove(serial_number)
 
     def validate_serial_numbers(self):
         """
         Fail if the image_staged state for any serial_number
         is Failed.
         """
+        self.method_name = inspect.stack()[0][3]
         for serial_number in self.serial_numbers:
             self.issu_detail.serial_number = serial_number
             self.issu_detail.refresh()
+
             if self.issu_detail.image_staged == "Failed":
+                msg = f"{self.class_name}.{self.method_name}: "
                 msg = "Image staging is failing for the following switch: "
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
@@ -139,22 +153,23 @@ class ImageStage(ImageUpgradeCommon):
                 msg += f"Check the switch connectivity to the controller "
                 msg += "and try again."
                 self.module.fail_json(msg)
-            else:
-                self.log_msg(f"Image staging is not failing for the following switch: {self.issu_detail.serial_number}")
 
     def commit(self):
         """
         Commit the image staging request to the controller and wait
         for the images to be staged.
         """
+        self.method_name = inspect.stack()[0][3]
+
         if self.serial_numbers is None:
-            msg = f"{self.class_name}.commit() call instance.serial_numbers "
-            msg += "before calling commit()."
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "call instance.serial_numbers "
+            msg += "before calling commit."
             self.module.fail_json(msg)
+
         if len(self.serial_numbers) == 0:
-            msg = f"REMOVE: {self.class_name}.commit() no serial numbers to stage."
-            self.log_msg(msg)
             return
+
         self.prune_serial_numbers()
         self.validate_serial_numbers()
         self._wait_for_current_actions_to_complete()
@@ -162,27 +177,34 @@ class ImageStage(ImageUpgradeCommon):
         self.path = self.endpoints.image_stage.get("path")
         self.verb = self.endpoints.image_stage.get("verb")
 
-        self.log_msg(f"REMOVE: {self.class_name}.commit() path: {self.path}")
-        self.log_msg(f"REMOVE: {self.class_name}.commit() verb: {self.verb}")
         self.payload = {}
         self._populate_controller_version()
+
         if self.controller_version == "12.1.2e":
             # Yes, version 12.1.2e wants serialNum to be misspelled
             self.payload["sereialNum"] = self.serial_numbers
         else:
             self.payload["serialNumbers"] = self.serial_numbers
+
         self.properties["response"] = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
         self.properties["result"] = self._handle_response(self.response, self.verb)
-        self.log_msg(
-            f"REMOVE: {self.class_name}.commit() response: {self.response}"
-        )
-        self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.result}")
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"response: {self.response}"
+        self.log_msg(msg)
+
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg += f"result: {self.result}"
+        self.log_msg(msg)
+
         if not self.result["success"]:
-            msg = f"{self.class_name}.commit() failed: {self.result}. "
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
             self.module.fail_json(msg)
+
         self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_stage_to_complete()
 
@@ -192,66 +214,53 @@ class ImageStage(ImageUpgradeCommon):
         progress.  Wait for all actions to complete before staging image.
         Actions include image staging, image upgrade, and image validation.
         """
+        self.method_name = inspect.stack()[0][3]
+
         self.serial_numbers_done = set()
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
         timeout = self.check_timeout
+
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
+
                 self.issu_detail.serial_number = serial_number
                 self.issu_detail.refresh()
-                msg = f"REMOVE: {self.class_name}."
-                msg += "_wait_for_current_actions_to_complete: "
-                msg += f"{serial_number} actions in progress: "
-                msg += f"{self.issu_detail.actions_in_progress}, "
-                msg += f"{timeout} seconds remaining."
-                self.log_msg(msg)
+
                 if self.issu_detail.actions_in_progress is False:
-                    msg = f"REMOVE: {self.class_name}."
-                    msg += "_wait_for_current_actions_to_complete: "
-                    msg += f"{serial_number} no actions in progress. "
-                    msg += f"OK to proceed. {timeout} seconds remaining."
-                    self.log_msg(msg)
                     self.serial_numbers_done.add(serial_number)
+
         if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}."
-            msg += "_wait_for_current_actions_to_complete: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += f"Timed out waiting for actions to complete. "
             msg += f"serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += f"serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.log_msg(msg)
             self.module.fail_json(msg)
 
     def _wait_for_image_stage_to_complete(self):
         """
         # Wait for image stage to complete
         """
-        # We're promoting serial_numbers_done to a class-level attribute
-        # so that it can be used in unit test asserts.
+        self.method_name = inspect.stack()[0][3]
+
         self.serial_numbers_done = set()
         timeout = self.check_timeout
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
+
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
-            msg = f"REMOVE: {self.class_name}."
-            msg += "_wait_for_image_stage_to_complete: "
-            msg += f"seconds remaining: {timeout}, "
-            msg += f"serial_numbers_todo: {sorted(list(serial_numbers_todo))}"
-            self.log_msg(msg)
-            msg = f"REMOVE: {self.class_name}."
-            msg += "_wait_for_image_stage_to_complete: "
-            msg += f"seconds remaining: {timeout}, "
-            msg += f"serial_numbers_done: {sorted(list(self.serial_numbers_done))}"
-            self.log_msg(msg)
+
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
+
                 self.issu_detail.serial_number = serial_number
                 self.issu_detail.refresh()
                 ip_address = self.issu_detail.ip_address
@@ -259,54 +268,23 @@ class ImageStage(ImageUpgradeCommon):
                 staged_percent = self.issu_detail.image_staged_percent
                 staged_status = self.issu_detail.image_staged
 
-                msg = f"REMOVE: {self.class_name}."
-                msg += "_wait_for_image_stage_to_complete: "
-                msg += f"Seconds remaining {timeout}: "
-                msg += f"{device_name}, {serial_number}, {ip_address} "
-                msg += f"image staged percent: {staged_percent}"
-                self.log_msg(msg)
-
                 if staged_status == "Failed":
-                    msg = f"Seconds remaining {timeout}: stage image failed "
+                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg += f"Seconds remaining {timeout}: stage image failed "
                     msg += f"for {device_name}, {serial_number}, {ip_address}. "
                     msg += f"image staged percent: {staged_percent}"
                     self.module.fail_json(msg)
 
                 if staged_status == "Success":
-                    msg = f"REMOVE: {self.class_name}."
-                    msg += "_wait_for_image_stage_to_complete: "
-                    msg += f"Seconds remaining {timeout}: stage image complete for "
-                    msg += f"for {device_name}, {serial_number}, {ip_address}. "
-                    msg += f"image staged percent: {staged_percent}"
-                    self.log_msg(msg)
                     self.serial_numbers_done.add(serial_number)
 
-                # if staged_status == None:
-                #     msg = f"REMOVE: {self.class_name}."
-                #     msg += "_wait_for_image_stage_to_complete: "
-                #     msg += f"Seconds remaining {timeout}: stage image "
-                #     msg += "not started for "
-                #     msg += f"{device_name}, {serial_number}, {ip_address}. "
-                #     msg += f"image staged percent: {staged_percent}"
-                #     self.log_msg(msg)
-
-                # if staged_status == "In Progress":
-                #     msg = f"REMOVE: {self.class_name}."
-                #     msg += "_wait_for_image_stage_to_complete: "
-                #     msg += f"Seconds remaining {timeout}: stage image "
-                #     msg += f"{staged_status} for "
-                #     msg += f"{device_name}, {serial_number}, {ip_address}. "
-                #     msg += f"image staged percent: {staged_percent}"
-                #     self.log_msg(msg)
         if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}."
-            msg += "_wait_for_image_stage_to_complete: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += f"Timed out waiting for image stage to complete. "
             msg += f"serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += f"serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.log_msg(msg)
             self.module.fail_json(msg)
 
     @property
@@ -320,9 +298,11 @@ class ImageStage(ImageUpgradeCommon):
 
     @serial_numbers.setter
     def serial_numbers(self, value):
+        self.method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
-            msg = f"{self.__class__.__name__}: instance.serial_numbers must "
-            msg += f"be a python list of switch serial numbers."
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "instance.serial_numbers must be a "
+            msg += "python list of switch serial numbers."
             self.module.fail_json(msg)
         self.properties["serial_numbers"] = value
 
