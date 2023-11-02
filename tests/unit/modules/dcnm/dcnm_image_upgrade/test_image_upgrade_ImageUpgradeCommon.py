@@ -1,19 +1,18 @@
+"""
+controller_version: 12
+description: Verify functionality of class ImageUpgradeCommon
+"""
+
 from typing import Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     ImageUpgradeCommon, ApiEndpoints)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
 
 from .fixture import load_fixture
 
-"""
-controller_version: 12
-description: Verify functionality of class ImageUpgradeCommon
-"""
 
 
 class MockAnsibleModule:
@@ -25,8 +24,8 @@ class MockAnsibleModule:
 
 @pytest.fixture
 def module():
-    # return ImageUpgradeCommon(MockAnsibleModule)
     return ImageUpgradeCommon(MockAnsibleModule)
+
 
 def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_ImageUpgradeCommon"
@@ -44,9 +43,7 @@ def test_init_(module) -> None:
     assert module.params == {}
     assert module.debug == True
     assert module.fd == None
-    # assert module.logfile == "/tmp/dcnm_image_upgrade.log"
     assert module.logfile == "/tmp/ndfc.log"
-    # assert isinstance(module.endpoints, ApiEndpoints)
 
 
 @pytest.mark.parametrize(
@@ -92,8 +89,6 @@ def test_handle_response_get(module, key, expected) -> None:
     """
     data = responses_image_upgrade_common(key)
     result = module._handle_response(data.get("response"), data.get("verb"))
-    # TODO: We could assert on the dictionary, with a less granular error message
-    # assert result == expected
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
 
@@ -185,19 +180,6 @@ def test_make_boolean(module, key, expected) -> None:
     assert module.make_boolean(key) == expected
 
 
-# def test_dcnm_image_upgrade_common_make_boolean(module) -> None:
-#     """
-#     NOTE: The above parameterized testcase results in 7% greater coverage according to pytest-cov versus for loops (below)
-#     verify that make_boolean() returns expected values for all cases
-#     """
-#     for value in ["True", "true", "TRUE", True]:
-#         assert module.make_boolean(value) == True
-#     for value in ["False", "false", "FALSE", False]:
-#         assert module.make_boolean(value) == False
-#     for value in ["foo", 1, 0, None, {"foo": 10}, [1, 2, "3"]]:
-#         assert module.make_boolean(value) == value
-
-
 @pytest.mark.parametrize(
     "key, expected",
     [
@@ -223,17 +205,6 @@ def test_make_none(module, key, expected) -> None:
     verify that make_none() returns expected values for all cases
     """
     assert module.make_none(key) == expected
-
-
-# def test_dcnm_image_upgrade_common_make_none(module) -> None:
-#     """
-#     NOTE: The above parameterized testcase results in 7% greater coverage according to pytest-cov versus for loops (below)
-#     verify that make_none() returns expected values for all cases
-#     """
-#     for value in ["", "none", "None", "NONE", "null", "Null", "NULL", None]:
-#         assert module.make_none(value) == None
-#     for value in ["foo", 1, 0, True, False, {"foo": 10}, [1, 2, "3"]]:
-#         assert module.make_none(value) == value
 
 
 def test_log_msg_disabled(module) -> None:

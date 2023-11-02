@@ -28,16 +28,36 @@ import copy
 import json
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import ImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import (
+    ApiEndpoints,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import (
+    ImagePolicies,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import (
+    ImagePolicyAction,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import (
+    ImageStage,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import (
+    ImageUpgradeCommon,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import (
+    ImageUpgrade,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import (
+    ImageValidate,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import (
+    ImageInstallOptions,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import (
+    SwitchDetails,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import (
+    SwitchIssuDetailsByIpAddress,
+)
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
@@ -405,6 +425,7 @@ EXAMPLES = """
 
 """
 
+
 class ImageUpgradeTask(ImageUpgradeCommon):
     """
     Ansible support for image policy attach, detach, and query.
@@ -482,7 +503,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self._validate_switch_configs()
         if not self.switch_configs:
             return
-        self.log_msg(f"{self.class_name}.get_want() self.switch_configs: {self.switch_configs}")
+        self.log_msg(
+            f"{self.class_name}.get_want() self.switch_configs: {self.switch_configs}"
+        )
         self.want_create = self.switch_configs
 
     def _get_idempotent_want(self, want):
@@ -491,7 +514,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         The have item is obtained from an instance of SwitchIssuDetails
         created in self.get_have().
-        
+
         want structure passed to this method:
 
         {
@@ -518,7 +541,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         The returned idempotent_want structure is identical to the
         above structure, except that the policy_changed key is added,
         and values are modified based on results from the have item,
-        and the information returned by ImageInstallOptions. 
+        and the information returned by ImageInstallOptions.
 
         Caller: self.get_need_merged()
         """
@@ -526,16 +549,20 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.have.ip_address = want["ip_address"]
 
         want["policy_changed"] = True
-        # In NDFC, the switch does not have an image policy attached
+        # The switch does not have an image policy attached.
         # Return the want item as-is with policy_changed = True
         if self.have.serial_number is None:
-            self.log_msg(f"{self.class_name}._get_idempotent_want() no serial_number. returning want: {want}")
+            self.log_msg(
+                f"{self.class_name}._get_idempotent_want() no serial_number. returning want: {want}"
+            )
             return want
         # The switch has an image policy attached which is
         # different from the want policy.
         # Return the want item as-is with policy_changed = True
         if want["policy"] != self.have.policy:
-            self.log_msg(f"{self.class_name}._get_idempotent_want() different policy attached. returning want: {want}")
+            self.log_msg(
+                f"{self.class_name}._get_idempotent_want() different policy attached. returning want: {want}"
+            )
             return want
 
         # start with a copy of the want item
@@ -552,7 +579,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         if self.have.validated == "Success":
             idempotent_want["validate"] = False
         # if the image is already upgraded, don't upgrade it again
-        if self.have.status == "In-Sync" and self.have.reason == "Upgrade" and self.have.policy == want["policy"]:
+        if (
+            self.have.status == "In-Sync"
+            and self.have.reason == "Upgrade"
+            and self.have.policy == want["policy"]
+        ):
             idempotent_want["upgrade"]["nxos"] = False
 
         # Get relevant install options from NDFC based on the
@@ -572,7 +603,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         if instance.epld_modules is None:
             idempotent_want["upgrade"]["epld"] = False
-        self.log_msg(f"REMOVE: {self.class_name}._get_idempotent_want() returned idempotent_want: {idempotent_want}")
+        self.log_msg(
+            f"REMOVE: {self.class_name}._get_idempotent_want() returned idempotent_want: {idempotent_want}"
+        )
         return idempotent_want
 
     def get_need_merged(self):
@@ -689,14 +722,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["default"] = {}
 
         params_spec[section][sub_section]["module"] = {}
-        params_spec[section][sub_section]["module"] ["required"] = False
-        params_spec[section][sub_section]["module"] ["type"] = "str"
-        params_spec[section][sub_section]["module"] ["default"] = "ALL"
+        params_spec[section][sub_section]["module"]["required"] = False
+        params_spec[section][sub_section]["module"]["type"] = "str"
+        params_spec[section][sub_section]["module"]["default"] = "ALL"
 
         params_spec[section][sub_section]["golden"] = {}
-        params_spec[section][sub_section]["golden"] ["required"] = False
-        params_spec[section][sub_section]["golden"] ["type"] = "bool"
-        params_spec[section][sub_section]["golden"] ["default"] = False
+        params_spec[section][sub_section]["golden"]["required"] = False
+        params_spec[section][sub_section]["golden"]["type"] = "bool"
+        params_spec[section][sub_section]["golden"]["default"] = False
 
         sub_section = "reboot"
         params_spec[section][sub_section] = {}
@@ -705,14 +738,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["default"] = {}
 
         params_spec[section][sub_section]["config_reload"] = {}
-        params_spec[section][sub_section]["config_reload"] ["required"] = False
-        params_spec[section][sub_section]["config_reload"] ["type"] = "bool"
-        params_spec[section][sub_section]["config_reload"] ["default"] = False
+        params_spec[section][sub_section]["config_reload"]["required"] = False
+        params_spec[section][sub_section]["config_reload"]["type"] = "bool"
+        params_spec[section][sub_section]["config_reload"]["default"] = False
 
         params_spec[section][sub_section]["write_erase"] = {}
-        params_spec[section][sub_section]["write_erase"] ["required"] = False
-        params_spec[section][sub_section]["write_erase"] ["type"] = "bool"
-        params_spec[section][sub_section]["write_erase"] ["default"] = False
+        params_spec[section][sub_section]["write_erase"]["required"] = False
+        params_spec[section][sub_section]["write_erase"]["type"] = "bool"
+        params_spec[section][sub_section]["write_erase"]["default"] = False
 
         sub_section = "package"
         params_spec[section][sub_section] = {}
@@ -721,14 +754,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["default"] = {}
 
         params_spec[section][sub_section]["install"] = {}
-        params_spec[section][sub_section]["install"] ["required"] = False
-        params_spec[section][sub_section]["install"] ["type"] = "bool"
-        params_spec[section][sub_section]["install"] ["default"] = False
+        params_spec[section][sub_section]["install"]["required"] = False
+        params_spec[section][sub_section]["install"]["type"] = "bool"
+        params_spec[section][sub_section]["install"]["default"] = False
 
         params_spec[section][sub_section]["uninstall"] = {}
-        params_spec[section][sub_section]["uninstall"] ["required"] = False
-        params_spec[section][sub_section]["uninstall"] ["type"] = "bool"
-        params_spec[section][sub_section]["uninstall"] ["default"] = False
+        params_spec[section][sub_section]["uninstall"]["required"] = False
+        params_spec[section][sub_section]["uninstall"]["type"] = "bool"
+        params_spec[section][sub_section]["uninstall"]["default"] = False
 
         return copy.deepcopy(params_spec)
 
@@ -746,7 +779,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.module.fail_json(msg)
 
         if state == "merged":
-            self.log_msg(f"{self.class_name}.validate_input: call _validate_input_for_merged_state()")
+            self.log_msg(
+                f"{self.class_name}.validate_input: call _validate_input_for_merged_state()"
+            )
             self._validate_input_for_merged_state()
             return
         if state == "deleted":
@@ -768,8 +803,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         params_spec = self._build_params_spec_for_merged_state()
 
-        self.log_msg(f"{self.class_name}._validate_input_for_merged_state: params_spec: {params_spec}")
-        self.log_msg(f"{self.class_name}._validate_input_for_merged_state: self.config: {self.config}")
+        self.log_msg(
+            f"{self.class_name}._validate_input_for_merged_state: params_spec: {params_spec}"
+        )
+        self.log_msg(
+            f"{self.class_name}._validate_input_for_merged_state: self.config: {self.config}"
+        )
         valid_params, invalid_params = validate_list_of_dicts(
             self.config.get("switches"), params_spec, self.module
         )
@@ -1012,7 +1051,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 'policy': 'KR3F',
                 'stage': False,
                 'upgrade': {
-                    'nxos': True, 
+                    'nxos': True,
                     'epld': False
                 },
                 'options': {
@@ -1040,20 +1079,28 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         # TODO:2 Need a way to call refresh() once in __init__() and mock in unit tests
         self.switch_details.refresh()
         for device in devices:
-            self.log_msg(f"REMOVE: {self.class_name}._verify_install_options: device: {device}")
+            self.log_msg(
+                f"REMOVE: {self.class_name}._verify_install_options: device: {device}"
+            )
             self.switch_details.ip_address = device.get("ip_address")
             install_options.serial_number = self.switch_details.serial_number
             install_options.policy_name = device["policy"]
             install_options.epld = device["upgrade"]["epld"]
             install_options.issu = device["upgrade"]["nxos"]
             install_options.refresh()
-            if install_options.status not in ["Success", "Skipped"] and device["upgrade"]["nxos"] is True:
+            if (
+                install_options.status not in ["Success", "Skipped"]
+                and device["upgrade"]["nxos"] is True
+            ):
                 msg = f"NXOS upgrade is set to True for switch  "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += f"NX-OS image"
                 self.module.fail_json(msg)
-            if install_options.epld_modules is None and device["upgrade"]["epld"] is True:
+            if (
+                install_options.epld_modules is None
+                and device["upgrade"]["epld"] is True
+            ):
                 msg = f"EPLD upgrade is set to True for switch "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
@@ -1124,8 +1171,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             if switch.get("validate") is not False:
                 validate_devices.append(device["serial_number"])
             if (
-                switch.get("upgrade").get("nxos") is not False or
-                switch.get("upgrade").get("epld") is not False):
+                switch.get("upgrade").get("nxos") is not False
+                or switch.get("upgrade").get("epld") is not False
+            ):
                 upgrade_devices.append(switch)
 
         msg = f"REMOVE: {self.class_name}.handle_merged_state: stage_devices: {stage_devices}"
@@ -1208,7 +1256,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.result["diff"] = []
         self.result["changed"] = False
 
-
     def _failure(self, resp):
         """
         Caller: self.attach_policies()
@@ -1239,9 +1286,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 res.update({"DATA": data})
 
         self.module.fail_json(msg=res)
-
-
-
 
 
 def main():

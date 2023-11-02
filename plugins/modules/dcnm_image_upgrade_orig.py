@@ -1558,7 +1558,7 @@ class SwitchDetails(ImageUpgradeCommon):
         self.log_msg(msg)
 
         if self.response["RETURN_CODE"] != 200:
-            msg = "Unable to retrieve switch information from NDFC. "
+            msg = "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.response}"
             self.module.fail_json(msg)
 
@@ -2467,14 +2467,14 @@ class ImagePolicies(ImageUpgradeCommon):
         if not self.result["success"]:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad result when retriving image policy "
-            msg += "information from NDFC."
+            msg += "information from the controller."
             self.module.fail_json(msg)
 
         data = self.response.get("DATA").get("lastOperDataObject")
         if data is None:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad response when retrieving image policy "
-            msg += "information from NDFC."
+            msg += "information from the controller."
             self.module.fail_json(msg)
         if len(data) == 0:
             msg = f"{self.class_name}.refresh: "
@@ -2745,7 +2745,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         if self.result["success"] == False or self.result["found"] == False:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad result when retriving switch "
-            msg += "information from NDFC"
+            msg += "information from the controller"
             self.module.fail_json(msg)
 
         data = self.response.get("DATA").get("lastOperDataObject")
@@ -5005,7 +5005,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
 class ControllerVersion(ImageUpgradeCommon):
     """
-    Return image version information from NDFC
+    Return image version information from the controller
 
     NOTES:
     1.  considered using dcnm_version_supported() but it does not return

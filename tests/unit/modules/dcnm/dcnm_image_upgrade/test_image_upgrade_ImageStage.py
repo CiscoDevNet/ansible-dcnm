@@ -1,7 +1,6 @@
 """
 controller_version: 12
 description: Verify functionality of ImageStage
-TODO:2 ImageStage.commit unit test
 """
 
 from contextlib import contextmanager
@@ -10,9 +9,12 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import ImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import \
+    ImageStage
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
@@ -21,13 +23,15 @@ from .fixture import load_fixture
 def does_not_raise():
     yield
 
+
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 patch_common = patch_module_utils + "common."
 
 dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
 dcnm_send_image_stage = patch_image_mgmt + "image_stage.dcnm_send"
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
+
 
 def responses_issu_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchIssuDetails"
@@ -197,7 +201,9 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
     module.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
 
     error_message = "Image staging is failing for the following switch: "
-    error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M."
+    error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M. "
+    error_message += "Check the switch connectivity to the controller "
+    error_message += "and try again."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.validate_serial_numbers()
 
@@ -358,6 +364,7 @@ def test_wait_for_image_stage_to_complete(
     3. module.serial_numbers_done should contain all serial numbers module.serial_numbers
     4. The module should return without calling fail_json.
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "ImageStage_test_wait_for_image_stage_to_complete"
         return responses_issu_details(key)
@@ -395,6 +402,7 @@ def test_wait_for_image_stage_to_complete_stage_failed(
     3. module.serial_numbers_done contains FDO21120U5D, imageStaged is "Success"
     4. Call fail_json on serial number FDO2112189M, imageStaged is "Failed"
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "ImageStage_test_wait_for_image_stage_to_complete_fail_json"
         return responses_issu_details(key)

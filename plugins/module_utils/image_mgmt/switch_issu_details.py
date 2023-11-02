@@ -5,8 +5,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
 
 class SwitchIssuDetails(ImageUpgradeCommon):
     """
-    Retrieve switch issu details from NDFC and provide property accessors
-    for the switch attributes.
+    Retrieve switch issu details from the controller and provide
+    property accessors for the switch attributes.
 
     Usage: See subclasses.
 
@@ -83,7 +83,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
     def refresh(self) -> None:
         """
-        Refresh current issu details from NDFC
+        Refresh current issu details from the controller.
         """
         path = self.endpoints.issu_info.get("path")
         verb = self.endpoints.issu_info.get("verb")
@@ -101,17 +101,17 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         if self.result["success"] == False or self.result["found"] == False:
             msg = f"{self.class_name}.refresh: "
             msg += "Bad result when retriving switch "
-            msg += "information from NDFC"
+            msg += "information from the controller"
             self.module.fail_json(msg)
 
         data = self.response.get("DATA").get("lastOperDataObject")
         if data is None:
             msg = f"{self.class_name}.refresh: "
-            msg += "NDFC has no switch ISSU information."
+            msg += "The controller has no switch ISSU information."
             self.module.fail_json(msg)
         if len(data) == 0:
             msg = f"{self.class_name}.refresh: "
-            msg += "NDFC has no switch ISSU information."
+            msg += "The controller has no switch ISSU information."
             self.module.fail_json(msg)
 
         self.properties["response_data"] = self.response.get("DATA", {}).get(
@@ -139,7 +139,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
     @property
     def response_data(self):
         """
-        Return the raw data retrieved from NDFC
+        Return the raw data retrieved from the controller
         """
         return self.properties["response_data"]
 
@@ -615,8 +615,8 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
 class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     """
-    Retrieve switch issu details from NDFC and provide property accessors
-    for the switch attributes retrieved by ip address.
+    Retrieve switch issu details from the controller and provide
+    property accessors for the switch attributes retrieved by ip address.
 
     Usage (where module is an instance of AnsibleModule):
 
@@ -643,7 +643,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         """
         Caller: __init__()
 
-        Refresh ip_address current issu details from NDFC
+        Refresh ip_address current issu details from the controller
         """
         super().refresh()
         self.data_subclass = {}
@@ -654,12 +654,16 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
 
     def _get(self, item):
         if self.ip_address is None:
-            msg = f"{self.class_name}: set instance.ip_address "
+            msg = f"{self.class_name}._get: set instance.ip_address "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg)
         if self.data_subclass.get(self.ip_address) is None:
-            msg = f"{self.class_name}: {self.ip_address} is not "
-            msg += f"defined in NDFC."
+            msg = f"{self.class_name}._get: {self.ip_address} does not "
+            msg += f"exist on the controller."
+            self.module.fail_json(msg)
+        if self.data_subclass[self.ip_address].get(item) is None:
+            msg = f"{self.class_name}._get: {self.ip_address} unknown "
+            msg += f"property name: {item}."
             self.module.fail_json(msg)
         return self.make_none(self.data_subclass[self.ip_address].get(item))
 
@@ -667,7 +671,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     def filtered_data(self):
         """
         Return a dictionary of the switch matching self.ip_address.
-        Return None of the switch does not exist in NDFC.
+        Return None if the switch does not exist on the controller.
         """
         return self.data_subclass.get(self.ip_address)
 
@@ -726,12 +730,16 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
 
     def _get(self, item):
         if self.serial_number is None:
-            msg = f"{self.class_name}: set instance.serial_number "
+            msg = f"{self.class_name}._get: set instance.serial_number "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg)
         if self.data_subclass.get(self.serial_number) is None:
-            msg = f"{self.class_name}: {self.serial_number} is not "
-            msg += f"defined in NDFC."
+            msg = f"{self.class_name}._get: {self.serial_number} does not "
+            msg += f"exist on the controller."
+            self.module.fail_json(msg)
+        if self.data_subclass[self.serial_number].get(item) is None:
+            msg = f"{self.class_name}._get: {self.serial_number} unknown "
+            msg += f"property name: {item}."
             self.module.fail_json(msg)
         return self.make_none(self.data_subclass[self.serial_number].get(item))
 
@@ -797,12 +805,16 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
 
     def _get(self, item):
         if self.device_name is None:
-            msg = f"{self.class_name}: set instance.device_name "
+            msg = f"{self.class_name}._get: set instance.device_name "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg)
         if self.data_subclass.get(self.device_name) is None:
-            msg = f"{self.class_name}: {self.device_name} is not "
-            msg += f"defined in NDFC."
+            msg = f"{self.class_name}._get: {self.device_name} does not "
+            msg += f"exist on the controller."
+            self.module.fail_json(msg)
+        if self.data_subclass[self.device_name].get(item) is None:
+            msg = f"{self.class_name}._get: {self.device_name} unknown "
+            msg += f"property name: {item}."
             self.module.fail_json(msg)
         return self.make_none(self.data_subclass[self.device_name].get(item))
 

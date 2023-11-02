@@ -8,7 +8,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import ControllerVersion
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
+    ControllerVersion
 
 from .fixture import load_fixture
 
@@ -16,6 +17,7 @@ patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
 patch_common = patch_module_utils + "common."
 
 dcnm_send_version = patch_common + "controller_version.dcnm_send"
+
 
 def responses_controller_version(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_ControllerVersion"
@@ -372,7 +374,8 @@ def test_result_500(monkeypatch, module) -> None:
 
 
 @pytest.mark.parametrize(
-    "key, expected", [("ControllerVersion_mode_LAN", "LAN"), ("ControllerVersion_mode_none", None)]
+    "key, expected",
+    [("ControllerVersion_mode_LAN", "LAN"), ("ControllerVersion_mode_none", None)],
 )
 def test_mode(monkeypatch, module, key, expected) -> None:
     """
@@ -404,7 +407,10 @@ def test_mode(monkeypatch, module, key, expected) -> None:
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("ControllerVersion_uuid_UUID", "foo-uuid"), ("ControllerVersion_uuid_none", None)],
+    [
+        ("ControllerVersion_uuid_UUID", "foo-uuid"),
+        ("ControllerVersion_uuid_none", None),
+    ],
 )
 def test_uuid(monkeypatch, module, key, expected) -> None:
     """
@@ -436,7 +442,10 @@ def test_uuid(monkeypatch, module, key, expected) -> None:
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("ControllerVersion_version_12.1.3b", "12.1.3b"), ("ControllerVersion_version_none", None)],
+    [
+        ("ControllerVersion_version_12.1.3b", "12.1.3b"),
+        ("ControllerVersion_version_none", None),
+    ],
 )
 def test_version(monkeypatch, module, key, expected) -> None:
     """
@@ -468,7 +477,10 @@ def test_version(monkeypatch, module, key, expected) -> None:
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("ControllerVersion_version_12.1.3b", "12"), ("ControllerVersion_version_none", None)],
+    [
+        ("ControllerVersion_version_12.1.3b", "12"),
+        ("ControllerVersion_version_none", None),
+    ],
 )
 def test_version_major(monkeypatch, module, key, expected) -> None:
     """
@@ -504,7 +516,10 @@ def test_version_major(monkeypatch, module, key, expected) -> None:
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("ControllerVersion_version_12.1.3b", "1"), ("ControllerVersion_version_none", None)],
+    [
+        ("ControllerVersion_version_12.1.3b", "1"),
+        ("ControllerVersion_version_none", None),
+    ],
 )
 def test_version_minor(monkeypatch, module, key, expected) -> None:
     """
@@ -540,7 +555,10 @@ def test_version_minor(monkeypatch, module, key, expected) -> None:
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("ControllerVersion_version_12.1.3b", "3b"), ("ControllerVersion_version_none", None)],
+    [
+        ("ControllerVersion_version_12.1.3b", "3b"),
+        ("ControllerVersion_version_none", None),
+    ],
 )
 def test_version_patch(monkeypatch, module, key, expected) -> None:
     """

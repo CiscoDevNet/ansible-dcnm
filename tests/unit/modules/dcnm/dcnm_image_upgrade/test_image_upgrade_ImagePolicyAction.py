@@ -9,9 +9,10 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
+    ImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
@@ -22,9 +23,10 @@ def does_not_raise():
 
 
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
+
 
 def responses_issu_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchIssuDetails"
@@ -141,7 +143,8 @@ def test_build_attach_payload_fail_json(monkeypatch, module, mock_issu_details) 
     ]
     error_message = "Unable to determine hostName for switch "
     error_message += "172.22.150.108, FDO2112189M, None. "
-    error_message += "Please verify that the switch is managed by NDFC."
+    error_message += "Please verify that the switch is managed by "
+    error_message += "the controller."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.build_attach_payload()
 

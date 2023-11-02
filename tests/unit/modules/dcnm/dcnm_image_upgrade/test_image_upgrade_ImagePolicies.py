@@ -1,27 +1,24 @@
-from typing import Any, Dict
-
-import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     ImagePolicies
-# )
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import ImagePolicies
-
-from .fixture import load_fixture
-
 """
 controller_version: 12
 description: Verify functionality of class ImagePolicies
 """
 
-#dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-#dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies.dcnm_send"
+from typing import Any, Dict
+
+import pytest
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
+    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+    ImagePolicies
+
+from .fixture import load_fixture
+
 
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 
 dcnm_send_image_policies = patch_image_mgmt + "image_policies.dcnm_send"
+
 
 class MockAnsibleModule:
     params = {}

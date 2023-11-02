@@ -95,7 +95,7 @@ class ImageStage(ImageUpgradeCommon):
 
     def _populate_controller_version(self):
         """
-        Populate self.controller_version with the NDFC version.
+        Populate self.controller_version with the running controller version.
 
         Notes:
         1.  This cannot go into ImageUpgradeCommon() due to circular
@@ -136,7 +136,7 @@ class ImageStage(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
                 msg += f"{self.issu_detail.serial_number}. "
-                msg += f"Check the switch connectivity to NDFC "
+                msg += f"Check the switch connectivity to the controller "
                 msg += "and try again."
                 self.module.fail_json(msg)
             else:
@@ -144,7 +144,7 @@ class ImageStage(ImageUpgradeCommon):
 
     def commit(self):
         """
-        Commit the image staging request to NDFC and wait
+        Commit the image staging request to the controller and wait
         for the images to be staged.
         """
         if self.serial_numbers is None:
@@ -167,7 +167,7 @@ class ImageStage(ImageUpgradeCommon):
         self.payload = {}
         self._populate_controller_version()
         if self.controller_version == "12.1.2e":
-            # Yes, NDFC 12.1.2e wants serialNum to be misspelled
+            # Yes, version 12.1.2e wants serialNum to be misspelled
             self.payload["sereialNum"] = self.serial_numbers
         else:
             self.payload["serialNumbers"] = self.serial_numbers
@@ -181,15 +181,15 @@ class ImageStage(ImageUpgradeCommon):
         self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.result}")
         if not self.result["success"]:
             msg = f"{self.class_name}.commit() failed: {self.result}. "
-            msg += f"NDFC response was: {self.response}"
+            msg += f"Controller response: {self.response}"
             self.module.fail_json(msg)
         self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_stage_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
         """
-        NDFC will not stage an image if there are any actions in progress.
-        Wait for all actions to complete before staging image.
+        The controller will not stage an image if there are any actions in
+        progress.  Wait for all actions to complete before staging image.
         Actions include image staging, image upgrade, and image validation.
         """
         self.serial_numbers_done = set()
@@ -339,14 +339,14 @@ class ImageStage(ImageUpgradeCommon):
     @property
     def result(self):
         """
-        Return the POST result from NDFC
+        Return the POST result from the controller
         """
         return self.properties.get("result")
 
     @property
     def response(self):
         """
-        Return the POST response from NDFC
+        Return the POST response from the controller
         """
         return self.properties.get("response")
 

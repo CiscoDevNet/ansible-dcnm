@@ -62,7 +62,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         caller _attach_policy()
         """
         self.payloads = []
-        # TODO:2 this results in more calls than necessary to NDFC. Need a better way to handle this.
+        # TODO:2 Need a way to call refresh() in __init__ with unit-tests being able to mock it
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.serial_number = serial_number
@@ -78,7 +78,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
                     msg += f"{self.switch_issu_details.ip_address}, "
                     msg += f"{self.switch_issu_details.serial_number}, "
                     msg += f"{self.switch_issu_details.device_name}. "
-                    msg += "Please verify that the switch is managed by NDFC."
+                    msg += "Please verify that the switch is managed by "
+                    msg += "the controller."
                     self.module.fail_json(msg)
             self.payloads.append(payload)
 

@@ -6,7 +6,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
 
 class SwitchDetails(ImageUpgradeCommon):
     """
-    Retrieve switch details from NDFC and provide property accessors
+    Retrieve switch details from the controller and provide property accessors
     for the switch attributes.
 
     Usage (where module is an instance of AnsibleModule):
@@ -41,7 +41,8 @@ class SwitchDetails(ImageUpgradeCommon):
         """
         Caller: __init__()
 
-        Refresh switch_details with current switch details from NDFC
+        Refresh switch_details with current switch details from
+        the controller.
         """
         path = self.endpoints.switches_info.get("path")
         verb = self.endpoints.switches_info.get("verb")
@@ -55,7 +56,7 @@ class SwitchDetails(ImageUpgradeCommon):
         self.log_msg(msg)
 
         if self.response["RETURN_CODE"] != 200:
-            msg = "Unable to retrieve switch information from NDFC. "
+            msg = "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.response}"
             self.module.fail_json(msg)
 
@@ -69,8 +70,16 @@ class SwitchDetails(ImageUpgradeCommon):
 
     def _get(self, item):
         if self.ip_address is None:
-            msg = f"{self.class_name}: set instance.ip_address "
+            msg = f"{self.class_name}._get: set instance.ip_address "
             msg += f"before accessing property {item}."
+            self.module.fail_json(msg)
+        if self.properties["response_data"].get(self.ip_address) is None:
+            msg = f"{self.class_name}._get: {self.ip_address} does not exist "
+            msg += f"on the controller."
+            self.module.fail_json(msg)
+        if self.properties["response_data"][self.ip_address].get(item) is None:
+            msg = f"{self.class_name}._get: {self.ip_address} does not have a key"
+            msg += f" named {item}."
             self.module.fail_json(msg)
         return self.make_boolean(
             self.make_none(
@@ -159,7 +168,7 @@ class SwitchDetails(ImageUpgradeCommon):
         Return the platform of the switch with ip_address, if it exists.
         Return None otherwise
 
-        NOTE: This is derived from "model" and is not in the NDFC response
+        NOTE: This is derived from "model". Is not in the controller response.
         """
         model = self._get("model")
         if model is None:

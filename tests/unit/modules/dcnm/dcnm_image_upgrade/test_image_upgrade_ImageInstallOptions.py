@@ -1,21 +1,24 @@
-from typing import Any, Dict
-
-import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import ImageInstallOptions
-
-from .fixture import load_fixture
-
 """
 controller_version: 12
 description: Verify functionality of class ImageInstallOptions
 """
 
+from typing import Any, Dict
+
+import pytest
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
+    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
+    ImageInstallOptions
+
+from .fixture import load_fixture
+
+
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 
 dcnm_send_install_options = patch_image_mgmt + "install_options.dcnm_send"
+
 
 class MockAnsibleModule:
     params = {}
@@ -104,7 +107,8 @@ def test_refresh_return_code_500(monkeypatch, module) -> None:
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
     error_message = "ImageInstallOptions.refresh: "
-    error_message += "Bad result when retrieving install-options from NDFC"
+    error_message += "Bad result when retrieving install-options from "
+    error_message += "the controller. Controller response:"
     with pytest.raises(AnsibleFailJson, match=rf"{error_message}"):
         module.refresh()
 

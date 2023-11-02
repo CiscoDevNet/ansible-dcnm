@@ -93,7 +93,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         }
     Response bodies:
         Responses are text, not JSON, and are returned immediately.
-        They do not contain useful information. We need to poll NDFC
+        They do not contain useful information. We need to poll the controller
         to determine when the upgrade is complete. Basically, we ignore
         these responses in favor of the poll responses.
         - If an action is in progress, text is returned:
@@ -294,7 +294,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         # nxos_mode: The choices for nxos_mode are mutually-exclusive.
         # If one is set to True, the others must be False.
-        # nonDisruptive corresponds to NDFC Allow Non-Disruptive GUI option
+        # nonDisruptive corresponds to Allow Non-Disruptive GUI option
         self.payload["issuUpgradeOptions1"] = {}
         self.payload["issuUpgradeOptions1"]["nonDisruptive"] = False
         self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] = False
@@ -312,7 +312,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         if nxos_mode == "force_non_disruptive":
             self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] = True
 
-        # biosForce corresponds to NDFC BIOS Force GUI option
+        # biosForce corresponds to BIOS Force GUI option
         bios_force = device.get("options").get("nxos").get("bios_force")
         if not isinstance(bios_force, bool):
             msg = f"{self.class_name}.build_payload() options.nxos.bios_force "
@@ -376,7 +376,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     def commit(self):
         """
-        Commit the image upgrade request to NDFC and wait
+        Commit the image upgrade request to the controller and wait
         for the images to be upgraded.
         """
         if self.devices is None:
@@ -405,15 +405,15 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.result}")
             if not self.result["success"]:
                 msg = f"{self.class_name}.commit() failed: {self.result}. "
-                msg += f"NDFC response was: {self.response}"
+                msg += f"Controller response: {self.response}"
                 self.module.fail_json(msg)
             self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_upgrade_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
         """
-        NDFC will not upgrade an image if there are any actions in progress.
-        Wait for all actions to complete before upgrading image.
+        The controller will not upgrade an image if there are any actions
+        in progress.  Wait for all actions to complete before upgrading image.
         Actions include image staging, image upgrade, and image validation.
         """
         ipv4_todo = copy.copy(self.ip_addresses)
@@ -770,7 +770,8 @@ class ImageUpgrade(ImageUpgradeCommon):
     @property
     def response_data(self):
         """
-        Return the data retrieved from NDFC for the image upgrade request.
+        Return the data retrieved from the controller for the
+        image upgrade request.
 
         instance.devices must be set first.
         instance.commit() must be called first.
@@ -780,7 +781,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     @property
     def result(self):
         """
-        Return the POST result from NDFC
+        Return the POST result.
         instance.devices must be set first.
         instance.commit() must be called first.
         """
@@ -789,7 +790,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     @property
     def response(self):
         """
-        Return the POST response from NDFC
+        Return the POST response from the controller
         instance.devices must be set first.
         instance.commit() must be called first.
         """

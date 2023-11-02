@@ -17,10 +17,11 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import os
 import json
+import os
 
 fixture_path = os.path.join(os.path.dirname(__file__), "fixtures")
+
 
 def load_fixture(filename):
     path = os.path.join(fixture_path, "{0}.json".format(filename))
@@ -34,5 +35,3 @@ def load_fixture(filename):
         print(f"Exception loading fixture {filename}.  Exception detail: {exception}")
 
     return fixture
-
-

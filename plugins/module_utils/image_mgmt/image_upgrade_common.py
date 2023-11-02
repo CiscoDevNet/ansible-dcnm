@@ -1,6 +1,6 @@
 class ImageUpgradeCommon:
     """
-    Base class for the other NDFC classes
+    Base class for the other image upgrade classes
 
     Usage (where module is an instance of AnsibleModule):
 
@@ -33,7 +33,7 @@ class ImageUpgradeCommon:
         """
         Caller:
             - self._handle_response()
-        Handle NDFC responses to GET requests
+        Handle controller responses to GET requests
         Returns: dict() with the following keys:
         - found:
             - False, if request error was "Not found" and RETURN_CODE == 404
@@ -67,11 +67,11 @@ class ImageUpgradeCommon:
         Caller:
             - self.self._handle_response()
 
-        Handle POST, PUT responses from NDFC.
+        Handle POST, PUT responses from the controller.
 
         Returns: dict() with the following keys:
         - changed:
-            - True if changes were made to NDFC
+            - True if changes were made to by the controller
             - False otherwise
         - success:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"

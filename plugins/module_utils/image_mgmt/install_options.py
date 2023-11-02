@@ -8,7 +8,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
 
 class ImageInstallOptions(ImageUpgradeCommon):
     """
-    Retrieve install-options details for ONE switch from NDFC and
+    Retrieve install-options details for ONE switch from the controller and
     provide property accessors for the policy attributes.
 
     Caveats:
@@ -26,10 +26,12 @@ class ImageInstallOptions(ImageUpgradeCommon):
     instance.epld = True
     instance.package_install = True
     instance.issu = True
-    # Retrieve install-options details from NDFC
+    # Retrieve install-options details from the controller
     instance.refresh()
     if instance.device_name is None:
-        print("Cannot retrieve policy/serial_number combination from NDFC")
+        msg = "Cannot retrieve policy/serial_number combination from "
+        msg += "the controller"
+        print(msg)
         exit(1)
     status = instance.status
     platform = instance.platform
@@ -131,7 +133,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     def refresh(self):
         """
-        Refresh self.data with current install-options from NDFC
+        Refresh self.data with current install-options from the controller
         """
         if self.policy_name is None:
             msg = f"{self.class_name}.refresh: "
@@ -157,11 +159,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
         msg += f"response: {self.response}"
         self.log_msg(msg)
         self.properties["result"] = self._handle_response(self.response, verb)
-        # TODO:2 should error message contain full response or just DATA.error?
         if self.result["success"] is False:
             msg = f"{self.class_name}.refresh: "
-            msg += "Bad result when retrieving install-options from NDFC. "
-            msg += f"NDFC response: {self.response}"
+            msg += "Bad result when retrieving install-options from "
+            msg += f"the controller. Controller response: {self.response}"
             self.module.fail_json(msg)
 
         self.properties["response_data"] = self.response.get("DATA")
@@ -358,21 +359,21 @@ class ImageInstallOptions(ImageUpgradeCommon):
     @property
     def response_data(self):
         """
-        Return the raw data from the NDFC response.
+        Return the DATA portion of the controller response.
         """
         return self.properties.get("response_data")
 
     @property
     def response(self):
         """
-        Return the response from NDFC of the query.
+        Return the controller response.
         """
         return self.properties.get("response")
 
     @property
     def result(self):
         """
-        Return the result from NDFC of the query.
+        Return the query result.
         """
         return self.properties.get("result")
 

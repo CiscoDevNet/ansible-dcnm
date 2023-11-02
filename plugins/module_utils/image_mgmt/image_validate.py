@@ -58,20 +58,6 @@ class ImageValidate(ImageUpgradeCommon):
         self.properties["non_disruptive"] = False
         self.properties["serial_numbers"] = None
 
-    # def _populate_controller_version(self):
-    #     """
-    #     Populate self.controller_version with the NDFC version.
-
-    #     TODO:3 Remove if 12.1.3b works with no changes to request/response payloads.
-
-    #     Notes:
-    #     1.  This cannot go into ImageUpgradeCommon() due to circular
-    #         imports resulting in RecursionError
-    #     """
-    #     instance = ControllerVersion(self.module)
-    #     instance.refresh()
-    #     self.controller_version = instance.version
-
     def prune_serial_numbers(self):
         """
         If the image is already validated on a switch, remove that switch's
@@ -108,8 +94,8 @@ class ImageValidate(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
                 msg += f"{self.issu_detail.serial_number}. "
-                msg += "If this persists, check the switch connectivity to NDFC and "
-                msg += "try again."
+                msg += "If this persists, check the switch connectivity to "
+                msg += "the controller and try again."
                 #self.log_msg(msg)
                 self.module.fail_json(msg)
 
@@ -120,7 +106,7 @@ class ImageValidate(ImageUpgradeCommon):
 
     def commit(self):
         """
-        Commit the image validation request to NDFC and wait
+        Commit the image validation request to the controller and wait
         for the images to be validated.
         """
         if self.serial_numbers is None:
@@ -148,15 +134,15 @@ class ImageValidate(ImageUpgradeCommon):
         self.log_msg(f"REMOVE: {self.class_name}.commit() result: {self.result}")
         if not self.result["success"]:
             msg = f"{self.class_name}.commit() failed: {self.result}. "
-            msg += f"NDFC response was: {self.response}"
+            msg += f"Controller response: {self.response}"
             self.module.fail_json(msg)
         self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_validate_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
         """
-        NDFC will not validate an image if there are any actions in progress.
-        Wait for all actions to complete before validating image.
+        The controller will not validate an image if there are any actions in
+        progress.  Wait for all actions to complete before validating image.
         Actions include image staging, image upgrade, and image validation.
         """
         self.serial_numbers_done = set()
@@ -241,9 +227,9 @@ class ImageValidate(ImageUpgradeCommon):
                     msg += f"image validated percent: {validated_percent}. "
                     msg += "Check the switch e.g. show install log detail, "
                     msg += "show incompatibility-all nxos <image>.  Or "
-                    msg += "check NDFC Operations > Image Management > "
-                    msg += "Devices > View Details > Validate for "
-                    msg += "more details."
+                    msg += "check Operations > Image Management > "
+                    msg += "Devices > View Details > Validate on the "
+                    msg += "controller GUI for more details."
                     self.module.fail_json(msg)
 
                 if validated_status == "Success":
@@ -331,14 +317,14 @@ class ImageValidate(ImageUpgradeCommon):
     @property
     def result(self):
         """
-        Return the POST result from NDFC
+        Return the POST result
         """
         return self.properties.get("result")
 
     @property
     def response(self):
         """
-        Return the POST response from NDFC
+        Return the POST response from the controller
         """
         return self.properties.get("response")
 

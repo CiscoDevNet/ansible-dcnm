@@ -8,10 +8,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     ImageUpgrade, SwitchDetails, ControllerVersion)
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import ImageUpgrade
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
+    ImageUpgrade
 
 from .fixture import load_fixture
 
@@ -21,11 +19,8 @@ def does_not_raise():
     yield
 
 
-# dcnm_send_patch = (
-#     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-# )
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 patch_common = patch_module_utils + "common."
 
 dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
@@ -58,6 +53,7 @@ def test_init(module) -> None:
     assert module.class_name == "ImageUpgrade"
     assert module.max_module_number == 9
 
+
 def test_init_defaults(module) -> None:
     """
     Defaults are initialized to expected values
@@ -77,6 +73,7 @@ def test_init_defaults(module) -> None:
     assert module.defaults["options"]["reboot"]["write_erase"] == False
     assert module.defaults["options"]["package"]["install"] == False
     assert module.defaults["options"]["package"]["uninstall"] == False
+
 
 def test_init_properties(module) -> None:
     """
@@ -103,8 +100,23 @@ def test_init_properties(module) -> None:
     assert module.properties.get("package_uninstall") == False
     assert module.properties.get("reboot") == False
     assert module.properties.get("write_erase") == False
-    assert module.valid_epld_module == {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
-    assert module.valid_nxos_mode == {"disruptive", "non_disruptive", "force_non_disruptive"}
+    assert module.valid_epld_module == {
+        "ALL",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+    }
+    assert module.valid_nxos_mode == {
+        "disruptive",
+        "non_disruptive",
+        "force_non_disruptive",
+    }
 
 
 # def test_ip_address_not_set(module) -> None:
@@ -200,7 +212,7 @@ def test_init_properties(module) -> None:
 #     assert module.serial_number == "FOX2109PGD1"
 
 
-# match = "Unable to retrieve switch information from NDFC. "
+# match = "Unable to retrieve switch information from the controller. "
 
 
 # @pytest.mark.parametrize(

@@ -8,20 +8,17 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     ImageValidate, SwitchIssuDetailsBySerialNumber, ControllerVersion)
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
+    ImageValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
-patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
-patch_common = patch_module_utils + "common."
 
-dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
-dcnm_send_image_stage = patch_image_mgmt + "image_stage.dcnm_send"
+patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
+
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
 
@@ -126,8 +123,8 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
     error_message = "ImageValidate.validate_serial_numbers: "
     error_message += "image validation is failing for the following switch: "
     error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M. If this "
-    error_message += "persists, check the switch connectivity to NDFC and "
-    error_message += "try again."
+    error_message += "persists, check the switch connectivity to the "
+    error_message += "controller and try again."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.validate_serial_numbers()
 
@@ -200,8 +197,9 @@ def test_wait_for_image_validate_to_complete_validate_failed(
     error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M, "
     error_message += "image validated percent: 100. Check the switch e.g. "
     error_message += "show install log detail, show incompatibility-all nxos "
-    error_message += "<image>.  Or check NDFC Operations > Image Management > "
-    error_message += "Devices > View Details > Validate for more details."
+    error_message += "<image>.  Or check Operations > Image Management > "
+    error_message += "Devices > View Details > Validate on the controller "
+    error_message += "GUI for more details."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module._wait_for_image_validate_to_complete()
     assert isinstance(module.serial_numbers_done, set)
