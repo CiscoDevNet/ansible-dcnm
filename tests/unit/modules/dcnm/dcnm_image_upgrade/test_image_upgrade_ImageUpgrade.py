@@ -21,17 +21,13 @@ def does_not_raise():
 
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
 patch_image_mgmt = patch_module_utils + "image_mgmt."
-patch_common = patch_module_utils + "common."
 
-dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
-dcnm_send_image_stage = patch_image_mgmt + "image_stage.dcnm_send"
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
-
-def responses_switch_details(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_SwitchDetails"
+def responses_issu_details(key: str) -> Dict[str, str]:
+    response_file = f"image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
-    print(f"responses_switch_details: {key} : {response}")
+    print(f"response_data_issu_details: {key} : {response}")
     return response
 
 
@@ -118,196 +114,78 @@ def test_init_properties(module) -> None:
         "force_non_disruptive",
     }
 
+def test_validate_devices_success(monkeypatch, module) -> None:
+    """
+    Function description:
 
-# def test_ip_address_not_set(module) -> None:
-#     """
-#     Function description:
+    ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
+    with the ip addresses of the devices that have issu_detail.upgrade is
+    not "Failed"
 
-#     SwitchDetails.ip_address returns:
-#         - IP Address, if the user has set ip_address
-#         - None, if the user has not already set ip_address
+    Expected results:
 
-#     Expected results:
+    1. instance.ip_addresses will contain {"172.22.150.102", "172.22.150.108"}
+    2. fail_json will not be called
+    """
 
-#     1. instance.ip_address will return None
-#     """
-#     assert module.ip_address == None
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImageUpgrade_test_validate_devices_success"
+        return responses_issu_details(key)
 
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-# def test_ip_address_is_set(module) -> None:
-#     """
-#     Function description:
+    devices = [
+        {
+            "ip_address": "172.22.150.102"
+        },
+        {
+            "ip_address": "172.22.150.108"
+        }
+    ]
 
-#     SwitchDetails.ip_address returns:
-#         - IP Address, if the user has set ip_address
-#         - None, if the user has not already set ip_address
+    module.devices = devices
+    module.validate_devices()
+    assert isinstance(module.ip_addresses, set)
+    assert len(module.ip_addresses) == 2
+    assert "172.22.150.102" in module.ip_addresses
+    assert "172.22.150.108" in module.ip_addresses
 
-#     Expected results:
+def test_validate_devices_failed(monkeypatch, module) -> None:
+    """
+    Function description:
 
-#     1. instance.ip_address will return the value set by the user
-#     """
-#     module.ip_address = "1.2.3.4"
-#     assert module.ip_address == "1.2.3.4"
+    ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
+    with the ip addresses of the devices that have issu_detail.upgrade is
+    not "Failed"
 
+    Expected results:
 
-# def test_refresh(monkeypatch, module) -> None:
-#     """
-#     Function description:
+    1. instance.ip_addresses will contain {"172.22.150.102"}
+    2. fail_json will be called
+    """
 
-#     SwitchDetails.refresh sets the following properties:
-#         - response_data
-#         - response
-#         - result
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "ImageUpgrade_test_validate_devices_failed"
+        return responses_issu_details(key)
 
-#     Expected results:
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-#     1. instance.response_data is a dictionary
-#     2. instance.response is a dictionary
-#     3. instance.response_data is a list
-#     """
+    devices = [
+        {
+            "ip_address": "172.22.150.102"
+        },
+        {
+            "ip_address": "172.22.150.108"
+        }
+    ]
 
-#     def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-#         key = "SwitchDetails_get_return_code_200"
-#         return responses_switch_details(key)
-
-#     monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
-
-#     module.refresh()
-#     assert isinstance(module.response_data, dict)
-#     assert isinstance(module.result, dict)
-#     assert isinstance(module.response, dict)
-
-
-# def test_refresh_response_data(monkeypatch, module) -> None:
-#     """
-#     Function description:
-
-#     See test_refresh
-
-#     Expected results:
-
-#     1. instance.response_data is a dictionary
-#     2. When instance.ip_address is set, getter properties will return values specific to ip_address
-#     """
-
-#     def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-#         key = "SwitchDetails_get_return_code_200"
-#         return responses_switch_details(key)
-
-#     monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
-
-#     module.refresh()
-#     assert isinstance(module.response_data, dict)
-#     module.ip_address = "172.22.150.110"
-#     assert module.hostname == "cvd-1111-bgw"
-#     module.ip_address = "172.22.150.111"
-#     # We use the above IP address to test the remaining properties
-#     assert module.fabric_name == "easy"
-#     assert module.hostname == "cvd-1112-bgw"
-#     assert module.logical_name == "cvd-1112-bgw"
-#     assert module.model == "N9K-C9504"
-#     # This is derived from "model" and is not in the NDFC response
-#     assert module.platform == "N9K"
-#     assert module.role == "border gateway"
-#     assert module.serial_number == "FOX2109PGD1"
-
-
-# match = "Unable to retrieve switch information from the controller. "
-
-
-# @pytest.mark.parametrize(
-#     "key,expected",
-#     [
-#         ("SwitchDetails_get_return_code_200", does_not_raise()),
-#         (
-#             "SwitchDetails_get_return_code_404",
-#             pytest.raises(AnsibleFailJson, match=match),
-#         ),
-#         (
-#             "SwitchDetails_get_return_code_500",
-#             pytest.raises(AnsibleFailJson, match=match),
-#         ),
-#     ],
-# )
-# def test_result(monkeypatch, module, key, expected) -> None:
-#     """
-#     Function description:
-
-#     SwitchDetails.result returns the result of its superclass
-#     method ImageUpgradeCommon._handle_response()
-
-#     Expectations:
-
-#     1.  200 RETURN_CODE, MESSAGE == "OK",
-#         SwitchDetails.result == {'found': True, 'success': True}
-
-#     2.  404 RETURN_CODE, MESSAGE == "Not Found",
-#         SwitchDetails.result == {'found': False, 'success': True}
-
-#     3.  500 RETURN_CODE, MESSAGE ~= "Internal Server Error",
-#         SwitchDetails.result == {'found': False, 'success': False}
-
-#     Expected results:
-
-#     1. SwitchDetails_result_200 == {'found': True, 'success': True}
-#     2. SwitchDetails_result_404 == {'found': False, 'success': True}
-#     3. SwitchDetails_result_500 == {'found': False, 'success': False}
-#     """
-
-#     def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-#         return responses_switch_details(key)
-
-#     monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
-
-#     with expected:
-#         module.refresh()
-
-
-# @pytest.mark.parametrize(
-#     "item, expected",
-#     [
-#         ("fabricName", "easy"),
-#         ("hostName", "cvd-1111-bgw"),
-#         ("licenseViolation", False),
-#         ("location", None),
-#         ("logicalName", "cvd-1111-bgw"),
-#         ("managable", True),
-#         ("model", "N9K-C9504"),
-#         ("present", True),
-#         ("serialNumber", "FOX2109PGCT"),
-#         ("switchRole", "border gateway"),
-#     ],
-# )
-# def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
-#     """
-#     Function description:
-
-#     SwitchDetails._get is called by all getter properties.
-#     It raises AnsibleFailJson if the user has not set ip_address.
-#     It returns the value of the requested property if the user has set ip_address.
-#     The property value is passed to both make_boolean() and make_none(), which
-#     either:
-#         - converts it to a boolean
-#         - converts it to NoneType
-#         - returns the value unchanged
-
-#     Expectations:
-
-#     1.  ControllerVersion._get returns above values
-#         given corresponding responses
-
-#     Expected results:
-
-#     1. ControllerVersion_mode_LAN == "LAN"
-#     2. ControllerVersion_mode_none == None
-#     """
-
-#     def mock_dcnm_send(*args, **kwargs) -> Dict[str, Any]:
-#         key = "SwitchDetails_get_return_code_200"
-#         return responses_switch_details(key)
-
-#     monkeypatch.setattr(dcnm_send_patch, mock_dcnm_send)
-
-#     module.refresh()
-#     module.ip_address = "172.22.150.110"
-#     assert module._get(item) == expected
+    match = "ImageUpgrade.validate_devices: Image upgrade is failing for the "
+    match += "following switch: cvd-2313-leaf, 172.22.150.108, FDO2112189M. "
+    match += "Please check the switch to determine the cause and try again."
+    module.devices = devices
+    with pytest.raises(AnsibleFailJson, match=match):
+        module.validate_devices()
+    assert isinstance(module.ip_addresses, set)
+    assert len(module.ip_addresses) == 1
+    assert "172.22.150.102" in module.ip_addresses
+    assert "172.22.150.108" not in module.ip_addresses
