@@ -1,3 +1,5 @@
+import inspect
+
 class ImageUpgradeCommon:
     """
     Base class for the other image upgrade classes
@@ -11,6 +13,9 @@ class ImageUpgradeCommon:
     """
 
     def __init__(self, module):
+        self.class_name = __class__.__name__
+        self.method_name = inspect.stack()[0][3]
+
         self.module = module
         self.params = module.params
         self.debug = True
@@ -19,6 +24,8 @@ class ImageUpgradeCommon:
         self.module = module
 
     def _handle_response(self, response, verb):
+        self.method_name = inspect.stack()[0][3]
+
         if verb == "GET":
             return self._handle_get_response(response)
         if verb in {"POST", "PUT", "DELETE"}:
@@ -26,7 +33,10 @@ class ImageUpgradeCommon:
         return self._handle_unknown_request_verbs(response, verb)
 
     def _handle_unknown_request_verbs(self, response, verb):
-        msg = f"Unknown request verb ({verb}) in _handle_response() for response {response}."
+        self.method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{self.method_name}: "
+        msg += f"Unknown request verb ({verb}) for response {response}."
         self.module.fail_json(msg)
 
     def _handle_get_response(self, response):
@@ -42,6 +52,8 @@ class ImageUpgradeCommon:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"
             - True otherwise
         """
+        self.method_name = inspect.stack()[0][3]
+
         result = {}
         success_return_codes = {200, 404}
         if (
@@ -77,6 +89,8 @@ class ImageUpgradeCommon:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"
             - True otherwise
         """
+        self.method_name = inspect.stack()[0][3]
+
         result = {}
         if response.get("ERROR") is not None:
             result["success"] = False
@@ -93,7 +107,7 @@ class ImageUpgradeCommon:
     def log_msg(self, msg):
         """
         used for debugging. disable this when committing to main
-        by setting __init__().debug to False
+        by setting self.debug to False in __init__()
         """
         if self.debug is False:
             return
@@ -114,6 +128,8 @@ class ImageUpgradeCommon:
         Return value converted to boolean, if possible.
         Return value, if value cannot be converted.
         """
+        self.method_name = inspect.stack()[0][3]
+
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
@@ -129,6 +145,8 @@ class ImageUpgradeCommon:
         representation of a None type
         Return value otherwise
         """
+        self.method_name = inspect.stack()[0][3]
+
         if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
             return None
         return value
