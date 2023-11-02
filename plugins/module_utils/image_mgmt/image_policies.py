@@ -1,3 +1,5 @@
+import inspect
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
@@ -31,16 +33,12 @@ class ImagePolicies(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.method_name = "__init__"
+        self.method_name = inspect.stack()[0][3]
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: entered"
-        self.log_msg(msg)
-
-
     def _init_properties(self):
-        self.method_name = "_init_properties"
+        self.method_name = inspect.stack()[0][3]
         self.properties = {}
         self.properties["policy_name"] = None
         self.properties["response_data"] = None
@@ -51,21 +49,13 @@ class ImagePolicies(ImageUpgradeCommon):
         """
         Refresh self.image_policies with current image policies from the controller
         """
-        self.method_name = "refresh"
+        self.method_name = inspect.stack()[0][3]
 
         path = self.endpoints.policies_info.get("path")
         verb = self.endpoints.policies_info.get("verb")
 
         self.properties["response"] = dcnm_send(self.module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"response: {self.response}"
-        self.log_msg(msg)
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"result: {self.result}"
-        self.log_msg(msg)
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{self.method_name}: "
@@ -90,14 +80,16 @@ class ImagePolicies(ImageUpgradeCommon):
 
         for policy in data:
             policy_name = policy.get("policyName")
+
             if policy_name is None:
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += "Cannot parse policy information from the controller."
                 self.module.fail_json(msg)
+
             self.properties["response_data"][policy_name] = policy
 
     def _get(self, item):
-        self.method_name = "_get"
+        self.method_name = inspect.stack()[0][3]
 
         if self.policy_name is None:
             msg = f"{self.class_name}.{self.method_name}: "
