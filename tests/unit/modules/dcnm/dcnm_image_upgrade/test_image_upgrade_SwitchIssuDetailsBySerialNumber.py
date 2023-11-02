@@ -17,6 +17,7 @@ patch_image_mgmt = patch_module_utils + "image_mgmt."
 
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
+
 class MockAnsibleModule:
     params = {}
 
@@ -211,6 +212,7 @@ def test_result_return_code_200_switch_issu_info_length_0(monkeypatch, module) -
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()
 
+
 def test_get_with_unknown_serial_number(monkeypatch, module) -> None:
     """
     Function description:
@@ -239,6 +241,7 @@ def test_get_with_unknown_serial_number(monkeypatch, module) -> None:
     match += "on the controller."
     with pytest.raises(AnsibleFailJson, match=match):
         module._get("serialNumber")
+
 
 def test_get_with_unknown_property_name(monkeypatch, module) -> None:
     """

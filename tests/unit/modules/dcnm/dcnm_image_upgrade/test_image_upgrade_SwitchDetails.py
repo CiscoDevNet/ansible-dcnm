@@ -251,6 +251,7 @@ def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
     module.ip_address = "172.22.150.110"
     assert module._get(item) == expected
 
+
 def test_get_with_unknown_ip_address(monkeypatch, module) -> None:
     """
     Function description:
@@ -279,6 +280,7 @@ def test_get_with_unknown_ip_address(monkeypatch, module) -> None:
     match += "on the controller."
     with pytest.raises(AnsibleFailJson, match=match):
         module._get("hostName")
+
 
 def test_get_with_unknown_property_name(monkeypatch, module) -> None:
     """

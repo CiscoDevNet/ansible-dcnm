@@ -6,6 +6,7 @@ description: Verify that class ApiEndpoints returns the correct API endpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 
+
 def test_dcnm_image_upgrade_endpoints_init() -> None:
     """
     Endpoints.__init__

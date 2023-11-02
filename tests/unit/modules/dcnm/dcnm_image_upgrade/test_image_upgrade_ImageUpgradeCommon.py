@@ -14,7 +14,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrad
 from .fixture import load_fixture
 
 
-
 class MockAnsibleModule:
     params = {}
 

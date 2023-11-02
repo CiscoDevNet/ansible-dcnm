@@ -13,7 +13,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_opti
 
 from .fixture import load_fixture
 
-
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
 patch_image_mgmt = patch_module_utils + "image_mgmt."
 
