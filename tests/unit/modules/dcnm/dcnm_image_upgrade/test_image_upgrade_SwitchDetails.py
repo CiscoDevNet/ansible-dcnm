@@ -8,11 +8,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import (
-#     ImageUpgradeCommon, SwitchDetails, ControllerVersion)
-
-# from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
+    SwitchDetails
 
 from .fixture import load_fixture
 
@@ -22,18 +19,11 @@ def does_not_raise():
     yield
 
 
-# dcnm_send_patch = (
-#     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
-# )
-
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
-patch_common = patch_module_utils + "common."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 
-dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
-dcnm_send_image_stage = patch_image_mgmt + "image_stage.dcnm_send"
-dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 dcnm_send_switch_details = patch_image_mgmt + "switch_details.dcnm_send"
+
 
 def responses_switch_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchDetails"
@@ -162,7 +152,7 @@ def test_refresh_response_data(monkeypatch, module) -> None:
     assert module.serial_number == "FOX2109PGD1"
 
 
-match = "Unable to retrieve switch information from NDFC. "
+match = "Unable to retrieve switch information from the controller. "
 
 
 @pytest.mark.parametrize(
@@ -233,23 +223,22 @@ def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
     Function description:
 
     SwitchDetails._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set ip_address.
-    It returns the value of the requested property if the user has set ip_address.
+
+    It raises AnsibleFailJson if the user has not set ip_address or if
+    the ip_address is unknown, or if an unknown property name is queried.
+
+    It returns the value of the requested property if the user has set
+    ip_address and the property name is known.
+
     The property value is passed to both make_boolean() and make_none(), which
     either:
         - converts it to a boolean
         - converts it to NoneType
         - returns the value unchanged
 
-    Expectations:
-
-    1.  ControllerVersion._get returns above values
-        given corresponding responses
-
     Expected results:
 
-    1. ControllerVersion_mode_LAN == "LAN"
-    2. ControllerVersion_mode_none == None
+    1. Property values are returned as expected
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
@@ -261,3 +250,58 @@ def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
     module.refresh()
     module.ip_address = "172.22.150.110"
     assert module._get(item) == expected
+
+def test_get_with_unknown_ip_address(monkeypatch, module) -> None:
+    """
+    Function description:
+
+    SwitchDetails._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set ip_address or if
+    the ip_address is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has set a known
+    ip_address.
+
+    Expected results:
+
+    1.  fail_json is called with appropriate error message since an unknown
+        ip_address is set.
+    """
+
+    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "SwitchDetails_get_return_code_200"
+        return responses_switch_details(key)
+
+    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+
+    module.refresh()
+    module.ip_address = "1.1.1.1"
+    match = "SwitchDetails._get: 1.1.1.1 does not exist "
+    match += "on the controller."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module._get("hostName")
+
+def test_get_with_unknown_property_name(monkeypatch, module) -> None:
+    """
+    Function description:
+
+    SwitchDetails._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set ip_address or if
+    the ip_address is unknown, or if an unknown property name is queried.
+
+    Expected results:
+
+    1.  fail_json is called with appropriate error message since an
+        unknown property name is queried.
+    """
+
+    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "SwitchDetails_get_return_code_200"
+        return responses_switch_details(key)
+
+    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+
+    module.refresh()
+    module.ip_address = "172.22.150.110"
+    match = "SwitchDetails._get: 172.22.150.110 does not have a key named FOO."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module._get("FOO")

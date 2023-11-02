@@ -1,23 +1,21 @@
+"""
+controller_version: 12
+description: Verify functionality of subclass SwitchIssuDetailsByIpAddress
+"""
+
 from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
-#     SwitchIssuDetailsByIpAddress
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsByIpAddress
 
 from .fixture import load_fixture
 
-"""
-controller_version: 12
-description: Verify functionality of subclass SwitchIssuDetailsByIpAddress
-"""
-# dcnm_send_patch = "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade.dcnm_send"
 
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt  = patch_module_utils + "image_mgmt."
+patch_image_mgmt = patch_module_utils + "image_mgmt."
 
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
@@ -173,7 +171,7 @@ def test_result_return_code_404(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    error_message = "Bad result when retriving switch information from NDFC"
+    error_message = "Bad result when retriving switch information from the controller"
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()
 
@@ -192,14 +190,12 @@ def test_result_return_code_200_empty_data(monkeypatch, module) -> None:
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     error_message = "SwitchIssuDetailsByIpAddress.refresh: "
-    error_message += "NDFC has no switch ISSU information."
+    error_message += "The controller has no switch ISSU information."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()
 
 
-def test_result_return_code_200_switch_issu_info_length_0(
-    monkeypatch, module
-) -> None:
+def test_result_return_code_200_switch_issu_info_length_0(monkeypatch, module) -> None:
     """
     fail_json is called on 200 response with DATA.lastOperDataObject length 0.
     endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
@@ -214,6 +210,64 @@ def test_result_return_code_200_switch_issu_info_length_0(
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
     error_message = "SwitchIssuDetailsByIpAddress.refresh: "
-    error_message += "NDFC has no switch ISSU information."
+    error_message += "The controller has no switch ISSU information."
     with pytest.raises(AnsibleFailJson, match=error_message):
         module.refresh()
+
+def test_get_with_unknown_ip_address(monkeypatch, module) -> None:
+    """
+    Function description:
+
+    SwitchIssuDetailsByIpAddress._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set ip_address or if
+    the ip_address is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has set a known
+    ip_address.
+
+    Expected results:
+
+    1.  fail_json is called with appropriate error message since an unknown
+        ip_address is set.
+    """
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "packagemgnt_issu_get_return_code_200_one_switch"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    module.refresh()
+    module.ip_address = "1.1.1.1"
+    match = "SwitchIssuDetailsByIpAddress._get: 1.1.1.1 does not exist "
+    match += "on the controller."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module._get("serialNumber")
+
+def test_get_with_unknown_property_name(monkeypatch, module) -> None:
+    """
+    Function description:
+
+    SwitchIssuDetailsByIpAddress._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set ip_address or if
+    the ip_address is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has set a
+    known ip_address and the property name is valid.
+
+    Expected results:
+
+    1.  fail_json is called with appropriate error message since an unknown
+        property is queried.
+    """
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "packagemgnt_issu_get_return_code_200_one_switch"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    module.refresh()
+    module.ip_address = "172.22.150.102"
+    match = "SwitchIssuDetailsByIpAddress._get: 172.22.150.102 unknown "
+    match += f"property name: FOO"
+    with pytest.raises(AnsibleFailJson, match=match):
+        module._get("FOO")
