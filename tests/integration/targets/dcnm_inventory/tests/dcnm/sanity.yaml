@@ -1,0 +1,183 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == "11"
+  tags: sanity
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version >= "12"
+  tags: sanity
+
+- name: SANITY- MERGED - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+  tags: sanity
+
+- name: SANITY- DELETED - setup - Clean up existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+  register: result
+  tags: sanity
+
+##############################################
+##                MERGED                    ##
+##############################################
+
+- name: SANITY- MERGED - Merge a Switch using GreenField Deployment
+  cisco.dcnm.dcnm_inventory: &conf
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+      max_hops: 0
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+      preserve_config: False # boolean, default is  true
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+  tags: sanity
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  tags: sanity
+
+- name: SANITY- MERGED - conf1 - GF - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+  tags: sanity  
+
+#############################################
+#                QUERY                     ##
+#############################################
+
+- name: SANITY- QUERY - Query a Switch - Hostname and Role must match
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
+                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.response[0].ipAddress == "{{ ansible_switch1 }}"'
+    - 'result.response[0].switchRole == "leaf"'
+  tags: sanity  
+
+
+
+##############################################
+##                OVERRIDDEN                ##
+##############################################
+
+- name: SANITY- OVERRIDDEN - Update a New Switch using GreenField Deployment - Delete and Create - default role
+  cisco.dcnm.dcnm_inventory: &conf_over
+    fabric: "{{ ansible_it_fabric }}"
+    state: overridden
+    config:
+    - seed_ip: "{{ ansible_switch2 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+      max_hops: 0
+      preserve_config: False # boolean, default is  true
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == true'
+  tags: sanity  
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  tags: sanity
+
+- name: SANITY- OVERRIDDEN - conf1 - OV - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_over
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and there is no more device to delete in the fabric"'
+  tags: sanity
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: SANITY- DELETED - setup - Clean up existing devices
+  cisco.dcnm.dcnm_inventory: &clean
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+    config:
+    - seed_ip: "{{ ansible_switch2 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+      max_hops: 0
+      preserve_config: False # boolean, default is  true
+  register: result
+  tags: sanity
+
+- name: SANITY- DELETED - conf1 - OV - Idempotence
+  cisco.dcnm.dcnm_inventory: *clean
+  register: result
+  tags: sanity
+
+##############################################
+##             RESET FABRIC                 ##
+##############################################
+
+- name: SANITY- RESET - setup switches in fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+      max_hops: 0
+      preserve_config: False # boolean, default is  true
+    - seed_ip: "{{ ansible_switch2 }}"
+      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+      max_hops: 0
+      preserve_config: False # boolean, default is  true
+  register: result
+  tags: sanity

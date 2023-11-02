@@ -8,11 +8,13 @@
     service_fabric: "{{ ansible_it_service_fabric }}"
     state: deleted
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Initialize the setup - Delete Service Nodes
   cisco.dcnm.dcnm_service_node: &conf
@@ -35,11 +37,13 @@
       switches:
         - "{{ ansible_switch1 }}"
   register: result
+  tags: sanity
 
 - assert:
     that:
     - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Initialize the setup - Delete VRFs
   cisco.dcnm.dcnm_vrf:
@@ -103,17 +107,21 @@
             - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Initialize the setup - sleep for 10 seconds for DCNM to completely update the state
   wait_for:
     timeout: 10
+  tags: sanity
 
-- block:
+- tags: sanity
+  block:
 
 ##############################################
 ##           MERGE VRFs                     ##

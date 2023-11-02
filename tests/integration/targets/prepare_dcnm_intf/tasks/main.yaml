@@ -43,6 +43,7 @@
           feature hsrp
 
           ##
+  tags: sanity
   register: result
 
 # Create the policy to deploy lacp, interface-vlan and hsrp features on the switches
@@ -69,6 +70,7 @@
     deploy: true
     state: merged
   register: result
+  tags: sanity
 
 # Determine the version of Controller
 - name: Determine version of DCNM or NDFC

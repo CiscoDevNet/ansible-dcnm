@@ -5,19 +5,23 @@
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
+  tags: sanity
 
 - set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
+  tags: sanity
 
 - name: set test_items
   set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  tags: sanity
 
 - name: run test cases (connection=httpapi)
   include: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
+  tags: sanity
 
 - name: Final Cleanup - delete telemetry policy that we created during init
   cisco.dcnm.dcnm_policy:
@@ -30,11 +34,13 @@
           - ip: "{{ ansible_switch1 }}"
           - ip: "{{ ansible_switch2 }}"
   register: result
+  tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
+  tags: sanity
 
 - name: Final Cleanup - delete all templates created during init
   cisco.dcnm.dcnm_template:
@@ -47,6 +53,7 @@
       - name: template_105
       - name: my_base_ospf
       - name: my_feature_telemetry
+  tags: sanity
 
   register: result
 

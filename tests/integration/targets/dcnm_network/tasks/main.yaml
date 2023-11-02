@@ -2,6 +2,7 @@
 
 - set_fact:
     controller_version: "Unable to determine controller version"
+  tags: sanity
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
@@ -9,11 +10,13 @@
     path: /appcenter/cisco/ndfc/api/about/version
   register: result
   ignore_errors: yes
+  tags: sanity
 
 - set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
   ignore_errors: yes
+  tags: sanity
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
@@ -21,21 +24,25 @@
     path: /fm/fmrest/about/version
   register: result
   ignore_errors: yes
+  tags: sanity
 
 - set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
   ignore_errors: yes
+  tags: sanity
 
 # No need to continue if we cannot determine the DCNM/NDFC controller version
 - assert:
     that:
     - 'controller_version != "Unable to determine controller version"'
+  tags: sanity
 
 - name: Remove all existing networks to start with a clean state
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: deleted
+  tags: sanity
 
 - name: Create vrfs required for this test and remove all other vrfs
   cisco.dcnm.dcnm_vrf:
@@ -63,5 +70,6 @@
       - ip_address: "{{ ansible_switch1 }}"
       - ip_address: "{{ ansible_switch2 }}"
       deploy: true
+  tags: sanity
 
-- { include_tasks: dcnm.yaml, tags: ['dcnm'] }
+- { include: dcnm.yaml, tags: ['dcnm'] }
