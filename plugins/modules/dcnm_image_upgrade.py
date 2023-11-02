@@ -18,9 +18,9 @@ Classes and methods for Ansible support of Nexus image upgrade.
 
 Ansible states "merged", "deleted", and "query" are implemented.
 
-merged: attach image policy to one or more devices
+merged: stage, validate, upgrade image for one or more devices
 deleted: delete image policy from one or more devices
-query: return image policy details for one or more devices
+query: return switch issu details for one or more devices
 """
 from __future__ import absolute_import, division, print_function
 
@@ -69,16 +69,18 @@ __author__ = "Cisco Systems, Inc."
 DOCUMENTATION = """
 ---
 module: dcnm_image_upgrade
-short_description: Attach, detach, and query device image policies.
+short_description: Image management for Nexus switches
 version_added: "0.9.0"
 description:
-    - Attach, detach, and query device image policies.
+    - Stage, validate, upgrade images.
+    - Attach, detach, image policies.
+    - Query device issu details.
 author: Cisco Systems, Inc.
 options:
     state:
         description:
         - The state of the feature or object after module completion.
-        - I(merged) and I(query) are the only states supported.
+        - I(merged), I(deleted), and I(query) states are supported.
         type: str
         choices:
         - merged
@@ -348,9 +350,12 @@ EXAMPLES = """
 #
 # merged:
 #   Attach image policy to one or more devices.
+#   Stage image on one or more devices.
+#   Validate image on one or more devices.
+#   Upgrade image on one or more devices.
 #
 # query:
-#   Return image policy details for one or more devices.
+#   Return ISSU details for one or more devices.
 #   
 # deleted:
 #   Delete image policy from one or more devices
@@ -422,6 +427,23 @@ EXAMPLES = """
                 switches:
                 -   ip_address: 192.168.1.1
                 -   ip_address: 192.168.1.2
+
+# Query ISSU details for three devices
+    -   name: query switch ISSU status
+        cisco.dcnm.dcnm_image_upgrade:
+            state: query
+            config:
+                policy: KMR5
+                switches:
+                -   ip_address: 192.168.1.1
+                    policy: OR1F
+                -   ip_address: 192.168.1.2
+                    policy: NR2F
+                -   ip_address: 192.168.1.3 # will query policy KMR5
+        register: result
+    -   name: print result
+        ansible.builtin.debug:
+            var: result
 
 """
 
