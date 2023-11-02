@@ -39,6 +39,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
+        self.method_name = "__init__"
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.image_policies = ImagePolicies(self.module)
@@ -46,6 +47,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.valid_actions = {"attach", "detach", "query"}
 
     def _init_properties(self):
+        self.method_name = "_init_properties"
         self.properties = {}
         self.properties["action"] = None
         self.properties["response"] = None
@@ -61,8 +63,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         caller _attach_policy()
         """
+        self.method_name = "build_attach_payload"
         self.payloads = []
-        # TODO:2 Need a way to call refresh() in __init__ with unit-tests being able to mock it
+
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.serial_number = serial_number
@@ -74,7 +77,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
             payload["serialNumber"] = self.switch_issu_details.serial_number
             for item in payload:
                 if payload[item] is None:
-                    msg = f"Unable to determine {item} for switch "
+                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg += f" Unable to determine {item} for switch "
                     msg += f"{self.switch_issu_details.ip_address}, "
                     msg += f"{self.switch_issu_details.serial_number}, "
                     msg += f"{self.switch_issu_details.device_name}. "
@@ -87,48 +91,56 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         validations prior to commit() should be added here.
         """
-        self.log_msg(f"REMOVE: {self.class_name}.validate_request: Entered")
+        self.method_name = "validate_request"
+
         if self.action is None:
-            msg = f"{self.class_name}.validate_request: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.action must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
 
         if self.policy_name is None:
-            msg = f"{self.class_name}.validate_request: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
 
-        self.log_msg(f"REMOVE: {self.class_name}.validate_request: action {self.action}")
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg = f"action {self.action}"
+        self.log_msg(msg)
 
         if self.action == "query":
             return
 
-        self.log_msg(f"REMOVE: {self.class_name}.validate_request: serial_numbers {self.serial_numbers}")
+        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
+        msg = f"serial_numbers {self.serial_numbers}"
+        self.log_msg(msg)
 
         if self.serial_numbers is None:
-            msg = f"{self.class_name}.validate_request: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
 
 
-        # TODO:2 Need a way to call refresh() in __init__ with unit-tests being able to mock it
         self.image_policies.refresh()
         self.switch_issu_details.refresh()
+
         # Fail if the image policy does not support the switch platform
         self.image_policies.policy_name = self.policy_name
         for serial_number in self.serial_numbers:
             self.switch_issu_details.serial_number = serial_number
             if self.switch_issu_details.platform not in self.image_policies.platform:
-                msg = f"policy {self.policy_name} does not support platform "
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += f"policy {self.policy_name} does not support platform "
                 msg += f"{self.switch_issu_details.platform}. {self.policy_name} "
                 msg += "supports the following platform(s): "
                 msg += f"{self.image_policies.platform}"
                 self.module.fail_json(msg)
 
     def commit(self):
+        self.method_name = "commit"
+
         self.validate_request()
         if self.action == "attach":
             self._attach_policy()
@@ -137,7 +149,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         elif self.action == "query":
             self._query_policy()
         else:
-            msg = f"{self.class_name}.commit: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += f"Unknown action {self.action}."
             self.module.fail_json(msg)
 
@@ -150,6 +162,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
         are accessible via properties response and result,
         respectively.
         """
+        self.method_name = "_attach_policy"
+
         self.build_attach_payload()
         path = self.endpoints.policy_attach.get("path")
         verb = self.endpoints.policy_attach.get("verb")
@@ -158,13 +172,16 @@ class ImagePolicyAction(ImageUpgradeCommon):
         for payload in self.payloads:
             response = dcnm_send(self.module, verb, path, data=json.dumps(payload))
             result = self._handle_response(response, verb)
+
             if not result["success"]:
-                msg = f"{self.class_name}._attach_policy: "
+                msg = f"{self.class_name}.{self.method_name}: "
                 msg += f"Bad result when attaching policy {self.policy_name} "
                 msg += f"to switch {payload['ipAddr']}."
                 self.module.fail_json(msg)
+
             responses.append(response)
             results.append(result)
+
         self.properties["response"] = responses
         self.properties["result"] = results
 
@@ -175,6 +192,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
         query_params: ?serialNumber=FDO211218GC,FDO21120U5D
         """
+        self.method_name = "_detach_policy"
+
         path = self.endpoints.policy_detach.get("path")
         verb = self.endpoints.policy_detach.get("verb")
         query_params = ",".join(self.serial_numbers)
@@ -192,6 +211,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
         verb: GET
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/__POLICY_NAME__
         """
+        self.method_name = "_query_policy"
+
         path = self.endpoints.policy_info.get("path")
         verb = self.endpoints.policy_info.get("verb")
         path = path.replace("__POLICY_NAME__", self.policy_name)
@@ -221,10 +242,14 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @action.setter
     def action(self, value):
+        self.method_name = "action.setter"
+
         if value not in self.valid_actions:
-            msg = f"{self.class_name}: instance.action must be "
-            msg += f"one of {','.join(sorted(self.valid_actions))}"
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "instance.action must be one of "
+            msg += f"{','.join(sorted(self.valid_actions))}"
             self.module.fail_json(msg)
+
         self.properties["action"] = value
 
     @property
@@ -274,9 +299,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @serial_numbers.setter
     def serial_numbers(self, value):
+        self.method_name = "serial_numbers.setter"
         if not isinstance(value, list):
-            msg = f"{self.class_name}: instance.serial_numbers must "
-            msg += f"be a python list of switch serial numbers."
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "instance.serial_numbers must be a "
+            msg += f"python list of switch serial numbers."
             self.module.fail_json(msg)
         self.properties["serial_numbers"] = value
-
