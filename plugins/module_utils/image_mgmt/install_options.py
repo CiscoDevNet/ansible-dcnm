@@ -1,5 +1,8 @@
-from time import sleep
+import inspect
 import json
+from time import sleep
+from typing import Dict, Any
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
@@ -113,7 +116,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
     }
     """
 
-    def __init__(self, module):
+    def __init__(self, module) -> None:
         super().__init__(module)
         self.class_name = self.__class__.__name__
         self.endpoints = ApiEndpoints()
@@ -131,48 +134,45 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.properties["serial_number"] = None
         self.properties["epld_modules"] = None
 
-    def refresh(self):
+    def refresh(self) -> None:
         """
-        Refresh self.data with current install-options from the controller
+        Refresh self.response_data with current install-options from the controller
         """
+        self.method_name = inspect.stack()[0][3]
+
         if self.policy_name is None:
-            msg = f"{self.class_name}.refresh: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling refresh()"
             self.module.fail_json(msg)
+
         if self.serial_number is None:
-            msg = f"{self.class_name}.refresh: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += f"instance.serial_number must be set before "
             msg += f"calling refresh()"
             self.module.fail_json(msg)
 
-        path = self.endpoints.install_options.get("path")
-        verb = self.endpoints.install_options.get("verb")
+        self.path = self.endpoints.install_options.get("path")
+        self.verb = self.endpoints.install_options.get("verb")
+
         self._build_payload()
-        msg = f"REMOVE: {self.class_name}.refresh: "
-        msg += f"payload: {self.payload}"
-        self.log_msg(msg)
         self.properties["response"] = dcnm_send(
-            self.module, verb, path, data=json.dumps(self.payload)
+            self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
-        msg = f"REMOVE: {self.class_name}.refresh: "
-        msg += f"response: {self.response}"
-        self.log_msg(msg)
-        self.properties["result"] = self._handle_response(self.response, verb)
+        self.properties["result"] = self._handle_response(self.response, self.verb)
+
         if self.result["success"] is False:
-            msg = f"{self.class_name}.refresh: "
+            msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retrieving install-options from "
             msg += f"the controller. Controller response: {self.response}"
             self.module.fail_json(msg)
 
-        self.properties["response_data"] = self.response.get("DATA")
-        self.data = self.properties["response_data"]
-        if self.data.get("compatibilityStatusList") is None:
-            self.compatibility_status = {}
-        else:
-            self.compatibility_status = self.data.get("compatibilityStatusList")[0]
+        self.properties["response_data"] = self.response.get("DATA", {})
 
-    def _build_payload(self):
+        self.compatibility_status = self.response_data.get("compatibilityStatusList", [{}])[0]
+
+
+    def _build_payload(self) -> None:
         """
         {
             "devices": [
@@ -186,7 +186,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             "packageInstall": false
         }
         """
-        self.payload = {}
+        self.payload: Dict[str, Any] = {}
         self.payload["devices"] = []
         devices = {}
         devices["serialNumber"] = self.serial_number
@@ -197,11 +197,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
-        return self.make_boolean(
-            self.make_none(
-                self.data.get(item)
-            )
-        )
+        self.response_data.get(item)
 
     # Mandatory properties
     @property
@@ -358,25 +354,28 @@ class ImageInstallOptions(ImageUpgradeCommon):
         return self.compatibility_status.get("ipAddress")
 
     @property
-    def response_data(self):
+    def response_data(self) -> Dict[str, Any]:
         """
         Return the DATA portion of the controller response.
+        Return empty dict otherwise
         """
-        return self.properties.get("response_data")
+        return self.properties.get("response_data", {})
 
     @property
-    def response(self):
+    def response(self) -> Dict[str, Any]:
         """
         Return the controller response.
+        Return empty dict otherwise
         """
-        return self.properties.get("response")
+        return self.properties.get("response", {})
 
     @property
     def result(self):
         """
         Return the query result.
+        Return empty dict otherwise
         """
-        return self.properties.get("result")
+        return self.properties.get("result", {})
 
     @property
     def os_type(self):
@@ -408,13 +407,15 @@ class ImageInstallOptions(ImageUpgradeCommon):
     def raw_data(self):
         """
         Return the raw data of the install-options response, if it exists.
+        Alias for self.response_data
         """
-        return self.data
+        return self.response_data
 
     @property
     def raw_response(self):
         """
         Return the raw response, if it exists.
+        Alias for self.response
         """
         return self.response
 
