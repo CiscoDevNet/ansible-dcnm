@@ -2,7 +2,7 @@ import copy
 import inspect
 import json
 from time import sleep
-from typing import Any, Dict
+from typing import Any, Dict, List, Set, Union
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -120,10 +120,10 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
 
-    def _init_defaults(self):
+    def _init_defaults(self) -> None:
         self.method_name = inspect.stack()[0][3]
 
-        self.defaults = {}
+        self.defaults: Dict[str, Any] = {}
         self.defaults["reboot"] = False
         self.defaults["stage"] = True
         self.defaults["validate"] = True
@@ -144,17 +144,17 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.defaults["options"]["package"]["install"] = False
         self.defaults["options"]["package"]["uninstall"] = False
 
-    def _init_properties(self):
+    def _init_properties(self) -> None:
         self.method_name = inspect.stack()[0][3]
 
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
         #   self._wait_for_image_upgrade_to_complete()
-        self.ip_addresses = set()
+        self.ip_addresses: Set[str] = set()
         # TODO:1 Review these properties since we are no longer
         # calling this class per-switch given the payload structure
         # is not amenable to that.
-        self.properties = {}
+        self.properties: Dict[str, Any] = {}
         self.properties["bios_force"] = False
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
@@ -174,12 +174,12 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["reboot"] = False
         self.properties["write_erase"] = False
 
-        self.valid_epld_module = set()
+        self.valid_epld_module: Set[Union[str, int]] = set()
         self.valid_epld_module.add("ALL")
         for module in range(1, self.max_module_number + 1):
             self.valid_epld_module.add(str(module))
 
-        self.valid_nxos_mode = set()
+        self.valid_nxos_mode: Set[str] = set()
         self.valid_nxos_mode.add("disruptive")
         self.valid_nxos_mode.add("non_disruptive")
         self.valid_nxos_mode.add("force_non_disruptive")
@@ -237,7 +237,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                 self.module.fail_json(msg)
 
             # used in self._wait_for_current_actions_to_complete()
-            self.ip_addresses.add(self.issu_detail.ip_address)
+            self.ip_addresses.add(str(self.issu_detail.ip_address))
 
     def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
         self.method_name = inspect.stack()[0][3]
@@ -304,16 +304,18 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         device = self._merge_defaults_to_switch_config(device)
 
-        # devices_to_upgrade must currently be a single device
-        devices_to_upgrade = []
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
-        payload_device = {}
+
+        # devices_to_upgrade must currently be a single device
+        devices_to_upgrade: List[dict] = []
+
+        payload_device: Dict[str, Any] = {}
         payload_device["serialNumber"] = self.issu_detail.serial_number
         payload_device["policyName"] = device.get("policy")
         devices_to_upgrade.append(payload_device)
 
-        self.payload = {}
+        self.payload: Dict[str, Any] = {}
         self.payload["devices"] = devices_to_upgrade
         self.payload["issuUpgrade"] = device.get("upgrade").get("nxos")
 
@@ -436,8 +438,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.validate_devices()
         self._wait_for_current_actions_to_complete()
 
-        self.path = self.endpoints.image_upgrade.get("path")
-        self.verb = self.endpoints.image_upgrade.get("verb")
+        self.path: str = self.endpoints.image_upgrade.get("path")
+        self.verb: str = self.endpoints.image_upgrade.get("verb")
 
         for device in self.devices:
             self.build_payload(device)
@@ -581,22 +583,23 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["config_reload"] = value
 
     @property
-    def devices(self):
+    def devices(self) -> List[Dict]:
         """
         Set the devices to upgrade.
 
         list() of dict() with the following structure:
-        {
-            "serial_number": "FDO211218HH",
-            "policy_name": "NR1F"
-        }
-
+        [
+            {
+                "serial_number": "FDO211218HH",
+                "policy_name": "NR1F"
+            }
+        ]
         Must be set before calling instance.commit()
         """
-        return self.properties.get("devices")
+        return self.properties.get("devices", [{}])
 
     @devices.setter
-    def devices(self, value):
+    def devices(self, value: List[Dict]):
         self.method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{self.method_name}: "
