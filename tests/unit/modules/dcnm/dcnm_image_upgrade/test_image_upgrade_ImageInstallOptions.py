@@ -43,10 +43,10 @@ def test_policy_name_not_defined(module) -> None:
     fail_json() is called if policy_name is not set when refresh() is called.
     """
     module.serial_number = "FOO"
-    error_message = "ImageInstallOptions.refresh: "
-    error_message += "instance.policy_name must be set before "
-    error_message += r"calling refresh\(\)"
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageInstallOptions.refresh: "
+    match += "instance.policy_name must be set before "
+    match += r"calling refresh\(\)"
+    with pytest.raises(AnsibleFailJson, match=match):
         module.refresh()
 
 
@@ -55,10 +55,10 @@ def test_serial_number_not_defined(module) -> None:
     fail_json() is called if serial_number is not set when refresh() is called.
     """
     module.policy_name = "FOO"
-    error_message = "ImageInstallOptions.refresh: "
-    error_message += "instance.serial_number must be set before "
-    error_message += r"calling refresh\(\)"
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageInstallOptions.refresh: "
+    match += "instance.serial_number must be set before "
+    match += r"calling refresh\(\)"
+    with pytest.raises(AnsibleFailJson, match=match):
         module.refresh()
 
 
@@ -79,7 +79,7 @@ def test_refresh_return_code_200(monkeypatch, module) -> None:
     module.refresh()
     assert isinstance(module.response, dict)
     assert module.device_name == "cvd-1314-leaf"
-    assert module.err_message == ""
+    assert module.err_message is None
     assert module.epld_modules is None
     assert module.install_option == "disruptive"
     assert module.install_packages is None
@@ -105,10 +105,10 @@ def test_refresh_return_code_500(monkeypatch, module) -> None:
 
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
-    error_message = "ImageInstallOptions.refresh: "
-    error_message += "Bad result when retrieving install-options from "
-    error_message += "the controller. Controller response:"
-    with pytest.raises(AnsibleFailJson, match=rf"{error_message}"):
+    match = "ImageInstallOptions.refresh: "
+    match += "Bad result when retrieving install-options from "
+    match += "the controller. Controller response:"
+    with pytest.raises(AnsibleFailJson, match=rf"{match}"):
         module.refresh()
 
 
@@ -149,9 +149,9 @@ def test_invalid_value_issu(module) -> None:
     """
     fail_json() is called if issu is not a boolean.
     """
-    error_message = "ImageInstallOptions.issu.setter: issu must be a "
-    error_message += "boolean value"
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageInstallOptions.issu.setter: issu must be a "
+    match += "boolean value"
+    with pytest.raises(AnsibleFailJson, match=match):
         module.issu = "FOO"
 
 
@@ -159,9 +159,9 @@ def test_invalid_value_epld(module) -> None:
     """
     fail_json() is called if epld is not a boolean.
     """
-    error_message = "ImageInstallOptions.epld.setter: epld must be a "
-    error_message += "boolean value"
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageInstallOptions.epld.setter: epld must be a "
+    match += "boolean value"
+    with pytest.raises(AnsibleFailJson, match=match):
         module.epld = "FOO"
 
 
@@ -169,7 +169,7 @@ def test_invalid_value_package_install(module) -> None:
     """
     fail_json() is called if package_install is not a boolean.
     """
-    error_message = "ImageInstallOptions.package_install.setter: "
-    error_message += "package_install must be a boolean value"
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageInstallOptions.package_install.setter: "
+    match += "package_install must be a boolean value"
+    with pytest.raises(AnsibleFailJson, match=match):
         module.package_install = "FOO"
