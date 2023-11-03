@@ -1,3 +1,5 @@
+import inspect
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
@@ -26,11 +28,15 @@ class SwitchDetails(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
+        self.method_name = inspect.stack()[0][3]
+
         self.class_name = self.__class__.__name__
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
+        self.method_name = inspect.stack()[0][3]
+
         self.properties = {}
         self.properties["ip_address"] = None
         self.properties["response_data"] = None
@@ -44,19 +50,17 @@ class SwitchDetails(ImageUpgradeCommon):
         Refresh switch_details with current switch details from
         the controller.
         """
+        self.method_name = inspect.stack()[0][3]
+
         path = self.endpoints.switches_info.get("path")
         verb = self.endpoints.switches_info.get("verb")
-        self.log_msg(f"REMOVE: {self.class_name}.refresh: path: {path}")
-        self.log_msg(f"REMOVE: {self.class_name}.refresh: verb: {verb}")
+
         self.properties["response"] = dcnm_send(self.module, verb, path)
-        msg = f"REMOVE: {self.class_name}.refresh: self.response {self.response}"
-        self.log_msg(msg)
         self.properties["result"] = self._handle_response(self.response, verb)
-        msg = f"REMOVE: {self.class_name}.refresh: self.result {self.result}"
-        self.log_msg(msg)
 
         if self.response["RETURN_CODE"] != 200:
-            msg = "Unable to retrieve switch information from the controller. "
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.response}"
             self.module.fail_json(msg)
 
@@ -65,22 +69,26 @@ class SwitchDetails(ImageUpgradeCommon):
         for switch in data:
             self.properties["response_data"][switch["ipAddress"]] = switch
 
-        msg = f"REMOVE: {self.class_name}.refresh: self.response_data {self.response_data}"
-        self.log_msg(msg)
 
     def _get(self, item):
+        self.method_name = inspect.stack()[0][3]
+
         if self.ip_address is None:
-            msg = f"{self.class_name}._get: set instance.ip_address "
-            msg += f"before accessing property {item}."
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += "set instance.ip_address before accessing "
+            msg += f"property {item}."
             self.module.fail_json(msg)
+
         if self.properties["response_data"].get(self.ip_address) is None:
-            msg = f"{self.class_name}._get: {self.ip_address} does not exist "
-            msg += f"on the controller."
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += f"{self.ip_address} does not exist on the controller."
             self.module.fail_json(msg)
+
         if self.properties["response_data"][self.ip_address].get(item) is None:
-            msg = f"{self.class_name}._get: {self.ip_address} does not have a key"
-            msg += f" named {item}."
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += f"{self.ip_address} does not have a key named {item}."
             self.module.fail_json(msg)
+
         return self.make_boolean(
             self.make_none(
                 self.properties["response_data"][self.ip_address].get(item)
