@@ -197,7 +197,11 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
-        return self.data.get(item)
+        return self.make_boolean(
+            self.make_none(
+                self.data.get(item)
+            )
+        )
 
     # Mandatory properties
     @property
@@ -307,10 +311,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if it exists.
         Return None otherwise
 
-        epldModules will be "null" if self.epld is False, so
-        make_none() will convert to NoneType in this case.
+        epldModules will be "null" if self.epld is False.
+        _get will convert to NoneType in this case.
         """
-        return self.make_none(self._get("epldModules"))
+        return self._get("epldModules")
 
     @property
     def err_message(self):
@@ -318,9 +322,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
         Return the errMessage of the install-options response,
         if it exists.
         Return None otherwise
-
-        epldModules will be "null" if self.epld is False, so
-        make_none() will convert to NoneType in this case.
         """
         return self._get("errMessage")
 
@@ -345,7 +346,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
                 12.1.2e
                 12.1.3b
         """
-        return self.make_none(self._get("installPacakges"))
+        return self._get("installPacakges")
 
     @property
     def ip_address(self):
