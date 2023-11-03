@@ -2,13 +2,17 @@ import copy
 import inspect
 import json
 from time import sleep
+from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
+
 
 class ImageUpgrade(ImageUpgradeCommon):
     """
@@ -33,7 +37,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                 'stage': False,
                 'validate': True,
                 'upgrade': {
-                    'nxos': True, 
+                    'nxos': True,
                     'epld': False
                 },
                 'options': {
@@ -180,7 +184,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.valid_nxos_mode.add("non_disruptive")
         self.valid_nxos_mode.add("force_non_disruptive")
 
-
     # def prune_devices(self):
     #     """
     #     If the image is already upgraded on a device, remove that device
@@ -213,7 +216,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     #         if device.get("ip_address") not in pruned_devices
     #     ]
 
-    def validate_devices(self):
+    def validate_devices(self) -> None:
         """
         Fail if the upgrade state for any device is Failed.
         """
@@ -222,6 +225,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         for device in self.devices:
             self.issu_detail.ip_address = device.get("ip_address")
             self.issu_detail.refresh()
+
             if self.issu_detail.upgrade == "Failed":
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += "Image upgrade is failing for the following switch: "
@@ -231,10 +235,11 @@ class ImageUpgrade(ImageUpgradeCommon):
                 msg += "Please check the switch "
                 msg += "to determine the cause and try again."
                 self.module.fail_json(msg)
+
             # used in self._wait_for_current_actions_to_complete()
             self.ip_addresses.add(self.issu_detail.ip_address)
 
-    def _merge_defaults_to_switch_config(self, config):
+    def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
         self.method_name = inspect.stack()[0][3]
 
         if config.get("stage") is None:
@@ -256,42 +261,48 @@ class ImageUpgrade(ImageUpgradeCommon):
         if config["options"]["nxos"].get("mode") is None:
             config["options"]["nxos"]["mode"] = self.defaults["options"]["nxos"]["mode"]
         if config["options"]["nxos"].get("bios_force") is None:
-            config["options"]["nxos"]["bios_force"] = self.defaults["options"]["nxos"]["bios_force"]
+            config["options"]["nxos"]["bios_force"] = self.defaults["options"]["nxos"][
+                "bios_force"
+            ]
         if config["options"].get("epld") is None:
             config["options"]["epld"] = self.defaults["options"]["epld"]
         if config["options"]["epld"].get("module") is None:
-            config["options"]["epld"]["module"] = self.defaults["options"]["epld"]["module"]
+            config["options"]["epld"]["module"] = self.defaults["options"]["epld"][
+                "module"
+            ]
         if config["options"]["epld"].get("golden") is None:
-            config["options"]["epld"]["golden"] = self.defaults["options"]["epld"]["golden"]
+            config["options"]["epld"]["golden"] = self.defaults["options"]["epld"][
+                "golden"
+            ]
         if config["options"].get("reboot") is None:
             config["options"]["reboot"] = self.defaults["options"]["reboot"]
         if config["options"]["reboot"].get("config_reload") is None:
-            config["options"]["reboot"]["config_reload"] = self.defaults["options"]["reboot"]["config_reload"]
+            config["options"]["reboot"]["config_reload"] = self.defaults["options"][
+                "reboot"
+            ]["config_reload"]
         if config["options"]["reboot"].get("write_erase") is None:
-            config["options"]["reboot"]["write_erase"] = self.defaults["options"]["reboot"]["write_erase"]
+            config["options"]["reboot"]["write_erase"] = self.defaults["options"][
+                "reboot"
+            ]["write_erase"]
         if config["options"].get("package") is None:
             config["options"]["package"] = self.defaults["options"]["package"]
         if config["options"]["package"].get("install") is None:
-            config["options"]["package"]["install"] = self.defaults["options"]["package"]["install"]
+            config["options"]["package"]["install"] = self.defaults["options"][
+                "package"
+            ]["install"]
         if config["options"]["package"].get("uninstall") is None:
-            config["options"]["package"]["uninstall"] = self.defaults["options"]["package"]["uninstall"]
+            config["options"]["package"]["uninstall"] = self.defaults["options"][
+                "package"
+            ]["uninstall"]
         return config
 
-    def build_payload(self, device):
+    def build_payload(self, device) -> None:
         """
         Build the request payload to upgrade the switches.
         """
         self.method_name = inspect.stack()[0][3]
 
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f" PRE_DEFAULTS: device: {device}"
-        self.log_msg(msg)
-
         device = self._merge_defaults_to_switch_config(device)
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"POST_DEFAULTS: device: {device}"
-        self.log_msg(msg)
 
         # devices_to_upgrade must currently be a single device
         devices_to_upgrade = []
@@ -410,7 +421,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["pacakgeInstall"] = package_install
         self.payload["pacakgeUnInstall"] = package_uninstall
 
-    def commit(self):
+    def commit(self) -> None:
         """
         Commit the image upgrade request to the controller and wait
         for the images to be upgraded.
@@ -422,7 +433,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "call instance.devices before calling commit."
             self.module.fail_json(msg)
 
-        #self.prune_devices()
         self.validate_devices()
         self._wait_for_current_actions_to_complete()
 
@@ -432,22 +442,10 @@ class ImageUpgrade(ImageUpgradeCommon):
         for device in self.devices:
             self.build_payload(device)
 
-            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-            msg += f"upgrade payload: {self.payload}"
-            self.log_msg(msg)
-
             self.properties["response"] = dcnm_send(
                 self.module, self.verb, self.path, data=json.dumps(self.payload)
             )
             self.properties["result"] = self._handle_response(self.response, self.verb)
-
-            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-            msg += f"response: {self.response}"
-            self.log_msg(msg)
-
-            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-            msg += f"result: {self.result}"
-            self.log_msg(msg)
 
             if not self.result["success"]:
                 msg = f"{self.class_name}.{self.method_name}: "
@@ -475,7 +473,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             timeout -= self.check_interval
 
             for ipv4 in self.ip_addresses:
-                if ipv4 not in self.ipv4_done:
+                if ipv4 in self.ipv4_done:
                     continue
 
                 self.issu_detail.ip_address = ipv4
@@ -484,11 +482,6 @@ class ImageUpgrade(ImageUpgradeCommon):
                 if self.issu_detail.actions_in_progress is False:
                     self.ipv4_done.add(ipv4)
                     continue
-
-                msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-                msg += f"{ipv4} actions in progress. "
-                msg += f"Waiting. {timeout} seconds remaining."
-                self.log_msg(msg)
 
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{self.method_name}: "
@@ -513,11 +506,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
-
-            msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-            msg += f"seconds remaining {timeout}, "
-            msg += f"ipv4_todo: {sorted(list(self.ipv4_todo))}"
-            self.log_msg(msg)
 
             for ipv4 in self.ip_addresses:
                 if ipv4 in self.ipv4_done:
@@ -545,13 +533,6 @@ class ImageUpgrade(ImageUpgradeCommon):
                     status = "not started"
                 if upgrade_status == "In-Progress":
                     status = "in progress"
-
-                msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-                msg += f"Seconds remaining {timeout}, "
-                msg += f"Percent complete {upgrade_percent}, "
-                msg += f"Status {status}, "
-                msg += f"{device_name}, {serial_number}, {ip_address}"
-                self.log_msg(msg)
 
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{self.method_name}: "
@@ -808,7 +789,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "instance.write_erase must be a boolean."
             self.module.fail_json(msg)
         self.properties["write_erase"] = value
-
 
     # getter properties
     @property
