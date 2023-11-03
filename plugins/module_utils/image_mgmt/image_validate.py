@@ -2,7 +2,7 @@ import copy
 import inspect
 import json
 from time import sleep
-from typing import Any, Dict
+from typing import Any, Dict, List, Set
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -59,14 +59,14 @@ class ImageValidate(ImageUpgradeCommon):
     def _init_properties(self) -> None:
         self.method_name = inspect.stack()[0][3]
 
-        self.properties = {}
+        self.properties:Dict[str, Any] = {}
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
-        self.properties["response_data"] = None
-        self.properties["result"] = None
-        self.properties["response"] = None
+        self.properties["response_data"] = {}
+        self.properties["result"] = {}
+        self.properties["response"] = {}
         self.properties["non_disruptive"] = False
-        self.properties["serial_numbers"] = None
+        self.properties["serial_numbers"] = []
 
     def prune_serial_numbers(self) -> None:
         """
@@ -163,7 +163,7 @@ class ImageValidate(ImageUpgradeCommon):
         """
         self.method_name = inspect.stack()[0][3]
 
-        self.serial_numbers_done = set()
+        self.serial_numbers_done: Set[str] = set()
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
         timeout = self.check_timeout
 
@@ -241,16 +241,16 @@ class ImageValidate(ImageUpgradeCommon):
             self.module.fail_json(msg)
 
     @property
-    def serial_numbers(self):
+    def serial_numbers(self) -> List[str]:
         """
         Set the serial numbers of the switches to stage.
 
         This must be set before calling instance.commit()
         """
-        return self.properties.get("serial_numbers")
+        return self.properties.get("serial_numbers", [])
 
     @serial_numbers.setter
-    def serial_numbers(self, value):
+    def serial_numbers(self, value: List[str]):
         self.method_name = inspect.stack()[0][3]
 
         if not isinstance(value, list):

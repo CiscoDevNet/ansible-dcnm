@@ -53,11 +53,11 @@ def test_init_properties(module) -> None:
     assert isinstance(module.properties, dict)
     assert module.properties.get("check_interval") == 10
     assert module.properties.get("check_timeout") == 1800
-    assert module.properties.get("response_data") == None
-    assert module.properties.get("response") == None
-    assert module.properties.get("result") == None
+    assert module.properties.get("response_data") == {}
+    assert module.properties.get("response") == {}
+    assert module.properties.get("result") == {}
     assert module.properties.get("non_disruptive") == False
-    assert module.properties.get("serial_numbers") == None
+    assert module.properties.get("serial_numbers") == []
 
 
 def test_prune_serial_numbers(monkeypatch, module, mock_issu_details) -> None:
