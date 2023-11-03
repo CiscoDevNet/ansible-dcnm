@@ -27,7 +27,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 import inspect
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -445,29 +445,29 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.method_name = inspect.stack()[0][3]
-        self.params = self.module.params
         self.class_name = self.__class__.__name__
+        self.method_name = inspect.stack()[0][3]
+
+        self.params = self.module.params
         self.endpoints = ApiEndpoints()
 
         # populated in self._build_policy_attach_payload()
         self.payloads = []
 
-        self.config = module.params.get("config")
+        self.config = module.params.get("config", {})
 
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "expected dict type for self.config. "
-            msg = +f"got {type(self.config).__name__}"
+            msg += f"got {type(self.config).__name__}"
             self.module.fail_json(msg)
 
         self.check_mode = False
-        self.validated = []
-        self.have_create = []
+
+        self.validated = {}
         self.want_create = []
         self.need = []
-        self.diff_save = {}
-        self.query = []
+
         self.result = dict(changed=False, diff=[], response=[])
 
         self.mandatory_global_keys = {"switches"}
@@ -524,7 +524,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def _build_idempotent_want(self, want) -> None:
         """
-        Return an itempotent want item based on the have item contents.
+        Build an itempotent want item based on the have item contents.
 
         The have item is obtained from an instance of SwitchIssuDetails
         created in self.get_have().
@@ -565,15 +565,17 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         want["policy_changed"] = True
         # The switch does not have an image policy attached.
-        # Return the want item as-is with policy_changed = True
+        # idempotent_want == want with policy_changed = True
         if self.have.serial_number is None:
-            return want
+            self.idempotent_want = copy.deepcopy(want)
+            return
 
         # The switch has an image policy attached which is
         # different from the want policy.
-        # Return the want item as-is with policy_changed = True
+        # idempotent_want == want with policy_changed = True
         if want["policy"] != self.have.policy:
-            return want
+            self.idempotent_want = copy.deepcopy(want)
+            return
 
         # start with a copy of the want item
         self.idempotent_want = copy.deepcopy(want)
@@ -617,7 +619,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         be sent to the controller.
         """
         self.method_name = inspect.stack()[0][3]
-        need = []
+        need: List[Dict] = []
 
         for want_create in self.want_create:
             self.have.ip_address = want_create["ip_address"]
@@ -632,10 +634,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                     continue
                 need.append(self.idempotent_want)
         self.need = need
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"need: {self.need}"
-        self.log_msg(msg)
 
     def get_need_deleted(self) -> None:
         """
@@ -680,7 +678,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Return: params_spec, a dictionary containing the set of
                 playbook parameter specifications.
         """
-        params_spec = {}
+        params_spec: Dict[str, Any] = {}
         params_spec["policy"] = {}
         params_spec["policy"]["required"] = False
         params_spec["policy"]["type"] = "str"
@@ -995,7 +993,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += f"{self.image_policies.platform}"
                 self.module.fail_json(msg)
 
-            payload = {}
+            payload: Dict[str, Any] = {}
             payload["policyName"] = self.image_policies.name
             # switch_details.host_name is always None in 12.1.2e
             # so we're using logical_name instead
@@ -1031,7 +1029,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.path = self.endpoints.policy_attach.get("path")
         self.verb = self.endpoints.policy_attach.get("verb")
 
-        payload = {}
+        payload: Dict[str, Any] = {}
         payload["mappingList"] = self.payloads
         response = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(payload)
@@ -1170,9 +1168,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self._build_policy_attach_payload()
         self._send_policy_attach_payload()
 
-        stage_devices = []
-        validate_devices = []
-        upgrade_devices = []
+        stage_devices: List[str] = []
+        validate_devices: List[str] = []
+        upgrade_devices: List[Dict[str, Any]] = []
 
         self.switch_details.refresh()
 
@@ -1208,7 +1206,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         self.method_name = inspect.stack()[0][3]
 
-        detach_policy_devices = {}
+        detach_policy_devices: Dict[str, Any] = {}
 
         self.switch_details.refresh()
         self.image_policies.refresh()
@@ -1245,7 +1243,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
 
-        query_devices = []
+        query_devices: List[Dict[str, Any]] = []
         for switch in self.need:
             instance.ip_address = switch.get("ip_address")
             if instance.filtered_data is None:
