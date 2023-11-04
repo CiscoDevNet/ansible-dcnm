@@ -145,5 +145,12 @@
             ],
             "message": ""
         }
-    }
+    },
+    "ImagePolicyAction_detach_policy_200": {
+        "RETURN_CODE": 200,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO21120U5D,FDO211218GC,FOX2109PGD0",
+        "MESSAGE": "OK",
+        "DATA": "Successfully detach the policy from device."
+    }    
 }
