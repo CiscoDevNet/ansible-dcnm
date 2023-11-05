@@ -1,0 +1,47 @@
+{
+    "test_image_mgmt_stage_00006a": {
+        "TEST_NOTES": [
+            "Needed only for the 200 return code"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-info",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    },
+    "test_image_mgmt_stage_00007a": {
+        "TEST_NOTES": [
+            "Needed only for the 200 return code"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-info",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    },
+    "test_image_mgmt_stage_00008a": {
+        "TEST_NOTES": [
+            "Needed only for the 200 return code"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-info",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    }
+}
