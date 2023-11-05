@@ -7,7 +7,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
     ApiEndpoints
 
 
-def test_dcnm_image_upgrade_endpoints_init() -> None:
+def test_image_mgmt_api_00001() -> None:
     """
     Endpoints.__init__
     """
@@ -38,7 +38,7 @@ def test_dcnm_image_upgrade_endpoints_init() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_bootflash_info() -> None:
+def test_image_mgmt_api_00002() -> None:
     """
     Endpoints.bootflash_info
     """
@@ -50,7 +50,7 @@ def test_dcnm_image_upgrade_endpoints_bootflash_info() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_install_options() -> None:
+def test_image_mgmt_api_00003() -> None:
     """
     Endpoints.install_options
     """
@@ -62,7 +62,7 @@ def test_dcnm_image_upgrade_endpoints_install_options() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_image_stage() -> None:
+def test_image_mgmt_api_00004() -> None:
     """
     Endpoints.image_stage
     """
@@ -74,7 +74,7 @@ def test_dcnm_image_upgrade_endpoints_image_stage() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_image_upgrade() -> None:
+def test_image_mgmt_api_00005() -> None:
     """
     Endpoints.image_upgrade
     """
@@ -86,7 +86,7 @@ def test_dcnm_image_upgrade_endpoints_image_upgrade() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_image_validate() -> None:
+def test_image_mgmt_api_00006() -> None:
     """
     Endpoints.image_validate
     """
@@ -98,7 +98,7 @@ def test_dcnm_image_upgrade_endpoints_image_validate() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_issu_info() -> None:
+def test_image_mgmt_api_00007() -> None:
     """
     Endpoints.issu_info
     """
@@ -110,7 +110,7 @@ def test_dcnm_image_upgrade_endpoints_issu_info() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_controller_version() -> None:
+def test_image_mgmt_api_00008() -> None:
     """
     Endpoints.controller_version
     """
@@ -122,7 +122,7 @@ def test_dcnm_image_upgrade_endpoints_controller_version() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_policies_attached_info() -> None:
+def test_image_mgmt_api_00009() -> None:
     """
     Endpoints.policies_attached_info
     """
@@ -134,7 +134,7 @@ def test_dcnm_image_upgrade_endpoints_policies_attached_info() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_policies_info() -> None:
+def test_image_mgmt_api_00010() -> None:
     """
     Endpoints.policies_info
     """
@@ -146,7 +146,7 @@ def test_dcnm_image_upgrade_endpoints_policies_info() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_policy_attach() -> None:
+def test_image_mgmt_api_00011() -> None:
     """
     Endpoints.policy_attach
     """
@@ -158,7 +158,7 @@ def test_dcnm_image_upgrade_endpoints_policy_attach() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_policy_create() -> None:
+def test_image_mgmt_api_00012() -> None:
     """
     Endpoints.policy_create
     """
@@ -170,7 +170,7 @@ def test_dcnm_image_upgrade_endpoints_policy_create() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_policy_detach() -> None:
+def test_image_mgmt_api_00013() -> None:
     """
     Endpoints.policy_detach
     """
@@ -182,7 +182,7 @@ def test_dcnm_image_upgrade_endpoints_policy_detach() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_policy_info() -> None:
+def test_image_mgmt_api_00014() -> None:
     """
     Endpoints.policy_info
     """
@@ -194,7 +194,7 @@ def test_dcnm_image_upgrade_endpoints_policy_info() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_stage_info() -> None:
+def test_image_mgmt_api_00015() -> None:
     """
     Endpoints.stage_info
     """
@@ -206,7 +206,7 @@ def test_dcnm_image_upgrade_endpoints_stage_info() -> None:
     )
 
 
-def test_dcnm_image_upgrade_endpoints_switches_info() -> None:
+def test_image_mgmt_api_00016() -> None:
     """
     Endpoints.switches_info
     """

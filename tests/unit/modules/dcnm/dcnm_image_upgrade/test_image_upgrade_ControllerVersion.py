@@ -43,7 +43,7 @@ def mock_controller_version() -> ControllerVersion:
     return ControllerVersion(MockAnsibleModule)
 
 
-def test_init_properties(module) -> None:
+def test_common_version_00001(module) -> None:
     """
     Properties are initialized to expected values
     """
@@ -57,18 +57,18 @@ def test_init_properties(module) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_dev_false", False),
-        ("ControllerVersion_dev_true", True),
-        ("ControllerVersion_dev_none", None),
+        ("test_common_version_00002a", False),
+        ("test_common_version_00002b", True),
+        ("test_common_version_00002c", None),
     ],
 )
-def test_dev(monkeypatch, module, key, expected) -> None:
+def test_common_version_00002(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
     ControllerVersion.dev returns:
-        - True if NDFC is a development version
-        - False if NDFC is not a development version
+        - True if the controller is a development version
+        - False if the controller is not a development version
         - None otherwise
 
     Expectations:
@@ -77,9 +77,9 @@ def test_dev(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_dev_false == False
-    2. ControllerVersion_dev_true == True
-    3. ControllerVersion_dev_none == None
+    1. test_common_version_00002a == False
+    2. test_common_version_00002b == True
+    3. test_common_version_00002c == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -94,17 +94,17 @@ def test_dev(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_install_EASYFABRIC", "EASYFABRIC"),
-        ("ControllerVersion_install_none", None),
+        ("test_common_version_00003a", "EASYFABRIC"),
+        ("test_common_version_00003b", None),
     ],
 )
-def test_install(monkeypatch, module, key, expected) -> None:
+def test_common_version_00003(monkeypatch, module, key, expected) -> None:
     """
     Description:
 
     ControllerVersion.install returns:
-        - Value of NDFC response "install" key, if present
-        - None, if NDFC response "install" key is missing
+        - Value of controller response "install" key, if present
+        - None, if controller response "install" key is missing
 
     Expectations:
 
@@ -113,8 +113,8 @@ def test_install(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_install_EASYFABRIC == "EASYFABRIC"
-    2. ControllerVersion_install_none == None
+    1. test_common_version_00003a == "EASYFABRIC"
+    2. test_common_version_00003b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -129,19 +129,19 @@ def test_install(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_is_ha_enabled_true", True),
-        ("ControllerVersion_is_ha_enabled_false", False),
-        ("ControllerVersion_is_ha_enabled_none", None),
+        ("test_common_version_00004a", True),
+        ("test_common_version_00004b", False),
+        ("test_common_version_00004c", None),
     ],
 )
-def test_is_ha_enabled(monkeypatch, module, key, expected) -> None:
+def test_common_version_00004(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
     ControllerVersion.is_ha_enabled returns:
-        - True, if NDFC response "isHaEnabled" key == "true"
-        - False, if NDFC response "isHaEnabled" key == "false"
-        - None, if NDFC response "isHaEnabled" key is missing
+        - True, if controller response "isHaEnabled" key == "true"
+        - False, if controller response "isHaEnabled" key == "false"
+        - None, if controller response "isHaEnabled" key is missing
 
     Expectations:
 
@@ -149,9 +149,9 @@ def test_is_ha_enabled(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_is_ha_enabled_true == True
-    2. ControllerVersion_is_ha_enabled_false == False
-    3. ControllerVersion_is_ha_enabled_none == None
+    1. test_common_version_00004a == True
+    2. test_common_version_00004b == False
+    3. test_common_version_00004c == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -166,19 +166,19 @@ def test_is_ha_enabled(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_is_media_controller_true", True),
-        ("ControllerVersion_is_media_controller_false", False),
-        ("ControllerVersion_is_media_controller_none", None),
+        ("test_common_version_00005a", True),
+        ("test_common_version_00005b", False),
+        ("test_common_version_00005c", None),
     ],
 )
-def test_is_media_controller(monkeypatch, module, key, expected) -> None:
+def test_common_version_00005(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
     ControllerVersion.is_media_controller returns:
-        - True, if NDFC response "isMediaController" key == "true"
-        - False, if NDFC response "isMediaController" key == "false"
-        - None, if NDFC response "isMediaController" key is missing
+        - True, if controller response "isMediaController" key == "true"
+        - False, if controller response "isMediaController" key == "false"
+        - None, if controller response "isMediaController" key is missing
 
     Expectations:
 
@@ -187,9 +187,9 @@ def test_is_media_controller(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_is_media_controller_true == True
-    2. ControllerVersion_is_media_controller_false == False
-    3. ControllerVersion_is_media_controller_none == None
+    1. test_common_version_00005a == True
+    2. test_common_version_00005b == False
+    3. test_common_version_00005c == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -204,12 +204,12 @@ def test_is_media_controller(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_is_upgrade_inprogress_true", True),
-        ("ControllerVersion_is_upgrade_inprogress_false", False),
-        ("ControllerVersion_is_upgrade_inprogress_none", None),
+        ("test_common_version_00006a", True),
+        ("test_common_version_00006b", False),
+        ("test_common_version_00006c", None),
     ],
 )
-def test_is_upgrade_inprogress(monkeypatch, module, key, expected) -> None:
+def test_common_version_00006(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
@@ -225,9 +225,9 @@ def test_is_upgrade_inprogress(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_is_upgrade_inprogress_true == True
-    2. ControllerVersion_is_upgrade_inprogress_false == False
-    3. ControllerVersion_is_upgrade_inprogress_none == None
+    1. test_common_version_00006a == True
+    2. test_common_version_00006b == False
+    3. test_common_version_00006c == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -239,7 +239,7 @@ def test_is_upgrade_inprogress(monkeypatch, module, key, expected) -> None:
     assert module.is_upgrade_inprogress == expected
 
 
-def test_response_data_present(monkeypatch, module) -> None:
+def test_common_version_00007(monkeypatch, module) -> None:
     """
     Function description:
 
@@ -254,11 +254,11 @@ def test_response_data_present(monkeypatch, module) -> None:
 
     Expected results:
 
-    1. ControllerVersion_DATA_present, ControllerVersion.response_data == type(dict)
+    1. test_common_version_00007a, ControllerVersion.response_data == type(dict)
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "ControllerVersion_DATA_present"
+        key = "test_common_version_00007a"
         return responses_controller_version(key)
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
@@ -267,7 +267,7 @@ def test_response_data_present(monkeypatch, module) -> None:
     assert isinstance(module.response_data, dict)
 
 
-def test_response_data_not_present(monkeypatch, module) -> None:
+def test_common_version_00008(monkeypatch, module) -> None:
     """
     Function description:
 
@@ -283,7 +283,7 @@ def test_response_data_not_present(monkeypatch, module) -> None:
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "ControllerVersion_DATA_not_present"
+        key = "test_common_version_00008a"
         return responses_controller_version(key)
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
@@ -292,7 +292,7 @@ def test_response_data_not_present(monkeypatch, module) -> None:
         module.refresh()
 
 
-def test_result_200(monkeypatch, module) -> None:
+def test_common_version_00009(monkeypatch, module) -> None:
     """
     Function description:
 
@@ -310,7 +310,7 @@ def test_result_200(monkeypatch, module) -> None:
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "ControllerVersion_get_return_code_200"
+        key = "test_common_version_00009a"
         return responses_controller_version(key)
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
@@ -319,7 +319,7 @@ def test_result_200(monkeypatch, module) -> None:
     assert module.result == {"found": True, "success": True}
 
 
-def test_result_404(monkeypatch, module) -> None:
+def test_common_version_00010(monkeypatch, module) -> None:
     """
     Function description:
 
@@ -337,7 +337,7 @@ def test_result_404(monkeypatch, module) -> None:
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "ControllerVersion_get_return_code_404"
+        key = "test_common_version_00010a"
         return responses_controller_version(key)
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
@@ -346,7 +346,7 @@ def test_result_404(monkeypatch, module) -> None:
         module.refresh()
 
 
-def test_result_500(monkeypatch, module) -> None:
+def test_common_version_00011(monkeypatch, module) -> None:
     """
     Function description:
 
@@ -364,7 +364,7 @@ def test_result_500(monkeypatch, module) -> None:
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "ControllerVersion_get_return_code_500"
+        key = "test_common_version_00011a"
         return responses_controller_version(key)
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
@@ -375,15 +375,15 @@ def test_result_500(monkeypatch, module) -> None:
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("ControllerVersion_mode_LAN", "LAN"), ("ControllerVersion_mode_none", None)],
+    [("test_common_version_00012a", "LAN"), ("test_common_version_00012b", None)],
 )
-def test_mode(monkeypatch, module, key, expected) -> None:
+def test_common_version_00012(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
     ControllerVersion.mode returns:
-        - If NDFC response "mode" key is present, its value
-        - If NDFC response "mode" key is not present, None
+        - If controller response "mode" key is present, its value
+        - If controller response "mode" key is not present, None
 
     Expectations:
 
@@ -392,8 +392,8 @@ def test_mode(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_mode_LAN == "LAN"
-    2. ControllerVersion_mode_none == None
+    1. test_common_version_00012a == "LAN"
+    2. test_common_version_00012b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -408,17 +408,17 @@ def test_mode(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_uuid_UUID", "foo-uuid"),
-        ("ControllerVersion_uuid_none", None),
+        ("test_common_version_00013a", "foo-uuid"),
+        ("test_common_version_00013b", None),
     ],
 )
-def test_uuid(monkeypatch, module, key, expected) -> None:
+def test_common_version_00013(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
     ControllerVersion.uuid returns:
-        - If NDFC response "uuid" key is present, its value
-        - If NDFC response "uuid" key is not present, None
+        - If controller response "uuid" key is present, its value
+        - If controller response "uuid" key is not present, None
 
     Expectations:
 
@@ -427,8 +427,8 @@ def test_uuid(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_uuid_UUID == "foo-uuid"
-    2. ControllerVersion_uuid_none == None
+    1. test_common_version_00013a == "foo-uuid"
+    2. test_common_version_00013b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -443,17 +443,17 @@ def test_uuid(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_version_12.1.3b", "12.1.3b"),
-        ("ControllerVersion_version_none", None),
+        ("test_common_version_00014a", "12.1.3b"),
+        ("test_common_version_00014b", None),
     ],
 )
-def test_version(monkeypatch, module, key, expected) -> None:
+def test_common_version_00014(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
     ControllerVersion.version returns:
-        - If NDFC response "version" key is present, its value
-        - If NDFC response "version" key is not present, None
+        - If controller response "version" key is present, its value
+        - If controller response "version" key is not present, None
 
     Expectations:
 
@@ -462,8 +462,8 @@ def test_version(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_version_12.1.3b == "12.1.3b"
-    2. ControllerVersion_version_none == None
+    1. test_common_version_00014a == "12.1.3b"
+    2. test_common_version_00014b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -478,11 +478,11 @@ def test_version(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_version_12.1.3b", "12"),
-        ("ControllerVersion_version_none", None),
+        ("test_common_version_00015a", "12"),
+        ("test_common_version_00015b", None),
     ],
 )
-def test_version_major(monkeypatch, module, key, expected) -> None:
+def test_common_version_00015(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
@@ -491,8 +491,8 @@ def test_version_major(monkeypatch, module, key, expected) -> None:
     by splitting the string on "." and returning the first element
 
     ControllerVersion.version_major returns:
-        - If NDFC response "version" key is present, the major version
-        - If NDFC response "version" key is not present, None
+        - If controller response "version" key is present, the major version
+        - If controller response "version" key is not present, None
 
     Expectations:
 
@@ -501,8 +501,8 @@ def test_version_major(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_version_12.1.3b == "12"
-    2. ControllerVersion_version_none == None
+    1. test_common_version_00015a == "12"
+    2. test_common_version_00015b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -517,11 +517,11 @@ def test_version_major(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_version_12.1.3b", "1"),
-        ("ControllerVersion_version_none", None),
+        ("test_common_version_00016a", "1"),
+        ("test_common_version_00016b", None),
     ],
 )
-def test_version_minor(monkeypatch, module, key, expected) -> None:
+def test_common_version_00016(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
@@ -530,8 +530,8 @@ def test_version_minor(monkeypatch, module, key, expected) -> None:
     by splitting the string on "." and returning the second element
 
     ControllerVersion.version_minor returns:
-        - If NDFC response "version" key is present, the minor version
-        - If NDFC response "version" key is not present, None
+        - If controller response "version" key is present, the minor version
+        - If controller response "version" key is not present, None
 
     Expectations:
 
@@ -540,8 +540,8 @@ def test_version_minor(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_version_12.1.3b == "1"
-    2. ControllerVersion_version_none == None
+    1. test_common_version_00016a == "1"
+    2. test_common_version_00016b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
@@ -556,11 +556,11 @@ def test_version_minor(monkeypatch, module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("ControllerVersion_version_12.1.3b", "3b"),
-        ("ControllerVersion_version_none", None),
+        ("test_common_version_00017a", "3b"),
+        ("test_common_version_00017b", None),
     ],
 )
-def test_version_patch(monkeypatch, module, key, expected) -> None:
+def test_common_version_00017(monkeypatch, module, key, expected) -> None:
     """
     Function description:
 
@@ -569,8 +569,8 @@ def test_version_patch(monkeypatch, module, key, expected) -> None:
     by splitting the string on "." and returning the third element
 
     ControllerVersion.version_patch returns:
-        - If NDFC response "version" key is present, the patch version
-        - If NDFC response "version" key is not present, None
+        - If controller response "version" key is present, the patch version
+        - If controller response "version" key is not present, None
 
     Expectations:
 
@@ -579,8 +579,8 @@ def test_version_patch(monkeypatch, module, key, expected) -> None:
 
     Expected results:
 
-    1. ControllerVersion_version_12.1.3b == "3b"
-    2. ControllerVersion_version_none == None
+    1. test_common_version_00017a == "3b"
+    2. test_common_version_00017b == None
     """
 
     def mock_dcnm_send_version(*args, **kwargs) -> Dict[str, Any]:
