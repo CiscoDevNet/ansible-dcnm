@@ -159,17 +159,25 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
+        self.properties["response_data"] = self.response.get("DATA", {})
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
         if self.result["success"] is False:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retrieving install-options from "
-            msg += f"the controller. Controller response: {self.response}"
+            msg += f"the controller. Controller response: {self.response}. "
+            if "does not have package to continue" in self.response_data.get("error", ""):
+                msg += f"Possible cause: Image policy {self.policy_name} does not have "
+                msg += "a package defined, and package_install is set to "
+                msg += "True in the playbook."
             self.module.fail_json(msg)
 
         self.properties["response_data"] = self.response.get("DATA", {})
 
-        self.compatibility_status = self.response_data.get("compatibilityStatusList", [{}])[0]
+        if self.response_data.get("compatibilityStatusList") is None:
+            self.compatibility_status = {}
+        else:
+            self.compatibility_status = self.response_data.get("compatibilityStatusList", [{}])[0]
 
 
     def _build_payload(self) -> None:
@@ -197,7 +205,11 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
-        self.response_data.get(item)
+        return self.make_boolean(
+            self.make_none(
+                self.response_data.get(item)
+            )
+        )
 
     # Mandatory properties
     @property
