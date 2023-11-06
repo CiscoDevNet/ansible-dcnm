@@ -8,6 +8,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
     ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
+    ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
@@ -119,6 +121,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._init_defaults()
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
+        self.install_options = ImageInstallOptions(self.module)
 
     def _init_defaults(self) -> None:
         self.method_name = inspect.stack()[0][3]
@@ -307,6 +310,20 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
 
+        self.install_options.serial_number = self.issu_detail.serial_number
+        self.install_options.policy_name = device.get("policy")
+        self.install_options.epld = device.get("upgrade").get("epld")
+        self.install_options.nxos = device.get("upgrade").get("nxos")
+        self.install_options.package_install = device.get("options").get("package").get("install")
+        self.install_options.refresh()
+        # ImageInstallOptions may fail_json in the refresh() above, which is
+        # fine since it will contain more detailed information.
+        if self.install_options.result["success"] is False:
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += f"failed: {self.install_options.result}. "
+            msg += f"Controller response: {self.install_options.response}"
+            self.module.fail_json(msg)
+
         # devices_to_upgrade must currently be a single device
         devices_to_upgrade: List[dict] = []
 
@@ -485,6 +502,14 @@ class ImageUpgrade(ImageUpgradeCommon):
                     self.ipv4_done.add(ipv4)
                     continue
 
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += f"Seconds remaining {timeout}.  Waiting "
+                msg += f" on ipv4 {ipv4} actions to complete. "
+                msg += f"staged_percent {self.issu_detail.image_staged_percent}, "
+                msg += f"validated_percent {self.issu_detail.validated_percent}, "
+                msg += f"upgrade_percent {self.issu_detail.upgrade_percent}"
+                self.log_msg(msg)
+
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Timed out while waiting for actions in progress "
@@ -525,7 +550,8 @@ class ImageUpgrade(ImageUpgradeCommon):
                     msg = f"{self.class_name}.{self.method_name}: "
                     msg += f"Seconds remaining {timeout}: upgrade image "
                     msg += f"{upgrade_status} for "
-                    msg += f"{device_name}, {serial_number}, {ip_address}"
+                    msg += f"{device_name}, {serial_number}, {ip_address}, "
+                    msg += f"upgrade_percent {upgrade_percent}."
                     self.module.fail_json(msg)
 
                 if upgrade_status == "Success":
