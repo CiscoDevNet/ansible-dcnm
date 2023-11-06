@@ -8,6 +8,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
@@ -45,7 +47,24 @@ def mock_issu_details() -> SwitchIssuDetailsBySerialNumber:
     return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
 
 
-def test_init_properties(module) -> None:
+# test_image_mgmt_validate_00001
+
+
+def test_image_mgmt_validate_00001(module) -> None:
+    """
+    __init__
+    """
+    module.__init__(MockAnsibleModule)
+    assert module.class_name == "ImageValidate"
+    assert isinstance(module.endpoints, ApiEndpoints)
+    assert isinstance(module.issu_detail, SwitchIssuDetailsBySerialNumber)
+
+
+# test_image_mgmt_validate_00002
+# test_init_properties (former name)
+
+
+def test_image_mgmt_validate_00002(module) -> None:
     """
     Properties are initialized to expected values
     """
@@ -60,7 +79,11 @@ def test_init_properties(module) -> None:
     assert module.properties.get("serial_numbers") == []
 
 
-def test_prune_serial_numbers(monkeypatch, module, mock_issu_details) -> None:
+# test_image_mgmt_validate_00003
+# test_prune_serial_numbers (former name)
+
+
+def test_image_mgmt_validate_00003(monkeypatch, module, mock_issu_details) -> None:
     """
     prune_serial_numbers removes serial numbers from the list for which
     "validated" == "Success" (TODO: AND policy == <target_policy>)
@@ -77,7 +100,7 @@ def test_prune_serial_numbers(monkeypatch, module, mock_issu_details) -> None:
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_prune_serial_numbers"
+        key = "test_image_mgmt_validate_00003a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -100,7 +123,11 @@ def test_prune_serial_numbers(monkeypatch, module, mock_issu_details) -> None:
     assert "FDO211218GC" not in module.serial_numbers
 
 
-def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) -> None:
+# test_image_mgmt_validate_00004
+# test_validate_serial_numbers_failed (former name)
+
+
+def test_image_mgmt_validate_00004(monkeypatch, module, mock_issu_details) -> None:
     """
     fail_json is called when imageStaged == "Failed".
 
@@ -111,7 +138,7 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_validate_serial_numbers"
+        key = "test_image_mgmt_validate_00004a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -128,9 +155,11 @@ def test_validate_serial_numbers_failed(monkeypatch, module, mock_issu_details) 
         module.validate_serial_numbers()
 
 
-def test_wait_for_image_validate_to_complete(
-    monkeypatch, module, mock_issu_details
-) -> None:
+# test_image_mgmt_validate_00005
+# test_wait_for_image_validate_to_complete (former name)
+
+
+def test_image_mgmt_validate_00005(monkeypatch, module, mock_issu_details) -> None:
     """
     _wait_for_image_validate_to_complete looks at the "validated" status for each
     serial number and waits for it to be "Success" or "Failed".
@@ -146,7 +175,7 @@ def test_wait_for_image_validate_to_complete(
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_wait_for_image_validate_to_complete"
+        key = "test_image_mgmt_validate_00005a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -164,11 +193,13 @@ def test_wait_for_image_validate_to_complete(
     assert "FDO2112189M" in module.serial_numbers_done
 
 
-def test_wait_for_image_validate_to_complete_validate_failed(
-    monkeypatch, module, mock_issu_details
-) -> None:
+# test_image_mgmt_validate_00006
+# test_wait_for_image_validate_to_complete_validate_failed (former name)
+
+
+def test_image_mgmt_validate_00006(monkeypatch, module, mock_issu_details) -> None:
     """
-    _wait_for_image_validate_to_complete looks at the "validate" status for each
+    _wait_for_image_validate_to_complete looks at the "validated" status for each
     serial number and waits for it to be "Success" or "Failed".
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
@@ -181,7 +212,7 @@ def test_wait_for_image_validate_to_complete_validate_failed(
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_wait_for_image_validate_to_complete_fail_json"
+        key = "test_image_mgmt_validate_00006a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -207,11 +238,15 @@ def test_wait_for_image_validate_to_complete_validate_failed(
     assert "FDO2112189M" not in module.serial_numbers_done
 
 
-def test_wait_for_image_validate_to_complete_timeout(
-    monkeypatch, module, mock_issu_details
-) -> None:
+# test_image_mgmt_validate_00007
+# test_wait_for_image_validate_to_complete_timeout (former name)
+
+
+def test_image_mgmt_validate_00007(monkeypatch, module, mock_issu_details) -> None:
     """
     See test_wait_for_image_stage_to_complete for functional details.
+
+    Since FDO2112189M validated == "In-Progress" the function should timeout
 
     Expectations:
     1.  module.serial_numbers_done should be a set()
@@ -222,7 +257,7 @@ def test_wait_for_image_validate_to_complete_timeout(
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_wait_for_image_validate_to_complete_timeout"
+        key = "test_image_mgmt_validate_00007a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -247,9 +282,11 @@ def test_wait_for_image_validate_to_complete_timeout(
     assert "FDO2112189M" not in module.serial_numbers_done
 
 
-def test_wait_for_current_actions_to_complete(
-    monkeypatch, module, mock_issu_details
-) -> None:
+# test_image_mgmt_validate_00008
+# test_wait_for_current_actions_to_complete (former name)
+
+
+def test_image_mgmt_validate_00008(monkeypatch, module, mock_issu_details) -> None:
     """
     _wait_for_current_actions_to_complete waits until staging, validation,
     and upgrade actions are complete for all serial numbers.  It calls
@@ -268,7 +305,7 @@ def test_wait_for_current_actions_to_complete(
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_wait_for_current_actions_to_complete"
+        key = "test_image_mgmt_validate_00008a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
@@ -286,11 +323,15 @@ def test_wait_for_current_actions_to_complete(
     assert "FDO2112189M" in module.serial_numbers_done
 
 
-def test_wait_for_current_actions_to_complete_timeout(
-    monkeypatch, module, mock_issu_details
-) -> None:
+# test_image_mgmt_validate_00009
+# test_wait_for_current_actions_to_complete_timeout (former name)
+
+
+def test_image_mgmt_validate_00009(monkeypatch, module, mock_issu_details) -> None:
     """
     See test_wait_for_current_actions_to_complete for functional details.
+
+    Since FDO2112189M validated == "In-Progress" the function should timeout
 
     Expectations:
     1.  module.serial_numbers_done should be a set()
@@ -301,7 +342,7 @@ def test_wait_for_current_actions_to_complete_timeout(
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageValidate_test_wait_for_current_actions_to_complete_timeout"
+        key = "test_image_mgmt_validate_00009a"
         return response_data_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)

@@ -1749,7 +1749,14 @@
             "message": ""
         }
     },
-    "ImageValidate_test_prune_serial_numbers": {
+    "test_image_mgmt_validate_00003a": {
+        "TEST_NOTES": [
+            "FDO2112189M validated: none",
+            "FDO211218AX validated: none",
+            "FDO211218B5 validated: none",
+            "FDO211218FV validated: Success",
+            "FDO211218GC validated: Success"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1956,7 +1963,11 @@
             "message": ""
         }
     },
-    "ImageValidate_test_validate_serial_numbers": {
+    "test_image_mgmt_validate_00004a": {
+        "TEST_NOTES": [
+            "FDO21120U5D validated: Success",
+            "FDO2112189M validated: Failed"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2046,7 +2057,11 @@
             "message": ""
         }
     },
-    "ImageValidate_test_wait_for_image_validate_to_complete": {
+    "test_image_mgmt_validate_00005a": {
+        "TEST_NOTES": [
+            "FDO21120U5D validated: Success",
+            "FDO2112189M validated: Success"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2136,7 +2151,11 @@
             "message": ""
         }
     },
-    "ImageValidate_test_wait_for_image_validate_to_complete_fail_json": {
+    "test_image_mgmt_validate_00006a": {
+        "TEST_NOTES": [
+            "FDO21120U5D validated: Success",
+            "FDO2112189M validated: Failed"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2226,7 +2245,13 @@
             "message": ""
         }
     },
-    "ImageValidate_test_wait_for_image_validate_to_complete_timeout": {
+    "test_image_mgmt_validate_00007a": {
+        "TEST_NOTES": [
+            "FDO21120U5D validated: Success",
+            "FDO21120U5D imageStagedPercent: 100",
+            "FDO2112189M validated: In-Progress",
+            "FDO2112189M imageStagedPercent: 50"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2316,7 +2341,11 @@
             "message": ""
         }
     },
-    "ImageValidate_test_wait_for_current_actions_to_complete": {
+    "test_image_mgmt_validate_00008a": {
+        "TEST_NOTES": [
+            "FDO21120U5D imageStaged, upgrade, validated: Success",
+            "FDO2112189M imageStaged, upgrade, validated: Success"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2406,7 +2435,12 @@
             "message": ""
         }
     },
-    "ImageValidate_test_wait_for_current_actions_to_complete_timeout": {
+    "test_image_mgmt_validate_00009a": {
+        "TEST_NOTES": [
+            "FDO21120U5D imageStaged, upgrade, validated: Success",
+            "FDO2112189M imageStaged, upgrade: Success",
+            "FDO2112189M validated: In-Progress"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
