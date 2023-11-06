@@ -8,6 +8,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
     ImageInstallOptions
 
@@ -38,7 +40,37 @@ def module():
     return ImageInstallOptions(MockAnsibleModule)
 
 
-def test_policy_name_not_defined(module) -> None:
+def test_image_mgmt_install_options_00001(module) -> None:
+    """
+    Verify attributes set in __init__
+    """
+    module.__init__(MockAnsibleModule)
+    assert module.module == MockAnsibleModule
+    assert module.class_name == "ImageInstallOptions"
+    assert isinstance(module.endpoints, ApiEndpoints)
+
+
+def test_image_mgmt_install_options_00002(module) -> None:
+    """
+    Properties are initialized to expected values
+    """
+    module._init_properties()
+    assert isinstance(module.properties, dict)
+    assert module.properties.get("epld") == False
+    assert module.properties.get("epld_modules") == None
+    assert module.properties.get("issu") == True
+    assert module.properties.get("package_install") == False
+    assert module.properties.get("policy_name") == None
+    assert module.properties.get("response") == None
+    assert module.properties.get("response_data") == None
+    assert module.properties.get("result") == None
+    assert module.properties.get("serial_number") == None
+
+
+# test_image_mgmt_install_options_00003
+# test_policy_name_not_defined (former name)
+
+def test_image_mgmt_install_options_00003(module) -> None:
     """
     fail_json() is called if policy_name is not set when refresh() is called.
     """
@@ -49,8 +81,10 @@ def test_policy_name_not_defined(module) -> None:
     with pytest.raises(AnsibleFailJson, match=match):
         module.refresh()
 
+# test_image_mgmt_install_options_00004
+# test_serial_number_not_defined (former name)
 
-def test_serial_number_not_defined(module) -> None:
+def test_image_mgmt_install_options_00004(module) -> None:
     """
     fail_json() is called if serial_number is not set when refresh() is called.
     """
@@ -62,14 +96,18 @@ def test_serial_number_not_defined(module) -> None:
         module.refresh()
 
 
-def test_refresh_return_code_200(monkeypatch, module) -> None:
+# test_image_mgmt_install_options_00005
+# test_refresh_return_code_200 (former name)
+
+
+def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
     """
     Properties are updated based on 200 response from endpoint.
     endpoint: install-options
     """
-    key = "imageupgrade_install_options_post_return_code_200"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_install_options_00005a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
@@ -92,13 +130,16 @@ def test_refresh_return_code_200(monkeypatch, module) -> None:
     assert module.result.get("success") == True
 
 
-def test_refresh_return_code_500(monkeypatch, module) -> None:
+# test_image_mgmt_install_options_00006
+# test_refresh_return_code_500 (former name)
+
+def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
     """
     fail_json() should be called if the response RETURN_CODE != 200
     """
-    key = "imageupgrade_install_options_post_return_code_500"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_install_options_00006a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
@@ -112,7 +153,11 @@ def test_refresh_return_code_500(monkeypatch, module) -> None:
         module.refresh()
 
 
-def test_build_payload_defaults(module) -> None:
+# test_image_mgmt_install_options_00007
+# test_build_payload_defaults (former name)
+
+
+def test_image_mgmt_install_options_00007(module) -> None:
     """
     Payload contains defaults if not specified by the user.
     Defaults for issu, epld, and package_install are applied.
@@ -127,10 +172,14 @@ def test_build_payload_defaults(module) -> None:
     assert module.payload.get("packageInstall") == False
 
 
-def test_build_payload_user_changed_defaults(module) -> None:
+# test_image_mgmt_install_options_00008
+# test_build_payload_user_changed_defaults (former name)
+
+
+def test_image_mgmt_install_options_00008(module) -> None:
     """
     Payload contains user-specified values if the user sets them.
-    Defaults for issu, epld, and package_install overridden by user values.
+    Defaults for issu, epld, and package_install are overridden by user values.
     """
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
@@ -145,7 +194,11 @@ def test_build_payload_user_changed_defaults(module) -> None:
     assert module.payload.get("packageInstall") == True
 
 
-def test_invalid_value_issu(module) -> None:
+# test_image_mgmt_install_options_00009
+# test_invalid_value_issu (former name)
+
+
+def test_image_mgmt_install_options_00009(module) -> None:
     """
     fail_json() is called if issu is not a boolean.
     """
@@ -155,7 +208,11 @@ def test_invalid_value_issu(module) -> None:
         module.issu = "FOO"
 
 
-def test_invalid_value_epld(module) -> None:
+# test_image_mgmt_install_options_00010
+# test_invalid_value_epld (former name)
+
+
+def test_image_mgmt_install_options_00010(module) -> None:
     """
     fail_json() is called if epld is not a boolean.
     """
@@ -163,6 +220,10 @@ def test_invalid_value_epld(module) -> None:
     match += "boolean value"
     with pytest.raises(AnsibleFailJson, match=match):
         module.epld = "FOO"
+
+
+# test_image_mgmt_install_options_00011
+# test_invalid_value_package_install (former name)
 
 
 def test_invalid_value_package_install(module) -> None:

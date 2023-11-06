@@ -1,5 +1,11 @@
 {
-    "imageupgrade_install_options_post_return_code_200": {
+    "test_image_mgmt_install_options_00005a": {
+        "TEST_NOTES": [
+            "All attributes in compatibilityStatusList are tested",
+            "epldModules is tested",
+            "installPacakges (yes, misspelled) is tested",
+            "errMessage is tested"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "POST",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
@@ -26,7 +32,10 @@
             "errMessage": ""
         }
     },
-    "imageupgrade_install_options_post_return_code_500": {
+    "test_image_mgmt_install_options_00006a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 500 is tested"
+        ],
         "RETURN_CODE": 500,
         "METHOD": "POST",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
