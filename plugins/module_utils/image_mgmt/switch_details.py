@@ -79,12 +79,12 @@ class SwitchDetails(ImageUpgradeCommon):
             msg += f"property {item}."
             self.module.fail_json(msg)
 
-        if self.properties["response_data"].get(self.ip_address) is None:
+        if self.ip_address not in self.properties["response_data"]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.ip_address} does not exist on the controller."
             self.module.fail_json(msg)
 
-        if self.properties["response_data"][self.ip_address].get(item) is None:
+        if item not in self.properties["response_data"][self.ip_address]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.ip_address} does not have a key named {item}."
             self.module.fail_json(msg)
