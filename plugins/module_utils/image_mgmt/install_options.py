@@ -169,7 +169,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             if "does not have package to continue" in self.response_data.get("error", ""):
                 msg += f"Possible cause: Image policy {self.policy_name} does not have "
                 msg += "a package defined, and package_install is set to "
-                msg += "True in the playbook."
+                msg += f"True in the playbook for device {self.serial_number}."
             self.module.fail_json(msg)
 
         self.properties["response_data"] = self.response.get("DATA", {})
