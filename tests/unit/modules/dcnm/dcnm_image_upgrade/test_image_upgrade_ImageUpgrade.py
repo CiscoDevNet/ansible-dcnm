@@ -24,6 +24,7 @@ patch_image_mgmt = patch_module_utils + "image_mgmt."
 
 dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
+
 def responses_issu_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
@@ -43,16 +44,19 @@ def module():
     return ImageUpgrade(MockAnsibleModule)
 
 
-def test_init(module) -> None:
+def test_image_mgmt_upgrade_00001(module) -> None:
+    """
+    ImageUpgrade.__init__ initializes class attributes to expected values
+    """
     module.__init__(MockAnsibleModule)
     assert isinstance(module, ImageUpgrade)
     assert module.class_name == "ImageUpgrade"
     assert module.max_module_number == 9
 
 
-def test_init_defaults(module) -> None:
+def test_image_mgmt_upgrade_00002(module) -> None:
     """
-    Defaults are initialized to expected values
+    ImageUpgrade._init_defaults initializes attributes to expected values
     """
     module._init_defaults()
     assert isinstance(module.defaults, dict)
@@ -71,9 +75,9 @@ def test_init_defaults(module) -> None:
     assert module.defaults["options"]["package"]["uninstall"] == False
 
 
-def test_init_properties(module) -> None:
+def test_image_mgmt_upgrade_00003(module) -> None:
     """
-    Properties are initialized to expected values
+    ImageUpgrade._init_properties initializes properties to expected values
     """
     module._init_properties()
     assert isinstance(module.properties, dict)
@@ -114,7 +118,8 @@ def test_init_properties(module) -> None:
         "force_non_disruptive",
     }
 
-def test_validate_devices_success(monkeypatch, module) -> None:
+
+def test_image_mgmt_upgrade_00004(monkeypatch, module) -> None:
     """
     Function description:
 
@@ -129,19 +134,12 @@ def test_validate_devices_success(monkeypatch, module) -> None:
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageUpgrade_test_validate_devices_success"
+        key = "test_image_mgmt_upgrade_00004a"
         return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    devices = [
-        {
-            "ip_address": "172.22.150.102"
-        },
-        {
-            "ip_address": "172.22.150.108"
-        }
-    ]
+    devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
     module.devices = devices
     module.validate_devices()
@@ -150,34 +148,29 @@ def test_validate_devices_success(monkeypatch, module) -> None:
     assert "172.22.150.102" in module.ip_addresses
     assert "172.22.150.108" in module.ip_addresses
 
-def test_validate_devices_failed(monkeypatch, module) -> None:
+
+def test_image_mgmt_upgrade_00005(monkeypatch, module) -> None:
     """
     Function description:
 
     ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
-    with the ip addresses of the devices that have issu_detail.upgrade is
+    with the ip addresses of the devices for which issu_detail.upgrade is
     not "Failed"
 
     Expected results:
 
-    1. instance.ip_addresses will contain {"172.22.150.102"}
-    2. fail_json will be called
+    1.  instance.ip_addresses will contain {"172.22.150.102"} since its
+        upgrade status is Success
+    2. fail_json will be called due to 172.22.150.108 upgrade status is Failed
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "ImageUpgrade_test_validate_devices_failed"
+        key = "test_image_mgmt_upgrade_00005a"
         return responses_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    devices = [
-        {
-            "ip_address": "172.22.150.102"
-        },
-        {
-            "ip_address": "172.22.150.108"
-        }
-    ]
+    devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
     match = "ImageUpgrade.validate_devices: Image upgrade is failing for the "
     match += "following switch: cvd-2313-leaf, 172.22.150.108, FDO2112189M. "
@@ -189,3 +182,46 @@ def test_validate_devices_failed(monkeypatch, module) -> None:
     assert len(module.ip_addresses) == 1
     assert "172.22.150.102" in module.ip_addresses
     assert "172.22.150.108" not in module.ip_addresses
+
+
+def test_image_mgmt_upgrade_00006(monkeypatch, module) -> None:
+    """
+    Function: ImageUpgrade.commit
+
+    Expected results:
+
+    1.  ImageUpgrade.commit calls fail_json if devices is None
+    """
+    match = "ImageUpgrade.commit: call instance.devices before calling commit."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module.commit()
+
+
+def test_image_mgmt_upgrade_00007(monkeypatch, module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        values missing that have defaults defined (see ImageUpgrade._init_defaults)
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    """
+    config = {"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
