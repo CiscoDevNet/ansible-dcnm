@@ -34,24 +34,19 @@ class MockAnsibleModule:
 
 
 @pytest.fixture
-def module():
+def controller_version():
     return ControllerVersion(MockAnsibleModule)
 
 
-@pytest.fixture
-def mock_controller_version() -> ControllerVersion:
-    return ControllerVersion(MockAnsibleModule)
-
-
-def test_common_version_00001(module) -> None:
+def test_common_version_00001(controller_version) -> None:
     """
     Properties are initialized to expected values
     """
-    module._init_properties()
-    assert isinstance(module.properties, dict)
-    assert module.properties.get("response_data") == None
-    assert module.properties.get("response") == None
-    assert module.properties.get("result") == None
+    controller_version._init_properties()
+    assert isinstance(controller_version.properties, dict)
+    assert controller_version.properties.get("response_data") == None
+    assert controller_version.properties.get("response") == None
+    assert controller_version.properties.get("result") == None
 
 
 @pytest.mark.parametrize(
@@ -62,7 +57,7 @@ def test_common_version_00001(module) -> None:
         ("test_common_version_00002c", None),
     ],
 )
-def test_common_version_00002(monkeypatch, module, key, expected) -> None:
+def test_common_version_00002(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -87,8 +82,8 @@ def test_common_version_00002(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.dev == expected
+    controller_version.refresh()
+    assert controller_version.dev == expected
 
 
 @pytest.mark.parametrize(
@@ -98,7 +93,7 @@ def test_common_version_00002(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00003b", None),
     ],
 )
-def test_common_version_00003(monkeypatch, module, key, expected) -> None:
+def test_common_version_00003(monkeypatch, controller_version, key, expected) -> None:
     """
     Description:
 
@@ -122,8 +117,8 @@ def test_common_version_00003(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.install == expected
+    controller_version.refresh()
+    assert controller_version.install == expected
 
 
 @pytest.mark.parametrize(
@@ -134,7 +129,7 @@ def test_common_version_00003(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00004c", None),
     ],
 )
-def test_common_version_00004(monkeypatch, module, key, expected) -> None:
+def test_common_version_00004(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -159,8 +154,8 @@ def test_common_version_00004(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.is_ha_enabled == expected
+    controller_version.refresh()
+    assert controller_version.is_ha_enabled == expected
 
 
 @pytest.mark.parametrize(
@@ -171,7 +166,7 @@ def test_common_version_00004(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00005c", None),
     ],
 )
-def test_common_version_00005(monkeypatch, module, key, expected) -> None:
+def test_common_version_00005(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -197,8 +192,8 @@ def test_common_version_00005(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.is_media_controller == expected
+    controller_version.refresh()
+    assert controller_version.is_media_controller == expected
 
 
 @pytest.mark.parametrize(
@@ -209,7 +204,7 @@ def test_common_version_00005(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00006c", None),
     ],
 )
-def test_common_version_00006(monkeypatch, module, key, expected) -> None:
+def test_common_version_00006(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -235,11 +230,11 @@ def test_common_version_00006(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.is_upgrade_inprogress == expected
+    controller_version.refresh()
+    assert controller_version.is_upgrade_inprogress == expected
 
 
-def test_common_version_00007(monkeypatch, module) -> None:
+def test_common_version_00007(monkeypatch, controller_version) -> None:
     """
     Function description:
 
@@ -263,11 +258,11 @@ def test_common_version_00007(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert isinstance(module.response_data, dict)
+    controller_version.refresh()
+    assert isinstance(controller_version.response_data, dict)
 
 
-def test_common_version_00008(monkeypatch, module) -> None:
+def test_common_version_00008(monkeypatch, controller_version) -> None:
     """
     Function description:
 
@@ -289,10 +284,10 @@ def test_common_version_00008(monkeypatch, module) -> None:
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
     with pytest.raises(AnsibleFailJson):
-        module.refresh()
+        controller_version.refresh()
 
 
-def test_common_version_00009(monkeypatch, module) -> None:
+def test_common_version_00009(monkeypatch, controller_version) -> None:
     """
     Function description:
 
@@ -315,11 +310,11 @@ def test_common_version_00009(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.result == {"found": True, "success": True}
+    controller_version.refresh()
+    assert controller_version.result == {"found": True, "success": True}
 
 
-def test_common_version_00010(monkeypatch, module) -> None:
+def test_common_version_00010(monkeypatch, controller_version) -> None:
     """
     Function description:
 
@@ -343,10 +338,10 @@ def test_common_version_00010(monkeypatch, module) -> None:
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
     with pytest.raises(AnsibleFailJson):
-        module.refresh()
+        controller_version.refresh()
 
 
-def test_common_version_00011(monkeypatch, module) -> None:
+def test_common_version_00011(monkeypatch, controller_version) -> None:
     """
     Function description:
 
@@ -370,14 +365,14 @@ def test_common_version_00011(monkeypatch, module) -> None:
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
     with pytest.raises(AnsibleFailJson):
-        module.refresh()
+        controller_version.refresh()
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [("test_common_version_00012a", "LAN"), ("test_common_version_00012b", None)],
 )
-def test_common_version_00012(monkeypatch, module, key, expected) -> None:
+def test_common_version_00012(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -401,8 +396,8 @@ def test_common_version_00012(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.mode == expected
+    controller_version.refresh()
+    assert controller_version.mode == expected
 
 
 @pytest.mark.parametrize(
@@ -412,7 +407,7 @@ def test_common_version_00012(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00013b", None),
     ],
 )
-def test_common_version_00013(monkeypatch, module, key, expected) -> None:
+def test_common_version_00013(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -436,8 +431,8 @@ def test_common_version_00013(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.uuid == expected
+    controller_version.refresh()
+    assert controller_version.uuid == expected
 
 
 @pytest.mark.parametrize(
@@ -447,7 +442,7 @@ def test_common_version_00013(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00014b", None),
     ],
 )
-def test_common_version_00014(monkeypatch, module, key, expected) -> None:
+def test_common_version_00014(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -471,8 +466,8 @@ def test_common_version_00014(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.version == expected
+    controller_version.refresh()
+    assert controller_version.version == expected
 
 
 @pytest.mark.parametrize(
@@ -482,7 +477,7 @@ def test_common_version_00014(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00015b", None),
     ],
 )
-def test_common_version_00015(monkeypatch, module, key, expected) -> None:
+def test_common_version_00015(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -510,8 +505,8 @@ def test_common_version_00015(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.version_major == expected
+    controller_version.refresh()
+    assert controller_version.version_major == expected
 
 
 @pytest.mark.parametrize(
@@ -521,7 +516,7 @@ def test_common_version_00015(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00016b", None),
     ],
 )
-def test_common_version_00016(monkeypatch, module, key, expected) -> None:
+def test_common_version_00016(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -549,8 +544,8 @@ def test_common_version_00016(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.version_minor == expected
+    controller_version.refresh()
+    assert controller_version.version_minor == expected
 
 
 @pytest.mark.parametrize(
@@ -560,7 +555,7 @@ def test_common_version_00016(monkeypatch, module, key, expected) -> None:
         ("test_common_version_00017b", None),
     ],
 )
-def test_common_version_00017(monkeypatch, module, key, expected) -> None:
+def test_common_version_00017(monkeypatch, controller_version, key, expected) -> None:
     """
     Function description:
 
@@ -588,5 +583,5 @@ def test_common_version_00017(monkeypatch, module, key, expected) -> None:
 
     monkeypatch.setattr(dcnm_send_version, mock_dcnm_send_version)
 
-    module.refresh()
-    assert module.version_patch == expected
+    controller_version.refresh()
+    assert controller_version.version_patch == expected
