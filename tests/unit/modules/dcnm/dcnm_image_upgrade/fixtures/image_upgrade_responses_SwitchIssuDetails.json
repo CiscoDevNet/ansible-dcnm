@@ -2890,7 +2890,11 @@
             "message": ""
         }
     },
-    "ImageUpgrade_test_validate_devices_success": {
+    "test_image_mgmt_upgrade_00004a": {
+        "TEST_NOTES": [
+            "FDO21120U5D imageStaged == Success",
+            "FDO2112189M imageStage == Success"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2944,7 +2948,7 @@
                     "policy": "KR5M",
                     "status": "In-Sync",
                     "reason": "Upgrade",
-                    "imageStaged": "Failed",
+                    "imageStaged": "Success",
                     "validated": "Success",
                     "upgrade": "Success",
                     "upgGroups": "null",
@@ -2980,7 +2984,11 @@
             "message": ""
         }
     },
-    "ImageUpgrade_test_validate_devices_failed": {
+    "test_image_mgmt_upgrade_00005a": {
+        "TEST_NOTES": [
+            "FDO21120U5D imageStaged == Success",
+            "FDO2112189M imageStage == Failed"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -3034,7 +3042,7 @@
                     "policy": "KR5M",
                     "status": "In-Sync",
                     "reason": "Upgrade",
-                    "imageStaged": "Failed",
+                    "imageStaged": "Success",
                     "validated": "Success",
                     "upgrade": "Failed",
                     "upgGroups": "null",
