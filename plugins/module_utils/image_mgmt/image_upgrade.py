@@ -112,7 +112,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.endpoints = ApiEndpoints()
 
@@ -122,7 +122,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.install_options = ImageInstallOptions(self.module)
 
     def _init_defaults(self) -> None:
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.defaults: Dict[str, Any] = {}
         self.defaults["reboot"] = False
@@ -146,7 +146,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.defaults["options"]["package"]["uninstall"] = False
 
     def _init_properties(self) -> None:
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
@@ -216,14 +216,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Fail if the upgrade state for any device is Failed.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         for device in self.devices:
             self.issu_detail.ip_address = device.get("ip_address")
             self.issu_detail.refresh()
 
             if self.issu_detail.upgrade == "Failed":
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "Image upgrade is failing for the following switch: "
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
@@ -236,7 +236,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.ip_addresses.add(str(self.issu_detail.ip_address))
 
     def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if config.get("stage") is None:
             config["stage"] = self.defaults["stage"]
@@ -296,7 +296,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Build the request payload to upgrade the switches.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         device = self._merge_defaults_to_switch_config(device)
 
@@ -312,7 +312,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         # ImageInstallOptions may fail_json in the refresh() above, which is
         # fine since it will contain more detailed information.
         if self.install_options.result["success"] is False:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"failed: {self.install_options.result}. "
             msg += f"Controller response: {self.install_options.response}"
             self.module.fail_json(msg)
@@ -339,7 +339,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         nxos_mode = device.get("options").get("nxos").get("mode")
         if nxos_mode not in self.valid_nxos_mode:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.mode must be one of "
             msg += f"{self.valid_nxos_mode}. Got {nxos_mode}."
             self.module.fail_json(msg)
@@ -355,7 +355,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         bios_force = device.get("options").get("nxos").get("bios_force")
 
         if not isinstance(bios_force, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.bios_force must be a boolean. "
             msg += f"Got {bios_force}."
             self.module.fail_json(msg)
@@ -367,7 +367,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
         if epld_golden is True and device.get("upgrade").get("nxos") is True:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid configuration for "
             msg += f"{self.issu_detail.ip_address}. "
             msg += "If options.epld.golden is True "
@@ -379,13 +379,13 @@ class ImageUpgrade(ImageUpgradeCommon):
             try:
                 epld_module = int(epld_module)
             except:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "options.epld.module must either be 'ALL' "
                 msg += f"or an integer. Got {epld_module}."
                 self.module.fail_json(msg)
 
         if not isinstance(epld_golden, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.epld.golden must be a boolean. "
             msg += f"Got {epld_golden}."
             self.module.fail_json(msg)
@@ -400,7 +400,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         reboot = device.get("reboot")
 
         if not isinstance(reboot, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "reboot must be a boolean. "
             msg += f"Got {reboot}."
             self.module.fail_json(msg)
@@ -411,13 +411,13 @@ class ImageUpgrade(ImageUpgradeCommon):
         write_erase = device.get("options").get("reboot").get("write_erase")
 
         if not isinstance(config_reload, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.config_reload must be a boolean. "
             msg += f"Got {config_reload}."
             self.module.fail_json(msg)
 
         if not isinstance(write_erase, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.write_erase must be a boolean. "
             msg += f"Got {write_erase}."
             self.module.fail_json(msg)
@@ -431,13 +431,13 @@ class ImageUpgrade(ImageUpgradeCommon):
         package_uninstall = device.get("options").get("package").get("uninstall")
 
         if not isinstance(package_install, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.install must be a boolean. "
             msg += f"Got {package_install}."
             self.module.fail_json(msg)
 
         if not isinstance(package_uninstall, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.uninstall must be a boolean. "
             msg += f"Got {package_uninstall}."
             self.module.fail_json(msg)
@@ -450,10 +450,10 @@ class ImageUpgrade(ImageUpgradeCommon):
         Commit the image upgrade request to the controller and wait
         for the images to be upgraded.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.devices is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.devices before calling commit."
             self.module.fail_json(msg)
 
@@ -472,7 +472,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.properties["result"] = self._handle_response(self.response, self.verb)
 
             if not self.result["success"]:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += f"failed: {self.result}. "
                 msg += f"Controller response: {self.response}"
                 self.module.fail_json(msg)
@@ -486,7 +486,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         in progress.  Wait for all actions to complete before upgrading image.
         Actions include image staging, image upgrade, and image validation.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.ipv4_todo = copy.copy(self.ip_addresses)
         self.ipv4_done = set()
@@ -507,7 +507,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                     self.ipv4_done.add(ipv4)
                     continue
 
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += f"Seconds remaining {timeout}.  Waiting "
                 msg += f" on ipv4 {ipv4} actions to complete. "
                 msg += f"staged_percent {self.issu_detail.image_staged_percent}, "
@@ -516,7 +516,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                 self.log_msg(msg)
 
         if self.ipv4_done != self.ipv4_todo:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Timed out while waiting for actions in progress "
             msg += "to complete for the following device(s): "
             msg += f"{self.ipv4_todo}. "
@@ -529,7 +529,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Wait for image upgrade to complete
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
         self.ipv4_done = set()
@@ -552,7 +552,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                 serial_number = self.issu_detail.serial_number
 
                 if upgrade_status == "Failed":
-                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg = f"{self.class_name}.{method_name}: "
                     msg += f"Seconds remaining {timeout}: upgrade image "
                     msg += f"{upgrade_status} for "
                     msg += f"{device_name}, {serial_number}, {ip_address}, "
@@ -570,7 +570,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                     status = "in progress"
 
         if self.ipv4_done != self.ipv4_todo:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "The following device(s) did not complete upgrade: "
             msg += f"{self.ipv4_todo.difference(self.ipv4_done)}. "
             msg += "Try increasing issu timeout in the playbook, or check "
@@ -590,9 +590,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @bios_force.setter
     def bios_force(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.bios_force must be a boolean."
             self.module.fail_json(msg)
         self.properties["bios_force"] = value
@@ -608,9 +608,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @config_reload.setter
     def config_reload(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.config_reload must be a boolean."
             self.module.fail_json(msg)
         self.properties["config_reload"] = value
@@ -633,9 +633,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @devices.setter
     def devices(self, value: List[Dict]):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.devices must be a python list of dict."
             self.module.fail_json(msg)
         self.properties["devices"] = value
@@ -651,9 +651,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @disruptive.setter
     def disruptive(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.disruptive must be a boolean."
             self.module.fail_json(msg)
         self.properties["disruptive"] = value
@@ -669,9 +669,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @epld_golden.setter
     def epld_golden(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_golden must be a boolean."
             self.module.fail_json(msg)
         self.properties["epld_golden"] = value
@@ -687,9 +687,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @epld_upgrade.setter
     def epld_upgrade(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_upgrade must be a boolean."
             self.module.fail_json(msg)
         self.properties["epld_upgrade"] = value
@@ -707,13 +707,13 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @epld_module.setter
     def epld_module(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         try:
             value = value.upper()
         except AttributeError:
             pass
         if not isinstance(value, int) and value != "ALL":
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.epld_module must be an integer or 'ALL'"
             self.module.fail_json(msg)
         self.properties["epld_module"] = value
@@ -729,9 +729,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @force_non_disruptive.setter
     def force_non_disruptive(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.force_non_disruptivemust be a boolean."
             self.module.fail_json(msg)
         self.properties["force_non_disruptive"] = value
@@ -747,9 +747,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @non_disruptive.setter
     def non_disruptive(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}.setter: "
+            msg = f"{self.class_name}.{method_name}.setter: "
             msg += "instance.non_disruptive must be a boolean."
             self.module.fail_json(msg)
         self.properties["non_disruptive"] = value
@@ -765,9 +765,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @package_install.setter
     def package_install(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.package_install must be a boolean."
             self.module.fail_json(msg)
         self.properties["package_install"] = value
@@ -783,9 +783,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @package_uninstall.setter
     def package_uninstall(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.package_uninstall must be a boolean."
             self.module.fail_json(msg)
         self.properties["package_uninstall"] = value
@@ -801,9 +801,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @reboot.setter
     def reboot(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.reboot must be a boolean."
             self.module.fail_json(msg)
         self.properties["reboot"] = value
@@ -819,9 +819,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @write_erase.setter
     def write_erase(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.write_erase must be a boolean."
             self.module.fail_json(msg)
         self.properties["write_erase"] = value

@@ -81,7 +81,7 @@ class ImageStage(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.serial_numbers_done = set()
@@ -92,7 +92,7 @@ class ImageStage(ImageUpgradeCommon):
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.properties = {}
         self.properties["serial_numbers"] = None
         self.properties["response_data"] = None
@@ -109,7 +109,7 @@ class ImageStage(ImageUpgradeCommon):
         1.  This cannot go into ImageUpgradeCommon() due to circular
             imports resulting in RecursionError
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         instance = ControllerVersion(self.module)
         instance.refresh()
         self.controller_version = instance.version
@@ -119,7 +119,7 @@ class ImageStage(ImageUpgradeCommon):
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
             self.issu_detail.serial_number = serial_number
@@ -132,13 +132,13 @@ class ImageStage(ImageUpgradeCommon):
         Fail if the image_staged state for any serial_number
         is Failed.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         for serial_number in self.serial_numbers:
             self.issu_detail.serial_number = serial_number
             self.issu_detail.refresh()
 
             if self.issu_detail.image_staged == "Failed":
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg = "Image staging is failing for the following switch: "
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
@@ -152,10 +152,10 @@ class ImageStage(ImageUpgradeCommon):
         Commit the image staging request to the controller and wait
         for the images to be staged.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.serial_numbers is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.serial_numbers "
             msg += "before calling commit."
             self.module.fail_json(msg)
@@ -185,7 +185,7 @@ class ImageStage(ImageUpgradeCommon):
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
         if not self.result["success"]:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
             self.module.fail_json(msg)
@@ -199,7 +199,7 @@ class ImageStage(ImageUpgradeCommon):
         progress.  Wait for all actions to complete before staging image.
         Actions include image staging, image upgrade, and image validation.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.serial_numbers_done = set()
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
@@ -220,7 +220,7 @@ class ImageStage(ImageUpgradeCommon):
                     self.serial_numbers_done.add(serial_number)
 
         if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"Timed out waiting for actions to complete. "
             msg += f"serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
@@ -232,7 +232,7 @@ class ImageStage(ImageUpgradeCommon):
         """
         # Wait for image stage to complete
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.serial_numbers_done = set()
         timeout = self.check_timeout
@@ -254,7 +254,7 @@ class ImageStage(ImageUpgradeCommon):
                 staged_status = self.issu_detail.image_staged
 
                 if staged_status == "Failed":
-                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg = f"{self.class_name}.{method_name}: "
                     msg += f"Seconds remaining {timeout}: stage image failed "
                     msg += f"for {device_name}, {serial_number}, {ip_address}. "
                     msg += f"image staged percent: {staged_percent}"
@@ -264,7 +264,7 @@ class ImageStage(ImageUpgradeCommon):
                     self.serial_numbers_done.add(serial_number)
 
         if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"Timed out waiting for image stage to complete. "
             msg += f"serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
@@ -283,9 +283,9 @@ class ImageStage(ImageUpgradeCommon):
 
     @serial_numbers.setter
     def serial_numbers(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers."
             self.module.fail_json(msg)

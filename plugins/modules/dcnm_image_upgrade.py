@@ -446,7 +446,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.params = self.module.params
         self.endpoints = ApiEndpoints()
@@ -457,7 +457,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.config = module.params.get("config", {})
 
         if not isinstance(self.config, dict):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
             self.module.fail_json(msg)
@@ -474,20 +474,20 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.mandatory_switch_keys = {"ip_address"}
 
         if not self.mandatory_global_keys.issubset(self.config):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Missing mandatory key(s) in playbook global config. "
             msg += f"expected {self.mandatory_global_keys}, "
             msg += f"got {self.config.keys()}"
             self.module.fail_json(msg)
 
         if self.config["switches"] is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "missing list of switches in playbook config."
             self.module.fail_json(msg)
 
         for switch in self.config["switches"]:
             if not self.mandatory_switch_keys.issubset(switch):
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "missing mandatory key(s) in playbook switch config. "
                 msg += f"expected {self.mandatory_switch_keys}, "
                 msg += f"got {switch.keys()}"
@@ -502,7 +502,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Determine current switch ISSU state on NDFC
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.have = SwitchIssuDetailsByIpAddress(self.module)
         self.have.refresh()
@@ -513,7 +513,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Update self.want_create for all switches defined in the playbook
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self._merge_global_and_switch_configs(self.config)
         self._validate_switch_configs()
@@ -559,7 +559,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: self.get_need_merged()
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.have.ip_address = want["ip_address"]
 
@@ -621,7 +621,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         our want list that are not in our have list.  These items will
         be sent to the controller.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         need: List[Dict] = []
 
         for want_create in self.want_create:
@@ -646,7 +646,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         list that are not in our have list.  These items will be sent to
         the controller.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         need = []
         for want in self.want_create:
@@ -665,7 +665,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         For query state, populate self.need list() with all items from
         our want list.  These items will be sent to the controller.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         need = []
         for want in self.want_create:
@@ -779,12 +779,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Validate the playbook parameters
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         state = self.params["state"]
 
         if state not in ["merged", "deleted", "query"]:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "This module supports deleted, merged, and query states. "
             msg += f"Got state {state}"
             self.module.fail_json(msg)
@@ -805,10 +805,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Validate that self.config contains appropriate values for merged state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if not self.config:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "config: element is mandatory for state merged"
             self.module.fail_json(msg)
 
@@ -822,7 +822,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.validated = copy.deepcopy(valid_params)
 
         if invalid_params:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
@@ -837,11 +837,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         1. This is currently identical to _validate_input_for_merged_state()
         2. Adding in case there are differences in the future
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         params_spec = self._build_params_spec_for_merged_state()
         if not self.config:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "config: element is mandatory for state deleted"
             self.module.fail_json(msg)
 
@@ -853,7 +853,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.validated = copy.deepcopy(valid_params)
 
         if invalid_params:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
@@ -868,12 +868,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         1. This is currently identical to _validate_input_for_merged_state()
         2. Adding in case there are differences in the future
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         params_spec = self._build_params_spec_for_merged_state()
 
         if not self.config:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "config: element is mandatory for state query"
             self.module.fail_json(msg)
 
@@ -885,7 +885,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.validated = copy.deepcopy(valid_params)
 
         if invalid_params:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
@@ -905,10 +905,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         5.  If global_config and switch_config are both missing a
             mandatory parameter, fail.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if not config.get("switches"):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "playbook is missing list of switches"
             self.module.fail_json(msg)
 
@@ -937,11 +937,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.get_want
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         for switch in self.switch_configs:
             if not switch.get("ip_address"):
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg = "playbook is missing ip_address for at least one switch"
                 self.module.fail_json(msg)
 
@@ -951,7 +951,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 continue
 
             if switch.get("policy") is None:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "playbook is missing image policy for switch "
                 msg += f"{switch.get('ip_address')} "
                 msg += "and global image policy is not defined."
@@ -966,7 +966,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.handle_merged_state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.payloads = []
         self.switch_details.refresh()
@@ -981,14 +981,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             # Fail if the image policy does not exist.
             # Image policy creation is handled by a different module.
             if self.image_policies.name is None:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += f"policy {switch.get('policy')} does not exist on "
                 msg += "the controller"
                 self.module.fail_json(msg)
 
             # Fail if the image policy does not support the switch platform
             if self.switch_details.platform not in self.image_policies.platform:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += f"policy {switch.get('policy')} does not support "
                 msg += f"platform {self.switch_details.platform}. "
                 msg += f"Policy {switch.get('policy')} "
@@ -1008,7 +1008,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
             for item in payload:
                 if payload[item] is None:
-                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg = f"{self.class_name}.{method_name}: "
                     msg += f"Unable to determine {item} for switch "
                     msg += f"{switch.get('ip_address')}. "
                     msg += "Please verify that the switch is managed by "
@@ -1024,7 +1024,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.handle_merged_state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if len(self.payloads) == 0:
             return
@@ -1050,7 +1050,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
@@ -1063,7 +1063,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
@@ -1106,7 +1106,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - self.handle_merged_state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if len(devices) == 0:
             return
@@ -1126,7 +1126,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 install_options.status not in ["Success", "Skipped"]
                 and device["upgrade"]["nxos"] is True
             ):
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "NXOS upgrade is set to True for switch  "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
@@ -1137,7 +1137,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 install_options.epld_modules is None
                 and device["upgrade"]["epld"] is True
             ):
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "EPLD upgrade is set to True for switch "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
@@ -1151,7 +1151,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         upgrade = ImageUpgrade(self.module)
         upgrade.devices = devices
@@ -1166,7 +1166,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self._build_policy_attach_payload()
         self._send_policy_attach_payload()
@@ -1207,7 +1207,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         detach_policy_devices: Dict[str, Any] = {}
 
@@ -1241,7 +1241,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
