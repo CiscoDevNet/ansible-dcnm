@@ -96,15 +96,22 @@ class ImagePolicies(ImageUpgradeCommon):
             msg += f"accessing property {item}."
             self.module.fail_json(msg)
 
-        if self.properties['response_data'].get(self.policy_name) is None:
+        if self.policy_name not in self.properties["response_data"]:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"policy_name {self.policy_name} is not defined on "
-            msg += "the controller."
+            msg += f"policy_name {self.policy_name} is not defined "
+            msg += "on the controller."
             self.module.fail_json(msg)
 
-        return_item = self.make_boolean(self.properties["response_data"][self.policy_name].get(item))
-        return_item = self.make_none(return_item)
-        return return_item
+        if item not in self.properties["response_data"][self.policy_name]:
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += f"{self.policy_name} does not have a key named {item}."
+            self.module.fail_json(msg)
+
+        return self.make_boolean(
+            self.make_none(
+                self.properties["response_data"][self.policy_name][item]
+            )
+        )
 
     @property
     def description(self):
