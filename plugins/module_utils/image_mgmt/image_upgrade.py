@@ -115,8 +115,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.method_name = inspect.stack()[0][3]
 
         self.endpoints = ApiEndpoints()
-        # Maximum number of modules/linecards in a switch
-        self.max_module_number = 9
 
         self._init_defaults()
         self._init_properties()
@@ -176,11 +174,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["package_uninstall"] = False
         self.properties["reboot"] = False
         self.properties["write_erase"] = False
-
-        self.valid_epld_module: Set[Union[str, int]] = set()
-        self.valid_epld_module.add("ALL")
-        for module in range(1, self.max_module_number + 1):
-            self.valid_epld_module.add(str(module))
 
         self.valid_nxos_mode: Set[str] = set()
         self.valid_nxos_mode.add("disruptive")
@@ -373,12 +366,23 @@ class ImageUpgrade(ImageUpgradeCommon):
         # EPLD
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
-
-        if epld_module not in self.valid_epld_module:
+        if epld_golden is True and device.get("upgrade").get("nxos") is True:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += "options.epld.module must be one of "
-            msg += f"{self.valid_epld_module}. Got {epld_module}."
+            msg += "Invalid configuration for "
+            msg += f"{self.issu_detail.ip_address}. "
+            msg += "If options.epld.golden is True "
+            msg += "all other upgrade options, e.g. upgrade.nxos, "
+            msg += "must be False."
             self.module.fail_json(msg)
+
+        if epld_module != "ALL":
+            try:
+                epld_module = int(epld_module)
+            except:
+                msg = f"{self.class_name}.{self.method_name}: "
+                msg += "options.epld.module must either be 'ALL' "
+                msg += f"or an integer. Got {epld_module}."
+                self.module.fail_json(msg)
 
         if not isinstance(epld_golden, bool):
             msg = f"{self.class_name}.{self.method_name}: "
@@ -390,6 +394,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["epldOptions"] = {}
         self.payload["epldOptions"]["moduleNumber"] = epld_module
         self.payload["epldOptions"]["golden"] = epld_golden
+
 
         # Reboot
         reboot = device.get("reboot")
@@ -551,7 +556,9 @@ class ImageUpgrade(ImageUpgradeCommon):
                     msg += f"Seconds remaining {timeout}: upgrade image "
                     msg += f"{upgrade_status} for "
                     msg += f"{device_name}, {serial_number}, {ip_address}, "
-                    msg += f"upgrade_percent {upgrade_percent}."
+                    msg += f"upgrade_percent {upgrade_percent}. "
+                    msg += "Check the controller to determine the cause. "
+                    msg += "Operations > Image Management > Devices > View Details."
                     self.module.fail_json(msg)
 
                 if upgrade_status == "Success":

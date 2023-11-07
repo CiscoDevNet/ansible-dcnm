@@ -51,7 +51,6 @@ def test_image_mgmt_upgrade_00001(module) -> None:
     module.__init__(MockAnsibleModule)
     assert isinstance(module, ImageUpgrade)
     assert module.class_name == "ImageUpgrade"
-    assert module.max_module_number == 9
 
 
 def test_image_mgmt_upgrade_00002(module) -> None:
@@ -100,18 +99,6 @@ def test_image_mgmt_upgrade_00003(module) -> None:
     assert module.properties.get("package_uninstall") == False
     assert module.properties.get("reboot") == False
     assert module.properties.get("write_erase") == False
-    assert module.valid_epld_module == {
-        "ALL",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-    }
     assert module.valid_nxos_mode == {
         "disruptive",
         "non_disruptive",
