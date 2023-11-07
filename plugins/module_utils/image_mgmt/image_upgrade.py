@@ -214,7 +214,10 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     def validate_devices(self) -> None:
         """
-        Fail if the upgrade state for any device is Failed.
+        1.  Perform any pre-upgrade validations (currently none)
+        2.  Populate self.ip_addresses with the ip_address of all
+            switches which can be upgraded.  This is used in
+            _wait_for_current_actions_to_complete
         """
         method_name = inspect.stack()[0][3]
 
@@ -222,15 +225,12 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.issu_detail.ip_address = device.get("ip_address")
             self.issu_detail.refresh()
 
-            if self.issu_detail.upgrade == "Failed":
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Image upgrade is failing for the following switch: "
-                msg += f"{self.issu_detail.device_name}, "
-                msg += f"{self.issu_detail.ip_address}, "
-                msg += f"{self.issu_detail.serial_number}. "
-                msg += "Please check the switch "
-                msg += "to determine the cause and try again."
-                self.module.fail_json(msg)
+            # Any device validation from issu_detail would go here.
+            # We used to fail_json if upgrade == "Failed" but that
+            # forced users to have to reset the upgrade state on the
+            # controller.  We now allow the upgrade to proceed if
+            # upgrade == "Failed".  But let's leave this method here
+            # in case we want to add more validation in the future.
 
             # used in self._wait_for_current_actions_to_complete()
             self.ip_addresses.add(str(self.issu_detail.ip_address))
