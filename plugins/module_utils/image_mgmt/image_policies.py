@@ -23,7 +23,6 @@ class ImagePolicies(ImageUpgradeCommon):
     epd_image_name = instance.epld_image_name
     etc...
 
-    Policies are retrieved on instantiation of this class.
     Policies can be refreshed by calling instance.refresh().
 
     Endpoint:
