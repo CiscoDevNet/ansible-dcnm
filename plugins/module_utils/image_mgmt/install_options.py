@@ -1,13 +1,15 @@
 import inspect
 import json
 from time import sleep
-from typing import Dict, Any
+from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
+
 
 class ImageInstallOptions(ImageUpgradeCommon):
     """
@@ -156,9 +158,11 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.verb = self.endpoints.install_options.get("verb")
 
         self._build_payload()
+
         self.properties["response"] = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
+
         self.properties["response_data"] = self.response.get("DATA", {})
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
@@ -166,7 +170,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retrieving install-options from "
             msg += f"the controller. Controller response: {self.response}. "
-            if "does not have package to continue" in self.response_data.get("error", ""):
+            if "does not have package to continue" in self.response_data.get(
+                "error", ""
+            ):
                 msg += f"Possible cause: Image policy {self.policy_name} does not have "
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
@@ -177,8 +183,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
         else:
-            self.compatibility_status = self.response_data.get("compatibilityStatusList", [{}])[0]
-
+            self.compatibility_status = self.response_data.get(
+                "compatibilityStatusList", [{}]
+            )[0]
 
     def _build_payload(self) -> None:
         """
@@ -205,11 +212,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
-        return self.make_boolean(
-            self.make_none(
-                self.response_data.get(item)
-            )
-        )
+        return self.make_boolean(self.make_none(self.response_data.get(item)))
 
     # Mandatory properties
     @property
