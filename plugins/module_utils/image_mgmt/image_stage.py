@@ -127,13 +127,6 @@ class ImageStage(ImageUpgradeCommon):
             if self.issu_detail.image_staged == "Success":
                 self.serial_numbers.remove(serial_number)
 
-                msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-                msg += "image already staged for "
-                msg += f"{self.issu_detail.device_name}, "
-                msg += f"{self.issu_detail.ip_address}, "
-                msg += f"{self.issu_detail.serial_number}."
-                self.log_msg(msg)
-
     def validate_serial_numbers(self):
         """
         Fail if the image_staged state for any serial_number
@@ -190,14 +183,6 @@ class ImageStage(ImageUpgradeCommon):
             self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
         self.properties["result"] = self._handle_response(self.response, self.verb)
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"response: {self.response}"
-        self.log_msg(msg)
-
-        msg = f"REMOVE: {self.class_name}.{self.method_name}: "
-        msg += f"result: {self.result}"
-        self.log_msg(msg)
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{self.method_name}: "
