@@ -43,5 +43,171 @@
         "DATA": {
             "error": "null"
         }
+    },
+    "test_image_mgmt_install_options_00007a": {
+        "TEST_NOTES": [
+            "POST REQUEST contents: issu == true, epld == false, packageInstall false",
+            "Device has no policy attached",
+            "NDFC version: 12.1.3b",
+            "All attributes in compatibilityStatusList are tested",
+            "epldModules is tested",
+            "installPacakges (yes, misspelled) is tested",
+            "errMessage is tested"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "MESSAGE": "OK",
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "deviceName": "leaf1",
+                    "ipAddress": "172.22.150.102",
+                    "policyName": "KR5M",
+                    "platform": "N9K/N3K",
+                    "version": "10.2.5",
+                    "osType": "64bit",
+                    "status": "Skipped",
+                    "installOption": "NA",
+                    "compDisp": "Compatibility status skipped.",
+                    "versionCheck": "Compatibility status skipped.",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "timestamp": "NA"
+                }
+            ],
+            "epldModules": null,
+            "installPacakges": null,
+            "errMessage": ""
+        }
+    },
+    "test_image_mgmt_install_options_00008a": {
+        "TEST_NOTES": [
+            "POST REQUEST contents: issu == true, epld == true, packageInstall false",
+            "Device has no policy attached",
+            "NDFC version: 12.1.3b",
+            "All attributes in compatibilityStatusList are tested",
+            "epldModules is tested to be a dict",
+            "epldModules.moduleList length is tested to be 2",
+            "installPacakges (yes, misspelled) is tested",
+            "errMessage is tested"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "MESSAGE": "OK",
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "deviceName": "leaf1",
+                    "ipAddress": "172.22.150.102",
+                    "policyName": "KR5M",
+                    "platform": "N9K/N3K",
+                    "version": "10.2.5",
+                    "osType": "64bit",
+                    "status": "Skipped",
+                    "installOption": "NA",
+                    "compDisp": "Compatibility status skipped.",
+                    "versionCheck": "Compatibility status skipped.",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "timestamp": "NA"
+                }
+            ],
+            "epldModules": {
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "policyName": "KR5M",
+                        "module": 1,
+                        "name": null,
+                        "modelName": "N9K-C93180YC-EX",
+                        "moduleType": "IO FPGA",
+                        "oldVersion": "0x15",
+                        "newVersion": "0x15"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "policyName": "KR5M",
+                        "module": 1,
+                        "name": null,
+                        "modelName": "N9K-C93180YC-EX",
+                        "moduleType": "MI FPGA",
+                        "oldVersion": "0x4",
+                        "newVersion": "0x04"
+                    }
+                ],
+                "bException": false,
+                "exceptionReason": null
+            },
+            "installPacakges": null,
+            "errMessage": ""
+        }
+    },
+    "test_image_mgmt_install_options_00009a": {
+        "TEST_NOTES": [
+            "POST REQUEST contents: issu == false, epld == true, packageInstall false",
+            "Device has no policy attached",
+            "NDFC version: 12.1.3b",
+            "compatibilityStatusList is tested to be None",
+            "epldModules is tested to be a dict",
+            "epldModules.moduleList length is tested to be 2",
+            "installPacakges (yes, misspelled) is tested",
+            "errMessage is tested"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "MESSAGE": "OK",
+        "DATA": {
+            "compatibilityStatusList": null,
+            "epldModules": {
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "policyName": "KR5M",
+                        "module": 1,
+                        "name": null,
+                        "modelName": "N9K-C93180YC-EX",
+                        "moduleType": "IO FPGA",
+                        "oldVersion": "0x15",
+                        "newVersion": "0x15"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "policyName": "KR5M",
+                        "module": 1,
+                        "name": null,
+                        "modelName": "N9K-C93180YC-EX",
+                        "moduleType": "MI FPGA",
+                        "oldVersion": "0x4",
+                        "newVersion": "0x04"
+                    }
+                ],
+                "bException": false,
+                "exceptionReason": null
+            },
+            "installPacakges": null,
+            "errMessage": ""
+        }
+    },
+    "test_image_mgmt_install_options_00010a": {
+        "TEST_NOTES": [
+            "POST REQUEST contents: issu == true, epld == true, packageInstall true",
+            "RETURN_CODE is 500 due to packageInstall is true, but policy contains no packages",
+            "Device has KR5M policy attached",
+            "NDFC version: 12.1.3b"
+        ],
+        "RETURN_CODE": 500,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "MESSAGE": "Internal Server Error",
+        "DATA": {
+            "error": "Selected policy KR5M does not have package to continue."
+        }
     }
 }

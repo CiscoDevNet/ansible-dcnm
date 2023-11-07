@@ -121,9 +121,18 @@ def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
     assert module.epld_modules is None
     assert module.install_option == "disruptive"
     assert module.install_packages is None
+    assert module.ip_address == "172.22.150.105"
     assert module.os_type == "64bit"
     assert module.platform == "N9K/N3K"
+    assert module.pre_issu_link == "Not Applicable"
+    assert isinstance(module.raw_data, dict)
+    assert isinstance(module.raw_response, dict)
+    assert "compatibilityStatusList" in module.raw_data
+    print("module.raw_data: ", module.raw_data)
+    assert module.rep_status == "skipped"
     assert module.serial_number == "BAR"
+    assert module.status == "Success"
+    assert module.timestamp == "NA"
     assert module.version == "10.2.5"
     comp_disp = "show install all impact nxos bootflash:nxos64-cs.10.2.5.M.bin"
     assert module.comp_disp == comp_disp
@@ -153,11 +162,183 @@ def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
         module.refresh()
 
 
-# test_image_mgmt_install_options_00007
-# test_build_payload_defaults (former name)
+
+def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
+    """
+    Properties are updated based on:
+    -   200 response from endpoint
+    -   Device has no policy attached
+    -   POST REQUEST
+        - issu == True
+        - epld == False
+        - package_install == False
+
+    endpoint: install-options
+    """
+
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_install_options_00007a"
+        return responses_image_install_options(key)
+
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+
+    module.policy_name = "KRM5"
+    module.serial_number = "FDO21120U5D"
+    module.refresh()
+    assert isinstance(module.response, dict)
+    assert module.device_name == "leaf1"
+    assert module.err_message is None
+    assert module.epld_modules is None
+    assert module.install_option == "NA"
+    assert module.install_packages is None
+    assert module.ip_address == "172.22.150.102"
+    assert module.os_type == "64bit"
+    assert module.platform == "N9K/N3K"
+    assert module.pre_issu_link == "Not Applicable"
+    assert isinstance(module.raw_data, dict)
+    assert isinstance(module.raw_response, dict)
+    assert "compatibilityStatusList" in module.raw_data
+    print("module.raw_data: ", module.raw_data)
+    assert module.rep_status == "skipped"
+    assert module.serial_number == "FDO21120U5D"
+    assert module.status == "Skipped"
+    assert module.timestamp == "NA"
+    assert module.version == "10.2.5"
+    assert module.version_check == "Compatibility status skipped."
+    assert module.comp_disp == "Compatibility status skipped."
+    assert module.result.get("success") == True
 
 
-def test_image_mgmt_install_options_00007(module) -> None:
+def test_image_mgmt_install_options_00008(monkeypatch, module) -> None:
+    """
+    Properties are updated based on:
+    -   200 response from endpoint
+    -   Device has no policy attached
+    -   POST REQUEST
+        - issu == True
+        - epld == True
+        - package_install == False
+
+    endpoint: install-options
+    """
+
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_install_options_00008a"
+        return responses_image_install_options(key)
+
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+
+    module.policy_name = "KRM5"
+    module.serial_number = "FDO21120U5D"
+    module.epld = True
+    module.issu = True
+    module.package_install = False
+    module.refresh()
+    assert isinstance(module.response, dict)
+    assert module.device_name == "leaf1"
+    assert module.err_message is None
+    assert isinstance(module.epld_modules, dict)
+    assert len(module.epld_modules.get("moduleList")) == 2
+    assert module.install_option == "NA"
+    assert module.install_packages is None
+    assert module.ip_address == "172.22.150.102"
+    assert module.os_type == "64bit"
+    assert module.platform == "N9K/N3K"
+    assert module.pre_issu_link == "Not Applicable"
+    assert isinstance(module.raw_data, dict)
+    assert isinstance(module.raw_response, dict)
+    assert "compatibilityStatusList" in module.raw_data
+    assert module.rep_status == "skipped"
+    assert module.serial_number == "FDO21120U5D"
+    assert module.status == "Skipped"
+    assert module.timestamp == "NA"
+    assert module.version == "10.2.5"
+    assert module.version_check == "Compatibility status skipped."
+    assert module.comp_disp == "Compatibility status skipped."
+    assert module.result.get("success") == True
+
+
+def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
+    """
+    Properties are updated based on:
+    -   200 response from endpoint
+    -   Device has no policy attached
+    -   POST REQUEST
+        - issu == False
+        - epld == True
+        - package_install == False
+
+    endpoint: install-options
+    """
+
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_install_options_00009a"
+        return responses_image_install_options(key)
+
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+
+    module.policy_name = "KRM5"
+    module.serial_number = "FDO21120U5D"
+    module.epld = True
+    module.issu = False
+    module.package_install = False
+    module.refresh()
+    assert isinstance(module.response, dict)
+    assert module.device_name is None
+    assert module.err_message is None
+    assert isinstance(module.epld_modules, dict)
+    assert len(module.epld_modules.get("moduleList")) == 2
+    assert module.install_option == None
+    assert module.install_packages is None
+    assert module.ip_address == None
+    assert module.os_type == None
+    assert module.platform == None
+    assert module.pre_issu_link == None
+    assert isinstance(module.raw_data, dict)
+    assert isinstance(module.raw_response, dict)
+    assert "compatibilityStatusList" in module.raw_data
+    assert module.rep_status == None
+    assert module.serial_number == "FDO21120U5D"
+    assert module.status == None
+    assert module.timestamp == None
+    assert module.version == None
+    assert module.version_check == None
+    assert module.comp_disp == None
+    assert module.result.get("success") == True
+
+def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
+    """
+    Properties are updated based on:
+    -   500 response from endpoint due to KR5M policy has no packages defined
+        and package_install set to True
+    -   KR5M policy is attached to the device
+    -   POST REQUEST contains
+        - issu == False
+        - epld == True
+        - package_install == True (this causes the expected error)
+
+    endpoint: install-options
+    """
+
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_install_options_00010a"
+        return responses_image_install_options(key)
+
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+
+    module.policy_name = "KRM5"
+    module.serial_number = "FDO21120U5D"
+    module.epld = True
+    module.issu = True
+    module.package_install = True
+    match = "Selected policy KR5M does not have package to continue."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module.refresh()
+
+
+# test_image_mgmt_install_options_00020
+
+def test_image_mgmt_install_options_00020(module) -> None:
     """
     Payload contains defaults if not specified by the user.
     Defaults for issu, epld, and package_install are applied.
@@ -172,11 +353,10 @@ def test_image_mgmt_install_options_00007(module) -> None:
     assert module.payload.get("packageInstall") == False
 
 
-# test_image_mgmt_install_options_00008
-# test_build_payload_user_changed_defaults (former name)
+# test_image_mgmt_install_options_00021
 
 
-def test_image_mgmt_install_options_00008(module) -> None:
+def test_image_mgmt_install_options_00021(module) -> None:
     """
     Payload contains user-specified values if the user sets them.
     Defaults for issu, epld, and package_install are overridden by user values.
@@ -194,11 +374,10 @@ def test_image_mgmt_install_options_00008(module) -> None:
     assert module.payload.get("packageInstall") == True
 
 
-# test_image_mgmt_install_options_00009
-# test_invalid_value_issu (former name)
+# test_image_mgmt_install_options_00022
 
 
-def test_image_mgmt_install_options_00009(module) -> None:
+def test_image_mgmt_install_options_00022(module) -> None:
     """
     fail_json() is called if issu is not a boolean.
     """
@@ -208,11 +387,10 @@ def test_image_mgmt_install_options_00009(module) -> None:
         module.issu = "FOO"
 
 
-# test_image_mgmt_install_options_00010
-# test_invalid_value_epld (former name)
+# test_image_mgmt_install_options_00023
 
 
-def test_image_mgmt_install_options_00010(module) -> None:
+def test_image_mgmt_install_options_00023(module) -> None:
     """
     fail_json() is called if epld is not a boolean.
     """
@@ -222,11 +400,10 @@ def test_image_mgmt_install_options_00010(module) -> None:
         module.epld = "FOO"
 
 
-# test_image_mgmt_install_options_00011
-# test_invalid_value_package_install (former name)
+# test_image_mgmt_install_options_00024
 
 
-def test_invalid_value_package_install(module) -> None:
+def test_image_mgmt_install_options_00024(module) -> None:
     """
     fail_json() is called if package_install is not a boolean.
     """
