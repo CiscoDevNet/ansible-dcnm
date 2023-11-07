@@ -158,6 +158,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.verb = self.endpoints.install_options.get("verb")
 
         self._build_payload()
+        self.method_name = inspect.stack()[0][3]
 
         self.properties["response"] = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(self.payload)
@@ -201,6 +202,8 @@ class ImageInstallOptions(ImageUpgradeCommon):
             "packageInstall": false
         }
         """
+        self.method_name = inspect.stack()[0][3]
+
         self.payload: Dict[str, Any] = {}
         self.payload["devices"] = []
         devices = {}
@@ -212,6 +215,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
+        self.method_name = inspect.stack()[0][3]
         return self.make_boolean(self.make_none(self.response_data.get(item)))
 
     # Mandatory properties
@@ -251,9 +255,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @issu.setter
     def issu(self, value):
+        value = self.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.issu.setter: "
-            msg += "issu must be a boolean value"
+            msg += f"issu must be a boolean value. Got {value}."
             self.module.fail_json(msg)
         self.properties["issu"] = value
 
@@ -271,9 +276,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @epld.setter
     def epld(self, value):
+        value = self.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.epld.setter: "
-            msg += "epld must be a boolean value"
+            msg += f"epld must be a boolean value. Got {value}."
             self.module.fail_json(msg)
         self.properties["epld"] = value
 
@@ -290,9 +296,11 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @package_install.setter
     def package_install(self, value):
+        value = self.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.package_install.setter: "
-            msg += "package_install must be a boolean value"
+            msg += "package_install must be a boolean value. "
+            msg += f"Got {value}."
             self.module.fail_json(msg)
         self.properties["package_install"] = value
 
