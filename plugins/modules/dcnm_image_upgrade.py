@@ -595,6 +595,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.have.status == "In-Sync"
             and self.have.reason == "Upgrade"
             and self.have.policy == want["policy"]
+            # If upgrade is other than Success, we need to try to upgrade
+            # again.  So only change upgrade.nxos if upgrade is Success.
+            and self.have.upgrade == "Success"
         ):
             self.idempotent_want["upgrade"]["nxos"] = False
 
