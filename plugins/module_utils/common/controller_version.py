@@ -59,12 +59,6 @@ class ControllerVersion(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
-        msg = f"REMOVE: {self.class_name}.refresh() response: {self.response}"
-        self.log_msg(msg)
-
-        msg = f"REMOVE: {self.class_name}.refresh() result: {self.result}"
-        self.log_msg(msg)
-
         if self.result["success"] == False or self.result["found"] == False:
             msg = f"{self.class_name}.refresh() failed: {self.result}"
             self.module.fail_json(msg)
@@ -75,9 +69,6 @@ class ControllerVersion(ImageUpgradeCommon):
             msg += "does not contain DATA key. Controller response: "
             msg += f"{self.response}"
             self.module.fail_json(msg)
-
-        msg = f"REMOVE: {self.class_name}.refresh() response_data: {self.response_data}"
-        self.log_msg(msg)
 
     def _get(self, item):
         return self.make_boolean(self.make_none(self.response_data.get(item)))
