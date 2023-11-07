@@ -141,14 +141,13 @@ def test_image_mgmt_upgrade_00005(monkeypatch, module) -> None:
     Function description:
 
     ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
-    with the ip addresses of the devices for which issu_detail.upgrade is
-    not "Failed"
+    with the ip addresses of the devices for which validation succeeds.
+    Currently, validation succeeds for all devices.  This function may be
+    updated in the future to handle various failure scenarios.
 
     Expected results:
 
-    1.  instance.ip_addresses will contain {"172.22.150.102"} since its
-        upgrade status is Success
-    2. fail_json will be called due to 172.22.150.108 upgrade status is Failed
+    1.  instance.ip_addresses will contain {"172.22.150.102", "172.22.150.108"}
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -159,16 +158,12 @@ def test_image_mgmt_upgrade_00005(monkeypatch, module) -> None:
 
     devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
-    match = "ImageUpgrade.validate_devices: Image upgrade is failing for the "
-    match += "following switch: cvd-2313-leaf, 172.22.150.108, FDO2112189M. "
-    match += "Please check the switch to determine the cause and try again."
     module.devices = devices
-    with pytest.raises(AnsibleFailJson, match=match):
-        module.validate_devices()
+    module.validate_devices()
     assert isinstance(module.ip_addresses, set)
-    assert len(module.ip_addresses) == 1
+    assert len(module.ip_addresses) == 2
     assert "172.22.150.102" in module.ip_addresses
-    assert "172.22.150.108" not in module.ip_addresses
+    assert "172.22.150.108" in module.ip_addresses
 
 
 def test_image_mgmt_upgrade_00006(monkeypatch, module) -> None:
