@@ -358,7 +358,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if nxos_mode not in self.valid_nxos_mode:
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.mode must be one of "
-            msg += f"{self.valid_nxos_mode}. Got {nxos_mode}."
+            msg += f"{sorted(self.valid_nxos_mode)}. "
+            msg += f"Got {nxos_mode}."
             self.module.fail_json(msg)
 
         if nxos_mode == "non_disruptive":

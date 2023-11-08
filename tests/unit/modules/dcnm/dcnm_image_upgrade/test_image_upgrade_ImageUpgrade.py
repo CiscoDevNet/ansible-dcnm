@@ -793,6 +793,68 @@ def test_image_mgmt_upgrade_00020(monkeypatch, module) -> None:
     assert module.payload == payload
 
 
+match_00021 = "ImageUpgrade.build_payload: options.nxos.mode must be one of "
+match_00021 += r"\['disruptive', 'force_non_disruptive', 'non_disruptive'\]. "
+match_00021 += "Got FOO."
+def test_image_mgmt_upgrade_00021(monkeypatch, module) -> None:
+    """
+    Function: ImageUpgrade.commit
+
+    Setup:
+    1.  ImageUpgrade.devices is set to a list of one dict for a device
+        to be upgraded
+    2. The methods called by commit are mocked to simulate that the
+        device has not yet been upgraded to the desired version
+    3.  Methods called by commit that wait for current actions, and
+        image upgrade, to complete are mocked to do nothing
+
+    4. module.devices is set to contain an invalid nxos.mode value
+
+    Expected results:
+
+    1.  build_payload will call fail_json
+    """
+    key = "test_image_mgmt_upgrade_00021a"
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        return responses_install_options(key)
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_issu_details(key)
+    def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
+        pass
+    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
+        pass
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
+    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
+    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
+
+
+    module.devices = [
+        {
+            'policy': 'NR3F',
+            'stage': True,
+            'upgrade': {
+                'nxos': True,
+                'epld': True
+            },
+            'options': {
+                'nxos': {
+                    'mode': 'FOO',
+                    'bios_force': False
+                }
+            },
+            'validate': True,
+            'ip_address': '172.22.150.102',
+            'policy_changed': True
+        }
+    ]
+    with pytest.raises(AnsibleFailJson, match=match_00021):
+        module.commit()
+
+
 match_00030 = "ImageUpgrade.bios_force: instance.bios_force must be a boolean."
 @pytest.mark.parametrize(
     "value, expected",
