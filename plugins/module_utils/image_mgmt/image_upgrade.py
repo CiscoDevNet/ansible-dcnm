@@ -326,14 +326,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         msg += f"install_options.response: {json.dumps(self.install_options.response, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
-        # ImageInstallOptions may fail_json in the refresh() above, which is
-        # fine since it will contain more detailed information.
-        if self.install_options.result["success"] is False:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.install_options.result}. "
-            msg += f"Controller response: {self.install_options.response}"
-            self.module.fail_json(msg)
-
         # devices_to_upgrade must currently be a single device
         devices_to_upgrade: List[dict] = []
 
