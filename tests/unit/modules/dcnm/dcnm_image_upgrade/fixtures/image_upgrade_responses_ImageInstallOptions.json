@@ -210,7 +210,7 @@
             "error": "Selected policy KR5M does not have package to continue."
         }
     },
-    "test_image_mgmt_upgrade_00008a": {
+    "test_image_mgmt_upgrade_00019a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -265,7 +265,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00009a": {
+    "test_image_mgmt_upgrade_00020a": {
         "DATA": {
             "compatibilityStatusList": [
                 {

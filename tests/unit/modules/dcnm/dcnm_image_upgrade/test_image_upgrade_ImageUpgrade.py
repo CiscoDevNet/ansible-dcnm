@@ -229,7 +229,450 @@ def test_image_mgmt_upgrade_00007(module) -> None:
     assert merged_config["options"]["package"]["install"] == False
     assert merged_config["options"]["package"]["uninstall"] == False
 
-def test_image_mgmt_upgrade_00008(monkeypatch, module) -> None:
+def test_image_mgmt_upgrade_00008(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except upgrade.nxos.  This forces the code
+        to take the upgrade.epld is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "upgrade": {
+            "nxos": False
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == False
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00009(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except upgrade.epld.  This forces the code
+        to take the upgrade.nxos is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "upgrade": {
+            "epld": True
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == True
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00010(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options, which is empty.  This forces
+        the code to take the options.nxos is None path and provide default
+        values for options.nxos and options.epld.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {},
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00011(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.nxos.mode.  This forces the code
+        to take the options.nxos.bios_force is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "nxos": {
+                "mode": "non_disruptive"
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "non_disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00012(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.nxos.bios_force.  This forces the code
+        to take the options.nxos.mode is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "nxos": {
+                "bios_force": True
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == True
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00013(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.epld.module.  This forces
+        the code to take the options.epld.golden is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "epld": {
+                "module": 27
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == 27
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00014(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.epld.golden.  This forces
+        the code to take the options.epld.module is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "epld": {
+                "golden": True
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == True
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00015(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.reboot.config_reload.  This
+        forces the code to take the options.reboot.write_erase is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "reboot": {
+                "config_reload": True
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == True
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00016(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.reboot.config_reload.  This
+        forces the code to take the options.reboot.write_erase is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "reboot": {
+                "write_erase": True
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == True
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00017(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.package.install.  This
+        forces the code to take the options.package.uninstall is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "package": {
+                "install": True
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == True
+    assert merged_config["options"]["package"]["uninstall"] == False
+
+
+def test_image_mgmt_upgrade_00018(module) -> None:
+    """
+    Function: ImageUpgrade._merge_defaults_to_switch_config
+
+    Setup:
+    1.  _merge_defaults_to_switch_config is passed a dictionary with all
+        default values missing except options.package.uninstall.  This
+        forces the code to take the options.package.install is None path.
+
+    Expected results:
+
+    1.  merged_config will contain the expected default values
+    2.  merged_config will contain the expected non-default values
+    """
+    config = {
+        "policy": "KR5M",
+        "ip_address": "172.22.150.102",
+        "policy_changed": False,
+        "options": {
+            "package": {
+                "uninstall": True
+            }
+        }
+    }
+
+    merged_config = module._merge_defaults_to_switch_config(config)
+    assert merged_config["reboot"] == False
+    assert merged_config["stage"] == True
+    assert merged_config["validate"] == True
+    assert merged_config["upgrade"]["nxos"] == True
+    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
+    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["epld"]["module"] == "ALL"
+    assert merged_config["options"]["epld"]["golden"] == False
+    assert merged_config["options"]["reboot"]["config_reload"] == False
+    assert merged_config["options"]["reboot"]["write_erase"] == False
+    assert merged_config["options"]["package"]["install"] == False
+    assert merged_config["options"]["package"]["uninstall"] == True
+
+
+def test_image_mgmt_upgrade_00019(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
 
@@ -248,7 +691,7 @@ def test_image_mgmt_upgrade_00008(monkeypatch, module) -> None:
     1.  module.payload will equal a payload previously obtained by
         running ansible-playbook against the controller for this scenario
     """
-    key = "test_image_mgmt_upgrade_00008a"
+    key = "test_image_mgmt_upgrade_00019a"
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -289,7 +732,7 @@ def test_image_mgmt_upgrade_00008(monkeypatch, module) -> None:
     payload = payloads_image_upgrade(key)
     assert module.payload == payload
 
-def test_image_mgmt_upgrade_00009(monkeypatch, module) -> None:
+def test_image_mgmt_upgrade_00020(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
 
@@ -307,7 +750,7 @@ def test_image_mgmt_upgrade_00009(monkeypatch, module) -> None:
     1.  module.payload will equal a payload previously obtained by
         running ansible-playbook against the controller for this scenario
     """
-    key = "test_image_mgmt_upgrade_00009a"
+    key = "test_image_mgmt_upgrade_00020a"
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:

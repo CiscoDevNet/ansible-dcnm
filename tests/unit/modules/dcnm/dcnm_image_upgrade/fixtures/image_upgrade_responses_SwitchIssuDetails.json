@@ -3078,7 +3078,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00008a": {
+    "test_image_mgmt_upgrade_00019a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3129,7 +3129,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00009a": {
+    "test_image_mgmt_upgrade_00020a": {
         "DATA": {
             "lastOperDataObject": [
                 {
