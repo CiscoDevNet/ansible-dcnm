@@ -664,8 +664,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         list() of dict() with the following structure:
         [
             {
-                "serial_number": "FDO211218HH",
-                "policy_name": "NR1F"
+                "ip_address": "192.168.1.1"
             }
         ]
         Must be set before calling instance.commit()
@@ -677,8 +676,22 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.devices must be a python list of dict."
+            msg += "instance.devices must be a python list of dict. "
+            msg += f"Got {value}."
             self.module.fail_json(msg)
+        for device in value:
+            if not isinstance(device, dict):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "instance.devices must be a python list of dict. "
+                msg += f"Got {value}."
+                self.module.fail_json(msg)
+            if "ip_address" not in device:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "instance.devices must be a python list of dict, "
+                msg += "where each dict contains the following keys: "
+                msg += "ip_address. "
+                msg += f"Got {value}."
+                self.module.fail_json(msg)
         self.properties["devices"] = value
 
     @property
@@ -753,6 +766,10 @@ class ImageUpgrade(ImageUpgradeCommon):
             value = value.upper()
         except AttributeError:
             pass
+        try:
+            value = int(value)
+        except:
+            pass
         if not isinstance(value, int) and value != "ALL":
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.epld_module must be an integer or 'ALL'"
@@ -773,7 +790,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.force_non_disruptivemust be a boolean."
+            msg += "instance.force_non_disruptive must be a boolean."
             self.module.fail_json(msg)
         self.properties["force_non_disruptive"] = value
 
@@ -790,7 +807,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     def non_disruptive(self, value):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}.setter: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.non_disruptive must be a boolean."
             self.module.fail_json(msg)
         self.properties["non_disruptive"] = value
@@ -910,10 +927,3 @@ class ImageUpgrade(ImageUpgradeCommon):
         instance.commit() must be called first.
         """
         return self.properties.get("response")
-
-    @property
-    def serial_numbers(self):
-        """
-        Return a list of serial numbers from self.devices
-        """
-        return [device.get("serial_number") for device in self.devices]
