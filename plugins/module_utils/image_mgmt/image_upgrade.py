@@ -298,10 +298,22 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"device PRE : {json.dumps(device, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
         device = self._merge_defaults_to_switch_config(device)
+
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"device POST: {json.dumps(device, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
+
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"issu_detail.response: {json.dumps(self.issu_detail.response, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
         self.install_options.serial_number = self.issu_detail.serial_number
         self.install_options.policy_name = device.get("policy")
@@ -309,6 +321,11 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.install_options.nxos = device.get("upgrade").get("nxos")
         self.install_options.package_install = device.get("options").get("package").get("install")
         self.install_options.refresh()
+
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"install_options.response: {json.dumps(self.install_options.response, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
         # ImageInstallOptions may fail_json in the refresh() above, which is
         # fine since it will contain more detailed information.
         if self.install_options.result["success"] is False:
@@ -445,12 +462,20 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["pacakgeInstall"] = package_install
         self.payload["pacakgeUnInstall"] = package_uninstall
 
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
     def commit(self) -> None:
         """
         Commit the image upgrade request to the controller and wait
         for the images to be upgraded.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"self.devices: {self.devices}"
+        self.log_msg(msg)
 
         if self.devices is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -463,13 +488,29 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.path: str = self.endpoints.image_upgrade.get("path")
         self.verb: str = self.endpoints.image_upgrade.get("verb")
 
+        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg += f"self.verb {self.verb}, self.path: {self.path}"
+        self.log_msg(msg)
+
         for device in self.devices:
+            msg = f"REMOVE: {self.class_name}.{method_name}: "
+            msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+
             self.build_payload(device)
+
+            msg = f"REMOVE: {self.class_name}.{method_name}: "
+            msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
 
             self.properties["response"] = dcnm_send(
                 self.module, self.verb, self.path, data=json.dumps(self.payload)
             )
             self.properties["result"] = self._handle_response(self.response, self.verb)
+
+            msg = f"REMOVE: {self.class_name}.{method_name}: "
+            msg += f"self.response: {self.response}"
+            self.log_msg(msg)
 
             if not self.result["success"]:
                 msg = f"{self.class_name}.{method_name}: "
@@ -507,7 +548,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                     self.ipv4_done.add(ipv4)
                     continue
 
-                msg = f"{self.class_name}.{method_name}: "
+                msg = f"REMOVE: {self.class_name}.{method_name}: "
                 msg += f"Seconds remaining {timeout}.  Waiting "
                 msg += f" on ipv4 {ipv4} actions to complete. "
                 msg += f"staged_percent {self.issu_detail.image_staged_percent}, "
