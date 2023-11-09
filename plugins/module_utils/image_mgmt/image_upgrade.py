@@ -441,6 +441,10 @@ class ImageUpgrade(ImageUpgradeCommon):
         package_uninstall = device.get("options").get("package").get("uninstall")
 
         if not isinstance(package_install, bool):
+            # This code is never hit since ImageInstallOptions calls
+            # fail_json on invalid options.package.install.
+            # We'll leave this here in case we change ImageInstallOptions
+            # in the future.
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.install must be a boolean. "
             msg += f"Got {package_install}."

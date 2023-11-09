@@ -374,5 +374,610 @@
         "METHOD": "POST",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00022a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00023a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00024a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00025a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00026a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00027a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00028a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00029a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00030a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00031a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
+    },
+    "test_image_mgmt_upgrade_00032a": {
+        "DATA": {
+            "compatibilityStatusList": [
+                {
+                    "compDisp": "REMOVED",
+                    "deviceName": "leaf1",
+                    "installOption": "disruptive",
+                    "ipAddress": "172.22.150.102",
+                    "osType": "64bit",
+                    "platform": "N9K/N3K",
+                    "policyName": "NR3F",
+                    "preIssuLink": "Not Applicable",
+                    "repStatus": "skipped",
+                    "status": "Success",
+                    "timestamp": "NA",
+                    "version": "10.3.1",
+                    "versionCheck": "REMOVED"
+                }
+            ],
+            "epldModules": {
+                "bException": false,
+                "exceptionReason": null,
+                "moduleList": [
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "IO FPGA",
+                        "name": null,
+                        "newVersion": "0x15",
+                        "oldVersion": "0x15",
+                        "policyName": "NR3F"
+                    },
+                    {
+                        "deviceName": "leaf1",
+                        "ipAddress": "172.22.150.102",
+                        "modelName": "N9K-C93180YC-EX",
+                        "module": 1,
+                        "moduleType": "MI FPGA",
+                        "name": null,
+                        "newVersion": "0x04",
+                        "oldVersion": "0x4",
+                        "policyName": "NR3F"
+                    }
+                ]
+            },
+            "errMessage": "",
+            "installPacakges": null
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
+        "RETURN_CODE": 200
     }
 }
