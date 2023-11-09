@@ -624,18 +624,12 @@ class ImageUpgrade(ImageUpgradeCommon):
 
                 if upgrade_status == "Success":
                     self.ipv4_done.add(ipv4)
-                    status = "succeeded"
-                if upgrade_status == None:
-                    status = "not started"
-                if upgrade_status == "In-Progress":
-                    status = "in progress"
 
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{method_name}: "
             msg += "The following device(s) did not complete upgrade: "
-            msg += f"{self.ipv4_todo.difference(self.ipv4_done)}. "
-            msg += "Try increasing issu timeout in the playbook, or check "
-            msg += "the device(s) to determine the cause "
+            msg += f"{sorted(self.ipv4_todo.difference(self.ipv4_done))}. "
+            msg += "Check the device(s) to determine the cause "
             msg += "(e.g. show install all status)."
             self.module.fail_json(msg)
 
