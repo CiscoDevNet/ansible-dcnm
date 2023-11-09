@@ -135,36 +135,6 @@ def test_image_mgmt_upgrade_00004(monkeypatch, module) -> None:
     Function description:
 
     ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
-    with the ip addresses of the devices for which issu_detail.upgrade is
-    not "Failed"
-
-    Expected results:
-
-    1. instance.ip_addresses will contain {"172.22.150.102", "172.22.150.108"}
-    2. fail_json will not be called
-    """
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00004a"
-        return responses_issu_details(key)
-
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
-
-    devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
-
-    module.devices = devices
-    module.validate_devices()
-    assert isinstance(module.ip_addresses, set)
-    assert len(module.ip_addresses) == 2
-    assert "172.22.150.102" in module.ip_addresses
-    assert "172.22.150.108" in module.ip_addresses
-
-
-def test_image_mgmt_upgrade_00005(monkeypatch, module) -> None:
-    """
-    Function description:
-
-    ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
     with the ip addresses of the devices for which validation succeeds.
     Currently, validation succeeds for all devices.  This function may be
     updated in the future to handle various failure scenarios.
@@ -190,7 +160,7 @@ def test_image_mgmt_upgrade_00005(monkeypatch, module) -> None:
     assert "172.22.150.108" in module.ip_addresses
 
 
-def test_image_mgmt_upgrade_00006(module) -> None:
+def test_image_mgmt_upgrade_00005(module) -> None:
     """
     Function: ImageUpgrade.commit
 
@@ -203,7 +173,7 @@ def test_image_mgmt_upgrade_00006(module) -> None:
         module.commit()
 
 
-def test_image_mgmt_upgrade_00007(module) -> None:
+def test_image_mgmt_upgrade_00006(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -233,7 +203,7 @@ def test_image_mgmt_upgrade_00007(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00008(module) -> None:
+def test_image_mgmt_upgrade_00007(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -270,7 +240,7 @@ def test_image_mgmt_upgrade_00008(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00009(module) -> None:
+def test_image_mgmt_upgrade_00008(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -307,7 +277,7 @@ def test_image_mgmt_upgrade_00009(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00010(module) -> None:
+def test_image_mgmt_upgrade_00009(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -344,7 +314,7 @@ def test_image_mgmt_upgrade_00010(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00011(module) -> None:
+def test_image_mgmt_upgrade_00010(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -381,7 +351,7 @@ def test_image_mgmt_upgrade_00011(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00012(module) -> None:
+def test_image_mgmt_upgrade_00011(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -418,7 +388,7 @@ def test_image_mgmt_upgrade_00012(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00013(module) -> None:
+def test_image_mgmt_upgrade_00012(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -455,7 +425,7 @@ def test_image_mgmt_upgrade_00013(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00014(module) -> None:
+def test_image_mgmt_upgrade_00013(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -492,7 +462,7 @@ def test_image_mgmt_upgrade_00014(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00015(module) -> None:
+def test_image_mgmt_upgrade_00014(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -529,7 +499,7 @@ def test_image_mgmt_upgrade_00015(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00016(module) -> None:
+def test_image_mgmt_upgrade_00015(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -566,7 +536,7 @@ def test_image_mgmt_upgrade_00016(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00017(module) -> None:
+def test_image_mgmt_upgrade_00016(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
@@ -603,7 +573,7 @@ def test_image_mgmt_upgrade_00017(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == False
 
 
-def test_image_mgmt_upgrade_00018(module) -> None:
+def test_image_mgmt_upgrade_00017(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
 
