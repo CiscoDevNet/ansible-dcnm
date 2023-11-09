@@ -354,16 +354,20 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += f"Got {nxos_mode}."
             self.module.fail_json(msg)
 
+        verify_nxos_mode_list = []
         if nxos_mode == "non_disruptive":
+            verify_nxos_mode_list.append(True)
             self.payload["issuUpgradeOptions1"]["nonDisruptive"] = True
         if nxos_mode == "disruptive":
+            verify_nxos_mode_list.append(True)
             self.payload["issuUpgradeOptions1"]["disruptive"] = True
         if nxos_mode == "force_non_disruptive":
+            verify_nxos_mode_list.append(True)
             self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] = True
 
         # biosForce corresponds to BIOS Force GUI option
         bios_force = device.get("options").get("nxos").get("bios_force")
-
+        bios_force = self.make_bool(bios_force)
         if not isinstance(bios_force, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.bios_force must be a boolean. "
@@ -376,6 +380,22 @@ class ImageUpgrade(ImageUpgradeCommon):
         # EPLD
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
+        epld_upgrade = device.get("upgrade").get("epld")
+
+        epld_golden = self.make_bool(epld_golden)
+        if not isinstance(epld_golden, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "options.epld.golden must be a boolean. "
+            msg += f"Got {epld_golden}."
+            self.module.fail_json(msg)
+
+        epld_upgrade = self.make_bool(epld_upgrade)
+        if not isinstance(epld_upgrade, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "upgrade.epld must be a boolean. "
+            msg += f"Got {epld_upgrade}."
+            self.module.fail_json(msg)
+
         if epld_golden is True and device.get("upgrade").get("nxos") is True:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid configuration for "
@@ -394,13 +414,8 @@ class ImageUpgrade(ImageUpgradeCommon):
                 msg += f"or an integer. Got {epld_module}."
                 self.module.fail_json(msg)
 
-        if not isinstance(epld_golden, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "options.epld.golden must be a boolean. "
-            msg += f"Got {epld_golden}."
-            self.module.fail_json(msg)
 
-        self.payload["epldUpgrade"] = device.get("upgrade").get("epld")
+        self.payload["epldUpgrade"] = epld_upgrade
         self.payload["epldOptions"] = {}
         self.payload["epldOptions"]["moduleNumber"] = epld_module
         self.payload["epldOptions"]["golden"] = epld_golden
@@ -409,6 +424,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         # Reboot
         reboot = device.get("reboot")
 
+        reboot = self.make_bool(reboot)
         if not isinstance(reboot, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "reboot must be a boolean. "
@@ -420,12 +436,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         config_reload = device.get("options").get("reboot").get("config_reload")
         write_erase = device.get("options").get("reboot").get("write_erase")
 
+        config_reload = self.make_bool(config_reload)
         if not isinstance(config_reload, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.config_reload must be a boolean. "
             msg += f"Got {config_reload}."
             self.module.fail_json(msg)
 
+        write_erase = self.make_bool(write_erase)
         if not isinstance(write_erase, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.write_erase must be a boolean. "
@@ -440,6 +458,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         package_install = device.get("options").get("package").get("install")
         package_uninstall = device.get("options").get("package").get("uninstall")
 
+        package_install = self.make_bool(package_install)
         if not isinstance(package_install, bool):
             # This code is never hit since ImageInstallOptions calls
             # fail_json on invalid options.package.install.
@@ -450,6 +469,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += f"Got {package_install}."
             self.module.fail_json(msg)
 
+        package_uninstall = self.make_bool(package_uninstall)
         if not isinstance(package_uninstall, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.uninstall must be a boolean. "
