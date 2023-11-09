@@ -398,20 +398,12 @@ class ImageUpgrade(ImageUpgradeCommon):
         # EPLD
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
-        epld_upgrade = device.get("upgrade").get("epld")
 
         epld_golden = self.make_boolean(epld_golden)
         if not isinstance(epld_golden, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.epld.golden must be a boolean. "
             msg += f"Got {epld_golden}."
-            self.module.fail_json(msg)
-
-        epld_upgrade = self.make_boolean(epld_upgrade)
-        if not isinstance(epld_upgrade, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "upgrade.epld must be a boolean. "
-            msg += f"Got {epld_upgrade}."
             self.module.fail_json(msg)
 
         if epld_golden is True and device.get("upgrade").get("nxos") is True:
