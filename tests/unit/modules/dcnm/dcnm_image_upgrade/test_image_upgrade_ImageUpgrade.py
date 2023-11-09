@@ -2403,3 +2403,52 @@ def test_image_mgmt_upgrade_00090(monkeypatch, module, mock_issu_details) -> Non
     assert len(module.ipv4_done) == 1
     assert "172.22.150.102" in module.ipv4_done
     assert "172.22.150.108" not in module.ipv4_done
+
+
+def test_image_mgmt_upgrade_00091(monkeypatch, module, mock_issu_details) -> None:
+    """
+    Function: ImageUpgrade._wait_for_image_upgrade_to_complete
+    Test:   One ip address is added to ipv4_done due to
+            issu_detail.upgrade == "Success"
+    Test:   fail_json is called due to timeout because one
+            ip address has issu_detail.upgrade == "In-Progress"
+
+    _wait_for_image_upgrade_to_complete looks at the upgrade status for each
+    ip address and waits for it to be "Success" or "Failed".
+    In the case where all ip addresses are "Success", the module returns.
+    In the case where any ip address is "Failed", the module calls fail_json.
+    In the case where any ip address is "In-Progress", the module waits until
+    timeout is exceeded
+
+    Expectations:
+    1. module.ipv4_done is a set()
+    2. module.ipv4_done has length 1
+    3. module.ipv4_done contains 172.22.150.102, upgrade is "Success"
+    4. Call fail_json due to timeout exceeded
+    """
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_upgrade_00091a"
+        return responses_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    module.issu_detail = mock_issu_details
+    module.ip_addresses = [
+        "172.22.150.102",
+        "172.22.150.108",
+    ]
+    module.check_interval = 1
+    module.check_timeout = 1
+
+    match = "ImageUpgrade._wait_for_image_upgrade_to_complete: "
+    match += r"The following device\(s\) did not complete upgrade: "
+    match += r"\['172\.22\.150\.108'\]. "
+    match += r"Check the device\(s\) to determine the cause "
+    match += r"\(e\.g\. show install all status\)\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module._wait_for_image_upgrade_to_complete()
+    assert isinstance(module.ipv4_done, set)
+    assert len(module.ipv4_done) == 1
+    assert "172.22.150.102" in module.ipv4_done
+    assert "172.22.150.108" not in module.ipv4_done
