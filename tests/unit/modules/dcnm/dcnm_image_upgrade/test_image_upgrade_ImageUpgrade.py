@@ -176,6 +176,7 @@ def test_image_mgmt_upgrade_00005(module) -> None:
 def test_image_mgmt_upgrade_00006(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: merged_config contains all default values
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -206,6 +207,7 @@ def test_image_mgmt_upgrade_00006(module) -> None:
 def test_image_mgmt_upgrade_00007(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the upgrade.epld is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -243,6 +245,7 @@ def test_image_mgmt_upgrade_00007(module) -> None:
 def test_image_mgmt_upgrade_00008(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the upgrade.nxos is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -280,6 +283,7 @@ def test_image_mgmt_upgrade_00008(module) -> None:
 def test_image_mgmt_upgrade_00009(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.nxos is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -317,6 +321,7 @@ def test_image_mgmt_upgrade_00009(module) -> None:
 def test_image_mgmt_upgrade_00010(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.nxos.bios_force is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -354,6 +359,7 @@ def test_image_mgmt_upgrade_00010(module) -> None:
 def test_image_mgmt_upgrade_00011(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.nxos.mode is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -391,6 +397,7 @@ def test_image_mgmt_upgrade_00011(module) -> None:
 def test_image_mgmt_upgrade_00012(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.epld.golden is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -428,6 +435,7 @@ def test_image_mgmt_upgrade_00012(module) -> None:
 def test_image_mgmt_upgrade_00013(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.epld.module is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -465,6 +473,7 @@ def test_image_mgmt_upgrade_00013(module) -> None:
 def test_image_mgmt_upgrade_00014(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.reboot.write_erase is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -502,11 +511,12 @@ def test_image_mgmt_upgrade_00014(module) -> None:
 def test_image_mgmt_upgrade_00015(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.reboot.config_reload is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.reboot.config_reload.  This
-        forces the code to take the options.reboot.write_erase is None path.
+        default values missing except options.reboot.write_erase.  This
+        forces the code to take the options.reboot.config_reload is None path.
 
     Expected results:
 
@@ -539,6 +549,7 @@ def test_image_mgmt_upgrade_00015(module) -> None:
 def test_image_mgmt_upgrade_00016(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.package.uninstall is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -576,6 +587,7 @@ def test_image_mgmt_upgrade_00016(module) -> None:
 def test_image_mgmt_upgrade_00017(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
+    Test: Force code coverage of the options.package.install is None path
 
     Setup:
     1.  _merge_defaults_to_switch_config is passed a dictionary with all
@@ -610,9 +622,77 @@ def test_image_mgmt_upgrade_00017(module) -> None:
     assert merged_config["options"]["package"]["uninstall"] == True
 
 
+def test_image_mgmt_upgrade_00018(monkeypatch, module) -> None:
+    """
+    Function: ImageUpgrade.commit
+    Test: upgrade.nxos set to invalid value
+
+    Setup:
+    1.  ImageUpgrade.devices is set to a list of one dict for a device
+        to be upgraded.
+    2. The methods called by commit are mocked to simulate that the
+        the image has already been staged and validated and the device
+        has already been upgraded to the desired version.
+    3.  Methods called by commit that wait for current actions, and
+        image upgrade, to complete are mocked to do nothing.
+
+    Expected results:
+
+    1.  commit will call build_payload which will call fail_json
+    """
+    key = "test_image_mgmt_upgrade_00019a"
+
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        return responses_install_options(key)
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_issu_details(key)
+
+    def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
+        pass
+
+    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
+
+    module.devices = [
+        {
+            "policy": "KR5M",
+            "stage": True,
+            "upgrade": {"nxos": "FOO", "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+        }
+    ]
+    match = r"ImageUpgrade.build_payload: upgrade.nxos must be a boolean. Got FOO\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module.commit()
+
+
 def test_image_mgmt_upgrade_00019(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: non-default values are set for several options
+    Test: policy_changed is set to False
+
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -627,7 +707,9 @@ def test_image_mgmt_upgrade_00019(monkeypatch, module) -> None:
     Expected results:
 
     1.  module.payload will equal a payload previously obtained by
-        running ansible-playbook against the controller for this scenario
+        running ansible-playbook against the controller for this
+        scenario which verifies that the non-default values are
+        included in the payload.
     """
     key = "test_image_mgmt_upgrade_00019a"
 
@@ -679,6 +761,8 @@ def test_image_mgmt_upgrade_00019(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00020(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: User explicitely sets default values for several options
+    Test: policy_changed is set to True
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -744,6 +828,7 @@ def test_image_mgmt_upgrade_00020(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00021(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for nxos.mode
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -752,7 +837,6 @@ def test_image_mgmt_upgrade_00021(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4. module.devices is set to contain an invalid nxos.mode value
 
     Expected results:
@@ -811,6 +895,7 @@ def test_image_mgmt_upgrade_00021(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00022(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Force code coverage of nxos.mode == "non_disruptive" path
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -819,7 +904,6 @@ def test_image_mgmt_upgrade_00022(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain nxos.mode non_disruptive
         forcing the code to take nxos_mode == "non_disruptive" path
 
@@ -880,6 +964,7 @@ def test_image_mgmt_upgrade_00022(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Force code coverage of nxos.mode == "force_non_disruptive" path
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -888,7 +973,6 @@ def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain nxos.mode force_non_disruptive
         forcing the code to take nxos_mode == "force_non_disruptive" path
 
@@ -949,6 +1033,7 @@ def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00024(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for options.nxos.bios_force
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -957,7 +1042,6 @@ def test_image_mgmt_upgrade_00024(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain invalid value for
         options.nxos.bios_force
 
@@ -1016,6 +1100,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00025(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Incompatible values for options.epld.golden and upgrade.nxos
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1024,7 +1109,6 @@ def test_image_mgmt_upgrade_00025(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain epld golden True and
         upgrade.nxos True.
 
@@ -1085,6 +1169,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00026(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for epld.module
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1156,6 +1241,7 @@ def test_image_mgmt_upgrade_00026(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00027(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for epld.golden
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1164,8 +1250,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
-    4.  module.devices is set to contain invalid epld.module
+    4.  module.devices is set to contain invalid epld.golden
 
     Expected results:
 
@@ -1226,6 +1311,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00028(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for reboot
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1234,7 +1320,6 @@ def test_image_mgmt_upgrade_00028(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain invalid value for reboot
 
     Expected results:
@@ -1292,6 +1377,7 @@ def test_image_mgmt_upgrade_00028(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00029(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for options.reboot.config_reload
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1300,7 +1386,6 @@ def test_image_mgmt_upgrade_00029(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain invalid value for
         options.reboot.config_reload
 
@@ -1363,6 +1448,7 @@ def test_image_mgmt_upgrade_00029(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00030(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for options.reboot.write_erase
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1371,9 +1457,8 @@ def test_image_mgmt_upgrade_00030(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain invalid value for
-        options.reboot.config_reload
+        options.reboot.write_erase
 
     Expected results:
 
@@ -1434,6 +1519,7 @@ def test_image_mgmt_upgrade_00030(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00031(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Invalid value for options.package.uninstall
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1442,7 +1528,6 @@ def test_image_mgmt_upgrade_00031(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  module.devices is set to contain invalid value for
         options.package.uninstall
 
@@ -1511,6 +1596,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, module) -> None:
 def test_image_mgmt_upgrade_00032(monkeypatch, module) -> None:
     """
     Function: ImageUpgrade.commit
+    Test: Bad result code in image upgrade response
 
     Setup:
     1.  ImageUpgrade.devices is set to a list of one dict for a device
@@ -1519,7 +1605,6 @@ def test_image_mgmt_upgrade_00032(monkeypatch, module) -> None:
         device has not yet been upgraded to the desired version
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
-
     4.  ImageUpgrade response (mock_dcnm_send_image_upgrade) is set
         to return RESULT_CODE 500 with MESSAGE "Internal Server Error"
 
@@ -1577,6 +1662,77 @@ def test_image_mgmt_upgrade_00032(monkeypatch, module) -> None:
     match += "'https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/"
     match += "imagemanagement/rest/imageupgrade/upgrade-image', "
     match += r"'RETURN_CODE': 500\}"
+    with pytest.raises(AnsibleFailJson, match=match):
+        module.commit()
+
+
+def test_image_mgmt_upgrade_00033(monkeypatch, module) -> None:
+    """
+    Function: ImageUpgrade.commit
+    Test: Invalid value for upgrade.epld
+
+    Setup:
+    1.  ImageUpgrade.devices is set to a list of one dict for a device
+        to be upgraded
+    2. The methods called by commit are mocked to simulate that the
+        device has not yet been upgraded to the desired version
+    3.  Methods called by commit that wait for current actions, and
+        image upgrade, to complete are mocked to do nothing
+    4.  module.devices is set to contain invalid value for
+        upgrade.epld
+
+    Expected results:
+
+    1.  commit calls build_payload which calls fail_json
+    """
+    key = "test_image_mgmt_upgrade_00033a"
+
+    def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
+        return responses_install_options(key)
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_issu_details(key)
+
+    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
+        pass
+
+    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
+
+    module.devices = [
+        {
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": "FOO"},
+            "options": {
+                "package": {
+                    "uninstall": "FOO",
+                }
+            },
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
+        }
+    ]
+    match = "ImageUpgrade.build_payload: "
+    match += r"upgrade.epld must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         module.commit()
 

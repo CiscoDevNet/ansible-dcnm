@@ -308,6 +308,24 @@ class ImageUpgrade(ImageUpgradeCommon):
         msg += f"device POST: {json.dumps(device, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
+        # device.upgrade
+        nxos_upgrade = device.get("upgrade").get("nxos")
+        nxos_upgrade = self.make_boolean(nxos_upgrade)
+        if not isinstance(nxos_upgrade, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "upgrade.nxos must be a boolean. "
+            msg += f"Got {nxos_upgrade}."
+            self.module.fail_json(msg)
+
+        epld_upgrade = device.get("upgrade").get("epld")
+        epld_upgrade = self.make_boolean(epld_upgrade)
+        if not isinstance(epld_upgrade, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "upgrade.epld must be a boolean. "
+            msg += f"Got {epld_upgrade}."
+            self.module.fail_json(msg)
+
+        # TODO:2 Validate ip_address
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
 

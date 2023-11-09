@@ -90,6 +90,13 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
         "RETURN_CODE": 500
     },
+    "test_image_mgmt_upgrade_00033a": {
+        "DATA": 123,
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 200
+    },
     "test_image_mgmt_upgrade_00045a": {
         "DATA": 121,
         "MESSAGE": "OK",
