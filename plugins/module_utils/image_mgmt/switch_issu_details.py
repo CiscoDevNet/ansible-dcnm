@@ -676,7 +676,9 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
             msg += f"{self.ip_address} unknown property name: {item}."
             self.module.fail_json(msg)
 
-        return self.make_none(self.data_subclass[self.ip_address].get(item))
+        return self.make_none(
+            self.make_boolean(self.data_subclass[self.ip_address].get(item))
+        )
 
     @property
     def filtered_data(self):
@@ -763,7 +765,9 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
             msg += f"{self.serial_number} unknown property name: {item}."
             self.module.fail_json(msg)
 
-        return self.make_none(self.data_subclass[self.serial_number].get(item))
+        return self.make_none(
+            self.make_boolean(self.data_subclass[self.serial_number].get(item))
+        )
 
     @property
     def filtered_data(self):
@@ -848,7 +852,9 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
             msg += f"{self.device_name} unknown property name: {item}."
             self.module.fail_json(msg)
 
-        return self.make_none(self.data_subclass[self.device_name].get(item))
+        return self.make_none(
+            self.make_boolean(self.data_subclass[self.device_name].get(item))
+        )
 
     @property
     def filtered_data(self):
