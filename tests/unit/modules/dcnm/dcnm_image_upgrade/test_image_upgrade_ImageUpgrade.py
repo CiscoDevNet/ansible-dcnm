@@ -34,17 +34,20 @@ def payloads_image_upgrade(key: str) -> Dict[str, str]:
     print(f"payload_data_image_upgrade: {key} : {payload}")
     return payload
 
+
 def responses_image_upgrade(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_ImageUpgrade"
     response = load_fixture(response_file).get(key)
     print(f"response_data_image_upgrade: {key} : {response}")
     return response
 
+
 def responses_install_options(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_ImageInstallOptions"
     response = load_fixture(response_file).get(key)
     print(f"response_data_install_options: {key} : {response}")
     return response
+
 
 def responses_issu_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchIssuDetails"
@@ -229,6 +232,7 @@ def test_image_mgmt_upgrade_00007(module) -> None:
     assert merged_config["options"]["package"]["install"] == False
     assert merged_config["options"]["package"]["uninstall"] == False
 
+
 def test_image_mgmt_upgrade_00008(module) -> None:
     """
     Function: ImageUpgrade._merge_defaults_to_switch_config
@@ -247,9 +251,7 @@ def test_image_mgmt_upgrade_00008(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "upgrade": {
-            "nxos": False
-        }
+        "upgrade": {"nxos": False},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -286,9 +288,7 @@ def test_image_mgmt_upgrade_00009(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "upgrade": {
-            "epld": True
-        }
+        "upgrade": {"epld": True},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -362,11 +362,7 @@ def test_image_mgmt_upgrade_00011(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "nxos": {
-                "mode": "non_disruptive"
-            }
-        }
+        "options": {"nxos": {"mode": "non_disruptive"}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -403,11 +399,7 @@ def test_image_mgmt_upgrade_00012(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "nxos": {
-                "bios_force": True
-            }
-        }
+        "options": {"nxos": {"bios_force": True}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -444,11 +436,7 @@ def test_image_mgmt_upgrade_00013(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "epld": {
-                "module": 27
-            }
-        }
+        "options": {"epld": {"module": 27}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -485,11 +473,7 @@ def test_image_mgmt_upgrade_00014(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "epld": {
-                "golden": True
-            }
-        }
+        "options": {"epld": {"golden": True}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -526,11 +510,7 @@ def test_image_mgmt_upgrade_00015(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "reboot": {
-                "config_reload": True
-            }
-        }
+        "options": {"reboot": {"config_reload": True}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -567,11 +547,7 @@ def test_image_mgmt_upgrade_00016(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "reboot": {
-                "write_erase": True
-            }
-        }
+        "options": {"reboot": {"write_erase": True}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -608,11 +584,7 @@ def test_image_mgmt_upgrade_00017(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "package": {
-                "install": True
-            }
-        }
+        "options": {"package": {"install": True}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -649,11 +621,7 @@ def test_image_mgmt_upgrade_00018(module) -> None:
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
-        "options": {
-            "package": {
-                "uninstall": True
-            }
-        }
+        "options": {"package": {"uninstall": True}},
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
@@ -692,45 +660,51 @@ def test_image_mgmt_upgrade_00019(monkeypatch, module) -> None:
         running ansible-playbook against the controller for this scenario
     """
     key = "test_image_mgmt_upgrade_00019a"
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'KR5M',
-            'stage': True,
-            'upgrade': {
-                'nxos': False,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'disruptive',
-                    'bios_force': True
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': False
+            "policy": "KR5M",
+            "stage": True,
+            "upgrade": {"nxos": False, "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
         }
     ]
     module.commit()
 
-    payload = payloads_image_upgrade(key)
-    assert module.payload == payload
+    assert module.payload == payloads_image_upgrade(key)
+
 
 def test_image_mgmt_upgrade_00020(monkeypatch, module) -> None:
     """
@@ -751,46 +725,50 @@ def test_image_mgmt_upgrade_00020(monkeypatch, module) -> None:
         running ansible-playbook against the controller for this scenario
     """
     key = "test_image_mgmt_upgrade_00020a"
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'disruptive',
-                    'bios_force': False
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": False}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     module.commit()
 
-    payload = payloads_image_upgrade(key)
-    assert module.payload == payload
+    assert module.payload == payloads_image_upgrade(key)
 
 
 def test_image_mgmt_upgrade_00021(monkeypatch, module) -> None:
@@ -812,40 +790,45 @@ def test_image_mgmt_upgrade_00021(monkeypatch, module) -> None:
     1.  commit calls build_payload, which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00021a"
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'FOO',
-                    'bios_force': False
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {"nxos": {"mode": "FOO", "bios_force": False}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: options.nxos.mode must be one of "
@@ -877,40 +860,45 @@ def test_image_mgmt_upgrade_00022(monkeypatch, module) -> None:
     3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] == True
     """
     key = "test_image_mgmt_upgrade_00022a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'non_disruptive',
-                    'bios_force': False
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {"nxos": {"mode": "non_disruptive", "bios_force": False}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     module.commit()
@@ -941,40 +929,45 @@ def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
     3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] == False
     """
     key = "test_image_mgmt_upgrade_00023a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'force_non_disruptive',
-                    'bios_force': False
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {"nxos": {"mode": "force_non_disruptive", "bios_force": False}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     module.commit()
@@ -995,7 +988,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, module) -> None:
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
 
-    4.  module.devices is set to contain invalid value for 
+    4.  module.devices is set to contain invalid value for
         options.nxos.bios_force
 
     Expected results:
@@ -1003,40 +996,45 @@ def test_image_mgmt_upgrade_00024(monkeypatch, module) -> None:
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00024a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'disruptive',
-                    'bios_force': "FOO"
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": "FOO"}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1057,7 +1055,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, module) -> None:
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
 
-    4.  module.devices is set to contain epld golden True and 
+    4.  module.devices is set to contain epld golden True and
         upgrade.nxos True.
 
     Expected results:
@@ -1065,40 +1063,45 @@ def test_image_mgmt_upgrade_00025(monkeypatch, module) -> None:
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00025a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'epld': {
-                    'module': 'ALL',
-                    'golden': True
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {"epld": {"module": "ALL", "golden": True}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: Invalid configuration for "
@@ -1121,46 +1124,56 @@ def test_image_mgmt_upgrade_00026(monkeypatch, module) -> None:
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
 
-    4.  module.devices is set to contain invalid epld.module 
+    4.  module.devices is set to contain invalid epld.module
 
     Expected results:
 
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00026a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'epld': {
-                    'module': 'FOO',
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {
+                "epld": {
+                    "module": "FOO",
                 }
             },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1182,46 +1195,56 @@ def test_image_mgmt_upgrade_00027(monkeypatch, module) -> None:
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
 
-    4.  module.devices is set to contain invalid epld.module 
+    4.  module.devices is set to contain invalid epld.module
 
     Expected results:
 
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00027a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'options': {
-                'epld': {
-                    'golden': 'FOO',
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {
+                "epld": {
+                    "golden": "FOO",
                 }
             },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1242,42 +1265,52 @@ def test_image_mgmt_upgrade_00028(monkeypatch, module) -> None:
     3.  Methods called by commit that wait for current actions, and
         image upgrade, to complete are mocked to do nothing
 
-    4.  module.devices is set to contain invalid value for reboot 
+    4.  module.devices is set to contain invalid value for reboot
 
     Expected results:
 
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00028a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': True
-            },
-            'reboot': "FOO",
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "reboot": "FOO",
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1299,46 +1332,56 @@ def test_image_mgmt_upgrade_00029(monkeypatch, module) -> None:
         image upgrade, to complete are mocked to do nothing
 
     4.  module.devices is set to contain invalid value for
-        options.reboot.config_reload 
+        options.reboot.config_reload
 
     Expected results:
 
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00029a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': False
-            },
-            'options': {
-                'reboot': {
-                    'config_reload': "FOO",
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": False},
+            "options": {
+                "reboot": {
+                    "config_reload": "FOO",
                 }
             },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1360,46 +1403,56 @@ def test_image_mgmt_upgrade_00030(monkeypatch, module) -> None:
         image upgrade, to complete are mocked to do nothing
 
     4.  module.devices is set to contain invalid value for
-        options.reboot.config_reload 
+        options.reboot.config_reload
 
     Expected results:
 
     1.  commit calls build_payload which calls fail_json
     """
     key = "test_image_mgmt_upgrade_00030a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': False
-            },
-            'options': {
-                'reboot': {
-                    'write_erase': "FOO",
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": False},
+            "options": {
+                "reboot": {
+                    "write_erase": "FOO",
                 }
             },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1421,7 +1474,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, module) -> None:
         image upgrade, to complete are mocked to do nothing
 
     4.  module.devices is set to contain invalid value for
-        options.package.uninstall 
+        options.package.uninstall
 
     Expected results:
 
@@ -1434,39 +1487,49 @@ def test_image_mgmt_upgrade_00031(monkeypatch, module) -> None:
         the value.
     """
     key = "test_image_mgmt_upgrade_00031a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': False
-            },
-            'options': {
-                'package': {
-                    'uninstall': "FOO",
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": False},
+            "options": {
+                "package": {
+                    "uninstall": "FOO",
                 }
             },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.build_payload: "
@@ -1496,34 +1559,44 @@ def test_image_mgmt_upgrade_00032(monkeypatch, module) -> None:
 
     """
     key = "test_image_mgmt_upgrade_00032a"
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_install_options(key)
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
-
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'NR3F',
-            'stage': True,
-            'upgrade': {
-                'nxos': True,
-                'epld': False
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': True
+            "policy": "NR3F",
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": False},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
         }
     ]
     match = "ImageUpgrade.commit: failed: "
@@ -1539,6 +1612,7 @@ def test_image_mgmt_upgrade_00032(monkeypatch, module) -> None:
 
 
 # getters
+
 
 def test_image_mgmt_upgrade_00043(module) -> None:
     """
@@ -1573,43 +1647,49 @@ def test_image_mgmt_upgrade_00045(monkeypatch, module) -> None:
     1.  module.response_data == 121
     """
     key = "test_image_mgmt_upgrade_00045a"
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'KR5M',
-            'stage': True,
-            'upgrade': {
-                'nxos': False,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'disruptive',
-                    'bios_force': True
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': False
+            "policy": "KR5M",
+            "stage": True,
+            "upgrade": {"nxos": False, "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
         }
     ]
     module.commit()
-    assert module.response_data == 121 
+    assert module.response_data == 121
 
 
 def test_image_mgmt_upgrade_00046(monkeypatch, module) -> None:
@@ -1631,43 +1711,49 @@ def test_image_mgmt_upgrade_00046(monkeypatch, module) -> None:
     1. module.result == {'success': True, 'changed': True}
     """
     key = "test_image_mgmt_upgrade_00046a"
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'KR5M',
-            'stage': True,
-            'upgrade': {
-                'nxos': False,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'disruptive',
-                    'bios_force': True
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': False
+            "policy": "KR5M",
+            "stage": True,
+            "upgrade": {"nxos": False, "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
         }
     ]
     module.commit()
-    assert module.result == {'success': True, 'changed': True} 
+    assert module.result == {"success": True, "changed": True}
 
 
 def test_image_mgmt_upgrade_00047(monkeypatch, module) -> None:
@@ -1689,39 +1775,45 @@ def test_image_mgmt_upgrade_00047(monkeypatch, module) -> None:
     1. module.response is a dict
     """
     key = "test_image_mgmt_upgrade_00047a"
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_issu_details(key)
+
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
+
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
+
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
+
     monkeypatch.setattr(dcnm_send_install_options, mock_dcnm_send_install_options)
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
     monkeypatch.setattr(dcnm_send_image_upgrade, mock_dcnm_send_image_upgrade)
-    monkeypatch.setattr(module, "_wait_for_current_actions_to_complete", mock_wait_for_current_actions_to_complete)
-    monkeypatch.setattr(module, "_wait_for_image_upgrade_to_complete", mock_wait_for_image_upgrade_to_complete)
+    monkeypatch.setattr(
+        module,
+        "_wait_for_current_actions_to_complete",
+        mock_wait_for_current_actions_to_complete,
+    )
+    monkeypatch.setattr(
+        module,
+        "_wait_for_image_upgrade_to_complete",
+        mock_wait_for_image_upgrade_to_complete,
+    )
 
     module.devices = [
         {
-            'policy': 'KR5M',
-            'stage': True,
-            'upgrade': {
-                'nxos': False,
-                'epld': True
-            },
-            'options': {
-                'nxos': {
-                    'mode': 'disruptive',
-                    'bios_force': True
-                }
-            },
-            'validate': True,
-            'ip_address': '172.22.150.102',
-            'policy_changed': False
+            "policy": "KR5M",
+            "stage": True,
+            "upgrade": {"nxos": False, "epld": True},
+            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
         }
     ]
     module.commit()
@@ -1733,12 +1825,14 @@ def test_image_mgmt_upgrade_00047(monkeypatch, module) -> None:
 # setters
 
 match_00060 = "ImageUpgrade.bios_force: instance.bios_force must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00060))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00060)),
     ],
 )
 def test_image_mgmt_upgrade_00060(module, value, expected) -> None:
@@ -1755,12 +1849,14 @@ def test_image_mgmt_upgrade_00060(module, value, expected) -> None:
 
 match_00061 = "ImageUpgrade.config_reload: "
 match_00061 += "instance.config_reload must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00061))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00061)),
     ],
 )
 def test_image_mgmt_upgrade_00061(module, value, expected) -> None:
@@ -1779,9 +1875,9 @@ match_00062_common = "ImageUpgrade.devices: "
 match_00062_common += "instance.devices must be a python list of dict"
 
 match_00062_fail_1 = f"{match_00062_common}. Got not a list."
-match_00062_fail_2 = fr"{match_00062_common}. Got \['not a dict'\]."
+match_00062_fail_2 = rf"{match_00062_common}. Got \['not a dict'\]."
 
-match_00062_fail_3 = f"{match_00062_common}, where each dict contains " 
+match_00062_fail_3 = f"{match_00062_common}, where each dict contains "
 match_00062_fail_3 += "the following keys: ip_address. "
 match_00062_fail_3 += r"Got \[\{'bad_key_ip_address': '192.168.1.1'\}\]."
 
@@ -1789,13 +1885,15 @@ data_00062_pass = [{"ip_address": "192.168.1.1"}]
 data_00062_fail_1 = "not a list"
 data_00062_fail_2 = ["not a dict"]
 data_00062_fail_3 = [{"bad_key_ip_address": "192.168.1.1"}]
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (data_00062_pass, does_not_raise()),
         (data_00062_fail_1, pytest.raises(AnsibleFailJson, match=match_00062_fail_1)),
         (data_00062_fail_2, pytest.raises(AnsibleFailJson, match=match_00062_fail_2)),
-        (data_00062_fail_3, pytest.raises(AnsibleFailJson, match=match_00062_fail_3))
+        (data_00062_fail_3, pytest.raises(AnsibleFailJson, match=match_00062_fail_3)),
     ],
 )
 def test_image_mgmt_upgrade_00062(module, value, expected) -> None:
@@ -1808,12 +1906,14 @@ def test_image_mgmt_upgrade_00062(module, value, expected) -> None:
 
 match_00063 = "ImageUpgrade.disruptive: "
 match_00063 += "instance.disruptive must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00063))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00063)),
     ],
 )
 def test_image_mgmt_upgrade_00063(module, value, expected) -> None:
@@ -1830,12 +1930,14 @@ def test_image_mgmt_upgrade_00063(module, value, expected) -> None:
 
 match_00064 = "ImageUpgrade.epld_golden: "
 match_00064 += "instance.epld_golden must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00064))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00064)),
     ],
 )
 def test_image_mgmt_upgrade_00064(module, value, expected) -> None:
@@ -1852,12 +1954,14 @@ def test_image_mgmt_upgrade_00064(module, value, expected) -> None:
 
 match_00065 = "ImageUpgrade.epld_upgrade: "
 match_00065 += "instance.epld_upgrade must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00065))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00065)),
     ],
 )
 def test_image_mgmt_upgrade_00065(module, value, expected) -> None:
@@ -1874,6 +1978,8 @@ def test_image_mgmt_upgrade_00065(module, value, expected) -> None:
 
 match_00066_fail_1 = "ImageUpgrade.epld_module: "
 match_00066_fail_1 += "instance.epld_module must be an integer or 'ALL'"
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
@@ -1881,7 +1987,7 @@ match_00066_fail_1 += "instance.epld_module must be an integer or 'ALL'"
         (1, does_not_raise()),
         (27, does_not_raise()),
         ("27", does_not_raise()),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00066_fail_1))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00066_fail_1)),
     ],
 )
 def test_image_mgmt_upgrade_00066(module, value, expected) -> None:
@@ -1894,12 +2000,14 @@ def test_image_mgmt_upgrade_00066(module, value, expected) -> None:
 
 match_00067 = "ImageUpgrade.force_non_disruptive: "
 match_00067 += "instance.force_non_disruptive must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00067))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00067)),
     ],
 )
 def test_image_mgmt_upgrade_00067(module, value, expected) -> None:
@@ -1916,12 +2024,14 @@ def test_image_mgmt_upgrade_00067(module, value, expected) -> None:
 
 match_00068 = "ImageUpgrade.non_disruptive: "
 match_00068 += "instance.non_disruptive must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00068))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00068)),
     ],
 )
 def test_image_mgmt_upgrade_00068(module, value, expected) -> None:
@@ -1938,12 +2048,14 @@ def test_image_mgmt_upgrade_00068(module, value, expected) -> None:
 
 match_00069 = "ImageUpgrade.package_install: "
 match_00069 += "instance.package_install must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00069))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00069)),
     ],
 )
 def test_image_mgmt_upgrade_00069(module, value, expected) -> None:
@@ -1960,12 +2072,14 @@ def test_image_mgmt_upgrade_00069(module, value, expected) -> None:
 
 match_00070 = "ImageUpgrade.package_uninstall: "
 match_00070 += "instance.package_uninstall must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00070))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00070)),
     ],
 )
 def test_image_mgmt_upgrade_00070(module, value, expected) -> None:
@@ -1982,12 +2096,14 @@ def test_image_mgmt_upgrade_00070(module, value, expected) -> None:
 
 match_00071 = "ImageUpgrade.reboot: "
 match_00071 += "instance.reboot must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00071))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00071)),
     ],
 )
 def test_image_mgmt_upgrade_00071(module, value, expected) -> None:
@@ -2004,12 +2120,14 @@ def test_image_mgmt_upgrade_00071(module, value, expected) -> None:
 
 match_00072 = "ImageUpgrade.write_erase: "
 match_00072 += "instance.write_erase must be a boolean."
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
         (True, True),
         (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00072))
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00072)),
     ],
 )
 def test_image_mgmt_upgrade_00072(module, value, expected) -> None:
@@ -2022,4 +2140,3 @@ def test_image_mgmt_upgrade_00072(module, value, expected) -> None:
     else:
         module.write_erase = value
         assert module.write_erase == expected
-
