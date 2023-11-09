@@ -367,7 +367,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         # biosForce corresponds to BIOS Force GUI option
         bios_force = device.get("options").get("nxos").get("bios_force")
-        bios_force = self.make_bool(bios_force)
+        bios_force = self.make_boolean(bios_force)
         if not isinstance(bios_force, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.bios_force must be a boolean. "
@@ -382,14 +382,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         epld_golden = device.get("options").get("epld").get("golden")
         epld_upgrade = device.get("upgrade").get("epld")
 
-        epld_golden = self.make_bool(epld_golden)
+        epld_golden = self.make_boolean(epld_golden)
         if not isinstance(epld_golden, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.epld.golden must be a boolean. "
             msg += f"Got {epld_golden}."
             self.module.fail_json(msg)
 
-        epld_upgrade = self.make_bool(epld_upgrade)
+        epld_upgrade = self.make_boolean(epld_upgrade)
         if not isinstance(epld_upgrade, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "upgrade.epld must be a boolean. "
@@ -424,7 +424,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         # Reboot
         reboot = device.get("reboot")
 
-        reboot = self.make_bool(reboot)
+        reboot = self.make_boolean(reboot)
         if not isinstance(reboot, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "reboot must be a boolean. "
@@ -436,14 +436,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         config_reload = device.get("options").get("reboot").get("config_reload")
         write_erase = device.get("options").get("reboot").get("write_erase")
 
-        config_reload = self.make_bool(config_reload)
+        config_reload = self.make_boolean(config_reload)
         if not isinstance(config_reload, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.config_reload must be a boolean. "
             msg += f"Got {config_reload}."
             self.module.fail_json(msg)
 
-        write_erase = self.make_bool(write_erase)
+        write_erase = self.make_boolean(write_erase)
         if not isinstance(write_erase, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.write_erase must be a boolean. "
@@ -458,7 +458,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         package_install = device.get("options").get("package").get("install")
         package_uninstall = device.get("options").get("package").get("uninstall")
 
-        package_install = self.make_bool(package_install)
+        package_install = self.make_boolean(package_install)
         if not isinstance(package_install, bool):
             # This code is never hit since ImageInstallOptions calls
             # fail_json on invalid options.package.install.
@@ -469,7 +469,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += f"Got {package_install}."
             self.module.fail_json(msg)
 
-        package_uninstall = self.make_bool(package_uninstall)
+        package_uninstall = self.make_boolean(package_uninstall)
         if not isinstance(package_uninstall, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.uninstall must be a boolean. "
