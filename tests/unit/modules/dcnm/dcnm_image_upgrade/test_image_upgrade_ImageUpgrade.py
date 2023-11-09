@@ -10,6 +10,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
     ImageUpgrade
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsByIpAddress
 
 from .fixture import load_fixture
 
@@ -66,6 +68,11 @@ class MockAnsibleModule:
 @pytest.fixture
 def module():
     return ImageUpgrade(MockAnsibleModule)
+
+
+@pytest.fixture
+def mock_issu_details() -> SwitchIssuDetailsByIpAddress:
+    return SwitchIssuDetailsByIpAddress(MockAnsibleModule)
 
 
 def test_image_mgmt_upgrade_00001(module) -> None:
@@ -2266,3 +2273,87 @@ def test_image_mgmt_upgrade_00072(module, value, expected) -> None:
     else:
         module.write_erase = value
         assert module.write_erase == expected
+
+
+def test_image_mgmt_upgrade_00080(monkeypatch, module, mock_issu_details) -> None:
+    """
+    Function: ImageUpgrade._wait_for_current_actions_to_complete
+    Test: Verify that two switches are added to ipv4_done
+
+    _wait_for_current_actions_to_complete waits until staging, validation,
+    and upgrade actions are complete for all ip addresses.  It calls
+    SwitchIssuDetailsByIpAddress.actions_in_progress() and expects
+    this to return False.  actions_in_progress() returns True until none of
+    the following keys has a value of "In-Progress":
+
+    ["imageStaged", "upgrade", "validated"]
+
+    Expectations:
+    1.  module.ipv4_done should be a set()
+    2.  module.ipv4_done should be length 2
+    3.  module.ipv4_done should contain all ip addresses in
+        module.ip_addresses
+    4.  The function should return without calling fail_json.
+    """
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_upgrade_00080a"
+        return responses_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    module.issu_detail = mock_issu_details
+    module.ip_addresses = [
+        "172.22.150.102",
+        "172.22.150.108",
+    ]
+    module.check_interval = 0
+    module._wait_for_current_actions_to_complete()
+    assert isinstance(module.ipv4_done, set)
+    assert len(module.ipv4_done) == 2
+    assert "172.22.150.102" in module.ipv4_done
+    assert "172.22.150.108" in module.ipv4_done
+
+
+def test_image_mgmt_upgrade_00081(monkeypatch, module, mock_issu_details) -> None:
+    """
+    Function: ImageUpgrade._wait_for_current_actions_to_complete
+    Test: Verify that one switch is added to ipv4_done
+    Test: Verify that fail_json is called due to timeout
+
+    See test_image_mgmt_upgrade_00080 for functional details.
+
+    Expectations:
+    1.  module.ipv4_done should be a set()
+    2.  module.ipv4_done should be length 1
+    3.  module.ipv4_done should contain 172.22.150.102
+    3.  module.ipv4_done should not contain 172.22.150.108
+    4.  The function should call fail_json due to timeout
+    """
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_upgrade_00081a"
+        return responses_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    module.issu_detail = mock_issu_details
+    module.ip_addresses = [
+        "172.22.150.102",
+        "172.22.150.108",
+    ]
+    module.check_interval = 1
+    module.check_timeout = 1
+
+    match = "ImageUpgrade._wait_for_current_actions_to_complete: "
+    match += "Timed out waiting for actions to complete. "
+    match += r"ipv4_done: 172\.22\.150\.102, "
+    match += r"ipv4_todo: 172\.22\.150\.102,172\.22\.150\.108\. "
+    match += r"check the device\(s\) to determine the cause "
+    match += r"\(e\.g\. show install all status\)\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        module._wait_for_current_actions_to_complete()
+    assert isinstance(module.ipv4_done, set)
+    assert len(module.ipv4_done) == 1
+    assert "172.22.150.102" in module.ipv4_done
+    assert "172.22.150.108" not in module.ipv4_done

@@ -337,7 +337,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.install_options.policy_name = device.get("policy")
         self.install_options.epld = device.get("upgrade").get("epld")
         self.install_options.nxos = device.get("upgrade").get("nxos")
-        self.install_options.package_install = device.get("options").get("package").get("install")
+        self.install_options.package_install = (
+            device.get("options").get("package").get("install")
+        )
         self.install_options.refresh()
 
         msg = f"REMOVE: {self.class_name}.{method_name}: "
@@ -424,12 +426,10 @@ class ImageUpgrade(ImageUpgradeCommon):
                 msg += f"or an integer. Got {epld_module}."
                 self.module.fail_json(msg)
 
-
         self.payload["epldUpgrade"] = epld_upgrade
         self.payload["epldOptions"] = {}
         self.payload["epldOptions"]["moduleNumber"] = epld_module
         self.payload["epldOptions"]["golden"] = epld_golden
-
 
         # Reboot
         reboot = device.get("reboot")
@@ -556,8 +556,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        self.ipv4_todo = copy.copy(self.ip_addresses)
         self.ipv4_done = set()
+        self.ipv4_todo = set(copy.copy(self.ip_addresses))
         timeout = self.check_timeout
 
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
@@ -575,21 +575,14 @@ class ImageUpgrade(ImageUpgradeCommon):
                     self.ipv4_done.add(ipv4)
                     continue
 
-                msg = f"REMOVE: {self.class_name}.{method_name}: "
-                msg += f"Seconds remaining {timeout}.  Waiting "
-                msg += f" on ipv4 {ipv4} actions to complete. "
-                msg += f"staged_percent {self.issu_detail.image_staged_percent}, "
-                msg += f"validated_percent {self.issu_detail.validated_percent}, "
-                msg += f"upgrade_percent {self.issu_detail.upgrade_percent}"
-                self.log_msg(msg)
-
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Timed out while waiting for actions in progress "
-            msg += "to complete for the following device(s): "
-            msg += f"{self.ipv4_todo}. "
-            msg += "Try increasing issu timeout in the playbook, or check "
-            msg += "the device(s) to determine the cause "
+            msg += f"Timed out waiting for actions to complete. "
+            msg += f"ipv4_done: "
+            msg += f"{','.join(sorted(self.ipv4_done))}, "
+            msg += f"ipv4_todo: "
+            msg += f"{','.join(sorted(self.ipv4_todo))}. "
+            msg += "check the device(s) to determine the cause "
             msg += "(e.g. show install all status)."
             self.module.fail_json(msg)
 
@@ -911,7 +904,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.module.fail_json(msg)
         self.properties["write_erase"] = value
 
-    # getter properties
     @property
     def check_interval(self):
         """
@@ -919,12 +911,30 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         return self.properties.get("check_interval")
 
+    @check_interval.setter
+    def check_interval(self, value):
+        if not isinstance(value, int):
+            msg = f"{self.__class__.__name__}: instance.check_interval must "
+            msg += f"be an integer."
+            self.module.fail_json(msg)
+        self.properties["check_interval"] = value
+
     @property
     def check_timeout(self):
         """
         Return the image upgrade check timeout in seconds
         """
         return self.properties.get("check_timeout")
+
+    @check_timeout.setter
+    def check_timeout(self, value):
+        if not isinstance(value, int):
+            msg = f"{self.__class__.__name__}: instance.check_timeout must "
+            msg += f"be an integer."
+            self.module.fail_json(msg)
+        self.properties["check_timeout"] = value
+
+    # getter properties
 
     @property
     def response_data(self):
