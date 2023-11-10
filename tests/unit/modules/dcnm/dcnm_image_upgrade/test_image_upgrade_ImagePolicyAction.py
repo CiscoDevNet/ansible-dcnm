@@ -1,6 +1,6 @@
 """
 controller_version: 12
-description: Verify functionality of ImageStage
+Description: Verify functionality of ImagePolicyAction
 """
 
 from contextlib import contextmanager
@@ -87,8 +87,11 @@ def image_policies() -> ImagePolicies:
 
 def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
     """
-    Function: __init__
-    Test: All class attributes initialized to expected values
+    Function
+    - __init__
+
+    Test
+    - Class attributes initialized to expected values
     """
     image_policy_action.__init__(MockAnsibleModule)
     assert isinstance(image_policy_action, ImagePolicyAction)
@@ -100,8 +103,11 @@ def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
 
 def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
     """
-    Function: _init_properties
-    Test: All class properties initialized to expected values
+    Function
+    - _init_properties
+
+    Test
+    - Class properties are initialized to expected values
     """
     image_policy_action._init_properties()
     assert isinstance(image_policy_action.properties, dict)
@@ -117,15 +123,15 @@ def test_image_mgmt_image_policy_action_00003(
     monkeypatch, image_policy_action, issu_details
 ) -> None:
     """
-    Function:
-    build_payload
+    Function
+    - build_payload
 
-    Test:
-    -   fail_json is not called
-    -   image_policy_action.payloads is a list
-    -   image_policy_action.payloads has length 5
+    Test
+    - fail_json is not called
+    - image_policy_action.payloads is a list
+    - image_policy_action.payloads has length 5
 
-    Description:
+    Description
     build_payload builds the payload to send in the POST request
     to attach policies to devices
     """
@@ -157,15 +163,14 @@ def test_image_mgmt_image_policy_action_00004(
     monkeypatch, image_policy_action, issu_details
 ) -> None:
     """
-    Function:
-    build_payload
+    Function
+    - build_payload
 
-    Test:
-    -   fail_json is called since deviceName is null in the issu_details
-        response
-    -   The error message is matched
+    Test
+    - fail_json is called since deviceName is null in the issu_details response
+    - The error message is matched
 
-    Description:
+    Description
     build_payload builds the payload to send in the POST request
     to attach policies to devices.  If any key in the payload has a value
     of None, the function calls fail_json.
@@ -196,14 +201,14 @@ def test_image_mgmt_image_policy_action_00010(
     image_policy_action, issu_details
 ) -> None:
     """
-    Function:
-    validate_request
+    Function
+    - validate_request
 
-    Test:
-    -   fail_json is called because image_policy_action.action is None
-    -   The error message is matched
+    Test
+    - fail_json is called because image_policy_action.action is None
+    - The error message is matched
 
-    Description:
+    Description
     validate_request performs a number of validations prior to calling commit
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
@@ -236,14 +241,14 @@ def test_image_mgmt_image_policy_action_00011(
     action, expected, image_policy_action, issu_details
 ) -> None:
     """
-    Function:
-    validate_request
+    Function
+    - validate_request
 
-    Test:
-    -   fail_json is called because image_policy_action.policy_name is None
-    -   The error message is matched
+    Test
+    - fail_json is called because image_policy_action.policy_name is None
+    - The error message is matched
 
-    Description:
+    Description
     validate_request performs a number of validations prior to calling commit
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
@@ -275,10 +280,10 @@ def test_image_mgmt_image_policy_action_00012(
     action, expected, image_policy_action, issu_details
 ) -> None:
     """
-    Function:
-    validate_request
+    Function
+    - validate_request
 
-    Test:
+    Test
     -   fail_json is called for action == attach because
         image_policy_action.serial_numbers is None
     -   fail_json is called for action == detach because
@@ -287,7 +292,7 @@ def test_image_mgmt_image_policy_action_00012(
         validate_request is exited early for action == "query"
     -   The error message, if any, is matched
 
-    Description:
+    Description
     validate_request performs a number of validations prior to calling commit
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
@@ -305,16 +310,16 @@ def test_image_mgmt_image_policy_action_00013(
     monkeypatch, image_policy_action, issu_details, image_policies
 ) -> None:
     """
-    Function:
-    validate_request
+    Function
+    - validate_request
 
-    Test:
+    Test
     -   fail_json is called because policy KR5M supports playform N9K/N3K
         and the response from ImagePolicies contains platform
         TEST_UNKNOWN_PLATFORM
     -   The error message is matched
 
-    Description:
+    Description
     validate_request performs a number of validations prior to calling commit
     validate_request performs a number of validations prior to calling commit
     If any of these validations fail, the function calls fail_json with a
@@ -349,14 +354,14 @@ def test_image_mgmt_image_policy_action_00013(
 
 def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) -> None:
     """
-    Function:
-    commit
+    Function
+    - commit
 
-    Test:
+    Test
     -   fail_json is called because action is unknown
     -   The error message is matched
 
-    Description:
+    Description
     commit calls validate_request() and then calls one of the following
     functions based on the value of action:
         action == "attach" : _attach_policy
@@ -405,16 +410,16 @@ def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) 
 
 def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) -> None:
     """
-    Function:
-    commit
+    Function
+    - commit
 
-    Test:
+    Test
     -   action is "detach", so ImagePolicyAction._detach_policy is called
     -   commit is successful given a 200 response from the controller in
         ImagePolicyAction._detach_policy
     -   ImagePolicyAction.response contains RESULT_CODE 200
 
-    Description:
+    Description
     commit calls validate_request() and then calls one of the following
     functions based on the value of action:
         action == "attach" : _attach_policy
