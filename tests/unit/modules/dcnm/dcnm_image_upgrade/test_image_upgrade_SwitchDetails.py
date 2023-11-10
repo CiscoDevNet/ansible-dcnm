@@ -40,116 +40,91 @@ class MockAnsibleModule:
 
 
 @pytest.fixture
-def module():
+def switch_details():
     return SwitchDetails(MockAnsibleModule)
 
 
-def test_init(module) -> None:
-    module.__init__(MockAnsibleModule)
-    assert isinstance(module, SwitchDetails)
-    assert module.class_name == "SwitchDetails"
-
-
-def test_init_properties(module) -> None:
+def test_image_mgmt_switch_details_00001(switch_details) -> None:
     """
-    Properties are initialized to expected values
+    Function
+    - __init__
+
+    Test
+    - Class attributes are initialized to expected values
     """
-    module._init_properties()
-    assert isinstance(module.properties, dict)
-    assert module.properties.get("ip_address") == None
-    assert module.properties.get("response_data") == None
-    assert module.properties.get("response") == None
-    assert module.properties.get("result") == None
+    switch_details.__init__(MockAnsibleModule)
+    assert isinstance(switch_details, SwitchDetails)
+    assert switch_details.class_name == "SwitchDetails"
 
 
-# test_ip_address
-
-
-@pytest.mark.parametrize(
-    "ip_address_is_set, expected",
-    [
-        (True, "1.2.3.4"),
-        (False, None),
-    ],
-)
-def test_ip_address(module, ip_address_is_set, expected) -> None:
+def test_image_mgmt_switch_details_00002(switch_details) -> None:
     """
-    Function description:
+    Function
+    - _init_properties
 
-    SwitchDetails.ip_address returns:
-        - IP Address, if the user has set ip_address
-        - None, if the user has not already set ip_address
-
-    Expected results:
-
-    1. instance.ip_address will return the value set by the user
-    2. instance.ip_address will return None
+    Test
+    - Class properties are initialized to expected values
     """
-    if ip_address_is_set:
-        module.ip_address = "1.2.3.4"
-    assert module.ip_address == expected
+    switch_details._init_properties()
+    assert isinstance(switch_details.properties, dict)
+    assert switch_details.properties.get("ip_address") == None
+    assert switch_details.properties.get("response_data") == None
+    assert switch_details.properties.get("response") == None
+    assert switch_details.properties.get("result") == None
 
 
-def test_refresh(monkeypatch, module) -> None:
+def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
     """
-    Function description:
+    Function
+    - refresh
 
-    SwitchDetails.refresh sets the following properties:
-        - response_data
-        - response
-        - result
-
-    Expected results:
-
-    1. instance.response_data is a dictionary
-    2. instance.response is a dictionary
-    3. instance.response_data is a dictionary
+    Test
+    - response_data, response, result are dictionaries
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "SwitchDetails_get_return_code_200"
+        key = "test_image_mgmt_switch_details_00020a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
 
-    module.refresh()
-    assert isinstance(module.response_data, dict)
-    assert isinstance(module.result, dict)
-    assert isinstance(module.response, dict)
+    switch_details.refresh()
+    assert isinstance(switch_details.response_data, dict)
+    assert isinstance(switch_details.result, dict)
+    assert isinstance(switch_details.response, dict)
 
 
-def test_refresh_response_data(monkeypatch, module) -> None:
+def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
     """
-    Function description:
+    Function
+    - refresh
 
-    See test_refresh
-
-    Expected results:
-
-    1. instance.response_data is a dictionary
-    2. When instance.ip_address is set, getter properties will return values specific to ip_address
+    Test
+    - response_data is a dictionary
+    - ip_address is set
+    - getter properties will return values specific to ip_address
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "SwitchDetails_get_return_code_200"
+        key = "test_image_mgmt_switch_details_00021a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
 
-    module.refresh()
-    assert isinstance(module.response_data, dict)
-    module.ip_address = "172.22.150.110"
-    assert module.hostname == "cvd-1111-bgw"
-    module.ip_address = "172.22.150.111"
+    switch_details.refresh()
+    assert isinstance(switch_details.response_data, dict)
+    switch_details.ip_address = "172.22.150.110"
+    assert switch_details.hostname == "cvd-1111-bgw"
+    switch_details.ip_address = "172.22.150.111"
     # We use the above IP address to test the remaining properties
-    assert module.fabric_name == "easy"
-    assert module.hostname == "cvd-1112-bgw"
-    assert module.logical_name == "cvd-1112-bgw"
-    assert module.model == "N9K-C9504"
-    # This is derived from "model" and is not in the NDFC response
-    assert module.platform == "N9K"
-    assert module.role == "border gateway"
-    assert module.serial_number == "FOX2109PGD1"
+    assert switch_details.fabric_name == "easy"
+    assert switch_details.hostname == "cvd-1112-bgw"
+    assert switch_details.logical_name == "cvd-1112-bgw"
+    assert switch_details.model == "N9K-C9504"
+    # This is derived from "model" and is not in the controller response
+    assert switch_details.platform == "N9K"
+    assert switch_details.role == "border gateway"
+    assert switch_details.serial_number == "FOX2109PGD1"
 
 
 match = "Unable to retrieve switch information from the controller. "
@@ -158,40 +133,36 @@ match = "Unable to retrieve switch information from the controller. "
 @pytest.mark.parametrize(
     "key,expected",
     [
-        ("SwitchDetails_get_return_code_200", does_not_raise()),
+        ("test_image_mgmt_switch_details_00022a", does_not_raise()),
         (
-            "SwitchDetails_get_return_code_404",
+            "test_image_mgmt_switch_details_00022b",
             pytest.raises(AnsibleFailJson, match=match),
         ),
         (
-            "SwitchDetails_get_return_code_500",
+            "test_image_mgmt_switch_details_00022c",
             pytest.raises(AnsibleFailJson, match=match),
         ),
     ],
 )
-def test_result(monkeypatch, module, key, expected) -> None:
+def test_image_mgmt_switch_details_00022(
+    monkeypatch, switch_details, key, expected
+) -> None:
     """
-    Function description:
+    Function
+    - switch_details.refresh
+    - switch_details.result
+    - ImageUpgradeCommon._handle_response
 
-    SwitchDetails.result returns the result of its superclass
-    method ImageUpgradeCommon._handle_response()
-
-    Expectations:
-
-    1.  200 RETURN_CODE, MESSAGE == "OK",
-        SwitchDetails.result == {'found': True, 'success': True}
-
-    2.  404 RETURN_CODE, MESSAGE == "Not Found",
-        SwitchDetails.result == {'found': False, 'success': True}
-
-    3.  500 RETURN_CODE, MESSAGE ~= "Internal Server Error",
-        SwitchDetails.result == {'found': False, 'success': False}
-
-    Expected results:
-
-    1. SwitchDetails_result_200 == {'found': True, 'success': True}
-    2. SwitchDetails_result_404 == {'found': False, 'success': True}
-    3. SwitchDetails_result_500 == {'found': False, 'success': False}
+    Test
+    - test_image_mgmt_switch_details_00022a
+        - 200 RETURN_CODE, MESSAGE == "OK"
+        - result == {'found': True, 'success': True}
+    - test_image_mgmt_switch_details_00022b
+        - 404 RETURN_CODE, MESSAGE == "Not Found"
+        - result == {'found': False, 'success': True}
+    - test_image_mgmt_switch_details_00022c
+        - 500 RETURN_CODE, MESSAGE ~= "Internal Server Error"
+        - result == {'found': False, 'success': False}
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
@@ -200,7 +171,7 @@ def test_result(monkeypatch, module, key, expected) -> None:
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
 
     with expected:
-        module.refresh()
+        switch_details.refresh()
 
 
 @pytest.mark.parametrize(
@@ -218,9 +189,19 @@ def test_result(monkeypatch, module, key, expected) -> None:
         ("switchRole", "border gateway"),
     ],
 )
-def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
+def test_image_mgmt_switch_details_00023(
+    monkeypatch, switch_details, item, expected
+) -> None:
     """
-    Function description:
+    Function
+    - switch_details.refresh
+    - switch_details.ip_address
+    - switch_details._get
+
+    Test
+    - _get returns correct property values
+
+    Description
 
     SwitchDetails._get is called by all getter properties.
 
@@ -230,80 +211,105 @@ def test_get_with_ip_address_set(monkeypatch, module, item, expected) -> None:
     It returns the value of the requested property if the user has set
     ip_address and the property name is known.
 
-    The property value is passed to both make_boolean() and make_none(), which
-    either:
-        - converts it to a boolean
-        - converts it to NoneType
-        - returns the value unchanged
-
-    Expected results:
-
-    1. Property values are returned as expected
+    Property values are passed to make_boolean() and make_none(), which either:
+        - converts value to a boolean
+        - converts value to NoneType
+        - returns value unchanged
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "SwitchDetails_get_return_code_200"
+        key = "test_image_mgmt_switch_details_00023a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
 
-    module.refresh()
-    module.ip_address = "172.22.150.110"
-    assert module._get(item) == expected
+    switch_details.refresh()
+    switch_details.ip_address = "172.22.150.110"
+    assert switch_details._get(item) == expected
 
 
-def test_get_with_unknown_ip_address(monkeypatch, module) -> None:
+def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
     """
-    Function description:
+    Function
+    - switch_details.refresh
+    - switch_details.ip_address
+    - switch_details._get
 
+    Test
+    - _get calls fail_json when switch_details.ip_address is unknown
+
+    Description
     SwitchDetails._get is called by all getter properties.
     It raises AnsibleFailJson if the user has not set ip_address or if
     the ip_address is unknown, or if an unknown property name is queried.
     It returns the value of the requested property if the user has set a known
     ip_address.
-
-    Expected results:
-
-    1.  fail_json is called with appropriate error message since an unknown
-        ip_address is set.
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "SwitchDetails_get_return_code_200"
+        key = "test_image_mgmt_switch_details_00024a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
 
-    module.refresh()
-    module.ip_address = "1.1.1.1"
+    switch_details.refresh()
+    switch_details.ip_address = "1.1.1.1"
     match = "SwitchDetails._get: 1.1.1.1 does not exist "
     match += "on the controller."
     with pytest.raises(AnsibleFailJson, match=match):
-        module._get("hostName")
+        switch_details._get("hostName")
 
 
-def test_get_with_unknown_property_name(monkeypatch, module) -> None:
+def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
     """
-    Function description:
+    Function
+    - switch_details.refresh
+    - switch_details.ip_address
+    - switch_details._get
 
+    Test
+    - _get calls fail_json when an unknown property name is queried
+
+    Description
     SwitchDetails._get is called by all getter properties.
     It raises AnsibleFailJson if the user has not set ip_address or if
     the ip_address is unknown, or if an unknown property name is queried.
-
-    Expected results:
-
-    1.  fail_json is called with appropriate error message since an
-        unknown property name is queried.
     """
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "SwitchDetails_get_return_code_200"
+        key = "test_image_mgmt_switch_details_00025a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
 
-    module.refresh()
-    module.ip_address = "172.22.150.110"
+    switch_details.refresh()
+    switch_details.ip_address = "172.22.150.110"
     match = "SwitchDetails._get: 172.22.150.110 does not have a key named FOO."
     with pytest.raises(AnsibleFailJson, match=match):
-        module._get("FOO")
+        switch_details._get("FOO")
+
+
+# setters
+
+
+@pytest.mark.parametrize(
+    "ip_address_is_set, expected",
+    [
+        (True, "1.2.3.4"),
+        (False, None),
+    ],
+)
+def test_image_mgmt_switch_details_00060(
+    switch_details, ip_address_is_set, expected
+) -> None:
+    """
+    Function
+    - ip_address.setter
+
+    Test
+    - return IP address, if set
+    - return None, if not set
+    """
+    if ip_address_is_set:
+        switch_details.ip_address = "1.2.3.4"
+    assert switch_details.ip_address == expected
