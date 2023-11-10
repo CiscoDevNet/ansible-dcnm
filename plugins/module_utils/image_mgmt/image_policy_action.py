@@ -221,7 +221,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         verb: GET
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/__POLICY_NAME__
         """
-        self.method_name = "_query_policy"
+        self.method_name = inspect.stack()[0][3]
 
         self.path = self.endpoints.policy_info.get("path")
         self.verb = self.endpoints.policy_info.get("verb")
@@ -256,7 +256,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @action.setter
     def action(self, value):
-        self.method_name = "action.setter"
+        self.method_name = inspect.stack()[0][3]
 
         if value not in self.valid_actions:
             msg = f"{self.class_name}.{self.method_name}: "
@@ -299,6 +299,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @policy_name.setter
     def policy_name(self, value):
+        self.method_name = inspect.stack()[0][3]
         self.properties["policy_name"] = value
 
     @property
@@ -313,7 +314,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @serial_numbers.setter
     def serial_numbers(self, value):
-        self.method_name = "serial_numbers.setter"
+        self.method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.serial_numbers must be a "
