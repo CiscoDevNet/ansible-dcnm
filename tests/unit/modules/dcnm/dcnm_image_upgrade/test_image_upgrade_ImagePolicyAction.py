@@ -9,10 +9,10 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
-    ImagePolicyAction
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
+    ImagePolicyAction
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
@@ -34,11 +34,13 @@ dcnm_send_image_policy_action = patch_image_mgmt + "image_policy_action.dcnm_sen
 dcnm_send_switch_details = patch_image_mgmt + "switch_details.dcnm_send"
 dcnm_send_switch_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
+
 def responses_image_policies(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_ImagePolicies"
     response = load_fixture(response_file).get(key)
     print(f"responses_image_policies: {key} : {response}")
     return response
+
 
 def responses_image_policy_action(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_ImagePolicyAction"
@@ -46,11 +48,13 @@ def responses_image_policy_action(key: str) -> Dict[str, str]:
     print(f"responses_image_policy_action: {key} : {response}")
     return response
 
+
 def responses_switch_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchDetails"
     response = load_fixture(response_file).get(key)
     print(f"responses_switch_details: {key} : {response}")
     return response
+
 
 def responses_switch_issu_details(key: str) -> Dict[str, str]:
     response_file = f"image_upgrade_responses_SwitchIssuDetails"
@@ -70,9 +74,11 @@ class MockAnsibleModule:
 def image_policy_action():
     return ImagePolicyAction(MockAnsibleModule)
 
+
 @pytest.fixture
 def issu_details() -> SwitchIssuDetailsBySerialNumber:
     return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
+
 
 @pytest.fixture
 def image_policies() -> ImagePolicies:
@@ -86,7 +92,9 @@ def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
     """
     image_policy_action.__init__(MockAnsibleModule)
     assert isinstance(image_policy_action, ImagePolicyAction)
-    assert isinstance(image_policy_action.switch_issu_details, SwitchIssuDetailsBySerialNumber)
+    assert isinstance(
+        image_policy_action.switch_issu_details, SwitchIssuDetailsBySerialNumber
+    )
     assert image_policy_action.valid_actions == {"attach", "detach", "query"}
 
 
@@ -105,7 +113,9 @@ def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
     assert image_policy_action.properties.get("serial_numbers") == None
 
 
-def test_image_mgmt_image_policy_action_00003(monkeypatch, image_policy_action, issu_details) -> None:
+def test_image_mgmt_image_policy_action_00003(
+    monkeypatch, image_policy_action, issu_details
+) -> None:
     """
     Function:
     build_payload
@@ -124,7 +134,9 @@ def test_image_mgmt_image_policy_action_00003(monkeypatch, image_policy_action, 
         key = "test_image_mgmt_image_policy_action_00003a"
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(
+        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+    )
 
     image_policy_action.switch_issu_details = issu_details
     image_policy_action.policy_name = "KR5M"
@@ -141,7 +153,9 @@ def test_image_mgmt_image_policy_action_00003(monkeypatch, image_policy_action, 
     assert len(image_policy_action.payloads) == 5
 
 
-def test_image_mgmt_image_policy_action_00004(monkeypatch, image_policy_action, issu_details) -> None:
+def test_image_mgmt_image_policy_action_00004(
+    monkeypatch, image_policy_action, issu_details
+) -> None:
     """
     Function:
     build_payload
@@ -161,7 +175,9 @@ def test_image_mgmt_image_policy_action_00004(monkeypatch, image_policy_action, 
         key = "test_image_mgmt_image_policy_action_00004a"
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(
+        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+    )
 
     image_policy_action.switch_issu_details = issu_details
     image_policy_action.policy_name = "KR5M"
@@ -176,7 +192,9 @@ def test_image_mgmt_image_policy_action_00004(monkeypatch, image_policy_action, 
         image_policy_action.build_payload()
 
 
-def test_image_mgmt_image_policy_action_00010(image_policy_action, issu_details) -> None:
+def test_image_mgmt_image_policy_action_00010(
+    image_policy_action, issu_details
+) -> None:
     """
     Function:
     validate_request
@@ -201,8 +219,6 @@ def test_image_mgmt_image_policy_action_00010(image_policy_action, issu_details)
     with pytest.raises(AnsibleFailJson, match=match):
         image_policy_action.validate_request()
 
-
-# test_image_mgmt_image_policy_action_00011
 
 match_00011 = "ImagePolicyAction.validate_request: "
 match_00011 += "instance.policy_name must be set before calling commit()"
@@ -241,7 +257,6 @@ def test_image_mgmt_image_policy_action_00011(
 
     with expected:
         image_policy_action.validate_request()
-
 
 
 match_00012 = "ImagePolicyAction.validate_request: "
@@ -286,7 +301,8 @@ def test_image_mgmt_image_policy_action_00012(
         image_policy_action.validate_request()
 
 
-def test_image_mgmt_image_policy_action_00013(monkeypatch, image_policy_action, issu_details, image_policies
+def test_image_mgmt_image_policy_action_00013(
+    monkeypatch, image_policy_action, issu_details, image_policies
 ) -> None:
     """
     Function:
@@ -305,13 +321,16 @@ def test_image_mgmt_image_policy_action_00013(monkeypatch, image_policy_action, 
     validation-specific error message.
     """
     key = "test_image_mgmt_image_policy_action_00013a"
+
     def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(
+        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+    )
     monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
 
     image_policy_action.switch_issu_details = issu_details
@@ -319,7 +338,6 @@ def test_image_mgmt_image_policy_action_00013(monkeypatch, image_policy_action, 
     image_policy_action.action = "attach"
     image_policy_action.policy_name = "KR5M"
     image_policy_action.serial_numbers = ["FDO2112189M"]
-
 
     match = "ImagePolicyAction.validate_request: "
     match += "policy KR5M does not support platform TEST_UNKNOWN_PLATFORM. "
@@ -365,11 +383,15 @@ def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) 
     def mock_validate_request(*args, **kwargs) -> None:
         pass
 
-    monkeypatch.setattr(dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(
+        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+    )
     monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
 
     monkeypatch.setattr(image_policy_action, "validate_request", mock_validate_request)
-    monkeypatch.setattr(image_policy_action, "valid_actions", {"attach", "detach", "query", "FOO"})
+    monkeypatch.setattr(
+        image_policy_action, "valid_actions", {"attach", "detach", "query", "FOO"}
+    )
 
     image_policy_action.policy_name = "KR5M"
     image_policy_action.serial_numbers = ["FDO2112189M"]
@@ -414,9 +436,13 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
         return responses_image_policy_action(key)
 
     monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
-    monkeypatch.setattr(dcnm_send_image_policy_action, mock_dcnm_send_image_policy_action)
+    monkeypatch.setattr(
+        dcnm_send_image_policy_action, mock_dcnm_send_image_policy_action
+    )
     monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
-    monkeypatch.setattr(dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(
+        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+    )
 
     image_policy_action.policy_name = "KR5M"
     image_policy_action.serial_numbers = ["FDO2112189M"]
@@ -427,7 +453,61 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     assert image_policy_action.response.get("RETURN_CODE") == 200
     assert image_policy_action.response.get("METHOD") == "DELETE"
     assert image_policy_action.response.get("MESSAGE") == "OK"
-    assert image_policy_action.response.get("DATA") == "Successfully detach the policy from device."
+    assert (
+        image_policy_action.response.get("DATA")
+        == "Successfully detach the policy from device."
+    )
     assert image_policy_action.result.get("success") == True
     assert image_policy_action.result.get("changed") == True
 
+
+match_00060 = "ImagePolicyAction.action: instance.action must be "
+match_00060 += "one of attach,detach,query. Got FOO."
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("attach", "attach"),
+        ("detach", "detach"),
+        ("query", "query"),
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00060)),
+    ],
+)
+def test_image_mgmt_image_policy_action_00060(
+    image_policy_action, value, expected
+) -> None:
+    """
+    ImagePolicyAction.action setter
+    """
+    if value == "FOO":
+        with pytest.raises(AnsibleFailJson, match=match_00060):
+            image_policy_action.action = value
+    else:
+        image_policy_action.action = value
+        assert image_policy_action.action == expected
+
+
+match_00061 = "ImagePolicyAction.serial_numbers: instance.serial_numbers "
+match_00061 += "must be a python list of switch serial numbers. Got FOO."
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (["FDO2112189M", "FDO21120U5D"], ["FDO2112189M", "FDO21120U5D"]),
+        ("FOO", pytest.raises(AnsibleFailJson, match=match_00061)),
+    ],
+)
+def test_image_mgmt_image_policy_action_00061(
+    image_policy_action, value, expected
+) -> None:
+    """
+    ImagePolicyAction.serial_numbers setter
+    """
+    if value == "FOO":
+        with pytest.raises(AnsibleFailJson, match=match_00061):
+            image_policy_action.serial_numbers = value
+    else:
+        image_policy_action.serial_numbers = value
+        assert image_policy_action.serial_numbers == expected
