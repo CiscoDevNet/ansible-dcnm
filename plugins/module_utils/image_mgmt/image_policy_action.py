@@ -1,12 +1,16 @@
 import inspect
 import json
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import SwitchIssuDetailsBySerialNumber
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+    ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
 
 
 class ImagePolicyAction(ImageUpgradeCommon):
@@ -165,10 +169,15 @@ class ImagePolicyAction(ImageUpgradeCommon):
         results = []
 
         for payload in self.payloads:
-            response = dcnm_send(self.module, self.verb, self.path, data=json.dumps(payload))
+            response = dcnm_send(
+                self.module, self.verb, self.path, data=json.dumps(payload)
+            )
             result = self._handle_response(response, self.verb)
 
-            self.log_msg(f"{self.class_name}.{self.method_name}: response: {json.dumps(response, indent=4)}")
+            msg = f"{self.class_name}.{self.method_name}: "
+            msg += f"response: {json.dumps(response, indent=4)}"
+            self.log_msg(msg)
+
             if not result["success"]:
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += f"Bad result when attaching policy {self.policy_name} "
@@ -196,10 +205,12 @@ class ImagePolicyAction(ImageUpgradeCommon):
         query_params = ",".join(self.serial_numbers)
         self.path += f"?serialNumber={query_params}"
 
-        self.properties["response"] =  dcnm_send(self.module, self.verb, self.path)
-        self.properties["result"] =  self._handle_response(self.response, self.verb)
+        self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
+        self.properties["result"] = self._handle_response(self.response, self.verb)
 
-        self.log_msg(f"{self.class_name}.{self.method_name}: response: {json.dumps(self.response, indent=4)}")
+        msg = f"{self.class_name}.{self.method_name}: "
+        msg += f"response: {json.dumps(self.response, indent=4)}"
+        self.log_msg(msg)
 
         if not self.result["success"]:
             self._failure(self.response)
@@ -236,7 +247,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
     def action(self):
         """
         Set the action to take.
-        
+
         One of "attach", "detach", "query"
 
         Must be set prior to calling instance.commit()
