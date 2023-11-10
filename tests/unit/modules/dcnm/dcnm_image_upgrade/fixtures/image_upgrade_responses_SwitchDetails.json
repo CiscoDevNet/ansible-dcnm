@@ -235,13 +235,6 @@
             }
         ]
     },
-    "SwitchDetails_get_return_code_404": {
-        "RETURN_CODE": 404,
-        "METHOD": "GET",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitchess",
-        "MESSAGE": "Not Found",
-        "DATA": {}
-    },
     "SwitchDetails_get_return_code_500": {
         "RETURN_CODE": 500,
         "METHOD": "GET",
@@ -249,7 +242,14 @@
         "MESSAGE": "Internal Server Error",
         "DATA": {}
     },
-    "ImagePolicyAction_test_commit_all": {
+    "SwitchDetails_get_return_code_404": {
+        "RETURN_CODE": 404,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitchess",
+        "MESSAGE": "Not Found",
+        "DATA": {}
+    },
+    "test_image_mgmt_image_policy_action_00021a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",

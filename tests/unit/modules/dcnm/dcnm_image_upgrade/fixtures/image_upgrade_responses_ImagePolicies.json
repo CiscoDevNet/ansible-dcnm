@@ -94,7 +94,7 @@
             "message": ""
         }
     },
-    "ImagePolicyAction_test_validate_request_1": {
+    "test_image_mgmt_image_policy_action_00013a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
@@ -120,7 +120,33 @@
             "message": ""
         }
     },
-    "ImagePolicyAction_test_commit_all": {
+    "test_image_mgmt_image_policy_action_00020a": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "policyName": "KR5M",
+                    "policyType": "PLATFORM",
+                    "nxosVersion": "10.2.5_nxos64-cs_64bit",
+                    "packageName": "",
+                    "platform": "N9K/N3K",
+                    "policyDescr": "10.2.(5) with EPLD",
+                    "platformPolicies": "",
+                    "epldImgName": "n9000-epld.10.2.5.M.img",
+                    "rpmimages": "",
+                    "imageName": "nxos64-cs.10.2.5.M.bin",
+                    "agnostic": "false",
+                    "ref_count": 10
+                }
+            ],
+            "message": ""
+        }
+    },
+    "test_image_mgmt_image_policy_action_00021a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
