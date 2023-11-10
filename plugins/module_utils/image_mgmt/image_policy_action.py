@@ -261,7 +261,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
         if value not in self.valid_actions:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.action must be one of "
-            msg += f"{','.join(sorted(self.valid_actions))}"
+            msg += f"{','.join(sorted(self.valid_actions))}. "
+            msg += f"Got {value}."
             self.module.fail_json(msg)
 
         self.properties["action"] = value
@@ -318,6 +319,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         if not isinstance(value, list):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.serial_numbers must be a "
-            msg += f"python list of switch serial numbers."
+            msg += f"python list of switch serial numbers. "
+            msg += f"Got {value}."
             self.module.fail_json(msg)
         self.properties["serial_numbers"] = value
