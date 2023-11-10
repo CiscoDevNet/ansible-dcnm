@@ -1,10 +1,12 @@
 import inspect
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
+
 
 class ImagePolicies(ImageUpgradeCommon):
     """
@@ -108,9 +110,7 @@ class ImagePolicies(ImageUpgradeCommon):
             self.module.fail_json(msg)
 
         return self.make_boolean(
-            self.make_none(
-                self.properties["response_data"][self.policy_name][item]
-            )
+            self.make_none(self.properties["response_data"][self.policy_name][item])
         )
 
     @property
@@ -256,4 +256,3 @@ class ImagePolicies(ImageUpgradeCommon):
         Return None otherwise
         """
         return self._get("agnostic")
-

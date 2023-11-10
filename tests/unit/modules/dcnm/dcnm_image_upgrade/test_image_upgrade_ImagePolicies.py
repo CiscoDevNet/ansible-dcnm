@@ -6,10 +6,10 @@ description: Verify functionality of class ImagePolicies
 from typing import Any, Dict
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
-    ApiEndpoints
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
 
@@ -52,6 +52,7 @@ def test_image_mgmt_image_policies_00001(image_policies) -> None:
     assert image_policies.module == MockAnsibleModule
     assert image_policies.class_name == "ImagePolicies"
     assert isinstance(image_policies.endpoints, ApiEndpoints)
+
 
 def test_image_mgmt_image_policies_00002(image_policies) -> None:
     """
@@ -180,9 +181,7 @@ def test_image_mgmt_image_policies_00022(monkeypatch, image_policies) -> None:
         image_policies.refresh()
 
 
-def test_image_mgmt_image_policies_00023(
-    monkeypatch, image_policies
-) -> None:
+def test_image_mgmt_image_policies_00023(monkeypatch, image_policies) -> None:
     """
     Function
     - refresh
@@ -213,7 +212,7 @@ def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
     Function
     - refresh
 
-    Test 
+    Test
     - fail_json() is called if response does not contain policy_name.
     - i.e. image policy with name FOO has not yet been created on NDFC.
 
@@ -237,10 +236,7 @@ def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
         image_policies.policy_type == "PLATFORM"
 
 
-
-def test_image_mgmt_image_policies_00025(
-    monkeypatch, image_policies
-) -> None:
+def test_image_mgmt_image_policies_00025(monkeypatch, image_policies) -> None:
     """
     Function
     - refresh
@@ -272,6 +268,7 @@ def test_image_mgmt_image_policies_00025(
     with pytest.raises(AnsibleFailJson, match=match):
         image_policies.refresh()
 
+
 def test_image_mgmt_image_policies_00040(image_policies) -> None:
     """
     Function
@@ -284,4 +281,3 @@ def test_image_mgmt_image_policies_00040(image_policies) -> None:
     match += "set before accessing property imageName."
     with pytest.raises(AnsibleFailJson, match=match):
         image_policies._get("imageName")
-
