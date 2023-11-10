@@ -57,7 +57,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.properties["query_result"] = None
         self.properties["serial_numbers"] = None
 
-    def build_attach_payload(self):
+    def build_payload(self):
         """
         build the payload to send in the POST request
         to attach policies to devices
@@ -156,7 +156,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         self.method_name = inspect.stack()[0][3]
 
-        self.build_attach_payload()
+        self.build_payload()
 
         self.path = self.endpoints.policy_attach.get("path")
         self.verb = self.endpoints.policy_attach.get("verb")
@@ -168,6 +168,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             response = dcnm_send(self.module, self.verb, self.path, data=json.dumps(payload))
             result = self._handle_response(response, self.verb)
 
+            self.log_msg(f"{self.class_name}.{self.method_name}: response: {json.dumps(response, indent=4)}")
             if not result["success"]:
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += f"Bad result when attaching policy {self.policy_name} "
@@ -197,6 +198,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.properties["response"] =  dcnm_send(self.module, self.verb, self.path)
         self.properties["result"] =  self._handle_response(self.response, self.verb)
+
+        self.log_msg(f"{self.class_name}.{self.method_name}: response: {json.dumps(self.response, indent=4)}")
 
         if not self.result["success"]:
             self._failure(self.response)
@@ -232,7 +235,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
     @property
     def action(self):
         """
-        Set the action to take. Either "attach" or "detach".
+        Set the action to take.
+        
+        One of "attach", "detach", "query"
 
         Must be set prior to calling instance.commit()
         """
