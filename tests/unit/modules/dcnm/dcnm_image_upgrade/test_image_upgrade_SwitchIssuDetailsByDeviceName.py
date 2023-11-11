@@ -2,7 +2,7 @@
 controller_version: 12
 description: Verify functionality of subclass SwitchIssuDetailsByDeviceName
 """
-
+from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
@@ -12,6 +12,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
     SwitchIssuDetailsByDeviceName
 
 from .fixture import load_fixture
+
+
+@contextmanager
+def does_not_raise():
+    yield
+
 
 patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
 patch_image_mgmt = patch_module_utils + "image_mgmt."
@@ -34,32 +40,59 @@ def responses_switch_issu_details(key: str) -> Dict[str, str]:
 
 
 @pytest.fixture
-def module():
+def issu_details():
     return SwitchIssuDetailsByDeviceName(MockAnsibleModule)
 
 
-def test_init_properties(module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00001(issu_details) -> None:
     """
-    Properties are initialized to expected values
+    Function
+    - __init__
+
+    Test
+    - fail_json is not called
+    - issu_details.properties is a dict
+    """
+    with does_not_raise():
+        issu_details.__init__(MockAnsibleModule)
+    assert isinstance(issu_details.properties, dict)
+
+
+def test_image_mgmt_switch_issu_details_by_device_name_00002(issu_details) -> None:
+    """
+    Function
+    - _init_properties
+
+    Test
+    - Class properties initialized to expected values
+    - issu_details.properties is a dict
+    - issu_details.action_keys is a set
+    - action_keys contains expected values
     """
     action_keys = {"imageStaged", "upgrade", "validated"}
 
-    module._init_properties()
-    assert isinstance(module.properties, dict)
-    assert isinstance(module.properties.get("action_keys"), set)
-    assert module.properties.get("action_keys") == action_keys
-    assert module.properties.get("response_data") == None
-    assert module.properties.get("response") == None
-    assert module.properties.get("result") == None
-    assert module.properties.get("device_name") == None
+    issu_details._init_properties()
+    assert isinstance(issu_details.properties, dict)
+    assert isinstance(issu_details.properties.get("action_keys"), set)
+    assert issu_details.properties.get("action_keys") == action_keys
+    assert issu_details.properties.get("response_data") == None
+    assert issu_details.properties.get("response") == None
+    assert issu_details.properties.get("result") == None
+    assert issu_details.properties.get("device_name") == None
 
 
-def test_refresh_return_code_200(monkeypatch, module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00020(
+    monkeypatch, issu_details
+) -> None:
     """
-    NDFC response data for 200 response has expected types.
-    endpoint: .../api/v1/imagemanagement/rest/packagemgnt/issu
+    Function
+    - refresh
+
+    Test
+    - issu_details.response is a dict
+    - issu_details.response_data is a list
     """
-    key = "packagemgnt_issu_get_return_code_200_one_switch"
+    key = "test_image_mgmt_switch_issu_details_by_device_name_00020a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
@@ -67,17 +100,23 @@ def test_refresh_return_code_200(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    module.refresh()
-    assert isinstance(module.response, dict)
-    assert isinstance(module.response_data, list)
+    issu_details.refresh()
+    assert isinstance(issu_details.response, dict)
+    assert isinstance(issu_details.response_data, list)
 
 
-def test_properties_are_set_to_expected_values(monkeypatch, module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00021(
+    monkeypatch, issu_details
+) -> None:
     """
-    Properties are set based on device_name setter value.
-    endpoint: .../api/v1/imagemanagement/rest/packagemgnt/issu
+    Function
+    - refresh
+
+    Test
+    - Properties are set based on device_name
+    - Expected property values are returned
     """
-    key = "packagemgnt_issu_get_return_code_200_many_switch"
+    key = "test_image_mgmt_switch_issu_details_by_device_name_00021a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
@@ -85,64 +124,77 @@ def test_properties_are_set_to_expected_values(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    module.refresh()
-    module.device_name = "leaf1"
-    assert module.device_name == "leaf1"
-    assert module.serial_number == "FDO21120U5D"
+    issu_details.refresh()
+    issu_details.device_name = "leaf1"
+    assert issu_details.device_name == "leaf1"
+    assert issu_details.serial_number == "FDO21120U5D"
     # change device_name to a different switch, expect different information
-    module.device_name = "cvd-2313-leaf"
-    assert module.device_name == "cvd-2313-leaf"
-    assert module.serial_number == "FDO2112189M"
+    issu_details.device_name = "cvd-2313-leaf"
+    assert issu_details.device_name == "cvd-2313-leaf"
+    assert issu_details.serial_number == "FDO2112189M"
     # verify remaining properties using current device_name
-    assert module.eth_switch_id == 39890
-    assert module.fabric == "hard"
-    assert module.fcoe_enabled == False
-    assert module.group == "hard"
+    assert issu_details.eth_switch_id == 39890
+    assert issu_details.fabric == "hard"
+    assert issu_details.fcoe_enabled == False
+    assert issu_details.group == "hard"
     # NOTE: For "id" see switch_id below
-    assert module.image_staged == "Success"
-    assert module.image_staged_percent == 100
-    assert module.ip_address == "172.22.150.108"
-    assert module.issu_allowed == None
-    assert module.last_upg_action == "2023-Oct-06 03:43"
-    assert module.mds == False
-    assert module.mode == "Normal"
-    assert module.model == "N9K-C93180YC-EX"
-    assert module.model_type == 0
-    assert module.peer == None
-    assert module.platform == "N9K"
-    assert module.policy == "KR5M"
-    assert module.reason == "Upgrade"
-    assert module.role == "leaf"
-    assert module.status == "In-Sync"
-    assert module.status_percent == 100
+    assert issu_details.image_staged == "Success"
+    assert issu_details.image_staged_percent == 100
+    assert issu_details.ip_address == "172.22.150.108"
+    assert issu_details.issu_allowed == None
+    assert issu_details.last_upg_action == "2023-Oct-06 03:43"
+    assert issu_details.mds == False
+    assert issu_details.mode == "Normal"
+    assert issu_details.model == "N9K-C93180YC-EX"
+    assert issu_details.model_type == 0
+    assert issu_details.peer == None
+    assert issu_details.platform == "N9K"
+    assert issu_details.policy == "KR5M"
+    assert issu_details.reason == "Upgrade"
+    assert issu_details.role == "leaf"
+    assert issu_details.status == "In-Sync"
+    assert issu_details.status_percent == 100
     # NOTE: switch_id appears in the response data as "id"
     # NOTE: "id" is a python reserved keyword, so we changed the property name
-    assert module.switch_id == 2
-    assert module.sys_name == "cvd-2313-leaf"
-    assert module.system_mode == "Normal"
-    assert module.upg_groups == None
-    assert module.upgrade == "Success"
-    assert module.upgrade_percent == 100
-    assert module.validated == "Success"
-    assert module.validated_percent == 100
-    assert module.version == "10.2(5)"
+    assert issu_details.switch_id == 2
+    assert issu_details.sys_name == "cvd-2313-leaf"
+    assert issu_details.system_mode == "Normal"
+    assert issu_details.upg_groups == None
+    assert issu_details.upgrade == "Success"
+    assert issu_details.upgrade_percent == 100
+    assert issu_details.validated == "Success"
+    assert issu_details.validated_percent == 100
+    assert issu_details.version == "10.2(5)"
     # NOTE: Two vdc_id values exist in the response data for each switch.
     # NOTE: Namely, "vdcId" and "vdc_id"
     # NOTE: Properties are provided for both, as follows.
     # NOTE: vdc_id == vdcId
     # NOTE: vdc_id2 == vdc_id
-    assert module.vdc_id == 0
-    assert module.vdc_id2 == -1
-    assert module.vpc_peer == None
-    assert module.vpc_role == None
+    assert issu_details.vdc_id == 0
+    assert issu_details.vdc_id2 == -1
+    assert issu_details.vpc_peer == None
+    # NOTE: Two vpc role keys exist in the response data for each switch.
+    # NOTE: Namely, "vpcRole" and "vpc_role"
+    # NOTE: Properties are provided for both, as follows.
+    # NOTE: vpc_role == vpcRole
+    # NOTE: vpc_role2 == vpc_role
+    # NOTE: Values are synthesized in the response for this test
+    assert issu_details.vpc_role == "FOO"
+    assert issu_details.vpc_role2 == "BAR"
 
 
-def test_result_return_code_200(monkeypatch, module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00022(
+    monkeypatch, issu_details
+) -> None:
     """
-    result contains expected key/values on 200 response from endpoint.
-    endpoint: .../api/v1/imagemanagement/rest/packagemgnt/issu
+    Function
+    - refresh
+
+    Test
+    - issu_details.result is a dict
+    - issu_details.result contains expected key/values for 200 RESULT_CODE
     """
-    key = "packagemgnt_issu_get_return_code_200_one_switch"
+    key = "test_image_mgmt_switch_issu_details_by_device_name_00022a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
@@ -150,18 +202,71 @@ def test_result_return_code_200(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    module.refresh()
-    assert isinstance(module.result, dict)
-    assert module.result.get("found") == True
-    assert module.result.get("success") == True
+    issu_details.refresh()
+    assert isinstance(issu_details.result, dict)
+    assert issu_details.result.get("found") == True
+    assert issu_details.result.get("success") == True
 
 
-def test_result_return_code_404(monkeypatch, module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00023(
+    monkeypatch, issu_details
+) -> None:
     """
-    fail_json is called on 404 response from malformed endpoint.
-    endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
+    Function
+    - refresh
+
+    Test
+    - refresh calls handle_response, which calls json_fail on 404 response
+    - Error message matches expectation
     """
-    key = "packagemgnt_issu_get_return_code_404"
+    key = "test_image_mgmt_switch_issu_details_by_device_name_00023a"
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    match = "Bad result when retriving switch information from the controller"
+    with pytest.raises(AnsibleFailJson, match=match):
+        issu_details.refresh()
+
+
+def test_image_mgmt_switch_issu_details_by_device_name_00024(
+    monkeypatch, issu_details
+) -> None:
+    """
+    Function
+    - refresh
+
+    Test
+    - fail_json is called on 200 response with empty DATA key
+    - Error message matches expectation
+    """
+    key = "test_image_mgmt_switch_issu_details_by_device_name_00024a"
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+
+    match = "SwitchIssuDetailsByDeviceName.refresh: "
+    match += "The controller has no switch ISSU information."
+    with pytest.raises(AnsibleFailJson, match=match):
+        issu_details.refresh()
+
+
+def test_image_mgmt_switch_issu_details_by_device_name_00025(
+    monkeypatch, issu_details
+) -> None:
+    """
+    Function
+    - refresh
+
+    Test
+    - fail_json is called on 200 response with DATA.lastOperDataObject length 0
+    - Error message matches expectation
+    """
+    key = "test_image_mgmt_switch_issu_details_by_device_name_00025a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
@@ -169,105 +274,72 @@ def test_result_return_code_404(monkeypatch, module) -> None:
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    error_message = "Bad result when retriving switch information from the controller"
-    with pytest.raises(AnsibleFailJson, match=error_message):
-        module.refresh()
+    match = "SwitchIssuDetailsByDeviceName.refresh: "
+    match += "The controller has no switch ISSU information."
+    with pytest.raises(AnsibleFailJson, match=match):
+        issu_details.refresh()
 
 
-def test_result_return_code_200_empty_data(monkeypatch, module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00040(
+    monkeypatch, issu_details
+) -> None:
     """
-    fail_json is called on 200 response with empty DATA key.
-    endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
-    """
-    key = "packagemgnt_issu_get_return_code_200_empty_DATA"
+    Function
+    - _get
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
-
-    error_message = "SwitchIssuDetailsByDeviceName.refresh: "
-    error_message += "The controller has no switch ISSU information."
-    with pytest.raises(AnsibleFailJson, match=error_message):
-        module.refresh()
-
-
-def test_result_return_code_200_switch_issu_info_length_0(monkeypatch, module) -> None:
-    """
-    fail_json is called on 200 response with DATA.lastOperDataObject length 0.
-    endpoint: .../api/v1/imagemanagement/rest/policymgnt/policiess
-    """
-    key = "packagemgnt_issu_get_return_code_200"
-    key += "_switch_issu_info_length_0"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
-
-    error_message = "SwitchIssuDetailsByDeviceName.refresh: "
-    error_message += "The controller has no switch ISSU information."
-    with pytest.raises(AnsibleFailJson, match=error_message):
-        module.refresh()
-
-
-def test_get_with_unknown_device_name(monkeypatch, module) -> None:
-    """
-    Function description:
+    Test
+    - fail_json is called due to unknown device_name is set
+    - Error message matches expectation
 
     SwitchIssuDetailsByDeviceName._get is called by all getter properties.
     It raises AnsibleFailJson if the user has not set device_name or if
     device_name is unknown, or if an unknown property name is queried.
     It returns the value of the requested property if the user has set a known
     device_name.
-
-    Expected results:
-
-    1.  fail_json is called with appropriate error message since an unknown
-        device_name is set.
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "packagemgnt_issu_get_return_code_200_one_switch"
+        key = "test_image_mgmt_switch_issu_details_by_device_name_00040a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    module.refresh()
-    module.device_name = "FOO"
+    issu_details.refresh()
+    issu_details.device_name = "FOO"
     match = "SwitchIssuDetailsByDeviceName._get: FOO does not exist "
     match += "on the controller."
     with pytest.raises(AnsibleFailJson, match=match):
-        module._get("serialNumber")
+        issu_details._get("serialNumber")
 
 
-def test_get_with_unknown_property_name(monkeypatch, module) -> None:
+def test_image_mgmt_switch_issu_details_by_device_name_00041(
+    monkeypatch, issu_details
+) -> None:
     """
-    Function description:
+    Function
+    - _get
 
+    Test
+    - fail_json is called on access of unknown property name
+    - Error message matches expectation
+
+    Description
     SwitchIssuDetailsByDeviceName._get is called by all getter properties.
     It raises AnsibleFailJson if the user has not set device_name or if
     device_name is unknown, or if an unknown property name is queried.
     It returns the value of the requested property if the user has set a known
     ip_address.
-
-    Expected results:
-
-    1.  fail_json is called with appropriate error message since an unknown
-        property is queried.
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "packagemgnt_issu_get_return_code_200_one_switch"
+        key = "test_image_mgmt_switch_issu_details_by_device_name_00041a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
 
-    module.refresh()
-    module.device_name = "leaf1"
+    issu_details.refresh()
+    issu_details.device_name = "leaf1"
     match = "SwitchIssuDetailsByDeviceName._get: leaf1 unknown "
     match += f"property name: FOO"
     with pytest.raises(AnsibleFailJson, match=match):
-        module._get("FOO")
+        issu_details._get("FOO")
