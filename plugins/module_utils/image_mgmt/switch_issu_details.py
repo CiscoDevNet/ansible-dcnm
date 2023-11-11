@@ -605,6 +605,8 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         Return the vpcRole of the switch with ip_address, if it exists.
         Return None otherwise
 
+        NOTE:   Two properties exist for vpc_role in the controller response.
+                vpc_role corresponds to vpcRole.
         Possible values:
             vpc role e.g.:
                 "primary"
@@ -616,6 +618,24 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         """
         return self._get("vpcRole")
 
+    @property
+    def vpc_role2(self):
+        """
+        Return the vpc_role of the switch with ip_address, if it exists.
+        Return None otherwise
+
+        NOTE:   Two properties exist for vpc_role in the controller response.
+                vpc_role2 corresponds to vpc_role.
+        Possible values:
+            vpc role e.g.:
+                "primary"
+                "secondary"
+                "none" -> This will be translated to None
+                "none established" (TODO:3 verify this)
+                "primary, operational secondary" (TODO:3 verify this)
+            None
+        """
+        return self._get("vpc_role")
 
 class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     """
@@ -812,12 +832,12 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self._init_properties()
 
     def _init_properties(self):
         super()._init_properties()
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.properties["device_name"] = None
 
     def refresh(self):
