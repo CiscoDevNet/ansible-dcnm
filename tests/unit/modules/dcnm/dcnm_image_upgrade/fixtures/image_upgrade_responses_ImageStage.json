@@ -16,7 +16,8 @@
     },
     "test_image_mgmt_stage_00007a": {
         "TEST_NOTES": [
-            "Needed only for the 200 return code"
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -31,7 +32,8 @@
     },
     "test_image_mgmt_stage_00008a": {
         "TEST_NOTES": [
-            "Needed only for the 200 return code"
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
