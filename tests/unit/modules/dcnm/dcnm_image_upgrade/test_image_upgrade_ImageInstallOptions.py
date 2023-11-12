@@ -70,6 +70,7 @@ def test_image_mgmt_install_options_00002(module) -> None:
 # test_image_mgmt_install_options_00003
 # test_policy_name_not_defined (former name)
 
+
 def test_image_mgmt_install_options_00003(module) -> None:
     """
     fail_json() is called if policy_name is not set when refresh() is called.
@@ -81,8 +82,10 @@ def test_image_mgmt_install_options_00003(module) -> None:
     with pytest.raises(AnsibleFailJson, match=match):
         module.refresh()
 
+
 # test_image_mgmt_install_options_00004
 # test_serial_number_not_defined (former name)
+
 
 def test_image_mgmt_install_options_00004(module) -> None:
     """
@@ -142,6 +145,7 @@ def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
 # test_image_mgmt_install_options_00006
 # test_refresh_return_code_500 (former name)
 
+
 def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
     """
     fail_json() should be called if the response RETURN_CODE != 200
@@ -160,7 +164,6 @@ def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
     match += "the controller. Controller response:"
     with pytest.raises(AnsibleFailJson, match=rf"{match}"):
         module.refresh()
-
 
 
 def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
@@ -306,6 +309,7 @@ def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
     assert module.comp_disp == None
     assert module.result.get("success") == True
 
+
 def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
     """
     Properties are updated based on:
@@ -337,6 +341,7 @@ def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
 
 
 # test_image_mgmt_install_options_00020
+
 
 def test_image_mgmt_install_options_00020(module) -> None:
     """
