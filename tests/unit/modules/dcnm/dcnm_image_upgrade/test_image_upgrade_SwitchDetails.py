@@ -127,7 +127,7 @@ def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
     assert switch_details.serial_number == "FOX2109PGD1"
 
 
-match = "Unable to retrieve switch information from the controller. "
+match_00022 = "Unable to retrieve switch information from the controller."
 
 
 @pytest.mark.parametrize(
@@ -136,11 +136,11 @@ match = "Unable to retrieve switch information from the controller. "
         ("test_image_mgmt_switch_details_00022a", does_not_raise()),
         (
             "test_image_mgmt_switch_details_00022b",
-            pytest.raises(AnsibleFailJson, match=match),
+            pytest.raises(AnsibleFailJson, match=match_00022),
         ),
         (
             "test_image_mgmt_switch_details_00022c",
-            pytest.raises(AnsibleFailJson, match=match),
+            pytest.raises(AnsibleFailJson, match=match_00022),
         ),
     ],
 )
