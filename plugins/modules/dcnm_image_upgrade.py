@@ -646,6 +646,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         For deleted state, populate self.need list() with items from our want
         list that are not in our have list.  These items will be sent to
         the controller.
+
+        Policies are detached only if the policy name matches.
         """
         method_name = inspect.stack()[0][3]
 
@@ -656,6 +658,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 continue
             if self.have.policy is None:
                 continue
+            if self.have.policy != want["policy"]:
+                continue
             need.append(want)
         self.need = need
 
@@ -665,6 +669,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         For query state, populate self.need list() with all items from
         our want list.  These items will be sent to the controller.
+
+        policy name is ignored for query state.
         """
         method_name = inspect.stack()[0][3]
 
