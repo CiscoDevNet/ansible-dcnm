@@ -54,7 +54,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send, validate_list_of_dicts)
 
 __metaclass__ = type
-__author__ = "Cisco Systems, Inc."
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 DOCUMENTATION = """
 ---
