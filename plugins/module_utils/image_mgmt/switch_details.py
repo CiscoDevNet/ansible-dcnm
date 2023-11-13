@@ -1,10 +1,12 @@
 import inspect
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
+
 
 class SwitchDetails(ImageUpgradeCommon):
     """
@@ -69,7 +71,6 @@ class SwitchDetails(ImageUpgradeCommon):
         for switch in data:
             self.properties["response_data"][switch["ipAddress"]] = switch
 
-
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
 
@@ -90,9 +91,7 @@ class SwitchDetails(ImageUpgradeCommon):
             self.module.fail_json(msg)
 
         return self.make_boolean(
-            self.make_none(
-                self.properties["response_data"][self.ip_address].get(item)
-            )
+            self.make_none(self.properties["response_data"][self.ip_address].get(item))
         )
 
     @property
@@ -198,4 +197,3 @@ class SwitchDetails(ImageUpgradeCommon):
         Return None otherwise
         """
         return self._get("serialNumber")
-

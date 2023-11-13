@@ -59,7 +59,7 @@ class ImageValidate(ImageUpgradeCommon):
     def _init_properties(self) -> None:
         self.method_name = inspect.stack()[0][3]
 
-        self.properties:Dict[str, Any] = {}
+        self.properties: Dict[str, Any] = {}
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
         self.properties["response_data"] = {}

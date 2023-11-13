@@ -637,6 +637,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         """
         return self._get("vpc_role")
 
+
 class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     """
     Retrieve switch issu details from the controller and provide

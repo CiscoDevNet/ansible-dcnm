@@ -1,5 +1,6 @@
 import inspect
 
+
 class ImageUpgradeCommon:
     """
     Base class for the other image upgrade classes
