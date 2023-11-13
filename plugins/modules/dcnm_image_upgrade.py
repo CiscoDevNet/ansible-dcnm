@@ -27,7 +27,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 import inspect
 import json
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -451,6 +451,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         self.params = self.module.params
         self.endpoints = ApiEndpoints()
+        self.have = None
+        self.idempotent_want = None
+        # populated in self._merge_global_and_switch_configs()
+        self.switch_configs = []
+
+        self.path = None
+        self.verb = None
 
         # populated in self._build_policy_attach_payload()
         self.payloads = []
@@ -466,10 +473,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.check_mode = False
 
         self.validated = {}
-        self.want_create = []
+        self.want = []
         self.need = []
 
-        self.result = dict(changed=False, diff=[], response=[])
+        self.result = {"changed": False, "diff": [], "response": []}
 
         self.mandatory_global_keys = {"switches"}
         self.mandatory_switch_keys = {"ip_address"}
@@ -512,7 +519,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         Caller: main()
 
-        Update self.want_create for all switches defined in the playbook
+        Update self.want for all switches defined in the playbook
         """
         method_name = inspect.stack()[0][3]
 
@@ -521,7 +528,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         if not self.switch_configs:
             return
 
-        self.want_create = self.switch_configs
+        self.want = self.switch_configs
 
     def _build_idempotent_want(self, want) -> None:
         """
@@ -559,6 +566,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         and the information returned by ImageInstallOptions.
 
         Caller: self.get_need_merged()
+
+        NOTES:
+        1.  There doesn't appear to be an API to query the controller for
+            the current EPLD version.  Hence, currently, EPLD handling
+            is not idempotent.
         """
         method_name = inspect.stack()[0][3]
 
@@ -625,7 +637,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         need: List[Dict] = []
 
-        for want_create in self.want_create:
+        for want_create in self.want:
             self.have.ip_address = want_create["ip_address"]
             if self.have.serial_number is not None:
                 self._build_idempotent_want(want_create)
@@ -652,7 +664,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
 
         need = []
-        for want in self.want_create:
+        for want in self.want:
             self.have.ip_address = want["ip_address"]
             if self.have.serial_number is None:
                 continue
@@ -675,7 +687,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
 
         need = []
-        for want in self.want_create:
+        for want in self.want:
             need.append(want)
         self.need = need
 
@@ -1013,10 +1025,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             payload["serialNumber"] = self.switch_details.serial_number
             # payload["bootstrapMode"] = switch.get('bootstrap_mode')
 
-            for item in payload:
-                if payload[item] is None:
+            for key, value in payload.items():
+                if value is None:
                     msg = f"{self.class_name}.{method_name}: "
-                    msg += f"Unable to determine {item} for switch "
+                    msg += f"Unable to determine {key} for switch "
                     msg += f"{switch.get('ip_address')}. "
                     msg += "Please verify that the switch is managed by "
                     msg += "the controller."
@@ -1074,10 +1086,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
-        # TODO:2 Discuss with Mike/Shangxin - ImageValidate.non_disruptive
-        # Should we add this option to the playbook?
-        # It's supported in ImageValidate with default of False
-        # instance.non_disruptive = False
         instance.commit()
 
     def _verify_install_options(self, devices) -> None:
@@ -1232,14 +1240,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             )
 
         if len(detach_policy_devices) == 0:
-            self.result = dict(changed=False, diff=[], response=[])
+            self.result = {"changed": False, "diff": [], "response": []}
             return
 
         instance = ImagePolicyAction(self.module)
-        for policy_name in detach_policy_devices:
-            instance.policy_name = policy_name
+        for key, value in detach_policy_devices.items():
+            instance.policy_name = key
             instance.action = "detach"
-            instance.serial_numbers = detach_policy_devices[policy_name]
+            instance.serial_numbers = value
             instance.commit()
 
     def handle_query_state(self) -> None:
@@ -1299,10 +1307,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 def main():
     """main entry point for module execution"""
 
-    element_spec = dict(
-        config=dict(required=True, type="dict"),
-        state=dict(default="merged", choices=["merged", "deleted", "query"]),
-    )
+    element_spec = {
+        "config": {"required": True, "type": "dict"},
+        "state": {"default": "merged", "choices": ["merged", "deleted", "query"]},
+    }
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
     task_module = ImageUpgradeTask(ansible_module)
