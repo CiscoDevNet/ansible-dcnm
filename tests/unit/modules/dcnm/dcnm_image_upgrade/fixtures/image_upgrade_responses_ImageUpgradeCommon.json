@@ -126,6 +126,10 @@
         "DATA": {}
     },
     "test_image_mgmt_image_upgrade_common_00080a": {
+        "TEST_NOTES": [
+            "RETURN_CODE does not matter",
+            "_handle_delete_post_put_response() considers only the MESSAGE field"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "POST",
         "REQUEST_PATH": "https://blah_noop",
@@ -133,6 +137,10 @@
         "DATA": {}
     },
     "test_image_mgmt_image_upgrade_common_00080b": {
+        "TEST_NOTES": [
+            "RETURN_CODE does not matter",
+            "_handle_delete_post_put_response() considers only the MESSAGE field"
+        ],
         "RETURN_CODE": 400,
         "METHOD": "POST",
         "REQUEST_PATH": "https://blah_noop",
@@ -140,6 +148,10 @@
         "DATA": {}
     },
     "test_image_mgmt_image_upgrade_common_00080c": {
+        "TEST_NOTES": [
+            "RETURN_CODE does not matter",
+            "_handle_delete_post_put_response() considers only the MESSAGE field"
+        ],
         "RETURN_CODE": 200,
         "METHOD": "POST",
         "REQUEST_PATH": "https://blah_noop",
