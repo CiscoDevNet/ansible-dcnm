@@ -24,14 +24,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_polici
     ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
     ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
-    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
 
-__copyright__ = "Copyright (c) 2023 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 """
