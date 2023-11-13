@@ -1,3 +1,7 @@
+"""
+    Retrieve image policy details from the controller and provide
+    property accessors for the policy attributes.
+"""
 import inspect
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -94,7 +98,7 @@ class ImagePolicies(ImageUpgradeCommon):
 
         if self.policy_name is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"instance.policy_name must be set before "
+            msg += "instance.policy_name must be set before "
             msg += f"accessing property {item}."
             self.module.fail_json(msg)
 
