@@ -18,9 +18,9 @@ class ImageUpgradeCommon:
 
         self.module = module
         self.params = module.params
-        self.debug = True
+        self.debug = False
         self.fd = None
-        self.logfile = "/tmp/ndfc.log"
+        self.logfile = "/tmp/ansible_dcnm.log"
         self.module = module
 
     def _handle_response(self, response, verb):

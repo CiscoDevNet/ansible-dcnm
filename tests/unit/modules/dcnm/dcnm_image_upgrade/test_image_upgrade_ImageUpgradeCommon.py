@@ -14,6 +14,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from contextlib import contextmanager
 from typing import Dict
 
 import pytest
@@ -33,6 +34,11 @@ description: Verify functionality of class ImageUpgradeCommon
 """
 
 
+@contextmanager
+def does_not_raise():
+    yield
+
+
 class MockAnsibleModule:
     params = {}
 
@@ -41,7 +47,7 @@ class MockAnsibleModule:
 
 
 @pytest.fixture
-def module():
+def image_upgrade_common():
     return ImageUpgradeCommon(MockAnsibleModule)
 
 
@@ -53,38 +59,63 @@ def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     return {"response": response, "verb": verb}
 
 
-def test_init_(module) -> None:
+def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     """
-    __init__ sets expected values
+    Function
+    - __init__
+
+    Test
+    - fail_json is not called
+    - image_upgrade_common.params is a dict
+    - image_upgrade_common.debug is False
+    - image_upgrade_common.fd is None
+    - image_upgrade_common.logfile is /tmp/ansible_dcnm.log
     """
-    module.__init__(MockAnsibleModule)
-    assert module.params == {}
-    assert module.debug == True
-    assert module.fd == None
-    assert module.logfile == "/tmp/ndfc.log"
+    with does_not_raise():
+        image_upgrade_common.__init__(MockAnsibleModule)
+    assert image_upgrade_common.params == {}
+    assert image_upgrade_common.debug == False
+    assert image_upgrade_common.fd == None
+    assert image_upgrade_common.logfile == "/tmp/ansible_dcnm.log"
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("mock_post_return_code_200_MESSAGE_OK", {"success": True, "changed": True}),
         (
-            "mock_post_return_code_400_MESSAGE_NOT_OK",
+            "test_image_mgmt_image_upgrade_common_00020a",
+            {"success": True, "changed": True},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00020b",
             {"success": False, "changed": False},
         ),
         (
-            "mock_post_return_code_200_ERROR_key_present",
+            "test_image_mgmt_image_upgrade_common_00020c",
             {"success": False, "changed": False},
         ),
     ],
 )
-def test_handle_response_post(module, key, expected) -> None:
+def test_image_mgmt_image_upgrade_common_00020(
+    image_upgrade_common, key, expected
+) -> None:
     """
-    verify _handle_reponse() return values for 200/OK response
-    to POST request
+    Function
+    - _handle_response
+
+    Test
+    - json_fail is not called
+    - success and changed are returned as expected for DELETE requests
+
+    Description
+    _handle_reponse() calls either _handle_get_reponse if verb is "GET" or
+    _handle_post_put_delete_response if verb is "DELETE", "POST", or "PUT"
     """
     data = responses_image_upgrade_common(key)
-    result = module._handle_response(data.get("response"), data.get("verb"))
+    with does_not_raise():
+        result = image_upgrade_common._handle_response(
+            data.get("response"), data.get("verb")
+        )
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
 
@@ -92,54 +123,172 @@ def test_handle_response_post(module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("mock_get_return_code_200_MESSAGE_OK", {"success": True, "found": True}),
-        ("mock_get_return_code_200_MESSAGE_not_OK", {"success": False, "found": False}),
         (
-            "mock_get_return_code_404_MESSAGE_not_found",
+            "test_image_mgmt_image_upgrade_common_00030a",
+            {"success": True, "changed": True},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00030b",
+            {"success": False, "changed": False},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00030c",
+            {"success": False, "changed": False},
+        ),
+    ],
+)
+def test_image_mgmt_image_upgrade_common_00030(
+    image_upgrade_common, key, expected
+) -> None:
+    """
+    Function
+    - _handle_response
+
+    Test
+    - json_fail is not called
+    - success and changed are returned as expected for POST requests
+
+    Description
+    _handle_reponse() calls either _handle_get_reponse if verb is "GET" or
+    _handle_post_put_delete_response if verb is "DELETE", "POST", or "PUT"
+    """
+    data = responses_image_upgrade_common(key)
+    with does_not_raise():
+        result = image_upgrade_common._handle_response(
+            data.get("response"), data.get("verb")
+        )
+    assert result.get("success") == expected.get("success")
+    assert result.get("changed") == expected.get("changed")
+
+
+@pytest.mark.parametrize(
+    "key, expected",
+    [
+        (
+            "test_image_mgmt_image_upgrade_common_00040a",
+            {"success": True, "changed": True},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00040b",
+            {"success": False, "changed": False},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00040c",
+            {"success": False, "changed": False},
+        ),
+    ],
+)
+def test_image_mgmt_image_upgrade_common_00040(
+    image_upgrade_common, key, expected
+) -> None:
+    """
+    Function
+    - _handle_response
+
+    Test
+    - json_fail is not called
+    - success and changed are returned as expected for PUT requests
+
+    Description
+    _handle_reponse() calls either _handle_get_reponse if verb is "GET" or
+    _handle_post_put_delete_response if verb is "DELETE", "POST", or "PUT"
+    """
+    data = responses_image_upgrade_common(key)
+    with does_not_raise():
+        result = image_upgrade_common._handle_response(
+            data.get("response"), data.get("verb")
+        )
+    assert result.get("success") == expected.get("success")
+    assert result.get("changed") == expected.get("changed")
+
+
+@pytest.mark.parametrize(
+    "key, expected",
+    [
+        (
+            "test_image_mgmt_image_upgrade_common_00050a",
+            {"success": True, "found": True},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00050b",
+            {"success": False, "found": False},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00050c",
             {"success": True, "found": False},
         ),
-        ("mock_get_return_code_500_MESSAGE_OK", {"success": False, "found": False}),
+        (
+            "test_image_mgmt_image_upgrade_common_00050d",
+            {"success": False, "found": False},
+        ),
     ],
 )
-def test_handle_response_get(module, key, expected) -> None:
+def test_image_mgmt_image_upgrade_common_00050(
+    image_upgrade_common, key, expected
+) -> None:
     """
-    verify _handle_reponse() return values for GET requests
+    Function
+    - _handle_response
+
+    Test
+    - _handle_reponse returns expected values for GET requests
     """
     data = responses_image_upgrade_common(key)
-    result = module._handle_response(data.get("response"), data.get("verb"))
+    result = image_upgrade_common._handle_response(
+        data.get("response"), data.get("verb")
+    )
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
 
 
-def test_handle_response_unknown_response_verb(module) -> None:
+def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
     """
-    verify that fail_json() is called if a unknown request verb is provided
+    Function
+    - _handle_response
+
+    Test
+    - fail_json is called because an unknown request verb is provided
     """
-    data = responses_image_upgrade_common("mock_unknown_response_verb")
+    data = responses_image_upgrade_common("test_image_mgmt_image_upgrade_common_00060a")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
-        module._handle_response(data.get("response"), data.get("verb"))
+        image_upgrade_common._handle_response(data.get("response"), data.get("verb"))
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("mock_get_return_code_200_MESSAGE_OK", {"success": True, "found": True}),
-        ("mock_get_return_code_200_MESSAGE_not_OK", {"success": False, "found": False}),
         (
-            "mock_get_return_code_404_MESSAGE_not_found",
+            "test_image_mgmt_image_upgrade_common_00070a",
+            {"success": True, "found": True},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00070b",
+            {"success": False, "found": False},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00070c",
             {"success": True, "found": False},
         ),
-        ("mock_get_return_code_500_MESSAGE_OK", {"success": False, "found": False}),
+        (
+            "test_image_mgmt_image_upgrade_common_00070d",
+            {"success": False, "found": False},
+        ),
     ],
 )
-def test_handle_get_response(module, key, expected) -> None:
+def test_image_mgmt_image_upgrade_common_00070(
+    image_upgrade_common, key, expected
+) -> None:
     """
-    verify _handle_get_reponse() return values for GET requests
+    Function
+    - _handle_get_response
 
-    NOTE: Adding this test increases coverage by 2% according to pytest-cov
+    Test
+    - fail_json is not called
+    - _handle_get_reponse() returns expected values for GET requests
     """
     data = responses_image_upgrade_common(key)
-    result = module._handle_get_response(data.get("response"))
+    with does_not_raise():
+        result = image_upgrade_common._handle_get_response(data.get("response"))
 
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
@@ -148,25 +297,36 @@ def test_handle_get_response(module, key, expected) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("mock_post_return_code_200_MESSAGE_OK", {"success": True, "changed": True}),
         (
-            "mock_post_return_code_400_MESSAGE_NOT_OK",
+            "test_image_mgmt_image_upgrade_common_00080a",
+            {"success": True, "changed": True},
+        ),
+        (
+            "test_image_mgmt_image_upgrade_common_00080b",
             {"success": False, "changed": False},
         ),
         (
-            "mock_post_return_code_200_ERROR_key_present",
+            "test_image_mgmt_image_upgrade_common_00080c",
             {"success": False, "changed": False},
         ),
     ],
 )
-def test_handle_post_put_delete_response(module, key, expected) -> None:
+def test_image_mgmt_image_upgrade_common_00080(
+    image_upgrade_common, key, expected
+) -> None:
     """
-    _handle_post_put_delete_response() return expected values for POST requests
-    NOTE: This method is covered in test_handle_response_post() above, but...
-    NOTE: Adding this test increases coverage by 2% according to pytest-cov
+    Function
+    - _handle_post_put_delete_response
+
+    Test
+    - return expected values for POST requests
+    - fail_json is not called
     """
     data = responses_image_upgrade_common(key)
-    result = module._handle_post_put_delete_response(data.get("response"))
+    with does_not_raise():
+        result = image_upgrade_common._handle_post_put_delete_response(
+            data.get("response")
+        )
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
 
@@ -191,11 +351,17 @@ def test_handle_post_put_delete_response(module, key, expected) -> None:
         ([1, 2, "3"], [1, 2, "3"]),
     ],
 )
-def test_make_boolean(module, key, expected) -> None:
+def test_image_mgmt_image_upgrade_common_00090(
+    image_upgrade_common, key, expected
+) -> None:
     """
-    verify that make_boolean() returns expected values for all cases
+    Function
+    - make_boolean
+
+    Test
+    - expected values are returned for all cases
     """
-    assert module.make_boolean(key) == expected
+    assert image_upgrade_common.make_boolean(key) == expected
 
 
 @pytest.mark.parametrize(
@@ -218,49 +384,71 @@ def test_make_boolean(module, key, expected) -> None:
         ([1, 2, "3"], [1, 2, "3"]),
     ],
 )
-def test_make_none(module, key, expected) -> None:
+def test_image_mgmt_image_upgrade_common_00100(
+    image_upgrade_common, key, expected
+) -> None:
     """
-    verify that make_none() returns expected values for all cases
+    Function
+    - make_none
+
+    Test
+    - expected values are returned for all cases
     """
-    assert module.make_none(key) == expected
+    assert image_upgrade_common.make_none(key) == expected
 
 
-def test_log_msg_disabled(module) -> None:
+def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
     """
-    verify that make_none() returns expected values for all cases
+    Function
+    - log_msg
+
+    Test
+    - log_msg returns None when debug is False
     """
     ERROR_MESSAGE = "This is an error message"
-    module.debug = False
-    assert module.log_msg(ERROR_MESSAGE) == None
+    image_upgrade_common.debug = False
+    assert image_upgrade_common.log_msg(ERROR_MESSAGE) == None
 
 
-def test_log_msg_enabled(tmp_path, module) -> None:
+def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
     """
-    verify that make_none() returns expected values for all cases
+    Function
+    - log_msg
+
+    Test
+    - log_msg writes to the logfile when debug is True
     """
     directory = tmp_path / "test_log_msg"
     directory.mkdir()
     filename = directory / f"test_log_msg.txt"
 
     ERROR_MESSAGE = "This is an error message"
-    module.debug = True
-    module.logfile = filename
-    module.log_msg(ERROR_MESSAGE)
+    image_upgrade_common.debug = True
+    image_upgrade_common.logfile = filename
+    image_upgrade_common.log_msg(ERROR_MESSAGE)
 
     assert filename.read_text(encoding="UTF-8") == ERROR_MESSAGE + "\n"
     assert len(list(tmp_path.iterdir())) == 1
 
 
-def test_log_msg_enabled_fail_json(tmp_path, module) -> None:
+def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
     """
-    log_msg() calls fail_json() if the logfile cannot be opened
+    Function
+    - log_msg
+
+    Test
+    - log_msg calls fail_json if the logfile cannot be opened
+
+    Description
+    To ensure an error is generated, we attempt a write to a filename
+    that is too long for the target OS.
     """
     directory = tmp_path / "test_log_msg"
     directory.mkdir()
     filename = directory / f"test_{'a' * 2000}_log_msg.txt"
 
     ERROR_MESSAGE = "This is an error message"
-    module.debug = True
-    module.logfile = filename
+    image_upgrade_common.debug = True
+    image_upgrade_common.logfile = filename
     with pytest.raises(AnsibleFailJson, match=r"error opening logfile"):
-        module.log_msg(ERROR_MESSAGE)
+        image_upgrade_common.log_msg(ERROR_MESSAGE)
