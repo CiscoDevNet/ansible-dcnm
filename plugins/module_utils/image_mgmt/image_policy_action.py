@@ -80,10 +80,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
             payload["ipAddr"] = self.switch_issu_details.ip_address
             payload["platform"] = self.switch_issu_details.platform
             payload["serialNumber"] = self.switch_issu_details.serial_number
-            for item in payload:
-                if payload[item] is None:
+            for key,value in payload.items():
+                if value is None:
                     msg = f"{self.class_name}.{self.method_name}: "
-                    msg += f" Unable to determine {item} for switch "
+                    msg += f" Unable to determine {key} for switch "
                     msg += f"{self.switch_issu_details.ip_address}, "
                     msg += f"{self.switch_issu_details.serial_number}, "
                     msg += f"{self.switch_issu_details.device_name}. "
@@ -219,7 +219,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         Query the image policy
         verb: GET
-        endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/__POLICY_NAME__
+        endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy
         """
         self.method_name = inspect.stack()[0][3]
 
