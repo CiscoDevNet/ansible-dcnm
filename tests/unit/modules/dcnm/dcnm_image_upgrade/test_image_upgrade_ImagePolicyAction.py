@@ -509,7 +509,13 @@ def test_image_mgmt_image_policy_action_00060(
     image_policy_action, value, expected
 ) -> None:
     """
-    ImagePolicyAction.action setter
+    Function
+    - action setter
+
+    Test
+    - Expected values are set
+    - fail_json is called when value is not a valid action
+    - fail_json error message is matched
     """
     if value == "FOO":
         with pytest.raises(AnsibleFailJson, match=match_00060):
@@ -534,7 +540,13 @@ def test_image_mgmt_image_policy_action_00061(
     image_policy_action, value, expected
 ) -> None:
     """
-    ImagePolicyAction.serial_numbers setter
+    Function
+    - serial_numbers setter
+
+    Test
+    - fail_json is not called with value is a list
+    - fail_json is called when value is not a list
+    - fail_json error message is matched
     """
     if value == "FOO":
         with pytest.raises(AnsibleFailJson, match=match_00061):
