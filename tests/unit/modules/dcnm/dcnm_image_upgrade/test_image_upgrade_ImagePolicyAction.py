@@ -20,6 +20,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
@@ -109,13 +111,20 @@ def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
 
     Test
     - Class attributes initialized to expected values
+    - fail_json is not called
     """
-    image_policy_action.__init__(MockAnsibleModule)
+    with does_not_raise():
+        image_policy_action.__init__(MockAnsibleModule)
+    assert image_policy_action.class_name == "ImagePolicyAction"
+    assert isinstance(image_policy_action.endpoints, ApiEndpoints)
     assert isinstance(image_policy_action, ImagePolicyAction)
     assert isinstance(
         image_policy_action.switch_issu_details, SwitchIssuDetailsBySerialNumber
     )
+    assert image_policy_action.path == None
+    assert image_policy_action.payloads == []
     assert image_policy_action.valid_actions == {"attach", "detach", "query"}
+    assert image_policy_action.verb == None
 
 
 def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:

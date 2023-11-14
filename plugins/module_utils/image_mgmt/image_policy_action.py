@@ -1,3 +1,6 @@
+"""
+Perform image policy actions on the controller for one or more switches.
+"""
 import inspect
 import json
 
@@ -44,15 +47,18 @@ class ImagePolicyAction(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.image_policies = ImagePolicies(self.module)
+        self.path = None
+        self.payloads = []
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber(self.module)
         self.valid_actions = {"attach", "detach", "query"}
+        self.verb = None
 
     def _init_properties(self):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.properties = {}
         self.properties["action"] = None
         self.properties["response"] = None
@@ -68,7 +74,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         caller _attach_policy()
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.payloads = []
 
         self.switch_issu_details.refresh()
@@ -80,9 +86,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
             payload["ipAddr"] = self.switch_issu_details.ip_address
             payload["platform"] = self.switch_issu_details.platform
             payload["serialNumber"] = self.switch_issu_details.serial_number
-            for key,value in payload.items():
+            for key, value in payload.items():
                 if value is None:
-                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg = f"{self.class_name}.{method_name}: "
                     msg += f" Unable to determine {key} for switch "
                     msg += f"{self.switch_issu_details.ip_address}, "
                     msg += f"{self.switch_issu_details.serial_number}, "
@@ -96,16 +102,16 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         validations prior to commit() should be added here.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.action is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.action must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
 
         if self.policy_name is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
@@ -114,7 +120,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             return
 
         if self.serial_numbers is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
             self.module.fail_json(msg)
@@ -127,7 +133,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         for serial_number in self.serial_numbers:
             self.switch_issu_details.serial_number = serial_number
             if self.switch_issu_details.platform not in self.image_policies.platform:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += f"policy {self.policy_name} does not support platform "
                 msg += f"{self.switch_issu_details.platform}. {self.policy_name} "
                 msg += "supports the following platform(s): "
@@ -135,7 +141,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
                 self.module.fail_json(msg)
 
     def commit(self):
-        self.method_name = inspect.stack()[0][3]
+        """
+        Call one of the following methods to commit the action to the controller:
+        - _attach_policy
+        - _detach_policy
+        - _query_policy
+        """
+        method_name = inspect.stack()[0][3]
 
         self.validate_request()
         if self.action == "attach":
@@ -145,7 +157,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         elif self.action == "query":
             self._query_policy()
         else:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"Unknown action {self.action}."
             self.module.fail_json(msg)
 
@@ -158,7 +170,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         are accessible via properties response and result,
         respectively.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.build_payload()
 
@@ -174,12 +186,12 @@ class ImagePolicyAction(ImageUpgradeCommon):
             )
             result = self._handle_response(response, self.verb)
 
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"response: {json.dumps(response, indent=4)}"
             self.log_msg(msg)
 
             if not result["success"]:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += f"Bad result when attaching policy {self.policy_name} "
                 msg += f"to switch {payload['ipAddr']}."
                 self.module.fail_json(msg)
@@ -197,7 +209,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
         query_params: ?serialNumber=FDO211218GC,FDO21120U5D
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.path = self.endpoints.policy_detach.get("path")
         self.verb = self.endpoints.policy_detach.get("verb")
@@ -208,12 +220,15 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
-        msg = f"{self.class_name}.{self.method_name}: "
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"response: {json.dumps(self.response, indent=4)}"
         self.log_msg(msg)
 
         if not self.result["success"]:
-            self._failure(self.response)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Bad result when detaching policy {self.policy_name} "
+            msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
+            self.module.fail_json(msg)
 
     def _query_policy(self):
         """
@@ -221,7 +236,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         verb: GET
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         self.path = self.endpoints.policy_info.get("path")
         self.verb = self.endpoints.policy_info.get("verb")
@@ -232,7 +247,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
         if not self.result["success"]:
-            self._failure(self.response)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Bad result when querying image policy {self.policy_name}."
+            self.module.fail_json(msg)
 
         self.properties["query_result"] = self.response.get("DATA")
 
@@ -256,10 +273,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @action.setter
     def action(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if value not in self.valid_actions:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.action must be one of "
             msg += f"{','.join(sorted(self.valid_actions))}. "
             msg += f"Got {value}."
@@ -300,7 +317,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @policy_name.setter
     def policy_name(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         self.properties["policy_name"] = value
 
     @property
@@ -315,11 +332,11 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @serial_numbers.setter
     def serial_numbers(self, value):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be a "
-            msg += f"python list of switch serial numbers. "
+            msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
             self.module.fail_json(msg)
         self.properties["serial_numbers"] = value
