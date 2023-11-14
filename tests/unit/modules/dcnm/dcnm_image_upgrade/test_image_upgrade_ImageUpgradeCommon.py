@@ -40,9 +40,16 @@ def does_not_raise():
 
 
 class MockAnsibleModule:
+    """
+    Mock the AnsibleModule class
+    """
+
     params = {}
 
-    def fail_json(msg) -> dict:
+    def fail_json(msg) -> AnsibleFailJson:
+        """
+        mock the fail_json method
+        """
         raise AnsibleFailJson(msg)
 
 

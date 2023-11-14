@@ -79,9 +79,16 @@ def responses_issu_details(key: str) -> Dict[str, str]:
 
 
 class MockAnsibleModule:
+    """
+    Mock the AnsibleModule class
+    """
+
     params = {}
 
     def fail_json(msg) -> AnsibleFailJson:
+        """
+        mock the fail_json method
+        """
         raise AnsibleFailJson(msg)
 
 

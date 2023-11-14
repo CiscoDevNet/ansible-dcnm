@@ -47,9 +47,16 @@ def responses_controller_version(key: str) -> Dict[str, str]:
 
 
 class MockAnsibleModule:
+    """
+    Mock the AnsibleModule class
+    """
+
     params = {}
 
     def fail_json(msg) -> AnsibleFailJson:
+        """
+        mock the fail_json method
+        """
         raise AnsibleFailJson(msg)
 
 

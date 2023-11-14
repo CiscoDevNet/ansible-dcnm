@@ -41,9 +41,16 @@ dcnm_send_install_options = patch_image_mgmt + "install_options.dcnm_send"
 
 
 class MockAnsibleModule:
+    """
+    Mock the AnsibleModule class
+    """
+
     params = {}
 
     def fail_json(msg) -> AnsibleFailJson:
+        """
+        mock the fail_json method
+        """
         raise AnsibleFailJson(msg)
 
 

@@ -46,9 +46,16 @@ dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
 
 class MockAnsibleModule:
+    """
+    Mock the AnsibleModule class
+    """
+
     params = {}
 
     def fail_json(msg) -> AnsibleFailJson:
+        """
+        mock the fail_json method
+        """
         raise AnsibleFailJson(msg)
 
 

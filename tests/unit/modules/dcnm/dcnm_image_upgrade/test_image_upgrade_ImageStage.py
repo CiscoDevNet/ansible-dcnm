@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Tests for ImageStage class
+"""
 
 from __future__ import absolute_import, division, print_function
 
@@ -40,6 +43,9 @@ description: Verify functionality of ImageStage
 
 @contextmanager
 def does_not_raise():
+    """
+    A context manager that does not raise an exception.
+    """
     yield
 
 
@@ -53,30 +59,46 @@ dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
 
 
 def responses_controller_version(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_ControllerVersion"
+    """
+    mock responses from ControllerVersion
+    """
+    response_file = "image_upgrade_responses_ControllerVersion"
     response = load_fixture(response_file).get(key)
     print(f"responses_controller_version: {key} : {response}")
     return response
 
 
 def responses_image_stage(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_ImageStage"
+    """
+    mock responses from ImageStage
+    """
+    response_file = "image_upgrade_responses_ImageStage"
     response = load_fixture(response_file).get(key)
     print(f"responses_image_stage: {key} : {response}")
     return response
 
 
 def responses_issu_details(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_SwitchIssuDetails"
+    """
+    mock responses from SwitchIssuDetails
+    """
+    response_file = "image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
     print(f"responses_issu_details: {key} : {response}")
     return response
 
 
 class MockAnsibleModule:
+    """
+    Mock the AnsibleModule class
+    """
+
     params = {}
 
     def fail_json(msg) -> AnsibleFailJson:
+        """
+        mock the fail_json method
+        """
         raise AnsibleFailJson(msg)
 
 
@@ -103,10 +125,10 @@ def test_image_mgmt_stage_00001(module) -> None:
     assert module.class_name == "ImageStage"
     assert isinstance(module.properties, dict)
     assert isinstance(module.serial_numbers_done, set)
-    assert module.controller_version == None
-    assert module.path == None
-    assert module.verb == None
-    assert module.payload == None
+    assert module.controller_version is None
+    assert module.path is None
+    assert module.verb is None
+    assert module.payload is None
     assert isinstance(module.issu_detail, SwitchIssuDetailsBySerialNumber)
     assert isinstance(module.endpoints, ApiEndpoints)
 
@@ -121,10 +143,10 @@ def test_image_mgmt_stage_00002(module) -> None:
     """
     module._init_properties()
     assert isinstance(module.properties, dict)
-    assert module.properties.get("response_data") == None
-    assert module.properties.get("response") == None
-    assert module.properties.get("result") == None
-    assert module.properties.get("serial_numbers") == None
+    assert module.properties.get("response_data") is None
+    assert module.properties.get("response") is None
+    assert module.properties.get("result") is None
+    assert module.properties.get("serial_numbers") is None
     assert module.properties.get("check_interval") == 10
     assert module.properties.get("check_timeout") == 1800
 
