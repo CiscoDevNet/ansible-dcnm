@@ -118,14 +118,15 @@ def test_image_mgmt_install_options_00004(module) -> None:
         module.refresh()
 
 
-# test_image_mgmt_install_options_00005
-# test_refresh_return_code_200 (former name)
-
-
 def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
     """
-    Properties are updated based on 200 response from endpoint.
-    endpoint: install-options
+    Function
+    - refresh
+
+    Test
+    -   200 response from endpoint
+    -   Properties are updated with expected values
+    -   endpoint: install-options
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -150,7 +151,6 @@ def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
     assert isinstance(module.raw_data, dict)
     assert isinstance(module.raw_response, dict)
     assert "compatibilityStatusList" in module.raw_data
-    print("module.raw_data: ", module.raw_data)
     assert module.rep_status == "skipped"
     assert module.serial_number == "BAR"
     assert module.status == "Success"
@@ -161,13 +161,13 @@ def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
     assert module.result.get("success") == True
 
 
-# test_image_mgmt_install_options_00006
-# test_refresh_return_code_500 (former name)
-
-
 def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
     """
-    fail_json() should be called if the response RETURN_CODE != 200
+    Function
+    - refresh
+
+    Test
+    - fail_json is called if the response RETURN_CODE != 200
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -187,15 +187,22 @@ def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
 
 def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
     """
-    Properties are updated based on:
-    -   200 response from endpoint
-    -   Device has no policy attached
+    Function
+    - refresh
+
+    Setup
+    -  Device has no policy attached
     -   POST REQUEST
         - issu == True
         - epld == False
         - package_install == False
 
-    endpoint: install-options
+    Test
+    - 200 response from endpoint
+    - Response contains expected values
+
+    Endpoint
+    - install-options
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -220,7 +227,6 @@ def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
     assert isinstance(module.raw_data, dict)
     assert isinstance(module.raw_response, dict)
     assert "compatibilityStatusList" in module.raw_data
-    print("module.raw_data: ", module.raw_data)
     assert module.rep_status == "skipped"
     assert module.serial_number == "FDO21120U5D"
     assert module.status == "Skipped"
@@ -233,15 +239,22 @@ def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
 
 def test_image_mgmt_install_options_00008(monkeypatch, module) -> None:
     """
-    Properties are updated based on:
-    -   200 response from endpoint
-    -   Device has no policy attached
+    Function
+    - refresh
+
+    Setup
+    -  Device has no policy attached
     -   POST REQUEST
         - issu == True
         - epld == True
         - package_install == False
 
-    endpoint: install-options
+    Test
+    - 200 response from endpoint
+    - Response contains expected values
+
+    Endpoint
+    - install-options
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -282,15 +295,22 @@ def test_image_mgmt_install_options_00008(monkeypatch, module) -> None:
 
 def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
     """
-    Properties are updated based on:
-    -   200 response from endpoint
-    -   Device has no policy attached
+    Function
+    - refresh
+
+    Setup
+    -  Device has no policy attached
     -   POST REQUEST
         - issu == False
         - epld == True
         - package_install == False
 
-    endpoint: install-options
+    Test
+    - 200 response from endpoint
+    - Response contains expected values
+
+    Endpoint
+    - install-options
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -331,16 +351,24 @@ def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
 
 def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
     """
-    Properties are updated based on:
-    -   500 response from endpoint due to KR5M policy has no packages defined
-        and package_install set to True
-    -   KR5M policy is attached to the device
-    -   POST REQUEST contains
+    Function
+    - refresh
+
+    Setup
+    -  Device has no policy attached
+    -   POST REQUEST
         - issu == False
         - epld == True
-        - package_install == True (this causes the expected error)
+        - package_install == True (causes expected error)
 
-    endpoint: install-options
+    Test
+    -   500 response from endpoint due to
+        - KR5M policy has no packages defined and
+        - package_install set to True
+    -   Response contains expected values
+
+    Endpoint
+    - install-options
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -359,13 +387,16 @@ def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
         module.refresh()
 
 
-# test_image_mgmt_install_options_00020
-
-
 def test_image_mgmt_install_options_00020(module) -> None:
     """
-    Payload contains defaults if not specified by the user.
-    Defaults for issu, epld, and package_install are applied.
+    Function
+    - build_payload
+
+    Setup
+    - Defaults are not specified by the user
+
+    Test
+    - Default values for issu, epld, and package_install are applied
     """
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
@@ -377,13 +408,17 @@ def test_image_mgmt_install_options_00020(module) -> None:
     assert module.payload.get("packageInstall") == False
 
 
-# test_image_mgmt_install_options_00021
-
-
 def test_image_mgmt_install_options_00021(module) -> None:
     """
-    Payload contains user-specified values if the user sets them.
-    Defaults for issu, epld, and package_install are overridden by user values.
+    Function
+    - build_payload
+
+    Setup
+    - Values are specified by the user
+
+    Test
+    - Payload contains user-specified values if the user sets them
+    - Defaults for issu, epld, and package_install are overridden by user values.
     """
     module.policy_name = "KRM5"
     module.serial_number = "BAR"
@@ -398,12 +433,13 @@ def test_image_mgmt_install_options_00021(module) -> None:
     assert module.payload.get("packageInstall") == True
 
 
-# test_image_mgmt_install_options_00022
-
-
 def test_image_mgmt_install_options_00022(module) -> None:
     """
-    fail_json() is called if issu is not a boolean.
+    Function
+    - issu setter
+
+    Test
+    - fail_json is called if issu is not a boolean.
     """
     match = "ImageInstallOptions.issu.setter: issu must be a "
     match += "boolean value"
@@ -411,12 +447,13 @@ def test_image_mgmt_install_options_00022(module) -> None:
         module.issu = "FOO"
 
 
-# test_image_mgmt_install_options_00023
-
-
 def test_image_mgmt_install_options_00023(module) -> None:
     """
-    fail_json() is called if epld is not a boolean.
+    Function
+    - epld setter
+
+    Test
+    - fail_json is called if epld is not a boolean.
     """
     match = "ImageInstallOptions.epld.setter: epld must be a "
     match += "boolean value"
@@ -424,12 +461,13 @@ def test_image_mgmt_install_options_00023(module) -> None:
         module.epld = "FOO"
 
 
-# test_image_mgmt_install_options_00024
-
-
 def test_image_mgmt_install_options_00024(module) -> None:
     """
-    fail_json() is called if package_install is not a boolean.
+    Function
+    - package_install setter
+
+    Test
+    - fail_json is called if package_install is not a boolean.
     """
     match = "ImageInstallOptions.package_install.setter: "
     match += "package_install must be a boolean value"
