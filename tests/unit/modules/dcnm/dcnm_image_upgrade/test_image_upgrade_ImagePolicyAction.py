@@ -42,6 +42,9 @@ Description: Verify functionality of ImagePolicyAction
 
 @contextmanager
 def does_not_raise():
+    """
+    A context manager that does not raise an exception.
+    """
     yield
 
 

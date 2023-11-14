@@ -38,6 +38,9 @@ description: Verify functionality of NdfcSwitchUpgrade
 
 @contextmanager
 def does_not_raise():
+    """
+    A context manager that does not raise an exception.
+    """
     yield
 
 

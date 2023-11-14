@@ -36,6 +36,9 @@ description: Verify functionality of subclass SwitchIssuDetailsBySerialNumber
 
 @contextmanager
 def does_not_raise():
+    """
+    A context manager that does not raise an exception.
+    """
     yield
 
 
