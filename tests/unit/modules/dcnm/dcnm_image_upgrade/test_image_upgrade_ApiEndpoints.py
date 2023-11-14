@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Tests for ApiEndpoints class
+"""
 from __future__ import absolute_import, division, print_function
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -26,7 +29,6 @@ def test_image_mgmt_api_00001() -> None:
     Endpoints.__init__
     """
     endpoints = ApiEndpoints()
-    endpoints.__init__()
     assert endpoints.endpoint_api_v1 == "/appcenter/cisco/ndfc/api/v1"
     assert endpoints.endpoint_feature_manager == "/appcenter/cisco/ndfc/api/v1/fm"
     assert (
@@ -200,12 +202,11 @@ def test_image_mgmt_api_00014() -> None:
     """
     Endpoints.policy_info
     """
+    path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/"
+    path += "image-policy/__POLICY_NAME__"
     endpoints = ApiEndpoints()
     assert endpoints.policy_info.get("verb") == "GET"
-    assert (
-        endpoints.policy_info.get("path")
-        == "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/__POLICY_NAME__"
-    )
+    assert endpoints.policy_info.get("path") == path
 
 
 def test_image_mgmt_api_00015() -> None:
