@@ -66,12 +66,13 @@ def mock_issu_details() -> SwitchIssuDetailsBySerialNumber:
     return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
 
 
-# test_image_mgmt_validate_00001
-
-
 def test_image_mgmt_validate_00001(module) -> None:
     """
-    __init__
+    Function
+    - __init__
+
+    Test
+    - Class attributes are initialized to expected values
     """
     module.__init__(MockAnsibleModule)
     assert module.class_name == "ImageValidate"
@@ -79,13 +80,13 @@ def test_image_mgmt_validate_00001(module) -> None:
     assert isinstance(module.issu_detail, SwitchIssuDetailsBySerialNumber)
 
 
-# test_image_mgmt_validate_00002
-# test_init_properties (former name)
-
-
 def test_image_mgmt_validate_00002(module) -> None:
     """
-    Properties are initialized to expected values
+    Function
+    - _init_properties
+
+    Test
+    - Class properties are initialized to expected values
     """
     module._init_properties()
     assert isinstance(module.properties, dict)
@@ -98,20 +99,20 @@ def test_image_mgmt_validate_00002(module) -> None:
     assert module.properties.get("serial_numbers") == []
 
 
-# test_image_mgmt_validate_00003
-# test_prune_serial_numbers (former name)
-
-
 def test_image_mgmt_validate_00003(monkeypatch, module, mock_issu_details) -> None:
     """
+    Function
+    - prune_serial_numbers
+
+    Test
+    -   module.serial_numbers contains only serial numbers for which
+        "validated" == "none"
+    -   serial_numbers does not contain serial numbers for which
+        "validated" == "Success"
+
+    Description
     prune_serial_numbers removes serial numbers from the list for which
     "validated" == "Success" (TODO: AND policy == <target_policy>)
-
-    Expectations:
-    1. module.serial_numbers should contain only serial numbers for which
-    "validated" == "none"
-    2. module.serial_numbers should not contain serial numbers for which
-    "validated" == "Success"
 
     Expected results:
     1. module.serial_numbers == ["FDO2112189M", "FDO211218AX", "FDO211218B5"]
@@ -148,7 +149,12 @@ def test_image_mgmt_validate_00003(monkeypatch, module, mock_issu_details) -> No
 
 def test_image_mgmt_validate_00004(monkeypatch, module, mock_issu_details) -> None:
     """
-    fail_json is called when imageStaged == "Failed".
+    Function
+    - validate_serial_numbers
+
+    Test
+    - fail_json is called when imageStaged == "Failed".
+    - fail_json error message is matched
 
     Expectations:
 
@@ -165,32 +171,31 @@ def test_image_mgmt_validate_00004(monkeypatch, module, mock_issu_details) -> No
     module.issu_detail = mock_issu_details
     module.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
 
-    error_message = "ImageValidate.validate_serial_numbers: "
-    error_message += "image validation is failing for the following switch: "
-    error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M. If this "
-    error_message += "persists, check the switch connectivity to the "
-    error_message += "controller and try again."
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageValidate.validate_serial_numbers: "
+    match += "image validation is failing for the following switch: "
+    match += "cvd-2313-leaf, 172.22.150.108, FDO2112189M. If this "
+    match += "persists, check the switch connectivity to the "
+    match += "controller and try again."
+    with pytest.raises(AnsibleFailJson, match=match):
         module.validate_serial_numbers()
-
-
-# test_image_mgmt_validate_00005
-# test_wait_for_image_validate_to_complete (former name)
 
 
 def test_image_mgmt_validate_00005(monkeypatch, module, mock_issu_details) -> None:
     """
+    Function
+    - _wait_for_image_validate_to_complete
+
+    Test
+    - serial_numbers_done is a set()
+    - serial_numbers_done has length 2
+    - serial_numbers_done contains all serial numbers in instance.serial_numbers
+    - fail_json is not called
+
+    Description
     _wait_for_image_validate_to_complete looks at the "validated" status for each
     serial number and waits for it to be "Success" or "Failed".
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
-
-    Expectations:
-    1.  module.serial_numbers_done should be a set()
-    2.  module.serial_numbers_done should be length 2
-    3.  module.serial_numbers_done should contain all serial numbers in
-        module.serial_numbers
-    4.  The module should return without calling fail_json.
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -218,16 +223,22 @@ def test_image_mgmt_validate_00005(monkeypatch, module, mock_issu_details) -> No
 
 def test_image_mgmt_validate_00006(monkeypatch, module, mock_issu_details) -> None:
     """
+    Function
+    - _wait_for_image_validate_to_complete
+
+    Test
+    - serial_numbers_done is a set()
+    - serial_numbers_done has length 1
+    - serial_numbers_done contains FDO21120U5D since "validated" == "Success"
+    - serial_numbers_done does not contain FDO2112189M since "validated" == "Failed"
+    - fail_json is called
+    - fail_json error message is matched
+
+    Description
     _wait_for_image_validate_to_complete looks at the "validated" status for each
     serial number and waits for it to be "Success" or "Failed".
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
-
-    Expectations:
-    1. module.serial_numbers_done is a set()
-    2. module.serial_numbers_done has length 1
-    3. module.serial_numbers_done contains FDO21120U5D, "validated" is "Success"
-    4. Call fail_json on serial number FDO2112189M, "validated" is "Failed"
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -242,14 +253,14 @@ def test_image_mgmt_validate_00006(monkeypatch, module, mock_issu_details) -> No
         "FDO2112189M",
     ]
     module.check_interval = 0
-    error_message = "Seconds remaining 1800: validate image Failed for "
-    error_message += "cvd-2313-leaf, 172.22.150.108, FDO2112189M, "
-    error_message += "image validated percent: 100. Check the switch e.g. "
-    error_message += "show install log detail, show incompatibility-all nxos "
-    error_message += "<image>.  Or check Operations > Image Management > "
-    error_message += "Devices > View Details > Validate on the controller "
-    error_message += "GUI for more details."
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "Seconds remaining 1800: validate image Failed for "
+    match += "cvd-2313-leaf, 172.22.150.108, FDO2112189M, "
+    match += "image validated percent: 100. Check the switch e.g. "
+    match += "show install log detail, show incompatibility-all nxos "
+    match += "<image>.  Or check Operations > Image Management > "
+    match += "Devices > View Details > Validate on the controller "
+    match += "GUI for more details."
+    with pytest.raises(AnsibleFailJson, match=match):
         module._wait_for_image_validate_to_complete()
     assert isinstance(module.serial_numbers_done, set)
     assert len(module.serial_numbers_done) == 1
@@ -257,22 +268,21 @@ def test_image_mgmt_validate_00006(monkeypatch, module, mock_issu_details) -> No
     assert "FDO2112189M" not in module.serial_numbers_done
 
 
-# test_image_mgmt_validate_00007
-# test_wait_for_image_validate_to_complete_timeout (former name)
-
-
 def test_image_mgmt_validate_00007(monkeypatch, module, mock_issu_details) -> None:
     """
+    Function
+    - _wait_for_image_validate_to_complete
+
+    Test
+    - serial_numbers_done is a set()
+    - serial_numbers_done has length 1
+    - serial_numbers_done contains FDO21120U5D since "validated" == "Success"
+    - serial_numbers_done does not contain FDO2112189M since "validated" == "In-Progress"
+    - fail_json is called due to timeout
+    - fail_json error message is matched
+
+    Description
     See test_wait_for_image_stage_to_complete for functional details.
-
-    Since FDO2112189M validated == "In-Progress" the function should timeout
-
-    Expectations:
-    1.  module.serial_numbers_done should be a set()
-    2.  module.serial_numbers_done should be length 1
-    3.  module.serial_numbers_done should contain FDO21120U5D
-    3.  module.serial_numbers_done should not contain FDO2112189M
-    4.  The function should call fail_json due to timeout
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -301,12 +311,19 @@ def test_image_mgmt_validate_00007(monkeypatch, module, mock_issu_details) -> No
     assert "FDO2112189M" not in module.serial_numbers_done
 
 
-# test_image_mgmt_validate_00008
-# test_wait_for_current_actions_to_complete (former name)
-
-
 def test_image_mgmt_validate_00008(monkeypatch, module, mock_issu_details) -> None:
     """
+    Function
+    - _wait_for_current_actions_to_complete
+
+    Test
+    - serial_numbers_done is a set()
+    - serial_numbers_done has length 2
+    - serial_numbers_done contains all serial numbers in
+      serial_numbers
+    - fail_json is not called
+
+    Description
     _wait_for_current_actions_to_complete waits until staging, validation,
     and upgrade actions are complete for all serial numbers.  It calls
     SwitchIssuDetailsBySerialNumber.actions_in_progress() and expects
@@ -314,13 +331,6 @@ def test_image_mgmt_validate_00008(monkeypatch, module, mock_issu_details) -> No
     the following keys has a value of "In-Progress":
 
     ["imageStaged", "upgrade", "validated"]
-
-    Expectations:
-    1.  module.serial_numbers_done should be a set()
-    2.  module.serial_numbers_done should be length 2
-    3.  module.serial_numbers_done should contain all serial numbers in
-        module.serial_numbers
-    4.  The function should return without calling fail_json.
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -342,22 +352,21 @@ def test_image_mgmt_validate_00008(monkeypatch, module, mock_issu_details) -> No
     assert "FDO2112189M" in module.serial_numbers_done
 
 
-# test_image_mgmt_validate_00009
-# test_wait_for_current_actions_to_complete_timeout (former name)
-
-
 def test_image_mgmt_validate_00009(monkeypatch, module, mock_issu_details) -> None:
     """
+    Function
+    - _wait_for_current_actions_to_complete
+
+    Test
+    - serial_numbers_done is a set()
+    - serial_numbers_done has length 1
+    - serial_numbers_done contains FDO21120U5D since "validated" == "Success"
+    - serial_numbers_done does not contain FDO2112189M since "validated" == "In-Progress"
+    - fail_json is called due to timeout
+    - fail_json error message is matched
+
+    Description
     See test_wait_for_current_actions_to_complete for functional details.
-
-    Since FDO2112189M validated == "In-Progress" the function should timeout
-
-    Expectations:
-    1.  module.serial_numbers_done should be a set()
-    2.  module.serial_numbers_done should be length 1
-    3.  module.serial_numbers_done should contain FDO21120U5D
-    3.  module.serial_numbers_done should not contain FDO2112189M
-    4.  The function should call fail_json due to timeout
     """
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
@@ -374,11 +383,11 @@ def test_image_mgmt_validate_00009(monkeypatch, module, mock_issu_details) -> No
     module.check_interval = 1
     module.check_timeout = 1
 
-    error_message = "ImageValidate._wait_for_current_actions_to_complete: "
-    error_message += "Timed out waiting for actions to complete. "
-    error_message += "serial_numbers_done: FDO21120U5D, "
-    error_message += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
-    with pytest.raises(AnsibleFailJson, match=error_message):
+    match = "ImageValidate._wait_for_current_actions_to_complete: "
+    match += "Timed out waiting for actions to complete. "
+    match += "serial_numbers_done: FDO21120U5D, "
+    match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
+    with pytest.raises(AnsibleFailJson, match=match):
         module._wait_for_current_actions_to_complete()
     assert isinstance(module.serial_numbers_done, set)
     assert len(module.serial_numbers_done) == 1
