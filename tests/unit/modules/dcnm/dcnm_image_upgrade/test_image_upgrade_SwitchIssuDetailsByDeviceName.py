@@ -165,7 +165,7 @@ def test_image_mgmt_switch_issu_details_by_device_name_00021(
     # verify remaining properties using current device_name
     assert issu_details.eth_switch_id == 39890
     assert issu_details.fabric == "hard"
-    assert issu_details.fcoe_enabled == False
+    assert issu_details.fcoe_enabled is False
     assert issu_details.group == "hard"
     # NOTE: For "id" see switch_id below
     assert issu_details.image_staged == "Success"
@@ -173,7 +173,7 @@ def test_image_mgmt_switch_issu_details_by_device_name_00021(
     assert issu_details.ip_address == "172.22.150.108"
     assert issu_details.issu_allowed == None
     assert issu_details.last_upg_action == "2023-Oct-06 03:43"
-    assert issu_details.mds == False
+    assert issu_details.mds is False
     assert issu_details.mode == "Normal"
     assert issu_details.model == "N9K-C93180YC-EX"
     assert issu_details.model_type == 0
@@ -234,8 +234,8 @@ def test_image_mgmt_switch_issu_details_by_device_name_00022(
 
     issu_details.refresh()
     assert isinstance(issu_details.result, dict)
-    assert issu_details.result.get("found") == True
-    assert issu_details.result.get("success") == True
+    assert issu_details.result.get("found") is True
+    assert issu_details.result.get("success") is True
 
 
 def test_image_mgmt_switch_issu_details_by_device_name_00023(

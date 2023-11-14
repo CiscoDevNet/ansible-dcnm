@@ -82,10 +82,10 @@ def test_image_mgmt_install_options_00002(module) -> None:
     """
     module._init_properties()
     assert isinstance(module.properties, dict)
-    assert module.properties.get("epld") == False
+    assert module.properties.get("epld") is False
     assert module.properties.get("epld_modules") == None
-    assert module.properties.get("issu") == True
-    assert module.properties.get("package_install") == False
+    assert module.properties.get("issu") is True
+    assert module.properties.get("package_install") is False
     assert module.properties.get("policy_name") == None
     assert module.properties.get("response") == None
     assert module.properties.get("response_data") == None
@@ -165,7 +165,7 @@ def test_image_mgmt_install_options_00005(monkeypatch, module) -> None:
     assert module.version == "10.2.5"
     comp_disp = "show install all impact nxos bootflash:nxos64-cs.10.2.5.M.bin"
     assert module.comp_disp == comp_disp
-    assert module.result.get("success") == True
+    assert module.result.get("success") is True
 
 
 def test_image_mgmt_install_options_00006(monkeypatch, module) -> None:
@@ -200,9 +200,9 @@ def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
     Setup
     -  Device has no policy attached
     -   POST REQUEST
-        - issu == True
-        - epld == False
-        - package_install == False
+        - issu is True
+        - epld is False
+        - package_install is False
 
     Test
     - 200 response from endpoint
@@ -241,7 +241,7 @@ def test_image_mgmt_install_options_00007(monkeypatch, module) -> None:
     assert module.version == "10.2.5"
     assert module.version_check == "Compatibility status skipped."
     assert module.comp_disp == "Compatibility status skipped."
-    assert module.result.get("success") == True
+    assert module.result.get("success") is True
 
 
 def test_image_mgmt_install_options_00008(monkeypatch, module) -> None:
@@ -252,9 +252,9 @@ def test_image_mgmt_install_options_00008(monkeypatch, module) -> None:
     Setup
     -  Device has no policy attached
     -   POST REQUEST
-        - issu == True
-        - epld == True
-        - package_install == False
+        - issu is True
+        - epld is True
+        - package_install is False
 
     Test
     - 200 response from endpoint
@@ -297,7 +297,7 @@ def test_image_mgmt_install_options_00008(monkeypatch, module) -> None:
     assert module.version == "10.2.5"
     assert module.version_check == "Compatibility status skipped."
     assert module.comp_disp == "Compatibility status skipped."
-    assert module.result.get("success") == True
+    assert module.result.get("success") is True
 
 
 def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
@@ -308,9 +308,9 @@ def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
     Setup
     -  Device has no policy attached
     -   POST REQUEST
-        - issu == False
-        - epld == True
-        - package_install == False
+        - issu is False
+        - epld is True
+        - package_install is False
 
     Test
     - 200 response from endpoint
@@ -353,7 +353,7 @@ def test_image_mgmt_install_options_00009(monkeypatch, module) -> None:
     assert module.version == None
     assert module.version_check == None
     assert module.comp_disp == None
-    assert module.result.get("success") == True
+    assert module.result.get("success") is True
 
 
 def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
@@ -364,9 +364,9 @@ def test_image_mgmt_install_options_00010(monkeypatch, module) -> None:
     Setup
     -  Device has no policy attached
     -   POST REQUEST
-        - issu == False
-        - epld == True
-        - package_install == True (causes expected error)
+        - issu is False
+        - epld is True
+        - package_install is True (causes expected error)
 
     Test
     -   500 response from endpoint due to
@@ -410,9 +410,9 @@ def test_image_mgmt_install_options_00020(module) -> None:
     module._build_payload()
     assert module.payload.get("devices")[0].get("policyName") == "KRM5"
     assert module.payload.get("devices")[0].get("serialNumber") == "BAR"
-    assert module.payload.get("issu") == True
-    assert module.payload.get("epld") == False
-    assert module.payload.get("packageInstall") == False
+    assert module.payload.get("issu") is True
+    assert module.payload.get("epld") is False
+    assert module.payload.get("packageInstall") is False
 
 
 def test_image_mgmt_install_options_00021(module) -> None:
@@ -435,9 +435,9 @@ def test_image_mgmt_install_options_00021(module) -> None:
     module._build_payload()
     assert module.payload.get("devices")[0].get("policyName") == "KRM5"
     assert module.payload.get("devices")[0].get("serialNumber") == "BAR"
-    assert module.payload.get("issu") == False
-    assert module.payload.get("epld") == True
-    assert module.payload.get("packageInstall") == True
+    assert module.payload.get("issu") is False
+    assert module.payload.get("epld") is True
+    assert module.payload.get("packageInstall") is True
 
 
 def test_image_mgmt_install_options_00022(module) -> None:

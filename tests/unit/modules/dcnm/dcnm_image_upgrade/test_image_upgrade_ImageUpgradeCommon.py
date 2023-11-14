@@ -84,7 +84,7 @@ def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     with does_not_raise():
         image_upgrade_common.__init__(MockAnsibleModule)
     assert image_upgrade_common.params == {}
-    assert image_upgrade_common.debug == False
+    assert image_upgrade_common.debug is False
     assert image_upgrade_common.fd == None
     assert image_upgrade_common.logfile == "/tmp/ansible_dcnm.log"
 

@@ -128,19 +128,19 @@ def test_image_mgmt_upgrade_00002(module) -> None:
     """
     module._init_defaults()
     assert isinstance(module.defaults, dict)
-    assert module.defaults["reboot"] == False
-    assert module.defaults["stage"] == True
-    assert module.defaults["validate"] == True
-    assert module.defaults["upgrade"]["nxos"] == True
-    assert module.defaults["upgrade"]["epld"] == False
+    assert module.defaults["reboot"] is False
+    assert module.defaults["stage"] is True
+    assert module.defaults["validate"] is True
+    assert module.defaults["upgrade"]["nxos"] is True
+    assert module.defaults["upgrade"]["epld"] is False
     assert module.defaults["options"]["nxos"]["mode"] == "disruptive"
-    assert module.defaults["options"]["nxos"]["bios_force"] == False
+    assert module.defaults["options"]["nxos"]["bios_force"] is False
     assert module.defaults["options"]["epld"]["module"] == "ALL"
-    assert module.defaults["options"]["epld"]["golden"] == False
-    assert module.defaults["options"]["reboot"]["config_reload"] == False
-    assert module.defaults["options"]["reboot"]["write_erase"] == False
-    assert module.defaults["options"]["package"]["install"] == False
-    assert module.defaults["options"]["package"]["uninstall"] == False
+    assert module.defaults["options"]["epld"]["golden"] is False
+    assert module.defaults["options"]["reboot"]["config_reload"] is False
+    assert module.defaults["options"]["reboot"]["write_erase"] is False
+    assert module.defaults["options"]["package"]["install"] is False
+    assert module.defaults["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00003(module) -> None:
@@ -153,25 +153,25 @@ def test_image_mgmt_upgrade_00003(module) -> None:
     """
     module._init_properties()
     assert isinstance(module.properties, dict)
-    assert module.properties.get("bios_force") == False
+    assert module.properties.get("bios_force") is False
     assert module.properties.get("check_interval") == 10
     assert module.properties.get("check_timeout") == 1800
-    assert module.properties.get("config_reload") == False
+    assert module.properties.get("config_reload") is False
     assert module.properties.get("devices") == None
-    assert module.properties.get("disruptive") == True
-    assert module.properties.get("epld_golden") == False
+    assert module.properties.get("disruptive") is True
+    assert module.properties.get("epld_golden") is False
     assert module.properties.get("epld_module") == "ALL"
-    assert module.properties.get("epld_upgrade") == False
-    assert module.properties.get("force_non_disruptive") == False
+    assert module.properties.get("epld_upgrade") is False
+    assert module.properties.get("force_non_disruptive") is False
     assert module.properties.get("response_data") == None
     assert module.properties.get("response") == None
     assert module.properties.get("result") == None
-    assert module.properties.get("non_disruptive") == False
-    assert module.properties.get("force_non_disruptive") == False
-    assert module.properties.get("package_install") == False
-    assert module.properties.get("package_uninstall") == False
-    assert module.properties.get("reboot") == False
-    assert module.properties.get("write_erase") == False
+    assert module.properties.get("non_disruptive") is False
+    assert module.properties.get("force_non_disruptive") is False
+    assert module.properties.get("package_install") is False
+    assert module.properties.get("package_uninstall") is False
+    assert module.properties.get("reboot") is False
+    assert module.properties.get("write_erase") is False
     assert module.valid_nxos_mode == {
         "disruptive",
         "non_disruptive",
@@ -243,19 +243,19 @@ def test_image_mgmt_upgrade_00006(module) -> None:
     config = {"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00007(module) -> None:
@@ -283,19 +283,19 @@ def test_image_mgmt_upgrade_00007(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == False
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is False
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00008(module) -> None:
@@ -323,19 +323,19 @@ def test_image_mgmt_upgrade_00008(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == True
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is True
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00009(module) -> None:
@@ -364,19 +364,19 @@ def test_image_mgmt_upgrade_00009(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00010(module) -> None:
@@ -405,19 +405,19 @@ def test_image_mgmt_upgrade_00010(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "non_disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00011(module) -> None:
@@ -446,19 +446,19 @@ def test_image_mgmt_upgrade_00011(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == True
+    assert merged_config["options"]["nxos"]["bios_force"] is True
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00012(module) -> None:
@@ -487,19 +487,19 @@ def test_image_mgmt_upgrade_00012(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == 27
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00013(module) -> None:
@@ -528,19 +528,19 @@ def test_image_mgmt_upgrade_00013(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == True
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is True
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00014(module) -> None:
@@ -569,19 +569,19 @@ def test_image_mgmt_upgrade_00014(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == True
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is True
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00015(module) -> None:
@@ -610,19 +610,19 @@ def test_image_mgmt_upgrade_00015(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == True
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is True
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00016(module) -> None:
@@ -651,19 +651,19 @@ def test_image_mgmt_upgrade_00016(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == True
-    assert merged_config["options"]["package"]["uninstall"] == False
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is True
+    assert merged_config["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00017(module) -> None:
@@ -692,19 +692,19 @@ def test_image_mgmt_upgrade_00017(module) -> None:
     }
 
     merged_config = module._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] == False
-    assert merged_config["stage"] == True
-    assert merged_config["validate"] == True
-    assert merged_config["upgrade"]["nxos"] == True
-    assert merged_config["upgrade"]["epld"] == False
+    assert merged_config["reboot"] is False
+    assert merged_config["stage"] is True
+    assert merged_config["validate"] is True
+    assert merged_config["upgrade"]["nxos"] is True
+    assert merged_config["upgrade"]["epld"] is False
     assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] == False
+    assert merged_config["options"]["nxos"]["bios_force"] is False
     assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] == False
-    assert merged_config["options"]["reboot"]["config_reload"] == False
-    assert merged_config["options"]["reboot"]["write_erase"] == False
-    assert merged_config["options"]["package"]["install"] == False
-    assert merged_config["options"]["package"]["uninstall"] == True
+    assert merged_config["options"]["epld"]["golden"] is False
+    assert merged_config["options"]["reboot"]["config_reload"] is False
+    assert merged_config["options"]["reboot"]["write_erase"] is False
+    assert merged_config["options"]["package"]["install"] is False
+    assert merged_config["options"]["package"]["uninstall"] is True
 
 
 def test_image_mgmt_upgrade_00018(monkeypatch, module) -> None:
@@ -1009,9 +1009,9 @@ def test_image_mgmt_upgrade_00022(monkeypatch, module) -> None:
 
     Expected results:
 
-    1.  self.payload["issuUpgradeOptions1"]["disruptive"] == False
-    2.  self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] == False
-    3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] == True
+    1.  self.payload["issuUpgradeOptions1"]["disruptive"] is False
+    2.  self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is False
+    3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] is True
     """
     key = "test_image_mgmt_upgrade_00022a"
 
@@ -1056,9 +1056,9 @@ def test_image_mgmt_upgrade_00022(monkeypatch, module) -> None:
         }
     ]
     module.commit()
-    assert module.payload["issuUpgradeOptions1"]["disruptive"] == False
-    assert module.payload["issuUpgradeOptions1"]["forceNonDisruptive"] == False
-    assert module.payload["issuUpgradeOptions1"]["nonDisruptive"] == True
+    assert module.payload["issuUpgradeOptions1"]["disruptive"] is False
+    assert module.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is False
+    assert module.payload["issuUpgradeOptions1"]["nonDisruptive"] is True
 
 
 def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
@@ -1081,9 +1081,9 @@ def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
 
     Expected results:
 
-    1.  self.payload["issuUpgradeOptions1"]["disruptive"] == False
-    2.  self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] == True
-    3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] == False
+    1.  self.payload["issuUpgradeOptions1"]["disruptive"] is False
+    2.  self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is True
+    3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] is False
     """
     key = "test_image_mgmt_upgrade_00023a"
 
@@ -1128,9 +1128,9 @@ def test_image_mgmt_upgrade_00023(monkeypatch, module) -> None:
         }
     ]
     module.commit()
-    assert module.payload["issuUpgradeOptions1"]["disruptive"] == False
-    assert module.payload["issuUpgradeOptions1"]["forceNonDisruptive"] == True
-    assert module.payload["issuUpgradeOptions1"]["nonDisruptive"] == False
+    assert module.payload["issuUpgradeOptions1"]["disruptive"] is False
+    assert module.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is True
+    assert module.payload["issuUpgradeOptions1"]["nonDisruptive"] is False
 
 
 def test_image_mgmt_upgrade_00024(monkeypatch, module) -> None:

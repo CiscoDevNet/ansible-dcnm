@@ -102,7 +102,7 @@ def test_image_mgmt_validate_00002(module) -> None:
     assert module.properties.get("response_data") == {}
     assert module.properties.get("response") == {}
     assert module.properties.get("result") == {}
-    assert module.properties.get("non_disruptive") == False
+    assert module.properties.get("non_disruptive") is False
     assert module.properties.get("serial_numbers") == []
 
 

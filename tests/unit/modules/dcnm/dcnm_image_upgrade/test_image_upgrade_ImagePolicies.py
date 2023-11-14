@@ -118,7 +118,7 @@ def test_image_mgmt_image_policies_00010(monkeypatch, image_policies) -> None:
     image_policies.refresh()
     image_policies.policy_name = "KR5M"
     assert isinstance(image_policies.response, dict)
-    assert image_policies.agnostic == False
+    assert image_policies.agnostic is False
     assert image_policies.description == "10.2.(5) with EPLD"
     assert image_policies.epld_image_name == "n9000-epld.10.2.5.M.img"
     assert image_policies.image_name == "nxos64-cs.10.2.5.M.bin"
@@ -153,8 +153,8 @@ def test_image_mgmt_image_policies_00020(monkeypatch, image_policies) -> None:
 
     image_policies.refresh()
     assert isinstance(image_policies.result, dict)
-    assert image_policies.result.get("found") == True
-    assert image_policies.result.get("success") == True
+    assert image_policies.result.get("found") is True
+    assert image_policies.result.get("success") is True
 
 
 def test_image_mgmt_image_policies_00021(monkeypatch, image_policies) -> None:

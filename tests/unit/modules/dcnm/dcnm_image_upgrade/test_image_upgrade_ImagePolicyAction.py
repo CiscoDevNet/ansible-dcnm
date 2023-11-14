@@ -498,8 +498,8 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
         image_policy_action.response.get("DATA")
         == "Successfully detach the policy from device."
     )
-    assert image_policy_action.result.get("success") == True
-    assert image_policy_action.result.get("changed") == True
+    assert image_policy_action.result.get("success") is True
+    assert image_policy_action.result.get("changed") is True
 
 
 match_00060 = "ImagePolicyAction.action: instance.action must be "

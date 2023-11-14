@@ -99,8 +99,8 @@ def test_common_version_00002(monkeypatch, controller_version, key, expected) ->
 
     Expected results:
 
-    1. test_common_version_00002a == False
-    2. test_common_version_00002b == True
+    1. test_common_version_00002a is False
+    2. test_common_version_00002b is True
     3. test_common_version_00002c == None
     """
 
@@ -171,8 +171,8 @@ def test_common_version_00004(monkeypatch, controller_version, key, expected) ->
 
     Expected results:
 
-    1. test_common_version_00004a == True
-    2. test_common_version_00004b == False
+    1. test_common_version_00004a is True
+    2. test_common_version_00004b is False
     3. test_common_version_00004c == None
     """
 
@@ -209,8 +209,8 @@ def test_common_version_00005(monkeypatch, controller_version, key, expected) ->
 
     Expected results:
 
-    1. test_common_version_00005a == True
-    2. test_common_version_00005b == False
+    1. test_common_version_00005a is True
+    2. test_common_version_00005b is False
     3. test_common_version_00005c == None
     """
 
@@ -247,8 +247,8 @@ def test_common_version_00006(monkeypatch, controller_version, key, expected) ->
 
     Expected results:
 
-    1. test_common_version_00006a == True
-    2. test_common_version_00006b == False
+    1. test_common_version_00006a is True
+    2. test_common_version_00006b is False
     3. test_common_version_00006c == None
     """
 
