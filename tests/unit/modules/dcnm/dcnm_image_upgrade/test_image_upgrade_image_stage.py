@@ -11,13 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# See the following regarding *_fixture imports
+# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+# Due to the above, we also need to disable unused-import
+# pylint: disable=unused-import
+# Some fixtures need to use *args to match the signature of the function they are mocking
+# pylint: disable=unused-argument
 """
-Tests for ImageStage class
+ImageStage - unit tests
 """
 
 from __future__ import absolute_import, division, print_function
 
-from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
@@ -25,37 +31,25 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import \
-    ImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
+from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
+                                  image_stage_fixture,
+                                  issu_details_by_serial_number_fixture)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-"""
-controller_version: 12
-description: Verify functionality of ImageStage
-"""
 
+PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
+PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+PATCH_COMMON = PATCH_MODULE_UTILS + "common."
 
-@contextmanager
-def does_not_raise():
-    """
-    A context manager that does not raise an exception.
-    """
-    yield
-
-
-patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt = patch_module_utils + "image_mgmt."
-patch_common = patch_module_utils + "common."
-
-dcnm_send_controller_version = patch_common + "controller_version.dcnm_send"
-dcnm_send_image_stage = patch_image_mgmt + "image_stage.dcnm_send"
-dcnm_send_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
+DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
+DCNM_SEND_IMAGE_STAGE = PATCH_IMAGE_MGMT + "image_stage.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
 
 def responses_controller_version(key: str) -> Dict[str, str]:
@@ -88,31 +82,7 @@ def responses_issu_details(key: str) -> Dict[str, str]:
     return response
 
 
-class MockAnsibleModule:
-    """
-    Mock the AnsibleModule class
-    """
-
-    params = {}
-
-    def fail_json(msg) -> AnsibleFailJson:
-        """
-        mock the fail_json method
-        """
-        raise AnsibleFailJson(msg)
-
-
-@pytest.fixture
-def module():
-    return ImageStage(MockAnsibleModule)
-
-
-@pytest.fixture
-def mock_issu_details() -> SwitchIssuDetailsBySerialNumber:
-    return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
-
-
-def test_image_mgmt_stage_00001(module) -> None:
+def test_image_mgmt_stage_00001(image_stage) -> None:
     """
     Function
     - __init__
@@ -120,20 +90,20 @@ def test_image_mgmt_stage_00001(module) -> None:
     Test
     - Class attributes are initialized to expected values
     """
-    module.__init__(MockAnsibleModule)
-    assert module.module == MockAnsibleModule
-    assert module.class_name == "ImageStage"
-    assert isinstance(module.properties, dict)
-    assert isinstance(module.serial_numbers_done, set)
-    assert module.controller_version is None
-    assert module.path is None
-    assert module.verb is None
-    assert module.payload is None
-    assert isinstance(module.issu_detail, SwitchIssuDetailsBySerialNumber)
-    assert isinstance(module.endpoints, ApiEndpoints)
+    instance = image_stage
+    assert instance.module == MockAnsibleModule
+    assert instance.class_name == "ImageStage"
+    assert isinstance(instance.properties, dict)
+    assert isinstance(instance.serial_numbers_done, set)
+    assert instance.controller_version is None
+    assert instance.path is None
+    assert instance.verb is None
+    assert instance.payload is None
+    assert isinstance(instance.issu_detail, SwitchIssuDetailsBySerialNumber)
+    assert isinstance(instance.endpoints, ApiEndpoints)
 
 
-def test_image_mgmt_stage_00002(module) -> None:
+def test_image_mgmt_stage_00002(image_stage) -> None:
     """
     Function
     - _init_properties
@@ -141,14 +111,14 @@ def test_image_mgmt_stage_00002(module) -> None:
     Test
     - Class properties are initialized to expected values
     """
-    module._init_properties()
-    assert isinstance(module.properties, dict)
-    assert module.properties.get("response_data") is None
-    assert module.properties.get("response") is None
-    assert module.properties.get("result") is None
-    assert module.properties.get("serial_numbers") is None
-    assert module.properties.get("check_interval") == 10
-    assert module.properties.get("check_timeout") == 1800
+    instance = image_stage
+    assert isinstance(instance.properties, dict)
+    assert instance.properties.get("response_data") is None
+    assert instance.properties.get("response") is None
+    assert instance.properties.get("result") is None
+    assert instance.properties.get("serial_numbers") is None
+    assert instance.properties.get("check_interval") == 10
+    assert instance.properties.get("check_timeout") == 1800
 
 
 @pytest.mark.parametrize(
@@ -158,14 +128,14 @@ def test_image_mgmt_stage_00002(module) -> None:
         ("test_image_mgmt_stage_00003b", "12.1.3b"),
     ],
 )
-def test_image_mgmt_stage_00003(monkeypatch, module, key, expected) -> None:
+def test_image_mgmt_stage_00003(monkeypatch, image_stage, key, expected) -> None:
     """
     Function
     - _populate_controller_version
 
     Test
-    - test_image_mgmt_stage_00003a -> module.controller_version == "12.1.2e"
-    - test_image_mgmt_stage_00003b -> module.controller_version == "12.1.3b"
+    - test_image_mgmt_stage_00003a -> instance.controller_version == "12.1.2e"
+    - test_image_mgmt_stage_00003b -> instance.controller_version == "12.1.3b"
 
     Description
     _populate_controller_version retrieves the controller version from
@@ -174,16 +144,19 @@ def test_image_mgmt_stage_00003(monkeypatch, module, key, expected) -> None:
     correctly-spelled "serialNumbers" key/value (12.1.3b).
     """
 
-    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_controller_version(*args) -> Dict[str, Any]:
         return responses_controller_version(key)
 
-    monkeypatch.setattr(dcnm_send_controller_version, mock_dcnm_send_controller_version)
+    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
 
-    module._populate_controller_version()
-    assert module.controller_version == expected
+    instance = image_stage
+    instance._populate_controller_version()  # pylint: disable=protected-access
+    assert instance.controller_version == expected
 
 
-def test_image_mgmt_stage_00004(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00004(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - prune_serial_numbers
@@ -199,31 +172,34 @@ def test_image_mgmt_stage_00004(monkeypatch, module, mock_issu_details) -> None:
     imageStaged == "Success" (TODO: AND policy == <target_policy>)
     """
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00004a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = [
+    instance = image_stage
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = [
         "FDO2112189M",
         "FDO211218AX",
         "FDO211218B5",
         "FDO211218FV",
         "FDO211218GC",
     ]
-    module.prune_serial_numbers()
-    assert isinstance(module.serial_numbers, list)
-    assert len(module.serial_numbers) == 3
-    assert "FDO2112189M" in module.serial_numbers
-    assert "FDO211218AX" in module.serial_numbers
-    assert "FDO211218B5" in module.serial_numbers
-    assert "FDO211218FV" not in module.serial_numbers
-    assert "FDO211218GC" not in module.serial_numbers
+    instance.prune_serial_numbers()
+    assert isinstance(instance.serial_numbers, list)
+    assert len(instance.serial_numbers) == 3
+    assert "FDO2112189M" in instance.serial_numbers
+    assert "FDO211218AX" in instance.serial_numbers
+    assert "FDO211218B5" in instance.serial_numbers
+    assert "FDO211218FV" not in instance.serial_numbers
+    assert "FDO211218GC" not in instance.serial_numbers
 
 
-def test_image_mgmt_stage_00005(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00005(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - validate_serial_numbers
@@ -238,36 +214,37 @@ def test_image_mgmt_stage_00005(monkeypatch, module, mock_issu_details) -> None:
     number.
     """
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00005a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
-
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     match = "Image staging is failing for the following switch: "
     match += "cvd-2313-leaf, 172.22.150.108, FDO2112189M. "
     match += "Check the switch connectivity to the controller "
     match += "and try again."
+
+    instance = image_stage
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
     with pytest.raises(AnsibleFailJson, match=match):
-        module.validate_serial_numbers()
+        instance.validate_serial_numbers()
 
 
-match_00006 = "ImageStage.commit: call instance.serial_numbers "
-match_00006 += "before calling commit."
+MATCH_00006 = "ImageStage.commit: call instance.serial_numbers "
+MATCH_00006 += "before calling commit."
 
 
 @pytest.mark.parametrize(
     "serial_numbers_is_set, expected",
     [
         (True, does_not_raise()),
-        (False, pytest.raises(AnsibleFailJson, match=match_00006)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00006)),
     ],
 )
 def test_image_mgmt_stage_00006(
-    monkeypatch, module, serial_numbers_is_set, expected
+    monkeypatch, image_stage, serial_numbers_is_set, expected
 ) -> None:
     """
     Function
@@ -290,17 +267,18 @@ def test_image_mgmt_stage_00006(
         key = "test_image_mgmt_stage_00006a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_controller_version, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(dcnm_send_image_stage, mock_dcnm_send_image_stage)
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
+    instance = image_stage
     if serial_numbers_is_set:
-        module.serial_numbers = ["FDO21120U5D"]
+        instance.serial_numbers = ["FDO21120U5D"]
     with expected:
-        module.commit()
+        instance.commit()
 
 
-def test_image_mgmt_stage_00007(monkeypatch, module) -> None:
+def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
@@ -324,21 +302,18 @@ def test_image_mgmt_stage_00007(monkeypatch, module) -> None:
         key = "test_image_mgmt_stage_00007a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_controller_version, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(dcnm_send_image_stage, mock_dcnm_send_image_stage)
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
     module_path += "stagingmanagement/stage-image"
 
-    module.serial_numbers = ["FDO21120U5D"]
-    module.commit()
-    assert module.path == module_path
-    assert module.verb == "POST"
-
-
-# test_image_mgmt_stage_00008
-# test_commit_payload_serial_number_key_name (former name)
+    instance = image_stage
+    instance.serial_numbers = ["FDO21120U5D"]
+    instance.commit()
+    assert instance.path == module_path
+    assert instance.verb == "POST"
 
 
 @pytest.mark.parametrize(
@@ -349,7 +324,7 @@ def test_image_mgmt_stage_00007(monkeypatch, module) -> None:
     ],
 )
 def test_image_mgmt_stage_00008(
-    monkeypatch, module, controller_version, expected_serial_number_key
+    monkeypatch, image_stage, controller_version, expected_serial_number_key
 ) -> None:
     """
     Function
@@ -363,9 +338,10 @@ def test_image_mgmt_stage_00008(
     commit() will set the payload key name for the serial number
     based on the controller version, per Expected Results below
     """
+    instance = image_stage
 
-    def mock_controller_version(*args, **kwargs) -> None:
-        module.controller_version = controller_version
+    def mock_controller_version(*args) -> None:
+        instance.controller_version = controller_version
 
     controller_version_patch = "ansible_collections.cisco.dcnm.plugins."
     controller_version_patch += "modules.dcnm_image_upgrade."
@@ -376,19 +352,22 @@ def test_image_mgmt_stage_00008(
         key = "test_image_mgmt_stage_00008a"
         return responses_image_stage(key)
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00008a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_image_stage, mock_dcnm_send_image_stage)
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.serial_numbers = ["FDO21120U5D"]
-    module.commit()
-    assert expected_serial_number_key in module.payload.keys()
+    instance.serial_numbers = ["FDO21120U5D"]
+    instance.commit()
+    print(f"instance.payload: {instance.payload.keys()}")
+    assert expected_serial_number_key in instance.payload.keys()
 
 
-def test_image_mgmt_stage_00009(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00009(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - _wait_for_image_stage_to_complete
@@ -406,27 +385,30 @@ def test_image_mgmt_stage_00009(monkeypatch, module, mock_issu_details) -> None:
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
+    instance = image_stage
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00009a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = [
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = [
         "FDO21120U5D",
         "FDO2112189M",
     ]
-    module.check_interval = 0
-    module._wait_for_image_stage_to_complete()
-    assert isinstance(module.serial_numbers_done, set)
-    assert len(module.serial_numbers_done) == 2
-    assert "FDO21120U5D" in module.serial_numbers_done
-    assert "FDO2112189M" in module.serial_numbers_done
+    instance.check_interval = 0
+    instance._wait_for_image_stage_to_complete() # pylint: disable=protected-access
+    assert isinstance(instance.serial_numbers_done, set)
+    assert len(instance.serial_numbers_done) == 2
+    assert "FDO21120U5D" in instance.serial_numbers_done
+    assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00010(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00010(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - _wait_for_image_stage_to_complete
@@ -446,31 +428,34 @@ def test_image_mgmt_stage_00010(monkeypatch, module, mock_issu_details) -> None:
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
+    instance = image_stage
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00010a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = [
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = [
         "FDO21120U5D",
         "FDO2112189M",
     ]
-    module.check_interval = 0
+    instance.check_interval = 0
     match = "Seconds remaining 1800: stage image failed for "
     match += "cvd-2313-leaf, FDO2112189M, 172.22.150.108. image "
     match += "staged percent: 90"
     with pytest.raises(AnsibleFailJson, match=match):
-        module._wait_for_image_stage_to_complete()
-    assert isinstance(module.serial_numbers_done, set)
-    assert len(module.serial_numbers_done) == 1
-    assert "FDO21120U5D" in module.serial_numbers_done
-    assert "FDO2112189M" not in module.serial_numbers_done
+        instance._wait_for_image_stage_to_complete() # pylint: disable=protected-access
+    assert isinstance(instance.serial_numbers_done, set)
+    assert len(instance.serial_numbers_done) == 1
+    assert "FDO21120U5D" in instance.serial_numbers_done
+    assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00011(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00011(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - _wait_for_image_stage_to_complete
@@ -488,20 +473,21 @@ def test_image_mgmt_stage_00011(monkeypatch, module, mock_issu_details) -> None:
     Description
     See test_wait_for_image_stage_to_complete for functional details.
     """
+    instance = image_stage
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00011a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = [
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = [
         "FDO21120U5D",
         "FDO2112189M",
     ]
-    module.check_interval = 1
-    module.check_timeout = 1
+    instance.check_interval = 1
+    instance.check_timeout = 1
 
     match = "ImageStage._wait_for_image_stage_to_complete: "
     match += "Timed out waiting for image stage to complete. "
@@ -509,18 +495,16 @@ def test_image_mgmt_stage_00011(monkeypatch, module, mock_issu_details) -> None:
     match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
 
     with pytest.raises(AnsibleFailJson, match=match):
-        module._wait_for_image_stage_to_complete()
-    assert isinstance(module.serial_numbers_done, set)
-    assert len(module.serial_numbers_done) == 1
-    assert "FDO21120U5D" in module.serial_numbers_done
-    assert "FDO2112189M" not in module.serial_numbers_done
+        instance._wait_for_image_stage_to_complete() # pylint: disable=protected-access
+    assert isinstance(instance.serial_numbers_done, set)
+    assert len(instance.serial_numbers_done) == 1
+    assert "FDO21120U5D" in instance.serial_numbers_done
+    assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-# test_image_mgmt_stage_00012
-# test_wait_for_current_actions_to_complete (former name)
-
-
-def test_image_mgmt_stage_00012(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00012(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - _wait_for_current_actions_to_complete
@@ -542,27 +526,30 @@ def test_image_mgmt_stage_00012(monkeypatch, module, mock_issu_details) -> None:
     - upgrade
     - validated
     """
+    instance = image_stage
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00012a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = [
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = [
         "FDO21120U5D",
         "FDO2112189M",
     ]
-    module.check_interval = 0
-    module._wait_for_current_actions_to_complete()
-    assert isinstance(module.serial_numbers_done, set)
-    assert len(module.serial_numbers_done) == 2
-    assert "FDO21120U5D" in module.serial_numbers_done
-    assert "FDO2112189M" in module.serial_numbers_done
+    instance.check_interval = 0
+    instance._wait_for_current_actions_to_complete() # pylint: disable=protected-access
+    assert isinstance(instance.serial_numbers_done, set)
+    assert len(instance.serial_numbers_done) == 2
+    assert "FDO21120U5D" in instance.serial_numbers_done
+    assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00013(monkeypatch, module, mock_issu_details) -> None:
+def test_image_mgmt_stage_00013(
+    monkeypatch, image_stage, issu_details_by_serial_number
+) -> None:
     """
     Function
     - _wait_for_current_actions_to_complete
@@ -579,28 +566,30 @@ def test_image_mgmt_stage_00013(monkeypatch, module, mock_issu_details) -> None:
     Description
     See test_image_mgmt_stage_00012
     """
+    instance = image_stage
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00013a"
         return responses_issu_details(key)
 
-    monkeypatch.setattr(dcnm_send_issu_details, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    module.issu_detail = mock_issu_details
-    module.serial_numbers = [
+    match = "ImageStage._wait_for_current_actions_to_complete: "
+    match += "Timed out waiting for actions to complete. "
+    match += "serial_numbers_done: FDO21120U5D, "
+    match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
+
+    instance.issu_detail = issu_details_by_serial_number
+    instance.serial_numbers = [
         "FDO21120U5D",
         "FDO2112189M",
     ]
-    module.check_interval = 1
-    module.check_timeout = 1
+    instance.check_interval = 1
+    instance.check_timeout = 1
 
-    error_message = "ImageStage._wait_for_current_actions_to_complete: "
-    error_message += "Timed out waiting for actions to complete. "
-    error_message += "serial_numbers_done: FDO21120U5D, "
-    error_message += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
-    with pytest.raises(AnsibleFailJson, match=error_message):
-        module._wait_for_current_actions_to_complete()
-    assert isinstance(module.serial_numbers_done, set)
-    assert len(module.serial_numbers_done) == 1
-    assert "FDO21120U5D" in module.serial_numbers_done
-    assert "FDO2112189M" not in module.serial_numbers_done
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._wait_for_current_actions_to_complete() # pylint: disable=protected-access
+    assert isinstance(instance.serial_numbers_done, set)
+    assert len(instance.serial_numbers_done) == 1
+    assert "FDO21120U5D" in instance.serial_numbers_done
+    assert "FDO2112189M" not in instance.serial_numbers_done

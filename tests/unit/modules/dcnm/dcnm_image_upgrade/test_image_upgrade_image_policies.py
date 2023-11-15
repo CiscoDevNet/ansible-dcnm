@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# See the following regarding *_fixture imports
+# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+# Due to the above, we also need to disable unused-import
+# pylint: disable=unused-import
+# Some fixtures need to use *args to match the signature of the function they are mocking
+# pylint: disable=unused-argument
+
+"""
+ImagePolicies - unit tests
+"""
+
 from __future__ import absolute_import, division, print_function
 
 from typing import Any, Dict
@@ -21,10 +32,9 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
-    ImagePolicies
 
 from .fixture import load_fixture
+from .image_upgrade_utils import MockAnsibleModule, does_not_raise, image_policies_fixture
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -34,36 +44,20 @@ controller_version: 12
 description: Verify functionality of class ImagePolicies
 """
 
-patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt = patch_module_utils + "image_mgmt."
+PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
+PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 
-dcnm_send_image_policies = patch_image_mgmt + "image_policies.dcnm_send"
-
-
-class MockAnsibleModule:
-    """
-    Mock the AnsibleModule class
-    """
-
-    params = {}
-
-    def fail_json(msg) -> AnsibleFailJson:
-        """
-        mock the fail_json method
-        """
-        raise AnsibleFailJson(msg)
+DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
 
 
 def responses_image_policies(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_ImagePolicies"
+    """
+    Return the response from ImagePolicies
+    """
+    response_file = "image_upgrade_responses_ImagePolicies"
     response = load_fixture(response_file).get(key)
     print(f"responses_image_policies: {key} : {response}")
     return response
-
-
-@pytest.fixture
-def image_policies():
-    return ImagePolicies(MockAnsibleModule)
 
 
 def test_image_mgmt_image_policies_00001(image_policies) -> None:
@@ -74,10 +68,11 @@ def test_image_mgmt_image_policies_00001(image_policies) -> None:
     Test
     - Class attributes are initialized to expected values
     """
-    image_policies.__init__(MockAnsibleModule)
-    assert image_policies.module == MockAnsibleModule
-    assert image_policies.class_name == "ImagePolicies"
-    assert isinstance(image_policies.endpoints, ApiEndpoints)
+    with does_not_raise():
+        instance = image_policies
+    assert instance.module == MockAnsibleModule
+    assert instance.class_name == "ImagePolicies"
+    assert isinstance(instance.endpoints, ApiEndpoints)
 
 
 def test_image_mgmt_image_policies_00002(image_policies) -> None:
@@ -88,12 +83,13 @@ def test_image_mgmt_image_policies_00002(image_policies) -> None:
     Test
     - Class properties are initialized to expected values
     """
-    image_policies._init_properties()
+    with does_not_raise():
+        instance = image_policies
     assert isinstance(image_policies.properties, dict)
-    assert image_policies.properties.get("policy_name") == None
-    assert image_policies.properties.get("response_data") == None
-    assert image_policies.properties.get("response") == None
-    assert image_policies.properties.get("result") == None
+    assert instance.properties.get("policy_name") is None
+    assert instance.properties.get("response_data") is None
+    assert instance.properties.get("response") is None
+    assert instance.properties.get("result") is None
 
 
 def test_image_mgmt_image_policies_00010(monkeypatch, image_policies) -> None:
@@ -104,32 +100,35 @@ def test_image_mgmt_image_policies_00010(monkeypatch, image_policies) -> None:
     Test
     - properties are initialized to expected values
     - 200 RETURN_CODE
+    - fail_json is not called
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
     key = "test_image_mgmt_image_policies_00010a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
-    image_policies.refresh()
-    image_policies.policy_name = "KR5M"
-    assert isinstance(image_policies.response, dict)
-    assert image_policies.agnostic is False
-    assert image_policies.description == "10.2.(5) with EPLD"
-    assert image_policies.epld_image_name == "n9000-epld.10.2.5.M.img"
-    assert image_policies.image_name == "nxos64-cs.10.2.5.M.bin"
-    assert image_policies.nxos_version == "10.2.5_nxos64-cs_64bit"
-    assert image_policies.package_name == None
-    assert image_policies.platform == "N9K/N3K"
-    assert image_policies.platform_policies == None
-    assert image_policies.policy_name == "KR5M"
-    assert image_policies.policy_type == "PLATFORM"
-    assert image_policies.ref_count == 10
-    assert image_policies.rpm_images == None
+    instance = image_policies
+    with does_not_raise():
+        instance.refresh()
+    instance.policy_name = "KR5M"
+    assert isinstance(instance.response, dict)
+    assert instance.agnostic is False
+    assert instance.description == "10.2.(5) with EPLD"
+    assert instance.epld_image_name == "n9000-epld.10.2.5.M.img"
+    assert instance.image_name == "nxos64-cs.10.2.5.M.bin"
+    assert instance.nxos_version == "10.2.5_nxos64-cs_64bit"
+    assert instance.package_name is None
+    assert instance.platform == "N9K/N3K"
+    assert instance.platform_policies is None
+    assert instance.policy_name == "KR5M"
+    assert instance.policy_type == "PLATFORM"
+    assert instance.ref_count == 10
+    assert instance.rpm_images is None
 
 
 def test_image_mgmt_image_policies_00020(monkeypatch, image_policies) -> None:
@@ -145,16 +144,18 @@ def test_image_mgmt_image_policies_00020(monkeypatch, image_policies) -> None:
     """
     key = "test_image_mgmt_image_policies_00020a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
-    image_policies.refresh()
-    assert isinstance(image_policies.result, dict)
-    assert image_policies.result.get("found") is True
-    assert image_policies.result.get("success") is True
+    instance = image_policies
+    with does_not_raise():
+        instance.refresh()
+    assert isinstance(instance.result, dict)
+    assert instance.result.get("found") is True
+    assert instance.result.get("success") is True
 
 
 def test_image_mgmt_image_policies_00021(monkeypatch, image_policies) -> None:
@@ -170,16 +171,18 @@ def test_image_mgmt_image_policies_00021(monkeypatch, image_policies) -> None:
     """
     key = "test_image_mgmt_image_policies_00021a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
     match = "ImagePolicies.refresh: Bad response when retrieving "
     match += "image policy information from the controller."
+
+    instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policies.refresh()
+        instance.refresh()
 
 
 def test_image_mgmt_image_policies_00022(monkeypatch, image_policies) -> None:
@@ -195,16 +198,18 @@ def test_image_mgmt_image_policies_00022(monkeypatch, image_policies) -> None:
     """
     key = "test_image_mgmt_image_policies_00022a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
     match = "ImagePolicies.refresh: Bad response when retrieving "
     match += "image policy information from the controller."
+
+    instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policies.refresh()
+        instance.refresh()
 
 
 def test_image_mgmt_image_policies_00023(monkeypatch, image_policies) -> None:
@@ -221,16 +226,18 @@ def test_image_mgmt_image_policies_00023(monkeypatch, image_policies) -> None:
     """
     key = "test_image_mgmt_image_policies_00023a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
     match = "ImagePolicies.refresh: "
     match += "the controller has no defined image policies."
+
+    instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policies.refresh()
+        instance.refresh()
 
 
 def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
@@ -240,26 +247,29 @@ def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
 
     Test
     - fail_json() is called if response does not contain policy_name.
-    - i.e. image policy with name FOO has not yet been created on NDFC.
+    - i.e. image policy with name FOO has not yet been created on the controller.
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
     key = "test_image_mgmt_image_policies_00024a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
     image_policies.refresh()
     image_policies.policy_name = "FOO"
 
     match = "ImagePolicies._get: "
     match += "policy_name FOO is not defined on the controller."
+
+    instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policies.policy_type == "PLATFORM"
+        if instance.policy_type == "PLATFORM":
+            pass
 
 
 def test_image_mgmt_image_policies_00025(monkeypatch, image_policies) -> None:
@@ -269,7 +279,6 @@ def test_image_mgmt_image_policies_00025(monkeypatch, image_policies) -> None:
 
     Test
     - fail_json is called on response with missing policyName key.
-    - 200 RETURN_CODE
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
@@ -277,22 +286,22 @@ def test_image_mgmt_image_policies_00025(monkeypatch, image_policies) -> None:
     NOTES
     - This is to cover a check in ImagePolicies.refresh()
     - This scenario should never happen.
-
-    TODO
     - Consider removing this check, and this testcase.
     """
     key = "test_image_mgmt_image_policies_00025a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
         return responses_image_policies(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
     match = "ImagePolicies.refresh: "
     match += "Cannot parse policy information from the controller."
+
+    instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policies.refresh()
+        instance.refresh()
 
 
 def test_image_mgmt_image_policies_00040(image_policies) -> None:
@@ -305,5 +314,7 @@ def test_image_mgmt_image_policies_00040(image_policies) -> None:
     """
     match = "ImagePolicies._get: instance.policy_name must be "
     match += "set before accessing property imageName."
+
+    instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policies._get("imageName")
+        instance._get("imageName") # pylint: disable=protected-access

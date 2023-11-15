@@ -1,3 +1,5 @@
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
@@ -59,7 +61,7 @@ class ControllerVersion(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
-        if self.result["success"] == False or self.result["found"] == False:
+        if self.result["success"] is False or self.result["found"] is False:
             msg = f"{self.class_name}.refresh() failed: {self.result}"
             self.module.fail_json(msg)
 

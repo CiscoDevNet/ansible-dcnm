@@ -99,7 +99,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
-        if self.result["success"] == False or self.result["found"] == False:
+        if self.result["success"] is False or self.result["found"] == False:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"

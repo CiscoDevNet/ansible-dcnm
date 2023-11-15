@@ -12,57 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# See the following regarding *_fixture imports
+# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+# Due to the above, we also need to disable unused-import
+# pylint: disable=unused-import
+# Some fixtures need to use *args to match the signature of the function they are mocking
+# pylint: disable=unused-argument
+
+"""
+ImageUpgradeCommon - unit tests
+"""
+
 from __future__ import absolute_import, division, print_function
 
-from contextlib import contextmanager
 from typing import Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
-    ImageUpgradeCommon
+# from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+#     ImageUpgradeCommon
 
 from .fixture import load_fixture
+from .image_upgrade_utils import MockAnsibleModule, does_not_raise, image_upgrade_common_fixture
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-"""
-controller_version: 12
-description: Verify functionality of class ImageUpgradeCommon
-"""
-
-
-@contextmanager
-def does_not_raise():
-    """
-    A context manager that does not raise an exception.
-    """
-    yield
-
-
-class MockAnsibleModule:
-    """
-    Mock the AnsibleModule class
-    """
-
-    params = {}
-
-    def fail_json(msg) -> AnsibleFailJson:
-        """
-        mock the fail_json method
-        """
-        raise AnsibleFailJson(msg)
-
-
-@pytest.fixture
-def image_upgrade_common():
-    return ImageUpgradeCommon(MockAnsibleModule)
-
 
 def responses_image_upgrade_common(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_ImageUpgradeCommon"
+    """
+    Return responses from ImageUpgradeCommon
+    """
+    response_file = "image_upgrade_responses_ImageUpgradeCommon"
     response = load_fixture(response_file).get(key)
     verb = response.get("METHOD")
     print(f"{key} : {verb} : {response}")
@@ -82,11 +64,11 @@ def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     - image_upgrade_common.logfile is /tmp/ansible_dcnm.log
     """
     with does_not_raise():
-        image_upgrade_common.__init__(MockAnsibleModule)
-    assert image_upgrade_common.params == {}
-    assert image_upgrade_common.debug is False
-    assert image_upgrade_common.fd == None
-    assert image_upgrade_common.logfile == "/tmp/ansible_dcnm.log"
+        instance = image_upgrade_common
+    assert instance.params == {}
+    assert instance.debug is False
+    assert instance.fd is None
+    assert instance.logfile == "/tmp/ansible_dcnm.log"
 
 
 @pytest.mark.parametrize(
@@ -121,9 +103,11 @@ def test_image_mgmt_image_upgrade_common_00020(
     _handle_reponse() calls either _handle_get_reponse if verb is "GET" or
     _handle_post_put_delete_response if verb is "DELETE", "POST", or "PUT"
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = image_upgrade_common._handle_response(
+        result = instance._handle_response( # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )
     assert result.get("success") == expected.get("success")
@@ -162,9 +146,11 @@ def test_image_mgmt_image_upgrade_common_00030(
     _handle_reponse() calls either _handle_get_reponse if verb is "GET" or
     _handle_post_put_delete_response if verb is "DELETE", "POST", or "PUT"
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = image_upgrade_common._handle_response(
+        result = instance._handle_response( # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )
     assert result.get("success") == expected.get("success")
@@ -203,9 +189,11 @@ def test_image_mgmt_image_upgrade_common_00040(
     _handle_reponse() calls either _handle_get_reponse if verb is "GET" or
     _handle_post_put_delete_response if verb is "DELETE", "POST", or "PUT"
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = image_upgrade_common._handle_response(
+        result = instance._handle_response( # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )
     assert result.get("success") == expected.get("success")
@@ -243,8 +231,10 @@ def test_image_mgmt_image_upgrade_common_00050(
     Test
     - _handle_reponse returns expected values for GET requests
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common(key)
-    result = image_upgrade_common._handle_response(
+    result = instance._handle_response( # pylint: disable=protected-access
         data.get("response"), data.get("verb")
     )
     assert result.get("success") == expected.get("success")
@@ -259,9 +249,11 @@ def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
     Test
     - fail_json is called because an unknown request verb is provided
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common("test_image_mgmt_image_upgrade_common_00060a")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
-        image_upgrade_common._handle_response(data.get("response"), data.get("verb"))
+        instance._handle_response(data.get("response"), data.get("verb")) # pylint: disable=protected-access
 
 
 @pytest.mark.parametrize(
@@ -296,9 +288,11 @@ def test_image_mgmt_image_upgrade_common_00070(
     - fail_json is not called
     - _handle_get_reponse() returns expected values for GET requests
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = image_upgrade_common._handle_get_response(data.get("response"))
+        result = instance._handle_get_response(data.get("response")) # pylint: disable=protected-access
 
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
@@ -332,9 +326,11 @@ def test_image_mgmt_image_upgrade_common_00080(
     - return expected values for POST requests
     - fail_json is not called
     """
+    instance = image_upgrade_common
+
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = image_upgrade_common._handle_post_put_delete_response(
+        result = instance._handle_post_put_delete_response( # pylint: disable=protected-access
             data.get("response")
         )
     assert result.get("success") == expected.get("success")
@@ -371,7 +367,8 @@ def test_image_mgmt_image_upgrade_common_00090(
     Test
     - expected values are returned for all cases
     """
-    assert image_upgrade_common.make_boolean(key) == expected
+    instance = image_upgrade_common
+    assert instance.make_boolean(key) == expected
 
 
 @pytest.mark.parametrize(
@@ -404,7 +401,8 @@ def test_image_mgmt_image_upgrade_common_00100(
     Test
     - expected values are returned for all cases
     """
-    assert image_upgrade_common.make_none(key) == expected
+    instance = image_upgrade_common
+    assert instance.make_none(key) == expected
 
 
 def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
@@ -415,9 +413,11 @@ def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
     Test
     - log_msg returns None when debug is False
     """
-    ERROR_MESSAGE = "This is an error message"
-    image_upgrade_common.debug = False
-    assert image_upgrade_common.log_msg(ERROR_MESSAGE) == None
+    instance = image_upgrade_common
+
+    error_message = "This is an error message"
+    instance.debug = False
+    assert instance.log_msg(error_message) is None
 
 
 def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
@@ -428,16 +428,18 @@ def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -
     Test
     - log_msg writes to the logfile when debug is True
     """
+    instance = image_upgrade_common
+
     directory = tmp_path / "test_log_msg"
     directory.mkdir()
-    filename = directory / f"test_log_msg.txt"
+    filename = directory / "test_log_msg.txt"
 
-    ERROR_MESSAGE = "This is an error message"
-    image_upgrade_common.debug = True
-    image_upgrade_common.logfile = filename
-    image_upgrade_common.log_msg(ERROR_MESSAGE)
+    error_message = "This is an error message"
+    instance.debug = True
+    instance.logfile = filename
+    instance.log_msg(error_message)
 
-    assert filename.read_text(encoding="UTF-8") == ERROR_MESSAGE + "\n"
+    assert filename.read_text(encoding="UTF-8") == error_message + "\n"
     assert len(list(tmp_path.iterdir())) == 1
 
 
@@ -453,12 +455,14 @@ def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -
     To ensure an error is generated, we attempt a write to a filename
     that is too long for the target OS.
     """
+    instance = image_upgrade_common
+
     directory = tmp_path / "test_log_msg"
     directory.mkdir()
     filename = directory / f"test_{'a' * 2000}_log_msg.txt"
 
-    ERROR_MESSAGE = "This is an error message"
-    image_upgrade_common.debug = True
-    image_upgrade_common.logfile = filename
+    error_message = "This is an error message"
+    instance.debug = True
+    instance.logfile = filename
     with pytest.raises(AnsibleFailJson, match=r"error opening logfile"):
-        image_upgrade_common.log_msg(ERROR_MESSAGE)
+        instance.log_msg(error_message)

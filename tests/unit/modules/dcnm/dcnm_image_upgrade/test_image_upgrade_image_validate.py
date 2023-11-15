@@ -27,6 +27,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
+from .image_upgrade_utils import MockAnsibleModule
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -47,20 +48,6 @@ def response_data_issu_details(key: str) -> Dict[str, str]:
     response = load_fixture(response_file).get(key)
     print(f"response_data_issu_details: {key} : {response}")
     return response
-
-
-class MockAnsibleModule:
-    """
-    Mock the AnsibleModule class
-    """
-
-    params = {}
-
-    def fail_json(msg) -> AnsibleFailJson:
-        """
-        mock the fail_json method
-        """
-        raise AnsibleFailJson(msg)
 
 
 @pytest.fixture

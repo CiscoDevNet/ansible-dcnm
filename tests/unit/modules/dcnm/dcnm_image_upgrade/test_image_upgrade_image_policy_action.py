@@ -11,10 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+ImagePolicyAction - unit tests 
+"""
+# See the following regarding *_fixture imports
+# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+# Due to the above, we also need to disable unused-import
+# pylint: disable=unused-import
+# Some fixtures need to use *args to match the signature of the function they are mocking
+# pylint: disable=unused-argument
 
 from __future__ import absolute_import, division, print_function
 
-from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
@@ -22,14 +30,15 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
-    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
     ImagePolicyAction
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
+from .image_upgrade_utils import (
+    does_not_raise, image_policies_fixture, image_policy_action_fixture,
+    issu_details_by_serial_number_fixture)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -39,79 +48,53 @@ controller_version: 12
 Description: Verify functionality of ImagePolicyAction
 """
 
+PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
+PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 
-@contextmanager
-def does_not_raise():
-    """
-    A context manager that does not raise an exception.
-    """
-    yield
-
-
-patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt = patch_module_utils + "image_mgmt."
-
-dcnm_send_image_policies = patch_image_mgmt + "image_policies.dcnm_send"
-dcnm_send_image_policy_action = patch_image_mgmt + "image_policy_action.dcnm_send"
-dcnm_send_switch_details = patch_image_mgmt + "switch_details.dcnm_send"
-dcnm_send_switch_issu_details = patch_image_mgmt + "switch_issu_details.dcnm_send"
+DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
+DCNM_SEND_IMAGE_POLICY_ACTION = PATCH_IMAGE_MGMT + "image_policy_action.dcnm_send"
+DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.dcnm_send"
+DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
 
 def responses_image_policies(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_ImagePolicies"
+    """
+    Return ImagePolicies controller responses
+    """
+    response_file = "image_upgrade_responses_ImagePolicies"
     response = load_fixture(response_file).get(key)
     print(f"responses_image_policies: {key} : {response}")
     return response
 
 
 def responses_image_policy_action(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_ImagePolicyAction"
+    """
+    Return ImagePolicyAction controller responses
+    """
+    response_file = "image_upgrade_responses_ImagePolicyAction"
     response = load_fixture(response_file).get(key)
     print(f"responses_image_policy_action: {key} : {response}")
     return response
 
 
 def responses_switch_details(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_SwitchDetails"
+    """
+    Return SwitchDetails controller responses
+    """
+    response_file = "image_upgrade_responses_SwitchDetails"
     response = load_fixture(response_file).get(key)
     print(f"responses_switch_details: {key} : {response}")
     return response
 
 
 def responses_switch_issu_details(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_SwitchIssuDetails"
+    """
+    Return SwitchIssuDetails controller responses
+    """
+    response_file = "image_upgrade_responses_SwitchIssuDetails"
     response = load_fixture(response_file).get(key)
     print(f"responses_switch_issu_details: {key} : {response}")
     return response
-
-
-class MockAnsibleModule:
-    """
-    Mock the AnsibleModule class
-    """
-
-    params = {}
-
-    def fail_json(msg) -> AnsibleFailJson:
-        """
-        mock the fail_json method
-        """
-        raise AnsibleFailJson(msg)
-
-
-@pytest.fixture
-def image_policy_action():
-    return ImagePolicyAction(MockAnsibleModule)
-
-
-@pytest.fixture
-def issu_details() -> SwitchIssuDetailsBySerialNumber:
-    return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
-
-
-@pytest.fixture
-def image_policies() -> ImagePolicies:
-    return ImagePolicies(MockAnsibleModule)
 
 
 def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
@@ -124,17 +107,15 @@ def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
     - fail_json is not called
     """
     with does_not_raise():
-        image_policy_action.__init__(MockAnsibleModule)
-    assert image_policy_action.class_name == "ImagePolicyAction"
-    assert isinstance(image_policy_action.endpoints, ApiEndpoints)
-    assert isinstance(image_policy_action, ImagePolicyAction)
-    assert isinstance(
-        image_policy_action.switch_issu_details, SwitchIssuDetailsBySerialNumber
-    )
-    assert image_policy_action.path == None
-    assert image_policy_action.payloads == []
-    assert image_policy_action.valid_actions == {"attach", "detach", "query"}
-    assert image_policy_action.verb == None
+        instance = image_policy_action
+    assert instance.class_name == "ImagePolicyAction"
+    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance, ImagePolicyAction)
+    assert isinstance(instance.switch_issu_details, SwitchIssuDetailsBySerialNumber)
+    assert instance.path is None
+    assert instance.payloads == []
+    assert instance.valid_actions == {"attach", "detach", "query"}
+    assert instance.verb is None
 
 
 def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
@@ -145,18 +126,18 @@ def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
     Test
     - Class properties are initialized to expected values
     """
-    image_policy_action._init_properties()
-    assert isinstance(image_policy_action.properties, dict)
-    assert image_policy_action.properties.get("action") == None
-    assert image_policy_action.properties.get("response") == None
-    assert image_policy_action.properties.get("result") == None
-    assert image_policy_action.properties.get("policy_name") == None
-    assert image_policy_action.properties.get("query_result") == None
-    assert image_policy_action.properties.get("serial_numbers") == None
+    instance = image_policy_action
+    assert isinstance(instance.properties, dict)
+    assert instance.properties.get("action") is None
+    assert instance.properties.get("response") is None
+    assert instance.properties.get("result") is None
+    assert instance.properties.get("policy_name") is None
+    assert instance.properties.get("query_result") is None
+    assert instance.properties.get("serial_numbers") is None
 
 
 def test_image_mgmt_image_policy_action_00003(
-    monkeypatch, image_policy_action, issu_details
+    monkeypatch, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
     Function
@@ -172,17 +153,18 @@ def test_image_mgmt_image_policy_action_00003(
     to attach policies to devices
     """
 
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_image_policy_action_00003a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
-        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )
 
-    image_policy_action.switch_issu_details = issu_details
-    image_policy_action.policy_name = "KR5M"
-    image_policy_action.serial_numbers = [
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = [
         "FDO2112189M",
         "FDO211218AX",
         "FDO211218B5",
@@ -190,20 +172,20 @@ def test_image_mgmt_image_policy_action_00003(
         "FDO211218GC",
     ]
     with does_not_raise():
-        image_policy_action.build_payload()
-    assert isinstance(image_policy_action.payloads, list)
-    assert len(image_policy_action.payloads) == 5
+        instance.build_payload()
+    assert isinstance(instance.payloads, list)
+    assert len(instance.payloads) == 5
 
 
 def test_image_mgmt_image_policy_action_00004(
-    monkeypatch, image_policy_action, issu_details
+    monkeypatch, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
     Function
     - build_payload
 
     Test
-    - fail_json is called since deviceName is null in the issu_details response
+    - fail_json is called since deviceName is null in the issu_details_by_serial_number response
     - The error message is matched
 
     Description
@@ -212,17 +194,18 @@ def test_image_mgmt_image_policy_action_00004(
     of None, the function calls fail_json.
     """
 
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_image_policy_action_00004a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
-        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )
 
-    image_policy_action.switch_issu_details = issu_details
-    image_policy_action.policy_name = "KR5M"
-    image_policy_action.serial_numbers = [
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = [
         "FDO2112189M",
     ]
     match = "Unable to determine hostName for switch "
@@ -230,11 +213,11 @@ def test_image_mgmt_image_policy_action_00004(
     match += "Please verify that the switch is managed by "
     match += "the controller."
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policy_action.build_payload()
+        instance.build_payload()
 
 
 def test_image_mgmt_image_policy_action_00010(
-    image_policy_action, issu_details
+    image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
     Function
@@ -249,32 +232,32 @@ def test_image_mgmt_image_policy_action_00010(
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
-
-    image_policy_action.switch_issu_details = issu_details
-    image_policy_action.policy_name = "KR5M"
-    image_policy_action.serial_numbers = [
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = [
         "FDO2112189M",
     ]
     match = "ImagePolicyAction.validate_request: "
     match += "instance.action must be set before calling commit()"
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policy_action.validate_request()
+        instance.validate_request()
 
 
-match_00011 = "ImagePolicyAction.validate_request: "
-match_00011 += "instance.policy_name must be set before calling commit()"
+MATCH_00011 = "ImagePolicyAction.validate_request: "
+MATCH_00011 += "instance.policy_name must be set before calling commit()"
 
 
 @pytest.mark.parametrize(
     "action,expected",
     [
-        ("attach", pytest.raises(AnsibleFailJson, match=match_00011)),
-        ("detach", pytest.raises(AnsibleFailJson, match=match_00011)),
-        ("query", pytest.raises(AnsibleFailJson, match=match_00011)),
+        ("attach", pytest.raises(AnsibleFailJson, match=MATCH_00011)),
+        ("detach", pytest.raises(AnsibleFailJson, match=MATCH_00011)),
+        ("query", pytest.raises(AnsibleFailJson, match=MATCH_00011)),
     ],
 )
 def test_image_mgmt_image_policy_action_00011(
-    action, expected, image_policy_action, issu_details
+    action, expected, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
     Function
@@ -289,31 +272,31 @@ def test_image_mgmt_image_policy_action_00011(
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
-
-    image_policy_action.switch_issu_details = issu_details
-    image_policy_action.action = action
-    image_policy_action.serial_numbers = [
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.action = action
+    instance.serial_numbers = [
         "FDO2112189M",
     ]
 
     with expected:
-        image_policy_action.validate_request()
+        instance.validate_request()
 
 
-match_00012 = "ImagePolicyAction.validate_request: "
-match_00012 += "instance.serial_numbers must be set before calling commit()"
+MATCH_00012 = "ImagePolicyAction.validate_request: "
+MATCH_00012 += "instance.serial_numbers must be set before calling commit()"
 
 
 @pytest.mark.parametrize(
     "action,expected",
     [
-        ("attach", pytest.raises(AnsibleFailJson, match=match_00012)),
-        ("detach", pytest.raises(AnsibleFailJson, match=match_00012)),
+        ("attach", pytest.raises(AnsibleFailJson, match=MATCH_00012)),
+        ("detach", pytest.raises(AnsibleFailJson, match=MATCH_00012)),
         ("query", does_not_raise()),
     ],
 )
 def test_image_mgmt_image_policy_action_00012(
-    action, expected, image_policy_action, issu_details
+    action, expected, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
     Function
@@ -333,17 +316,17 @@ def test_image_mgmt_image_policy_action_00012(
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
-
-    image_policy_action.switch_issu_details = issu_details
-    image_policy_action.action = action
-    image_policy_action.policy_name = "KR5M"
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.action = action
+    instance.policy_name = "KR5M"
 
     with expected:
-        image_policy_action.validate_request()
+        instance.validate_request()
 
 
 def test_image_mgmt_image_policy_action_00013(
-    monkeypatch, image_policy_action, issu_details, image_policies
+    monkeypatch, image_policy_action, issu_details_by_serial_number, image_policies
 ) -> None:
     """
     Function
@@ -363,29 +346,30 @@ def test_image_mgmt_image_policy_action_00013(
     """
     key = "test_image_mgmt_image_policy_action_00013a"
 
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
 
     monkeypatch.setattr(
-        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
-    image_policy_action.switch_issu_details = issu_details
-    image_policy_action.image_policies = image_policies
-    image_policy_action.action = "attach"
-    image_policy_action.policy_name = "KR5M"
-    image_policy_action.serial_numbers = ["FDO2112189M"]
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.image_policies = image_policies
+    instance.action = "attach"
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
 
     match = "ImagePolicyAction.validate_request: "
     match += "policy KR5M does not support platform TEST_UNKNOWN_PLATFORM. "
     match += r"KR5M supports the following platform\(s\): N9K/N3K"
 
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policy_action.validate_request()
+        instance.validate_request()
 
 
 def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) -> None:
@@ -415,33 +399,32 @@ def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) 
     """
     key = "test_image_mgmt_image_policy_action_00020a"
 
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
 
-    def mock_validate_request(*args, **kwargs) -> None:
+    def mock_validate_request(*args) -> None:
         pass
 
     monkeypatch.setattr(
-        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
-    monkeypatch.setattr(image_policy_action, "validate_request", mock_validate_request)
-    monkeypatch.setattr(
-        image_policy_action, "valid_actions", {"attach", "detach", "query", "FOO"}
-    )
+    instance = image_policy_action
+    monkeypatch.setattr(instance, "validate_request", mock_validate_request)
+    monkeypatch.setattr(instance, "valid_actions", {"attach", "detach", "query", "FOO"})
 
-    image_policy_action.policy_name = "KR5M"
-    image_policy_action.serial_numbers = ["FDO2112189M"]
-    image_policy_action.action = "FOO"
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+    instance.action = "FOO"
 
     match = "ImagePolicyAction.commit: Unknown action FOO."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        image_policy_action.commit()
+        instance.commit()
 
 
 def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) -> None:
@@ -464,46 +447,46 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     """
     key = "test_image_mgmt_image_policy_action_00021a"
 
-    def mock_dcnm_send_image_policies(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_switch_details(*args) -> Dict[str, Any]:
         return responses_switch_details(key)
 
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    def mock_dcnm_send_image_policy_action(*args, **kwargs) -> Dict[str, Any]:
+    def mock_dcnm_send_image_policy_action(*args) -> Dict[str, Any]:
         return responses_image_policy_action(key)
 
-    monkeypatch.setattr(dcnm_send_image_policies, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
     monkeypatch.setattr(
-        dcnm_send_image_policy_action, mock_dcnm_send_image_policy_action
+        DCNM_SEND_IMAGE_POLICY_ACTION, mock_dcnm_send_image_policy_action
     )
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
     monkeypatch.setattr(
-        dcnm_send_switch_issu_details, mock_dcnm_send_switch_issu_details
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )
 
-    image_policy_action.policy_name = "KR5M"
-    image_policy_action.serial_numbers = ["FDO2112189M"]
-    image_policy_action.action = "detach"
+    instance = image_policy_action
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+    instance.action = "detach"
 
-    image_policy_action.commit()
-    assert isinstance(image_policy_action.response, dict)
-    assert image_policy_action.response.get("RETURN_CODE") == 200
-    assert image_policy_action.response.get("METHOD") == "DELETE"
-    assert image_policy_action.response.get("MESSAGE") == "OK"
+    instance.commit()
+    assert isinstance(instance.response, dict)
+    assert instance.response.get("RETURN_CODE") == 200
+    assert instance.response.get("METHOD") == "DELETE"
+    assert instance.response.get("MESSAGE") == "OK"
     assert (
-        image_policy_action.response.get("DATA")
-        == "Successfully detach the policy from device."
+        instance.response.get("DATA") == "Successfully detach the policy from device."
     )
-    assert image_policy_action.result.get("success") is True
-    assert image_policy_action.result.get("changed") is True
+    assert instance.result.get("success") is True
+    assert instance.result.get("changed") is True
 
 
-match_00060 = "ImagePolicyAction.action: instance.action must be "
-match_00060 += "one of attach,detach,query. Got FOO."
+MATCH_00060 = "ImagePolicyAction.action: instance.action must be "
+MATCH_00060 += "one of attach,detach,query. Got FOO."
 
 
 @pytest.mark.parametrize(
@@ -512,7 +495,7 @@ match_00060 += "one of attach,detach,query. Got FOO."
         ("attach", "attach"),
         ("detach", "detach"),
         ("query", "query"),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00060)),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
     ],
 )
 def test_image_mgmt_image_policy_action_00060(
@@ -527,23 +510,24 @@ def test_image_mgmt_image_policy_action_00060(
     - fail_json is called when value is not a valid action
     - fail_json error message is matched
     """
+    instance = image_policy_action
     if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=match_00060):
-            image_policy_action.action = value
+        with expected:
+            instance.action = value
     else:
-        image_policy_action.action = value
-        assert image_policy_action.action == expected
+        instance.action = value
+        assert instance.action == expected
 
 
-match_00061 = "ImagePolicyAction.serial_numbers: instance.serial_numbers "
-match_00061 += "must be a python list of switch serial numbers. Got FOO."
+MATCH_00061 = "ImagePolicyAction.serial_numbers: instance.serial_numbers "
+MATCH_00061 += "must be a python list of switch serial numbers. Got FOO."
 
 
 @pytest.mark.parametrize(
     "value, expected",
     [
         (["FDO2112189M", "FDO21120U5D"], ["FDO2112189M", "FDO21120U5D"]),
-        ("FOO", pytest.raises(AnsibleFailJson, match=match_00061)),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00061)),
     ],
 )
 def test_image_mgmt_image_policy_action_00061(
@@ -558,9 +542,10 @@ def test_image_mgmt_image_policy_action_00061(
     - fail_json is called when value is not a list
     - fail_json error message is matched
     """
+    instance = image_policy_action
     if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=match_00061):
-            image_policy_action.serial_numbers = value
+        with expected:
+            instance.serial_numbers = value
     else:
-        image_policy_action.serial_numbers = value
-        assert image_policy_action.serial_numbers == expected
+        instance.serial_numbers = value
+        assert instance.serial_numbers == expected

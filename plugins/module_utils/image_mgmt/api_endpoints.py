@@ -1,6 +1,9 @@
 """
 Endpoints for image management API calls
 """
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+
 class ApiEndpoints:
     """
     Endpoints for image management API calls
