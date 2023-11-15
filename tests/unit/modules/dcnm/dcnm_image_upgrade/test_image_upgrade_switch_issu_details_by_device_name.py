@@ -22,7 +22,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 
 from .fixture import load_fixture
-from .image_upgrade_utils import MockAnsibleModule, does_not_raise, issu_details_by_device_name
+from .image_upgrade_utils import MockAnsibleModule, does_not_raise, issu_details_by_device_name_fixture
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"

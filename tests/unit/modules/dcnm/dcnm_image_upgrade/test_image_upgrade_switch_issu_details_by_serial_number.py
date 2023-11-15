@@ -24,7 +24,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
-from .image_upgrade_utils import MockAnsibleModule
+from .image_upgrade_utils import MockAnsibleModule, issu_details_by_serial_number_fixture
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
