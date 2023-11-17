@@ -4,7 +4,7 @@ Base class for the other image upgrade classes
 from __future__ import absolute_import, division, print_function
 
 # disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type # pylint: disable=invalid-name
+__metaclass__ = type  # pylint: disable=invalid-name
 
 import inspect
 
@@ -131,7 +131,9 @@ class ImageUpgradeCommon:
             try:
                 # since we need self.fd open throughout several classes
                 # we are disabling pylint R1732
-                self.fd = open(f"{self.logfile}", "a+", encoding="UTF-8") # pylint: disable=consider-using-with
+                self.fd = open(
+                    f"{self.logfile}", "a+", encoding="UTF-8"
+                )  # pylint: disable=consider-using-with
             except IOError as err:
                 msg = f"error opening logfile {self.logfile}. "
                 msg += f"detail: {err}"

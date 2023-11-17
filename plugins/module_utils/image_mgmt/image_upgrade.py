@@ -121,9 +121,14 @@ class ImageUpgrade(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.endpoints = ApiEndpoints()
+        self.ipv4_done = set()
+        self.ipv4_todo = set()
+        self.payload: Dict[str, Any] = {}
+        self.path = None
+        self.verb = None
 
         self._init_defaults()
         self._init_properties()
@@ -132,7 +137,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.log_msg("DEBUG: ImageUpgrade.__init__ DONE")
 
     def _init_defaults(self) -> None:
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.defaults: Dict[str, Any] = {}
         self.defaults["options"] = {}
@@ -156,15 +161,19 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.defaults["validate"] = True
 
     def _init_properties(self) -> None:
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        """
+        Initialize properties used by this class.
+
+        Review these later since we are no longer calling this class
+        per-switch given the payload structure is not amenable to that.
+        Consider removing some of these.
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
         #   self._wait_for_image_upgrade_to_complete()
         self.ip_addresses: Set[str] = set()
-        # TODO:1 Review these properties since we are no longer
-        # calling this class per-switch given the payload structure
-        # is not amenable to that.
         self.properties: Dict[str, Any] = {}
         self.properties["bios_force"] = False
         self.properties["check_interval"] = 10  # seconds
@@ -190,46 +199,18 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.valid_nxos_mode.add("non_disruptive")
         self.valid_nxos_mode.add("force_non_disruptive")
 
-    # def prune_devices(self):
-    #     """
-    #     If the image is already upgraded on a device, remove that device
-    #     from self.devices.  self.devices dict has already been validated,
-    #     so no further error checking is needed here.
+    # We used to have a prune_devices() method here, but this
+    # is now done in dcnm_image_upgrade.py.  Consider moving
+    # that code here later.
 
-    #     TODO:1 This prunes devices only based on the image upgrade state.
-    #     TODO:1 It does not check other image states and EPLD states.
-    #     """
-    #     # issu = SwitchIssuDetailsBySerialNumber(self.module)
-    #     pruned_devices = set()
-    #     instance = SwitchIssuDetailsByIpAddress(self.module)
-    #     instance.refresh()
-    #     for device in self.devices:
-    #         msg = f"REMOVE: {self.class_name}.prune_devices() device: {device}"
-    #         self.log_msg(msg)
-    #         instance.ip_address = device.get("ip_address")
-    #         instance.refresh()
-    #         if instance.upgrade == "Success":
-    #             msg = f"REMOVE: {self.class_name}.prune_devices: "
-    #             msg = "image already upgraded for "
-    #             msg += f"{instance.device_name}, "
-    #             msg += f"{instance.serial_number}, "
-    #             msg += f"{instance.ip_address}"
-    #             self.log_msg(msg)
-    #             pruned_devices.add(instance.ip_address)
-    #     self.devices = [
-    #         device
-    #         for device in self.devices
-    #         if device.get("ip_address") not in pruned_devices
-    #     ]
-
-    def validate_devices(self) -> None:
+    def _validate_devices(self) -> None:
         """
         1.  Perform any pre-upgrade validations (currently none)
         2.  Populate self.ip_addresses with the ip_address of all
             switches which can be upgraded.  This is used in
             _wait_for_current_actions_to_complete
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         for device in self.devices:
             self.issu_detail.ip_address = device.get("ip_address")
@@ -246,7 +227,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.ip_addresses.add(str(self.issu_detail.ip_address))
 
     def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         if config.get("stage") is None:
             config["stage"] = self.defaults["stage"]
@@ -302,7 +283,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             ]["uninstall"]
         return config
 
-    def build_payload(self, device) -> None:
+    def _build_payload(self, device) -> None:
         """
         Build the request payload to upgrade the switches.
         """
@@ -344,23 +325,23 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload: Dict[str, Any] = {}
         self.payload["devices"] = devices_to_upgrade
 
-        self.build_payload_issu_upgrade(device)
-        self.build_payload_issu_options_1(device)
-        self.build_payload_issu_options_2(device)
-        self.build_payload_epld(device)
-        self.build_payload_reboot(device)
-        self.build_payload_reboot_options(device)
-        self.build_payload_package(device)
+        self._build_payload_issu_upgrade(device)
+        self._build_payload_issu_options_1(device)
+        self._build_payload_issu_options_2(device)
+        self._build_payload_epld(device)
+        self._build_payload_reboot(device)
+        self._build_payload_reboot_options(device)
+        self._build_payload_package(device)
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
-    def build_payload_issu_upgrade(self, device) -> None:
+    def _build_payload_issu_upgrade(self, device) -> None:
         """
         Build the issuUpgrade portion of the payload.
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         nxos_upgrade = device.get("upgrade").get("nxos")
         nxos_upgrade = self.make_boolean(nxos_upgrade)
@@ -371,7 +352,10 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.module.fail_json(msg)
         self.payload["issuUpgrade"] = nxos_upgrade
 
-    def build_payload_issu_options_1(self, device) -> None:
+    def _build_payload_issu_options_1(self, device) -> None:
+        """
+        Build the issuUpgradeOptions1 portion of the payload.
+        """
         method_name = inspect.stack()[0][3]
 
         # nxos_mode: The choices for nxos_mode are mutually-exclusive.
@@ -401,7 +385,10 @@ class ImageUpgrade(ImageUpgradeCommon):
             verify_nxos_mode_list.append(True)
             self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] = True
 
-    def build_payload_issu_options_2(self, device) -> None:
+    def _build_payload_issu_options_2(self, device) -> None:
+        """
+        Build the issuUpgradeOptions2 portion of the payload.
+        """
         method_name = inspect.stack()[0][3]
 
         bios_force = device.get("options").get("nxos").get("bios_force")
@@ -415,7 +402,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["issuUpgradeOptions2"] = {}
         self.payload["issuUpgradeOptions2"]["biosForce"] = bios_force
 
-    def build_payload_epld(self, device) -> None:
+    def _build_payload_epld(self, device) -> None:
         """
         Build the epldUpgrade and epldOptions portions of the payload.
         """
@@ -462,7 +449,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["epldOptions"]["moduleNumber"] = epld_module
         self.payload["epldOptions"]["golden"] = epld_golden
 
-    def build_payload_reboot(self, device) -> None:
+    def _build_payload_reboot(self, device) -> None:
         """
         Build the reboot portion of the payload.
         """
@@ -477,7 +464,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.module.fail_json(msg)
         self.payload["reboot"] = reboot
 
-    def build_payload_reboot_options(self, device) -> None:
+    def _build_payload_reboot_options(self, device) -> None:
         """
         Build the rebootOptions portion of the payload.
         """
@@ -504,8 +491,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["rebootOptions"]["configReload"] = config_reload
         self.payload["rebootOptions"]["writeErase"] = write_erase
 
-
-    def build_payload_package(self, device) -> None:
+    def _build_payload_package(self, device) -> None:
         """
         Build the packageInstall and packageUnInstall portions of the payload.
         """
@@ -532,6 +518,9 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += f"Got {package_uninstall}."
             self.module.fail_json(msg)
 
+        # Yes, these keys are misspelled. The controller
+        # wants them to be misspelled.  Need to keep an
+        # eye out for future releases correcting the spelling.
         self.payload["pacakgeInstall"] = package_install
         self.payload["pacakgeUnInstall"] = package_uninstall
 
@@ -551,7 +540,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "call instance.devices before calling commit."
             self.module.fail_json(msg)
 
-        self.validate_devices()
+        self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
         self.path: str = self.endpoints.image_upgrade.get("path")
@@ -566,7 +555,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
             self.log_msg(msg)
 
-            self.build_payload(device)
+            self._build_payload(device)
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
@@ -578,7 +567,9 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.properties["result"] = self._handle_response(self.response, self.verb)
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+            msg += (
+                f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+            )
             self.log_msg(msg)
 
             if not self.result["success"]:

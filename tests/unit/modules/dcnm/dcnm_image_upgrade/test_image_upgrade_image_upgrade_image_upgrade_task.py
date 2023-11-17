@@ -60,12 +60,14 @@ DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_MGMT + "install_options.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
 
-# This fixture differs from image_upgrade_task_fixture
-# in that it does not use a patched MockAnsibleModule.
-# This is because we need to modify MockAnsibleModule for
-# some of the test cases below.
 @pytest.fixture(name="image_upgrade_task_bare")
 def image_upgrade_task_bare_fixture():
+    """
+    This fixture differs from image_upgrade_task_fixture
+    in that it does not use a patched MockAnsibleModule.
+    This is because we need to modify MockAnsibleModule for
+    some of the test cases below.
+    """
     return ImageUpgradeTask
 
 
@@ -106,7 +108,9 @@ def test_image_mgmt_upgrade_task_00002(image_upgrade_task_bare) -> None:
     Test
     - fail_json is called because config is not a dict
     """
-    match = "ImageUpgradeTask.__init__: expected dict type for self.config. got str"
+    match = "ImageUpgradeTask.__init__: expected dict type "
+    match += "for self.config. got str"
+
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = {"config": "foo"}
     with pytest.raises(AnsibleFailJson, match=match):
@@ -122,11 +126,13 @@ def test_image_mgmt_upgrade_task_00003(image_upgrade_task_bare) -> None:
     Test
     - fail_json is called because config.switches is not a list
     """
+    key = "test_image_mgmt_upgrade_task_00003a"
+
     match = "ImageUpgradeTask.__init__: expected list type for "
     match += r"self.config\['switches'\]. got str"
 
     mock_ansible_module = MockAnsibleModule()
-    mock_ansible_module.params = {"config": {"switches": "FOO"}}
+    mock_ansible_module.params = load_playbook_config(key)
     with pytest.raises(AnsibleFailJson, match=match):
         instance = image_upgrade_task_bare(mock_ansible_module)
         assert isinstance(instance, ImageUpgradeTask)
@@ -140,10 +146,13 @@ def test_image_mgmt_upgrade_task_00004(image_upgrade_task_bare) -> None:
     Test
     - fail_json is called because config.switches is empty
     """
+    key = "test_image_mgmt_upgrade_task_00004a"
+
     match = "ImageUpgradeTask.__init__: missing list of switches "
     match += "in playbook config."
+
     mock_ansible_module = MockAnsibleModule()
-    mock_ansible_module.params = {"config": {"switches": []}}
+    mock_ansible_module.params = load_playbook_config(key)
     with pytest.raises(AnsibleFailJson, match=match):
         instance = image_upgrade_task_bare(mock_ansible_module)
         assert isinstance(instance, ImageUpgradeTask)
@@ -158,14 +167,14 @@ def test_image_mgmt_upgrade_task_00005(image_upgrade_task_bare) -> None:
     -   fail_json is called because mandatory keys are missing in
         one of the switch configs
     """
+    key = "test_image_mgmt_upgrade_task_00005a"
+
     match = "ImageUpgradeTask.__init__: missing mandatory "
     match += r"key\(s\) in playbook switch config. expected "
     match += r"\{'ip_address'\}, got dict_keys\(\['foo'\]\)"
 
     mock_ansible_module = MockAnsibleModule()
-    mock_ansible_module.params = {
-        "config": {"switches": [{"ip_address": "1.2.3.4"}, {"foo": "bar"}]}
-    }
+    mock_ansible_module.params = load_playbook_config(key)
     with pytest.raises(AnsibleFailJson, match=match):
         instance = image_upgrade_task_bare(mock_ansible_module)
         assert isinstance(instance, ImageUpgradeTask)
@@ -188,9 +197,9 @@ def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
 
     instance = image_upgrade_task
     instance.get_have()
-    instance.have.ip_address = "172.22.150.102"
+    instance.have.ip_address = "1.1.1.1"
     assert instance.have.device_name == "leaf1"
-    instance.have.ip_address = "172.22.150.108"
+    instance.have.ip_address = "2.2.2.2"
     assert instance.have.device_name == "cvd-2313-leaf"
     assert instance.have.serial_number == "FDO2112189M"
     assert instance.have.fabric == "hard"

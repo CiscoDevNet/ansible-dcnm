@@ -54,7 +54,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send, validate_list_of_dicts)
 
-__metaclass__ = type # pylint: disable=invalid-name
+__metaclass__ = type  # pylint: disable=invalid-name
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
@@ -450,11 +450,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
-        self.params = self.module.params
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.params: {json.dumps(self.params, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
-
         self.endpoints = ApiEndpoints()
         self.have = None
         self.idempotent_want = None
@@ -468,10 +463,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.payloads = []
 
         self.config = module.params.get("config", {})
-
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
 
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
@@ -523,9 +514,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         Caller: main()
 
-        Determine current switch ISSU state on NDFC
+        Determine current switch ISSU state on the controller
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.have = SwitchIssuDetailsByIpAddress(self.module)
         self.have.refresh()
@@ -597,7 +588,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: self.get_need_merged()
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.have.ip_address = want["ip_address"]
 
@@ -662,8 +653,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         instance.epld = want.get("upgrade", {}).get("epld", False)
         instance.issu = want.get("upgrade", {}).get("nxos", False)
-        instance.package_install = want.get("options", {}).get("package", {}).get(
-            "install", False
+        instance.package_install = (
+            want.get("options", {}).get("package", {}).get("install", False)
         )
         instance.refresh()
 
@@ -674,7 +665,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.log_msg(msg)
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.idempotent_want PRE EPLD CHECK: "
+        msg += "self.idempotent_want PRE EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
@@ -684,7 +675,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.idempotent_want["upgrade"]["epld"] = False
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.idempotent_want POST EPLD CHECK: "
+        msg += "self.idempotent_want POST EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
@@ -720,20 +711,16 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 test_idempotence.add(self.idempotent_want["stage"])
                 test_idempotence.add(self.idempotent_want["upgrade"]["nxos"])
                 test_idempotence.add(self.idempotent_want["upgrade"]["epld"])
-                test_idempotence.add(self.idempotent_want["options"]["package"]["install"])
-                # TODO:2 InstallOptions doesn't seem to have a way to determine package uninstall.
-                # TODO:2 For now, we'll comment this out so that it doesn't muck up idempotence.
+                test_idempotence.add(
+                    self.idempotent_want["options"]["package"]["install"]
+                )
+                # NOTE: InstallOptions doesn't seem to have a way to determine package uninstall.
+                # NOTE: For now, we'll comment this out so that it doesn't muck up idempotence.
                 # test_idempotence.add(self.idempotent_want["options"]["package"]["uninstall"])
-                msg = f"DEBUG: {self.class_name}.{method_name}: "
-                msg += f"test_idempotence: {test_idempotence}"
-                self.log_msg(msg)
                 if True not in test_idempotence:
                     continue
                 need.append(self.idempotent_want)
         self.need = need
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.need: {json.dumps(self.need, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
 
     def get_need_deleted(self) -> None:
         """
@@ -745,7 +732,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Policies are detached only if the policy name matches.
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         need = []
         for want in self.want:
@@ -768,7 +755,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         policy name is ignored for query state.
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         need = []
         for want in self.want:
@@ -1148,12 +1135,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def _send_policy_attach_payload(self) -> None:
         """
-        Send the policy attach payload to NDFC and handle the response
+        Send the policy attach payload to the controller and
+        handle the response
 
         Callers:
             - self.handle_merged_state
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         if len(self.payloads) == 0:
             return
@@ -1208,7 +1196,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def _verify_install_options(self, devices) -> None:
         """
-        Verify that the install options for the devices(es) are valid
+        Verify that the install options for the device(s) are valid
 
         Example devices structure:
 
@@ -1283,12 +1271,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"install_options.epld: {install_options.epld}"
             self.log_msg(msg)
 
-            
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += "install_options.epld_modules: "
-            msg += f"{json.dumps(install_options.epld_modules, indent=4, sort_keys=True)}"
+            msg += (
+                f"{json.dumps(install_options.epld_modules, indent=4, sort_keys=True)}"
+            )
             self.log_msg(msg)
-
 
             if install_options.epld_modules is None and install_options.epld is True:
                 msg = f"{self.class_name}.{method_name}: "
@@ -1297,11 +1285,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += "EPLD image."
                 self.module.fail_json(msg)
-
-            # if self.needs_epld_upgrade(install_options.epld_modules) is False:
-            #     devices[devices.index(device)]["upgrade"]["epld"] = False
-            
-            # return devices
 
     def needs_epld_upgrade(self, epld_modules) -> bool:
         """
@@ -1315,7 +1298,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - self._build_idempotent_want
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         if epld_modules is None:
             return False
@@ -1346,7 +1329,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         upgrade = ImageUpgrade(self.module)
         upgrade.devices = devices
@@ -1361,7 +1344,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self._build_policy_attach_payload()
         self._send_policy_attach_payload()
@@ -1402,7 +1385,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         detach_policy_devices: Dict[str, Any] = {}
 
@@ -1436,7 +1419,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()

@@ -1,4 +1,32 @@
 {
+    "test_image_mgmt_upgrade_task_00003a": {
+        "TEST_NOTES": [
+            "fail_json is called because config.switches is not a list"
+        ],
+        "config": {
+            "switches": "FOO"
+        }
+    },
+    "test_image_mgmt_upgrade_task_00004a": {
+        "TEST_NOTES": [
+            "fail_json is called because config.switches is empty"
+        ],
+        "config": {
+            "switches": []
+        }
+    },
+    "test_image_mgmt_upgrade_task_00005a": {
+        "TEST_NOTES": [
+            "fail_json is called because mandatory keys are missing"
+        ],
+        "config": {
+            "switches": [
+                {
+                    "ip_address": "1.2.3.4"},
+                    {"foo": "bar"}
+            ]
+        }
+    },
     "test_image_mgmt_upgrade_task_00030a": {
         "TEST_NOTES": [
             "switch 1.1.1.1 uses default options",
@@ -68,6 +96,15 @@
         "state": "merged"
     },
     "test_image_mgmt_upgrade_task_00031a": {
+        "TEST_NOTES": [
+            "switch 1.1.1.1 overrides global_config.options.nxos.bios_force with default value (False)",
+            "switch 1.1.1.1 overrides global_config.options.nxos.mode with a non-default value (non_disruptive)",
+            "switch 1.1.1.1 overrides global_config.options.reboot.write_erase with default value (False)",
+            "switch 1.1.1.1 overrides global_config.reboot with default value (False)",
+            "switch 1.1.1.1 overrides global_config.stage with a non-default value (False)",
+            "switch 1.1.1.1 overrides global_config.validate with a non-default value (False)",
+            "switch 2.2.2.2 overrides global_config.upgrade.epld with a non-default value (True)"
+        ],
         "config": {
             "options": {
                 "epld": {

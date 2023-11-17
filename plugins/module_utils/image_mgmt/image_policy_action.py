@@ -4,7 +4,7 @@ Perform image policy actions on the controller for one or more switches.
 from __future__ import absolute_import, division, print_function
 
 # disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type # pylint: disable=invalid-name
+__metaclass__ = type  # pylint: disable=invalid-name
 
 import inspect
 import json
@@ -52,7 +52,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.image_policies = ImagePolicies(self.module)
@@ -63,7 +63,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.verb = None
 
     def _init_properties(self):
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties = {}
         self.properties["action"] = None
         self.properties["response"] = None
@@ -322,7 +322,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @policy_name.setter
     def policy_name(self, value):
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties["policy_name"] = value
 
     @property

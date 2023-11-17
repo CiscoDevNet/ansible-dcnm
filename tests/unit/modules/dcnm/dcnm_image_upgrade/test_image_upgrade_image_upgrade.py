@@ -64,7 +64,12 @@ def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
     """
     instance = image_upgrade
     assert isinstance(instance, ImageUpgrade)
+    assert isinstance(instance.ipv4_done, set)
+    assert isinstance(instance.ipv4_todo, set)
+    assert isinstance(instance.payload, dict)
     assert instance.class_name == "ImageUpgrade"
+    assert instance.path is None
+    assert instance.verb is None
 
 
 def test_image_mgmt_upgrade_00002(image_upgrade) -> None:
@@ -160,7 +165,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
     devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
     instance.devices = devices
-    instance.validate_devices()
+    instance._validate_devices() # pylint: disable=protected-access
     assert isinstance(instance.ip_addresses, set)
     assert len(instance.ip_addresses) == 2
     assert "172.22.150.102" in instance.ip_addresses
@@ -704,7 +709,7 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit will call build_payload which will call fail_json
+    1.  commit will call _build_payload which will call fail_json
     """
     instance = image_upgrade
 
@@ -750,7 +755,7 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
             "policy_changed": False,
         }
     ]
-    match = r"ImageUpgrade.build_payload_issu_upgrade: upgrade.nxos must be a boolean. Got FOO\."
+    match = r"ImageUpgrade._build_payload_issu_upgrade: upgrade.nxos must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
@@ -922,7 +927,7 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload, which calls fail_json
+    1.  commit calls _build_payload, which calls fail_json
     """
     instance = image_upgrade
 
@@ -968,7 +973,7 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_issu_options_1: "
+    match = "ImageUpgrade._build_payload_issu_options_1: "
     match += "options.nxos.mode must be one of "
     match += r"\['disruptive', 'force_non_disruptive', 'non_disruptive'\]. "
     match += "Got FOO."
@@ -1144,7 +1149,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1190,7 +1195,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_issu_options_2: "
+    match = "ImageUpgrade._build_payload_issu_options_2: "
     match += r"options.nxos.bios_force must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1216,7 +1221,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1262,7 +1267,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_epld: Invalid configuration for "
+    match = "ImageUpgrade._build_payload_epld: Invalid configuration for "
     match += "172.22.150.102. If options.epld.golden is True "
     match += "all other upgrade options, e.g. upgrade.nxos, "
     match += "must be False."
@@ -1289,7 +1294,7 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1339,7 +1344,7 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_epld: "
+    match = "ImageUpgrade._build_payload_epld: "
     match += "options.epld.module must either be 'ALL' "
     match += r"or an integer. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
@@ -1365,7 +1370,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1415,7 +1420,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_epld: "
+    match = "ImageUpgrade._build_payload_epld: "
     match += r"options.epld.golden must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1440,7 +1445,7 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1486,7 +1491,7 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_reboot: "
+    match = "ImageUpgrade._build_payload_reboot: "
     match += r"reboot must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1512,7 +1517,7 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1562,7 +1567,7 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_reboot_options: "
+    match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.config_reload must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1588,7 +1593,7 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 
@@ -1638,7 +1643,7 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_reboot_options: "
+    match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.write_erase must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1663,7 +1668,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
 
     NOTES:
     1. The corresponding test for options.package.install is missing.
@@ -1719,7 +1724,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload_package: "
+    match = "ImageUpgrade._build_payload_package: "
     match += r"options.package.uninstall must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1823,7 +1828,7 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1.  commit calls build_payload which calls fail_json
+    1.  commit calls _build_payload which calls fail_json
     """
     instance = image_upgrade
 

@@ -3654,7 +3654,8 @@
             "RETURN_CODE 200",
             "Two switches present",
             "First switch requires ipAddress and deviceName",
-            "Second switch requires ipAddress, deviceName, serialNumber, fabric"
+            "Second switch requires ipAddress, deviceName, serialNumber, fabric",
+            "Test: SwitchIssuDetailsByIpAddress attributes are set to expected values"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -3664,11 +3665,11 @@
             "status": "SUCCESS",
             "lastOperDataObject": [
                 {
-                    "ipAddress": "172.22.150.102",
+                    "ipAddress": "1.1.1.1",
                     "deviceName": "leaf1"
                 },
                 {
-                    "ipAddress": "172.22.150.108",
+                    "ipAddress": "2.2.2.2",
                     "deviceName": "cvd-2313-leaf",
                     "serialNumber": "FDO2112189M",
                     "fabric": "hard"
