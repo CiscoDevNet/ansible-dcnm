@@ -35,13 +35,13 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
     ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
-    SwitchIssuDetailsByIpAddress
 
-from .fixture import load_fixture
-from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
-                                  image_upgrade_fixture,
-                                  issu_details_by_ip_address_fixture)
+from .image_upgrade_utils import (does_not_raise, image_upgrade_fixture,
+                                  issu_details_by_ip_address_fixture,
+                                  payloads_image_upgrade,
+                                  responses_image_install_options,
+                                  responses_image_upgrade,
+                                  responses_switch_issu_details)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -49,50 +49,9 @@ __author__ = "Allen Robel"
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 
-
 DCNM_SEND_IMAGE_UPGRADE = PATCH_IMAGE_MGMT + "image_upgrade.dcnm_send"
 DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_MGMT + "install_options.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
-
-
-def payloads_image_upgrade(key: str) -> Dict[str, str]:
-    """
-    Return payloads for ImageUpgrade
-    """
-    payload_file = "image_upgrade_payloads_ImageUpgrade"
-    payload = load_fixture(payload_file).get(key)
-    print(f"payload_data_image_upgrade: {key} : {payload}")
-    return payload
-
-
-def responses_image_upgrade(key: str) -> Dict[str, str]:
-    """
-    Return responses for ImageUpgrade
-    """
-    response_file = "image_upgrade_responses_ImageUpgrade"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_image_upgrade: {key} : {response}")
-    return response
-
-
-def responses_install_options(key: str) -> Dict[str, str]:
-    """
-    Return responses for ImageInstallOptions
-    """
-    response_file = "image_upgrade_responses_ImageInstallOptions"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_install_options: {key} : {response}")
-    return response
-
-
-def responses_issu_details(key: str) -> Dict[str, str]:
-    """
-    Return responses for SwitchIssuDetails
-    """
-    response_file = "image_upgrade_responses_SwitchIssuDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_issu_details: {key} : {response}")
-    return response
 
 
 def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
@@ -194,7 +153,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_upgrade_00005a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -752,10 +711,10 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
     key = "test_image_mgmt_upgrade_00019a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -791,7 +750,7 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
             "policy_changed": False,
         }
     ]
-    match = r"ImageUpgrade.build_payload: upgrade.nxos must be a boolean. Got FOO\."
+    match = r"ImageUpgrade.build_payload_issu_upgrade: upgrade.nxos must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
@@ -828,10 +787,10 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade) -> None:
     key = "test_image_mgmt_upgrade_00019a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -900,10 +859,10 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade) -> None:
     key = "test_image_mgmt_upgrade_00020a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -970,10 +929,10 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
     key = "test_image_mgmt_upgrade_00021a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -1009,7 +968,8 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: options.nxos.mode must be one of "
+    match = "ImageUpgrade.build_payload_issu_options_1: "
+    match += "options.nxos.mode must be one of "
     match += r"\['disruptive', 'force_non_disruptive', 'non_disruptive'\]. "
     match += "Got FOO."
     with pytest.raises(AnsibleFailJson, match=match):
@@ -1048,10 +1008,10 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1122,10 +1082,10 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1194,10 +1154,10 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1230,7 +1190,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_issu_options_2: "
     match += r"options.nxos.bios_force must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1266,10 +1226,10 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1302,7 +1262,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: Invalid configuration for "
+    match = "ImageUpgrade.build_payload_epld: Invalid configuration for "
     match += "172.22.150.102. If options.epld.golden is True "
     match += "all other upgrade options, e.g. upgrade.nxos, "
     match += "must be False."
@@ -1339,10 +1299,10 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1379,7 +1339,7 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_epld: "
     match += "options.epld.module must either be 'ALL' "
     match += r"or an integer. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
@@ -1415,10 +1375,10 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1455,7 +1415,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_epld: "
     match += r"options.epld.golden must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1490,10 +1450,10 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1526,7 +1486,7 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_reboot: "
     match += r"reboot must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1562,10 +1522,10 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1602,7 +1562,7 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_reboot_options: "
     match += r"options.reboot.config_reload must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1638,10 +1598,10 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1678,7 +1638,7 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_reboot_options: "
     match += r"options.reboot.write_erase must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1719,10 +1679,10 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1759,7 +1719,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
+    match = "ImageUpgrade.build_payload_package: "
     match += r"options.package.uninstall must be a boolean. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
@@ -1796,10 +1756,10 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1873,10 +1833,10 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
         return responses_image_upgrade(key)
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_install_options(key)
+        return responses_image_install_options(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
@@ -1913,8 +1873,8 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageUpgrade.build_payload: "
-    match += r"upgrade.epld must be a boolean. Got FOO\."
+    match = "ImageInstallOptions.epld.setter: "
+    match += r"epld must be a boolean value. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
@@ -1967,7 +1927,7 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
         return {}
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -2034,7 +1994,7 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
         return {}
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -2101,7 +2061,7 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
         return {}
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     def mock_dcnm_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
@@ -2531,7 +2491,7 @@ def test_image_mgmt_upgrade_00080(
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_upgrade_00080a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -2574,7 +2534,7 @@ def test_image_mgmt_upgrade_00081(
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_upgrade_00081a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -2627,7 +2587,7 @@ def test_image_mgmt_upgrade_00090(
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_upgrade_00090a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -2681,7 +2641,7 @@ def test_image_mgmt_upgrade_00091(
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_upgrade_00091a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 

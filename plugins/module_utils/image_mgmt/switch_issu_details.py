@@ -1,3 +1,8 @@
+from __future__ import absolute_import, division, print_function
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type # pylint: disable=invalid-name
+
 import inspect
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \

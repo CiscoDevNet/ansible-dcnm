@@ -11,27 +11,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Function to load unit test inputs
 
-# Make coding more python3-ish
+Imported by image_upgrade_utils.py
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 import json
 import os
+import sys
 
 fixture_path = os.path.join(os.path.dirname(__file__), "fixtures")
 
 
 def load_fixture(filename):
-    path = os.path.join(fixture_path, "{0}.json".format(filename))
+    """
+    load test inputs from json files
+    """
+    path = os.path.join(fixture_path, f"{filename}.json")
 
-    with open(path) as f:
-        data = f.read()
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = f.read()
+    except IOError as exception:
+        msg = f"Exception opening test input file {filename}.json : "
+        msg += f"Exception detail: {exception}"
+        print(msg)
+        sys.exit(1)
 
     try:
         fixture = json.loads(data)
-    except Exception as exception:
-        print(f"Exception loading fixture {filename}.  Exception detail: {exception}")
+    except json.JSONDecodeError as exception:
+        msg = "Exception reading JSON contents in "
+        msg += f"test input file {filename}.json : "
+        msg += f"Exception detail: {exception}"
+        print(msg)
+        sys.exit(1)
 
     return fixture

@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# See the following regarding *_fixture imports
+# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+# Due to the above, we also need to disable unused-import
+# pylint: disable=unused-import
+# Some fixtures need to use *args to match the signature of the function they are mocking
+# pylint: disable=unused-argument
+# Some tests require calling protected methods
+# pylint: disable=protected-access
+
+"""
+SwitchDetails - unit tests
+"""
+
 from __future__ import absolute_import, division, print_function
 
-from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
@@ -23,42 +35,16 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
     SwitchDetails
 
-from .fixture import load_fixture
-from .image_upgrade_utils import MockAnsibleModule
+from .image_upgrade_utils import (does_not_raise, responses_switch_details,
+                                  switch_details_fixture)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-"""
-controller_version: 12
-description: Verify functionality of SwitchDetails
-"""
 
-
-@contextmanager
-def does_not_raise():
-    """
-    A context manager that does not raise an exception.
-    """
-    yield
-
-
-patch_module_utils = "ansible_collections.cisco.dcnm.plugins.module_utils."
-patch_image_mgmt = patch_module_utils + "image_mgmt."
-
-dcnm_send_switch_details = patch_image_mgmt + "switch_details.dcnm_send"
-
-
-def responses_switch_details(key: str) -> Dict[str, str]:
-    response_file = f"image_upgrade_responses_SwitchDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_switch_details: {key} : {response}")
-    return response
-
-
-@pytest.fixture
-def switch_details():
-    return SwitchDetails(MockAnsibleModule)
+PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
+PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.dcnm_send"
 
 
 def test_image_mgmt_switch_details_00001(switch_details) -> None:
@@ -69,9 +55,9 @@ def test_image_mgmt_switch_details_00001(switch_details) -> None:
     Test
     - Class attributes are initialized to expected values
     """
-    switch_details.__init__(MockAnsibleModule)
-    assert isinstance(switch_details, SwitchDetails)
-    assert switch_details.class_name == "SwitchDetails"
+    instance = switch_details
+    assert isinstance(instance, SwitchDetails)
+    assert instance.class_name == "SwitchDetails"
 
 
 def test_image_mgmt_switch_details_00002(switch_details) -> None:
@@ -82,12 +68,13 @@ def test_image_mgmt_switch_details_00002(switch_details) -> None:
     Test
     - Class properties are initialized to expected values
     """
-    switch_details._init_properties()
-    assert isinstance(switch_details.properties, dict)
-    assert switch_details.properties.get("ip_address") == None
-    assert switch_details.properties.get("response_data") == None
-    assert switch_details.properties.get("response") == None
-    assert switch_details.properties.get("result") == None
+    instance = switch_details
+
+    assert isinstance(instance.properties, dict)
+    assert instance.properties.get("ip_address") is None
+    assert instance.properties.get("response_data") is None
+    assert instance.properties.get("response") is None
+    assert instance.properties.get("result") is None
 
 
 def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
@@ -98,17 +85,18 @@ def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
     Test
     - response_data, response, result are dictionaries
     """
+    instance = switch_details
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00020a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
 
-    switch_details.refresh()
-    assert isinstance(switch_details.response_data, dict)
-    assert isinstance(switch_details.result, dict)
-    assert isinstance(switch_details.response, dict)
+    instance.refresh()
+    assert isinstance(instance.response_data, dict)
+    assert isinstance(instance.result, dict)
+    assert isinstance(instance.response, dict)
 
 
 def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
@@ -121,30 +109,31 @@ def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
     - ip_address is set
     - getter properties will return values specific to ip_address
     """
+    instance = switch_details
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00021a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
 
-    switch_details.refresh()
-    assert isinstance(switch_details.response_data, dict)
-    switch_details.ip_address = "172.22.150.110"
-    assert switch_details.hostname == "cvd-1111-bgw"
-    switch_details.ip_address = "172.22.150.111"
+    instance.refresh()
+    assert isinstance(instance.response_data, dict)
+    instance.ip_address = "172.22.150.110"
+    assert instance.hostname == "cvd-1111-bgw"
+    instance.ip_address = "172.22.150.111"
     # We use the above IP address to test the remaining properties
-    assert switch_details.fabric_name == "easy"
-    assert switch_details.hostname == "cvd-1112-bgw"
-    assert switch_details.logical_name == "cvd-1112-bgw"
-    assert switch_details.model == "N9K-C9504"
+    assert instance.fabric_name == "easy"
+    assert instance.hostname == "cvd-1112-bgw"
+    assert instance.logical_name == "cvd-1112-bgw"
+    assert instance.model == "N9K-C9504"
     # This is derived from "model" and is not in the controller response
-    assert switch_details.platform == "N9K"
-    assert switch_details.role == "border gateway"
-    assert switch_details.serial_number == "FOX2109PGD1"
+    assert instance.platform == "N9K"
+    assert instance.role == "border gateway"
+    assert instance.serial_number == "FOX2109PGD1"
 
 
-match_00022 = "Unable to retrieve switch information from the controller."
+MATCH_00022 = "Unable to retrieve switch information from the controller."
 
 
 @pytest.mark.parametrize(
@@ -153,11 +142,11 @@ match_00022 = "Unable to retrieve switch information from the controller."
         ("test_image_mgmt_switch_details_00022a", does_not_raise()),
         (
             "test_image_mgmt_switch_details_00022b",
-            pytest.raises(AnsibleFailJson, match=match_00022),
+            pytest.raises(AnsibleFailJson, match=MATCH_00022),
         ),
         (
             "test_image_mgmt_switch_details_00022c",
-            pytest.raises(AnsibleFailJson, match=match_00022),
+            pytest.raises(AnsibleFailJson, match=MATCH_00022),
         ),
     ],
 )
@@ -181,14 +170,15 @@ def test_image_mgmt_switch_details_00022(
         - 500 RETURN_CODE, MESSAGE ~= "Internal Server Error"
         - result == {'found': False, 'success': False}
     """
+    instance = switch_details
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
 
     with expected:
-        switch_details.refresh()
+        instance.refresh()
 
 
 @pytest.mark.parametrize(
@@ -233,16 +223,17 @@ def test_image_mgmt_switch_details_00023(
         - converts value to NoneType
         - returns value unchanged
     """
+    instance = switch_details
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00023a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
 
-    switch_details.refresh()
-    switch_details.ip_address = "172.22.150.110"
-    assert switch_details._get(item) == expected
+    instance.refresh()
+    instance.ip_address = "172.22.150.110"
+    assert instance._get(item) == expected
 
 
 def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
@@ -262,19 +253,21 @@ def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
     It returns the value of the requested property if the user has set a known
     ip_address.
     """
+    instance = switch_details
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00024a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
 
-    switch_details.refresh()
-    switch_details.ip_address = "1.1.1.1"
     match = "SwitchDetails._get: 1.1.1.1 does not exist "
     match += "on the controller."
+
+    instance.refresh()
+    instance.ip_address = "1.1.1.1"
     with pytest.raises(AnsibleFailJson, match=match):
-        switch_details._get("hostName")
+        instance._get("hostName")
 
 
 def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
@@ -292,18 +285,20 @@ def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
     It raises AnsibleFailJson if the user has not set ip_address or if
     the ip_address is unknown, or if an unknown property name is queried.
     """
+    instance = switch_details
 
     def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00025a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(dcnm_send_switch_details, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
 
-    switch_details.refresh()
-    switch_details.ip_address = "172.22.150.110"
     match = "SwitchDetails._get: 172.22.150.110 does not have a key named FOO."
+
+    instance.refresh()
+    instance.ip_address = "172.22.150.110"
     with pytest.raises(AnsibleFailJson, match=match):
-        switch_details._get("FOO")
+        instance._get("FOO")
 
 
 # setters
@@ -327,6 +322,8 @@ def test_image_mgmt_switch_details_00060(
     - return IP address, if set
     - return None, if not set
     """
+    instance = switch_details
+
     if ip_address_is_set:
-        switch_details.ip_address = "1.2.3.4"
-    assert switch_details.ip_address == expected
+        instance.ip_address = "1.2.3.4"
+    assert instance.ip_address == expected

@@ -27,6 +27,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 import inspect
 import json
+from collections.abc import MutableMapping as Map
 from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
@@ -53,7 +54,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send, validate_list_of_dicts)
 
-__metaclass__ = type
+__metaclass__ = type # pylint: disable=invalid-name
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
@@ -450,6 +451,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
 
         self.params = self.module.params
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.params: {json.dumps(self.params, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
         self.endpoints = ApiEndpoints()
         self.have = None
         self.idempotent_want = None
@@ -463,6 +468,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.payloads = []
 
         self.config = module.params.get("config", {})
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
@@ -488,7 +497,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"got {self.config.keys()}"
             self.module.fail_json(msg)
 
-        if self.config["switches"] is None:
+        if not isinstance(self.config["switches"], list):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "expected list type for self.config['switches']. "
+            msg += f"got {type(self.config['switches']).__name__}"
+            self.module.fail_json(msg)
+
+        if len(self.config["switches"]) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "missing list of switches in playbook config."
             self.module.fail_json(msg)
@@ -510,7 +525,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Determine current switch ISSU state on NDFC
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         self.have = SwitchIssuDetailsByIpAddress(self.module)
         self.have.refresh()
@@ -523,12 +538,27 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += "Calling _merge_global_and_switch_configs with "
+        msg += f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
         self._merge_global_and_switch_configs(self.config)
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += "Calling _validate_switch_configs with self.switch_configs: "
+        msg += f"{json.dumps(self.switch_configs, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
         self._validate_switch_configs()
         if not self.switch_configs:
             return
 
         self.want = self.switch_configs
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.want: {json.dumps(self.want, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
     def _build_idempotent_want(self, want) -> None:
         """
@@ -566,22 +596,32 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         and the information returned by ImageInstallOptions.
 
         Caller: self.get_need_merged()
-
-        NOTES:
-        1.  There doesn't appear to be an API to query the controller for
-            the current EPLD version.  Hence, currently, EPLD handling
-            is not idempotent.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         self.have.ip_address = want["ip_address"]
+
+        # msg = f"DEBUG: {self.class_name}.{method_name}: "
+        # msg += f"self.have.ip_address: {self.have.ip_address}"
+        # self.log_msg(msg)
 
         want["policy_changed"] = True
         # The switch does not have an image policy attached.
         # idempotent_want == want with policy_changed = True
         if self.have.serial_number is None:
             self.idempotent_want = copy.deepcopy(want)
+            # msg = f"DEBUG: {self.class_name}.{method_name}: "
+            # msg += "returning due to serial_number is None. "
+            # msg += "self.idempotent_want: "
+            # msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
+            # self.log_msg(msg)
             return
+
+        # msg = f"DEBUG: {self.class_name}.{method_name}: "
+        # msg += f"self.have.serial_number: {self.have.serial_number}, "
+        # msg += f"want['policy']: {want['policy']}, "
+        # msg += f"self.have.policy: {self.have.policy}"
+        # self.log_msg(msg)
 
         # The switch has an image policy attached which is
         # different from the want policy.
@@ -619,12 +659,34 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance = ImageInstallOptions(self.module)
         instance.policy_name = want["policy"]
         instance.serial_number = self.have.serial_number
-        instance.epld = want["upgrade"]["epld"]
-        instance.issu = want["upgrade"]["nxos"]
+
+        instance.epld = want.get("upgrade", {}).get("epld", False)
+        instance.issu = want.get("upgrade", {}).get("nxos", False)
+        instance.package_install = want.get("options", {}).get("package", {}).get(
+            "install", False
+        )
         instance.refresh()
 
-        if instance.epld_modules is None:
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += "Calling ImageInstallOptions.response "
+        msg += "instance.response: "
+        msg += f"{json.dumps(instance.response_data, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.idempotent_want PRE EPLD CHECK: "
+        msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
+        # if InstallOptions indicates that EPLD is already upgraded,
+        # don't upgrade it again.
+        if self.needs_epld_upgrade(instance.epld_modules) is False:
             self.idempotent_want["upgrade"]["epld"] = False
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.idempotent_want POST EPLD CHECK: "
+        msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
     def get_need_merged(self) -> None:
         """
@@ -637,19 +699,41 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         need: List[Dict] = []
 
-        for want_create in self.want:
-            self.have.ip_address = want_create["ip_address"]
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += "self.want: "
+        msg += f"{json.dumps(self.want, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
+        for want in self.want:
+            self.have.ip_address = want["ip_address"]
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"self.have.serial_number: {self.have.serial_number}"
+            self.log_msg(msg)
             if self.have.serial_number is not None:
-                self._build_idempotent_want(want_create)
-                if (
-                    self.idempotent_want["policy_changed"] is False
-                    and self.idempotent_want["stage"] is False
-                    and self.idempotent_want["upgrade"]["nxos"] is False
-                    and self.idempotent_want["upgrade"]["epld"] is False
-                ):
+                self._build_idempotent_want(want)
+                msg = f"DEBUG: {self.class_name}.{method_name}: "
+                msg += "self.idempotent_want: "
+                msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
+                self.log_msg(msg)
+                test_idempotence = set()
+                test_idempotence.add(self.idempotent_want["policy_changed"])
+                test_idempotence.add(self.idempotent_want["stage"])
+                test_idempotence.add(self.idempotent_want["upgrade"]["nxos"])
+                test_idempotence.add(self.idempotent_want["upgrade"]["epld"])
+                test_idempotence.add(self.idempotent_want["options"]["package"]["install"])
+                # TODO:2 InstallOptions doesn't seem to have a way to determine package uninstall.
+                # TODO:2 For now, we'll comment this out so that it doesn't muck up idempotence.
+                # test_idempotence.add(self.idempotent_want["options"]["package"]["uninstall"])
+                msg = f"DEBUG: {self.class_name}.{method_name}: "
+                msg += f"test_idempotence: {test_idempotence}"
+                self.log_msg(msg)
+                if True not in test_idempotence:
                     continue
                 need.append(self.idempotent_want)
         self.need = need
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.need: {json.dumps(self.need, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
     def get_need_deleted(self) -> None:
         """
@@ -661,7 +745,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Policies are detached only if the policy name matches.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         need = []
         for want in self.want:
@@ -684,7 +768,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         policy name is ignored for query state.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         need = []
         for want in self.want:
@@ -909,6 +993,18 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
 
+    def merge_dicts(self, d1, d2):
+        """
+        Merge d2 into d1 and return d1.
+        Keys in d2 have precedence over keys in d1.
+        """
+        for key in d2:
+            if key in d1 and isinstance(d1[key], Map) and isinstance(d2[key], Map):
+                self.merge_dicts(d1[key], d2[key])
+            else:
+                d1[key] = d2[key]
+        return d1
+
     def _merge_global_and_switch_configs(self, config) -> None:
         """
         Merge the global config with each switch config and return
@@ -920,9 +1016,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             from global_config.
         3.  If a switch_config has a parameter, use it.
         4.  If global_config and switch_config are both missing an
-            optional parameter, use the parameter's default value.
+            optional parameter, use the parameter's default value
+            (done in ImageUpgrade.build_payload)
         5.  If global_config and switch_config are both missing a
-            mandatory parameter, fail.
+            mandatory parameter, fail (done in self._validate_switch_configs)
         """
         method_name = inspect.stack()[0][3]
 
@@ -931,16 +1028,28 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += "playbook is missing list of switches"
             self.module.fail_json(msg)
 
-        global_config = {}
-        global_config["policy"] = config.get("policy")
-        global_config["stage"] = config.get("stage")
-        global_config["upgrade"] = config.get("upgrade")
-        global_config["options"] = config.get("options")
-        global_config["validate"] = config.get("validate")
-
         self.switch_configs = []
         for switch in config["switches"]:
-            switch_config = global_config.copy() | switch.copy()
+            # we need to rebuild global_config in this loop
+            # because merge_dicts modifies it in place
+            global_config = copy.deepcopy(config)
+            global_config.pop("switches", None)
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += (
+                f"global_config: {json.dumps(global_config, indent=4, sort_keys=True)}"
+            )
+            self.log_msg(msg)
+
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+
+            switch_config = self.merge_dicts(global_config, switch)
+
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+
             self.switch_configs.append(switch_config)
 
     def _validate_switch_configs(self) -> None:
@@ -951,7 +1060,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         NOTES:
         1.  Final application of missing default parameters is done in
-            ImageUpgrade.commit()
+            ImageUpgrade.build_payload, which calls
+            ImageUpgrade._merge_defaults_to_switch_config
 
         Callers:
             - self.get_want
@@ -1043,7 +1153,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         if len(self.payloads) == 0:
             return
@@ -1071,6 +1181,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"serial_numbers: {serial_numbers}"
+        self.log_msg(msg)
+
         instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
@@ -1083,6 +1197,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         - handle_merged_state
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"serial_numbers: {serial_numbers}"
+        self.log_msg(msg)
 
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
@@ -1129,13 +1247,26 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         install_options = ImageInstallOptions(self.module)
         self.switch_details.refresh()
 
-        for device in devices:
+        verify_devices = copy.deepcopy(devices)
+
+        for device in verify_devices:
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+
             self.switch_details.ip_address = device.get("ip_address")
             install_options.serial_number = self.switch_details.serial_number
-            install_options.policy_name = device["policy"]
-            install_options.epld = device["upgrade"]["epld"]
-            install_options.issu = device["upgrade"]["nxos"]
+            install_options.policy_name = device.get("policy")
+            install_options.epld = device.get("upgrade", {}).get("epld", False)
+            install_options.issu = device.get("upgrade", {}).get("nxos", False)
             install_options.refresh()
+
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += "install_options.response_data: "
+            msg += (
+                f"{json.dumps(install_options.response_data, indent=4, sort_keys=True)}"
+            )
+            self.log_msg(msg)
 
             if (
                 install_options.status not in ["Success", "Skipped"]
@@ -1148,16 +1279,65 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += "NX-OS image"
                 self.module.fail_json(msg)
 
-            if (
-                install_options.epld_modules is None
-                and device["upgrade"]["epld"] is True
-            ):
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"install_options.epld: {install_options.epld}"
+            self.log_msg(msg)
+
+            
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += "install_options.epld_modules: "
+            msg += f"{json.dumps(install_options.epld_modules, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+
+
+            if install_options.epld_modules is None and install_options.epld is True:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "EPLD upgrade is set to True for switch "
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += "EPLD image."
                 self.module.fail_json(msg)
+
+            # if self.needs_epld_upgrade(install_options.epld_modules) is False:
+            #     devices[devices.index(device)]["upgrade"]["epld"] = False
+            
+            # return devices
+
+    def needs_epld_upgrade(self, epld_modules) -> bool:
+        """
+        Determine if the switch needs an EPLD upgrade
+
+        For all modules, compare EPLD oldVersion and newVersion.
+        Returns:
+        - True if newVersion > oldVersion for any module
+        - False otherwise
+
+        Callers:
+        - self._build_idempotent_want
+        """
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+
+        if epld_modules is None:
+            return False
+        if epld_modules.get("moduleList") is None:
+            return False
+        for module in epld_modules["moduleList"]:
+            new_version = module.get("newVersion", "0x0")
+            old_version = module.get("oldVersion", "0x0")
+            # int(str, 0) enables python to guess the base
+            # of the string when converting to int.  An
+            # error is thrown without this.
+            if int(new_version, 0) > int(old_version, 0):
+                msg = f"DEBUG: {self.class_name}.{method_name}: "
+                msg += f"(device: {module.get('deviceName')}), "
+                msg += f"(IP: {module.get('ipAddress')}), "
+                msg += f"(module#: {module.get('module')}), "
+                msg += f"(module: {module.get('moduleType')}), "
+                msg += f"new_version {new_version} > old_version {old_version}, "
+                msg += "returning True"
+                self.log_msg(msg)
+                return True
+        return False
 
     def _upgrade_images(self, devices) -> None:
         """
@@ -1166,7 +1346,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         upgrade = ImageUpgrade(self.module)
         upgrade.devices = devices
@@ -1181,7 +1361,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         self._build_policy_attach_payload()
         self._send_policy_attach_payload()
@@ -1222,7 +1402,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         detach_policy_devices: Dict[str, Any] = {}
 
@@ -1256,7 +1436,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()

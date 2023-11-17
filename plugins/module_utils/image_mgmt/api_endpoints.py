@@ -1,8 +1,11 @@
 """
 Endpoints for image management API calls
 """
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import absolute_import, division, print_function
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type # pylint: disable=invalid-name
+
 
 class ApiEndpoints:
     """

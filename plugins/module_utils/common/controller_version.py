@@ -1,5 +1,8 @@
 from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type # pylint: disable=invalid-name
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )

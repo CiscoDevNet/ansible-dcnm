@@ -1,3 +1,8 @@
+from __future__ import absolute_import, division, print_function
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type # pylint: disable=invalid-name
+
 import inspect
 import json
 from time import sleep
@@ -163,7 +168,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(self.payload)
         )
-
         self.properties["response_data"] = self.response.get("DATA", {})
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
@@ -171,6 +175,8 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retrieving install-options from "
             msg += f"the controller. Controller response: {self.response}. "
+            if self.response_data.get("error", None) is None:
+                self.module.fail_json(msg)
             if "does not have package to continue" in self.response_data.get(
                 "error", ""
             ):
@@ -178,8 +184,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
             self.module.fail_json(msg)
-
-        self.properties["response_data"] = self.response.get("DATA", {})
 
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
@@ -228,6 +232,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @policy_name.setter
     def policy_name(self, value):
+        if not isinstance(value, str):
+            msg = f"{self.class_name}.policy_name.setter: "
+            msg += f"policy_name must be a string. Got {value}."
+            self.module.fail_json(msg)
         self.properties["policy_name"] = value
 
     @property

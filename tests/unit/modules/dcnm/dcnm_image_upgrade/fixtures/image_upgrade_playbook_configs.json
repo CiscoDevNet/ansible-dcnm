@@ -1,0 +1,124 @@
+{
+    "test_image_mgmt_upgrade_task_00030a": {
+        "TEST_NOTES": [
+            "switch 1.1.1.1 uses default options",
+            "switch 2.2.2.2 overrides default options"
+        ],
+        "config": {
+            "options": {
+                "epld": {
+                    "golden": false,
+                    "module": "ALL"
+                },
+                "nxos": {
+                    "bios_force": false,
+                    "mode": "disruptive"
+                },
+                "package": {
+                    "install": false,
+                    "uninstall": false
+                },
+                "reboot": {
+                    "config_reload": false,
+                    "write_erase": false
+                }
+            },
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "switches": [
+                {
+                    "ip_address": "1.1.1.1"
+                },
+                {
+                    "ip_address": "2.2.2.2",
+                    "options": {
+                        "epld": {
+                            "module": 1,
+                            "golden": true
+                        },
+                        "nxos": {
+                            "bios_force": true,
+                            "mode": "non_disruptive"
+                        },
+                        "package": {
+                            "install": true,
+                            "uninstall": true
+                        },
+                        "reboot": {
+                            "config_reload": true,
+                            "write_erase": true
+                        }
+                    },
+                    "reboot": true,
+                    "stage": false,
+                    "upgrade": {
+                        "epld": true,
+                        "nxos": false
+                    },
+                    "validate": false
+                }
+            ],
+            "upgrade": {
+                "epld": false,
+                "nxos": true
+            },
+            "validate": true
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00031a": {
+        "config": {
+            "options": {
+                "epld": {
+                    "golden": false,
+                    "module": "ALL"
+                },
+                "nxos": {
+                    "bios_force": false,
+                    "mode": "disruptive"
+                },
+                "package": {
+                    "install": false,
+                    "uninstall": false
+                },
+                "reboot": {
+                    "config_reload": false,
+                    "write_erase": false
+                }
+            },
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "switches": [
+                {
+                    "ip_address": "1.1.1.1",
+                    "options": {
+                        "nxos": {
+                            "bios_force": false,
+                            "mode": "non_disruptive"
+                        },
+                        "reboot": {
+                            "write_erase": false
+                        }
+                    },
+                    "reboot": false,
+                    "stage": false,
+                    "validate": false
+                },
+                {
+                    "ip_address": "2.2.2.2",
+                    "upgrade": {
+                        "epld": true
+                    }
+                }
+            ],
+            "upgrade": {
+                "epld": false,
+                "nxos": true
+            },
+            "validate": true
+        },
+        "state": "merged"
+    }
+}

@@ -1,8 +1,16 @@
+"""
+ImageUpgrade - Methods to upgrade images on NX-OS switches
+"""
+from __future__ import absolute_import, division, print_function
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type  # pylint: disable=invalid-name
+
 import copy
 import inspect
 import json
 from time import sleep
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Set
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -104,7 +112,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         to determine when the upgrade is complete. Basically, we ignore
         these responses in favor of the poll responses.
         - If an action is in progress, text is returned:
-            "Action in progress for some of selected device(s). Please try again after completing current action."
+            "Action in progress for some of selected device(s).
+            Please try again after completing current action."
         -   If an action is not in progress, text is returned:
             "3"
     """
@@ -112,7 +121,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         self.endpoints = ApiEndpoints()
 
@@ -120,33 +129,34 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
         self.install_options = ImageInstallOptions(self.module)
+        self.log_msg("DEBUG: ImageUpgrade.__init__ DONE")
 
     def _init_defaults(self) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         self.defaults: Dict[str, Any] = {}
-        self.defaults["reboot"] = False
-        self.defaults["stage"] = True
-        self.defaults["validate"] = True
-        self.defaults["upgrade"] = {}
-        self.defaults["upgrade"]["nxos"] = True
-        self.defaults["upgrade"]["epld"] = False
         self.defaults["options"] = {}
-        self.defaults["options"]["nxos"] = {}
-        self.defaults["options"]["nxos"]["mode"] = "disruptive"
-        self.defaults["options"]["nxos"]["bios_force"] = False
         self.defaults["options"]["epld"] = {}
         self.defaults["options"]["epld"]["module"] = "ALL"
         self.defaults["options"]["epld"]["golden"] = False
-        self.defaults["options"]["reboot"] = {}
-        self.defaults["options"]["reboot"]["config_reload"] = False
-        self.defaults["options"]["reboot"]["write_erase"] = False
+        self.defaults["options"]["nxos"] = {}
+        self.defaults["options"]["nxos"]["mode"] = "disruptive"
+        self.defaults["options"]["nxos"]["bios_force"] = False
         self.defaults["options"]["package"] = {}
         self.defaults["options"]["package"]["install"] = False
         self.defaults["options"]["package"]["uninstall"] = False
+        self.defaults["options"]["reboot"] = {}
+        self.defaults["options"]["reboot"]["config_reload"] = False
+        self.defaults["options"]["reboot"]["write_erase"] = False
+        self.defaults["reboot"] = False
+        self.defaults["stage"] = True
+        self.defaults["upgrade"] = {}
+        self.defaults["upgrade"]["epld"] = False
+        self.defaults["upgrade"]["nxos"] = True
+        self.defaults["validate"] = True
 
     def _init_properties(self) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
@@ -219,7 +229,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             switches which can be upgraded.  This is used in
             _wait_for_current_actions_to_complete
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         for device in self.devices:
             self.issu_detail.ip_address = device.get("ip_address")
@@ -236,7 +246,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.ip_addresses.add(str(self.issu_detail.ip_address))
 
     def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
 
         if config.get("stage") is None:
             config["stage"] = self.defaults["stage"]
@@ -298,53 +308,30 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
-        msg += f"device PRE : {json.dumps(device, indent=4, sort_keys=True)}"
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"device PRE_DEFAULTS : {json.dumps(device, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
         device = self._merge_defaults_to_switch_config(device)
 
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
-        msg += f"device POST: {json.dumps(device, indent=4, sort_keys=True)}"
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"device POST_DEFAULTS: {json.dumps(device, indent=4, sort_keys=True)}"
         self.log_msg(msg)
-
-        # device.upgrade
-        nxos_upgrade = device.get("upgrade").get("nxos")
-        nxos_upgrade = self.make_boolean(nxos_upgrade)
-        if not isinstance(nxos_upgrade, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "upgrade.nxos must be a boolean. "
-            msg += f"Got {nxos_upgrade}."
-            self.module.fail_json(msg)
-
-        epld_upgrade = device.get("upgrade").get("epld")
-        epld_upgrade = self.make_boolean(epld_upgrade)
-        if not isinstance(epld_upgrade, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "upgrade.epld must be a boolean. "
-            msg += f"Got {epld_upgrade}."
-            self.module.fail_json(msg)
 
         # TODO:2 Validate ip_address
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
 
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
-        msg += f"issu_detail.response: {json.dumps(self.issu_detail.response, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
-
         self.install_options.serial_number = self.issu_detail.serial_number
-        self.install_options.policy_name = device.get("policy")
-        self.install_options.epld = device.get("upgrade").get("epld")
-        self.install_options.nxos = device.get("upgrade").get("nxos")
+        # install_options will fail_json if any of these are invalid
+        # so no need to validate these here.
+        self.install_options.policy_name = device.get("policy", None)
+        self.install_options.epld = device.get("upgrade", {}).get("epld", None)
+        self.install_options.nxos = device.get("upgrade", {}).get("nxos", None)
         self.install_options.package_install = (
-            device.get("options").get("package").get("install")
+            device.get("options", {}).get("package", {}).get("install", None)
         )
         self.install_options.refresh()
-
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
-        msg += f"install_options.response: {json.dumps(self.install_options.response, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
 
         # devices_to_upgrade must currently be a single device
         devices_to_upgrade: List[dict] = []
@@ -356,7 +343,36 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         self.payload: Dict[str, Any] = {}
         self.payload["devices"] = devices_to_upgrade
-        self.payload["issuUpgrade"] = device.get("upgrade").get("nxos")
+
+        self.build_payload_issu_upgrade(device)
+        self.build_payload_issu_options_1(device)
+        self.build_payload_issu_options_2(device)
+        self.build_payload_epld(device)
+        self.build_payload_reboot(device)
+        self.build_payload_reboot_options(device)
+        self.build_payload_package(device)
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
+    def build_payload_issu_upgrade(self, device) -> None:
+        """
+        Build the issuUpgrade portion of the payload.
+        """
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+
+        nxos_upgrade = device.get("upgrade").get("nxos")
+        nxos_upgrade = self.make_boolean(nxos_upgrade)
+        if not isinstance(nxos_upgrade, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "upgrade.nxos must be a boolean. "
+            msg += f"Got {nxos_upgrade}."
+            self.module.fail_json(msg)
+        self.payload["issuUpgrade"] = nxos_upgrade
+
+    def build_payload_issu_options_1(self, device) -> None:
+        method_name = inspect.stack()[0][3]
 
         # nxos_mode: The choices for nxos_mode are mutually-exclusive.
         # If one is set to True, the others must be False.
@@ -385,7 +401,9 @@ class ImageUpgrade(ImageUpgradeCommon):
             verify_nxos_mode_list.append(True)
             self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] = True
 
-        # biosForce corresponds to BIOS Force GUI option
+    def build_payload_issu_options_2(self, device) -> None:
+        method_name = inspect.stack()[0][3]
+
         bios_force = device.get("options").get("nxos").get("bios_force")
         bios_force = self.make_boolean(bios_force)
         if not isinstance(bios_force, bool):
@@ -397,7 +415,20 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["issuUpgradeOptions2"] = {}
         self.payload["issuUpgradeOptions2"]["biosForce"] = bios_force
 
-        # EPLD
+    def build_payload_epld(self, device) -> None:
+        """
+        Build the epldUpgrade and epldOptions portions of the payload.
+        """
+        method_name = inspect.stack()[0][3]
+
+        epld_upgrade = device.get("upgrade").get("epld")
+        epld_upgrade = self.make_boolean(epld_upgrade)
+        if not isinstance(epld_upgrade, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "upgrade.epld must be a boolean. "
+            msg += f"Got {epld_upgrade}."
+            self.module.fail_json(msg)
+
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
 
@@ -420,7 +451,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         if epld_module != "ALL":
             try:
                 epld_module = int(epld_module)
-            except:
+            except ValueError:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "options.epld.module must either be 'ALL' "
                 msg += f"or an integer. Got {epld_module}."
@@ -431,7 +462,11 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["epldOptions"]["moduleNumber"] = epld_module
         self.payload["epldOptions"]["golden"] = epld_golden
 
-        # Reboot
+    def build_payload_reboot(self, device) -> None:
+        """
+        Build the reboot portion of the payload.
+        """
+        method_name = inspect.stack()[0][3]
         reboot = device.get("reboot")
 
         reboot = self.make_boolean(reboot)
@@ -442,7 +477,12 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.module.fail_json(msg)
         self.payload["reboot"] = reboot
 
-        # Reboot options
+    def build_payload_reboot_options(self, device) -> None:
+        """
+        Build the rebootOptions portion of the payload.
+        """
+        method_name = inspect.stack()[0][3]
+
         config_reload = device.get("options").get("reboot").get("config_reload")
         write_erase = device.get("options").get("reboot").get("write_erase")
 
@@ -464,7 +504,13 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["rebootOptions"]["configReload"] = config_reload
         self.payload["rebootOptions"]["writeErase"] = write_erase
 
-        # Packages
+
+    def build_payload_package(self, device) -> None:
+        """
+        Build the packageInstall and packageUnInstall portions of the payload.
+        """
+        method_name = inspect.stack()[0][3]
+
         package_install = device.get("options").get("package").get("install")
         package_uninstall = device.get("options").get("package").get("uninstall")
 
@@ -489,10 +535,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["pacakgeInstall"] = package_install
         self.payload["pacakgeUnInstall"] = package_uninstall
 
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
-        msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
-
     def commit(self) -> None:
         """
         Commit the image upgrade request to the controller and wait
@@ -500,8 +542,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
-        msg += f"self.devices: {self.devices}"
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
         if self.devices is None:
@@ -515,18 +557,18 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.path: str = self.endpoints.image_upgrade.get("path")
         self.verb: str = self.endpoints.image_upgrade.get("verb")
 
-        msg = f"REMOVE: {self.class_name}.{method_name}: "
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"self.verb {self.verb}, self.path: {self.path}"
         self.log_msg(msg)
 
         for device in self.devices:
-            msg = f"REMOVE: {self.class_name}.{method_name}: "
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
             self.log_msg(msg)
 
             self.build_payload(device)
 
-            msg = f"REMOVE: {self.class_name}.{method_name}: "
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log_msg(msg)
 
@@ -535,8 +577,8 @@ class ImageUpgrade(ImageUpgradeCommon):
             )
             self.properties["result"] = self._handle_response(self.response, self.verb)
 
-            msg = f"REMOVE: {self.class_name}.{method_name}: "
-            msg += f"self.response: {self.response}"
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
             self.log_msg(msg)
 
             if not self.result["success"]:
@@ -577,10 +619,10 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Timed out waiting for actions to complete. "
-            msg += f"ipv4_done: "
+            msg += "Timed out waiting for actions to complete. "
+            msg += "ipv4_done: "
             msg += f"{','.join(sorted(self.ipv4_done))}, "
-            msg += f"ipv4_todo: "
+            msg += "ipv4_todo: "
             msg += f"{','.join(sorted(self.ipv4_todo))}. "
             msg += "check the device(s) to determine the cause "
             msg += "(e.g. show install all status)."
@@ -782,11 +824,11 @@ class ImageUpgrade(ImageUpgradeCommon):
             pass
         try:
             value = int(value)
-        except:
+        except ValueError:
             pass
         if not isinstance(value, int) and value != "ALL":
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.epld_module must be an integer or 'ALL'"
+            msg += "instance.epld_module must be an integer or 'ALL'"
             self.module.fail_json(msg)
         self.properties["epld_module"] = value
 
@@ -909,7 +951,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     def check_interval(self, value):
         if not isinstance(value, int):
             msg = f"{self.__class__.__name__}: instance.check_interval must "
-            msg += f"be an integer."
+            msg += "be an integer."
             self.module.fail_json(msg)
         self.properties["check_interval"] = value
 
@@ -924,7 +966,7 @@ class ImageUpgrade(ImageUpgradeCommon):
     def check_timeout(self, value):
         if not isinstance(value, int):
             msg = f"{self.__class__.__name__}: instance.check_timeout must "
-            msg += f"be an integer."
+            msg += "be an integer."
             self.module.fail_json(msg)
         self.properties["check_timeout"] = value
 

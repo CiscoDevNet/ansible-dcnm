@@ -1,3 +1,11 @@
+"""
+ImageStage - Methods to stage images to NX-OS switches
+"""
+from __future__ import absolute_import, division, print_function
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type # pylint: disable=invalid-name
+
 import copy
 import inspect
 import json
@@ -47,11 +55,11 @@ class ImageStage(ImageUpgradeCommon):
     Response:
         Unfortunately, the response does not contain consistent data.
         Would be better if all responses contained serial numbers as keys so that
-        we could verify against a set() of serial numbers.  Sigh.  It is what it is.
+        we could verify against a set() of serial numbers.
         {
             'RETURN_CODE': 200,
             'METHOD': 'POST',
-            'REQUEST_PATH': 'https: //172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image',
+            'REQUEST_PATH': '.../api/v1/imagemanagement/rest/stagingmanagement/stage-image',
             'MESSAGE': 'OK',
             'DATA': [
                 {
@@ -81,7 +89,7 @@ class ImageStage(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.serial_numbers_done = set()
@@ -90,9 +98,10 @@ class ImageStage(ImageUpgradeCommon):
         self.verb = None
         self.payload = None
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
+        self.log_msg("DEBUG: ImageStage.__init__ DONE")
 
     def _init_properties(self):
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties = {}
         self.properties["serial_numbers"] = None
         self.properties["response_data"] = None
@@ -109,7 +118,7 @@ class ImageStage(ImageUpgradeCommon):
         1.  This cannot go into ImageUpgradeCommon() due to circular
             imports resulting in RecursionError
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         instance = ControllerVersion(self.module)
         instance.refresh()
         self.controller_version = instance.version
@@ -119,7 +128,7 @@ class ImageStage(ImageUpgradeCommon):
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
             self.issu_detail.serial_number = serial_number
@@ -143,7 +152,7 @@ class ImageStage(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
                 msg += f"{self.issu_detail.serial_number}. "
-                msg += f"Check the switch connectivity to the controller "
+                msg += "Check the switch connectivity to the controller "
                 msg += "and try again."
                 self.module.fail_json(msg)
 
@@ -221,10 +230,10 @@ class ImageStage(ImageUpgradeCommon):
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Timed out waiting for actions to complete. "
-            msg += f"serial_numbers_done: "
+            msg += "Timed out waiting for actions to complete. "
+            msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += f"serial_numbers_todo: "
+            msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
             self.module.fail_json(msg)
 
@@ -265,10 +274,10 @@ class ImageStage(ImageUpgradeCommon):
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Timed out waiting for image stage to complete. "
-            msg += f"serial_numbers_done: "
+            msg += "Timed out waiting for image stage to complete. "
+            msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += f"serial_numbers_todo: "
+            msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
             self.module.fail_json(msg)
 
@@ -326,7 +335,7 @@ class ImageStage(ImageUpgradeCommon):
     def check_interval(self, value):
         if not isinstance(value, int):
             msg = f"{self.__class__.__name__}: instance.check_interval must "
-            msg += f"be an integer."
+            msg += "be an integer."
             self.module.fail_json(msg)
         self.properties["check_interval"] = value
 
@@ -341,6 +350,6 @@ class ImageStage(ImageUpgradeCommon):
     def check_timeout(self, value):
         if not isinstance(value, int):
             msg = f"{self.__class__.__name__}: instance.check_timeout must "
-            msg += f"be an integer."
+            msg += "be an integer."
             self.module.fail_json(msg)
         self.properties["check_timeout"] = value

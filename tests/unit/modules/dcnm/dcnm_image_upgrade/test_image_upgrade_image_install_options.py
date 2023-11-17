@@ -32,8 +32,9 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 
-from .fixture import load_fixture
-from .image_upgrade_utils import MockAnsibleModule, does_not_raise, image_install_options_fixture
+from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
+                                  image_install_options_fixture,
+                                  responses_image_install_options)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -41,16 +42,6 @@ __author__ = "Allen Robel"
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_MGMT + "install_options.dcnm_send"
-
-
-def responses_image_install_options(key: str) -> Dict[str, str]:
-    """
-    Return the response from ImageInstallOptions
-    """
-    response_file = "image_upgrade_responses_ImageInstallOptions"
-    response = load_fixture(response_file).get(key)
-    print(f"{key} : : {response}")
-    return response
 
 
 def test_image_mgmt_install_options_00001(image_install_options) -> None:
@@ -139,6 +130,7 @@ def test_image_mgmt_install_options_00005(monkeypatch, image_install_options) ->
     -   Properties are updated with expected values
     -   endpoint: install-options
     """
+
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_install_options_00005a"
         return responses_image_install_options(key)
@@ -419,7 +411,7 @@ def test_image_mgmt_install_options_00020(image_install_options) -> None:
     instance = image_install_options
     instance.policy_name = "KRM5"
     instance.serial_number = "BAR"
-    instance._build_payload() # pylint: disable=protected-access
+    instance._build_payload()  # pylint: disable=protected-access
     assert instance.payload.get("devices")[0].get("policyName") == "KRM5"
     assert instance.payload.get("devices")[0].get("serialNumber") == "BAR"
     assert instance.payload.get("issu") is True
@@ -445,7 +437,7 @@ def test_image_mgmt_install_options_00021(image_install_options) -> None:
     instance.issu = False
     instance.epld = True
     instance.package_install = True
-    instance._build_payload() # pylint: disable=protected-access
+    instance._build_payload()  # pylint: disable=protected-access
     assert instance.payload.get("devices")[0].get("policyName") == "KRM5"
     assert instance.payload.get("devices")[0].get("serialNumber") == "BAR"
     assert instance.payload.get("issu") is False

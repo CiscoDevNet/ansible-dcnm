@@ -11,9 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 ImagePolicyAction - unit tests 
 """
+
 # See the following regarding *_fixture imports
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
@@ -36,17 +38,16 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
-from .image_upgrade_utils import (
-    does_not_raise, image_policies_fixture, image_policy_action_fixture,
-    issu_details_by_serial_number_fixture)
+from .image_upgrade_utils import (does_not_raise, image_policies_fixture,
+                                  image_policy_action_fixture,
+                                  issu_details_by_serial_number_fixture,
+                                  responses_image_policies,
+                                  responses_image_policy_action,
+                                  responses_switch_details,
+                                  responses_switch_issu_details)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
-
-"""
-controller_version: 12
-Description: Verify functionality of ImagePolicyAction
-"""
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
@@ -55,46 +56,6 @@ DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
 DCNM_SEND_IMAGE_POLICY_ACTION = PATCH_IMAGE_MGMT + "image_policy_action.dcnm_send"
 DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.dcnm_send"
 DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
-
-
-def responses_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return ImagePolicies controller responses
-    """
-    response_file = "image_upgrade_responses_ImagePolicies"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_policies: {key} : {response}")
-    return response
-
-
-def responses_image_policy_action(key: str) -> Dict[str, str]:
-    """
-    Return ImagePolicyAction controller responses
-    """
-    response_file = "image_upgrade_responses_ImagePolicyAction"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_policy_action: {key} : {response}")
-    return response
-
-
-def responses_switch_details(key: str) -> Dict[str, str]:
-    """
-    Return SwitchDetails controller responses
-    """
-    response_file = "image_upgrade_responses_SwitchDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_switch_details: {key} : {response}")
-    return response
-
-
-def responses_switch_issu_details(key: str) -> Dict[str, str]:
-    """
-    Return SwitchIssuDetails controller responses
-    """
-    response_file = "image_upgrade_responses_SwitchIssuDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_switch_issu_details: {key} : {response}")
-    return response
 
 
 def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:

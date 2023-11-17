@@ -30,32 +30,16 @@ import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 
-from .fixture import load_fixture
-from .image_upgrade_utils import controller_version_fixture
+from .image_upgrade_utils import (controller_version_fixture,
+                                  responses_controller_version)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-"""
-controller_version: 12
-description: Verify functionality of ControllerVersion
-"""
-
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."
-
 DCNM_SEND_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
-
-
-def responses_controller_version(key: str) -> Dict[str, str]:
-    """
-    Return the response from ControllerVersion
-    """
-    response_file = "image_upgrade_responses_ControllerVersion"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
-    return response
 
 
 def test_common_version_00001(controller_version) -> None:

@@ -34,10 +34,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
-from .fixture import load_fixture
 from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   image_stage_fixture,
-                                  issu_details_by_serial_number_fixture)
+                                  issu_details_by_serial_number_fixture,
+                                  responses_controller_version,
+                                  responses_image_stage,
+                                  responses_switch_issu_details)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -50,36 +52,6 @@ PATCH_COMMON = PATCH_MODULE_UTILS + "common."
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
 DCNM_SEND_IMAGE_STAGE = PATCH_IMAGE_MGMT + "image_stage.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
-
-
-def responses_controller_version(key: str) -> Dict[str, str]:
-    """
-    mock responses from ControllerVersion
-    """
-    response_file = "image_upgrade_responses_ControllerVersion"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
-    return response
-
-
-def responses_image_stage(key: str) -> Dict[str, str]:
-    """
-    mock responses from ImageStage
-    """
-    response_file = "image_upgrade_responses_ImageStage"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_stage: {key} : {response}")
-    return response
-
-
-def responses_issu_details(key: str) -> Dict[str, str]:
-    """
-    mock responses from SwitchIssuDetails
-    """
-    response_file = "image_upgrade_responses_SwitchIssuDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_issu_details: {key} : {response}")
-    return response
 
 
 def test_image_mgmt_stage_00001(image_stage) -> None:
@@ -174,7 +146,7 @@ def test_image_mgmt_stage_00004(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00004a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -216,7 +188,7 @@ def test_image_mgmt_stage_00005(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00005a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -265,7 +237,7 @@ def test_image_mgmt_stage_00006(
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00006a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
     monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
@@ -300,7 +272,7 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00007a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
     monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
@@ -354,7 +326,7 @@ def test_image_mgmt_stage_00008(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00008a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -389,7 +361,7 @@ def test_image_mgmt_stage_00009(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00009a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -399,7 +371,7 @@ def test_image_mgmt_stage_00009(
         "FDO2112189M",
     ]
     instance.check_interval = 0
-    instance._wait_for_image_stage_to_complete() # pylint: disable=protected-access
+    instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -432,7 +404,7 @@ def test_image_mgmt_stage_00010(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00010a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -446,7 +418,7 @@ def test_image_mgmt_stage_00010(
     match += "cvd-2313-leaf, FDO2112189M, 172.22.150.108. image "
     match += "staged percent: 90"
     with pytest.raises(AnsibleFailJson, match=match):
-        instance._wait_for_image_stage_to_complete() # pylint: disable=protected-access
+        instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 1
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -477,7 +449,7 @@ def test_image_mgmt_stage_00011(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00011a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -495,7 +467,7 @@ def test_image_mgmt_stage_00011(
     match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance._wait_for_image_stage_to_complete() # pylint: disable=protected-access
+        instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 1
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -530,7 +502,7 @@ def test_image_mgmt_stage_00012(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00012a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -540,7 +512,7 @@ def test_image_mgmt_stage_00012(
         "FDO2112189M",
     ]
     instance.check_interval = 0
-    instance._wait_for_current_actions_to_complete() # pylint: disable=protected-access
+    instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -570,7 +542,7 @@ def test_image_mgmt_stage_00013(
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00013a"
-        return responses_issu_details(key)
+        return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -588,7 +560,7 @@ def test_image_mgmt_stage_00013(
     instance.check_timeout = 1
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance._wait_for_current_actions_to_complete() # pylint: disable=protected-access
+        instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 1
     assert "FDO21120U5D" in instance.serial_numbers_done

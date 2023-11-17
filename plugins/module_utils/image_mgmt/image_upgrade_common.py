@@ -1,8 +1,10 @@
 """
 Base class for the other image upgrade classes
 """
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import absolute_import, division, print_function
+
+# disabling pylint invalid-name for Ansible standard boilerplate
+__metaclass__ = type # pylint: disable=invalid-name
 
 import inspect
 
@@ -29,6 +31,7 @@ class ImageUpgradeCommon:
         self.fd = None
         self.logfile = "/tmp/ansible_dcnm.log"
         self.module = module
+        self.log_msg("ImageUpgradeCommon.__init__ DONE")
 
     def _handle_response(self, response, verb):
         # don't add self.method_name to this method since
@@ -126,7 +129,9 @@ class ImageUpgradeCommon:
             return
         if self.fd is None:
             try:
-                self.fd = open(f"{self.logfile}", "a+", encoding="UTF-8")
+                # since we need self.fd open throughout several classes
+                # we are disabling pylint R1732
+                self.fd = open(f"{self.logfile}", "a+", encoding="UTF-8") # pylint: disable=consider-using-with
             except IOError as err:
                 msg = f"error opening logfile {self.logfile}. "
                 msg += f"detail: {err}"

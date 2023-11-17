@@ -3648,5 +3648,33 @@
             ],
             "message": ""
         }
+    },
+    "test_image_mgmt_upgrade_task_00020a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "Two switches present",
+            "First switch requires ipAddress and deviceName",
+            "Second switch requires ipAddress, deviceName, serialNumber, fabric"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "ipAddress": "172.22.150.102",
+                    "deviceName": "leaf1"
+                },
+                {
+                    "ipAddress": "172.22.150.108",
+                    "deviceName": "cvd-2313-leaf",
+                    "serialNumber": "FDO2112189M",
+                    "fabric": "hard"
+                }
+            ],
+            "message": ""
+        }
     }
 }

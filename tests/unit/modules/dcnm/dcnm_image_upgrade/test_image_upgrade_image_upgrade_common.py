@@ -30,25 +30,12 @@ from typing import Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-# from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
-#     ImageUpgradeCommon
 
-from .fixture import load_fixture
-from .image_upgrade_utils import MockAnsibleModule, does_not_raise, image_upgrade_common_fixture
+from .image_upgrade_utils import (does_not_raise, image_upgrade_common_fixture,
+                                  responses_image_upgrade_common)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
-
-
-def responses_image_upgrade_common(key: str) -> Dict[str, str]:
-    """
-    Return responses from ImageUpgradeCommon
-    """
-    response_file = "image_upgrade_responses_ImageUpgradeCommon"
-    response = load_fixture(response_file).get(key)
-    verb = response.get("METHOD")
-    print(f"{key} : {verb} : {response}")
-    return {"response": response, "verb": verb}
 
 
 def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
@@ -63,9 +50,11 @@ def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     - image_upgrade_common.fd is None
     - image_upgrade_common.logfile is /tmp/ansible_dcnm.log
     """
+    test_params = {"config": {"switches": [{"ip_address": "172.22.150.105"}]}}
+
     with does_not_raise():
         instance = image_upgrade_common
-    assert instance.params == {}
+    assert instance.params == test_params
     assert instance.debug is False
     assert instance.fd is None
     assert instance.logfile == "/tmp/ansible_dcnm.log"
@@ -107,7 +96,7 @@ def test_image_mgmt_image_upgrade_common_00020(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_response( # pylint: disable=protected-access
+        result = instance._handle_response(  # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )
     assert result.get("success") == expected.get("success")
@@ -150,7 +139,7 @@ def test_image_mgmt_image_upgrade_common_00030(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_response( # pylint: disable=protected-access
+        result = instance._handle_response(  # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )
     assert result.get("success") == expected.get("success")
@@ -193,7 +182,7 @@ def test_image_mgmt_image_upgrade_common_00040(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_response( # pylint: disable=protected-access
+        result = instance._handle_response(  # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )
     assert result.get("success") == expected.get("success")
@@ -234,7 +223,7 @@ def test_image_mgmt_image_upgrade_common_00050(
     instance = image_upgrade_common
 
     data = responses_image_upgrade_common(key)
-    result = instance._handle_response( # pylint: disable=protected-access
+    result = instance._handle_response(  # pylint: disable=protected-access
         data.get("response"), data.get("verb")
     )
     assert result.get("success") == expected.get("success")
@@ -253,7 +242,9 @@ def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
 
     data = responses_image_upgrade_common("test_image_mgmt_image_upgrade_common_00060a")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
-        instance._handle_response(data.get("response"), data.get("verb")) # pylint: disable=protected-access
+        instance._handle_response(
+            data.get("response"), data.get("verb")
+        )  # pylint: disable=protected-access
 
 
 @pytest.mark.parametrize(
@@ -292,7 +283,9 @@ def test_image_mgmt_image_upgrade_common_00070(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_get_response(data.get("response")) # pylint: disable=protected-access
+        result = instance._handle_get_response(
+            data.get("response")
+        )  # pylint: disable=protected-access
 
     assert result.get("success") == expected.get("success")
     assert result.get("changed") == expected.get("changed")
@@ -330,7 +323,7 @@ def test_image_mgmt_image_upgrade_common_00080(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_post_put_delete_response( # pylint: disable=protected-access
+        result = instance._handle_post_put_delete_response(  # pylint: disable=protected-access
             data.get("response")
         )
     assert result.get("success") == expected.get("success")

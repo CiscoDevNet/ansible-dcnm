@@ -33,31 +33,16 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 
-from .fixture import load_fixture
-from .image_upgrade_utils import MockAnsibleModule, does_not_raise, image_policies_fixture
+from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
+                                  image_policies_fixture,
+                                  responses_image_policies)
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-"""
-controller_version: 12
-description: Verify functionality of class ImagePolicies
-"""
-
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
-
 DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
-
-
-def responses_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return the response from ImagePolicies
-    """
-    response_file = "image_upgrade_responses_ImagePolicies"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_policies: {key} : {response}")
-    return response
 
 
 def test_image_mgmt_image_policies_00001(image_policies) -> None:
@@ -317,4 +302,4 @@ def test_image_mgmt_image_policies_00040(image_policies) -> None:
 
     instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
-        instance._get("imageName") # pylint: disable=protected-access
+        instance._get("imageName")  # pylint: disable=protected-access
