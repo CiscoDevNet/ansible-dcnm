@@ -2562,9 +2562,6 @@ class DcnmVrf:
 
         def attach_ready_for_delete(attach_list):
             ready = True
-            # logit("Dump attach list start -------------------- ")
-            # logit(attach_list)
-            # logit("Dump attach list end -------------------- ")
             for attach in attach_list:
                 logit(attach["lanAttachState"])
                 if attach["lanAttachState"] != "NA":
