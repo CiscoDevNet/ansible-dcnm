@@ -580,7 +580,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_url,
 )
 from ansible.module_utils.basic import AnsibleModule
+from pprint import pprint
 
+import datetime
+def logit(msg):
+    with open('/tmp/alog.txt', 'a') as of:
+        d = datetime.datetime.now().replace(microsecond=0).isoformat()
+        of.write("---- %s ----\n%s\n" % (d,msg))
 
 class DcnmVrf:
 
@@ -665,7 +671,7 @@ class DcnmVrf:
                 for have in have_a:
                     if want["serialNumber"] == have["serialNumber"]:
                         # handle instanceValues first
-                        want.update({"freeformConfig": have["freeformConfig"]})  # copy freeformConfig from have as module is not managing it
+                        want.update({"freeformConfig": have.get("freeformConfig", "")})  # copy freeformConfig from have as module is not managing it
                         want_inst_values = {}
                         have_inst_values = {}
                         if (
@@ -1222,6 +1228,7 @@ class DcnmVrf:
         method = "GET"
         path = self.paths["GET_VRF"].format(self.fabric)
 
+        # print("Calling dcnm_send 1")
         vrf_objects = dcnm_send(self.module, method, path)
 
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
@@ -1344,87 +1351,11 @@ class DcnmVrf:
                 attach.update({"isAttached": attach_state})
                 attach.update({"is_deploy": deployed})
 
-                """ Get the VRF LITE extension template and update it to the attach['extensionvalues']"""
-
-                """Get the IP/Interface that is connected to edge router can be get from below query"""
-                method = "GET"
-                path = self.paths["GET_VRF_SWITCH"].format(
-                    self.fabric, attach["vrfName"], sn
-                )
-
-                lite_objects = dcnm_send(self.module, method, path)
-
-                if not lite_objects.get("DATA"):
-                    return
-
-                for sdl in lite_objects["DATA"]:
-                    for epv in sdl["switchDetailsList"]:
-                        if epv.get("extensionValues"):
-                            ext_values = epv["extensionValues"]
-                            ext_values = ast.literal_eval(ext_values)
-                            if ext_values.get("VRF_LITE_CONN") is not None:
-                                ext_values = ast.literal_eval(
-                                    ext_values["VRF_LITE_CONN"]
-                                )
-                                extension_values = {}
-                                extension_values["VRF_LITE_CONN"] = []
-
-                                for ev in ext_values.get("VRF_LITE_CONN"):
-                                    vrflite_con = {}
-
-                                    vrflite_con["VRF_LITE_CONN"] = []
-                                    vrflite_con["VRF_LITE_CONN"].append({})
-                                    vrflite_con["VRF_LITE_CONN"][0]["IF_NAME"] = ev[
-                                        "IF_NAME"
-                                    ]
-                                    vrflite_con["VRF_LITE_CONN"][0]["DOT1Q_ID"] = str(
-                                        ev["DOT1Q_ID"]
-                                    )
-                                    vrflite_con["VRF_LITE_CONN"][0]["IP_MASK"] = ev[
-                                        "IP_MASK"
-                                    ]
-                                    vrflite_con["VRF_LITE_CONN"][0]["NEIGHBOR_IP"] = ev[
-                                        "NEIGHBOR_IP"
-                                    ]
-                                    vrflite_con["VRF_LITE_CONN"][0]["IPV6_MASK"] = ev[
-                                        "IPV6_MASK"
-                                    ]
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "IPV6_NEIGHBOR"
-                                    ] = ev["IPV6_NEIGHBOR"]
-
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "AUTO_VRF_LITE_FLAG"
-                                    ] = "false"
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "PEER_VRF_NAME"
-                                    ] = ev["PEER_VRF_NAME"]
-                                    vrflite_con["VRF_LITE_CONN"][0][
-                                        "VRF_LITE_JYTHON_TEMPLATE"
-                                    ] = "Ext_VRF_Lite_Jython"
-
-                                    if (extension_values["VRF_LITE_CONN"]):
-                                        extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
-                                    else:
-                                        extension_values["VRF_LITE_CONN"] = vrflite_con
-
-                                extension_values["VRF_LITE_CONN"] = json.dumps(
-                                    extension_values["VRF_LITE_CONN"]
-                                )
-
-                                ms_con = {}
-                                ms_con["MULTISITE_CONN"] = []
-                                extension_values["MULTISITE_CONN"] = json.dumps(
-                                    ms_con
-                                )
-                                e_values = json.dumps(extension_values).replace(
-                                    " ", ""
-                                )
-
-                                attach.update({"extensionValues": e_values})
-
-                        ff_config = epv.get("freeformConfig", "")
-                        attach.update({"freeformConfig": ff_config})
+                # Add VRF-Lite Extension Information to have state if the switch role is border
+                role = attach.get('switchRole', "")
+                # role = "border_gateway"
+                if re.search(r"border", role.lower()):
+                    attach = self.get_have_vrf_lite(attach, sn)
 
             if dep_vrf:
                 upd_vrfs += dep_vrf + ","
@@ -1437,6 +1368,70 @@ class DcnmVrf:
         self.have_create = have_create
         self.have_attach = have_attach
         self.have_deploy = have_deploy
+
+    def get_have_vrf_lite(self, attach, sn):
+
+        """ Get the VRF LITE extension template and update it to the attach['extensionvalues']"""
+
+        """Get the IP/Interface that is connected to edge router can be get from below query"""
+        method = "GET"
+        path = self.paths["GET_VRF_SWITCH"].format(
+            self.fabric, attach["vrfName"], sn
+        )
+
+        # print("Calling dcnm_send 2")
+        lite_objects = dcnm_send(self.module, method, path)
+
+        if not lite_objects.get("DATA"):
+            return
+
+        def build_extension_structure(ext_values):
+            ext_values = ast.literal_eval(ext_values["VRF_LITE_CONN"])
+            extension_values = {}
+            extension_values["VRF_LITE_CONN"] = []
+
+            for ev in ext_values.get("VRF_LITE_CONN"):
+                vrflite_con = {}
+
+                vrflite_con["VRF_LITE_CONN"] = []
+                vrflite_con["VRF_LITE_CONN"].append({})
+                vrflite_con["VRF_LITE_CONN"][0]["IF_NAME"] = ev["IF_NAME"]
+                vrflite_con["VRF_LITE_CONN"][0]["DOT1Q_ID"] = str(ev["DOT1Q_ID"])
+                vrflite_con["VRF_LITE_CONN"][0]["IP_MASK"] = ev["IP_MASK"]
+                vrflite_con["VRF_LITE_CONN"][0]["NEIGHBOR_IP"] = ev["NEIGHBOR_IP"]
+                vrflite_con["VRF_LITE_CONN"][0]["IPV6_MASK"] = ev["IPV6_MASK"]
+                vrflite_con["VRF_LITE_CONN"][0]["IPV6_NEIGHBOR"] = ev["IPV6_NEIGHBOR"]
+
+                vrflite_con["VRF_LITE_CONN"][0]["AUTO_VRF_LITE_FLAG"] = "false"
+                vrflite_con["VRF_LITE_CONN"][0]["PEER_VRF_NAME"] = ev["PEER_VRF_NAME"]
+                vrflite_con["VRF_LITE_CONN"][0]["VRF_LITE_JYTHON_TEMPLATE"] = "Ext_VRF_Lite_Jython"
+
+                if (extension_values["VRF_LITE_CONN"]):
+                    extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
+                else:
+                    extension_values["VRF_LITE_CONN"] = vrflite_con
+
+            extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+
+            ms_con = {}
+            ms_con["MULTISITE_CONN"] = []
+            extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+            e_values = json.dumps(extension_values).replace(" ", "")
+
+            return e_values
+            
+        for sdl in lite_objects["DATA"]:
+            for epv in sdl["switchDetailsList"]:
+                if epv.get("extensionValues"):
+                    ext_values = epv["extensionValues"]
+                    ext_values = ast.literal_eval(ext_values)
+                    if ext_values.get("VRF_LITE_CONN") is not None:
+                        attach.update({"extensionValues": build_extension_structure(ext_values)})
+
+                ff_config = epv.get("freeformConfig", "")
+                attach.update({"freeformConfig": ff_config})
+
+        return attach
 
     def get_want(self):
 
@@ -1727,8 +1722,10 @@ class DcnmVrf:
                         attempt += 1
                         path = self.paths["GET_VRF_ID"].format(self.fabric)
                         if self.dcnm_version > 11:
+                            # print("Calling dcnm_send 3")
                             vrf_id_obj = dcnm_send(self.module, "GET", path)
                         else:
+                            # print("Calling dcnm_send 4")
                             vrf_id_obj = dcnm_send(self.module, method, path)
 
                         missing_fabric, not_ok = self.handle_response(
@@ -1820,6 +1817,7 @@ class DcnmVrf:
                     if self.module.check_mode:
                         continue
 
+                    # print("Calling dcnm_send 5")
                     resp = dcnm_send(
                         self.module, method, create_path, json.dumps(want_c)
                     )
@@ -2019,6 +2017,7 @@ class DcnmVrf:
 
         method = "GET"
         path = self.paths["GET_VRF"].format(self.fabric)
+        # print("Calling dcnm_send 6")
         vrf_objects = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -2056,6 +2055,7 @@ class DcnmVrf:
                             self.fabric, vrf["vrfName"]
                         )
 
+                        # print("Calling dcnm_send 7")
                         vrf_attach_objects = dcnm_send(self.module, method, path)
 
                         missing_fabric, not_ok = self.handle_response(
@@ -2089,6 +2089,7 @@ class DcnmVrf:
                                         attach["vrfName"],
                                         attach["switchSerialNo"],
                                     )
+                                    # print("Calling dcnm_send 8")
                                     lite_objects = dcnm_send(self.module, method, path)
                                     if not lite_objects.get("DATA"):
                                         return
@@ -2106,6 +2107,7 @@ class DcnmVrf:
                 method = "GET"
                 path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
+                # print("Calling dcnm_send 9")
                 vrf_attach_objects = dcnm_send(self.module, method, path)
 
                 missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
@@ -2135,6 +2137,7 @@ class DcnmVrf:
                             self.fabric, attach["vrfName"], attach["switchSerialNo"]
                         )
 
+                        # print("Calling dcnm_send 10")
                         lite_objects = dcnm_send(self.module, method, path)
                         if not lite_objects.get("DATA"):
                             return
@@ -2143,440 +2146,523 @@ class DcnmVrf:
 
         self.query = query
 
+    def ptr_diff_create_update(self, path, is_rollback=False):
+        method = "PUT"
+        for vrf in self.diff_create_update:
+            update_path = path + "/{0}".format(vrf["vrfName"])
+            # print("Calling dcnm_send 11")
+            resp = dcnm_send(self.module, method, update_path, json.dumps(vrf))
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "create")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+    def ptr_diff_detach(self, path, is_rollback=False):
+        method = "POST"
+        detach_path = path + "/attachments"
+
+        # Update the fabric name to specific fabric to which the switches belong for multisite fabric.
+        if self.fabric_type == "MFD":
+            for elem in self.diff_detach:
+                for node in elem["lanAttachList"]:
+                    node["fabric"] = self.sn_fab[node["serialNumber"]]
+
+        for d_a in self.diff_detach:
+            for v_a in d_a["lanAttachList"]:
+                if "is_deploy" in v_a.keys():
+                    del v_a["is_deploy"]
+
+        # print("Calling dcnm_send 12")
+        resp = dcnm_send(
+            self.module, method, detach_path, json.dumps(self.diff_detach)
+        )
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "attach")
+        if fail:
+            if is_rollback:
+                self.failed_to_rollback = True
+                return
+            self.failure(resp)
+
+    def ptr_diff_undeploy(self, path, is_rollback=False):
+        method = "POST"
+        deploy_path = path + "/deployments"
+        # print("Calling dcnm_send 13")
+        resp = dcnm_send(
+            self.module, method, deploy_path, json.dumps(self.diff_undeploy)
+        )
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        if fail:
+            if is_rollback:
+                self.failed_to_rollback = True
+                return
+            self.failure(resp)
+
+    def ptr_diff_delete(self, path, is_rollback=False):
+        del_failure = ""
+
+        method = "DELETE"
+        for vrf, state in self.diff_delete.items():
+            if state == "OUT-OF-SYNC":
+                del_failure += vrf + ","
+                continue
+            delete_path = path + "/" + vrf
+            # print("Calling dcnm_send 14")
+            resp = dcnm_send(self.module, method, delete_path)
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "delete")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+    def delete_vrf(self, path, vrf, is_rollback=False):
+        del_failure = ""
+
+        method = "DELETE"
+        delete_path = path + "/" + vrf
+        resp = dcnm_send(self.module, method, delete_path)
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "delete")
+        if fail:
+            if is_rollback:
+                self.failed_to_rollback = True
+                return
+            self.failure(resp)
+
+    def ptr_diff_create(self, path, is_rollback=False):
+        method = "POST"
+        for vrf in self.diff_create:
+            json_to_dict = json.loads(vrf["vrfTemplateConfig"])
+            vlanId = json_to_dict.get("vrfVlanId", "0")
+
+            if vlanId == 0:
+                vlan_path = self.paths["GET_VLAN"].format(self.fabric)
+                # print("Calling dcnm_send 15")
+                vlan_data = dcnm_send(self.module, "GET", vlan_path)
+
+                if vlan_data["RETURN_CODE"] != 200:
+                    self.module.fail_json(
+                        msg="Failure getting autogenerated vlan_id {0}".format(
+                            vlan_data
+                        )
+                    )
+                vlanId = vlan_data["DATA"]
+
+            t_conf = {
+                "vrfSegmentId": vrf["vrfId"],
+                "vrfName": json_to_dict.get("vrfName", ""),
+                "vrfVlanId": vlanId,
+                "vrfVlanName": json_to_dict.get("vrfVlanName"),
+                "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
+                "vrfDescription": json_to_dict.get("vrfDescription"),
+                "mtu": json_to_dict.get("mtu"),
+                "tag": json_to_dict.get("tag"),
+                "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
+                "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
+                "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                "trmEnabled": json_to_dict.get("trmEnabled"),
+                "isRPExternal": json_to_dict.get("isRPExternal"),
+                "rpAddress": json_to_dict.get("rpAddress"),
+                "loopbackNumber": json_to_dict.get("loopbackNumber"),
+                "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
+                "multicastGroup": json_to_dict.get("multicastGroup"),
+                "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
+                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
+                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
+                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
+                "bgpPassword": json_to_dict.get("bgpPassword"),
+                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
+            }
+
+            if self.dcnm_version > 11:
+                t_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
+                t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
+                t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
+                t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
+                t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
+                t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
+                t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
+                t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
+                t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
+
+            vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
+
+            # print("Calling dcnm_send 16")
+            resp = dcnm_send(self.module, method, path, json.dumps(vrf))
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "create")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+    def ptr_diff_attach(self, path, is_rollback=False):
+        for d_a in self.diff_attach:
+            for v_a in d_a["lanAttachList"]:
+                v_a.update(vlan=0)
+                if "is_deploy" in v_a.keys():
+                    del v_a["is_deploy"]
+                if v_a.get("vrf_lite"):
+                    for ip, ser in self.ip_sn.items():
+                        if ser == v_a["serialNumber"]:
+                            """Before apply the vrf_lite config, need double check if the switch role is started wth Border"""
+                            role = self.inventory_data[ip].get("switchRole")
+                            r = re.search(r"border", role.lower())
+                            if not r:
+                                msg = "VRF LITE cannot be attached to switch {0} with role {1}".format(
+                                    ip, role
+                                )
+                                self.module.fail_json(msg=msg)
+
+                    """Get the IP/Interface that is connected to edge router can be get from below query"""
+                    method = "GET"
+                    path = self.paths["GET_VRF_SWITCH"].format(
+                        self.fabric, v_a["vrfName"], v_a["serialNumber"]
+                    )
+
+                    # print("Calling dcnm_send 17")
+                    lite_objects = dcnm_send(self.module, method, path)
+
+                    if not lite_objects.get("DATA"):
+                        return
+
+                    lite = lite_objects["DATA"][0]["switchDetailsList"][0][
+                        "extensionPrototypeValues"
+                    ]
+                    ext_values = None
+                    extension_values = {}
+                    extension_values["VRF_LITE_CONN"] = []
+                    extension_values["MULTISITE_CONN"] = []
+
+                    for ext_l in lite:
+                        if str(ext_l.get("extensionType")) == "VRF_LITE":
+                            ext_values = ext_l["extensionValues"]
+                            ext_values = ast.literal_eval(ext_values)
+                            for ad_l in v_a.get("vrf_lite"):
+                                if ad_l["interface"] == ext_values["IF_NAME"]:
+                                    vrflite_con = {}
+                                    vrflite_con["VRF_LITE_CONN"] = []
+                                    vrflite_con["VRF_LITE_CONN"].append({})
+                                    vrflite_con["VRF_LITE_CONN"][0][
+                                        "IF_NAME"
+                                    ] = ad_l["interface"]
+
+                                    if ad_l["dot1q"]:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "DOT1Q_ID"
+                                        ] = str(ad_l["dot1q"])
+                                    else:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "DOT1Q_ID"
+                                        ] = str(ext_values["DOT1Q_ID"])
+
+                                    if ad_l["ipv4_addr"]:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "IP_MASK"
+                                        ] = ad_l["ipv4_addr"]
+                                    else:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "IP_MASK"
+                                        ] = ext_values["IP_MASK"]
+
+                                    if ad_l["neighbor_ipv4"]:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "NEIGHBOR_IP"
+                                        ] = ad_l["neighbor_ipv4"]
+                                    else:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "NEIGHBOR_IP"
+                                        ] = ext_values["NEIGHBOR_IP"]
+
+                                    vrflite_con["VRF_LITE_CONN"][0][
+                                        "NEIGHBOR_ASN"
+                                    ] = ext_values["NEIGHBOR_ASN"]
+
+                                    if ad_l["ipv6_addr"]:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "IPV6_MASK"
+                                        ] = ad_l["ipv6_addr"]
+                                    else:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "IPV6_MASK"
+                                        ] = ext_values["IPV6_MASK"]
+
+                                    if ad_l["neighbor_ipv6"]:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "IPV6_NEIGHBOR"
+                                        ] = ad_l["neighbor_ipv6"]
+                                    else:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "IPV6_NEIGHBOR"
+                                        ] = ext_values["IPV6_NEIGHBOR"]
+
+                                    vrflite_con["VRF_LITE_CONN"][0][
+                                        "AUTO_VRF_LITE_FLAG"
+                                    ] = ext_values["AUTO_VRF_LITE_FLAG"]
+
+                                    if ad_l["peer_vrf"]:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "PEER_VRF_NAME"
+                                        ] = ad_l["peer_vrf"]
+                                    else:
+                                        vrflite_con["VRF_LITE_CONN"][0][
+                                            "PEER_VRF_NAME"
+                                        ] = ext_values["PEER_VRF_NAME"]
+
+                                    vrflite_con["VRF_LITE_CONN"][0][
+                                        "VRF_LITE_JYTHON_TEMPLATE"
+                                    ] = "Ext_VRF_Lite_Jython"
+                                    if (extension_values["VRF_LITE_CONN"]):
+                                        extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
+                                    else:
+                                        extension_values["VRF_LITE_CONN"] = vrflite_con
+
+                                    ms_con = {}
+                                    ms_con["MULTISITE_CONN"] = []
+                                    extension_values["MULTISITE_CONN"] = json.dumps(
+                                        ms_con
+                                    )
+
+                                    del ad_l
+
+                    if ext_values is None:
+                        for ip, ser in self.ip_sn.items():
+                            if ser == v_a["serialNumber"]:
+                                msg = "There is no VRF LITE capable interface on this switch {0}".format(
+                                    ip
+                                )
+                        self.module.fail_json(msg=msg)
+                    else:
+                        extension_values["VRF_LITE_CONN"] = json.dumps(
+                            extension_values["VRF_LITE_CONN"]
+                        )
+                        v_a["extensionValues"] = json.dumps(
+                            extension_values
+                        ).replace(" ", "")
+                        if v_a.get("vrf_lite", None) is not None:
+                            del v_a["vrf_lite"]
+
+                else:
+                    if "vrf_lite" in v_a.keys():
+                        del v_a["vrf_lite"]
+
+        path = self.paths["GET_VRF"].format(self.fabric)
+        method = "POST"
+        attach_path = path + "/attachments"
+
+        # Update the fabric name to specific fabric to which the switches belong for multisite fabric.
+        if self.fabric_type == "MFD":
+            for elem in self.diff_attach:
+                for node in elem["lanAttachList"]:
+                    node["fabric"] = self.sn_fab[node["serialNumber"]]
+        # print("Calling dcnm_send 18")
+        resp = dcnm_send(
+            self.module, method, attach_path, json.dumps(self.diff_attach)
+        )
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "attach")
+        if fail:
+            if is_rollback:
+                self.failed_to_rollback = True
+                return
+            self.failure(resp)
+
+    def ptr_diff_deploy(self, path, is_rollback=False):
+        method = "POST"
+
+        deploy_path = path + "/deployments"
+        # print("Calling dcnm_send 19")
+        resp = dcnm_send(
+            self.module, method, deploy_path, json.dumps(self.diff_deploy)
+        )
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        if fail:
+            if is_rollback:
+                self.failed_to_rollback = True
+                return
+            self.failure(resp)
+
     def push_to_remote(self, is_rollback=False):
 
         path = self.paths["GET_VRF"].format(self.fabric)
 
-        method = "PUT"
         if self.diff_create_update:
-            for vrf in self.diff_create_update:
-                update_path = path + "/{0}".format(vrf["vrfName"])
-                resp = dcnm_send(self.module, method, update_path, json.dumps(vrf))
-                self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "create")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
+            self.ptr_diff_create_update(path, is_rollback=False)
 
         #
         # The detach and un-deploy operations are executed before the create,attach and deploy to particularly
         # address cases where a VLAN for vrf attachment being deleted is re-used on a new vrf attachment being
         # created. This is needed specially for state: overridden
         #
-
-        method = "POST"
         if self.diff_detach:
-            detach_path = path + "/attachments"
+            self.ptr_diff_detach(path, is_rollback=False)
 
-            # Update the fabric name to specific fabric to which the switches belong for multisite fabric.
-            if self.fabric_type == "MFD":
-                for elem in self.diff_detach:
-                    for node in elem["lanAttachList"]:
-                        node["fabric"] = self.sn_fab[node["serialNumber"]]
-
-            for d_a in self.diff_detach:
-                for v_a in d_a["lanAttachList"]:
-                    if "is_deploy" in v_a.keys():
-                        del v_a["is_deploy"]
-
-            resp = dcnm_send(
-                self.module, method, detach_path, json.dumps(self.diff_detach)
-            )
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "attach")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
-
-        method = "POST"
         if self.diff_undeploy:
-            deploy_path = path + "/deployments"
-            resp = dcnm_send(
-                self.module, method, deploy_path, json.dumps(self.diff_undeploy)
-            )
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "deploy")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
+            self.ptr_diff_undeploy(path, is_rollback=False)
 
-        del_failure = ""
+        # if self.diff_delete and self.wait_for_vrf_del_ready(path):
+        #     self.ptr_diff_delete(path, is_rollback=False)
+        if self.diff_delete:
+            self.delete_when_ready(path)
 
-        if self.diff_delete and self.wait_for_vrf_del_ready():
-            method = "DELETE"
-            for vrf, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC":
-                    del_failure += vrf + ","
-                    continue
-                delete_path = path + "/" + vrf
-                resp = dcnm_send(self.module, method, delete_path)
-                self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "delete")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
-
-        if del_failure:
-            self.result["response"].append(
-                "Deletion of vrfs {0} has failed".format(del_failure[:-1])
-            )
-            self.module.fail_json(msg=self.result)
-
-        method = "POST"
         if self.diff_create:
-
-            for vrf in self.diff_create:
-                json_to_dict = json.loads(vrf["vrfTemplateConfig"])
-                vlanId = json_to_dict.get("vrfVlanId", "0")
-
-                if vlanId == 0:
-                    vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-                    vlan_data = dcnm_send(self.module, "GET", vlan_path)
-
-                    if vlan_data["RETURN_CODE"] != 200:
-                        self.module.fail_json(
-                            msg="Failure getting autogenerated vlan_id {0}".format(
-                                vlan_data
-                            )
-                        )
-                    vlanId = vlan_data["DATA"]
-
-                t_conf = {
-                    "vrfSegmentId": vrf["vrfId"],
-                    "vrfName": json_to_dict.get("vrfName", ""),
-                    "vrfVlanId": vlanId,
-                    "vrfVlanName": json_to_dict.get("vrfVlanName"),
-                    "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
-                    "vrfDescription": json_to_dict.get("vrfDescription"),
-                    "mtu": json_to_dict.get("mtu"),
-                    "tag": json_to_dict.get("tag"),
-                    "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
-                    "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
-                    "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
-                    "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
-                    "trmEnabled": json_to_dict.get("trmEnabled"),
-                    "isRPExternal": json_to_dict.get("isRPExternal"),
-                    "rpAddress": json_to_dict.get("rpAddress"),
-                    "loopbackNumber": json_to_dict.get("loopbackNumber"),
-                    "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
-                    "multicastGroup": json_to_dict.get("multicastGroup"),
-                    "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
-                    "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
-                    "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
-                    "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
-                    "bgpPassword": json_to_dict.get("bgpPassword"),
-                    "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
-                }
-
-                if self.dcnm_version > 11:
-                    t_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
-                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
-                    t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
-                    t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
-                    t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
-                    t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
-                    t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
-                    t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
-                    t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
-                    t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
-
-                vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
-
-                resp = dcnm_send(self.module, method, path, json.dumps(vrf))
-                self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "create")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
+            self.ptr_diff_create(path, is_rollback=False)
 
         if self.diff_attach:
-            for d_a in self.diff_attach:
-                for v_a in d_a["lanAttachList"]:
-                    v_a.update(vlan=0)
-                    if "is_deploy" in v_a.keys():
-                        del v_a["is_deploy"]
-                    if v_a.get("vrf_lite"):
-                        for ip, ser in self.ip_sn.items():
-                            if ser == v_a["serialNumber"]:
-                                """Before apply the vrf_lite config, need double check if the switch role is started wth Border"""
-                                role = self.inventory_data[ip].get("switchRole")
-                                r = re.search(r"\bborder\b", role.lower())
-                                if not r:
-                                    msg = "VRF LITE cannot be attached to switch {0} with role {1}".format(
-                                        ip, role
-                                    )
-                                    self.module.fail_json(msg=msg)
+            self.ptr_diff_attach(path, is_rollback=False)
 
-                        """Get the IP/Interface that is connected to edge router can be get from below query"""
-                        method = "GET"
-                        path = self.paths["GET_VRF_SWITCH"].format(
-                            self.fabric, v_a["vrfName"], v_a["serialNumber"]
-                        )
-
-                        lite_objects = dcnm_send(self.module, method, path)
-
-                        if not lite_objects.get("DATA"):
-                            return
-
-                        lite = lite_objects["DATA"][0]["switchDetailsList"][0][
-                            "extensionPrototypeValues"
-                        ]
-                        ext_values = None
-                        extension_values = {}
-                        extension_values["VRF_LITE_CONN"] = []
-                        extension_values["MULTISITE_CONN"] = []
-
-                        for ext_l in lite:
-                            if str(ext_l.get("extensionType")) == "VRF_LITE":
-                                ext_values = ext_l["extensionValues"]
-                                ext_values = ast.literal_eval(ext_values)
-                                for ad_l in v_a.get("vrf_lite"):
-                                    if ad_l["interface"] == ext_values["IF_NAME"]:
-                                        vrflite_con = {}
-                                        vrflite_con["VRF_LITE_CONN"] = []
-                                        vrflite_con["VRF_LITE_CONN"].append({})
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "IF_NAME"
-                                        ] = ad_l["interface"]
-
-                                        if ad_l["dot1q"]:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "DOT1Q_ID"
-                                            ] = str(ad_l["dot1q"])
-                                        else:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "DOT1Q_ID"
-                                            ] = str(ext_values["DOT1Q_ID"])
-
-                                        if ad_l["ipv4_addr"]:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "IP_MASK"
-                                            ] = ad_l["ipv4_addr"]
-                                        else:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "IP_MASK"
-                                            ] = ext_values["IP_MASK"]
-
-                                        if ad_l["neighbor_ipv4"]:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "NEIGHBOR_IP"
-                                            ] = ad_l["neighbor_ipv4"]
-                                        else:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "NEIGHBOR_IP"
-                                            ] = ext_values["NEIGHBOR_IP"]
-
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "NEIGHBOR_ASN"
-                                        ] = ext_values["NEIGHBOR_ASN"]
-
-                                        if ad_l["ipv6_addr"]:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "IPV6_MASK"
-                                            ] = ad_l["ipv6_addr"]
-                                        else:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "IPV6_MASK"
-                                            ] = ext_values["IPV6_MASK"]
-
-                                        if ad_l["neighbor_ipv6"]:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "IPV6_NEIGHBOR"
-                                            ] = ad_l["neighbor_ipv6"]
-                                        else:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "IPV6_NEIGHBOR"
-                                            ] = ext_values["IPV6_NEIGHBOR"]
-
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "AUTO_VRF_LITE_FLAG"
-                                        ] = ext_values["AUTO_VRF_LITE_FLAG"]
-
-                                        if ad_l["peer_vrf"]:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "PEER_VRF_NAME"
-                                            ] = ad_l["peer_vrf"]
-                                        else:
-                                            vrflite_con["VRF_LITE_CONN"][0][
-                                                "PEER_VRF_NAME"
-                                            ] = ext_values["PEER_VRF_NAME"]
-
-                                        vrflite_con["VRF_LITE_CONN"][0][
-                                            "VRF_LITE_JYTHON_TEMPLATE"
-                                        ] = "Ext_VRF_Lite_Jython"
-                                        if (extension_values["VRF_LITE_CONN"]):
-                                            extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
-                                        else:
-                                            extension_values["VRF_LITE_CONN"] = vrflite_con
-
-                                        ms_con = {}
-                                        ms_con["MULTISITE_CONN"] = []
-                                        extension_values["MULTISITE_CONN"] = json.dumps(
-                                            ms_con
-                                        )
-
-                                        del ad_l
-
-                        if ext_values is None:
-                            for ip, ser in self.ip_sn.items():
-                                if ser == v_a["serialNumber"]:
-                                    msg = "There is no VRF LITE capable interface on this switch {0}".format(
-                                        ip
-                                    )
-                            self.module.fail_json(msg=msg)
-                        else:
-                            extension_values["VRF_LITE_CONN"] = json.dumps(
-                                extension_values["VRF_LITE_CONN"]
-                            )
-                            v_a["extensionValues"] = json.dumps(
-                                extension_values
-                            ).replace(" ", "")
-                            if v_a.get("vrf_lite", None) is not None:
-                                del v_a["vrf_lite"]
-
-                    else:
-                        if "vrf_lite" in v_a.keys():
-                            del v_a["vrf_lite"]
-
-            path = self.paths["GET_VRF"].format(self.fabric)
-            method = "POST"
-            attach_path = path + "/attachments"
-
-            # Update the fabric name to specific fabric to which the switches belong for multisite fabric.
-            if self.fabric_type == "MFD":
-                for elem in self.diff_attach:
-                    for node in elem["lanAttachList"]:
-                        node["fabric"] = self.sn_fab[node["serialNumber"]]
-            resp = dcnm_send(
-                self.module, method, attach_path, json.dumps(self.diff_attach)
-            )
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "attach")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
-
-        method = "POST"
         if self.diff_deploy:
-            deploy_path = path + "/deployments"
-            resp = dcnm_send(
-                self.module, method, deploy_path, json.dumps(self.diff_deploy)
-            )
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "deploy")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
+            self.ptr_diff_deploy(path, is_rollback=False)
 
-    def wait_for_vrf_del_ready(self):
+    def wait_for_vrf_del_ready(self, path):
 
         method = "GET"
-        if self.diff_delete:
-            for vrf in self.diff_delete:
-                state = False
-                path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-                while not state:
-                    resp = dcnm_send(self.module, method, path)
-                    state = True
-                    if resp.get("DATA") is not None:
-                        attach_list = resp["DATA"][0]["lanAttachList"]
-                        for atch in attach_list:
-                            if (
-                                atch["lanAttachState"] == "OUT-OF-SYNC"
-                                or atch["lanAttachState"] == "FAILED"
-                            ):
-                                self.diff_delete.update({vrf: "OUT-OF-SYNC"})
-                                break
-                            if atch["lanAttachState"] != "NA":
-                                self.diff_delete.update({vrf: "DEPLOYED"})
-                                state = False
-                                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                                break
-                            self.diff_delete.update({vrf: "NA"})
+        vrf_names_list = list(self.diff_delete.keys())
+        for vrf in self.diff_delete:
+            state = False
+            path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
+            while not state:
+                # print("Calling dcnm_send 20")
+                resp = dcnm_send(self.module, method, path)
+                state = True
+                if resp.get("DATA") is not None:
+                    attach_list = resp["DATA"][0]["lanAttachList"]
+                    for atch in attach_list:
+                        if (
+                            atch["lanAttachState"] == "OUT-OF-SYNC"
+                            or atch["lanAttachState"] == "FAILED"
+                        ):
+                            self.diff_delete.update({vrf: "OUT-OF-SYNC"})
+                            break
+                        if atch["lanAttachState"] != "NA":
+                            self.diff_delete.update({vrf: "DEPLOYED"})
+                            state = False
+                            time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                            break
+                        self.diff_delete.update({vrf: "NA"})
+                        # Delete VRF
+                        if vrf in vrf_names_list:
+                            self.delete_vrf(path, vrf)
+                            vrf_names_list.remove(vrf)
+
 
             return True
+
+    def delete_when_ready(self, path):
+
+        def attach_ready_for_delete(attach_list):
+            ready = True
+            # logit("Dump attach list start -------------------- ")
+            # logit(attach_list)
+            # logit("Dump attach list end -------------------- ")
+            for attach in attach_list:
+                logit(attach["lanAttachState"])
+                if attach["lanAttachState"] != "NA":
+                    ready = False
+
+            return ready
+
+        method = "GET"
+        delete_path = path
+        vrf_names_list = list(self.diff_delete.keys())
+        while len(vrf_names_list) > 0:
+            for vrf in self.diff_delete:
+                logit("Processing VRF {0}".format(vrf))
+                if vrf not in vrf_names_list:
+                    continue
+                # if len(vrf_names_list) == 0:
+                #     return True
+                path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
+                resp = dcnm_send(self.module, method, path)
+                # logit("Response from GET_VRF_ATTACH Start --------------------")
+                # logit(resp)
+                # logit("Response from GET_VRF_ATTACH End --------------------")
+                if resp.get("DATA") is not None and len(resp["DATA"]) > 0:
+                    attach_list = resp["DATA"][0]["lanAttachList"]
+                    if attach_ready_for_delete(attach_list):
+                        # Delete VRF
+                        if vrf in vrf_names_list:
+                            logit("Deleting VRF {0}".format(vrf))
+                            self.delete_vrf(delete_path, vrf)
+                            vrf_names_list.remove(vrf)
+
+        return True
 
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
 
         state = self.params["state"]
 
-        if state == "merged" or state == "overridden" or state == "replaced":
+        vrf_spec = dict(
+            vrf_name=dict(required=True, type="str", length_max=32),
+            vrf_id=dict(type="int", range_max=16777214),
+            vrf_template=dict(type="str", default="Default_VRF_Universal"),
+            vrf_extension_template=dict(type="str", default="Default_VRF_Extension_Universal"),
+            vlan_id=dict(type="int", range_max=4094),
+            source=dict(type="str", default=None),
+            service_vrf_template=dict(type="str", default=None),
+            attach=dict(type="list"),
+            deploy=dict(type="bool", default=True),
+            vrf_vlan_name=dict(type="str", default=""),
+            vrf_intf_desc=dict(type="str", default=""),
+            vrf_description=dict(type="str", default=""),
+            vrf_int_mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
+            loopback_route_tag=dict(type="int", default=12345, range_max=4294967295),
+            redist_direct_rmap=dict(type="str", default="FABRIC-RMAP-REDIST-SUBNET"),
+            max_bgp_paths=dict(type="int", range_min=1, range_max=64, default=1),
+            max_ibgp_paths=dict(type="int", range_min=1, range_max=64, default=2),
+            ipv6_linklocal_enable=dict(type="bool", default=True),
+            trm_enable=dict(type="bool", default=False),
+            no_rp=dict(type="bool", default=False),
+            rp_external=dict(type="bool", default=False),
+            rp_address=dict(type="str", default=""),
+            rp_loopback_id=dict(type="int", range_max=1023, default=""),
+            underlay_mcast_ip=dict(type="str", default=""),
+            overlay_mcast_group=dict(type="str", default=""),
+            trm_bgw_msite=dict(type="bool", default=False),
+            adv_host_routes=dict(type="bool", default=False),
+            adv_default_routes=dict(type="bool", default=True),
+            static_default_route=dict(type="bool", default=True),
+            bgp_password=dict(type="str", default=""),
+            bgp_passwd_encrypt=dict(type="int", default=3, choices=[3, 7]),
+            netflow_enable=dict(type="bool", default=False),
+            nf_monitor=dict(type="str", default=""),
+            disable_rt_auto=dict(type="bool", default=False),
+            import_vpn_rt=dict(type="str", default=""),
+            export_vpn_rt=dict(type="str", default=""),
+            import_evpn_rt=dict(type="str", default=""),
+            export_evpn_rt=dict(type="str", default=""),
+            import_mvpn_rt=dict(type="str", default=""),
+            export_mvpn_rt=dict(type="str", default=""),
+        )
+        att_spec = dict(
+            ip_address=dict(required=True, type="str"),
+            deploy=dict(type="bool", default=True),
+            vrf_lite=dict(type="list"),
+            import_evpn_rt=dict(type="str", default=""),
+            export_evpn_rt=dict(type="str", default=""),
+        )
+        lite_spec = dict(
+            interface=dict(required=True, type="str"),
+            peer_vrf=dict(type="str"),
+            ipv4_addr=dict(type="ipv4_subnet"),
+            neighbor_ipv4=dict(type="ipv4"),
+            ipv6_addr=dict(type="ipv6"),
+            neighbor_ipv6=dict(type="ipv6"),
+            dot1q=dict(type="int"),
+        )
 
-            vrf_spec = dict(
-                vrf_name=dict(required=True, type="str", length_max=32),
-                vrf_id=dict(type="int", range_max=16777214),
-                vrf_template=dict(type="str", default="Default_VRF_Universal"),
-                vrf_extension_template=dict(
-                    type="str", default="Default_VRF_Extension_Universal"
-                ),
-                vlan_id=dict(type="int", range_max=4094),
-                source=dict(type="str", default=None),
-                service_vrf_template=dict(type="str", default=None),
-                attach=dict(type="list"),
-                deploy=dict(type="bool", default=True),
-                vrf_vlan_name=dict(type="str", default=""),
-                vrf_intf_desc=dict(type="str", default=""),
-                vrf_description=dict(type="str", default=""),
-                vrf_int_mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
-                loopback_route_tag=dict(type="int", default=12345, range_max=4294967295),
-                redist_direct_rmap=dict(type="str", default="FABRIC-RMAP-REDIST-SUBNET"),
-                max_bgp_paths=dict(type="int", range_min=1, range_max=64, default=1),
-                max_ibgp_paths=dict(type="int", range_min=1, range_max=64, default=2),
-                ipv6_linklocal_enable=dict(type="bool", default=True),
-                trm_enable=dict(type="bool", default=False),
-                no_rp=dict(type="bool", default=False),
-                rp_external=dict(type="bool", default=False),
-                rp_address=dict(type="str", default=""),
-                rp_loopback_id=dict(type="int", range_max=1023, default=""),
-                underlay_mcast_ip=dict(type="str", default=""),
-                overlay_mcast_group=dict(type="str", default=""),
-                trm_bgw_msite=dict(type="bool", default=False),
-                adv_host_routes=dict(type="bool", default=False),
-                adv_default_routes=dict(type="bool", default=True),
-                static_default_route=dict(type="bool", default=True),
-                bgp_password=dict(type="str", default=""),
-                bgp_passwd_encrypt=dict(type="int", default=3, choices=[3, 7]),
-                netflow_enable=dict(type="bool", default=False),
-                nf_monitor=dict(type="str", default=""),
-                disable_rt_auto=dict(type="bool", default=False),
-                import_vpn_rt=dict(type="str", default=""),
-                export_vpn_rt=dict(type="str", default=""),
-                import_evpn_rt=dict(type="str", default=""),
-                export_evpn_rt=dict(type="str", default=""),
-                import_mvpn_rt=dict(type="str", default=""),
-                export_mvpn_rt=dict(type="str", default=""),
-            )
-            att_spec = dict(
-                ip_address=dict(required=True, type="str"),
-                deploy=dict(type="bool", default=True),
-                vrf_lite=dict(type="list"),
-                import_evpn_rt=dict(type="str", default=""),
-                export_evpn_rt=dict(type="str", default=""),
-            )
-            lite_spec = dict(
-                interface=dict(required=True, type="str"),
-                peer_vrf=dict(type="str"),
-                ipv4_addr=dict(type="ipv4_subnet"),
-                neighbor_ipv4=dict(type="ipv4"),
-                ipv6_addr=dict(type="ipv6"),
-                neighbor_ipv6=dict(type="ipv6"),
-                dot1q=dict(type="int"),
-            )
+        if state == "merged" or state == "overridden" or state == "replaced":
 
             msg = None
             if self.config:
@@ -2597,7 +2683,7 @@ class DcnmVrf:
                             if "ip_address" not in attach:
                                 msg = "ip_address is mandatory under attach parameters"
             else:
-                if state == "merged" or state == "overridden" or state == "replaced":
+                if state == "merged" or state == "replaced":
                     msg = "config: element is mandatory for this state {0}".format(
                         state
                     )
@@ -2636,66 +2722,10 @@ class DcnmVrf:
 
         else:
 
-            vrf_spec = dict(
-                vrf_name=dict(required=True, type="str", length_max=32),
-                vrf_id=dict(type="int", range_max=16777214),
-                vrf_template=dict(type="str", default="Default_VRF_Universal"),
-                vrf_extension_template=dict(
-                    type="str", default="Default_VRF_Extension_Universal"
-                ),
-                vlan_id=dict(type="int", range_max=4094),
-                source=dict(type="str", default=None),
-                service_vrf_template=dict(type="str", default=None),
-                attach=dict(type="list"),
-                deploy=dict(type="bool"),
-                vrf_vlan_name=dict(type="str", default=""),
-                vrf_intf_desc=dict(type="str", default=""),
-                vrf_description=dict(type="str", default=""),
-                vrf_int_mtu=dict(type="int", range_min=68, range_max=9216, default=9216),
-                loopback_route_tag=dict(type="int", default=12345, range_max=4294967295),
-                redist_direct_rmap=dict(type="str", default="FABRIC-RMAP-REDIST-SUBNET"),
-                max_bgp_paths=dict(type="int", range_min=1, range_max=64, default=1),
-                max_ibgp_paths=dict(type="int", range_min=1, range_max=64, default=2),
-                ipv6_linklocal_enable=dict(type="bool", default=True),
-                trm_enable=dict(type="bool", default=False),
-                no_rp=dict(type="bool", default=False),
-                rp_external=dict(type="bool", default=False),
-                rp_address=dict(type="str", default=""),
-                rp_loopback_id=dict(type="int", range_max=1023, default=""),
-                underlay_mcast_ip=dict(type="str", default=""),
-                overlay_mcast_group=dict(type="str", default=""),
-                trm_bgw_msite=dict(type="bool", default=False),
-                adv_host_routes=dict(type="bool", default=False),
-                adv_default_routes=dict(type="bool", default=True),
-                static_default_route=dict(type="bool", default=True),
-                bgp_password=dict(type="str", default=""),
-                bgp_passwd_encrypt=dict(type="int", default=3, choices=[3, 7]),
-                netflow_enable=dict(type="bool", default=False),
-                nf_monitor=dict(type="str", default=""),
-                disable_rt_auto=dict(type="bool", default=False),
-                import_vpn_rt=dict(type="str", default=""),
-                export_vpn_rt=dict(type="str", default=""),
-                import_evpn_rt=dict(type="str", default=""),
-                export_evpn_rt=dict(type="str", default=""),
-                import_mvpn_rt=dict(type="str", default=""),
-                export_mvpn_rt=dict(type="str", default=""),
-            )
-            att_spec = dict(
-                ip_address=dict(required=True, type="str"),
-                deploy=dict(type="bool", default=True),
-                vrf_lite=dict(type="list", default=[]),
-                import_evpn_rt=dict(type="str", default=""),
-                export_evpn_rt=dict(type="str", default=""),
-            )
-            lite_spec = dict(
-                interface=dict(type="str"),
-                peer_vrf=dict(type="str"),
-                ipv4_addr=dict(type="ipv4_subnet"),
-                neighbor_ipv4=dict(type="ipv4"),
-                ipv6_addr=dict(type="ipv6"),
-                neighbor_ipv6=dict(type="ipv6"),
-                dot1q=dict(type="int"),
-            )
+            # For Delete case the following keys need to be set differently in the spec
+            vrf_spec['deploy'] = dict(type="bool")
+            att_spec['vrf_lite'] = dict(type="list", default=[])
+            lite_spec['interface'] = dict(type="str")
 
             if self.config:
                 valid_vrf, invalid_params = validate_list_of_dicts(
