@@ -655,6 +655,7 @@ class DcnmVrf:
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
+        self.delete_attempts = 500
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
@@ -2603,6 +2604,7 @@ class DcnmVrf:
             return True
 
     def delete_when_ready(self, path):
+        delete_attempts = self.delete_attempts
 
         def attach_ready_for_delete(attach_list):
             ready = True
@@ -2616,7 +2618,8 @@ class DcnmVrf:
         method = "GET"
         delete_path = path
         vrf_names_list = list(self.diff_delete.keys())
-        while len(vrf_names_list) > 0:
+        while len(vrf_names_list) > 0 and delete_attempts > 0:
+            logit("Delete attempts left {0}".format(delete_attempts))
             for vrf in self.diff_delete:
                 logit("Processing VRF {0}".format(vrf))
                 if vrf not in vrf_names_list:
@@ -2636,6 +2639,15 @@ class DcnmVrf:
                             logit("Deleting VRF {0}".format(vrf))
                             self.delete_vrf(delete_path, vrf)
                             vrf_names_list.remove(vrf)
+
+            import time ; time.sleep(5)
+            delete_attempts = delete_attempts - 1
+
+        if delete_attempts == 0 and len(vrf_names_list) > 0:
+            self.result["response"].append(
+                "Deletion of vrfs {0} has failed".format(vrf_names_list)
+            )
+            self.module.fail_json(msg=self.result)
 
         return True
 
