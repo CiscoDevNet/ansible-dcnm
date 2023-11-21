@@ -1228,8 +1228,10 @@ class DcnmVrf:
         method = "GET"
         path = self.paths["GET_VRF"].format(self.fabric)
 
-        # print("Calling dcnm_send 1")
         vrf_objects = dcnm_send(self.module, method, path)
+        logit("\nCalling dcnm_send 1 ------------- \n")
+        logit(vrf_objects)
+        logit("\nCalling dcnm_send 1 ------------- \n")
 
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -1379,8 +1381,10 @@ class DcnmVrf:
             self.fabric, attach["vrfName"], sn
         )
 
-        # print("Calling dcnm_send 2")
         lite_objects = dcnm_send(self.module, method, path)
+        logit("\nCalling dcnm_send 2 ------------- \n")
+        logit(lite_objects)
+        logit("\nCalling dcnm_send 2 ------------- \n")
 
         if not lite_objects.get("DATA"):
             return
@@ -1722,11 +1726,15 @@ class DcnmVrf:
                         attempt += 1
                         path = self.paths["GET_VRF_ID"].format(self.fabric)
                         if self.dcnm_version > 11:
-                            # print("Calling dcnm_send 3")
                             vrf_id_obj = dcnm_send(self.module, "GET", path)
+                            logit("\nCalling dcnm_send 3 ------------- \n")
+                            logit(vrf_id_obj)
+                            logit("\nCalling dcnm_send 3 ------------- \n")
                         else:
-                            # print("Calling dcnm_send 4")
                             vrf_id_obj = dcnm_send(self.module, method, path)
+                            logit("\nCalling dcnm_send 4 ------------- \n")
+                            logit(vrf_id_obj)
+                            logit("\nCalling dcnm_send 4 ------------- \n")
 
                         missing_fabric, not_ok = self.handle_response(
                             vrf_id_obj, "query_dcnm"
@@ -1817,10 +1825,13 @@ class DcnmVrf:
                     if self.module.check_mode:
                         continue
 
-                    # print("Calling dcnm_send 5")
                     resp = dcnm_send(
                         self.module, method, create_path, json.dumps(want_c)
                     )
+                    logit("\nCalling dcnm_send 5 ------------- \n")
+                    logit(resp)
+                    logit("\nCalling dcnm_send 5 ------------- \n")
+
                     self.result["response"].append(resp)
                     fail, self.result["changed"] = self.handle_response(resp, "create")
                     if fail:
@@ -2017,8 +2028,10 @@ class DcnmVrf:
 
         method = "GET"
         path = self.paths["GET_VRF"].format(self.fabric)
-        # print("Calling dcnm_send 6")
         vrf_objects = dcnm_send(self.module, method, path)
+        logit("\nCalling dcnm_send 6 ------------- \n")
+        logit(vrf_objects)
+        logit("\nCalling dcnm_send 6 ------------- \n")
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
         if (
@@ -2055,8 +2068,10 @@ class DcnmVrf:
                             self.fabric, vrf["vrfName"]
                         )
 
-                        # print("Calling dcnm_send 7")
                         vrf_attach_objects = dcnm_send(self.module, method, path)
+                        logit("\nCalling dcnm_send 7 ------------- \n")
+                        logit(vrf_attach_objects)
+                        logit("\nCalling dcnm_send 7 ------------- \n")
 
                         missing_fabric, not_ok = self.handle_response(
                             vrf_attach_objects, "query_dcnm"
@@ -2089,8 +2104,10 @@ class DcnmVrf:
                                         attach["vrfName"],
                                         attach["switchSerialNo"],
                                     )
-                                    # print("Calling dcnm_send 8")
                                     lite_objects = dcnm_send(self.module, method, path)
+                                    logit("\nCalling dcnm_send 8 ------------- \n")
+                                    logit(lite_objects)
+                                    logit("\nCalling dcnm_send 8 ------------- \n")
                                     if not lite_objects.get("DATA"):
                                         return
                                     item["attach"].append(lite_objects.get("DATA")[0])
@@ -2107,8 +2124,10 @@ class DcnmVrf:
                 method = "GET"
                 path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
-                # print("Calling dcnm_send 9")
                 vrf_attach_objects = dcnm_send(self.module, method, path)
+                logit("\nCalling dcnm_send 9 ------------- \n")
+                logit(vrf_attach_objects)
+                logit("\nCalling dcnm_send 9 ------------- \n")
 
                 missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -2137,8 +2156,10 @@ class DcnmVrf:
                             self.fabric, attach["vrfName"], attach["switchSerialNo"]
                         )
 
-                        # print("Calling dcnm_send 10")
                         lite_objects = dcnm_send(self.module, method, path)
+                        logit("\nCalling dcnm_send 10 ------------- \n")
+                        logit(lite_objects)
+                        logit("\nCalling dcnm_send 10 ------------- \n")
                         if not lite_objects.get("DATA"):
                             return
                         item["attach"].append(lite_objects.get("DATA")[0])
@@ -2150,8 +2171,10 @@ class DcnmVrf:
         method = "PUT"
         for vrf in self.diff_create_update:
             update_path = path + "/{0}".format(vrf["vrfName"])
-            # print("Calling dcnm_send 11")
             resp = dcnm_send(self.module, method, update_path, json.dumps(vrf))
+            logit("\nCalling dcnm_send 11 ------------- \n")
+            logit(resp)
+            logit("\nCalling dcnm_send 11 ------------- \n")
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "create")
             if fail:
@@ -2175,10 +2198,12 @@ class DcnmVrf:
                 if "is_deploy" in v_a.keys():
                     del v_a["is_deploy"]
 
-        # print("Calling dcnm_send 12")
         resp = dcnm_send(
             self.module, method, detach_path, json.dumps(self.diff_detach)
         )
+        logit("\nCalling dcnm_send 12 ------------- \n")
+        logit(resp)
+        logit("\nCalling dcnm_send 12 ------------- \n")
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "attach")
         if fail:
@@ -2190,10 +2215,12 @@ class DcnmVrf:
     def ptr_diff_undeploy(self, path, is_rollback=False):
         method = "POST"
         deploy_path = path + "/deployments"
-        # print("Calling dcnm_send 13")
         resp = dcnm_send(
             self.module, method, deploy_path, json.dumps(self.diff_undeploy)
         )
+        logit("\nCalling dcnm_send 13 ------------- \n")
+        logit(resp)
+        logit("\nCalling dcnm_send 13 ------------- \n")
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "deploy")
         if fail:
@@ -2211,8 +2238,10 @@ class DcnmVrf:
                 del_failure += vrf + ","
                 continue
             delete_path = path + "/" + vrf
-            # print("Calling dcnm_send 14")
             resp = dcnm_send(self.module, method, delete_path)
+            logit("\nCalling dcnm_send 14 ------------- \n")
+            logit(resp)
+            logit("\nCalling dcnm_send 14 ------------- \n")
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "delete")
             if fail:
@@ -2227,6 +2256,9 @@ class DcnmVrf:
         method = "DELETE"
         delete_path = path + "/" + vrf
         resp = dcnm_send(self.module, method, delete_path)
+        logit("\nCalling dcnm_send 15 ------------- \n")
+        logit(resp)
+        logit("\nCalling dcnm_send 15 ------------- \n")
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "delete")
         if fail:
@@ -2243,8 +2275,10 @@ class DcnmVrf:
 
             if vlanId == 0:
                 vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-                # print("Calling dcnm_send 15")
                 vlan_data = dcnm_send(self.module, "GET", vlan_path)
+                logit("\nCalling dcnm_send 16 ------------- \n")
+                logit(vlan_data)
+                logit("\nCalling dcnm_send 16 ------------- \n")
 
                 if vlan_data["RETURN_CODE"] != 200:
                     self.module.fail_json(
@@ -2295,8 +2329,10 @@ class DcnmVrf:
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
 
-            # print("Calling dcnm_send 16")
             resp = dcnm_send(self.module, method, path, json.dumps(vrf))
+            logit("\nCalling dcnm_send 17 ------------- \n")
+            logit(resp)
+            logit("\nCalling dcnm_send 17 ------------- \n")
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "create")
             if fail:
@@ -2329,8 +2365,10 @@ class DcnmVrf:
                         self.fabric, v_a["vrfName"], v_a["serialNumber"]
                     )
 
-                    # print("Calling dcnm_send 17")
                     lite_objects = dcnm_send(self.module, method, path)
+                    logit("\nCalling dcnm_send 18 ------------- \n")
+                    logit(lite_objects)
+                    logit("\nCalling dcnm_send 18 ------------- \n")
 
                     if not lite_objects.get("DATA"):
                         return
@@ -2464,10 +2502,12 @@ class DcnmVrf:
             for elem in self.diff_attach:
                 for node in elem["lanAttachList"]:
                     node["fabric"] = self.sn_fab[node["serialNumber"]]
-        # print("Calling dcnm_send 18")
         resp = dcnm_send(
             self.module, method, attach_path, json.dumps(self.diff_attach)
         )
+        logit("\nCalling dcnm_send 19 ------------- \n")
+        logit(resp)
+        logit("\nCalling dcnm_send 19 ------------- \n")
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "attach")
         if fail:
@@ -2480,10 +2520,12 @@ class DcnmVrf:
         method = "POST"
 
         deploy_path = path + "/deployments"
-        # print("Calling dcnm_send 19")
         resp = dcnm_send(
             self.module, method, deploy_path, json.dumps(self.diff_deploy)
         )
+        logit("\nCalling dcnm_send 20 ------------- \n")
+        logit(resp)
+        logit("\nCalling dcnm_send 20 ------------- \n")
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "deploy")
         if fail:
@@ -2532,8 +2574,10 @@ class DcnmVrf:
             state = False
             path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
             while not state:
-                # print("Calling dcnm_send 20")
                 resp = dcnm_send(self.module, method, path)
+                logit("\nCalling dcnm_send 21 ------------- \n")
+                logit(resp)
+                logit("\nCalling dcnm_send 21 ------------- \n")
                 state = True
                 if resp.get("DATA") is not None:
                     attach_list = resp["DATA"][0]["lanAttachList"]
@@ -2581,9 +2625,9 @@ class DcnmVrf:
                 #     return True
                 path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
                 resp = dcnm_send(self.module, method, path)
-                # logit("Response from GET_VRF_ATTACH Start --------------------")
-                # logit(resp)
-                # logit("Response from GET_VRF_ATTACH End --------------------")
+                logit("\nCalling dcnm_send 22 ------------- \n")
+                logit(resp)
+                logit("\nCalling dcnm_send 22 ------------- \n")
                 if resp.get("DATA") is not None and len(resp["DATA"]) > 0:
                     attach_list = resp["DATA"][0]["lanAttachList"]
                     if attach_ready_for_delete(attach_list):
