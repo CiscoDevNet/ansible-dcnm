@@ -655,7 +655,6 @@ class DcnmVrf:
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
-        self.delete_attempts = 500
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
@@ -1356,7 +1355,6 @@ class DcnmVrf:
 
                 # Add VRF-Lite Extension Information to have state if the switch role is border
                 role = attach.get('switchRole', "")
-                # role = "border_gateway"
                 if re.search(r"border", role.lower()):
                     attach = self.get_have_vrf_lite(attach, sn)
 
@@ -1371,6 +1369,7 @@ class DcnmVrf:
         self.have_create = have_create
         self.have_attach = have_attach
         self.have_deploy = have_deploy
+
 
     def get_have_vrf_lite(self, attach, sn):
 
@@ -2604,7 +2603,6 @@ class DcnmVrf:
             return True
 
     def delete_when_ready(self, path):
-        delete_attempts = self.delete_attempts
 
         def attach_ready_for_delete(attach_list):
             ready = True
@@ -2618,8 +2616,13 @@ class DcnmVrf:
         method = "GET"
         delete_path = path
         vrf_names_list = list(self.diff_delete.keys())
+        # Create a variable to keep track of the number of attempts to delete the vrf
+        # by multiplying the length of vrf_names_list by 5
+        delete_attempts = len(vrf_names_list) * 5
         while len(vrf_names_list) > 0 and delete_attempts > 0:
+            logit("*******************************************")
             logit("Delete attempts left {0}".format(delete_attempts))
+            logit("*******************************************")
             for vrf in self.diff_delete:
                 logit("Processing VRF {0}".format(vrf))
                 if vrf not in vrf_names_list:
@@ -2640,7 +2643,7 @@ class DcnmVrf:
                             self.delete_vrf(delete_path, vrf)
                             vrf_names_list.remove(vrf)
 
-            import time ; time.sleep(5)
+            time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
             delete_attempts = delete_attempts - 1
 
         if delete_attempts == 0 and len(vrf_names_list) > 0:
