@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-# disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type  # pylint: disable=invalid-name
+__metaclass__ = type
 
 import inspect
 
@@ -104,7 +103,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
-        if self.result["success"] is False or self.result["found"] == False:
+        if self.result["success"] is False or self.result["found"] is False:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"
@@ -870,7 +869,7 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         if self.data_subclass.get(self.device_name) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.device_name} does not exist "
-            msg += f"on the controller."
+            msg += "on the controller."
             self.module.fail_json(msg)
 
         if self.data_subclass[self.device_name].get(item) is None:

@@ -13,49 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Classes and methods for Ansible support of Nexus image upgrade.
-
-Ansible states "merged", "deleted", and "query" are implemented.
-
-merged: stage, validate, upgrade image for one or more devices
-deleted: delete image policy from one or more devices
-query: return switch issu details for one or more devices
-"""
 from __future__ import absolute_import, division, print_function
 
-import copy
-import inspect
-import json
-from typing import Any, Dict, List
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
-    ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import \
-    ImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
-    ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
-    ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
-    ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
-    SwitchIssuDetailsByIpAddress
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send, validate_list_of_dicts)
-
-__metaclass__ = type  # pylint: disable=invalid-name
+__metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
+__email__ = "arobel@cisco.com"
 
 DOCUMENTATION = """
 ---
@@ -66,7 +29,7 @@ description:
     - Stage, validate, upgrade images.
     - Attach, detach, image policies.
     - Query device issu details.
-author: Cisco Systems, Inc.
+author: Allen Robel (@quantumonion)
 options:
     state:
         description:
@@ -82,13 +45,13 @@ options:
         description:
         - A dictionary containing the image policy configuration.
         type: dict
+        required: true
         suboptions:
             policy:
                 description:
                 - Image policy name
                 type: str
                 required: true
-                default: False
             stage:
                 description:
                 - Stage (True) or unstage (False) an image policy
@@ -141,7 +104,7 @@ options:
                                 description:
                                 - nxos upgrade mode
                                 - Choose between distruptive, non_disruptive, force_non_disruptive
-                                type: string
+                                type: str
                                 required: false
                                 default: distruptive
                             bios_force:
@@ -159,7 +122,7 @@ options:
                                 description:
                                 - The switch module to upgrade
                                 - Choose between ALL, or integer values
-                                type: string
+                                type: str
                                 required: false
                                 default: ALL
                             golden:
@@ -219,7 +182,6 @@ options:
                         - Image policy name
                         type: str
                         required: true
-                        default: False
                     stage:
                         description:
                         - Stage (True) or unstage (False) an image policy
@@ -272,7 +234,7 @@ options:
                                         description:
                                         - nxos upgrade mode
                                         - Choose between distruptive, non_disruptive, force_non_disruptive
-                                        type: string
+                                        type: str
                                         required: false
                                         default: distruptive
                                     bios_force:
@@ -290,7 +252,7 @@ options:
                                         description:
                                         - The switch module to upgrade
                                         - Choose between ALL, or integer values
-                                        type: string
+                                        type: str
                                         required: false
                                         default: ALL
                                     golden:
@@ -347,7 +309,7 @@ EXAMPLES = """
 #
 # query:
 #   Return ISSU details for one or more devices.
-#   
+#
 # deleted:
 #   Delete image policy from one or more devices
 #
@@ -439,9 +401,45 @@ EXAMPLES = """
 """
 
 
+import copy
+import inspect
+import json
+from typing import Any, Dict, List
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+    ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
+    ImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import \
+    ImageStage
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
+    ImageUpgrade
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
+    ImageValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
+    ImageInstallOptions
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
+    SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+    SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_send, validate_list_of_dicts)
+
+
 class ImageUpgradeTask(ImageUpgradeCommon):
     """
-    Ansible support for image policy attach, detach, and query.
+    Classes and methods for Ansible support of Nexus image upgrade.
+
+    Ansible states "merged", "deleted", and "query" are implemented.
+
+    merged: stage, validate, upgrade image for one or more devices
+    deleted: delete image policy from one or more devices
+    query: return switch issu details for one or more devices
     """
 
     def __init__(self, module):
@@ -1011,7 +1009,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
 
-
     def _merge_global_and_switch_configs(self, config) -> None:
         """
         Merge the global config with each switch config and return
@@ -1060,7 +1057,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             switch_config = self._merge_defaults_to_switch_config(switch_config)
 
             self.switch_configs.append(switch_config)
-
 
     def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
         """
@@ -1356,7 +1352,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             new_version = module.get("newVersion", "0x0")
             old_version = module.get("oldVersion", "0x0")
             # int(str, 0) enables python to guess the base
-            # of the string when converting to int.  An
+            # of the str when converting to int.  An
             # error is thrown without this.
             if int(new_version, 0) > int(old_version, 0):
                 msg = f"DEBUG: {self.class_name}.{method_name}: "

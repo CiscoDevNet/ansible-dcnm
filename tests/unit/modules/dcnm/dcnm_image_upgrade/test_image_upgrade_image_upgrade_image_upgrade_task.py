@@ -205,6 +205,7 @@ def test_image_mgmt_upgrade_task_00006(image_upgrade_task) -> None:
     assert instance.defaults["options"]["package"]["install"] is False
     assert instance.defaults["options"]["package"]["uninstall"] is False
 
+
 def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
     """
     Function
@@ -361,7 +362,6 @@ def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> 
     assert switch_2.get("upgrade").get("nxos") is True
     assert switch_2.get("validate") is True
 
-#---------------------------------------------------------
 
 def test_image_mgmt_upgrade_task_00040(image_upgrade_task) -> None:
     """

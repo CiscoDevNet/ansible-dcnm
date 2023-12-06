@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-# disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type  # pylint: disable=invalid-name
+__metaclass__ = type
 
 import copy
 import inspect
@@ -187,10 +186,10 @@ class ImageValidate(ImageUpgradeCommon):
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"Timed out waiting for actions to complete. "
-            msg += f"serial_numbers_done: "
+            msg += "Timed out waiting for actions to complete. "
+            msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += f"serial_numbers_todo: "
+            msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
             self.module.fail_json(msg)
 
@@ -238,10 +237,10 @@ class ImageValidate(ImageUpgradeCommon):
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"Timed out waiting for image validation to complete. "
-            msg += f"serial_numbers_done: "
+            msg += "Timed out waiting for image validation to complete. "
+            msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += f"serial_numbers_todo: "
+            msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
             self.module.fail_json(msg)
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-ImagePolicyAction - unit tests 
+ImagePolicyAction - unit tests
 """
 
 # See the following regarding *_fixture imports

@@ -3,8 +3,7 @@ ImageUpgrade - Methods to upgrade images on NX-OS switches
 """
 from __future__ import absolute_import, division, print_function
 
-# disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type  # pylint: disable=invalid-name
+__metaclass__ = type
 
 import copy
 import inspect

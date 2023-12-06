@@ -1,13 +1,13 @@
 from __future__ import (absolute_import, division, print_function)
 
-# disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type # pylint: disable=invalid-name
+__metaclass__ = type
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import ImageUpgradeCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import ApiEndpoints
+
 
 class ControllerVersion(ImageUpgradeCommon):
     """

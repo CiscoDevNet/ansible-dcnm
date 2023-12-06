@@ -1,11 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
-# disabling pylint invalid-name for Ansible standard boilerplate
-__metaclass__ = type  # pylint: disable=invalid-name
+__metaclass__ = type
 
 import inspect
 import json
-from time import sleep
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -155,8 +153,8 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
         if self.serial_number is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"instance.serial_number must be set before "
-            msg += f"calling refresh()"
+            msg += "instance.serial_number must be set before "
+            msg += "calling refresh()"
             self.module.fail_json(msg)
 
         self.path = self.endpoints.install_options.get("path")

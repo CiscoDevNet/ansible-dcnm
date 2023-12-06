@@ -72,8 +72,6 @@ def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
     assert instance.verb is None
 
 
-
-
 def test_image_mgmt_upgrade_00003(image_upgrade) -> None:
     """
     Function
