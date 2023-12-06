@@ -130,35 +130,10 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.path = None
         self.verb = None
 
-        self._init_defaults()
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
         self.install_options = ImageInstallOptions(self.module)
         self.log_msg("DEBUG: ImageUpgrade.__init__ DONE")
-
-    def _init_defaults(self) -> None:
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        self.defaults: Dict[str, Any] = {}
-        self.defaults["options"] = {}
-        self.defaults["options"]["epld"] = {}
-        self.defaults["options"]["epld"]["module"] = "ALL"
-        self.defaults["options"]["epld"]["golden"] = False
-        self.defaults["options"]["nxos"] = {}
-        self.defaults["options"]["nxos"]["mode"] = "disruptive"
-        self.defaults["options"]["nxos"]["bios_force"] = False
-        self.defaults["options"]["package"] = {}
-        self.defaults["options"]["package"]["install"] = False
-        self.defaults["options"]["package"]["uninstall"] = False
-        self.defaults["options"]["reboot"] = {}
-        self.defaults["options"]["reboot"]["config_reload"] = False
-        self.defaults["options"]["reboot"]["write_erase"] = False
-        self.defaults["reboot"] = False
-        self.defaults["stage"] = True
-        self.defaults["upgrade"] = {}
-        self.defaults["upgrade"]["epld"] = False
-        self.defaults["upgrade"]["nxos"] = True
-        self.defaults["validate"] = True
 
     def _init_properties(self) -> None:
         """
@@ -226,63 +201,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             # used in self._wait_for_current_actions_to_complete()
             self.ip_addresses.add(str(self.issu_detail.ip_address))
 
-    def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        if config.get("stage") is None:
-            config["stage"] = self.defaults["stage"]
-        if config.get("reboot") is None:
-            config["reboot"] = self.defaults["reboot"]
-        if config.get("validate") is None:
-            config["validate"] = self.defaults["validate"]
-        if config.get("upgrade") is None:
-            config["upgrade"] = self.defaults["upgrade"]
-        if config.get("upgrade").get("nxos") is None:
-            config["upgrade"]["nxos"] = self.defaults["upgrade"]["nxos"]
-        if config.get("upgrade").get("epld") is None:
-            config["upgrade"]["epld"] = self.defaults["upgrade"]["epld"]
-        if config.get("options") is None:
-            config["options"] = self.defaults["options"]
-        if config["options"].get("nxos") is None:
-            config["options"]["nxos"] = self.defaults["options"]["nxos"]
-        if config["options"]["nxos"].get("mode") is None:
-            config["options"]["nxos"]["mode"] = self.defaults["options"]["nxos"]["mode"]
-        if config["options"]["nxos"].get("bios_force") is None:
-            config["options"]["nxos"]["bios_force"] = self.defaults["options"]["nxos"][
-                "bios_force"
-            ]
-        if config["options"].get("epld") is None:
-            config["options"]["epld"] = self.defaults["options"]["epld"]
-        if config["options"]["epld"].get("module") is None:
-            config["options"]["epld"]["module"] = self.defaults["options"]["epld"][
-                "module"
-            ]
-        if config["options"]["epld"].get("golden") is None:
-            config["options"]["epld"]["golden"] = self.defaults["options"]["epld"][
-                "golden"
-            ]
-        if config["options"].get("reboot") is None:
-            config["options"]["reboot"] = self.defaults["options"]["reboot"]
-        if config["options"]["reboot"].get("config_reload") is None:
-            config["options"]["reboot"]["config_reload"] = self.defaults["options"][
-                "reboot"
-            ]["config_reload"]
-        if config["options"]["reboot"].get("write_erase") is None:
-            config["options"]["reboot"]["write_erase"] = self.defaults["options"][
-                "reboot"
-            ]["write_erase"]
-        if config["options"].get("package") is None:
-            config["options"]["package"] = self.defaults["options"]["package"]
-        if config["options"]["package"].get("install") is None:
-            config["options"]["package"]["install"] = self.defaults["options"][
-                "package"
-            ]["install"]
-        if config["options"]["package"].get("uninstall") is None:
-            config["options"]["package"]["uninstall"] = self.defaults["options"][
-                "package"
-            ]["uninstall"]
-        return config
-
     def _build_payload(self, device) -> None:
         """
         Build the request payload to upgrade the switches.
@@ -290,13 +208,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"device PRE_DEFAULTS : {json.dumps(device, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
-
-        device = self._merge_defaults_to_switch_config(device)
-
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"device POST_DEFAULTS: {json.dumps(device, indent=4, sort_keys=True)}"
+        msg += f"device FINAL: {json.dumps(device, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
         # TODO:2 Validate ip_address

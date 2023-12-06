@@ -7,8 +7,8 @@
             }
         ],
         "epldOptions": {
-            "golden": false,
-            "moduleNumber": "ALL"
+            "golden": true,
+            "moduleNumber": 27
         },
         "epldUpgrade": true,
         "issuUpgrade": false,
@@ -20,11 +20,11 @@
         "issuUpgradeOptions2": {
             "biosForce": true
         },
-        "pacakgeInstall": false,
+        "pacakgeInstall": true,
         "pacakgeUnInstall": false,
         "reboot": false,
         "rebootOptions": {
-            "configReload": false,
+            "configReload": true,
             "writeErase": false
         }
     },
@@ -49,7 +49,7 @@
         "issuUpgradeOptions2": {
             "biosForce": false
         },
-        "pacakgeInstall": false,
+        "pacakgeInstall": true,
         "pacakgeUnInstall": false,
         "reboot": false,
         "rebootOptions": {

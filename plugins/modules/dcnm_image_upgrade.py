@@ -27,7 +27,6 @@ from __future__ import absolute_import, division, print_function
 import copy
 import inspect
 import json
-from collections.abc import MutableMapping as Map
 from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
@@ -450,6 +449,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
+        self._init_defaults()
         self.endpoints = ApiEndpoints()
         self.have = None
         self.idempotent_want = None
@@ -509,6 +509,33 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
+
+    def _init_defaults(self):
+        """
+        Default values for playbook parameters.
+        These are merged with playbook parameters in
+        self._merge_defaults_to_switch_config()
+        """
+        self.defaults: Dict[str, Any] = {}
+        self.defaults["options"] = {}
+        self.defaults["options"]["epld"] = {}
+        self.defaults["options"]["epld"]["module"] = "ALL"
+        self.defaults["options"]["epld"]["golden"] = False
+        self.defaults["options"]["nxos"] = {}
+        self.defaults["options"]["nxos"]["mode"] = "disruptive"
+        self.defaults["options"]["nxos"]["bios_force"] = False
+        self.defaults["options"]["package"] = {}
+        self.defaults["options"]["package"]["install"] = False
+        self.defaults["options"]["package"]["uninstall"] = False
+        self.defaults["options"]["reboot"] = {}
+        self.defaults["options"]["reboot"]["config_reload"] = False
+        self.defaults["options"]["reboot"]["write_erase"] = False
+        self.defaults["reboot"] = False
+        self.defaults["stage"] = True
+        self.defaults["upgrade"] = {}
+        self.defaults["upgrade"]["epld"] = False
+        self.defaults["upgrade"]["nxos"] = True
+        self.defaults["validate"] = True
 
     def get_have(self) -> None:
         """
@@ -589,6 +616,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Caller: self.get_need_merged()
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
 
         self.have.ip_address = want["ip_address"]
 
@@ -980,17 +1011,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"{','.join(invalid_params)}"
             self.module.fail_json(msg)
 
-    def merge_dicts(self, d1, d2):
-        """
-        Merge d2 into d1 and return d1.
-        Keys in d2 have precedence over keys in d1.
-        """
-        for key in d2:
-            if key in d1 and isinstance(d1[key], Map) and isinstance(d2[key], Map):
-                self.merge_dicts(d1[key], d2[key])
-            else:
-                d1[key] = d2[key]
-        return d1
 
     def _merge_global_and_switch_configs(self, config) -> None:
         """
@@ -1037,7 +1057,36 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
             self.log_msg(msg)
 
+            switch_config = self._merge_defaults_to_switch_config(switch_config)
+
             self.switch_configs.append(switch_config)
+
+
+    def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
+        """
+        For any items in config which are not set, apply the default
+        value from self.defaults.
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        # self._init_defaults()
+
+        default_config = copy.deepcopy(self.defaults)
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"default_config: {json.dumps(default_config, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+
+        switch_config = copy.deepcopy(config)
+        merged_config = self.merge_dicts(default_config, switch_config)
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"default_config: {json.dumps(default_config, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
+        self.log_msg(msg)
+        return self.merge_dicts(default_config, switch_config)
 
     def _validate_switch_configs(self) -> None:
         """
@@ -1047,8 +1096,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         NOTES:
         1.  Final application of missing default parameters is done in
-            ImageUpgrade.build_payload, which calls
-            ImageUpgrade._merge_defaults_to_switch_config
+            self._merge_defaults_to_switch_config
 
         Callers:
             - self.get_want

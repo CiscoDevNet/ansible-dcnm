@@ -72,30 +72,6 @@ def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
     assert instance.verb is None
 
 
-def test_image_mgmt_upgrade_00002(image_upgrade) -> None:
-    """
-    Function
-    - _init_defaults
-
-    Test
-    - defaults dictionary is initialized with expected keys, values
-    """
-    instance = image_upgrade
-    instance._init_defaults()
-    assert isinstance(instance.defaults, dict)
-    assert instance.defaults["reboot"] is False
-    assert instance.defaults["stage"] is True
-    assert instance.defaults["validate"] is True
-    assert instance.defaults["upgrade"]["nxos"] is True
-    assert instance.defaults["upgrade"]["epld"] is False
-    assert instance.defaults["options"]["nxos"]["mode"] == "disruptive"
-    assert instance.defaults["options"]["nxos"]["bios_force"] is False
-    assert instance.defaults["options"]["epld"]["module"] == "ALL"
-    assert instance.defaults["options"]["epld"]["golden"] is False
-    assert instance.defaults["options"]["reboot"]["config_reload"] is False
-    assert instance.defaults["options"]["reboot"]["write_erase"] is False
-    assert instance.defaults["options"]["package"]["install"] is False
-    assert instance.defaults["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_00003(image_upgrade) -> None:
@@ -165,7 +141,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
     devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
     instance.devices = devices
-    instance._validate_devices() # pylint: disable=protected-access
+    instance._validate_devices()  # pylint: disable=protected-access
     assert isinstance(instance.ip_addresses, set)
     assert len(instance.ip_addresses) == 2
     assert "172.22.150.102" in instance.ip_addresses
@@ -185,509 +161,6 @@ def test_image_mgmt_upgrade_00005(image_upgrade) -> None:
     match = "ImageUpgrade.commit: call instance.devices before calling commit."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
-
-
-def test_image_mgmt_upgrade_00006(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        values missing that have defaults defined (see ImageUpgrade._init_defaults)
-
-    Test
-    -   merged_config contains expected default values
-    """
-    instance = image_upgrade
-
-    config = {"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00007(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except upgrade.nxos. This forces the code
-        to take the upgrade.epld is None path.
-
-    Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
-
-    Description
-    Force code coverage of the upgrade.epld is None path
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "upgrade": {"nxos": False},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is False
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00008(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except upgrade.epld. This forces the code
-        to take the upgrade.nxos is None path.
-
-    Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
-
-    Description
-    Force code coverage of the upgrade.nxos is None path
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "upgrade": {"epld": True},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is True
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00009(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options, which is empty.
-        This forces the code to take the options is None path
-        and provide default values for options.nxos and options.epld.
-
-    Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
-
-    Description
-    Force code coverage of the options is None path
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00010(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.nxos.mode.
-        This forces the code to take the options.nxos.bios_force
-        is None path.
-
-    Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
-
-    Description
-    Force code coverage of the options.nxos.bios_force is None path
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"nxos": {"mode": "non_disruptive"}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "non_disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00011(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.nxos.mode is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.nxos.bios_force.  This forces the code
-        to take the options.nxos.mode is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"nxos": {"bios_force": True}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is True
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00012(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.epld.golden is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.epld.module.  This forces
-        the code to take the options.epld.golden is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"epld": {"module": 27}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == 27
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00013(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.epld.module is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.epld.golden.  This forces
-        the code to take the options.epld.module is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"epld": {"golden": True}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is True
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00014(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.reboot.write_erase is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.reboot.config_reload.  This
-        forces the code to take the options.reboot.write_erase is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"reboot": {"config_reload": True}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is True
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00015(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.reboot.config_reload is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.reboot.write_erase.  This
-        forces the code to take the options.reboot.config_reload is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"reboot": {"write_erase": True}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is True
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00016(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.package.uninstall is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.package.install.  This
-        forces the code to take the options.package.uninstall is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"package": {"install": True}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is True
-    assert merged_config["options"]["package"]["uninstall"] is False
-
-
-def test_image_mgmt_upgrade_00017(image_upgrade) -> None:
-    """
-    Function
-    - _merge_defaults_to_switch_config
-
-    Test
-    - Force code coverage of the options.package.install is None path
-
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.package.uninstall.  This
-        forces the code to take the options.package.install is None path.
-
-    Expected results:
-
-    1.  merged_config will contain the expected default values
-    2.  merged_config will contain the expected non-default values
-    """
-    instance = image_upgrade
-
-    config = {
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"package": {"uninstall": True}},
-    }
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is True
 
 
 def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
@@ -749,7 +222,20 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
             "policy": "KR5M",
             "stage": True,
             "upgrade": {"nxos": "FOO", "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": True
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": False,
@@ -823,9 +309,27 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "KR5M",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": False, "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": True
+                },
+                "package": {
+                    "install": True,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": 27,
+                    "golden": True
+                },
+                "reboot": {
+                    "config_reload": True,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": False,
@@ -895,14 +399,33 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": False}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": True,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
         }
     ]
+
     instance.commit()
 
     assert instance.payload == payloads_image_upgrade(key)
@@ -965,14 +488,33 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "options": {"nxos": {"mode": "FOO", "bios_force": False}},
+            "options": {
+                "nxos": {
+                    "mode": "FOO",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
         }
     ]
+
     match = "ImageUpgrade._build_payload_issu_options_1: "
     match += "options.nxos.mode must be one of "
     match += r"\['disruptive', 'force_non_disruptive', 'non_disruptive'\]. "
@@ -1041,14 +583,33 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "options": {"nxos": {"mode": "non_disruptive", "bios_force": False}},
+            "options": {
+                "nxos": {
+                    "mode": "non_disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
         }
     ]
+
     instance.commit()
     assert instance.payload["issuUpgradeOptions1"]["disruptive"] is False
     assert instance.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is False
@@ -1115,9 +676,27 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "options": {"nxos": {"mode": "force_non_disruptive", "bios_force": False}},
+            "options": {
+                "nxos": {
+                    "mode": "force_non_disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
@@ -1187,9 +766,27 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": "FOO"}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": "FOO"
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
@@ -1259,14 +856,33 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "options": {"epld": {"module": "ALL", "golden": True}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": True
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
         }
     ]
+
     match = "ImageUpgrade._build_payload_epld: Invalid configuration for "
     match += "172.22.150.102. If options.epld.golden is True "
     match += "all other upgrade options, e.g. upgrade.nxos, "
@@ -1332,11 +948,25 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
                 "epld": {
                     "module": "FOO",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
                 }
             },
             "validate": True,
@@ -1408,11 +1038,25 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
                 "epld": {
-                    "golden": "FOO",
+                    "module": "ALL",
+                    "golden": "FOO"
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
                 }
             },
             "validate": True,
@@ -1483,9 +1127,27 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": "FOO",
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
-            "reboot": "FOO",
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
@@ -1555,11 +1217,25 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": True,
             "stage": True,
-            "upgrade": {"nxos": True, "epld": False},
+            "upgrade": {"nxos": True, "epld": True},
             "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
                 "reboot": {
                     "config_reload": "FOO",
+                    "write_erase": False
                 }
             },
             "validate": True,
@@ -1631,11 +1307,25 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": True,
             "stage": True,
-            "upgrade": {"nxos": True, "epld": False},
+            "upgrade": {"nxos": True, "epld": True},
             "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
                 "reboot": {
-                    "write_erase": "FOO",
+                    "config_reload": False,
+                    "write_erase": "FOO"
                 }
             },
             "validate": True,
@@ -1712,11 +1402,25 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": True,
             "stage": True,
-            "upgrade": {"nxos": True, "epld": False},
+            "upgrade": {"nxos": True, "epld": True},
             "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
                 "package": {
-                    "uninstall": "FOO",
+                    "install": False,
+                    "uninstall": "FOO"
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
                 }
             },
             "validate": True,
@@ -1789,8 +1493,27 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "NR3F",
+            "reboot": False,
             "stage": True,
-            "upgrade": {"nxos": True, "epld": False},
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": True,
@@ -1959,13 +1682,31 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
 
     instance.devices = [
         {
-            "policy": "KR5M",
+            "policy": "NR3F",
+            "reboot": False,
             "stage": True,
-            "upgrade": {"nxos": False, "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": False
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
-            "policy_changed": False,
+            "policy_changed": True,
         }
     ]
     instance.commit()
@@ -2027,9 +1768,27 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "KR5M",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": False, "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": True
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": False,
@@ -2094,9 +1853,27 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
     instance.devices = [
         {
             "policy": "KR5M",
+            "reboot": False,
             "stage": True,
             "upgrade": {"nxos": False, "epld": True},
-            "options": {"nxos": {"mode": "disruptive", "bios_force": True}},
+            "options": {
+                "nxos": {
+                    "mode": "disruptive",
+                    "bios_force": True
+                },
+                "package": {
+                    "install": False,
+                    "uninstall": False
+                },
+                "epld": {
+                    "module": "ALL",
+                    "golden": False
+                },
+                "reboot": {
+                    "config_reload": False,
+                    "write_erase": False
+                }
+            },
             "validate": True,
             "ip_address": "172.22.150.102",
             "policy_changed": False,

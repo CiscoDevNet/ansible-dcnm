@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 
 import inspect
+from collections.abc import MutableMapping as Map
 
 
 class ImageUpgradeCommon:
@@ -170,3 +171,37 @@ class ImageUpgradeCommon:
         if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
             return None
         return value
+
+    def merge_dicts(self, dict1, dict2):
+        """
+        Merge dict2 into dict1 and return dict1.
+        Keys in dict2 have precedence over keys in dict1.
+        """
+        for key in dict2:
+            # self.log_msg(f"DEBUG: {self.class_name}.merge_dicts: key: {key}")
+
+            if isinstance(dict1.get(key, None), Map) and dict2.get(key, None) is None:
+                # This is to handle a case where the playbook contains an
+                # options dict that is supposed to contain sub-options
+                # (in the example below, 'upgrade' should contain 'nxos' and
+                # 'epld'), but the dict is empty in the playbook.
+                # For example, below, upgrade is specified, but upgrade.nxos
+                # and upgrade.epld are not:
+                #
+                # -   ip_address: 172.22.150.110
+                #     upgrade:
+                #     options:
+                #         epld:
+                #             module: 27
+                #             golden: false
+                # In this case, we copy the entire 'upgrade' dict from dict1 to dict2
+                dict2[key] = dict1[key]
+            elif (
+                key in dict1
+                and isinstance(dict1[key], Map)
+                and isinstance(dict2[key], Map)
+            ):
+                self.merge_dicts(dict1[key], dict2[key])
+            else:
+                dict1[key] = dict2[key]
+        return dict1
