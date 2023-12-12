@@ -62,6 +62,12 @@ class HttpApi(HttpApiBase):
     def set_version(self, version):
         self.version = version
 
+    def set_token(self, token):
+        self.token = token
+
+    def get_token(self):
+        return self.token
+
     def _login_old(self, username, password, method, path):
         """DCNM Helper Function to login to DCNM version 11."""
         # Ansible expresses the persistent_connect_timeout in seconds.
@@ -88,6 +94,7 @@ class HttpApi(HttpApiBase):
             }
             self.login_succeeded = True
             self.set_version(11)
+            self.set_token(self.connection._auth)
 
         except Exception as e:
             self.login_fail_msg.append(
@@ -124,6 +131,7 @@ class HttpApi(HttpApiBase):
             }
             self.login_succeeded = True
             self.set_version(12)
+            self.set_token(self.connection._auth)
 
         except Exception as e:
             self.login_fail_msg.append(
@@ -160,6 +168,7 @@ class HttpApi(HttpApiBase):
             }
             self.login_succeeded = True
             self.set_version(12)
+            self.set_token(self.connection._auth)
 
         except Exception as e:
             self.login_fail_msg.append(
@@ -274,6 +283,9 @@ class HttpApi(HttpApiBase):
                 self.connection._url
             )
             raise ConnectionError(str(e) + msg)
+
+    def get_url_connection(self):
+        return self.connection._url
 
     def send_request(self, method, path, json=None):
         """This method handles all DCNM REST API requests other then login"""

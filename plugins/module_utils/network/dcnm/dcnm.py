@@ -23,6 +23,13 @@ import sys
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
+# Any third party module must be imported as shown. If not ansible sanity tests will fail
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
 
 def validate_ip_address_format(type, item, invalid_params):
 
@@ -386,7 +393,7 @@ def dcnm_reset_connection(module):
 
     conn = Connection(module._socket_path)
 
-    conn.logout()
+    # conn.logout()
     return conn.login(
         conn.get_option("remote_user"), conn.get_option("password")
     )
@@ -429,7 +436,7 @@ def dcnm_version_supported(module):
             supported = int(mo.group(1))
 
     if supported is None:
-        msg = "Unable to determine the DCNM/NDFC Software Version"
+        msg = "Unable to determine the DCNM/NDFC Software Version, " + "RESP = " + str(response)
         module.fail_json(msg=msg)
 
     return supported
@@ -517,3 +524,32 @@ def dcnm_get_url(module, fabric, path, items, module_name):
         iter += 1
 
     return attach_objects
+
+
+def dcnm_get_protocol_and_address(module):
+
+    conn = Connection(module._socket_path)
+
+    url_prefix = conn.get_url_connection()
+    split_url = url_prefix.split(":")
+
+    return [split_url[0], split_url[1]]
+
+
+def dcnm_get_auth_token(module):
+
+    conn = Connection(module._socket_path)
+    return (conn.get_token())
+
+
+def dcnm_post_request(path, hdrs, verify_flag, upload_files):
+
+    resp = requests.post(path, headers=hdrs, verify=verify_flag, files=upload_files)
+    json_resp = resp.json()
+    if json_resp:
+        json_resp["RETURN_CODE"] = resp.status_code
+        json_resp["DATA"] = json_resp["message"]
+        json_resp["METHOD"] = "POST"
+        json_resp["REQUEST_PATH"] = path
+        json_resp.pop("message")
+    return json_resp
