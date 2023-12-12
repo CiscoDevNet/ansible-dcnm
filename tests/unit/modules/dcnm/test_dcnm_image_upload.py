@@ -76,6 +76,12 @@ class TestDcnmImageUploadModule(TestDcnmModule):
 
         self.run_dcnm_post_request = self.mock_dcnm_post_request.start()
 
+        self.mock_open = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upload.open"
+        )
+
+        self.run_open = self.mock_open.start()
+
     def tearDown(self):
 
         super(TestDcnmImageUploadModule, self).tearDown()
@@ -385,6 +391,8 @@ class TestDcnmImageUploadModule(TestDcnmModule):
             {"BearerToken": "SampleTokenForUT6"},
             {"BearerToken": "SampleTokenForUT7"},
         ]
+        self.run_open.side_effect = ["dummy_file"]
+
         # Load image upload related side-effects
         self.load_image_upload_fixtures()
 
