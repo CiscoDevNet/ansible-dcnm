@@ -94,8 +94,8 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert instance.want == []
     assert instance.need == []
     assert instance.result == {"changed": False, "diff": [], "response": []}
-    assert instance.mandatory_global_keys == {"switches"}
-    assert instance.mandatory_switch_keys == {"ip_address"}
+    # assert instance.mandatory_global_keys == {"switches"}
+    # assert instance.mandatory_switch_keys == {"ip_address"}
     assert isinstance(instance.switch_details, SwitchDetails)
     assert isinstance(instance.image_policies, ImagePolicies)
 
@@ -118,66 +118,67 @@ def test_image_mgmt_upgrade_task_00002(image_upgrade_task_bare) -> None:
         assert isinstance(instance, ImageUpgradeTask)
 
 
-def test_image_mgmt_upgrade_task_00003(image_upgrade_task_bare) -> None:
-    """
-    Function
-    - __init__
+# This functionality is now in params_validator.py
+# def test_image_mgmt_upgrade_task_00003(image_upgrade_task_bare) -> None:
+#     """
+#     Function
+#     - __init__
 
-    Test
-    - fail_json is called because config.switches is not a list
-    """
-    key = "test_image_mgmt_upgrade_task_00003a"
+#     Test
+#     - fail_json is called because config.switches is not a list
+#     """
+#     key = "test_image_mgmt_upgrade_task_00003a"
 
-    match = "ImageUpgradeTask.__init__: expected list type for "
-    match += r"self.config\['switches'\]. got str"
+#     match = "ImageUpgradeTask.__init__: expected list type for "
+#     match += r"self.config\['switches'\]. got str"
 
-    mock_ansible_module = MockAnsibleModule()
-    mock_ansible_module.params = load_playbook_config(key)
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance = image_upgrade_task_bare(mock_ansible_module)
-        assert isinstance(instance, ImageUpgradeTask)
+#     mock_ansible_module = MockAnsibleModule()
+#     mock_ansible_module.params = load_playbook_config(key)
+#     with pytest.raises(AnsibleFailJson, match=match):
+#         instance = image_upgrade_task_bare(mock_ansible_module)
+#         assert isinstance(instance, ImageUpgradeTask)
 
+# This functionality is now in params_validator.py
+# def test_image_mgmt_upgrade_task_00004(image_upgrade_task_bare) -> None:
+#     """
+#     Function
+#     - __init__
 
-def test_image_mgmt_upgrade_task_00004(image_upgrade_task_bare) -> None:
-    """
-    Function
-    - __init__
+#     Test
+#     - fail_json is called because config.switches is empty
+#     """
+#     key = "test_image_mgmt_upgrade_task_00004a"
 
-    Test
-    - fail_json is called because config.switches is empty
-    """
-    key = "test_image_mgmt_upgrade_task_00004a"
+#     match = "ImageUpgradeTask.__init__: missing list of switches "
+#     match += "in playbook config."
 
-    match = "ImageUpgradeTask.__init__: missing list of switches "
-    match += "in playbook config."
+#     mock_ansible_module = MockAnsibleModule()
+#     mock_ansible_module.params = load_playbook_config(key)
+#     with pytest.raises(AnsibleFailJson, match=match):
+#         instance = image_upgrade_task_bare(mock_ansible_module)
+#         assert isinstance(instance, ImageUpgradeTask)
 
-    mock_ansible_module = MockAnsibleModule()
-    mock_ansible_module.params = load_playbook_config(key)
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance = image_upgrade_task_bare(mock_ansible_module)
-        assert isinstance(instance, ImageUpgradeTask)
+# This functionality is now in params_validator.py
+# def test_image_mgmt_upgrade_task_00005(image_upgrade_task_bare) -> None:
+#     """
+#     Function
+#     - __init__
 
+#     Test
+#     -   fail_json is called because mandatory keys are missing in
+#         one of the switch configs
+#     """
+#     key = "test_image_mgmt_upgrade_task_00005a"
 
-def test_image_mgmt_upgrade_task_00005(image_upgrade_task_bare) -> None:
-    """
-    Function
-    - __init__
+#     match = "ImageUpgradeTask.__init__: missing mandatory "
+#     match += r"key\(s\) in playbook switch config. expected "
+#     match += r"\{'ip_address'\}, got dict_keys\(\['foo'\]\)"
 
-    Test
-    -   fail_json is called because mandatory keys are missing in
-        one of the switch configs
-    """
-    key = "test_image_mgmt_upgrade_task_00005a"
-
-    match = "ImageUpgradeTask.__init__: missing mandatory "
-    match += r"key\(s\) in playbook switch config. expected "
-    match += r"\{'ip_address'\}, got dict_keys\(\['foo'\]\)"
-
-    mock_ansible_module = MockAnsibleModule()
-    mock_ansible_module.params = load_playbook_config(key)
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance = image_upgrade_task_bare(mock_ansible_module)
-        assert isinstance(instance, ImageUpgradeTask)
+#     mock_ansible_module = MockAnsibleModule()
+#     mock_ansible_module.params = load_playbook_config(key)
+#     with pytest.raises(AnsibleFailJson, match=match):
+#         instance = image_upgrade_task_bare(mock_ansible_module)
+#         assert isinstance(instance, ImageUpgradeTask)
 
 
 def test_image_mgmt_upgrade_task_00006(image_upgrade_task) -> None:
@@ -277,7 +278,7 @@ def test_image_mgmt_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) -> 
 
     assert switch_2.get("ip_address") == "2.2.2.2"
     assert switch_2.get("options").get("epld").get("golden") is True
-    assert switch_2.get("options").get("epld").get("module") == 1
+    assert switch_2.get("options").get("epld").get("module") == "1"
     assert switch_2.get("options").get("nxos").get("bios_force") is True
     assert switch_2.get("options").get("nxos").get("mode") == "non_disruptive"
     assert switch_2.get("options").get("package").get("install") is True

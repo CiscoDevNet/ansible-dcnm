@@ -429,6 +429,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
     SwitchIssuDetailsByIpAddress
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send, validate_list_of_dicts)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.params_validator import \
+    ParamsValidator
 
 
 class ImageUpgradeTask(ImageUpgradeCommon):
@@ -477,33 +479,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.result = {"changed": False, "diff": [], "response": []}
 
         self.mandatory_global_keys = {"switches"}
-        self.mandatory_switch_keys = {"ip_address"}
-
-        if not self.mandatory_global_keys.issubset(self.config):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Missing mandatory key(s) in playbook global config. "
-            msg += f"expected {self.mandatory_global_keys}, "
-            msg += f"got {self.config.keys()}"
-            self.module.fail_json(msg)
-
-        if not isinstance(self.config["switches"], list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "expected list type for self.config['switches']. "
-            msg += f"got {type(self.config['switches']).__name__}"
-            self.module.fail_json(msg)
-
-        if len(self.config["switches"]) == 0:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "missing list of switches in playbook config."
-            self.module.fail_json(msg)
-
-        for switch in self.config["switches"]:
-            if not self.mandatory_switch_keys.issubset(switch):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "missing mandatory key(s) in playbook switch config. "
-                msg += f"expected {self.mandatory_switch_keys}, "
-                msg += f"got {switch.keys()}"
-                self.module.fail_json(msg)
 
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
@@ -567,8 +542,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.log_msg(msg)
 
         self._validate_switch_configs()
-        if not self.switch_configs:
-            return
 
         self.want = self.switch_configs
 
@@ -576,12 +549,18 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         msg += f"self.want: {json.dumps(self.want, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
+        if len(self.want) == 0:
+            self.result["changed"] = False
+            self.exit_json(**self.result)
+
     def _build_idempotent_want(self, want) -> None:
         """
         Build an itempotent want item based on the have item contents.
 
         The have item is obtained from an instance of SwitchIssuDetails
         created in self.get_have().
+
+        Caller: self.get_need_merged()
 
         want structure passed to this method:
 
@@ -611,7 +590,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         and values are modified based on results from the have item,
         and the information returned by ImageInstallOptions.
 
-        Caller: self.get_need_merged()
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -621,27 +599,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         self.have.ip_address = want["ip_address"]
 
-        # msg = f"DEBUG: {self.class_name}.{method_name}: "
-        # msg += f"self.have.ip_address: {self.have.ip_address}"
-        # self.log_msg(msg)
-
         want["policy_changed"] = True
         # The switch does not have an image policy attached.
         # idempotent_want == want with policy_changed = True
         if self.have.serial_number is None:
             self.idempotent_want = copy.deepcopy(want)
-            # msg = f"DEBUG: {self.class_name}.{method_name}: "
-            # msg += "returning due to serial_number is None. "
-            # msg += "self.idempotent_want: "
-            # msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
-            # self.log_msg(msg)
             return
-
-        # msg = f"DEBUG: {self.class_name}.{method_name}: "
-        # msg += f"self.have.serial_number: {self.have.serial_number}, "
-        # msg += f"want['policy']: {want['policy']}, "
-        # msg += f"self.have.policy: {self.have.policy}"
-        # self.log_msg(msg)
 
         # The switch has an image policy attached which is
         # different from the want policy.
@@ -726,15 +689,19 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         for want in self.want:
             self.have.ip_address = want["ip_address"]
+
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"self.have.serial_number: {self.have.serial_number}"
             self.log_msg(msg)
+
             if self.have.serial_number is not None:
                 self._build_idempotent_want(want)
+
                 msg = f"DEBUG: {self.class_name}.{method_name}: "
                 msg += "self.idempotent_want: "
                 msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
                 self.log_msg(msg)
+
                 test_idempotence = set()
                 test_idempotence.add(self.idempotent_want["policy_changed"])
                 test_idempotence.add(self.idempotent_want["stage"])
@@ -797,10 +764,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Build the specs for the parameters expected when state == merged.
 
         Caller: _validate_input_for_merged_state()
-        Return: params_spec, a dictionary containing the set of
-                playbook parameter specifications.
+        Return: params_spec, a dictionary containing playbook
+                parameter specifications.
         """
         params_spec: Dict[str, Any] = {}
+        params_spec["ip_address"] = {}
+        params_spec["ip_address"]["required"] = True
+        params_spec["ip_address"]["type"] = "ipv4"
+
         params_spec["policy"] = {}
         params_spec["policy"]["required"] = False
         params_spec["policy"]["type"] = "str"
@@ -836,6 +807,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["mode"]["required"] = False
         params_spec[section][sub_section]["mode"]["type"] = "str"
         params_spec[section][sub_section]["mode"]["default"] = "disruptive"
+        params_spec[section][sub_section]["mode"]["choices"] = [
+            "disruptive", "non_disruptive", "force_non_disruptive"]
+
 
         params_spec[section][sub_section]["bios_force"] = {}
         params_spec[section][sub_section]["bios_force"]["required"] = False
@@ -852,6 +826,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["module"]["required"] = False
         params_spec[section][sub_section]["module"]["type"] = "str"
         params_spec[section][sub_section]["module"]["default"] = "ALL"
+        params_spec[section][sub_section]["module"]["choices"] = [
+            str(x) for x in range(1, 19)]
+        params_spec[section][sub_section]["module"]["choices"].extend([x for x in range(1,19)])
+        params_spec[section][sub_section]["module"]["choices"].append("ALL")
 
         params_spec[section][sub_section]["golden"] = {}
         params_spec[section][sub_section]["golden"]["required"] = False
@@ -892,122 +870,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         return copy.deepcopy(params_spec)
 
-    def validate_input(self) -> None:
-        """
-        Caller: main()
-
-        Validate the playbook parameters
-        """
-        method_name = inspect.stack()[0][3]
-
-        state = self.params["state"]
-
-        if state not in ["merged", "deleted", "query"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "This module supports deleted, merged, and query states. "
-            msg += f"Got state {state}"
-            self.module.fail_json(msg)
-
-        if state == "merged":
-            self._validate_input_for_merged_state()
-            return
-        if state == "deleted":
-            self._validate_input_for_deleted_state()
-            return
-        if state == "query":
-            self._validate_input_for_query_state()
-            return
-
-    def _validate_input_for_merged_state(self) -> None:
-        """
-        Caller: self.validate_input()
-
-        Validate that self.config contains appropriate values for merged state
-        """
-        method_name = inspect.stack()[0][3]
-
-        if not self.config:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "config: element is mandatory for state merged"
-            self.module.fail_json(msg)
-
-        params_spec = self._build_params_spec_for_merged_state()
-
-        valid_params, invalid_params = validate_list_of_dicts(
-            self.config.get("switches"), params_spec, self.module
-        )
-        # We're not using self.validated. Keeping this to avoid
-        # linter error due to non-use of valid_params
-        self.validated = copy.deepcopy(valid_params)
-
-        if invalid_params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid parameters in playbook: "
-            msg += f"{','.join(invalid_params)}"
-            self.module.fail_json(msg)
-
-    def _validate_input_for_deleted_state(self) -> None:
-        """
-        Caller: self.validate_input()
-
-        Validate that self.config contains appropriate values for deleted state
-
-        NOTES:
-        1. This is currently identical to _validate_input_for_merged_state()
-        2. Adding in case there are differences in the future
-        """
-        method_name = inspect.stack()[0][3]
-
-        params_spec = self._build_params_spec_for_merged_state()
-        if not self.config:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "config: element is mandatory for state deleted"
-            self.module.fail_json(msg)
-
-        valid_params, invalid_params = validate_list_of_dicts(
-            self.config.get("switches"), params_spec, self.module
-        )
-        # We're not using self.validated. Keeping this to avoid
-        # linter error due to non-use of valid_params
-        self.validated = copy.deepcopy(valid_params)
-
-        if invalid_params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid parameters in playbook: "
-            msg += f"{','.join(invalid_params)}"
-            self.module.fail_json(msg)
-
-    def _validate_input_for_query_state(self) -> None:
-        """
-        Caller: self.validate_input()
-
-        Validate that self.config contains appropriate values for query state
-
-        NOTES:
-        1. This is currently identical to _validate_input_for_merged_state()
-        2. Adding in case there are differences in the future
-        """
-        method_name = inspect.stack()[0][3]
-
-        params_spec = self._build_params_spec_for_merged_state()
-
-        if not self.config:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "config: element is mandatory for state query"
-            self.module.fail_json(msg)
-
-        valid_params, invalid_params = validate_list_of_dicts(
-            self.config.get("switches"), params_spec, self.module
-        )
-        # We're not using self.validated. Keeping this to avoid
-        # linter error due to non-use of valid_params
-        self.validated = copy.deepcopy(valid_params)
-
-        if invalid_params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid parameters in playbook: "
-            msg += f"{','.join(invalid_params)}"
-            self.module.fail_json(msg)
 
     def _merge_global_and_switch_configs(self, config) -> None:
         """
@@ -1064,58 +926,46 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         value from self.defaults.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        # self._init_defaults()
 
         default_config = copy.deepcopy(self.defaults)
+        switch_config = copy.deepcopy(config)
+        merged_config = self.merge_dicts(default_config, switch_config)
+
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"default_config: {json.dumps(default_config, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
-        switch_config = copy.deepcopy(config)
-        merged_config = self.merge_dicts(default_config, switch_config)
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"default_config: {json.dumps(default_config, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
         self.log_msg(msg)
+
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
         self.log_msg(msg)
+
         return self.merge_dicts(default_config, switch_config)
 
     def _validate_switch_configs(self) -> None:
         """
-        Ensure mandatory parameters are present for each switch
-            - fail_json if this isn't the case
-        Set defaults for missing optional parameters
-
-        NOTES:
-        1.  Final application of missing default parameters is done in
-            self._merge_defaults_to_switch_config
+        Verify parameters for each switch
+        - fail_json if any parameters are not valid
 
         Callers:
             - self.get_want
         """
         method_name = inspect.stack()[0][3]
+        validator = ParamsValidator(self.module)
+        validator.params_spec = self._build_params_spec_for_merged_state()
+        msg = f"DEBUG: {self.class_name}.{method_name}: "
+        msg += f"params_spec[options][epld][module][choices]: "
+        msg += f"{validator.params_spec['options']['epld']['module']['choices']}"
+        self.log_msg(msg)
+
 
         for switch in self.switch_configs:
-            if not switch.get("ip_address"):
-                msg = f"{self.class_name}.{method_name}: "
-                msg = "playbook is missing ip_address for at least one switch"
-                self.module.fail_json(msg)
+            validator.parameters = switch
+            validator.validate()
 
-            # for query state, the only mandatory parameter is ip_address
-            # so skip the remaining checks
-            if self.params.get("state") == "query":
-                continue
-
-            if switch.get("policy") is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "playbook is missing image policy for switch "
-                msg += f"{switch.get('ip_address')} "
-                msg += "and global image policy is not defined."
-                self.module.fail_json(msg)
 
     def _build_policy_attach_payload(self) -> None:
         """
@@ -1400,6 +1250,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.switch_details.refresh()
 
         for switch in self.need:
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+
             self.switch_details.ip_address = switch.get("ip_address")
             device = {}
             device["serial_number"] = self.switch_details.serial_number
@@ -1521,9 +1375,9 @@ def main():
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
     task_module = ImageUpgradeTask(ansible_module)
-    task_module.validate_input()
-    task_module.get_have()
+
     task_module.get_want()
+    task_module.get_have()
 
     if ansible_module.params["state"] == "merged":
         task_module.get_need_merged()
@@ -1532,25 +1386,22 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.get_need_query()
 
-    if ansible_module.params["state"] == "query":
-        task_module.result["changed"] = False
-    if ansible_module.params["state"] in ["merged", "deleted"]:
-        if task_module.need:
-            task_module.result["changed"] = True
-        else:
-            ansible_module.exit_json(**task_module.result)
-
-    if ansible_module.check_mode:
-        task_module.result["changed"] = False
+    task_module.result["changed"] = False
+    if len(task_module.need) == 0:
         ansible_module.exit_json(**task_module.result)
 
-    if task_module.need:
-        if ansible_module.params["state"] == "merged":
-            task_module.handle_merged_state()
-        elif ansible_module.params["state"] == "deleted":
-            task_module.handle_deleted_state()
-        elif ansible_module.params["state"] == "query":
-            task_module.handle_query_state()
+    if ansible_module.check_mode:
+        ansible_module.exit_json(**task_module.result)
+
+    if ansible_module.params["state"] in ["merged", "deleted"]:
+        task_module.result["changed"] = True
+
+    if ansible_module.params["state"] == "merged":
+        task_module.handle_merged_state()
+    elif ansible_module.params["state"] == "deleted":
+        task_module.handle_deleted_state()
+    elif ansible_module.params["state"] == "query":
+        task_module.handle_query_state()
 
     ansible_module.exit_json(**task_module.result)
 
