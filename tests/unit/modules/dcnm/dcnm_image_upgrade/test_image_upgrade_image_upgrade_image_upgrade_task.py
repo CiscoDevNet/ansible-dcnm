@@ -367,493 +367,522 @@ def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> 
 def test_image_mgmt_upgrade_task_00040(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
 
     Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        values missing that have defaults defined
-        (see ImageUpgradeTask._init_defaults)
+    -   instance.switch_configs list is initialized with one switch
+        config containing mandatory keys only, such that all optional
+        (default) keys are populated by _merge_defaults_to_switch_configs
+        (see ImageUpgradeTask._init_defaults) for the default values.
 
     Test
-    -   merged_config contains expected default values
+    -   instance.switch_configs contains expected default values
     """
     instance = image_upgrade_task
 
-    config = {"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}
-
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    switch_configs = [{"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}]
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00041(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
 
     Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except upgrade.nxos.
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (upgrade.nxos) which is set to a non-default value.
 
     Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Description
-    Force code coverage of the upgrade.epld is None path
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "upgrade": {"nxos": False},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is False
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is False
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00042(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
 
     Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except upgrade.epld.
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (upgrade.epld) which is set to a non-default value.
 
     Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Description
-    Force code coverage of the upgrade.nxos is None path
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "upgrade": {"epld": True},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is True
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is True
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00043(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
 
     Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options, which is empty.
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options) which is expected to contain sub-options, but which
+        is empty.
 
     Test
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
     Description
     When options is empty, the default values for all sub-options are added
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00044(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
 
     Setup
-    -   _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.nxos.mode.
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.nxos.mode) which is set to a non-default value.
 
     Test
     -   Default value for options.nxos.bios_force is added
-    -   merged_config contains expected default values
-    -   merged_config contains expected non-default values
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
+    Description
+    When options.nxos.mode is the only key present in options.nxos,
+    options.nxos.bios_force sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"nxos": {"mode": "non_disruptive"}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "non_disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "non_disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00045(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.nxos.bios_force) which is set to a non-default value.
 
     Test
-    - Default value of options.nxos.mode is added
+    -   Default value for options.nxos.mode is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.nxos.bios_force.
-
-    Expected results:
-
-    1.  merged_config contains the expected default values
-    2.  merged_config contains the expected non-default values
+    Description
+    When options.nxos.bios_force is the only key present in options.nxos,
+    options.nxos.mode sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"nxos": {"bios_force": True}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is True
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is True
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00046(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.epld.module) which is set to a non-default value.
 
     Test
-    - Default value of options.epld.golden is added
+    -   Default value for options.epld.golden is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.epld.module.
-
-    Expected results:
-
-    1.  merged_config contains the expected default values
-    2.  merged_config contains the expected non-default values
+    Description
+    When options.epld.module is the only key present in options.epld,
+    options.epld.golden sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"epld": {"module": 27}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == 27
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == 27
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00047(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.epld.golden) which is set to a non-default value.
 
     Test
-    - Default value for options.epld.module is added
+    -   Default value for options.epld.module is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.epld.golden.
-
-    Expected results:
-
-    1.  options.epld.module is set to ALL
-    2.  merged_config contains the expected default values
-    3.  merged_config contains the expected non-default values
+    Description
+    When options.epld.golden is the only key present in options.epld,
+    options.epld.module sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"epld": {"golden": True}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is True
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is True
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00048(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.reboot.config_reload) which is set to a non-default
+        value.
 
     Test
-    - Default value for options.reboot.write_erase is added
+    -   Default value for options.reboot.write_erase is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.reboot.config_reload.
-
-    Expected results:
-
-    1.  options.reboot.write_erase is set to False
-    2.  merged_config contains the expected default values
-    3.  merged_config contains the expected non-default values
+    Description
+    When options.reboot.config_reload is the only key present in options.reboot,
+    options.reboot.write_erase sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"reboot": {"config_reload": True}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is True
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is True
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00049(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.reboot.write_erase) which is set to a non-default
+        value.
 
     Test
-    - Default value for options.reboot.config_reload is added
+    -   Default value for options.reboot.config_reload is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.reboot.write_erase.
-
-    Expected results:
-
-    1.  options.reboot.config_reload is set to False
-    2.  merged_config contains the expected default values
-    3.  merged_config contains the expected non-default values
+    Description
+    When options.reboot.write_erase is the only key present in options.reboot,
+    options.reboot.config_reload sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"reboot": {"write_erase": True}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is True
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is True
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00050(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.package.install) which is set to a non-default
+        value.
 
     Test
-    - Default value for options.package.uninstall is added
+    -   Default value for options.package.uninstall is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.package.install.
-
-    Expected results:
-
-    1.  options.package.uninstall is set to False
-    2.  merged_config contains expected default values
-    3.  merged_config contains expected non-default values
+    Description
+    When options.package.install is the only key present in options.package,
+    options.package.uninstall sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"package": {"install": True}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is True
-    assert merged_config["options"]["package"]["uninstall"] is False
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is True
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
 def test_image_mgmt_upgrade_task_00051(image_upgrade_task) -> None:
     """
     Function
-    - _merge_defaults_to_switch_config
+    - _merge_defaults_to_switch_configs
+
+    Setup
+    -   instance.switch_configs list is initialized with one switch
+        config containing all mandatory keys, and one optional/default
+        key (options.package.uninstall) which is set to a non-default
+        value.
 
     Test
-    - Default value for options.package.install is added
+    -   Default value for options.package.install is added
+    -   instance.switch_configs contains expected default values
+    -   instance.switch_configs contains expected non-default values
 
-    Setup:
-    1.  _merge_defaults_to_switch_config is passed a dictionary with all
-        default values missing except options.package.uninstall.
-
-    Expected results:
-
-    1.  options.package.install is set to False
-    2.  merged_config contains the expected default values
-    3.  merged_config contains the expected non-default values
+    Description
+    When options.package.uninstall is the only key present in options.package,
+    options.package.install sub-option should be added with default value.
     """
     instance = image_upgrade_task
 
-    config = {
+    switch_configs = [{
         "policy": "KR5M",
         "ip_address": "172.22.150.102",
         "policy_changed": False,
         "options": {"package": {"uninstall": True}},
-    }
+    }]
 
-    merged_config = instance._merge_defaults_to_switch_config(config)
-    assert merged_config["reboot"] is False
-    assert merged_config["stage"] is True
-    assert merged_config["validate"] is True
-    assert merged_config["upgrade"]["nxos"] is True
-    assert merged_config["upgrade"]["epld"] is False
-    assert merged_config["options"]["nxos"]["mode"] == "disruptive"
-    assert merged_config["options"]["nxos"]["bios_force"] is False
-    assert merged_config["options"]["epld"]["module"] == "ALL"
-    assert merged_config["options"]["epld"]["golden"] is False
-    assert merged_config["options"]["reboot"]["config_reload"] is False
-    assert merged_config["options"]["reboot"]["write_erase"] is False
-    assert merged_config["options"]["package"]["install"] is False
-    assert merged_config["options"]["package"]["uninstall"] is True
+    instance.switch_configs = switch_configs
+    instance._merge_defaults_to_switch_configs()
+    assert instance.switch_configs[0]["reboot"] is False
+    assert instance.switch_configs[0]["stage"] is True
+    assert instance.switch_configs[0]["validate"] is True
+    assert instance.switch_configs[0]["upgrade"]["nxos"] is True
+    assert instance.switch_configs[0]["upgrade"]["epld"] is False
+    assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
+    assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "ALL"
+    assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
+    assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
+    assert instance.switch_configs[0]["options"]["package"]["install"] is False
+    assert instance.switch_configs[0]["options"]["package"]["uninstall"] is True

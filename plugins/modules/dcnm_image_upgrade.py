@@ -406,6 +406,8 @@ import inspect
 import json
 from typing import Any, Dict, List
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -423,14 +425,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_valida
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
     ImageInstallOptions
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.params_validate import \
+    ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send, validate_list_of_dicts)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.params_validator import \
-    ParamsValidator
 
 
 class ImageUpgradeTask(ImageUpgradeCommon):
@@ -535,6 +535,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.log_msg(msg)
 
         self._merge_global_and_switch_configs(self.config)
+
+        self._merge_defaults_to_switch_configs()
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += "Calling _validate_switch_configs with self.switch_configs: "
@@ -763,7 +765,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         Build the specs for the parameters expected when state == merged.
 
-        Caller: _validate_input_for_merged_state()
+        Caller: _validate_switch_configs()
         Return: params_spec, a dictionary containing playbook
                 parameter specifications.
         """
@@ -824,11 +826,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         params_spec[section][sub_section]["module"] = {}
         params_spec[section][sub_section]["module"]["required"] = False
-        params_spec[section][sub_section]["module"]["type"] = "str"
+        params_spec[section][sub_section]["module"]["type"] = ["str", "int"]
         params_spec[section][sub_section]["module"]["default"] = "ALL"
         params_spec[section][sub_section]["module"]["choices"] = [
-            str(x) for x in range(1, 19)]
-        params_spec[section][sub_section]["module"]["choices"].extend([x for x in range(1,19)])
+            str(x) for x in range(1, 33)]
+        params_spec[section][sub_section]["module"]["choices"].extend([x for x in range(1,33)])
         params_spec[section][sub_section]["module"]["choices"].append("ALL")
 
         params_spec[section][sub_section]["golden"] = {}
@@ -871,21 +873,38 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         return copy.deepcopy(params_spec)
 
 
+    @staticmethod
+    def _build_params_spec_for_query_state() -> Dict[str, Any]:
+        """
+        Build the specs for the parameters expected when state == query.
+
+        Caller: _validate_switch_configs()
+        Return: params_spec, a dictionary containing playbook
+                parameter specifications.
+        """
+        params_spec: Dict[str, Any] = {}
+        params_spec["ip_address"] = {}
+        params_spec["ip_address"]["required"] = True
+        params_spec["ip_address"]["type"] = "ipv4"
+
+        return copy.deepcopy(params_spec)
+
+
     def _merge_global_and_switch_configs(self, config) -> None:
         """
-        Merge the global config with each switch config and return
-        a dict of switch configs keyed on switch ip_address.
+        Merge the global config with each switch config and
+        populate list of merged configs self.switch_configs.
 
         Merge rules:
         1.  switch_config takes precedence over global_config.
         2.  If switch_config is missing a parameter, use parameter
             from global_config.
-        3.  If a switch_config has a parameter, use it.
-        4.  If global_config and switch_config are both missing an
-            optional parameter, use the parameter's default value
-            (done in ImageUpgrade.build_payload)
+        3.  If switch_config has a parameter, use it.
+        4.  If global_config and switch_config are both missing a
+            parameter, use the parameter's default value, if there
+            is one (see self._merge_defaults_to_switch_configs)
         5.  If global_config and switch_config are both missing a
-            mandatory parameter, fail (done in self._validate_switch_configs)
+            mandatory parameter, fail (see self._validate_switch_configs)
         """
         method_name = inspect.stack()[0][3]
 
@@ -895,6 +914,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.module.fail_json(msg)
 
         self.switch_configs = []
+        merged_configs = []
         for switch in config["switches"]:
             # we need to rebuild global_config in this loop
             # because merge_dicts modifies it in place
@@ -916,51 +936,54 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
             self.log_msg(msg)
 
-            switch_config = self._merge_defaults_to_switch_config(switch_config)
+            merged_configs.append(switch_config)
+        self.switch_configs = copy.copy(merged_configs)
 
-            self.switch_configs.append(switch_config)
 
-    def _merge_defaults_to_switch_config(self, config) -> Dict[str, Any]:
+    def _merge_defaults_to_switch_configs(self) -> None:
         """
         For any items in config which are not set, apply the default
         value from self.defaults.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        default_config = copy.deepcopy(self.defaults)
-        switch_config = copy.deepcopy(config)
-        merged_config = self.merge_dicts(default_config, switch_config)
+        configs_to_merge = copy.copy(self.switch_configs)
+        merged_configs = []
+        for switch_config in configs_to_merge:
+            # we need to rebuild default_config in this loop
+            # because merge_dicts modifies it in place
+            merged_config = self.merge_dicts(
+                copy.deepcopy(self.defaults),
+                copy.deepcopy(switch_config))
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"default_config: {json.dumps(default_config, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
+            msg = f"DEBUG: {self.class_name}.{method_name}: "
+            msg += f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
+            self.log_msg(msg)
+            merged_configs.append(merged_config)
+        self.switch_configs = copy.copy(merged_configs)
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
-
-        return self.merge_dicts(default_config, switch_config)
 
     def _validate_switch_configs(self) -> None:
         """
         Verify parameters for each switch
         - fail_json if any parameters are not valid
+        - fail_json if any mandatory parameters are missing
 
         Callers:
             - self.get_want
         """
         method_name = inspect.stack()[0][3]
-        validator = ParamsValidator(self.module)
-        validator.params_spec = self._build_params_spec_for_merged_state()
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"params_spec[options][epld][module][choices]: "
-        msg += f"{validator.params_spec['options']['epld']['module']['choices']}"
-        self.log_msg(msg)
-
+        validator = ParamsValidate(self.module)
+        if self.module.params.get("state") == "merged":
+            validator.params_spec = self._build_params_spec_for_merged_state()
+        if self.module.params.get("state") == "deleted":
+            validator.params_spec = self._build_params_spec_for_merged_state()
+        if self.module.params.get("state") == "query":
+            validator.params_spec = self._build_params_spec_for_query_state()
 
         for switch in self.switch_configs:
             validator.parameters = switch

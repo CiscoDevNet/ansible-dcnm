@@ -14,7 +14,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrad
     ImageUpgradeCommon
 
 
-class ParamsValidator(ImageUpgradeCommon):
+class ParamsValidate(ImageUpgradeCommon):
     """
     Validate playbook parameters.
 
@@ -124,7 +124,9 @@ class ParamsValidator(ImageUpgradeCommon):
         Verify that the type of value matches the expected type
         """
         method_name = inspect.stack()[0][3]
-
+        if isinstance(expected_type, list):
+            self.verify_multitype(expected_type, value, param)
+            return
         invalid = False
         if expected_type == "str":
             if not isinstance(value, str):
@@ -175,6 +177,69 @@ class ParamsValidator(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid type for parameter '{param}'. "
             msg += f"Expected {expected_type}. "
+            msg += f"Got '{value}'."
+            self.module.fail_json(msg)
+
+    def verify_multitype(self, expected_types: List[str], value: Any, param: str) -> None:
+        """
+        Verify that the type of value matches one of the expected types
+        """
+        method_name = inspect.stack()[0][3]
+        invalid = True
+        for expected_type in expected_types:
+            if expected_type == "str":
+                if isinstance(value, str):
+                    invalid = False
+            if expected_type == "bool":
+                if isinstance(value, bool):
+                    invalid = False
+            if expected_type == "int":
+                if isinstance(value, int):
+                    invalid = False
+            if expected_type == "dict":
+                if isinstance(value, dict):
+                    invalid = False
+            if expected_type == "list":
+                if isinstance(value, list):
+                    invalid = False
+            if expected_type == "set":
+                if isinstance(value, set):
+                    invalid = False
+            if expected_type == "tuple":
+                if isinstance(value, tuple):
+                    invalid = False
+            if expected_type == "float":
+                if isinstance(value, float):
+                    invalid = False
+            if expected_type == "ipv4":
+                try:
+                    ipaddress.IPv4Address(value)
+                    invalid = False
+                except ipaddress.AddressValueError:
+                    pass
+            if expected_type == "ipv6":
+                try:
+                    ipaddress.IPv6Address(value)
+                    invalid = False
+                except ipaddress.AddressValueError:
+                    pass
+            if expected_type == "ipv4_subnet":
+                try:
+                    ipaddress.IPv4Network(value)
+                    invalid = False
+                except ValueError:
+                    pass
+            if expected_type == "ipv6_subnet":
+                try:
+                    ipaddress.IPv6Network(value)
+                    invalid = False
+                except ValueError:
+                    pass
+
+        if invalid is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid type for parameter '{param}'. "
+            msg += f"Expected one of {expected_types}. "
             msg += f"Got '{value}'."
             self.module.fail_json(msg)
 
