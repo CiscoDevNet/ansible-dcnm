@@ -345,7 +345,7 @@ EXAMPLES = """
                     epld: false
                 options:
                     nxos:
-                        type: disruptive
+                        mode: disruptive
                     epld:
                         module: ALL
                         golden: false
@@ -366,7 +366,7 @@ EXAMPLES = """
                             epld: true
                         options:
                             nxos:
-                                type: disruptive
+                                mode: disruptive
                             epld:
                                 module: ALL
                                 golden: false
