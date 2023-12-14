@@ -60,7 +60,8 @@ options:
                 default: True
             validate:
                 description:
-                - Validate (True) or do not validate (False) the image after staging
+                - Validate (True) or do not validate (False) the image after staging.
+                - If True, triggers NX-OS to validate that the image is compatible with the switch platform hardware.
                 type: bool
                 required: false
                 default: True
