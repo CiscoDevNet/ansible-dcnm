@@ -22,7 +22,7 @@ class ParamsValidate(ImageUpgradeCommon):
         1.  parameters: fully-merged dictionary of parameters
         2.  params_spec: Dictionary that describes each parameter
             in parameters
-    
+
     Usage (where module is an instance of AnsibleModule):
 
     Assume the following params_spec describing parameters
@@ -94,19 +94,32 @@ class ParamsValidate(ImageUpgradeCommon):
             # We shouldn't hit this since defaults are merged for all
             # missing parameters, but just in case...
             if (
-                parameters.get(param, None) is None and
-                spec[param].get("required", False) is True
+                parameters.get(param, None) is None
+                and spec[param].get("required", False) is True
             ):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Playbook is missing mandatory parameter: {param}."
                 self.module.fail_json(msg)
 
             self.verify_type(spec[param]["type"], parameters[param], param)
-            self.verify_choices(spec[param].get("choices", None), parameters[param], param)
+            self.verify_choices(
+                spec[param].get("choices", None), parameters[param], param
+            )
+            if (
+                spec[param].get("type", None) == "int"
+                and spec[param].get("range_min", None) is not None
+                and spec[param].get("range_max", None) is not None
+            ):
+                self.verify_integer_range(
+                    spec[param].get("range_min", None),
+                    spec[param].get("range_max", None),
+                    parameters[param],
+                    param,
+                )
 
     def verify_choices(self, choices: List[Any], value: Any, param: str) -> None:
         """
-        Verify that the value is one of the choices
+        Verify that value is one of the choices
         """
         method_name = inspect.stack()[0][3]
         if choices is None:
@@ -119,9 +132,23 @@ class ParamsValidate(ImageUpgradeCommon):
             msg += f"Got {value}"
             self.module.fail_json(msg)
 
+    def verify_integer_range(
+        self, range_min: int, range_max: int, value: int, param: str
+    ) -> None:
+        """
+        Verify that value is within the range range_min to range_max
+        """
+        method_name = inspect.stack()[0][3]
+        if value < range_min or value > range_max:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid value for parameter '{param}'. "
+            msg += f"Expected value between {range_min} and {range_max}. "
+            msg += f"Got {value}"
+            self.module.fail_json(msg)
+
     def verify_type(self, expected_type: str, value: Any, param: str) -> None:
         """
-        Verify that the type of value matches the expected type
+        Verify that value's type matches the expected type
         """
         method_name = inspect.stack()[0][3]
         if isinstance(expected_type, list):
@@ -180,9 +207,11 @@ class ParamsValidate(ImageUpgradeCommon):
             msg += f"Got '{value}'."
             self.module.fail_json(msg)
 
-    def verify_multitype(self, expected_types: List[str], value: Any, param: str) -> None:
+    def verify_multitype(
+        self, expected_types: List[str], value: Any, param: str
+    ) -> None:
         """
-        Verify that the type of value matches one of the expected types
+        Verify that value's type matches one of the expected types
         """
         method_name = inspect.stack()[0][3]
         invalid = True
