@@ -86,7 +86,7 @@ options:
                         description:
                         - Enable (True) or disable (False) EPLD upgrade
                         - If upgrade.nxos is false, epld and packages cannot both be true
-                        - If epld is true, nxos_option must be disruptive
+                        - If epld is true, options.nxos.mode must be set to disruptive
                         type: bool
                         required: false
                         default: False
