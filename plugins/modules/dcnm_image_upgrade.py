@@ -718,7 +718,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 if True not in test_idempotence:
                     continue
                 need.append(self.idempotent_want)
-        self.need = need
+        self.need = copy.copy(need)
 
     def get_need_deleted(self) -> None:
         """
