@@ -10,6 +10,7 @@ import ipaddress
 from collections.abc import MutableMapping as Map
 from typing import Any, List
 
+from ansible.module_utils.common import validation
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
     ImageUpgradeCommon
 
@@ -61,14 +62,17 @@ class ParamsValidate(ImageUpgradeCommon):
     def __init__(self, module):
         super().__init__(module)
         self.class_name = __class__.__name__
+        self.validation = validation
         self.properties = {}
         self.properties["parameters"] = None
         self.properties["params_spec"] = None
         self.reserved_params = set()
+        self.reserved_params.add("choices")
+        self.reserved_params.add("default")
+        self.reserved_params.add("range_max")
+        self.reserved_params.add("range_min")
         self.reserved_params.add("required")
         self.reserved_params.add("type")
-        self.reserved_params.add("default")
-        self.reserved_params.add("choices")
 
     def validate(self) -> None:
         """
@@ -156,120 +160,172 @@ class ParamsValidate(ImageUpgradeCommon):
             return
         invalid = False
         if expected_type == "str":
-            if not isinstance(value, str):
+            try:
+                value = self.validation.check_type_str(value)
+            except TypeError as error:
                 invalid = True
-        if expected_type == "bool":
-            if not isinstance(value, bool):
+        elif expected_type == "bool":
+            try:
+                value = self.validation.check_type_bool(value)
+            except TypeError as error:
                 invalid = True
-        if expected_type == "int":
-            if not isinstance(value, int):
-                invalid = True
-        if expected_type == "dict":
-            if not isinstance(value, dict):
-                invalid = True
-        if expected_type == "list":
-            if not isinstance(value, list):
-                invalid = True
-        if expected_type == "set":
-            if not isinstance(value, set):
-                invalid = True
-        if expected_type == "tuple":
-            if not isinstance(value, tuple):
+        elif expected_type == "int":
+            try:
+                value = self.validation.check_type_int(value)
+            except TypeError as error:
                 invalid = True
         if expected_type == "float":
-            if not isinstance(value, float):
+            try:
+                value = self.validation.check_type_float(value)
+            except TypeError as error:
+                invalid = True
+        elif expected_type == "dict":
+            # check_type_dict() converts strings with format "k1=v1, k2=v2"
+            # to dict.
+            try:
+                value = self.validation.check_type_dict(value)
+            except TypeError as error:
+                invalid = True
+        elif expected_type == "list":
+            # check_type_list() converts int, str, float to a single-element
+            # list. It also converts comma-separated strings to lists.
+            try:
+                value = self.validation.check_type_list(value)
+            except TypeError as error:
+                invalid = True
+        elif expected_type == "set":
+            # validate does not have a check_type_set() method
+            if not isinstance(value, set):
+                error = f"Expected type set. Got type {type(value)} for "
+                error += f"param {param} with value {value}."
+                invalid = True
+        if expected_type == "tuple":
+            # validate does not have a check_type_tuple() method
+            if not isinstance(value, tuple):
+                error = f"Expected type tuple. Got type {type(value)} for "
+                error += f"param {param} with value {value}."
                 invalid = True
         if expected_type == "ipv4":
             try:
                 ipaddress.IPv4Address(value)
-            except ipaddress.AddressValueError:
+            except ipaddress.AddressValueError as error:
                 invalid = True
         if expected_type == "ipv6":
             try:
                 ipaddress.IPv6Address(value)
-            except ipaddress.AddressValueError:
+            except ipaddress.AddressValueError as error:
                 invalid = True
         if expected_type == "ipv4_subnet":
             try:
                 ipaddress.IPv4Network(value)
-            except ValueError:
+            except ValueError as error:
                 invalid = True
         if expected_type == "ipv6_subnet":
             try:
                 ipaddress.IPv6Network(value)
-            except ValueError:
+            except ValueError as error:
                 invalid = True
 
         if invalid is True:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid type for parameter '{param}'. "
             msg += f"Expected {expected_type}. "
-            msg += f"Got '{value}'."
+            msg += f"Got '{value}'. "
+            msg += f"More info: {error}"
             self.module.fail_json(msg)
 
     def verify_multitype(
         self, expected_types: List[str], value: Any, param: str
     ) -> None:
         """
-        Verify that value's type matches one of the expected types
+        Verify that value's type matches one of the types in expected_types
         """
         method_name = inspect.stack()[0][3]
         invalid = True
         for expected_type in expected_types:
             if expected_type == "str":
-                if isinstance(value, str):
+                try:
+                    value = self.validation.check_type_str(value)
                     invalid = False
-            if expected_type == "bool":
-                if isinstance(value, bool):
+                except TypeError as error:
+                    pass
+            elif expected_type == "bool":
+                try:
+                    value = self.validation.check_type_bool(value)
                     invalid = False
-            if expected_type == "int":
-                if isinstance(value, int):
+                except TypeError as error:
+                    pass
+            elif expected_type == "int":
+                try:
+                    value = self.validation.check_type_int(value)
                     invalid = False
-            if expected_type == "dict":
-                if isinstance(value, dict):
+                except TypeError as error:
+                    pass
+            elif expected_type == "dict":
+                try:
+                    value = self.validation.check_type_dict(value)
                     invalid = False
-            if expected_type == "list":
-                if isinstance(value, list):
+                except TypeError as error:
+                    pass
+            elif expected_type == "list":
+                try:
+                    value = self.validation.check_type_list(value)
                     invalid = False
-            if expected_type == "set":
+                except TypeError as error:
+                    pass
+            elif expected_type == "set":
+                # validate does not have a check_type_set() method
                 if isinstance(value, set):
                     invalid = False
-            if expected_type == "tuple":
+                error = f"Expected type set. Got type {type(value)} for "
+                error += f"param {param} with value {value}."
+            elif expected_type == "tuple":
+                # validate does not have a check_type_tuple() method
                 if isinstance(value, tuple):
                     invalid = False
-            if expected_type == "float":
-                if isinstance(value, float):
+                error = f"Expected type tuple. Got type {type(value)} for "
+                error += f"param {param} with value {value}."
+            elif expected_type == "float":
+                try:
+                    value = self.validation.check_type_float(value)
                     invalid = False
-            if expected_type == "ipv4":
+                except TypeError as error:
+                    pass
+            elif expected_type == "ipv4":
                 try:
                     ipaddress.IPv4Address(value)
                     invalid = False
-                except ipaddress.AddressValueError:
+                except ipaddress.AddressValueError as error:
                     pass
-            if expected_type == "ipv6":
+            elif expected_type == "ipv6":
                 try:
                     ipaddress.IPv6Address(value)
                     invalid = False
                 except ipaddress.AddressValueError:
                     pass
-            if expected_type == "ipv4_subnet":
+            elif expected_type == "ipv4_subnet":
                 try:
                     ipaddress.IPv4Network(value)
                     invalid = False
                 except ValueError:
                     pass
-            if expected_type == "ipv6_subnet":
+            elif expected_type == "ipv6_subnet":
                 try:
                     ipaddress.IPv6Network(value)
                     invalid = False
                 except ValueError:
                     pass
+            else:
+                error = f"Unknown type {expected_type} for param {param} "
+                error += f"with value {value}."
+                invalid = True
 
         if invalid is True:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid type for parameter '{param}'. "
             msg += f"Expected one of {expected_types}. "
-            msg += f"Got '{value}'."
+            msg += f"Got '{value}'. "
+            msg += f"More info: {error}"
             self.module.fail_json(msg)
 
     @property
