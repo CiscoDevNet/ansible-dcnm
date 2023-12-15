@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2024 Cisco and/or its affiliates.
+# Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -221,18 +221,9 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": "FOO", "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": True
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": True},
+                "package": {"install": False, "uninstall": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -311,22 +302,10 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": False, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": True
-                },
-                "package": {
-                    "install": True,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": 27,
-                    "golden": True
-                },
-                "reboot": {
-                    "config_reload": True,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": True},
+                "package": {"install": True, "uninstall": False},
+                "epld": {"module": 27, "golden": True},
+                "reboot": {"config_reload": True, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -401,22 +380,10 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": True,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": True, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -490,22 +457,10 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "FOO",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "FOO", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -585,22 +540,10 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "non_disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "non_disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -678,22 +621,10 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "force_non_disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "force_non_disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -768,22 +699,10 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": "FOO"
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": "FOO"},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -858,22 +777,10 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": True
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": True},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -950,22 +857,10 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "FOO",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "FOO", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1040,22 +935,10 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": "FOO"
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": "FOO"},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1129,22 +1012,10 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1219,22 +1090,10 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": "FOO",
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": "FOO", "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1309,22 +1168,10 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": "FOO"
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": "FOO"},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1404,22 +1251,10 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": "FOO"
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": "FOO"},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1495,22 +1330,10 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1685,22 +1508,10 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": False
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1770,22 +1581,10 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": False, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": True
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": True},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",
@@ -1855,22 +1654,10 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
             "stage": True,
             "upgrade": {"nxos": False, "epld": True},
             "options": {
-                "nxos": {
-                    "mode": "disruptive",
-                    "bios_force": True
-                },
-                "package": {
-                    "install": False,
-                    "uninstall": False
-                },
-                "epld": {
-                    "module": "ALL",
-                    "golden": False
-                },
-                "reboot": {
-                    "config_reload": False,
-                    "write_erase": False
-                }
+                "nxos": {"mode": "disruptive", "bios_force": True},
+                "package": {"install": False, "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
             },
             "validate": True,
             "ip_address": "172.22.150.102",

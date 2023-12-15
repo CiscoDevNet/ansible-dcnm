@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2024 Cisco and/or its affiliates.
+# Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -380,7 +380,9 @@ def test_image_mgmt_upgrade_task_00040(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}]
+    switch_configs = [
+        {"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}
+    ]
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
     assert instance.switch_configs[0]["reboot"] is False
@@ -415,12 +417,14 @@ def test_image_mgmt_upgrade_task_00041(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "upgrade": {"nxos": False},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "upgrade": {"nxos": False},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -456,12 +460,14 @@ def test_image_mgmt_upgrade_task_00042(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "upgrade": {"epld": True},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "upgrade": {"epld": True},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -500,12 +506,14 @@ def test_image_mgmt_upgrade_task_00043(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -545,12 +553,14 @@ def test_image_mgmt_upgrade_task_00044(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"nxos": {"mode": "non_disruptive"}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"nxos": {"mode": "non_disruptive"}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -590,12 +600,14 @@ def test_image_mgmt_upgrade_task_00045(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"nxos": {"bios_force": True}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"nxos": {"bios_force": True}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -635,12 +647,14 @@ def test_image_mgmt_upgrade_task_00046(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"epld": {"module": 27}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"epld": {"module": 27}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -680,12 +694,14 @@ def test_image_mgmt_upgrade_task_00047(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"epld": {"golden": True}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"epld": {"golden": True}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -726,12 +742,14 @@ def test_image_mgmt_upgrade_task_00048(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"reboot": {"config_reload": True}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"reboot": {"config_reload": True}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -772,12 +790,14 @@ def test_image_mgmt_upgrade_task_00049(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"reboot": {"write_erase": True}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"reboot": {"write_erase": True}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -818,12 +838,14 @@ def test_image_mgmt_upgrade_task_00050(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"package": {"install": True}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"package": {"install": True}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()
@@ -864,12 +886,14 @@ def test_image_mgmt_upgrade_task_00051(image_upgrade_task) -> None:
     """
     instance = image_upgrade_task
 
-    switch_configs = [{
-        "policy": "KR5M",
-        "ip_address": "172.22.150.102",
-        "policy_changed": False,
-        "options": {"package": {"uninstall": True}},
-    }]
+    switch_configs = [
+        {
+            "policy": "KR5M",
+            "ip_address": "172.22.150.102",
+            "policy_changed": False,
+            "options": {"package": {"uninstall": True}},
+        }
+    ]
 
     instance.switch_configs = switch_configs
     instance._merge_defaults_to_switch_configs()

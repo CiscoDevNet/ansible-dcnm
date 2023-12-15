@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2024 Cisco and/or its affiliates.
+# Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -242,7 +242,7 @@ def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
 
     data = responses_image_upgrade_common("test_image_mgmt_image_upgrade_common_00060a")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
-        instance._handle_response(
+        instance._handle_response(  # pylint: disable=protected-access
             data.get("response"), data.get("verb")
         )  # pylint: disable=protected-access
 
@@ -283,7 +283,7 @@ def test_image_mgmt_image_upgrade_common_00070(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_get_response(
+        result = instance._handle_get_response( # pylint: disable=protected-access
             data.get("response")
         )  # pylint: disable=protected-access
 

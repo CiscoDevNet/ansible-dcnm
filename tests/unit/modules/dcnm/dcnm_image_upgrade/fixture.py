@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ def load_fixture(filename):
     path = os.path.join(fixture_path, f"{filename}.json")
 
     try:
-        with open(path, encoding="utf-8") as f:
-            data = f.read()
+        with open(path, encoding="utf-8") as file_handle:
+            data = file_handle.read()
     except IOError as exception:
         msg = f"Exception opening test input file {filename}.json : "
         msg += f"Exception detail: {exception}"
