@@ -39,11 +39,9 @@ class ParamsValidate:
     params_spec["foo"] = {}
     params_spec["foo"]["required"] = False
     params_spec["foo"]["type"] = "dict"
-    params_spec["foo"]["default"] = {}
     params_spec["foo"]["bar"] = {}
     params_spec["foo"]["bar"]["required"] = False
     params_spec["foo"]["bar"]["type"] = "str"
-    params_spec["foo"]["bar"]["default"] = "bingo"
     params_spec["foo"]["bar"]["choices"] = ["bingo", "bango", "bongo"]
 
     Which describes the following YAML:
@@ -74,6 +72,10 @@ class ParamsValidate:
         self.reserved_params.add("range_min")
         self.reserved_params.add("required")
         self.reserved_params.add("type")
+        self.mandatory_param_spec_keys = set()
+        self.mandatory_param_spec_keys.add("required")
+        self.mandatory_param_spec_keys.add("type")
+
 
     def log_msg(self, msg):
         """
@@ -110,6 +112,7 @@ class ParamsValidate:
         Recursively traverse parameters and verify conformity with spec
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
 
         for param in spec:
             if param in self.reserved_params:
@@ -182,72 +185,83 @@ class ParamsValidate:
             self.verify_multitype(expected_type, value, param)
             return
         invalid = False
+        error = ""
         if expected_type == "str":
             try:
                 value = self.validation.check_type_str(value)
-            except TypeError as error:  # pylint: disable=unused-variable
+            except TypeError as err:  # pylint: disable=unused-variable
                 invalid = True
+                error = err
         elif expected_type == "bool":
             try:
                 value = self.validation.check_type_bool(value)
-            except TypeError as error:
+            except TypeError as err:
                 invalid = True
+                error = err
         elif expected_type == "int":
             try:
                 value = self.validation.check_type_int(value)
-            except TypeError as error:
+            except TypeError as err:
                 invalid = True
+                error = err
         if expected_type == "float":
             try:
                 value = self.validation.check_type_float(value)
-            except TypeError as error:
+            except TypeError as err:
                 invalid = True
+                error = err
         elif expected_type == "dict":
             # check_type_dict() converts strings with format "k1=v1, k2=v2"
             # to dict.
             try:
                 value = self.validation.check_type_dict(value)
-            except TypeError as error:
+            except TypeError as err:
                 invalid = True
+                error = err
         elif expected_type == "list":
             # check_type_list() converts int, str, float to a single-element
             # list. It also converts comma-separated strings to lists.
             try:
                 value = self.validation.check_type_list(value)
-            except TypeError as error:
+            except TypeError as err:
                 invalid = True
+                error = err
         elif expected_type == "set":
             # validate does not have a check_type_set() method
             if not isinstance(value, set):
+                invalid = True
                 error = f"Expected type set. Got type {type(value)} for "
                 error += f"param {param} with value {value}."
-                invalid = True
         if expected_type == "tuple":
             # validate does not have a check_type_tuple() method
             if not isinstance(value, tuple):
+                invalid = True
                 error = f"Expected type tuple. Got type {type(value)} for "
                 error += f"param {param} with value {value}."
-                invalid = True
         if expected_type == "ipv4":
             try:
                 ipaddress.IPv4Address(value)
-            except ipaddress.AddressValueError as error:
+            except ipaddress.AddressValueError as err:
                 invalid = True
+                error = err
         if expected_type == "ipv6":
             try:
                 ipaddress.IPv6Address(value)
-            except ipaddress.AddressValueError as error:
+            except ipaddress.AddressValueError as err:
                 invalid = True
+                error = err
         if expected_type == "ipv4_subnet":
             try:
                 ipaddress.IPv4Network(value)
-            except ValueError as error:
+            except ValueError as err:
                 invalid = True
+                error = err
         if expected_type == "ipv6_subnet":
             try:
                 ipaddress.IPv6Network(value)
-            except ValueError as error:
+            except ValueError as err:
                 invalid = True
+                error = err
 
         if invalid is True:
             msg = f"{self.class_name}.{method_name}: "
@@ -265,61 +279,56 @@ class ParamsValidate:
         """
         method_name = inspect.stack()[0][3]
         invalid = True
-        error = ""
         for expected_type in expected_types:
             if expected_type == "str":
                 try:
                     value = self.validation.check_type_str(value)
                     invalid = False
-                except TypeError as error:  # pylint: disable=unused-variable
+                except TypeError:
                     pass
             elif expected_type == "bool":
                 try:
                     value = self.validation.check_type_bool(value)
                     invalid = False
-                except TypeError as error:
+                except TypeError:
                     pass
             elif expected_type == "int":
                 try:
                     value = self.validation.check_type_int(value)
                     invalid = False
-                except TypeError as error:
+                except TypeError:
                     pass
             elif expected_type == "dict":
                 try:
                     value = self.validation.check_type_dict(value)
                     invalid = False
-                except TypeError as error:
+                except TypeError:
                     pass
             elif expected_type == "list":
                 try:
                     value = self.validation.check_type_list(value)
                     invalid = False
-                except TypeError as error:
+                except TypeError:
                     pass
             elif expected_type == "set":
                 # validate does not have a check_type_set() method
                 if isinstance(value, set):
                     invalid = False
-                error = f"Expected type set. Got type {type(value)} for "
-                error += f"param {param} with value {value}."
             elif expected_type == "tuple":
                 # validate does not have a check_type_tuple() method
                 if isinstance(value, tuple):
                     invalid = False
-                error = f"Expected type tuple. Got type {type(value)} for "
-                error += f"param {param} with value {value}."
             elif expected_type == "float":
                 try:
                     value = self.validation.check_type_float(value)
                     invalid = False
-                except TypeError as error:
+                except TypeError:
                     pass
             elif expected_type == "ipv4":
                 try:
                     ipaddress.IPv4Address(value)
                     invalid = False
-                except ipaddress.AddressValueError as error:
+                except ipaddress.AddressValueError:
                     pass
             elif expected_type == "ipv6":
                 try:
@@ -362,6 +371,12 @@ class ParamsValidate:
 
     @parameters.setter
     def parameters(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid parameters. Expected type dict. "
+            msg += f"Got type {type(value)}."
+            self.ansible_module.fail_json(msg)
         self.properties["parameters"] = value
 
     @property
@@ -373,4 +388,17 @@ class ParamsValidate:
 
     @params_spec.setter
     def params_spec(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid params_spec. Expected type dict. "
+            msg += f"Got type {type(value)}."
+            self.ansible_module.fail_json(msg)
+        for param in value:
+            for key in self.mandatory_param_spec_keys:
+                if key not in value[param]:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"Invalid params_spec. Missing key '{key}' for "
+                    msg += f"param '{param}'."
+                    self.ansible_module.fail_json(msg)
         self.properties["params_spec"] = value

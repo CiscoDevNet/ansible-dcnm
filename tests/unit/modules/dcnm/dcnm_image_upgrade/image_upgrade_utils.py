@@ -25,6 +25,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+    ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
@@ -149,6 +151,14 @@ def image_validate_fixture():
     mock ImageValidate
     """
     return ImageValidate(MockAnsibleModule)
+
+
+@pytest.fixture(name="params_validate")
+def params_validate_fixture():
+    """
+    mock ParamsValidate
+    """
+    return ParamsValidate(MockAnsibleModule)
 
 
 @pytest.fixture(name="issu_details_by_device_name")
