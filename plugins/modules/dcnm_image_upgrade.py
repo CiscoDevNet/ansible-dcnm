@@ -15,7 +15,7 @@
 # limitations under the License.
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type # pylint: disable=invalid-name
 __copyright__ = "Copyright (c) 2023 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 __email__ = "arobel@cisco.com"
@@ -406,9 +406,9 @@ import inspect
 import json
 from typing import Any, Dict, List
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+    ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
@@ -425,12 +425,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_valida
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.params_validate import \
-    ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
 
 
 class ImageUpgradeTask(ImageUpgradeCommon):
@@ -810,8 +810,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["mode"]["type"] = "str"
         params_spec[section][sub_section]["mode"]["default"] = "disruptive"
         params_spec[section][sub_section]["mode"]["choices"] = [
-            "disruptive", "non_disruptive", "force_non_disruptive"]
-
+            "disruptive",
+            "non_disruptive",
+            "force_non_disruptive",
+        ]
 
         params_spec[section][sub_section]["bios_force"] = {}
         params_spec[section][sub_section]["bios_force"]["required"] = False
@@ -829,8 +831,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["module"]["type"] = ["str", "int"]
         params_spec[section][sub_section]["module"]["default"] = "ALL"
         params_spec[section][sub_section]["module"]["choices"] = [
-            str(x) for x in range(1, 33)]
-        params_spec[section][sub_section]["module"]["choices"].extend([x for x in range(1,33)])
+            str(x) for x in range(1, 33)
+        ]
+        params_spec[section][sub_section]["module"]["choices"].extend(
+            list(range(1, 33))
+        )
         params_spec[section][sub_section]["module"]["choices"].append("ALL")
 
         params_spec[section][sub_section]["golden"] = {}
@@ -872,7 +877,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         return copy.deepcopy(params_spec)
 
-
     @staticmethod
     def _build_params_spec_for_query_state() -> Dict[str, Any]:
         """
@@ -888,7 +892,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec["ip_address"]["type"] = "ipv4"
 
         return copy.deepcopy(params_spec)
-
 
     def _merge_global_and_switch_configs(self, config) -> None:
         """
@@ -939,7 +942,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             merged_configs.append(switch_config)
         self.switch_configs = copy.copy(merged_configs)
 
-
     def _merge_defaults_to_switch_configs(self) -> None:
         """
         For any items in config which are not set, apply the default
@@ -953,19 +955,22 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             # we need to rebuild default_config in this loop
             # because merge_dicts modifies it in place
             merged_config = self.merge_dicts(
-                copy.deepcopy(self.defaults),
-                copy.deepcopy(switch_config))
+                copy.deepcopy(self.defaults), copy.deepcopy(switch_config)
+            )
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
+            msg += (
+                f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
+            )
             self.log_msg(msg)
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
+            msg += (
+                f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
+            )
             self.log_msg(msg)
             merged_configs.append(merged_config)
         self.switch_configs = copy.copy(merged_configs)
-
 
     def _validate_switch_configs(self) -> None:
         """
@@ -988,7 +993,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         for switch in self.switch_configs:
             validator.parameters = switch
             validator.validate()
-
 
     def _build_policy_attach_payload(self) -> None:
         """

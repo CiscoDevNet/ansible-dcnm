@@ -11,11 +11,9 @@ from collections.abc import MutableMapping as Map
 from typing import Any, List
 
 from ansible.module_utils.common import validation
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
-    ImageUpgradeCommon
 
 
-class ParamsValidate(ImageUpgradeCommon):
+class ParamsValidate:
     """
     Validate playbook parameters.
 
@@ -24,7 +22,7 @@ class ParamsValidate(ImageUpgradeCommon):
         2.  params_spec: Dictionary that describes each parameter
             in parameters
 
-    Usage (where module is an instance of AnsibleModule):
+    Usage (where ansible_module is an instance of AnsibleModule):
 
     Assume the following params_spec describing parameters
     ip_address and foo.
@@ -54,15 +52,18 @@ class ParamsValidate(ImageUpgradeCommon):
     foo:
         bar: bingo
 
-    validator = ParamsValidator(module)
-    validator.parameters = module.params
+    validator = ParamsValidator(ansible_module)
+    validator.parameters = ansible_module.params
     validator.params_spec = params_spec
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
         self.class_name = __class__.__name__
+        self.ansible_module = ansible_module
         self.validation = validation
+        self.debug = False
+        self.file_handle = None
+        self.logfile = "/tmp/ansible_dcnm.log"
         self.properties = {}
         self.properties["parameters"] = None
         self.properties["params_spec"] = None
@@ -73,6 +74,29 @@ class ParamsValidate(ImageUpgradeCommon):
         self.reserved_params.add("range_min")
         self.reserved_params.add("required")
         self.reserved_params.add("type")
+
+    def log_msg(self, msg):
+        """
+        used for debugging. disable this when committing to main
+        by setting self.debug to False in __init__()
+        """
+        if self.debug is False:
+            return
+        if self.file_handle is None:
+            try:
+                # since we need self.file_handle open throughout this class
+                # we are disabling pylint R1732
+                self.file_handle = open(  # pylint: disable=consider-using-with
+                    f"{self.logfile}", "a+", encoding="UTF-8"
+                )
+            except IOError as err:
+                msg = f"error opening logfile {self.logfile}. "
+                msg += f"detail: {err}"
+                self.ansible_module.fail_json(msg)
+
+        self.file_handle.write(msg)
+        self.file_handle.write("\n")
+        self.file_handle.flush()
 
     def validate(self) -> None:
         """
@@ -91,7 +115,6 @@ class ParamsValidate(ImageUpgradeCommon):
             if param in self.reserved_params:
                 continue
 
-            self.log_msg(f"DEBUG: {self.class_name}.{method_name}: param: {param}")
             if isinstance(spec[param], Map):
                 self.validate_parameters(spec[param], parameters.get(param, {}))
 
@@ -103,7 +126,7 @@ class ParamsValidate(ImageUpgradeCommon):
             ):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Playbook is missing mandatory parameter: {param}."
-                self.module.fail_json(msg)
+                self.ansible_module.fail_json(msg)
 
             self.verify_type(spec[param]["type"], parameters[param], param)
             self.verify_choices(
@@ -134,7 +157,7 @@ class ParamsValidate(ImageUpgradeCommon):
             msg += f"Invalid value for parameter '{param}'. "
             msg += f"Expected one of {choices}. "
             msg += f"Got {value}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
     def verify_integer_range(
         self, range_min: int, range_max: int, value: int, param: str
@@ -148,7 +171,7 @@ class ParamsValidate(ImageUpgradeCommon):
             msg += f"Invalid value for parameter '{param}'. "
             msg += f"Expected value between {range_min} and {range_max}. "
             msg += f"Got {value}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
     def verify_type(self, expected_type: str, value: Any, param: str) -> None:
         """
@@ -162,7 +185,7 @@ class ParamsValidate(ImageUpgradeCommon):
         if expected_type == "str":
             try:
                 value = self.validation.check_type_str(value)
-            except TypeError as error:
+            except TypeError as error:  # pylint: disable=unused-variable
                 invalid = True
         elif expected_type == "bool":
             try:
@@ -232,7 +255,7 @@ class ParamsValidate(ImageUpgradeCommon):
             msg += f"Expected {expected_type}. "
             msg += f"Got '{value}'. "
             msg += f"More info: {error}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
     def verify_multitype(
         self, expected_types: List[str], value: Any, param: str
@@ -242,12 +265,13 @@ class ParamsValidate(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
         invalid = True
+        error = ""
         for expected_type in expected_types:
             if expected_type == "str":
                 try:
                     value = self.validation.check_type_str(value)
                     invalid = False
-                except TypeError as error:
+                except TypeError as error:  # pylint: disable=unused-variable
                     pass
             elif expected_type == "bool":
                 try:
@@ -326,7 +350,7 @@ class ParamsValidate(ImageUpgradeCommon):
             msg += f"Expected one of {expected_types}. "
             msg += f"Got '{value}'. "
             msg += f"More info: {error}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
     @property
     def parameters(self):
