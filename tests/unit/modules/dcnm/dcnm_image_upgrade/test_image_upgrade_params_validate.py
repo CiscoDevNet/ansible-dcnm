@@ -77,6 +77,7 @@ def test_params_validate_00001(params_validate) -> None:
         "required",
         "type",
     }
+    assert instance.mandatory_param_spec_keys == {"required", "type"}
     assert instance.class_name == "ParamsValidate"
     assert instance.debug is False
     assert instance.logfile == "/tmp/ansible_dcnm.log"
