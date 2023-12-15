@@ -742,7 +742,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             if self.have.policy != want["policy"]:
                 continue
             need.append(want)
-        self.need = need
+        self.need = copy.copy(need)
 
     def get_need_query(self) -> None:
         """
@@ -758,7 +758,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         need = []
         for want in self.want:
             need.append(want)
-        self.need = need
+        self.need = copy.copy(need)
 
     @staticmethod
     def _build_params_spec_for_merged_state() -> Dict[str, Any]:
