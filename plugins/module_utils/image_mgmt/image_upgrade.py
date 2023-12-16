@@ -578,7 +578,9 @@ class ImageUpgrade(ImageUpgradeCommon):
                     msg += f"{device_name}, {serial_number}, {ip_address}, "
                     msg += f"upgrade_percent {upgrade_percent}. "
                     msg += "Check the controller to determine the cause. "
-                    msg += "Operations > Image Management > Devices > View Details."
+                    msg += "Operations > Image Management > Devices > View Details. "
+                    msg += "And/or check the devices "
+                    msg += "(e.g. show install all status)."
                     self.module.fail_json(msg)
 
                 if upgrade_status == "Success":
@@ -588,7 +590,9 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "The following device(s) did not complete upgrade: "
             msg += f"{sorted(self.ipv4_todo.difference(self.ipv4_done))}. "
-            msg += "Check the device(s) to determine the cause "
+            msg += "Check the controller to determine the cause. "
+            msg += "Operations > Image Management > Devices > View Details. "
+            msg += "And/or check the device(s) "
             msg += "(e.g. show install all status)."
             self.module.fail_json(msg)
 

@@ -2223,7 +2223,9 @@ def test_image_mgmt_upgrade_00091(
     match = "ImageUpgrade._wait_for_image_upgrade_to_complete: "
     match += r"The following device\(s\) did not complete upgrade: "
     match += r"\['172\.22\.150\.108'\]. "
-    match += r"Check the device\(s\) to determine the cause "
+    match += "Check the controller to determine the cause. "
+    match += "Operations > Image Management > Devices > View Details. "
+    match += r"And/or check the device\(s\) "
     match += r"\(e\.g\. show install all status\)\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance._wait_for_image_upgrade_to_complete()
