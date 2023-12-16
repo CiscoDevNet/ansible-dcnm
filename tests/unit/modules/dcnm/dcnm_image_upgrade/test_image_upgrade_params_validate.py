@@ -232,7 +232,7 @@ def test_params_validate_00051(params_validate) -> None:
         instance.params_spec = params_spec
         instance.parameters = parameters
 
-    match = "ParamsValidate.validate_parameters: "
+    match = "ParamsValidate._validate_parameters: "
     match += "Playbook is missing mandatory parameter: foo."
 
     with pytest.raises(AnsibleFailJson, match=match):
@@ -289,7 +289,7 @@ def test_params_validate_00053(params_validate) -> None:
         instance.params_spec = params_spec
         instance.parameters = parameters
 
-    match = "ParamsValidate.verify_choices: "
+    match = "ParamsValidate._verify_choices: "
     match += "Invalid value for parameter 'foo'. "
     match += r"Expected one of \['bar', 'baz'\]. Got bing"
 
@@ -306,8 +306,6 @@ def test_params_validate_00060(params_validate) -> None:
     Test
     - parameter type is invalid
     """
-    with does_not_raise():
-        instance = params_validate
     params_spec = {}
     params_spec["foo"] = {}
     params_spec["foo"]["type"] = "int"
@@ -317,10 +315,11 @@ def test_params_validate_00060(params_validate) -> None:
     parameters["foo"] = "bing"
 
     with does_not_raise():
+        instance = params_validate
         instance.params_spec = params_spec
         instance.parameters = parameters
 
-    match = "ParamsValidate.verify_type: "
+    match = "ParamsValidate.invalid_type: "
     match += "Invalid type for parameter 'foo'. "
     match += "Expected int. Got 'bing'. "
     match += r"More info: \<class 'str'\> cannot be converted to an int"
@@ -371,6 +370,183 @@ def test_params_validate_00061(params_validate, value, type_to_verify) -> None:
         instance = params_validate
         instance.params_spec = params_spec
         instance.parameters = parameters
+        instance.validate()
+
+@pytest.mark.parametrize(
+    "value, type_to_verify",
+    [
+        (1, ["int", "str"]),
+        ("1", ["dict", "ipv4"]),
+    ],
+)
+def test_params_validate_00062(params_validate, value, type_to_verify) -> None:
+    """
+    Function
+    - validate
+    - verify_type
+    - verify_multitype
+
+    Test
+    - parameter type is valid
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["required"] = True
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+        instance.validate()
+
+
+@pytest.mark.parametrize(
+    "value, type_to_verify",
+    [
+        ("1", ["dict", "ipv4"]),
+    ],
+)
+def test_params_validate_00062(params_validate, value, type_to_verify) -> None:
+    """
+    Function
+    - validate
+    - verify_type
+    - verify_multitype
+
+    Test
+    - parameter type is invalid
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["required"] = True
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+
+    match = "ParamsValidate._verify_multitype: "
+    match += "Invalid type for parameter 'foo'. "
+    match += r"Expected one of \['dict', 'ipv4'\]. "
+    match += f"Got '{value}'."
+ 
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        (1),
+        (5),
+        (10),
+    ],
+)
+def test_params_validate_00070(params_validate, value) -> None:
+    """
+    Function
+    - validate
+    - verify_integer_range
+
+    Test
+    - parameter (int) is within range_min and range_max
+    """
+    with does_not_raise():
+        instance = params_validate
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = "int"
+    params_spec["foo"]["required"] = True
+    params_spec["foo"]["range_min"] = 1
+    params_spec["foo"]["range_max"] = 10
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+        instance.validate()
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        (-1),
+        (0),
+        (11),
+    ],
+)
+def test_params_validate_00071(params_validate, value) -> None:
+    """
+    Function
+    - validate
+    - verify_choices
+
+    Test
+    - parameter (int) is outside range_min and range_max
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = "int"
+    params_spec["foo"]["required"] = True
+    params_spec["foo"]["range_min"] = 1
+    params_spec["foo"]["range_max"] = 10
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+
+    match = "ParamsValidate._verify_integer_range: "
+    match += "Invalid value for parameter 'foo'. "
+    match += f"Expected value between 1 and 10. Got {value}"
+ 
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+def test_params_validate_00072(params_validate) -> None:
+    """
+    Function
+    - validate
+    - verify_choices
+
+    Test
+    - Negative: non-int parameter with range_min and range_max specified.
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = "str"
+    params_spec["foo"]["required"] = True
+    params_spec["foo"]["range_min"] = 1
+    params_spec["foo"]["range_max"] = 10
+
+    parameters = {}
+    parameters["foo"] = "bar"
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+
+    match = "ParamsValidate._validate_parameters: "
+    match += "Invalid param_spec for parameter 'foo'. "
+    match += "range_min and range_max are only valid for "
+    match += "parameters of type int. Got type str for param foo."
+ 
+    with pytest.raises(AnsibleFailJson, match=match):
         instance.validate()
 
 
