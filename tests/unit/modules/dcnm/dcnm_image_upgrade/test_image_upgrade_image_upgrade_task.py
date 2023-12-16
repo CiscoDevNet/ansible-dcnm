@@ -278,7 +278,7 @@ def test_image_mgmt_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) -> 
 
     assert switch_2.get("ip_address") == "2.2.2.2"
     assert switch_2.get("options").get("epld").get("golden") is True
-    assert switch_2.get("options").get("epld").get("module") == "1"
+    assert switch_2.get("options").get("epld").get("module") == 1
     assert switch_2.get("options").get("nxos").get("bios_force") is True
     assert switch_2.get("options").get("nxos").get("mode") == "non_disruptive"
     assert switch_2.get("options").get("package").get("install") is True
