@@ -829,6 +829,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec[section][sub_section]["module"] = {}
         params_spec[section][sub_section]["module"]["required"] = False
         params_spec[section][sub_section]["module"]["type"] = ["str", "int"]
+        params_spec[section][sub_section]["module"]["preferred_type"] = "str"
         params_spec[section][sub_section]["module"]["default"] = "ALL"
         params_spec[section][sub_section]["module"]["choices"] = [
             str(x) for x in range(1, 33)

@@ -72,9 +72,20 @@ class ParamsValidate:
         self.reserved_params.add("range_min")
         self.reserved_params.add("required")
         self.reserved_params.add("type")
+        self.reserved_params.add("preferred_type")
         self.mandatory_param_spec_keys = set()
         self.mandatory_param_spec_keys.add("required")
         self.mandatory_param_spec_keys.add("type")
+        self.types = dict()
+        self.types["str"] = str
+        self.types['int'] = int
+        self.types['float'] = float
+        self.types['bool'] = bool
+        self.types['dict'] = dict
+        self.types['list'] = list
+        self.types['set'] = set
+        self.types['tuple'] = tuple
+
 
     def log_msg(self, msg):
         """
@@ -129,11 +140,10 @@ class ParamsValidate:
                 msg += f"Playbook is missing mandatory parameter: {param}."
                 self.ansible_module.fail_json(msg)
 
-            self.log_msg(f"parameters[param] PRE: {parameters[param]}")
-            parameters[param] = self._verify_type(
-                spec[param]["type"], parameters[param], param
-            )
-            self.log_msg(f"parameters[param] POST: {parameters[param]}")
+            if isinstance(spec[param]["type"], list):
+                parameters[param] = self._verify_multitype(spec[param], parameters, param)
+            else:
+                parameters[param] = self._verify_type(spec[param]["type"], parameters, param)
 
             self._verify_choices(
                 spec[param].get("choices", None), parameters[param], param
@@ -192,14 +202,13 @@ class ParamsValidate:
             msg += f"Got {value}"
             self.ansible_module.fail_json(msg)
 
-    def _verify_type(self, expected_type: str, value: Any, param: str) -> Any:
+    def _verify_type(self, expected_type: str, params: Any, param: str) -> Any:
         """
         Verify that value's type matches the expected type
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        if isinstance(expected_type, list):
-            value = self._verify_multitype(expected_type, value, param)
-            return value
+
+        value = params[param]
         value = self._verify_str(expected_type, value, param)
         value = self._verify_bool(expected_type, value, param)
         value = self._verify_int(expected_type, value, param)
@@ -226,7 +235,7 @@ class ParamsValidate:
             return self.validation.check_type_str(value)
         except TypeError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_bool(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -240,7 +249,7 @@ class ParamsValidate:
             return self.validation.check_type_bool(value)
         except TypeError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_int(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -254,7 +263,7 @@ class ParamsValidate:
             return self.validation.check_type_int(value)
         except TypeError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_float(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -268,7 +277,7 @@ class ParamsValidate:
             return self.validation.check_type_float(value)
         except TypeError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_dict(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -285,7 +294,7 @@ class ParamsValidate:
             return self.validation.check_type_dict(value)
         except TypeError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_list(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -302,7 +311,7 @@ class ParamsValidate:
             return self.validation.check_type_list(value)
         except TypeError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_set(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -319,7 +328,7 @@ class ParamsValidate:
         error = f"Expected type set. Got type {type(value)} for "
         error += f"param {param} with value {value}."
         self.invalid_type(expected_type, value, param, error)
-        return value  # to make pylint happy
+        return value  # never reached, but it makes pylint happy
 
     def _verify_tuple(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -336,7 +345,7 @@ class ParamsValidate:
         error = f"Expected type tuple. Got type {type(value)} for "
         error += f"param {param} with value {value}."
         self.invalid_type(expected_type, value, param, error)
-        return value  # to make pylint happy
+        return value  # never reached, but it makes pylint happy
 
     def _verify_ipv4(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -346,12 +355,13 @@ class ParamsValidate:
         """
         if expected_type != "ipv4":
             return value
+        self.ipaddress_guard(expected_type, value, param)
         try:
             _ = ipaddress.IPv4Address(value)
             return value
         except ipaddress.AddressValueError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_ipv6(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -361,12 +371,13 @@ class ParamsValidate:
         """
         if expected_type != "ipv6":
             return value
+        self.ipaddress_guard(expected_type, value, param)
         try:
             _ = ipaddress.IPv6Address(value)
             return value
         except ipaddress.AddressValueError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_ipv4_subnet(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -376,12 +387,13 @@ class ParamsValidate:
         """
         if expected_type != "ipv4_subnet":
             return value
+        self.ipaddress_guard(expected_type, value, param)
         try:
             _ = ipaddress.IPv4Network(value)
             return value
         except ValueError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
 
     def _verify_ipv6_subnet(self, expected_type: str, value: Any, param: str) -> Any:
         """
@@ -391,12 +403,33 @@ class ParamsValidate:
         """
         if expected_type != "ipv6_subnet":
             return value
+        self.ipaddress_guard(expected_type, value, param)
         try:
             _ = ipaddress.IPv6Network(value)
             return value
         except ValueError as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # to make pylint happy
+            return value  # never reached, but it makes pylint happy
+
+    def ipaddress_guard(self, expected_type, value: Any, param: str) -> None:
+        """
+        Guard against int and bool types for ipv4, ipv6, ipv4_subnet,
+        and ipv6_subnet type.
+
+        The ipaddress module accepts int and bool types and converts
+        them to IP addresses or networks.  E.g. True becomes 0.0.0.1,
+        False becomes 0.0.0.0, 1 becomse 0.0.0.1, etc.  Because of
+        this, we need to fail int and bool values if expected_type is
+        one of ipv4, ipv6, ipv4_subnet, or ipv6_subnet.
+        """
+        if isinstance(value, int):
+            error = f"Expected type ipv4. Got type {type(value)} for "
+            error += f"param {param} with value {value}."
+            self.invalid_type(expected_type, value, param, error)
+        if isinstance(value, bool):
+            error = f"Expected type ipv4. Got type {type(value)} for "
+            error += f"param {param} with value {value}."
+            self.invalid_type(expected_type, value, param, error)
 
     def invalid_type(
         self, expected_type: str, value: Any, param: str, error: str
@@ -413,14 +446,35 @@ class ParamsValidate:
         self.ansible_module.fail_json(msg)
 
     def _verify_multitype(
-        self, expected_types: List[str], value: Any, param: str
+        self, spec: Any, params: Any, param: str
     ) -> Any:
         """
         Verify that value's type matches one of the types in expected_types
         """
         method_name = inspect.stack()[0][3]
+
+        # preferred_type is mandatory for multitype
+        if spec.get("preferred_type", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid param_spec for parameter '{param}'. "
+            msg += "If type is a list, preferred_type must be specified."
+            self.ansible_module.fail_json(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"spec: {spec}"
+        self.log_msg(msg)
+        # try to convert to preferred_type
+        preferred_type = spec["preferred_type"]
+        self.log_msg(f"{self.class_name}.{method_name}: preferred_type: {preferred_type}")
+        value = self._verify_type(preferred_type, params, param)
+        if isinstance(value, self.types[preferred_type]):
+            return value
+
         invalid = True
         error = ""
+        value = params[param]
+        expected_types = spec.get("type", [])
+
         for expected_type in expected_types:
             if expected_type == "str":
                 try:
@@ -505,6 +559,28 @@ class ParamsValidate:
             msg += f"More info: {error}"
         self.ansible_module.fail_json(msg)
 
+    def verify_mandatory_param_spec_keys(self, params_spec: dict) -> None:
+        """
+        Recurse over params_spec dictionary and verify that the
+        specification for each param contains the mandatory keys
+        defined in self.mandatory_param_spec_keys
+        """
+        method_name = inspect.stack()[0][3]
+        for param in params_spec:
+            if not isinstance(params_spec[param], Map):
+                continue
+            if param in self.reserved_params:
+                continue
+            self.verify_mandatory_param_spec_keys(params_spec[param])
+            for key in self.mandatory_param_spec_keys:
+                if key in params_spec[param]:
+                    continue
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Invalid params_spec. Missing mandatory key "
+                msg += f"'{key}' for param '{param}'."
+                self.ansible_module.fail_json(msg)
+
+
     @property
     def parameters(self):
         """
@@ -538,11 +614,5 @@ class ParamsValidate:
             msg += "Invalid params_spec. Expected type dict. "
             msg += f"Got type {type(value)}."
             self.ansible_module.fail_json(msg)
-        for param in value:
-            for key in self.mandatory_param_spec_keys:
-                if key not in value[param]:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"Invalid params_spec. Missing key '{key}' for "
-                    msg += f"param '{param}'."
-                    self.ansible_module.fail_json(msg)
+        self.verify_mandatory_param_spec_keys(value)
         self.properties["params_spec"] = value

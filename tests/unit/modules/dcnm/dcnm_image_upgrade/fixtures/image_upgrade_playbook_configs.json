@@ -62,7 +62,7 @@
                     "ip_address": "2.2.2.2",
                     "options": {
                         "epld": {
-                            "module": "1",
+                            "module": 1,
                             "golden": true
                         },
                         "nxos": {
