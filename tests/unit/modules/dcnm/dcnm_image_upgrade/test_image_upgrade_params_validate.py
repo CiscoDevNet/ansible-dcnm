@@ -143,7 +143,7 @@ def test_params_validate_00022(
     params_spec["foo"] = {}
     params_spec["foo"][f"{present_key}"] = present_key_value
 
-    match = "ParamsValidate.verify_mandatory_param_spec_keys: "
+    match = "ParamsValidate._verify_mandatory_param_spec_keys: "
     match += "Invalid params_spec. "
     match += f"Missing mandatory key '{missing_key}' for param 'foo'."
 
@@ -331,7 +331,7 @@ def test_params_validate_00060(params_validate, value, expected_type) -> None:
         instance.params_spec = params_spec
         instance.parameters = parameters
 
-    match = "ParamsValidate.invalid_type: "
+    match = "ParamsValidate._invalid_type: "
     match += "Invalid type for parameter 'foo'. "
     match += f"Expected {expected_type}. Got '{value}'. "
 
@@ -632,7 +632,7 @@ def test_params_validate_00075(params_validate) -> None:
         instance = params_validate
         instance.params_spec = params_spec
         instance.parameters = parameters
-    match = "ParamsValidate._verify_preferred_type: "
+    match = "ParamsValidate._verify_preferred_type_param_spec_is_present: "
     match += "Invalid param_spec for parameter 'foo'. "
     match += "If type is a list, preferred_type must be specified."
     with pytest.raises(AnsibleFailJson, match=match):
@@ -684,18 +684,18 @@ def test_params_validate_00080(params_validate, value, type_to_verify) -> None:
 
 
 @pytest.mark.parametrize(
-    "value",
+    "value, range_min, range_max",
     [
-        (1),
-        (5),
-        (10),
+        (1, 1, 10),
+        (5, 1, 10),
+        (10, 1, 10),
     ],
 )
-def test_params_validate_00090(params_validate, value) -> None:
+def test_params_validate_00090(params_validate, value, range_min, range_max) -> None:
     """
     Function
     - validate
-    - verify_integer_range
+    - _verify_integer_range
 
     Test
     - parameter (int) is within range_min and range_max
@@ -706,8 +706,8 @@ def test_params_validate_00090(params_validate, value) -> None:
     params_spec["foo"] = {}
     params_spec["foo"]["type"] = "int"
     params_spec["foo"]["required"] = True
-    params_spec["foo"]["range_min"] = 1
-    params_spec["foo"]["range_max"] = 10
+    params_spec["foo"]["range_min"] = range_min
+    params_spec["foo"]["range_max"] = range_max
 
     parameters = {}
     parameters["foo"] = value
@@ -719,18 +719,18 @@ def test_params_validate_00090(params_validate, value) -> None:
 
 
 @pytest.mark.parametrize(
-    "value",
+    "value, range_min, range_max",
     [
-        (-1),
-        (0),
-        (11),
+        (-1, 1, 10),
+        (0, 1, 10),
+        (11, 1, 10),
     ],
 )
-def test_params_validate_00100(params_validate, value) -> None:
+def test_params_validate_00091(params_validate, value, range_min, range_max) -> None:
     """
     Function
     - validate
-    - verify_choices
+    - _verify_integer_range
 
     Test
     - parameter (int) is outside range_min and range_max
@@ -739,8 +739,8 @@ def test_params_validate_00100(params_validate, value) -> None:
     params_spec["foo"] = {}
     params_spec["foo"]["type"] = "int"
     params_spec["foo"]["required"] = True
-    params_spec["foo"]["range_min"] = 1
-    params_spec["foo"]["range_max"] = 10
+    params_spec["foo"]["range_min"] = range_min
+    params_spec["foo"]["range_max"] = range_max
 
     parameters = {}
     parameters["foo"] = value
@@ -758,11 +758,53 @@ def test_params_validate_00100(params_validate, value) -> None:
         instance.validate()
 
 
-def test_params_validate_00101(params_validate) -> None:
+@pytest.mark.parametrize(
+    "value, range_min, range_max",
+    [
+        (-1, "foo", 10),
+        (0, 1, "bar"),
+        (11, [], {}),
+    ],
+)
+def test_params_validate_00092(params_validate, value, range_min, range_max) -> None:
     """
     Function
     - validate
-    - verify_choices
+    - _verify_integer_range
+
+    Test
+    - Negative. range_min or range_max is not an integer
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = "int"
+    params_spec["foo"]["required"] = True
+    params_spec["foo"]["range_min"] = range_min
+    params_spec["foo"]["range_max"] = range_max
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+
+    match = "ParamsValidate._verify_integer_range: "
+    match += "Invalid specification for parameter 'foo'. "
+    match += "range_min and range_max must be integers. Got "
+    match += rf"range_min '.*?' type {type(range_min)}, "
+    match += rf"range_max '.*?' type {type(range_max)}."
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+def test_params_validate_00093(params_validate) -> None:
+    """
+    Function
+    - validate
+    - _verify_integer_range
 
     Test
     - Negative: non-int parameter with range_min and range_max specified.

@@ -43,12 +43,18 @@ class ParamsValidate:
     params_spec["foo"]["bar"]["required"] = False
     params_spec["foo"]["bar"]["type"] = "str"
     params_spec["foo"]["bar"]["choices"] = ["bingo", "bango", "bongo"]
+    params_spec["foo"]["baz"] = {}
+    params_spec["foo"]["baz"]["required"] = False
+    params_spec["foo"]["baz"]["type"] = int
+    params_spec["foo"]["baz"]["range_min"] = 0
+    params_spec["foo"]["baz"]["range_max"] = 10
 
     Which describes the following YAML:
 
     ip_address: 1.2.3.4
     foo:
         bar: bingo
+        baz: 10
 
     validator = ParamsValidator(ansible_module)
     validator.parameters = ansible_module.params
@@ -219,6 +225,15 @@ class ParamsValidate:
         """
         method_name = inspect.stack()[0][3]
 
+        for range_value in [range_min, range_max]:
+            if not isinstance(range_value, int):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Invalid specification for parameter '{param}'. "
+                msg += "range_min and range_max must be integers. Got "
+                msg += f"range_min '{range_min}' type {type(range_min)}, "
+                msg += f"range_max '{range_max}' type {type(range_max)}."
+                self.ansible_module.fail_json(msg)
+
         if value < range_min or value > range_max:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid value for parameter '{param}'. "
@@ -238,13 +253,13 @@ class ParamsValidate:
             try:
                 self._ipaddress_guard(expected_type, value, param)
             except TypeError as err:
-                self.invalid_type(expected_type, value, param, err)
+                self._invalid_type(expected_type, value, param, err)
                 return value
 
         try:
             return self.validations[expected_type](value)
         except (ValueError, TypeError) as err:
-            self.invalid_type(expected_type, value, param, err)
+            self._invalid_type(expected_type, value, param, err)
             return value
 
     def _ipaddress_guard(self, expected_type, value: Any, param: str) -> None:
@@ -273,7 +288,7 @@ class ParamsValidate:
         msg += f"param {param} with value {value}."
         raise TypeError(f"{msg}")
 
-    def invalid_type(
+    def _invalid_type(
         self, expected_type: str, value: Any, param: str, error: str = ""
     ) -> None:
         """
@@ -287,7 +302,7 @@ class ParamsValidate:
         msg += f"More info: {error}"
         self.ansible_module.fail_json(msg)
 
-    def _verify_multitype( # pylint: disable=inconsistent-return-statements
+    def _verify_multitype(  # pylint: disable=inconsistent-return-statements
         self, spec: Any, params: Any, param: str
     ) -> Any:
         """
@@ -300,7 +315,7 @@ class ParamsValidate:
         method_name = inspect.stack()[0][3]
 
         # preferred_type is mandatory for multitype
-        self._verify_preferred_type(spec, param)
+        self._verify_preferred_type_param_spec_is_present(spec, param)
 
         # try to convert value to the preferred_type
         preferred_type = spec["preferred_type"]
@@ -343,7 +358,9 @@ class ParamsValidate:
         msg += f"Got '{value}'."
         self.ansible_module.fail_json(msg)
 
-    def _verify_preferred_type(self, spec: Any, param: str) -> None:
+    def _verify_preferred_type_param_spec_is_present(
+        self, spec: Any, param: str
+    ) -> None:
         """
         verify that spec contains the key 'preferred_type'
         """
@@ -455,7 +472,7 @@ class ParamsValidate:
             raise TypeError(f"expected tuple, got {type(value)}")
         return value
 
-    def verify_mandatory_param_spec_keys(self, params_spec: dict) -> None:
+    def _verify_mandatory_param_spec_keys(self, params_spec: dict) -> None:
         """
         Recurse over params_spec dictionary and verify that the
         specification for each param contains the mandatory keys
@@ -467,7 +484,7 @@ class ParamsValidate:
                 continue
             if param in self.reserved_params:
                 continue
-            self.verify_mandatory_param_spec_keys(params_spec[param])
+            self._verify_mandatory_param_spec_keys(params_spec[param])
             for key in self.mandatory_param_spec_keys:
                 if key in params_spec[param]:
                     continue
@@ -523,5 +540,5 @@ class ParamsValidate:
             msg += "Invalid params_spec. Expected type dict. "
             msg += f"Got type {type(value)}."
             self.ansible_module.fail_json(msg)
-        self.verify_mandatory_param_spec_keys(value)
+        self._verify_mandatory_param_spec_keys(value)
         self.properties["params_spec"] = value
