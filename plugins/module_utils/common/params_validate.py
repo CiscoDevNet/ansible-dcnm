@@ -76,16 +76,36 @@ class ParamsValidate:
         self.mandatory_param_spec_keys = set()
         self.mandatory_param_spec_keys.add("required")
         self.mandatory_param_spec_keys.add("type")
-        self.types = dict()
-        self.types["str"] = str
-        self.types['int'] = int
-        self.types['float'] = float
-        self.types['bool'] = bool
-        self.types['dict'] = dict
-        self.types['list'] = list
-        self.types['set'] = set
-        self.types['tuple'] = tuple
+        # Standard python types
+        self._types = {}
+        self._types["bool"] = bool
+        self._types["dict"] = dict
+        self._types["float"] = float
+        self._types["int"] = int
+        self._types["list"] = list
+        self._types["set"] = set
+        self._types["str"] = str
+        self._types["tuple"] = tuple
+        self._ipaddress_types = set()
+        self._ipaddress_types.add("ipv4")
+        self._ipaddress_types.add("ipv6")
+        self._ipaddress_types.add("ipv4_subnet")
+        self._ipaddress_types.add("ipv6_subnet")
+        self.valid_expected_types = set(self._types.keys()).union(self._ipaddress_types)
 
+        self.validations = {}
+        self.validations["bool"] = validation.check_type_bool
+        self.validations["dict"] = validation.check_type_dict
+        self.validations["float"] = validation.check_type_float
+        self.validations["int"] = validation.check_type_int
+        self.validations["list"] = validation.check_type_list
+        self.validations["set"] = self._validate_set
+        self.validations["str"] = validation.check_type_str
+        self.validations["tuple"] = self._validate_tuple
+        self.validations["ipv4"] = self._validate_ipv4_address
+        self.validations["ipv6"] = self._validate_ipv6_address
+        self.validations["ipv4_subnet"] = self._validate_ipv4_subnet
+        self.validations["ipv6_subnet"] = self._validate_ipv6_subnet
 
     def log_msg(self, msg):
         """
@@ -141,9 +161,13 @@ class ParamsValidate:
                 self.ansible_module.fail_json(msg)
 
             if isinstance(spec[param]["type"], list):
-                parameters[param] = self._verify_multitype(spec[param], parameters, param)
+                parameters[param] = self._verify_multitype(
+                    spec[param], parameters, param
+                )
             else:
-                parameters[param] = self._verify_type(spec[param]["type"], parameters, param)
+                parameters[param] = self._verify_type(
+                    spec[param]["type"], parameters, param
+                )
 
             self._verify_choices(
                 spec[param].get("choices", None), parameters[param], param
@@ -207,214 +231,29 @@ class ParamsValidate:
         Verify that value's type matches the expected type
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self._verify_expected_type(expected_type, param)
 
         value = params[param]
-        value = self._verify_str(expected_type, value, param)
-        value = self._verify_bool(expected_type, value, param)
-        value = self._verify_int(expected_type, value, param)
-        value = self._verify_float(expected_type, value, param)
-        value = self._verify_dict(expected_type, value, param)
-        value = self._verify_list(expected_type, value, param)
-        value = self._verify_set(expected_type, value, param)
-        value = self._verify_tuple(expected_type, value, param)
-        value = self._verify_ipv4(expected_type, value, param)
-        value = self._verify_ipv6(expected_type, value, param)
-        value = self._verify_ipv4_subnet(expected_type, value, param)
-        value = self._verify_ipv6_subnet(expected_type, value, param)
-        return value
+        if expected_type in self._ipaddress_types:
+            try:
+                self._ipaddress_guard(expected_type, value, param)
+            except TypeError as err:
+                self.invalid_type(expected_type, value, param, err)
+                return value
 
-    def _verify_str(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a str, or convert to str if possible
-        If value is not a str, and conversion fails,
-        call invalid_type() to fail the playbook
-        """
-        if expected_type != "str":
-            return value
         try:
-            return self.validation.check_type_str(value)
-        except TypeError as err:
+            return self.validations[expected_type](value)
+        except (ValueError, TypeError) as err:
             self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
+            return value
 
-    def _verify_bool(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a bool, or convert to bool if possible
-        If value is not a bool, and conversion fails,
-        call invalid_type() to fail the playbook
-        """
-        if expected_type != "bool":
-            return value
-        try:
-            return self.validation.check_type_bool(value)
-        except TypeError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_int(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is an int, or convert to int if possible
-        If value is not an int, and conversion fails,
-        call invalid_type() to fail the playbook
-        """
-        if expected_type != "int":
-            return value
-        try:
-            return self.validation.check_type_int(value)
-        except TypeError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_float(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a float, or convert to float if possible
-        If value is not a float, and conversion fails,
-        call invalid_type() to fail the playbook
-        """
-        if expected_type != "float":
-            return value
-        try:
-            return self.validation.check_type_float(value)
-        except TypeError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_dict(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a dict
-        check_type_dict() also converts strings with format
-        "k1=v1, k2=v2" to dict.
-
-        If value is not a dict, and conversion fails,
-        call invalid_type() to fail the playbook
-        """
-        if expected_type != "dict":
-            return value
-        try:
-            return self.validation.check_type_dict(value)
-        except TypeError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_list(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a list
-        check_type_list() converts int, str, float to a single-element list.
-        It also converts comma-separated strings to lists.
-
-        If value is not a list, and conversion fails,
-        call invalid_type() to fail the playbook
-        """
-        if expected_type != "list":
-            return value
-        try:
-            return self.validation.check_type_list(value)
-        except TypeError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_set(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a set
-        validate does not have a check_type_set() method so
-        we use isinstance() instead.
-
-        If value is not a set, call invalid_type() to fail the playbook
-        """
-        if expected_type != "set":
-            return value
-        if isinstance(value, set):
-            return value
-        error = f"Expected type set. Got type {type(value)} for "
-        error += f"param {param} with value {value}."
-        self.invalid_type(expected_type, value, param, error)
-        return value  # never reached, but it makes pylint happy
-
-    def _verify_tuple(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is a tuple
-        validate does not have a check_type_tuple() method so
-        we use isinstance() instead.
-
-        If value is not a tuple, call invalid_type() to fail the playbook
-        """
-        if expected_type != "tuple":
-            return value
-        if isinstance(value, tuple):
-            return value
-        error = f"Expected type tuple. Got type {type(value)} for "
-        error += f"param {param} with value {value}."
-        self.invalid_type(expected_type, value, param, error)
-        return value  # never reached, but it makes pylint happy
-
-    def _verify_ipv4(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is an IPv4 address
-        If value is not an IPv4 address, call invalid_type()
-        to fail the playbook
-        """
-        if expected_type != "ipv4":
-            return value
-        self.ipaddress_guard(expected_type, value, param)
-        try:
-            _ = ipaddress.IPv4Address(value)
-            return value
-        except ipaddress.AddressValueError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_ipv6(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is an IPv6 address
-        If value is not an IPv6 address, call invalid_type()
-        to fail the playbook
-        """
-        if expected_type != "ipv6":
-            return value
-        self.ipaddress_guard(expected_type, value, param)
-        try:
-            _ = ipaddress.IPv6Address(value)
-            return value
-        except ipaddress.AddressValueError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_ipv4_subnet(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is an IPv4 subnet
-        If value is not an IPv4 subnet, call invalid_type()
-        to fail the playbook
-        """
-        if expected_type != "ipv4_subnet":
-            return value
-        self.ipaddress_guard(expected_type, value, param)
-        try:
-            _ = ipaddress.IPv4Network(value)
-            return value
-        except ValueError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def _verify_ipv6_subnet(self, expected_type: str, value: Any, param: str) -> Any:
-        """
-        verify that value is an IPv6 subnet
-        If value is not an IPv6 subnet, call invalid_type()
-        to fail the playbook
-        """
-        if expected_type != "ipv6_subnet":
-            return value
-        self.ipaddress_guard(expected_type, value, param)
-        try:
-            _ = ipaddress.IPv6Network(value)
-            return value
-        except ValueError as err:
-            self.invalid_type(expected_type, value, param, err)
-            return value  # never reached, but it makes pylint happy
-
-    def ipaddress_guard(self, expected_type, value: Any, param: str) -> None:
+    def _ipaddress_guard(self, expected_type, value: Any, param: str) -> None:
         """
         Guard against int and bool types for ipv4, ipv6, ipv4_subnet,
         and ipv6_subnet type.
+
+        Raise TypeError if value's type is int or bool and
+        expected_type is one of self._ipaddress_types.
 
         The ipaddress module accepts int and bool types and converts
         them to IP addresses or networks.  E.g. True becomes 0.0.0.1,
@@ -422,17 +261,20 @@ class ParamsValidate:
         this, we need to fail int and bool values if expected_type is
         one of ipv4, ipv6, ipv4_subnet, or ipv6_subnet.
         """
-        if isinstance(value, int):
-            error = f"Expected type ipv4. Got type {type(value)} for "
-            error += f"param {param} with value {value}."
-            self.invalid_type(expected_type, value, param, error)
-        if isinstance(value, bool):
-            error = f"Expected type ipv4. Got type {type(value)} for "
-            error += f"param {param} with value {value}."
-            self.invalid_type(expected_type, value, param, error)
+        method_name = inspect.stack()[0][3]
+        if type(value) not in [int, bool]:
+            return
+        if expected_type not in self._ipaddress_types:
+            return
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Expected type {expected_type}. "
+        msg += f"Got type {type(value)} for "
+        msg += f"param {param} with value {value}."
+        raise TypeError(f"{msg}")
 
     def invalid_type(
-        self, expected_type: str, value: Any, param: str, error: str
+        self, expected_type: str, value: Any, param: str, error: str = ""
     ) -> None:
         """
         Calls fail_json when value's type does not match expected_type
@@ -445,119 +287,173 @@ class ParamsValidate:
         msg += f"More info: {error}"
         self.ansible_module.fail_json(msg)
 
-    def _verify_multitype(
+    def _verify_multitype( # pylint: disable=inconsistent-return-statements
         self, spec: Any, params: Any, param: str
     ) -> Any:
         """
         Verify that value's type matches one of the types in expected_types
+
+        NOTES:
+        1.  We've disabled inconsistent-return-statements.  We're pretty
+            sure this method is correct.
         """
         method_name = inspect.stack()[0][3]
 
         # preferred_type is mandatory for multitype
+        self._verify_preferred_type(spec, param)
+
+        # try to convert value to the preferred_type
+        preferred_type = spec["preferred_type"]
+
+        (result, value) = self._verify_preferred_type_for_standard_types(
+            preferred_type, params[param]
+        )
+        if result is True:
+            return value
+
+        (result, value) = self._verify_preferred_type_for_ipaddress_types(
+            preferred_type, params[param]
+        )
+        if result is True:
+            return value
+
+        # Couldn't convert value to the preferred_type. Try the other types.
+        value = params[param]
+
+        expected_types = spec.get("type", [])
+
+        if preferred_type in expected_types:
+            # We've already tried preferred_type, so remove it
+            expected_types.remove(preferred_type)
+
+        for expected_type in expected_types:
+            if expected_type in self._ipaddress_types and type(value) in [int, bool]:
+                # These are invalid, so skip them
+                continue
+
+            try:
+                value = self.validations[expected_type](value)
+                return value
+            except (ValueError, TypeError):
+                pass
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Invalid type for parameter '{param}'. "
+        msg += f"Expected one of {expected_types}. "
+        msg += f"Got '{value}'."
+        self.ansible_module.fail_json(msg)
+
+    def _verify_preferred_type(self, spec: Any, param: str) -> None:
+        """
+        verify that spec contains the key 'preferred_type'
+        """
+        method_name = inspect.stack()[0][3]
         if spec.get("preferred_type", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid param_spec for parameter '{param}'. "
             msg += "If type is a list, preferred_type must be specified."
             self.ansible_module.fail_json(msg)
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"spec: {spec}"
-        self.log_msg(msg)
-        # try to convert to preferred_type
-        preferred_type = spec["preferred_type"]
-        self.log_msg(f"{self.class_name}.{method_name}: preferred_type: {preferred_type}")
-        value = self._verify_type(preferred_type, params, param)
-        if isinstance(value, self.types[preferred_type]):
+    def _verify_preferred_type_for_standard_types(
+        self, preferred_type: str, value: Any
+    ) -> (bool, Any):
+        """
+        If preferred_type is one of the standard python types
+        we use isinstance() to check if we are able to convert
+        the value to preferred_type
+        """
+        standard_type_success = True
+        if preferred_type not in self._types:
+            return (False, value)
+        try:
+            value = self.validations[preferred_type](value)
+        except (ValueError, TypeError):
+            standard_type_success = False
+
+        if standard_type_success is True:
+            if isinstance(value, self._types[preferred_type]):
+                return (True, value)
+        return (False, value)
+
+    def _verify_preferred_type_for_ipaddress_types(
+        self, preferred_type: str, value: Any
+    ) -> (bool, Any):
+        """
+        We can't use isinstance() to verify ipaddress types.
+        Hence, we check these types separately.
+        """
+        ip_type_success = True
+        if preferred_type not in self._ipaddress_types:
+            return (False, value)
+        try:
+            value = self.validations[preferred_type](value)
+        except (ValueError, TypeError):
+            ip_type_success = False
+        if ip_type_success is True:
+            return (True, value)
+        return (False, value)
+
+    @staticmethod
+    def _validate_ipv4_address(value: Any) -> Any:
+        """
+        verify that value is an IPv4 address
+        """
+        try:
+            _ = ipaddress.IPv4Address(value)
             return value
+        except ipaddress.AddressValueError as err:
+            raise ValueError(f"invalid IPv4 address: {err}") from err
 
-        invalid = True
-        error = ""
-        value = params[param]
-        expected_types = spec.get("type", [])
-
-        for expected_type in expected_types:
-            if expected_type == "str":
-                try:
-                    value = self.validation.check_type_str(value)
-                    invalid = False
-                except TypeError:
-                    pass
-            elif expected_type == "bool":
-                try:
-                    value = self.validation.check_type_bool(value)
-                    invalid = False
-                except TypeError:
-                    pass
-            elif expected_type == "int":
-                try:
-                    value = self.validation.check_type_int(value)
-                    invalid = False
-                except TypeError:
-                    pass
-            elif expected_type == "dict":
-                try:
-                    value = self.validation.check_type_dict(value)
-                    invalid = False
-                except TypeError:
-                    pass
-            elif expected_type == "list":
-                try:
-                    value = self.validation.check_type_list(value)
-                    invalid = False
-                except TypeError:
-                    pass
-            elif expected_type == "set":
-                # validate does not have a check_type_set() method
-                if isinstance(value, set):
-                    invalid = False
-            elif expected_type == "tuple":
-                # validate does not have a check_type_tuple() method
-                if isinstance(value, tuple):
-                    invalid = False
-            elif expected_type == "float":
-                try:
-                    value = self.validation.check_type_float(value)
-                    invalid = False
-                except TypeError:
-                    pass
-            elif expected_type == "ipv4":
-                try:
-                    ipaddress.IPv4Address(value)
-                    invalid = False
-                except ipaddress.AddressValueError:
-                    pass
-            elif expected_type == "ipv6":
-                try:
-                    ipaddress.IPv6Address(value)
-                    invalid = False
-                except ipaddress.AddressValueError:
-                    pass
-            elif expected_type == "ipv4_subnet":
-                try:
-                    ipaddress.IPv4Network(value)
-                    invalid = False
-                except ValueError:
-                    pass
-            elif expected_type == "ipv6_subnet":
-                try:
-                    ipaddress.IPv6Network(value)
-                    invalid = False
-                except ValueError:
-                    pass
-            else:
-                error = f"Unknown type {expected_type} for param {param} "
-                error += f"with value {value}."
-                invalid = True
-
-        if invalid is False:
+    @staticmethod
+    def _validate_ipv4_subnet(value: Any) -> Any:
+        """
+        verify that value is an IPv4 network
+        """
+        try:
+            _ = ipaddress.IPv4Network(value)
             return value
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Invalid type for parameter '{param}'. "
-        msg += f"Expected one of {expected_types}. "
-        msg += f"Got '{value}'."
-        if error:
-            msg += f"More info: {error}"
-        self.ansible_module.fail_json(msg)
+        except ipaddress.AddressValueError as err:
+            raise ValueError(f"invalid IPv4 network: {err}") from err
+
+    @staticmethod
+    def _validate_ipv6_address(value: Any) -> Any:
+        """
+        verify that value is an IPv6 address
+        """
+        try:
+            _ = ipaddress.IPv6Address(value)
+            return value
+        except ipaddress.AddressValueError as err:
+            raise ValueError(f"invalid IPv6 address: {err}") from err
+
+    @staticmethod
+    def _validate_ipv6_subnet(value: Any) -> Any:
+        """
+        verify that value is an IPv6 network
+        """
+        try:
+            _ = ipaddress.IPv6Network(value)
+            return value
+        except ipaddress.AddressValueError as err:
+            raise ValueError(f"invalid IPv6 network: {err}") from err
+
+    @staticmethod
+    def _validate_set(value: Any) -> Any:
+        """
+        verify that value is a set
+        """
+        if not isinstance(value, set):
+            raise TypeError(f"expected set, got {type(value)}")
+        return value
+
+    @staticmethod
+    def _validate_tuple(value: Any) -> Any:
+        """
+        verify that value is a tuple
+        """
+        if not isinstance(value, tuple):
+            raise TypeError(f"expected tuple, got {type(value)}")
+        return value
 
     def verify_mandatory_param_spec_keys(self, params_spec: dict) -> None:
         """
@@ -580,6 +476,19 @@ class ParamsValidate:
                 msg += f"'{key}' for param '{param}'."
                 self.ansible_module.fail_json(msg)
 
+    def _verify_expected_type(self, expected_type: str, param: str) -> None:
+        """
+        Verify that expected_type is valid
+        """
+        method_name = inspect.stack()[0][3]
+        if expected_type in self.valid_expected_types:
+            return
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Invalid 'type' in params_spec for parameter '{param}'. "
+        msg += "Expected one of "
+        msg += f"'{','.join(sorted(self.valid_expected_types))}'. "
+        msg += f"Got '{expected_type}'."
+        self.ansible_module.fail_json(msg)
 
     @property
     def parameters(self):

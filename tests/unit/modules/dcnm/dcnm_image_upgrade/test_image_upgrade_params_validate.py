@@ -299,25 +299,28 @@ def test_params_validate_00053(params_validate) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, type_to_verify",
-    [
-        ("bing", "int"),
-        ("1", "ipv4"),
-        (False, "ipv4"),
-    ]
+    "value, expected_type",
+    [("bing", "int"), ("1", "ipv4"), (False, "set"), (True, "tuple"), ("bar", "bool")],
 )
-def test_params_validate_00060(params_validate, value, type_to_verify) -> None:
+def test_params_validate_00060(params_validate, value, expected_type) -> None:
     """
     Function
     - validate
     - verify_type
 
     Test
-    - parameter type is invalid
+    - parameter value's type is not convertable to expected_type
+
+    NOTES:
+    1.  value == bool and type in [ipv4, ipv6, ipv4_subnet, ipv6_subnet]
+        is tested separately (see ipaddress_guard test)
+    2.  If expected_type is "str" ANY value (dict, tuple, float, int, etc)
+        will succeed.  Hence, for expected_type == "str" there are no invalid
+        values.
     """
     params_spec = {}
     params_spec["foo"] = {}
-    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["type"] = expected_type
     params_spec["foo"]["required"] = True
 
     parameters = {}
@@ -330,15 +333,14 @@ def test_params_validate_00060(params_validate, value, type_to_verify) -> None:
 
     match = "ParamsValidate.invalid_type: "
     match += "Invalid type for parameter 'foo'. "
-    match += f"Expected {type_to_verify}. Got '{value}'. "
-    # match += r"More info: \<class 'str'\> cannot be converted to an int"
+    match += f"Expected {expected_type}. Got '{value}'. "
 
     with pytest.raises(AnsibleFailJson, match=match):
         instance.validate()
 
 
 @pytest.mark.parametrize(
-    "value, type_to_verify",
+    "value, expected_type",
     [
         (1, "int"),
         ("1", "int"),
@@ -358,7 +360,7 @@ def test_params_validate_00060(params_validate, value, type_to_verify) -> None:
         ("2001:1:1::/64", "ipv6_subnet"),
     ],
 )
-def test_params_validate_00070(params_validate, value, type_to_verify) -> None:
+def test_params_validate_00061(params_validate, value, expected_type) -> None:
     """
     Function
     - validate
@@ -369,7 +371,7 @@ def test_params_validate_00070(params_validate, value, type_to_verify) -> None:
     """
     params_spec = {}
     params_spec["foo"] = {}
-    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["type"] = expected_type
     params_spec["foo"]["required"] = True
 
     parameters = {}
@@ -382,29 +384,81 @@ def test_params_validate_00070(params_validate, value, type_to_verify) -> None:
         instance.validate()
 
 
-@pytest.mark.parametrize(
-    "value, type_to_verify, preferred_type",
-    [
-        (1, ["int", "str"], "int"),
-        ("1", ["int", "str"], "int"),
-        (1, ["int", "str"], "str"),
-        ("1", ["int", "str"], "str"),
-        (1, ["int", "str", "list"], "list"),
-        ("1", ["int", "str", "list"], "list"),
-    ],
-)
-def test_params_validate_00071(params_validate, value, type_to_verify, preferred_type) -> None:
+def test_params_validate_00062(params_validate) -> None:
     """
     Function
     - validate
-    - verify_multitype
+    - verify_type
 
     Test
-    - Convert parameter to preferred_type
+    - verify_type calls fail_json if type is not a valid type
     """
     params_spec = {}
     params_spec["foo"] = {}
-    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["required"] = True
+    params_spec["foo"]["type"] = "bad_type"
+
+    parameters = {}
+    parameters["foo"] = "bar"
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+
+    match = "ParamsValidate._verify_expected_type: "
+    match += "Invalid 'type' in params_spec for parameter 'foo'. "
+    match += "Expected one of "
+    match += f"'{','.join(sorted(instance.valid_expected_types))}'. "
+    match += "Got 'bad_type'."
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+@pytest.mark.parametrize(
+    "value, expected_type, preferred_type",
+    [
+        # preferred type != value's "native" type
+        ("1", ["int", "str"], "int"),
+        (1, ["int", "str", "list"], "list"),
+        ("1", ["int", "str", "list"], "list"),
+        (1.145, ["int", "list", "float"], "list"),
+        # preferred_type == value's "native" type
+        ("1", ["int", "str"], "str"),
+        (1, ["int", "str"], "int"),
+        ([1, 2, 3], ["int", "str", "list"], "list"),
+        (1.456, ["int", "str", "float"], "float"),
+        (False, ["int", "str", "bool"], "bool"),
+        ("1.1.1.1", ["int", "str", "ipv4"], "ipv4"),
+        # any type is convertable to str
+        (1, ["int", "str"], "str"),
+        ([1, 2, 3], ["int", "str", "list"], "str"),
+        ((1, 2, 3), ["int", "str", "list"], "str"),
+        ({1, 2, 3}, ["int", "str", "list"], "str"),
+        ({"foo": "bar"}, ["int", "str", "dict"], "str"),
+        (False, ["int", "str", "bool"], "str"),
+        (1.456, ["int", "str", "float"], "str"),
+    ],
+)
+def test_params_validate_00071(
+    params_validate, value, expected_type, preferred_type
+) -> None:
+    """
+    Function
+    - validate
+    - _verify_multitype
+
+    Test
+    - Convert parameter value to preferred_type
+
+    NOTES:
+    1.  ansible.module_utils.common.validation can/will convert
+        any type to type str.
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = expected_type
     params_spec["foo"]["preferred_type"] = preferred_type
     params_spec["foo"]["required"] = True
 
@@ -416,9 +470,12 @@ def test_params_validate_00071(params_validate, value, type_to_verify, preferred
         instance.params_spec = params_spec
         instance.parameters = parameters
         instance.validate()
-    assert isinstance(instance.parameters["foo"], instance.types[preferred_type])
-
-
+    if preferred_type in instance._ipaddress_types:  # pylint: disable=protected-access
+        assert isinstance(instance.parameters["foo"], str)
+    else:
+        assert isinstance(
+            instance.parameters["foo"], instance._types[preferred_type]
+        )  # pylint: disable=protected-access
 
 
 @pytest.mark.parametrize(
@@ -428,12 +485,14 @@ def test_params_validate_00071(params_validate, value, type_to_verify, preferred
         ("1", ["dict", "ipv4"], "ipv4"),
     ],
 )
-def test_params_validate_00072(params_validate, value, type_to_verify, preferred_type) -> None:
+def test_params_validate_00072(
+    params_validate, value, type_to_verify, preferred_type
+) -> None:
     """
     Function
     - validate
     - verify_type
-    - verify_multitype
+    - _verify_multitype
 
     Test
     - parameter type is invalid
@@ -452,11 +511,11 @@ def test_params_validate_00072(params_validate, value, type_to_verify, preferred
         instance.params_spec = params_spec
         instance.parameters = parameters
 
-    match = "ParamsValidate.invalid_type: "
+    match = "ParamsValidate._verify_multitype: "
     match += "Invalid type for parameter 'foo'. "
-    match += f"Expected {preferred_type}. "
+    match += r"Expected one of .*?. "
     match += f"Got '{value}'."
- 
+
     with pytest.raises(AnsibleFailJson, match=match):
         instance.validate()
 
@@ -468,12 +527,14 @@ def test_params_validate_00072(params_validate, value, type_to_verify, preferred
         ("1", ["dict", "ipv4"], "ipv4"),
     ],
 )
-def test_params_validate_00073(params_validate, value, type_to_verify, preferred_type) -> None:
+def test_params_validate_00073(
+    params_validate, value, type_to_verify, preferred_type
+) -> None:
     """
     Function
     - validate
     - verify_type
-    - verify_multitype
+    - _verify_multitype
 
     Test
     - parameter type is invalid in multi-level parameters
@@ -501,11 +562,123 @@ def test_params_validate_00073(params_validate, value, type_to_verify, preferred
         instance.params_spec = params_spec
         instance.parameters = parameters
 
-    match = "ParamsValidate.invalid_type: "
+    match = "ParamsValidate._verify_multitype: "
     match += "Invalid type for parameter 'baz'. "
-    match += f"Expected {preferred_type}. "
+    match += r"Expected one of .*?. "
     match += f"Got '{value}'."
- 
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+@pytest.mark.parametrize(
+    "value, type_to_verify, preferred_type",
+    [
+        ("1", ["dict", "tuple", "list"], "dict"),
+    ],
+)
+def test_params_validate_00074(
+    params_validate, value, type_to_verify, preferred_type
+) -> None:
+    """
+    Function
+    - validate
+    - verify_type
+    - _verify_multitype
+
+    Test
+    -   Cannot convert parameter value to preferred_type, but can convert
+        to another type in _verify_multitype
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["preferred_type"] = preferred_type
+    params_spec["foo"]["required"] = True
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+        instance.validate()
+
+
+def test_params_validate_00075(params_validate) -> None:
+    """
+    Function
+    - validate
+    - _verify_multitype
+    - _verify_preferred_type
+
+    Test
+    -   preferred_type key is missing from spec when spec.type
+        is a list of types.
+
+    NOTES:
+    1.  preferred_type is mandatory when spec.type is a list of types.
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = ["int", "str"]
+    params_spec["foo"]["required"] = True
+
+    parameters = {}
+    parameters["foo"] = 1
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+    match = "ParamsValidate._verify_preferred_type: "
+    match += "Invalid param_spec for parameter 'foo'. "
+    match += "If type is a list, preferred_type must be specified."
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+@pytest.mark.parametrize(
+    "value, type_to_verify",
+    [
+        (1, "ipv4"),
+        (1, "ipv6"),
+        (1, "ipv4_subnet"),
+        (1, "ipv6_subnet"),
+        (True, "ipv4"),
+        (True, "ipv6"),
+        (True, "ipv4_subnet"),
+        (True, "ipv6_subnet"),
+    ],
+)
+def test_params_validate_00080(params_validate, value, type_to_verify) -> None:
+    """
+    Function
+    - validate
+    - verify_type
+    - ipaddress_guard
+
+    Test
+    -   fail_json if type is in [ipv4, ipv6, ipv4_subnet, ipv6_subnet]
+        and value is bool or int.
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = type_to_verify
+    params_spec["foo"]["required"] = True
+
+    parameters = {}
+    parameters["foo"] = value
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+        instance.parameters = parameters
+
+    match = "ParamsValidate._ipaddress_guard: "
+    match += f"Expected type {type_to_verify}. "
+    match += f"Got type {type(value)} for param foo with value {value}."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.validate()
 
@@ -518,7 +691,7 @@ def test_params_validate_00073(params_validate, value, type_to_verify, preferred
         (10),
     ],
 )
-def test_params_validate_00080(params_validate, value) -> None:
+def test_params_validate_00090(params_validate, value) -> None:
     """
     Function
     - validate
@@ -553,7 +726,7 @@ def test_params_validate_00080(params_validate, value) -> None:
         (11),
     ],
 )
-def test_params_validate_00090(params_validate, value) -> None:
+def test_params_validate_00100(params_validate, value) -> None:
     """
     Function
     - validate
@@ -580,12 +753,12 @@ def test_params_validate_00090(params_validate, value) -> None:
     match = "ParamsValidate._verify_integer_range: "
     match += "Invalid value for parameter 'foo'. "
     match += f"Expected value between 1 and 10. Got {value}"
- 
+
     with pytest.raises(AnsibleFailJson, match=match):
         instance.validate()
 
 
-def test_params_validate_00091(params_validate) -> None:
+def test_params_validate_00101(params_validate) -> None:
     """
     Function
     - validate
@@ -613,7 +786,7 @@ def test_params_validate_00091(params_validate) -> None:
     match += "Invalid param_spec for parameter 'foo'. "
     match += "range_min and range_max are only valid for "
     match += "parameters of type int. Got type str for param foo."
- 
+
     with pytest.raises(AnsibleFailJson, match=match):
         instance.validate()
 
