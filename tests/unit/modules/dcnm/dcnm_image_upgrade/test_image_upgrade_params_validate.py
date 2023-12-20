@@ -72,6 +72,8 @@ def test_params_validate_00001(params_validate) -> None:
     assert instance.reserved_params == {
         "choices",
         "default",
+        "length_max",
+        "no_log",
         "preferred_type",
         "range_max",
         "range_min",
@@ -80,9 +82,9 @@ def test_params_validate_00001(params_validate) -> None:
     }
     assert instance.mandatory_param_spec_keys == {"required", "type"}
     assert instance.class_name == "ParamsValidate"
-    assert instance.debug is False
-    assert instance.logfile == "/tmp/ansible_dcnm.log"
     assert instance.file_handle is None
+    assert instance.properties.get("debug", None) is False
+    assert instance.properties.get("logfile", "foo") is None
     assert instance.properties.get("parameters", "foo") is None
     assert instance.properties.get("params_spec", "foo") is None
 
@@ -474,7 +476,7 @@ def test_params_validate_00071(
         assert isinstance(instance.parameters["foo"], str)
     else:
         assert isinstance(
-            instance.parameters["foo"], instance._types[preferred_type]
+            instance.parameters["foo"], instance._standard_types[preferred_type]
         )  # pylint: disable=protected-access
 
 

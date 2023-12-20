@@ -65,40 +65,88 @@ class ParamsValidate:
         self.class_name = __class__.__name__
         self.ansible_module = ansible_module
         self.validation = validation
-        self.debug = False
         self.file_handle = None
-        self.logfile = "/tmp/ansible_dcnm.log"
+
+        self._build_properties()
+        self._build_reserved_params()
+        self._build_mandatory_param_spec_keys()
+        self._build_standard_types()
+        self._build_ipaddress_types()
+        self._build_valid_expected_types()
+        self._build_validations()
+
+    def _build_properties(self):
+        """
+        Set default values for the properties in this class
+        """
         self.properties = {}
         self.properties["parameters"] = None
         self.properties["params_spec"] = None
+        self.properties["debug"] = False
+        self.properties["logfile"] = None
+
+    def _build_reserved_params(self):
+        """
+        These are reserved parameter names that are skipped
+        during validation.
+        """
         self.reserved_params = set()
         self.reserved_params.add("choices")
         self.reserved_params.add("default")
+        self.reserved_params.add("length_max")
+        self.reserved_params.add("no_log")
         self.reserved_params.add("range_max")
         self.reserved_params.add("range_min")
         self.reserved_params.add("required")
         self.reserved_params.add("type")
         self.reserved_params.add("preferred_type")
-        self.mandatory_param_spec_keys = set()
-        self.mandatory_param_spec_keys.add("required")
-        self.mandatory_param_spec_keys.add("type")
-        # Standard python types
-        self._types = {}
-        self._types["bool"] = bool
-        self._types["dict"] = dict
-        self._types["float"] = float
-        self._types["int"] = int
-        self._types["list"] = list
-        self._types["set"] = set
-        self._types["str"] = str
-        self._types["tuple"] = tuple
+
+    def _build_standard_types(self):
+        """
+        Standard python types.  These are used with
+        isinstance() since isinstance() requires the
+        actual type and not the string representation.
+        """
+        self._standard_types = {}
+        self._standard_types["bool"] = bool
+        self._standard_types["dict"] = dict
+        self._standard_types["float"] = float
+        self._standard_types["int"] = int
+        self._standard_types["list"] = list
+        self._standard_types["set"] = set
+        self._standard_types["str"] = str
+        self._standard_types["tuple"] = tuple
+
+    def _build_ipaddress_types(self):
+        """
+        IP address types require special handling since
+        they cannot be verified using isinstance().
+        """
         self._ipaddress_types = set()
         self._ipaddress_types.add("ipv4")
         self._ipaddress_types.add("ipv6")
         self._ipaddress_types.add("ipv4_subnet")
         self._ipaddress_types.add("ipv6_subnet")
-        self.valid_expected_types = set(self._types.keys()).union(self._ipaddress_types)
 
+    def _build_mandatory_param_spec_keys(self):
+        """
+        Mandatory keys for every parameter in params_spec.
+        """
+        self.mandatory_param_spec_keys = set()
+        self.mandatory_param_spec_keys.add("required")
+        self.mandatory_param_spec_keys.add("type")
+
+    def _build_valid_expected_types(self):
+        """
+        Valid values for the 'type' key in params_spec.
+        """
+        self.valid_expected_types = set(self._standard_types.keys()).union(self._ipaddress_types)
+
+    def _build_validations(self):
+        """
+        Map of validation functions keyed by the parameter
+        type they validate.
+        """
         self.validations = {}
         self.validations["bool"] = validation.check_type_bool
         self.validations["dict"] = validation.check_type_dict
@@ -115,10 +163,17 @@ class ParamsValidate:
 
     def log_msg(self, msg):
         """
-        used for debugging. disable this when committing to main
-        by setting self.debug to False in __init__()
+        Used for debugging.  To enable, both debug and logfile properties
+        must be set e.g.:
+
+        instance = ParamsValidate(ansible_module)
+        instance.debug = True
+        instance.logfile = "/tmp/params_validate.log"
+        etc...
         """
         if self.debug is False:
+            return
+        if self.logfile is None:
             return
         if self.file_handle is None:
             try:
@@ -140,7 +195,19 @@ class ParamsValidate:
         """
         Verify that parameters in self.parameters conform to self.params_spec
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
+        if self.parameters is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.paramaters needs to be set "
+            msg += "prior to calling instance.validate()."
+            self.ansible_module.fail_json(msg)
+
+        if self.params_spec is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.params_spec needs to be set "
+            msg += "prior to calling instance.validate()."
+            self.ansible_module.fail_json(msg)
+
         self._validate_parameters(self.params_spec, self.parameters)
 
     def _validate_parameters(self, spec, parameters):
@@ -380,7 +447,7 @@ class ParamsValidate:
         the value to preferred_type
         """
         standard_type_success = True
-        if preferred_type not in self._types:
+        if preferred_type not in self._standard_types:
             return (False, value)
         try:
             value = self.validations[preferred_type](value)
@@ -388,7 +455,7 @@ class ParamsValidate:
             standard_type_success = False
 
         if standard_type_success is True:
-            if isinstance(value, self._types[preferred_type]):
+            if isinstance(value, self._standard_types[preferred_type]):
                 return (True, value)
         return (False, value)
 
@@ -506,6 +573,35 @@ class ParamsValidate:
         msg += f"'{','.join(sorted(self.valid_expected_types))}'. "
         msg += f"Got '{expected_type}'."
         self.ansible_module.fail_json(msg)
+
+    @property
+    def debug(self):
+        """
+        Enable/disable debugging to self.logfile
+        """
+        return self.properties["debug"]
+
+    @debug.setter
+    def debug(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Invalid type for debug. Expected bool. "
+            msg += f"Got {type(value)}."
+            self.ansible_module.fail_json(msg)
+        self.properties["debug"] = value
+
+    @property
+    def logfile(self):
+        """
+        Set file to which debug log is written
+        """
+        return self.properties["logfile"]
+
+    @logfile.setter
+    def logfile(self, value):
+        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        self.properties["logfile"] = value
 
     @property
     def parameters(self):
