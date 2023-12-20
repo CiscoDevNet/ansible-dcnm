@@ -292,6 +292,15 @@ def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     return {"response": response, "verb": verb}
 
 
+def responses_image_validate(key: str) -> Dict[str, str]:
+    """
+    Return ImageValidate controller responses
+    """
+    response_file = "image_upgrade_responses_ImageValidate"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_image_validate: {key} : {response}")
+    return response
+
 def responses_switch_details(key: str) -> Dict[str, str]:
     """
     Return SwitchDetails controller responses

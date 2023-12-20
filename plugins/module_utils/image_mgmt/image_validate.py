@@ -92,7 +92,7 @@ class ImageValidate(ImageUpgradeCommon):
         self.properties["result"] = {}
         self.properties["response"] = {}
         self.properties["non_disruptive"] = False
-        self.properties["serial_numbers"] = []
+        self.properties["serial_numbers"] = None
 
     def prune_serial_numbers(self) -> None:
         """

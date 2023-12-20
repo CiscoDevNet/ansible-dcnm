@@ -38,12 +38,14 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
-from .image_upgrade_utils import (image_validate_fixture,
+from .image_upgrade_utils import (does_not_raise, image_validate_fixture,
                                   issu_details_by_serial_number_fixture,
+                                  responses_image_validate,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+DCNM_SEND_IMAGE_VALIDATE = PATCH_IMAGE_MGMT + "image_validate.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
 
@@ -83,7 +85,7 @@ def test_image_mgmt_validate_00002(image_validate) -> None:
     assert instance.properties.get("response") == {}
     assert instance.properties.get("result") == {}
     assert instance.properties.get("non_disruptive") is False
-    assert instance.properties.get("serial_numbers") == []
+    assert instance.properties.get("serial_numbers") is None
 
 
 def test_image_mgmt_validate_00003(
@@ -397,3 +399,79 @@ def test_image_mgmt_validate_00009(
     assert len(instance.serial_numbers_done) == 1
     assert "FDO21120U5D" in instance.serial_numbers_done
     assert "FDO2112189M" not in instance.serial_numbers_done
+
+
+MATCH_00020 = "ImageValidate.commit: call instance.serial_numbers "
+MATCH_00020 += "before calling commit."
+
+
+@pytest.mark.parametrize(
+    "serial_numbers_is_set, expected",
+    [
+        (True, does_not_raise()),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00020)),
+    ],
+)
+def test_image_mgmt_validate_00020(
+    monkeypatch, image_validate, serial_numbers_is_set, expected
+) -> None:
+    """
+    Function
+    commit
+
+    Test
+    - fail_json is called when serial_numbers is None
+    - fail_json is not called when serial_numbers is set
+    """
+
+    def mock_dcnm_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_validate_00020a"
+        return responses_image_validate(key)
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_validate_00020a"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_VALIDATE, mock_dcnm_send_image_validate)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    instance = image_validate
+    assert instance.class_name == "ImageValidate"
+
+    if serial_numbers_is_set:
+        instance.serial_numbers = ["FDO21120U5D"]
+    with expected:
+        instance.commit()
+
+
+def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
+    """
+    Function
+    - commit
+
+    Test
+    - ImageValidate.verb is set to POST
+    - ImageValidate.path is set to:
+    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
+    """
+
+    # Needed only for the 200 return code
+    def mock_dcnm_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_validate_00021a"
+        return responses_image_validate(key)
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_validate_00021a"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_VALIDATE, mock_dcnm_send_image_validate)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
+    module_path += "stagingmanagement/validate-image"
+
+    instance = image_validate
+    instance.serial_numbers = ["FDO21120U5D"]
+    instance.commit()
+    assert instance.path == module_path
+    assert instance.verb == "POST"

@@ -1,0 +1,34 @@
+{
+    "test_image_mgmt_validate_00020a": {
+        "TEST_NOTES": [
+            "Needed only for the 200 return code"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    },
+    "test_image_mgmt_validate_00021a": {
+        "TEST_NOTES": [
+            "Needed only for the 200 return code",
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    }
+}
