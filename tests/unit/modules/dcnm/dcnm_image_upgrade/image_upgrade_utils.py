@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Utilities for image_upgrade unit tests
-"""
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 
 from contextlib import contextmanager
 from typing import Any, Dict

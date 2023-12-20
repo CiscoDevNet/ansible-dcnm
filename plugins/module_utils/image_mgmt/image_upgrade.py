@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-ImageUpgrade - Methods to upgrade images on NX-OS switches
-"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__author__ = "Allen Robel"
 
 import copy
 import inspect
@@ -225,7 +223,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         msg += f"device FINAL: {json.dumps(device, indent=4, sort_keys=True)}"
         self.log_msg(msg)
 
-        # TODO:2 Validate ip_address
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
 

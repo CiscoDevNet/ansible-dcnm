@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Validate images
-"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__author__ = "Allen Robel"
 
 import copy
 import inspect
@@ -75,6 +73,12 @@ class ImageValidate(ImageUpgradeCommon):
         self.method_name = inspect.stack()[0][3]
 
         self.endpoints = ApiEndpoints()
+
+        self.path = self.endpoints.image_validate.get("path")
+        self.verb = self.endpoints.image_validate.get("verb")
+        self.payload = {}
+        self.serial_numbers_done: Set[str] = set()
+
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
@@ -133,6 +137,9 @@ class ImageValidate(ImageUpgradeCommon):
                 self.module.fail_json(msg)
 
     def build_payload(self) -> None:
+        """
+        Build the payload for the image validation request
+        """
         self.method_name = inspect.stack()[0][3]
 
         self.payload = {}
@@ -158,9 +165,6 @@ class ImageValidate(ImageUpgradeCommon):
         self.prune_serial_numbers()
         self.validate_serial_numbers()
         self._wait_for_current_actions_to_complete()
-
-        self.path = self.endpoints.image_validate.get("path")
-        self.verb = self.endpoints.image_validate.get("verb")
 
         self.build_payload()
         self.properties["response"] = dcnm_send(

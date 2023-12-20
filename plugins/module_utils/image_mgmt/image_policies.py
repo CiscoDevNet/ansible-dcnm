@@ -13,13 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-    Retrieve image policy details from the controller and provide
-    property accessors for the policy attributes.
-"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type # pylint: disable=invalid-name
+__metaclass__ = type
+__author__ = "Allen Robel"
 
 import inspect
 

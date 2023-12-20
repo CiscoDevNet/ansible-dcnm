@@ -25,6 +25,11 @@ ImageUpgradeCommon - unit tests
 
 from __future__ import absolute_import, division, print_function
 
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
+
 from typing import Dict
 
 import pytest
@@ -33,9 +38,6 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 
 from .image_upgrade_utils import (does_not_raise, image_upgrade_common_fixture,
                                   responses_image_upgrade_common)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
 
 
 def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
@@ -283,7 +285,7 @@ def test_image_mgmt_image_upgrade_common_00070(
 
     data = responses_image_upgrade_common(key)
     with does_not_raise():
-        result = instance._handle_get_response( # pylint: disable=protected-access
+        result = instance._handle_get_response(  # pylint: disable=protected-access
             data.get("response")
         )  # pylint: disable=protected-access
 

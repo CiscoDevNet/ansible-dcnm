@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-ImageStage - Methods to stage images to NX-OS switches
-"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__author__ = "Allen Robel"
 
 import copy
 import inspect

@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Base class for the other image upgrade classes
-"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__author__ = "Allen Robel"
 
 import inspect
 from collections.abc import MutableMapping as Map
@@ -146,9 +144,9 @@ class ImageUpgradeCommon:
             try:
                 # since we need self.fd open throughout several classes
                 # we are disabling pylint R1732
-                self.fd = open(
+                self.fd = open(  # pylint: disable=consider-using-with
                     f"{self.logfile}", "a+", encoding="UTF-8"
-                )  # pylint: disable=consider-using-with
+                )
             except IOError as err:
                 msg = f"error opening logfile {self.logfile}. "
                 msg += f"detail: {err}"

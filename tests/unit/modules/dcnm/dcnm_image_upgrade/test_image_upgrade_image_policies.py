@@ -19,11 +19,12 @@
 # Some fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-argument
 
-"""
-ImagePolicies - unit tests
-"""
-
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from typing import Any, Dict
 
@@ -36,9 +37,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
 from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   image_policies_fixture,
                                   responses_image_policies)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."

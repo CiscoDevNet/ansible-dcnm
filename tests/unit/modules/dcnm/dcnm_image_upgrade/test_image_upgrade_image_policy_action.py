@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-ImagePolicyAction - unit tests
-"""
-
 # See the following regarding *_fixture imports
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
@@ -24,6 +20,11 @@ ImagePolicyAction - unit tests
 # pylint: disable=unused-argument
 
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from typing import Any, Dict
 
@@ -45,9 +46,6 @@ from .image_upgrade_utils import (does_not_raise, image_policies_fixture,
                                   responses_image_policy_action,
                                   responses_switch_details,
                                   responses_switch_issu_details)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."

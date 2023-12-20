@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Endpoints for image management API calls
-"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__author__ = "Allen Robel"
 
 
 class ApiEndpoints:

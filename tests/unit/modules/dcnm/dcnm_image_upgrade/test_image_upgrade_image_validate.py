@@ -21,11 +21,12 @@
 # Some tests require calling protected methods
 # pylint: disable=protected-access
 
-"""
-ImageUpgrade - unit tests
-"""
-
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from typing import Any, Dict
 
@@ -40,10 +41,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
 from .image_upgrade_utils import (image_validate_fixture,
                                   issu_details_by_serial_number_fixture,
                                   responses_switch_issu_details)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
-
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
@@ -62,6 +59,12 @@ def test_image_mgmt_validate_00001(image_validate) -> None:
     assert instance.class_name == "ImageValidate"
     assert isinstance(instance.endpoints, ApiEndpoints)
     assert isinstance(instance.issu_detail, SwitchIssuDetailsBySerialNumber)
+    assert isinstance(instance.serial_numbers_done, set)
+    assert (
+        instance.path
+        == "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image"
+    )
+    assert instance.verb == "POST"
 
 
 def test_image_mgmt_validate_00002(image_validate) -> None:

@@ -24,6 +24,11 @@ ImageStage - unit tests
 
 from __future__ import absolute_import, division, print_function
 
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
+
 from typing import Any, Dict
 
 import pytest
@@ -40,10 +45,6 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_controller_version,
                                   responses_image_stage,
                                   responses_switch_issu_details)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
-
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."

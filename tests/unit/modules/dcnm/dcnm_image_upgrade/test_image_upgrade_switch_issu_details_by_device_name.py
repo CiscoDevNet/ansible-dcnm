@@ -19,11 +19,12 @@
 # Some fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-argument
 
-"""
-SwitchIssuDetailsByDeviceName - unit tests
-"""
-
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from typing import Any, Dict
 
@@ -34,9 +35,6 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from .image_upgrade_utils import (does_not_raise,
                                   issu_details_by_device_name_fixture,
                                   responses_switch_issu_details)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."

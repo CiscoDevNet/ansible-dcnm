@@ -19,10 +19,12 @@
 # Some fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-argument
 
-"""
-ControllerVersion - unit tests
-"""
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from typing import Any, Dict
 
@@ -32,10 +34,6 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 
 from .image_upgrade_utils import (controller_version_fixture,
                                   responses_controller_version)
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
-
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."

@@ -11,14 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Function to load unit test inputs
 
-Imported by image_upgrade_utils.py
-"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type  # pylint: disable=invalid-name
+__metaclass__ = type
 
 import json
 import os
