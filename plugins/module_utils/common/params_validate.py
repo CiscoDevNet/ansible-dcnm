@@ -140,7 +140,9 @@ class ParamsValidate:
         """
         Valid values for the 'type' key in params_spec.
         """
-        self.valid_expected_types = set(self._standard_types.keys()).union(self._ipaddress_types)
+        self.valid_expected_types = set(self._standard_types.keys()).union(
+            self._ipaddress_types
+        )
 
     def _build_validations(self):
         """
@@ -600,7 +602,7 @@ class ParamsValidate:
 
     @logfile.setter
     def logfile(self, value):
-        method_name = inspect.stack()[0][3] # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties["logfile"] = value
 
     @property
