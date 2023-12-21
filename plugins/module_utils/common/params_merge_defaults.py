@@ -33,6 +33,7 @@ class ParamsMergeDefaults:
     associated with them into parameters (if parameters is missing the
     corresponding key/value).
     """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
@@ -71,9 +72,8 @@ class ParamsMergeDefaults:
         self.reserved_params.add("preferred_type")
 
     def _merge_default_params(
-            self,
-            spec: Dict[str, Any],
-            params: Dict[str, Any]) -> Dict[str, Any]:
+        self, spec: Dict[str, Any], params: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Merge default parameters into parameters.
 
@@ -87,7 +87,6 @@ class ParamsMergeDefaults:
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         for spec_key, spec_value in spec.items():
-
             if spec_key in self.reserved_params:
                 continue
 
@@ -98,7 +97,9 @@ class ParamsMergeDefaults:
                 continue
 
             if isinstance(spec_value, Map):
-                params[spec_key] = self._merge_default_params(spec_value, params[spec_key])
+                params[spec_key] = self._merge_default_params(
+                    spec_value, params[spec_key]
+                )
 
         return copy.deepcopy(params)
 
@@ -120,7 +121,9 @@ class ParamsMergeDefaults:
             msg += "Cannot commit. parameters is None."
             self.ansible_module.fail_json(msg)
 
-        self.properties["merged_parameters"] = self._merge_default_params(self.params_spec, self.parameters)
+        self.properties["merged_parameters"] = self._merge_default_params(
+            self.params_spec, self.parameters
+        )
 
     def log_msg(self, msg):
         """

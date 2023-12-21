@@ -498,7 +498,7 @@ class ParamsValidate:
         verify that value is an IPv4 address
         """
         try:
-            _ = ipaddress.IPv4Address(value)
+            ipaddress.IPv4Address(value)
             return value
         except ipaddress.AddressValueError as err:
             raise ValueError(f"invalid IPv4 address: {err}") from err
@@ -509,7 +509,7 @@ class ParamsValidate:
         verify that value is an IPv4 network
         """
         try:
-            _ = ipaddress.IPv4Network(value)
+            ipaddress.IPv4Network(value)
             return value
         except ipaddress.AddressValueError as err:
             raise ValueError(f"invalid IPv4 network: {err}") from err
@@ -520,7 +520,7 @@ class ParamsValidate:
         verify that value is an IPv6 address
         """
         try:
-            _ = ipaddress.IPv6Address(value)
+            ipaddress.IPv6Address(value)
             return value
         except ipaddress.AddressValueError as err:
             raise ValueError(f"invalid IPv6 address: {err}") from err
@@ -531,7 +531,7 @@ class ParamsValidate:
         verify that value is an IPv6 network
         """
         try:
-            _ = ipaddress.IPv6Network(value)
+            ipaddress.IPv6Network(value)
             return value
         except ipaddress.AddressValueError as err:
             raise ValueError(f"invalid IPv6 network: {err}") from err
