@@ -475,3 +475,187 @@ def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
     instance.commit()
     assert instance.path == module_path
     assert instance.verb == "POST"
+
+
+def test_image_mgmt_validate_00022(image_validate) -> None:
+    """
+    Function
+    - commit
+
+    Test
+    - instance.response is set to {} because dcnm_send was not called
+    - instance.result is set to {} because dcnm_send was not called
+
+    Description
+    If instance.serial_numbers is an empty list, instance.commit() returns
+    without calling dcnm_send.
+    """
+    with does_not_raise():
+        instance = image_validate
+        instance.serial_numbers = []
+        instance.commit()
+    assert instance.response == {}
+    assert instance.result == {}
+
+
+def test_image_mgmt_validate_00023(monkeypatch, image_validate) -> None:
+    """
+    Function
+    - commit
+
+    Test
+    -   501 response from controller endpoint:
+        POST /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
+    """
+
+    # Needed only for the 501 return code
+    def mock_dcnm_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_validate_00023a"
+        return responses_image_validate(key)
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_validate_00023a"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_VALIDATE, mock_dcnm_send_image_validate)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    with does_not_raise():
+        instance = image_validate
+        instance.serial_numbers = ["FDO21120U5D"]
+    with pytest.raises(AnsibleFailJson, match="failed:"):
+        instance.commit()
+    assert instance.result["success"] is False
+    assert instance.result["changed"] is False
+    assert instance.response["RETURN_CODE"] == 501
+
+
+MATCH_00030 = "ImageValidate.serial_numbers: "
+MATCH_00030 += "instance.serial_numbers must be a python list "
+MATCH_00030 += "of switch serial numbers."
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ([], does_not_raise()),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+        (10, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
+    ],
+)
+def test_image_mgmt_validate_00030(image_validate, value, expected) -> None:
+    """
+    Function
+    - serial_numbers.setter
+
+    Test
+    - fail_json when serial_numbers is not a list
+    """
+    with does_not_raise():
+        instance = image_validate
+    assert instance.class_name == "ImageValidate"
+
+    with expected:
+        instance.serial_numbers = value
+
+
+MATCH_00040 = "ImageValidate.make_boolean: "
+MATCH_00040 += "instance.non_disruptive must be a boolean."
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (True, does_not_raise()),
+        (False, does_not_raise()),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        (10, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+    ],
+)
+def test_image_mgmt_validate_00040(image_validate, value, expected) -> None:
+    """
+    Function
+    - non_disruptive.setter
+
+    Test
+    - fail_json when non_disruptive is not a boolean
+    """
+    with does_not_raise():
+        instance = image_validate
+    assert instance.class_name == "ImageValidate"
+
+    with expected:
+        instance.non_disruptive = value
+
+
+MATCH_00050 = "ImageValidate.check_interval: "
+MATCH_00050 += "instance.check_interval must be an integer."
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (10, does_not_raise()),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+    ],
+)
+def test_image_mgmt_validate_00050(image_validate, value, expected) -> None:
+    """
+    Function
+    - check_interval.setter
+
+    Test
+    - fail_json when check_interval is not an integer
+    """
+    with does_not_raise():
+        instance = image_validate
+    assert instance.class_name == "ImageValidate"
+
+    with expected:
+        instance.check_interval = value
+
+
+MATCH_00060 = "ImageValidate.check_timeout: "
+MATCH_00060 += "instance.check_timeout must be an integer."
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (10, does_not_raise()),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+    ],
+)
+def test_image_mgmt_validate_00060(image_validate, value, expected) -> None:
+    """
+    Function
+    - check_timeout.setter
+
+    Test
+    - fail_json when check_timeout is not an integer
+    """
+    with does_not_raise():
+        instance = image_validate
+    assert instance.class_name == "ImageValidate"
+
+    with expected:
+        instance.check_timeout = value

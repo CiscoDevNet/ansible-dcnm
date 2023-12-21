@@ -343,7 +343,13 @@ class ImageValidate(ImageUpgradeCommon):
     def check_interval(self, value):
         self.method_name = inspect.stack()[0][3]
 
+        result = True
+        # isinstance(True, int) is True so we need to check for bool first
+        if isinstance(value, bool):
+            result = False
         if not isinstance(value, int):
+            result = False
+        if result is False:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.check_interval must be an integer. "
             msg += f"Got {value}."
@@ -362,10 +368,15 @@ class ImageValidate(ImageUpgradeCommon):
     def check_timeout(self, value):
         self.method_name = inspect.stack()[0][3]
 
+        result = True
+        # isinstance(True, int) is True so we need to check for bool first
+        if isinstance(value, bool):
+            result = False
         if not isinstance(value, int):
+            result = False
+        if result is False:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.check_timeout must be an integer. "
             msg += f"Got {value}."
             self.module.fail_json(msg)
-
         self.properties["check_timeout"] = value
