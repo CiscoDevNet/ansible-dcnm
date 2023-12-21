@@ -115,95 +115,6 @@ def test_image_mgmt_upgrade_task_00002(image_upgrade_task_bare) -> None:
         assert isinstance(instance, ImageUpgradeTask)
 
 
-# This functionality is now in params_validator.py
-# def test_image_mgmt_upgrade_task_00003(image_upgrade_task_bare) -> None:
-#     """
-#     Function
-#     - __init__
-
-#     Test
-#     - fail_json is called because config.switches is not a list
-#     """
-#     key = "test_image_mgmt_upgrade_task_00003a"
-
-#     match = "ImageUpgradeTask.__init__: expected list type for "
-#     match += r"self.config\['switches'\]. got str"
-
-#     mock_ansible_module = MockAnsibleModule()
-#     mock_ansible_module.params = load_playbook_config(key)
-#     with pytest.raises(AnsibleFailJson, match=match):
-#         instance = image_upgrade_task_bare(mock_ansible_module)
-#         assert isinstance(instance, ImageUpgradeTask)
-
-# This functionality is now in params_validator.py
-# def test_image_mgmt_upgrade_task_00004(image_upgrade_task_bare) -> None:
-#     """
-#     Function
-#     - __init__
-
-#     Test
-#     - fail_json is called because config.switches is empty
-#     """
-#     key = "test_image_mgmt_upgrade_task_00004a"
-
-#     match = "ImageUpgradeTask.__init__: missing list of switches "
-#     match += "in playbook config."
-
-#     mock_ansible_module = MockAnsibleModule()
-#     mock_ansible_module.params = load_playbook_config(key)
-#     with pytest.raises(AnsibleFailJson, match=match):
-#         instance = image_upgrade_task_bare(mock_ansible_module)
-#         assert isinstance(instance, ImageUpgradeTask)
-
-# This functionality is now in params_validator.py
-# def test_image_mgmt_upgrade_task_00005(image_upgrade_task_bare) -> None:
-#     """
-#     Function
-#     - __init__
-
-#     Test
-#     -   fail_json is called because mandatory keys are missing in
-#         one of the switch configs
-#     """
-#     key = "test_image_mgmt_upgrade_task_00005a"
-
-#     match = "ImageUpgradeTask.__init__: missing mandatory "
-#     match += r"key\(s\) in playbook switch config. expected "
-#     match += r"\{'ip_address'\}, got dict_keys\(\['foo'\]\)"
-
-#     mock_ansible_module = MockAnsibleModule()
-#     mock_ansible_module.params = load_playbook_config(key)
-#     with pytest.raises(AnsibleFailJson, match=match):
-#         instance = image_upgrade_task_bare(mock_ansible_module)
-#         assert isinstance(instance, ImageUpgradeTask)
-
-
-def test_image_mgmt_upgrade_task_00006(image_upgrade_task) -> None:
-    """
-    Function
-    - _init_defaults
-
-    Test
-    - defaults dictionary is initialized with expected keys, values
-    """
-    instance = image_upgrade_task
-    instance._init_defaults()
-    assert isinstance(instance.defaults, dict)
-    assert instance.defaults["reboot"] is False
-    assert instance.defaults["stage"] is True
-    assert instance.defaults["validate"] is True
-    assert instance.defaults["upgrade"]["nxos"] is True
-    assert instance.defaults["upgrade"]["epld"] is False
-    assert instance.defaults["options"]["nxos"]["mode"] == "disruptive"
-    assert instance.defaults["options"]["nxos"]["bios_force"] is False
-    assert instance.defaults["options"]["epld"]["module"] == "ALL"
-    assert instance.defaults["options"]["epld"]["golden"] is False
-    assert instance.defaults["options"]["reboot"]["config_reload"] is False
-    assert instance.defaults["options"]["reboot"]["write_erase"] is False
-    assert instance.defaults["options"]["package"]["install"] is False
-    assert instance.defaults["options"]["package"]["uninstall"] is False
-
-
 def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
     """
     Function
@@ -325,7 +236,9 @@ def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
     instance = image_upgrade_task_bare(mock_ansible_module)
+
     instance.get_want()
+
     switch_1 = instance.want[0]
     switch_2 = instance.want[1]
     assert switch_1.get("ip_address") == "1.1.1.1"
@@ -361,27 +274,29 @@ def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> 
     assert switch_2.get("validate") is True
 
 
-def test_image_mgmt_upgrade_task_00040(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00040(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
-    -   instance.switch_configs list is initialized with one switch
-        config containing mandatory keys only, such that all optional
-        (default) keys are populated by _merge_defaults_to_switch_configs
-        (see ImageUpgradeTask._init_defaults) for the default values.
+    -   playbook is initialized with one switch config containing mandatory
+        keys only, such that all optional (default) keys are populated by
+        _merge_defaults_to_switch_configs
 
     Test
     -   instance.switch_configs contains expected default values
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00040a"
 
-    switch_configs = [
-        {"policy": "KR5M", "ip_address": "172.22.150.102", "policy_changed": False}
-    ]
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
+
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -397,9 +312,11 @@ def test_image_mgmt_upgrade_task_00040(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00041(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00041(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -412,19 +329,14 @@ def test_image_mgmt_upgrade_task_00041(image_upgrade_task) -> None:
     -   instance.switch_configs contains expected non-default values
 
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00041a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "upgrade": {"nxos": False},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -440,9 +352,11 @@ def test_image_mgmt_upgrade_task_00041(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00042(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00042(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -455,19 +369,14 @@ def test_image_mgmt_upgrade_task_00042(image_upgrade_task) -> None:
     -   instance.switch_configs contains expected non-default values
 
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00042a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "upgrade": {"epld": True},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -483,9 +392,11 @@ def test_image_mgmt_upgrade_task_00042(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00043(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00043(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -501,19 +412,14 @@ def test_image_mgmt_upgrade_task_00043(image_upgrade_task) -> None:
     Description
     When options is empty, the default values for all sub-options are added
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00043a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -529,9 +435,11 @@ def test_image_mgmt_upgrade_task_00043(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00044(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00044(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -548,19 +456,14 @@ def test_image_mgmt_upgrade_task_00044(image_upgrade_task) -> None:
     When options.nxos.mode is the only key present in options.nxos,
     options.nxos.bios_force sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00044a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"nxos": {"mode": "non_disruptive"}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -576,9 +479,11 @@ def test_image_mgmt_upgrade_task_00044(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00045(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00045(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -595,19 +500,14 @@ def test_image_mgmt_upgrade_task_00045(image_upgrade_task) -> None:
     When options.nxos.bios_force is the only key present in options.nxos,
     options.nxos.mode sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00045a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"nxos": {"bios_force": True}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -623,9 +523,11 @@ def test_image_mgmt_upgrade_task_00045(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00046(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00046(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -642,19 +544,14 @@ def test_image_mgmt_upgrade_task_00046(image_upgrade_task) -> None:
     When options.epld.module is the only key present in options.epld,
     options.epld.golden sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00046a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"epld": {"module": 27}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -662,7 +559,7 @@ def test_image_mgmt_upgrade_task_00046(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["upgrade"]["epld"] is False
     assert instance.switch_configs[0]["options"]["nxos"]["mode"] == "disruptive"
     assert instance.switch_configs[0]["options"]["nxos"]["bios_force"] is False
-    assert instance.switch_configs[0]["options"]["epld"]["module"] == 27
+    assert instance.switch_configs[0]["options"]["epld"]["module"] == "27"
     assert instance.switch_configs[0]["options"]["epld"]["golden"] is False
     assert instance.switch_configs[0]["options"]["reboot"]["config_reload"] is False
     assert instance.switch_configs[0]["options"]["reboot"]["write_erase"] is False
@@ -670,9 +567,11 @@ def test_image_mgmt_upgrade_task_00046(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00047(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00047(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -689,19 +588,14 @@ def test_image_mgmt_upgrade_task_00047(image_upgrade_task) -> None:
     When options.epld.golden is the only key present in options.epld,
     options.epld.module sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00047a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"epld": {"golden": True}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -717,9 +611,11 @@ def test_image_mgmt_upgrade_task_00047(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00048(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00048(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -737,19 +633,14 @@ def test_image_mgmt_upgrade_task_00048(image_upgrade_task) -> None:
     When options.reboot.config_reload is the only key present in options.reboot,
     options.reboot.write_erase sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00048a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"reboot": {"config_reload": True}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -765,9 +656,11 @@ def test_image_mgmt_upgrade_task_00048(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00049(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00049(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -785,19 +678,14 @@ def test_image_mgmt_upgrade_task_00049(image_upgrade_task) -> None:
     When options.reboot.write_erase is the only key present in options.reboot,
     options.reboot.config_reload sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00049a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"reboot": {"write_erase": True}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -813,9 +701,11 @@ def test_image_mgmt_upgrade_task_00049(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00050(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00050(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -833,19 +723,14 @@ def test_image_mgmt_upgrade_task_00050(image_upgrade_task) -> None:
     When options.package.install is the only key present in options.package,
     options.package.uninstall sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00050a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"package": {"install": True}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True
@@ -861,9 +746,11 @@ def test_image_mgmt_upgrade_task_00050(image_upgrade_task) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00051(image_upgrade_task) -> None:
+def test_image_mgmt_upgrade_task_00051(image_upgrade_task_bare) -> None:
     """
     Function
+    - get_want
+    - _merge_global_and_switch_configs
     - _merge_defaults_to_switch_configs
 
     Setup
@@ -881,19 +768,14 @@ def test_image_mgmt_upgrade_task_00051(image_upgrade_task) -> None:
     When options.package.uninstall is the only key present in options.package,
     options.package.install sub-option should be added with default value.
     """
-    instance = image_upgrade_task
+    key = "test_image_mgmt_upgrade_task_00051a"
 
-    switch_configs = [
-        {
-            "policy": "KR5M",
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-            "options": {"package": {"uninstall": True}},
-        }
-    ]
+    mock_ansible_module = MockAnsibleModule()
+    mock_ansible_module.params = load_playbook_config(key)
+    instance = image_upgrade_task_bare(mock_ansible_module)
 
-    instance.switch_configs = switch_configs
-    instance._merge_defaults_to_switch_configs()
+    instance.get_want()
+
     assert instance.switch_configs[0]["reboot"] is False
     assert instance.switch_configs[0]["stage"] is True
     assert instance.switch_configs[0]["validate"] is True

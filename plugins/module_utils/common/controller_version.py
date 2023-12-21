@@ -19,6 +19,8 @@ Class to retrieve and return information about an NDFC controller
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints

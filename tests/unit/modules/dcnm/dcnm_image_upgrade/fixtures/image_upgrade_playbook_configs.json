@@ -157,5 +157,159 @@
             "validate": true
         },
         "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00040a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false}
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00041a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "upgrade": {"nxos": false}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00042a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "upgrade": {"epld": true}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00043a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00044a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"nxos": {"mode": "non_disruptive"}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00045a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"nxos": {"bios_force": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00046a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"epld": {"module": 27}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00047a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"epld": {"golden": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00048a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"reboot": {"config_reload": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00049a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"reboot": {"write_erase": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00050a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": true,
+                    "options": {"package": {"install": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_mgmt_upgrade_task_00051a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"package": {"uninstall": true}}
+                }
+            ]
+        },
+        "state": "merged"
     }
 }

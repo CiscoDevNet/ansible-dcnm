@@ -18,7 +18,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
-__email__ = "arobel@cisco.com"
 
 DOCUMENTATION = """
 ---
@@ -407,6 +406,8 @@ import json
 from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
+    ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -449,7 +450,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
-        self._init_defaults()
         self.endpoints = ApiEndpoints()
         self.have = None
         self.idempotent_want = None
@@ -483,32 +483,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
 
-    def _init_defaults(self):
-        """
-        Default values for playbook parameters.
-        These are merged with playbook parameters in
-        self._merge_defaults_to_switch_config()
-        """
-        self.defaults: Dict[str, Any] = {}
-        self.defaults["options"] = {}
-        self.defaults["options"]["epld"] = {}
-        self.defaults["options"]["epld"]["module"] = "ALL"
-        self.defaults["options"]["epld"]["golden"] = False
-        self.defaults["options"]["nxos"] = {}
-        self.defaults["options"]["nxos"]["mode"] = "disruptive"
-        self.defaults["options"]["nxos"]["bios_force"] = False
-        self.defaults["options"]["package"] = {}
-        self.defaults["options"]["package"]["install"] = False
-        self.defaults["options"]["package"]["uninstall"] = False
-        self.defaults["options"]["reboot"] = {}
-        self.defaults["options"]["reboot"]["config_reload"] = False
-        self.defaults["options"]["reboot"]["write_erase"] = False
-        self.defaults["reboot"] = False
-        self.defaults["stage"] = True
-        self.defaults["upgrade"] = {}
-        self.defaults["upgrade"]["epld"] = False
-        self.defaults["upgrade"]["nxos"] = True
-        self.defaults["validate"] = True
 
     def get_have(self) -> None:
         """
@@ -760,6 +734,19 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             need.append(want)
         self.need = copy.copy(need)
 
+    def _build_params_spec(self) -> Dict[str, Any]:
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if self.module.params["state"] == "merged":
+            return self._build_params_spec_for_merged_state()
+        elif self.module.params["state"] == "deleted":
+            return self._build_params_spec_for_merged_state()
+        elif self.module.params["state"] == "query":
+            return self._build_params_spec_for_query_state()
+        else:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Unsupported state: {self.module.params['state']}"
+            self.module.fail_json(msg)
+
     @staticmethod
     def _build_params_spec_for_merged_state() -> Dict[str, Any]:
         """
@@ -778,6 +765,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec["policy"]["required"] = False
         params_spec["policy"]["type"] = "str"
 
+        params_spec["reboot"] = {}
+        params_spec["reboot"]["required"] = False
+        params_spec["reboot"]["type"] = "bool"
+        params_spec["reboot"]["default"] = False
+
         params_spec["stage"] = {}
         params_spec["stage"]["required"] = False
         params_spec["stage"]["type"] = "bool"
@@ -792,6 +784,15 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec["upgrade"]["required"] = False
         params_spec["upgrade"]["type"] = "dict"
         params_spec["upgrade"]["default"] = {}
+        params_spec["upgrade"]["epld"] = {}
+        params_spec["upgrade"]["epld"]["required"] = False
+        params_spec["upgrade"]["epld"]["type"] = "bool"
+        params_spec["upgrade"]["epld"]["default"] = False
+        params_spec["upgrade"]["nxos"] = {}
+        params_spec["upgrade"]["nxos"]["required"] = False
+        params_spec["upgrade"]["nxos"]["type"] = "bool"
+        params_spec["upgrade"]["nxos"]["default"] = True
+
 
         section = "options"
         params_spec[section] = {}
@@ -946,31 +947,18 @@ class ImageUpgradeTask(ImageUpgradeCommon):
     def _merge_defaults_to_switch_configs(self) -> None:
         """
         For any items in config which are not set, apply the default
-        value from self.defaults.
+        value from params_spec (if a default value exists).
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         configs_to_merge = copy.copy(self.switch_configs)
         merged_configs = []
+        merge = ParamsMergeDefaults(self.module)
+        merge.params_spec = self._build_params_spec()
         for switch_config in configs_to_merge:
-            # we need to rebuild default_config in this loop
-            # because merge_dicts modifies it in place
-            merged_config = self.merge_dicts(
-                copy.deepcopy(self.defaults), copy.deepcopy(switch_config)
-            )
-
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += (
-                f"switch_config: {json.dumps(switch_config, indent=4, sort_keys=True)}"
-            )
-            self.log_msg(msg)
-
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += (
-                f"merged_config: {json.dumps(merged_config, indent=4, sort_keys=True)}"
-            )
-            self.log_msg(msg)
-            merged_configs.append(merged_config)
+            merge.parameters = switch_config
+            merge.commit()
+            merged_configs.append(merge.merged_parameters)
         self.switch_configs = copy.copy(merged_configs)
 
     def _validate_switch_configs(self) -> None:
@@ -984,12 +972,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
         validator = ParamsValidate(self.module)
-        if self.module.params.get("state") == "merged":
-            validator.params_spec = self._build_params_spec_for_merged_state()
-        if self.module.params.get("state") == "deleted":
-            validator.params_spec = self._build_params_spec_for_merged_state()
-        if self.module.params.get("state") == "query":
-            validator.params_spec = self._build_params_spec_for_query_state()
+        validator.params_spec = self._build_params_spec()
 
         for switch in self.switch_configs:
             validator.parameters = switch
