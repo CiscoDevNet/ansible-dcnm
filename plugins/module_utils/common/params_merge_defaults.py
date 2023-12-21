@@ -23,6 +23,7 @@ import inspect
 from collections.abc import MutableMapping as Map
 from typing import Any, Dict
 
+
 class ParamsMergeDefaults:
     """
     Merge default parameters into parameters.
@@ -45,7 +46,7 @@ class ParamsMergeDefaults:
         """
         Container for the properties of this class.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties = {}
         self.properties["params_spec"] = None
         self.properties["parameters"] = None
@@ -76,14 +77,14 @@ class ParamsMergeDefaults:
         """
         Merge default parameters into parameters.
 
-        Caller: 
+        Caller:
         - commit()
         Return:
         -   A modified copy of params where missing parameters are added if:
             1. they are present in spec
             2. they have a default value defined in spec
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         for spec_key, spec_value in spec.items():
 
@@ -120,7 +121,6 @@ class ParamsMergeDefaults:
             self.ansible_module.fail_json(msg)
 
         self.properties["merged_parameters"] = self._merge_default_params(self.params_spec, self.parameters)
-
 
     def log_msg(self, msg):
         """
@@ -196,7 +196,7 @@ class ParamsMergeDefaults:
     def parameters(self):
         """
         The parameters into which defaults are merged.
-        
+
         The merge consists of adding any missing parameters
         (per a comparison with params_spec) and setting their
         value to the default value defined in params_spec.
@@ -229,4 +229,3 @@ class ParamsMergeDefaults:
             msg += f"Got type {type(value)}."
             self.ansible_module.fail_json(msg)
         self.properties["params_spec"] = value
-

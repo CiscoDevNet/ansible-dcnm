@@ -301,6 +301,7 @@ def responses_image_validate(key: str) -> Dict[str, str]:
     print(f"responses_image_validate: {key} : {response}")
     return response
 
+
 def responses_switch_details(key: str) -> Dict[str, str]:
     """
     Return SwitchDetails controller responses

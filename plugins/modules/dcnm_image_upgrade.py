@@ -483,7 +483,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
 
-
     def get_have(self) -> None:
         """
         Caller: main()
@@ -792,7 +791,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         params_spec["upgrade"]["nxos"]["required"] = False
         params_spec["upgrade"]["nxos"]["type"] = "bool"
         params_spec["upgrade"]["nxos"]["default"] = True
-
 
         section = "options"
         params_spec[section] = {}
