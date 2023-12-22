@@ -141,9 +141,7 @@ class ParamsMergeDefaults:
             return
         if self.file_handle is None:
             try:
-                # since we need self.file_handle open throughout this class
-                # we are disabling pylint R1732
-                self.file_handle = open(  # pylint: disable=consider-using-with
+                self.file_handle = open(
                     f"{self.logfile}", "a+", encoding="UTF-8"
                 )
             except IOError as err:

@@ -142,9 +142,7 @@ class ImageUpgradeCommon:
             return
         if self.fd is None:
             try:
-                # since we need self.fd open throughout several classes
-                # we are disabling pylint R1732
-                self.fd = open(  # pylint: disable=consider-using-with
+                self.fd = open(
                     f"{self.logfile}", "a+", encoding="UTF-8"
                 )
             except IOError as err:
