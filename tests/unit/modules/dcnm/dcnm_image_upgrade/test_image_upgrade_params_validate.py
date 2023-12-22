@@ -181,6 +181,52 @@ def test_params_validate_00031(params_validate) -> None:
         instance.parameters = [1, 2, 3]
 
 
+def test_params_validate_00040(params_validate) -> None:
+    """
+    Function
+    - validate
+
+    Test
+    - validate calls fail_json when parameters is None
+    """
+    params_spec = {}
+    params_spec["foo"] = {}
+    params_spec["foo"]["type"] = "str"
+    params_spec["foo"]["required"] = True
+
+    match = "ParamsValidate.validate: "
+    match += "instance.parameters needs to be set prior to calling "
+    match += r"instance.validate\(\)\."
+
+    with does_not_raise():
+        instance = params_validate
+        instance.params_spec = params_spec
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
+def test_params_validate_00041(params_validate) -> None:
+    """
+    Function
+    - validate
+
+    Test
+    - validate calls fail_json when params_spec is None
+    """
+    parameters = {}
+    parameters["foo"] = "bar"
+
+    match = "ParamsValidate.validate: "
+    match += "instance.params_spec needs to be set prior to calling "
+    match += r"instance.validate\(\)\."
+
+    with does_not_raise():
+        instance = params_validate
+        instance.parameters = parameters
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate()
+
+
 def test_params_validate_00050(params_validate) -> None:
     """
     Function

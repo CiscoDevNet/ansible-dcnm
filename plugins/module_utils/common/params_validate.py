@@ -211,7 +211,7 @@ class ParamsValidate:
         method_name = inspect.stack()[0][3]
         if self.parameters is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.paramaters needs to be set "
+            msg += "instance.parameters needs to be set "
             msg += "prior to calling instance.validate()."
             self.ansible_module.fail_json(msg)
 
