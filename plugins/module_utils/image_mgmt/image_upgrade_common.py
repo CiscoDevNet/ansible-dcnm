@@ -35,7 +35,7 @@ class ImageUpgradeCommon:
     """
 
     def __init__(self, module):
-        self.class_name = __class__.__name__
+        self.class_name = self.__class__.__name__
         self.method_name = inspect.stack()[0][3]
 
         self.module = module
