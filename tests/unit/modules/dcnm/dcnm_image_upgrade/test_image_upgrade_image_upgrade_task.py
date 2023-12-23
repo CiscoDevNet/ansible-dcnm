@@ -91,8 +91,6 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert instance.want == []
     assert instance.need == []
     assert instance.result == {"changed": False, "diff": [], "response": []}
-    # assert instance.mandatory_global_keys == {"switches"}
-    # assert instance.mandatory_switch_keys == {"ip_address"}
     assert isinstance(instance.switch_details, SwitchDetails)
     assert isinstance(instance.image_policies, ImagePolicies)
 

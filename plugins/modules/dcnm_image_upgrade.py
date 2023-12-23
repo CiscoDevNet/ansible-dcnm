@@ -408,6 +408,8 @@ from typing import Any, Dict, List
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
     ParamsMergeDefaults
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts \
+    import MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -478,8 +480,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.need = []
 
         self.result = {"changed": False, "diff": [], "response": []}
-
-        self.mandatory_global_keys = {"switches"}
 
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
@@ -933,7 +933,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
             self.log.log_msg(msg)
 
-            switch_config = self.merge_dicts(global_config, switch)
+            merge_dicts = MergeDicts(self.module)
+            merge_dicts.dict1 = global_config
+            merge_dicts.dict2 = switch
+            merge_dicts.commit()
+            switch_config = merge_dicts.dict_merged
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"

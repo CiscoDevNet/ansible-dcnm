@@ -19,14 +19,13 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
-from collections.abc import MutableMapping as Map
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
     Log
 
 
 class ImageUpgradeCommon:
     """
-    Base class for the other image upgrade classes
+    Common methods used by the other image upgrade classes
 
     Usage (where module is an instance of AnsibleModule):
 
@@ -38,7 +37,6 @@ class ImageUpgradeCommon:
 
     def __init__(self, module):
         self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
 
         self.module = module
         self.params = module.params
@@ -47,17 +45,13 @@ class ImageUpgradeCommon:
         self.log.debug = False
         self.log.logfile = "/tmp/dcnm_image_upgrade.log"
 
-        # self.debug = False
-        # self.fd = None
-        # self.logfile = "/tmp/ansible_dcnm.log"
         self.module = module
         self.log.log_msg("ImageUpgradeCommon.__init__ DONE")
 
     def _handle_response(self, response, verb):
-        # don't add self.method_name to this method since
-        # it is called by other methods and we want their
-        # method_names in the log
-
+        """
+        Call the appropriate handler for response based on verb
+        """
         if verb == "GET":
             return self._handle_get_response(response)
         if verb in {"POST", "PUT", "DELETE"}:
@@ -65,9 +59,9 @@ class ImageUpgradeCommon:
         return self._handle_unknown_request_verbs(response, verb)
 
     def _handle_unknown_request_verbs(self, response, verb):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
-        msg = f"{self.class_name}.{self.method_name}: "
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"Unknown request verb ({verb}) for response {response}."
         self.module.fail_json(msg)
 
@@ -84,10 +78,6 @@ class ImageUpgradeCommon:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"
             - True otherwise
         """
-        # don't add self.method_name to this method since
-        # it is called by other methods and we want their
-        # method_names in the log
-
         result = {}
         success_return_codes = {200, 404}
         if (
@@ -123,10 +113,6 @@ class ImageUpgradeCommon:
             - False if RETURN_CODE != 200 or MESSAGE != "OK"
             - True otherwise
         """
-        # don't add self.method_name to this method since
-        # it is called by other methods and we want their
-        # method_names in the log
-
         result = {}
         if response.get("ERROR") is not None:
             result["success"] = False
@@ -145,8 +131,6 @@ class ImageUpgradeCommon:
         Return value converted to boolean, if possible.
         Return value, if value cannot be converted.
         """
-        self.method_name = inspect.stack()[0][3]
-
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
@@ -162,41 +146,6 @@ class ImageUpgradeCommon:
         representation of a None type
         Return value otherwise
         """
-        self.method_name = inspect.stack()[0][3]
-
         if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
             return None
         return value
-
-    def merge_dicts(self, dict1, dict2):
-        """
-        Merge dict2 into dict1 and return dict1.
-        Keys in dict2 have precedence over keys in dict1.
-        """
-        for key in dict2:
-
-            if isinstance(dict1.get(key, None), Map) and dict2.get(key, None) is None:
-                # This is to handle a case where the playbook contains an
-                # options dict that is supposed to contain sub-options
-                # (in the example below, 'upgrade' should contain 'nxos' and
-                # 'epld'), but the dict is empty in the playbook.
-                # For example, below, upgrade is specified, but upgrade.nxos
-                # and upgrade.epld are not:
-                #
-                # -   ip_address: 172.22.150.110
-                #     upgrade:
-                #     options:
-                #         epld:
-                #             module: 27
-                #             golden: false
-                # In this case, we copy the entire 'upgrade' dict from dict1 to dict2
-                dict2[key] = dict1[key]
-            elif (
-                key in dict1
-                and isinstance(dict1[key], Map)
-                and isinstance(dict2[key], Map)
-            ):
-                self.merge_dicts(dict1[key], dict2[key])
-            else:
-                dict1[key] = dict2[key]
-        return dict1

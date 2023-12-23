@@ -564,7 +564,7 @@ def test_image_mgmt_validate_00030(image_validate, value, expected) -> None:
         instance.serial_numbers = value
 
 
-MATCH_00040 = "ImageValidate.make_boolean: "
+MATCH_00040 = "ImageValidate.non_disruptive: "
 MATCH_00040 += "instance.non_disruptive must be a boolean."
 
 
