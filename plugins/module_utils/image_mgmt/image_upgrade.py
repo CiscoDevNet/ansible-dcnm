@@ -145,7 +145,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
         self.install_options = ImageInstallOptions(self.module)
-        self.log_msg("DEBUG: ImageUpgrade.__init__ DONE")
+        self.log.log_msg("DEBUG: ImageUpgrade.__init__ DONE")
 
     def _init_properties(self) -> None:
         """
@@ -221,7 +221,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"device FINAL: {json.dumps(device, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
+        self.log.log_msg(msg)
 
         self.issu_detail.ip_address = device.get("ip_address")
         self.issu_detail.refresh()
@@ -258,7 +258,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
+        self.log.log_msg(msg)
 
     def _build_payload_issu_upgrade(self, device) -> None:
         """
@@ -456,7 +456,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
-        self.log_msg(msg)
+        self.log.log_msg(msg)
 
         if self.devices is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -471,18 +471,18 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         msg = f"DEBUG: {self.class_name}.{method_name}: "
         msg += f"self.verb {self.verb}, self.path: {self.path}"
-        self.log_msg(msg)
+        self.log.log_msg(msg)
 
         for device in self.devices:
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
-            self.log_msg(msg)
+            self.log.log_msg(msg)
 
             self._build_payload(device)
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log_msg(msg)
+            self.log.log_msg(msg)
 
             self.properties["response"] = dcnm_send(
                 self.module, self.verb, self.path, data=json.dumps(self.payload)
@@ -493,7 +493,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += (
                 f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
             )
-            self.log_msg(msg)
+            self.log.log_msg(msg)
 
             if not self.result["success"]:
                 msg = f"{self.class_name}.{method_name}: "

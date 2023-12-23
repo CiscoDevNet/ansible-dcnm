@@ -57,9 +57,8 @@ def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     with does_not_raise():
         instance = image_upgrade_common
     assert instance.params == test_params
-    assert instance.debug is False
-    assert instance.fd is None
-    assert instance.logfile == "/tmp/ansible_dcnm.log"
+    assert instance.log.debug is False
+    assert instance.log.logfile == "/tmp/dcnm_image_upgrade.log"
 
 
 @pytest.mark.parametrize(
@@ -403,25 +402,25 @@ def test_image_mgmt_image_upgrade_common_00100(
 def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
     """
     Function
-    - log_msg
+    - log.log_msg
 
     Test
-    - log_msg returns None when debug is False
+    - log.log_msg returns None when debug is False
     """
     instance = image_upgrade_common
 
     error_message = "This is an error message"
-    instance.debug = False
-    assert instance.log_msg(error_message) is None
+    instance.log.debug = False
+    assert instance.log.log_msg(error_message) is None
 
 
 def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
     """
     Function
-    - log_msg
+    - log.log_msg
 
     Test
-    - log_msg writes to the logfile when debug is True
+    - log_msg writes to the log.logfile when log.debug is True
     """
     instance = image_upgrade_common
 
@@ -430,9 +429,9 @@ def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -
     filename = directory / "test_log_msg.txt"
 
     error_message = "This is an error message"
-    instance.debug = True
-    instance.logfile = filename
-    instance.log_msg(error_message)
+    instance.log.debug = True
+    instance.log.logfile = filename
+    instance.log.log_msg(error_message)
 
     assert filename.read_text(encoding="UTF-8") == error_message + "\n"
     assert len(list(tmp_path.iterdir())) == 1
@@ -441,10 +440,10 @@ def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -
 def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
     """
     Function
-    - log_msg
+    - log.log_msg
 
     Test
-    - log_msg calls fail_json if the logfile cannot be opened
+    - log.log_msg calls fail_json if the logfile cannot be opened
 
     Description
     To ensure an error is generated, we attempt a write to a filename
@@ -457,7 +456,7 @@ def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -
     filename = directory / f"test_{'a' * 2000}_log_msg.txt"
 
     error_message = "This is an error message"
-    instance.debug = True
-    instance.logfile = filename
-    with pytest.raises(AnsibleFailJson, match=r"error opening logfile"):
-        instance.log_msg(error_message)
+    instance.log.debug = True
+    instance.log.logfile = filename
+    with pytest.raises(AnsibleFailJson, match="error writing to logfile"):
+        instance.log.log_msg(error_message)

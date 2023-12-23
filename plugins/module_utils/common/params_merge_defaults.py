@@ -23,6 +23,9 @@ import inspect
 from collections.abc import MutableMapping as Map
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
+    Log
+
 
 class ParamsMergeDefaults:
     """
@@ -37,7 +40,10 @@ class ParamsMergeDefaults:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
-        self.file_handle = None
+
+        self.log = Log(self.ansible_module)
+        self.log.debug = False
+        self.log.logfile = None
 
         self._build_properties()
         self._build_reserved_params()
@@ -125,40 +131,12 @@ class ParamsMergeDefaults:
             self.params_spec, self.parameters
         )
 
-    def log_msg(self, msg):
-        """
-        Used for debugging.  To enable, both debug and logfile properties
-        must be set e.g.:
-
-        instance = ParamsValidate(ansible_module)
-        instance.debug = True
-        instance.logfile = "/tmp/params_validate.log"
-        etc...
-        """
-        if self.debug is False:
-            return
-        if self.logfile is None:
-            return
-        if self.file_handle is None:
-            try:
-                self.file_handle = open(
-                    f"{self.logfile}", "a+", encoding="UTF-8"
-                )
-            except IOError as err:
-                msg = f"error opening logfile {self.logfile}. "
-                msg += f"detail: {err}"
-                self.ansible_module.fail_json(msg)
-
-        self.file_handle.write(msg)
-        self.file_handle.write("\n")
-        self.file_handle.flush()
-
     @property
     def debug(self):
         """
         Enable/disable debugging to self.logfile
         """
-        return self.properties["debug"]
+        return self.log.debug
 
     @debug.setter
     def debug(self, value):
@@ -168,19 +146,18 @@ class ParamsMergeDefaults:
             msg += "Invalid type for debug. Expected bool. "
             msg += f"Got {type(value)}."
             self.ansible_module.fail_json(msg)
-        self.properties["debug"] = value
+        self.log.debug = value
 
     @property
     def logfile(self):
         """
         Set file to which debug log is written
         """
-        return self.properties["logfile"]
+        return self.log.logfile
 
     @logfile.setter
     def logfile(self, value):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.properties["logfile"] = value
+        self.log.logfile = value
 
     @property
     def merged_parameters(self):

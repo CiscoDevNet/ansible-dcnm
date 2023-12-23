@@ -205,7 +205,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
             msg = f"{self.class_name}.{method_name}: "
             msg += f"response: {json.dumps(response, indent=4)}"
-            self.log_msg(msg)
+            self.log.log_msg(msg)
 
             if not result["success"]:
                 msg = f"{self.class_name}.{method_name}: "
@@ -239,7 +239,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"response: {json.dumps(self.response, indent=4)}"
-        self.log_msg(msg)
+        self.log.log_msg(msg)
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "

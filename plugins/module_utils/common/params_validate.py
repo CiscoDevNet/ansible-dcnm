@@ -24,6 +24,8 @@ from collections.abc import MutableMapping as Map
 from typing import Any, List
 
 from ansible.module_utils.common import validation
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
+    Log
 
 
 class ParamsValidate:
@@ -78,7 +80,10 @@ class ParamsValidate:
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
         self.validation = validation
-        self.file_handle = None
+
+        self.log = Log(self.ansible_module)
+        self.log.debug = False
+        self.log.logfile = None
 
         self._build_properties()
         self._build_reserved_params()
@@ -95,8 +100,6 @@ class ParamsValidate:
         self.properties = {}
         self.properties["parameters"] = None
         self.properties["params_spec"] = None
-        self.properties["debug"] = False
-        self.properties["logfile"] = None
 
     def _build_reserved_params(self):
         """
@@ -175,34 +178,6 @@ class ParamsValidate:
         self.validations["ipv6"] = self._validate_ipv6_address
         self.validations["ipv4_subnet"] = self._validate_ipv4_subnet
         self.validations["ipv6_subnet"] = self._validate_ipv6_subnet
-
-    def log_msg(self, msg):
-        """
-        Used for debugging.  To enable, both debug and logfile properties
-        must be set e.g.:
-
-        instance = ParamsValidate(ansible_module)
-        instance.debug = True
-        instance.logfile = "/tmp/params_validate.log"
-        etc...
-        """
-        if self.debug is False:
-            return
-        if self.logfile is None:
-            return
-        if self.file_handle is None:
-            try:
-                self.file_handle = open(
-                    f"{self.logfile}", "a+", encoding="UTF-8"
-                )
-            except IOError as err:
-                msg = f"error opening logfile {self.logfile}. "
-                msg += f"detail: {err}"
-                self.ansible_module.fail_json(msg)
-
-        self.file_handle.write(msg)
-        self.file_handle.write("\n")
-        self.file_handle.flush()
 
     def validate(self) -> None:
         """
@@ -590,9 +565,9 @@ class ParamsValidate:
     @property
     def debug(self):
         """
-        Enable/disable debugging to self.logfile
+        Enable/disable debugging to self.log.logfile
         """
-        return self.properties["debug"]
+        return self.log.debug
 
     @debug.setter
     def debug(self, value):
@@ -602,19 +577,18 @@ class ParamsValidate:
             msg += "Invalid type for debug. Expected bool. "
             msg += f"Got {type(value)}."
             self.ansible_module.fail_json(msg)
-        self.properties["debug"] = value
+        self.log.debug = value
 
     @property
     def logfile(self):
         """
         Set file to which debug log is written
         """
-        return self.properties["logfile"]
+        return self.log.logfile
 
     @logfile.setter
     def logfile(self, value):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.properties["logfile"] = value
+        self.log.logfile = value
 
     @property
     def parameters(self):

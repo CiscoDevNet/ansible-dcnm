@@ -79,9 +79,8 @@ def test_params_validate_00001(params_validate) -> None:
     }
     assert instance.mandatory_param_spec_keys == {"required", "type"}
     assert instance.class_name == "ParamsValidate"
-    assert instance.file_handle is None
-    assert instance.properties.get("debug", None) is False
-    assert instance.properties.get("logfile", "foo") is None
+    assert instance.log.logfile is None
+    assert instance.log.debug is False
     assert instance.properties.get("parameters", "foo") is None
     assert instance.properties.get("params_spec", "foo") is None
 
@@ -885,16 +884,16 @@ def test_params_validate_00093(params_validate) -> None:
 def test_params_validate_00110(params_validate) -> None:
     """
     Function
-    - log_msg
+    - log.log_msg
 
     Test
-    - log_msg returns None when debug is False
+    - log.log_msg returns None when debug is False
     """
     instance = params_validate
 
     error_message = "This is an error message"
     instance.debug = False
-    assert instance.log_msg(error_message) is None
+    assert instance.log.log_msg(error_message) is None
 
 
 def test_params_validate_00111(tmp_path, params_validate) -> None:
@@ -914,7 +913,7 @@ def test_params_validate_00111(tmp_path, params_validate) -> None:
     error_message = "This is an error message"
     instance.debug = True
     instance.logfile = filename
-    instance.log_msg(error_message)
+    instance.log.log_msg(error_message)
 
     assert filename.read_text(encoding="UTF-8") == error_message + "\n"
     assert len(list(tmp_path.iterdir())) == 1
@@ -941,5 +940,5 @@ def test_params_validate_00112(tmp_path, params_validate) -> None:
     error_message = "This is an error message"
     instance.debug = True
     instance.logfile = filename
-    with pytest.raises(AnsibleFailJson, match=r"error opening logfile"):
-        instance.log_msg(error_message)
+    with pytest.raises(AnsibleFailJson, match="error writing to logfile"):
+        instance.log.log_msg(error_message)

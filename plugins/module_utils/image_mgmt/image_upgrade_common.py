@@ -20,6 +20,8 @@ __author__ = "Allen Robel"
 
 import inspect
 from collections.abc import MutableMapping as Map
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
+    Log
 
 
 class ImageUpgradeCommon:
@@ -40,11 +42,16 @@ class ImageUpgradeCommon:
 
         self.module = module
         self.params = module.params
-        self.debug = False
-        self.fd = None
-        self.logfile = "/tmp/ansible_dcnm.log"
+
+        self.log = Log(module)
+        self.log.debug = False
+        self.log.logfile = "/tmp/dcnm_image_upgrade.log"
+
+        # self.debug = False
+        # self.fd = None
+        # self.logfile = "/tmp/ansible_dcnm.log"
         self.module = module
-        self.log_msg("ImageUpgradeCommon.__init__ DONE")
+        self.log.log_msg("ImageUpgradeCommon.__init__ DONE")
 
     def _handle_response(self, response, verb):
         # don't add self.method_name to this method since
@@ -133,27 +140,6 @@ class ImageUpgradeCommon:
         result["changed"] = True
         return result
 
-    def log_msg(self, msg):
-        """
-        used for debugging. disable this when committing to main
-        by setting self.debug to False in __init__()
-        """
-        if self.debug is False:
-            return
-        if self.fd is None:
-            try:
-                self.fd = open(
-                    f"{self.logfile}", "a+", encoding="UTF-8"
-                )
-            except IOError as err:
-                msg = f"error opening logfile {self.logfile}. "
-                msg += f"detail: {err}"
-                self.module.fail_json(msg)
-
-        self.fd.write(msg)
-        self.fd.write("\n")
-        self.fd.flush()
-
     def make_boolean(self, value):
         """
         Return value converted to boolean, if possible.
@@ -188,7 +174,6 @@ class ImageUpgradeCommon:
         Keys in dict2 have precedence over keys in dict1.
         """
         for key in dict2:
-            # self.log_msg(f"DEBUG: {self.class_name}.merge_dicts: key: {key}")
 
             if isinstance(dict1.get(key, None), Map) and dict2.get(key, None) is None:
                 # This is to handle a case where the playbook contains an

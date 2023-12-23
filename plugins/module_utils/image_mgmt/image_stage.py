@@ -110,7 +110,6 @@ class ImageStage(ImageUpgradeCommon):
         self.verb = None
         self.payload = None
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
-        self.log_msg("DEBUG: ImageStage.__init__ DONE")
 
     def _init_properties(self):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
