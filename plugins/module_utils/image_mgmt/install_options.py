@@ -141,6 +141,13 @@ class ImageInstallOptions(ImageUpgradeCommon):
         super().__init__(module)
         self.class_name = self.__class__.__name__
         self.endpoints = ApiEndpoints()
+
+        self.path = self.endpoints.install_options.get("path")
+        self.verb = self.endpoints.install_options.get("verb")
+        self.payload: Dict[str, Any] = {}
+
+        self.compatibility_status = {}
+
         self._init_properties()
 
     def _init_properties(self):
@@ -159,25 +166,39 @@ class ImageInstallOptions(ImageUpgradeCommon):
         """
         Refresh self.response_data with current install-options from the controller
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.policy_name is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling refresh()"
             self.module.fail_json(msg)
 
         if self.serial_number is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_number must be set before "
             msg += "calling refresh()"
             self.module.fail_json(msg)
 
-        self.path = self.endpoints.install_options.get("path")
-        self.verb = self.endpoints.install_options.get("verb")
+        # At least one of epld, issu, or package_install must be True
+        # before calling refresh() or the controller will return an error.
+        # Mock the response such that the caller knows nothing needs to be
+        # done.
+        if self.epld is False and self.issu is False and self.package_install is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "At least one of epld, issu, or package_install "
+            msg += "must be True before calling refresh(). Skipping."
+            self.log.log_msg(msg)
+            self.compatibility_status = {}
+            self.properties["response_data"] = {
+                "compatibilityStatusList": [],
+                "epldModules": None,
+                "installPacakges": None,
+                "errMessage": "",
+            }
+            return
 
         self._build_payload()
-        self.method_name = inspect.stack()[0][3]
 
         self.properties["response"] = dcnm_send(
             self.module, self.verb, self.path, data=json.dumps(self.payload)
@@ -186,7 +207,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
         if self.result["success"] is False:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retrieving install-options from "
             msg += f"the controller. Controller response: {self.response}. "
             if self.response_data.get("error", None) is None:
@@ -220,7 +241,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             "packageInstall": false
         }
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.payload: Dict[str, Any] = {}
         self.payload["devices"] = []
@@ -233,7 +254,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         return self.make_boolean(self.make_none(self.response_data.get(item)))
 
     # Mandatory properties
@@ -246,8 +267,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @policy_name.setter
     def policy_name(self, value):
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, str):
-            msg = f"{self.class_name}.policy_name.setter: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"policy_name must be a string. Got {value}."
             self.module.fail_json(msg)
         self.properties["policy_name"] = value
@@ -277,9 +299,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @issu.setter
     def issu(self, value):
+        method_name = inspect.stack()[0][3]
         value = self.make_boolean(value)
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.issu.setter: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"issu must be a boolean value. Got {value}."
             self.module.fail_json(msg)
         self.properties["issu"] = value
@@ -298,9 +321,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @epld.setter
     def epld(self, value):
+        method_name = inspect.stack()[0][3]
         value = self.make_boolean(value)
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.epld.setter: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"epld must be a boolean value. Got {value}."
             self.module.fail_json(msg)
         self.properties["epld"] = value
@@ -318,9 +342,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     @package_install.setter
     def package_install(self, value):
+        method_name = inspect.stack()[0][3]
         value = self.make_boolean(value)
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.package_install.setter: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "package_install must be a boolean value. "
             msg += f"Got {value}."
             self.module.fail_json(msg)

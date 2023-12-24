@@ -1419,7 +1419,7 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    match = "ImageInstallOptions.epld.setter: "
+    match = "ImageInstallOptions.epld: "
     match += r"epld must be a boolean value. Got FOO\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()

@@ -57,6 +57,11 @@ def test_image_mgmt_install_options_00001(image_install_options) -> None:
     assert instance.module == MockAnsibleModule
     assert instance.class_name == "ImageInstallOptions"
     assert isinstance(instance.endpoints, ApiEndpoints)
+    path = "/appcenter/cisco/ndfc/api/v1/imagemanagement"
+    path += "/rest/imageupgrade/install-options"
+    assert instance.path == path
+    assert instance.verb == "POST"
+    assert instance.compatibility_status == {}
 
 
 def test_image_mgmt_install_options_00002(image_install_options) -> None:
@@ -452,7 +457,7 @@ def test_image_mgmt_install_options_00022(image_install_options) -> None:
     Test
     - fail_json is called if issu is not a boolean.
     """
-    match = "ImageInstallOptions.issu.setter: issu must be a "
+    match = "ImageInstallOptions.issu: issu must be a "
     match += "boolean value"
 
     instance = image_install_options
@@ -468,7 +473,7 @@ def test_image_mgmt_install_options_00023(image_install_options) -> None:
     Test
     - fail_json is called if epld is not a boolean.
     """
-    match = "ImageInstallOptions.epld.setter: epld must be a "
+    match = "ImageInstallOptions.epld: epld must be a "
     match += "boolean value"
 
     instance = image_install_options
@@ -484,7 +489,7 @@ def test_image_mgmt_install_options_00024(image_install_options) -> None:
     Test
     - fail_json is called if package_install is not a boolean.
     """
-    match = "ImageInstallOptions.package_install.setter: "
+    match = "ImageInstallOptions.package_install: "
     match += "package_install must be a boolean value"
 
     instance = image_install_options
