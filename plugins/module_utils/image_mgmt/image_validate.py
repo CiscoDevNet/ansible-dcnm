@@ -101,10 +101,10 @@ class ImageValidate(ImageUpgradeCommon):
         """
         self.method_name = inspect.stack()[0][3]
 
+        self.issu_detail.refresh()
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
             self.issu_detail.serial_number = serial_number
-            self.issu_detail.refresh()
             if self.issu_detail.validated == "Success":
                 self.serial_numbers.remove(self.issu_detail.serial_number)
 
