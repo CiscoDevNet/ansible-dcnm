@@ -401,6 +401,47 @@ def test_image_mgmt_install_options_00010(monkeypatch, image_install_options) ->
         instance.refresh()
 
 
+def test_image_mgmt_install_options_00011(image_install_options) -> None:
+    """
+    Function
+    - refresh
+
+    Setup
+    -   POST REQUEST
+        - issu is False
+        - epld is False
+        - package_install is False
+
+    Test
+    -   ImageInstallOptions returns a mocked response when all of
+        issu, epld, and package_install are False
+    -   Mocked response contains expected values
+
+    Endpoint
+    - install-options
+
+    Description:
+    monkeypatch is not needed here since the class never sends a request
+    to the controller in this case.
+    """
+    with does_not_raise():
+        instance = image_install_options
+        instance.policy_name = "KRM5"
+        instance.serial_number = "FDO21120U5D"
+        instance.epld = False
+        instance.issu = False
+        instance.package_install = False
+        instance.refresh()
+
+    assert isinstance(instance.response_data, dict)
+    assert instance.response_data.get("compatibilityStatusList") == []
+    assert instance.response_data.get("epldModules") is None
+    # yes, installPackages is intentionally misspelled below since
+    # this is what the controller returns in a real response
+    assert instance.response_data.get("installPacakges") is None
+    assert instance.response_data.get("errMessage") == ""
+
+
 def test_image_mgmt_install_options_00020(image_install_options) -> None:
     """
     Function
