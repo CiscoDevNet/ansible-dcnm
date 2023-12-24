@@ -32,8 +32,8 @@ import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 
-from .image_upgrade_utils import (controller_version_fixture,
-                                  responses_controller_version)
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
+    controller_version_fixture, responses_controller_version)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."
