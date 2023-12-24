@@ -48,8 +48,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_
     SwitchIssuDetailsBySerialNumber)
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
     ImageUpgradeTask
-
-from .fixture import load_fixture
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.fixture import \
+    load_fixture
 
 
 class MockAnsibleModule:
