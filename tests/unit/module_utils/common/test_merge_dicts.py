@@ -184,6 +184,25 @@ def test_merge_dicts_00040(merge_dicts, value, expected) -> None:
         instance.debug = value
 
 
+def test_merge_dicts_00041(merge_dicts) -> None:
+    """
+    Function
+    - dict_merged
+
+    Test
+    - dict_merged calls fail_json when called before calling commit
+    """
+    with does_not_raise():
+        instance = merge_dicts
+
+    match = "MergeDicts.dict_merged: "
+    match += r"Call instance\.commit\(\) before "
+    match += r"calling instance\.dict_merged\."
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        value = instance.dict_merged  # pylint: disable=unused-variable
+
+
 # The remaining tests verify various combinations of dict1 and dict2
 # using the following merge rules:
 # 1.  non-dict keys in dict1 are overwritten by dict2
