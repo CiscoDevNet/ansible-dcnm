@@ -96,11 +96,11 @@ class ParamsMergeDefaults:
             if spec_key in self.reserved_params:
                 continue
 
-            if spec_key not in params and "default" in spec_value:
-                params[spec_key] = spec_value["default"]
-
-            if spec_key not in params and "default" not in spec_value:
+            if params.get(spec_key, None) is None and "default" not in spec_value:
                 continue
+
+            if params.get(spec_key, None) is None and "default" in spec_value:
+                params[spec_key] = spec_value["default"]
 
             if isinstance(spec_value, Map):
                 params[spec_key] = self._merge_default_params(
