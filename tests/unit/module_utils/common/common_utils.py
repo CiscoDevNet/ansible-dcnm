@@ -25,8 +25,9 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
-    Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+    MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
 
@@ -65,7 +66,7 @@ class MockAnsibleModule:
 @pytest.fixture(name="controller_version")
 def controller_version_fixture():
     """
-    mock ControllerVersion
+    return ControllerVersion with mocked AnsibleModule
     """
     return ControllerVersion(MockAnsibleModule)
 
@@ -73,15 +74,23 @@ def controller_version_fixture():
 @pytest.fixture(name="log")
 def log_fixture():
     """
-    mock Log
+    return Log with mocked AnsibleModule
     """
     return Log(MockAnsibleModule)
+
+
+@pytest.fixture(name="merge_dicts")
+def merge_dicts_fixture():
+    """
+    return MergeDicts with mocked AnsibleModule
+    """
+    return MergeDicts(MockAnsibleModule)
 
 
 @pytest.fixture(name="params_validate")
 def params_validate_fixture():
     """
-    mock ParamsValidate
+    return ParamsValidate with mocked AnsibleModule
     """
     return ParamsValidate(MockAnsibleModule)
 
@@ -94,14 +103,14 @@ def does_not_raise():
     yield
 
 
-def load_playbook_config(key: str) -> Dict[str, str]:
+def merge_dicts_data(key: str) -> Dict[str, str]:
     """
-    Return playbook configs for common
+    Return data for merge_dicts unit tests
     """
-    playbook_file = "common_playbook_configs"
-    playbook_config = load_fixture(playbook_file).get(key)
-    print(f"load_playbook_config: {key} : {playbook_config}")
-    return playbook_config
+    data_file = "merge_dicts"
+    data = load_fixture(data_file).get(key)
+    print(f"merge_dicts_data: {key} : {data}")
+    return data
 
 
 def responses_controller_version(key: str) -> Dict[str, str]:

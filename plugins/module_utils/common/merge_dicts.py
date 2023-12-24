@@ -85,23 +85,7 @@ class MergeDicts:
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         for key in dict2:
-            if isinstance(dict1.get(key, None), Map) and dict2.get(key, None) is None:
-                # This is to handle a case where dict1 contains a key that is a
-                # dict, which is supposed to contain sub-options, but the dict
-                # is empty.
-                #
-                # For example, below, upgrade is specified, but upgrade.nxos
-                # and upgrade.epld are not.  In this case, we copy the entire
-                # 'upgrade' dict from dict1 to dict2:
-                #
-                # -   ip_address: 172.22.150.110
-                #     upgrade:
-                #     options:
-                #         epld:
-                #             module: 27
-                #             golden: false
-                dict2[key] = dict1[key]
-            elif (
+            if (
                 key in dict1
                 and isinstance(dict1[key], Map)
                 and isinstance(dict2[key], Map)
@@ -166,7 +150,7 @@ class MergeDicts:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid parameters. Expected type dict. "
+            msg += "Invalid value. Expected type dict. "
             msg += f"Got type {type(value)}."
             self.ansible_module.fail_json(msg)
         self.properties["dict1"] = copy.deepcopy(value)
@@ -185,7 +169,7 @@ class MergeDicts:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid parameters. Expected type dict. "
+            msg += "Invalid value. Expected type dict. "
             msg += f"Got type {type(value)}."
             self.ansible_module.fail_json(msg)
         self.properties["dict2"] = copy.deepcopy(value)
