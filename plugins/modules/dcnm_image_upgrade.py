@@ -978,7 +978,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         for switch in self.switch_configs:
             validator.parameters = switch
-            validator.validate()
+            validator.commit()
 
     def _build_policy_attach_payload(self) -> None:
         """

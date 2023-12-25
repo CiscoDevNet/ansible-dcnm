@@ -169,53 +169,53 @@ def test_params_validate_00031(params_validate) -> None:
 def test_params_validate_00040(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
 
     Test
-    - validate calls fail_json when parameters is None
+    - commit calls fail_json when parameters is None
     """
     params_spec = {}
     params_spec["foo"] = {}
     params_spec["foo"]["type"] = "str"
     params_spec["foo"]["required"] = True
 
-    match = "ParamsValidate.validate: "
+    match = "ParamsValidate.commit: "
     match += "instance.parameters needs to be set prior to calling "
-    match += r"instance.validate\(\)\."
+    match += r"instance.commit\(\)\."
 
     with does_not_raise():
         instance = params_validate
         instance.params_spec = params_spec
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00041(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
 
     Test
-    - validate calls fail_json when params_spec is None
+    - commit calls fail_json when params_spec is None
     """
     parameters = {}
     parameters["foo"] = "bar"
 
-    match = "ParamsValidate.validate: "
+    match = "ParamsValidate.commit: "
     match += "instance.params_spec needs to be set prior to calling "
-    match += r"instance.validate\(\)\."
+    match += r"instance.commit\(\)\."
 
     with does_not_raise():
         instance = params_validate
         instance.parameters = parameters
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00050(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - validate_parameters
     - verify_choices
 
@@ -236,13 +236,13 @@ def test_params_validate_00050(params_validate) -> None:
     with does_not_raise():
         instance.params_spec = params_spec
         instance.parameters = parameters
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00051(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - validate_parameters
 
     Test
@@ -267,13 +267,13 @@ def test_params_validate_00051(params_validate) -> None:
     match += "Playbook is missing mandatory parameter: foo."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00052(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_choices
 
     Test
@@ -293,13 +293,13 @@ def test_params_validate_00052(params_validate) -> None:
     with does_not_raise():
         instance.params_spec = params_spec
         instance.parameters = parameters
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00053(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_choices
 
     Test
@@ -325,7 +325,7 @@ def test_params_validate_00053(params_validate) -> None:
     match += r"Expected one of \['bar', 'baz'\]. Got bing"
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -335,7 +335,7 @@ def test_params_validate_00053(params_validate) -> None:
 def test_params_validate_00060(params_validate, value, expected_type) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
 
     Test
@@ -366,7 +366,7 @@ def test_params_validate_00060(params_validate, value, expected_type) -> None:
     match += f"Expected {expected_type}. Got '{value}'. "
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -393,7 +393,7 @@ def test_params_validate_00060(params_validate, value, expected_type) -> None:
 def test_params_validate_00061(params_validate, value, expected_type) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
 
     Test
@@ -411,13 +411,13 @@ def test_params_validate_00061(params_validate, value, expected_type) -> None:
         instance = params_validate
         instance.params_spec = params_spec
         instance.parameters = parameters
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00062(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
 
     Test
@@ -443,7 +443,7 @@ def test_params_validate_00062(params_validate) -> None:
     match += "Got 'bad_type'."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -476,7 +476,7 @@ def test_params_validate_00071(
 ) -> None:
     """
     Function
-    - validate
+    - commit
     - _verify_multitype
 
     Test
@@ -499,7 +499,7 @@ def test_params_validate_00071(
         instance = params_validate
         instance.params_spec = params_spec
         instance.parameters = parameters
-        instance.validate()
+        instance.commit()
     if preferred_type in instance._ipaddress_types:  # pylint: disable=protected-access
         assert isinstance(instance.parameters["foo"], str)
     else:
@@ -520,7 +520,7 @@ def test_params_validate_00072(
 ) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
     - _verify_multitype
 
@@ -547,7 +547,7 @@ def test_params_validate_00072(
     match += f"Got '{value}'."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -562,7 +562,7 @@ def test_params_validate_00073(
 ) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
     - _verify_multitype
 
@@ -598,7 +598,7 @@ def test_params_validate_00073(
     match += f"Got '{value}'."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -612,7 +612,7 @@ def test_params_validate_00074(
 ) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
     - _verify_multitype
 
@@ -633,13 +633,13 @@ def test_params_validate_00074(
         instance = params_validate
         instance.params_spec = params_spec
         instance.parameters = parameters
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00075(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - _verify_multitype
     - _verify_preferred_type
 
@@ -666,7 +666,7 @@ def test_params_validate_00075(params_validate) -> None:
     match += "Invalid param_spec for parameter 'foo'. "
     match += "If type is a list, preferred_type must be specified."
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -685,7 +685,7 @@ def test_params_validate_00075(params_validate) -> None:
 def test_params_validate_00080(params_validate, value, type_to_verify) -> None:
     """
     Function
-    - validate
+    - commit
     - verify_type
     - ipaddress_guard
 
@@ -710,7 +710,7 @@ def test_params_validate_00080(params_validate, value, type_to_verify) -> None:
     match += f"Expected type {type_to_verify}. "
     match += f"Got type {type(value)} for param foo with value {value}."
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -724,7 +724,7 @@ def test_params_validate_00080(params_validate, value, type_to_verify) -> None:
 def test_params_validate_00090(params_validate, value, range_min, range_max) -> None:
     """
     Function
-    - validate
+    - commit
     - _verify_integer_range
 
     Test
@@ -745,7 +745,7 @@ def test_params_validate_00090(params_validate, value, range_min, range_max) -> 
     with does_not_raise():
         instance.params_spec = params_spec
         instance.parameters = parameters
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -759,7 +759,7 @@ def test_params_validate_00090(params_validate, value, range_min, range_max) -> 
 def test_params_validate_00091(params_validate, value, range_min, range_max) -> None:
     """
     Function
-    - validate
+    - commit
     - _verify_integer_range
 
     Test
@@ -785,7 +785,7 @@ def test_params_validate_00091(params_validate, value, range_min, range_max) -> 
     match += f"Expected value between 1 and 10. Got {value}"
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 @pytest.mark.parametrize(
@@ -799,7 +799,7 @@ def test_params_validate_00091(params_validate, value, range_min, range_max) -> 
 def test_params_validate_00092(params_validate, value, range_min, range_max) -> None:
     """
     Function
-    - validate
+    - commit
     - _verify_integer_range
 
     Test
@@ -827,13 +827,13 @@ def test_params_validate_00092(params_validate, value, range_min, range_max) -> 
     match += rf"range_max '.*?' type {type(range_max)}."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()
 
 
 def test_params_validate_00093(params_validate) -> None:
     """
     Function
-    - validate
+    - commit
     - _verify_integer_range
 
     Test
@@ -860,4 +860,4 @@ def test_params_validate_00093(params_validate) -> None:
     match += "parameters of type int. Got type str for param foo."
 
     with pytest.raises(AnsibleFailJson, match=match):
-        instance.validate()
+        instance.commit()

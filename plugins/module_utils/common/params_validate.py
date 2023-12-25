@@ -71,9 +71,10 @@ class ParamsValidate:
         bar: bingo
         baz: 10
 
-    validator = ParamsValidator(ansible_module)
+    validator = ParamsValidate(ansible_module)
     validator.parameters = ansible_module.params
     validator.params_spec = params_spec
+    validator.commit()
     """
 
     def __init__(self, ansible_module):
@@ -179,7 +180,7 @@ class ParamsValidate:
         self.validations["ipv4_subnet"] = self._validate_ipv4_subnet
         self.validations["ipv6_subnet"] = self._validate_ipv6_subnet
 
-    def validate(self) -> None:
+    def commit(self) -> None:
         """
         Verify that parameters in self.parameters conform to self.params_spec
         """
@@ -187,13 +188,13 @@ class ParamsValidate:
         if self.parameters is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.parameters needs to be set "
-            msg += "prior to calling instance.validate()."
+            msg += "prior to calling instance.commit()."
             self.ansible_module.fail_json(msg)
 
         if self.params_spec is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.params_spec needs to be set "
-            msg += "prior to calling instance.validate()."
+            msg += "prior to calling instance.commit()."
             self.ansible_module.fail_json(msg)
 
         self._validate_parameters(self.params_spec, self.parameters)
