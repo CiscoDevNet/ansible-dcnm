@@ -119,10 +119,10 @@ class ImagePolicies(ImageUpgradeCommon):
             self.module.fail_json(msg)
 
         if self.policy_name not in self.properties["response_data"]:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"policy_name {self.policy_name} is not defined "
-            msg += "on the controller."
-            self.module.fail_json(msg)
+            return None
+
+        if item == "policy":
+            return self.properties["response_data"][self.policy_name]
 
         if item not in self.properties["response_data"][self.policy_name]:
             msg = f"{self.class_name}.{self.method_name}: "
@@ -194,6 +194,15 @@ class ImagePolicies(ImageUpgradeCommon):
     @policy_name.setter
     def policy_name(self, value):
         self.properties["policy_name"] = value
+
+    @property
+    def policy(self):
+        """
+        Return the policy data of the policy matching self.policy_name,
+        if it exists.
+        Return None otherwise
+        """
+        return self._get("policy")
 
     @property
     def policy_type(self):

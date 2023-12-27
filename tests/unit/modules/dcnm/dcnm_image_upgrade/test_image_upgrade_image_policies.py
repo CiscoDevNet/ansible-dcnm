@@ -227,10 +227,11 @@ def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
     """
     Function
     - refresh
+    - policy_name
 
     Test
-    - fail_json() is called if response does not contain policy_name.
-    - i.e. image policy with name FOO has not yet been created on the controller.
+    - instance.policy_name is set to a policy that does not exist on the controller.
+    - instance.policy returns None
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
@@ -243,16 +244,19 @@ def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
 
     monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
-    image_policies.refresh()
-    image_policies.policy_name = "FOO"
+    with does_not_raise():
+        instance = image_policies
+        instance.refresh()
+        image_policies.policy_name = "FOO"
 
-    match = "ImagePolicies._get: "
-    match += "policy_name FOO is not defined on the controller."
+    assert image_policies.policy is None
+    # match = "ImagePolicies._get: "
+    # match += "policy_name FOO is not defined on the controller."
 
-    instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
-        if instance.policy_type == "PLATFORM":
-            pass
+    # instance = image_policies
+    # with pytest.raises(AnsibleFailJson, match=match):
+    #     if instance.policy_type == "PLATFORM":
+    #         pass
 
 
 def test_image_mgmt_image_policies_00025(monkeypatch, image_policies) -> None:
