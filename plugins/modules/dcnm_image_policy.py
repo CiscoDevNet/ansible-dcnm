@@ -27,6 +27,8 @@ from typing import Any, Dict, List
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+    MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
@@ -75,6 +77,10 @@ class Task(ImagePolicyCommon):
 
         self.want = []
         self.need = []
+        # policies which need to be created
+        self.need_create = []
+        # policies which need to be updated
+        self.need_update = []
         self.validated_configs = []
 
         self.result = {"changed": False, "diff": [], "response": []}
@@ -139,40 +145,180 @@ class Task(ImagePolicyCommon):
 
     def get_need_merged(self) -> None:
         """
-        For merged state, populate self.need list() with items from
-        our want list that are not in our have list.  These items will
-        be sent to the controller.
+        1.  Populate self.need_create with items from self.want that are
+            not in self.have
+        2.  Populate self.need_update with updated policies.  We update
+            policies as follows:
+            a.  If a policy is in both self.want amd self.have, and they
+                contain differences, merge self.want into self.have,
+                with self.want keys taking precedence and append the
+                merged policy to self.need_update.
+            b.  If a policy is in both self.want and self.have, and they
+                are identical, do not append the policy to self.need_update
+                (i.e. do nothing).
         """
-        method_name = inspect.stack()[0][3]
-        need: List[Dict] = []
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        # new policies to be created
+        need_create: List[Dict] = []
+        # existing policies to be updated
+        need_update: List[Dict] = []
 
         for want in self.want:
-            # self.want parameters have already been verified
             self.have.policy_name = want.get("policyName")
 
-            # If the policy exists on the controller, skip it.
-            if self.have.policy is not None:
+            # Policy does not exist on the controller.
+            if self.have.policy is None:
+                need_create.append(copy.deepcopy(want))
                 continue
 
-            need.append(copy.deepcopy(want))
-        self.need = copy.copy(need)
+            # The policy exists on the controller.  Merge
+            # our want parameters with the controller's parameters
+            # and add the merged parameters to the need_update list
+            # if they differ from the want parameters.
+            have = copy.deepcopy(self.have.policy)
+            merged, needs_update = self._merge_policies(have, want)
 
-    def send_need_merged(self) -> None:
+            if needs_update is True:
+                need_update.append(copy.deepcopy(merged))
+        self.need_create = copy.copy(need_create)
+        self.need_update = copy.copy(need_update)
+
+
+    def get_need_merged_orig(self) -> None:
         """
-        send the payloads to the controller
+        1.  Populate self.need_create with items from self.want that are
+            not in self.have
+        2.  Populate self.need_update with updated policies.  We update
+            policies as follows:
+            a.  If a policy is in both self.want amd self.have, and they
+                contain differences, merge self.want into self.have,
+                with self.want keys taking precedence and append the
+                merged policy to self.need_update.
+            b.  If a policy is in both self.want and self.have, and they
+                are identical, do not append the policy to self.need_update
+                (i.e. do nothing).
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        # new policies to be created
+        need_create: List[Dict] = []
+        # existing policies to be updated
+        need_update: List[Dict] = []
+
+        for want in self.want:
+            self.have.policy_name = want.get("policyName")
+
+            if self.have.policy is not None:
+                # If the policy exists on the controller, merge
+                # our want parameters with the controller's parameters
+                # and add the merged parameters to the need_update list
+                # if they differ from the want parameters.
+                have = copy.deepcopy(self.have.policy)
+                merged, needs_update = self._merge_policies(have, want)
+
+                if needs_update is True:
+                    need_update.append(copy.deepcopy(merged))
+                continue
+            need_create.append(copy.deepcopy(want))
+        self.need_create = copy.copy(need_create)
+        self.need_update = copy.copy(need_update)
+
+    def _merge_policies(self, have: Dict, want: Dict) -> Dict:
+        """
+        Merge the parameters in want with the parameters in have.
+
+        We need to alter some items in have before we can compare it.
+        Specifically:
+
+        1.  The controller returns "N9K/N3K" for the platform, but
+            it expects "N9K" in the payload.  We change "N9K/N3K"
+            to "N9K" in have so that the compare works.
+        2.  Remove fields in "have" that are not part of a request
+            payload i.e. imageName and ref_count.
+        2.  Remove all fields that are not set in "have"
         """
         method_name = inspect.stack()[0][3]
 
-        if len(self.need) == 0:
-            self.result["changed"] = False
-            self.ansible_module.exit_json(**self.result)
+        # Remove keys that the controller adds which are not part
+        # of a request payload.
+        have.pop("imageName", None)
+        have.pop("ref_count", None)
+        have.pop("platformPolicies", None)
+
+        # Change "N9K/N3K" to "N9K" in have so that it matches
+        # the request payload.
+        if have.get("platform", None) == "N9K/N3K":
+            have["platform"] = "N9K"
+
+        # Remove all keys that are not set
+        if have.get("rpmimages", None) is None:
+            have.pop("rpmimages", None)
+        if have.get("packageName", None) == "":
+            have.pop("packageName", None)
+
+        # Merge the parameters in want with the parameters in have
+        # with the parameters in want taking precedence.
+        merge = MergeDicts(self.ansible_module)
+        merge.dict1 = have
+        merge.dict2 = want
+        merge.commit()
+        merged = copy.deepcopy(merge.dict_merged)
+
+        needs_update = False
+        if have != merged:
+            needs_update = True
+        return (merged, needs_update)
+
+    def send_need_create(self) -> None:
+        """
+        send the payloads to the controller that need to be created
+        """
+        method_name = inspect.stack()[0][3]
+
+        if len(self.need_create) == 0:
+            return
 
         path = self.endpoints.policy_create.get("path")
         verb = self.endpoints.policy_create.get("verb")
 
         requests_ok = []
         requests_nok = []
-        for payload in self.need:
+        for payload in self.need_create:
+            response = dcnm_send(self.ansible_module, verb, path,
+                                 data=json.dumps(payload))
+            result = self._handle_response(response, verb)
+
+            if not result["success"]:
+                requests_nok.append(payload)
+            else:
+                requests_ok.append(payload)
+
+        # all requests succeeded
+        if len(requests_ok) == len(self.need_create):
+            self.result["changed"] = True
+            return
+
+        # Some requests failed.  If at least one request succeeded,
+        # set changed to True
+        if len(requests_nok) != len(self.need_create):
+            self.result["changed"] = True
+        self._failure(response)
+
+
+    def send_need_update(self) -> None:
+        """
+        send the payloads to the controller that need to be updated
+        """
+        method_name = inspect.stack()[0][3]
+
+        if len(self.need_update) == 0:
+            return
+
+        path = self.endpoints.policy_edit.get("path")
+        verb = self.endpoints.policy_edit.get("verb")
+
+        requests_ok = []
+        requests_nok = []
+        for payload in self.need_update:
             response = dcnm_send(self.ansible_module, verb, path,
                                  data=json.dumps(payload))
             result = self._handle_response(response, verb)
@@ -181,21 +327,25 @@ class Task(ImagePolicyCommon):
             else:
                 requests_ok.append(payload)
 
-            if len(requests_ok) == len(self.need):
-                self.result["changed"] = True
-                self.ansible_module.exit_json(**self.result)
+        # All requests succeeded
+        if len(requests_ok) == len(self.need_update):
+            self.result["changed"] = True
+            return
 
-            if len(requests_nok) == len.self_need:
-                self.result["changed"] = False
-            else:
-                self.result["changed"] = True
-            self._failure(response)
+        # Some requests failed.  If at least one request succeeded,
+        # set changed to True
+        if len(requests_nok) != len(self.need_update):
+            self.result["changed"] = True
+        self._failure(response)
 
 
     def _failure(self, response) -> None:
         """
         fail_json with the response
         """
+        msg = f"{self.class_name}._failure: "
+        msg += f"response: {json_pretty(response)}"
+        self.log.log_msg(msg)
         if not response.get("DATA"):
             self.module.fail_json(response)
         data = response.get("DATA", {})
@@ -254,7 +404,9 @@ def main():
     task_module.get_want()
     task_module.get_have()
     task_module.get_need_merged()
-    task_module.send_need_merged()
+    task_module.send_need_create()
+    task_module.send_need_update()
+    ansible_module.exit_json(**task_module.result)
 
 if __name__ == "__main__":
     main()

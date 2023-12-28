@@ -88,6 +88,19 @@ class ApiEndpoints:
         endpoint["verb"] = "DELETE"
         return endpoint
 
+
+    @property
+    def policy_edit(self):
+        """
+        return endpoint POST /rest/policymgnt/edit-policy
+        """
+        path = f"{self.endpoint_policy_mgnt}/edit-policy"
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "POST"
+        return endpoint
+
+
     @property
     def policy_info(self):
         """
