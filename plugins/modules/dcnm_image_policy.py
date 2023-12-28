@@ -36,14 +36,14 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_common import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_params_spec import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
     ParamsSpec
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_payload import \
-    Payload
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
+    Config2Payload
 
 def json_pretty(msg):
     return json.dumps(msg, indent=4, sort_keys=True)
@@ -127,7 +127,7 @@ class Task(ImagePolicyCommon):
         # compare them to self.have (which consists of the current
         # image policies on the controller).
         for config in self.validated_configs:
-            payload = Payload(self.ansible_module)
+            payload = Config2Payload(self.ansible_module)
             payload.config = config
             payload.commit()
             self.want.append(payload.payload)
@@ -215,7 +215,7 @@ class Task(ImagePolicyCommon):
         """
         payloads = []
         for config in self.validated_configs:
-            payload = Payload(self.ansible_module)
+            payload = Config2Payload(self.ansible_module)
             payload.config = config
             payload.commit()
             payloads.append(payload.payload)

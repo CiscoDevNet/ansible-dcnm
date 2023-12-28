@@ -34,12 +34,11 @@ class ApiEndpoints:
         self.endpoint_policy_mgnt += "/rest/policymgnt"
 
     @property
-    def bootflash_info(self):
+    def policies_attached_info(self):
         """
-        return endpoint GET /rest/imagemgnt/bootFlash
+        return endpoint GET /rest/policymgnt/all-attached-policies
         """
-        path = f"{self.endpoint_image_management}/rest/imagemgnt/bootFlash"
-        path += "/bootflash-info"
+        path = f"{self.endpoint_policy_mgnt}/all-attached-policies"
         endpoint = {}
         endpoint["path"] = path
         endpoint["verb"] = "GET"
@@ -57,6 +56,17 @@ class ApiEndpoints:
         return endpoint
 
     @property
+    def policy_attach(self):
+        """
+        return endpoint POST /rest/policymgnt/attach-policy
+        """
+        path = f"{self.endpoint_policy_mgnt}/attach-policy"
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "POST"
+        return endpoint
+
+    @property
     def policy_create(self):
         """
         return endpoint POST /rest/policymgnt/platform-policy
@@ -65,6 +75,17 @@ class ApiEndpoints:
         endpoint = {}
         endpoint["path"] = path
         endpoint["verb"] = "POST"
+        return endpoint
+
+    @property
+    def policy_detach(self):
+        """
+        return endpoint DELETE /rest/policymgnt/detach-policy
+        """
+        path = f"{self.endpoint_policy_mgnt}/detach-policy"
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "DELETE"
         return endpoint
 
     @property

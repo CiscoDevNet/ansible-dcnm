@@ -64,9 +64,11 @@ class ParamsSpec:
         """
         # print("Building params spec for merged state")
         self._params_spec: Dict[str, Any] = {}
-        self._params_spec["name"] = {}
-        self._params_spec["name"]["required"] = True
-        self._params_spec["name"]["type"] = "str"
+
+        self._params_spec["agnostic"] = {}
+        self._params_spec["agnostic"]["required"] = False
+        self._params_spec["agnostic"]["type"] = "bool"
+        self._params_spec["agnostic"]["default"] = False
 
         self._params_spec["description"] = {}
         self._params_spec["description"]["default"] = ""
@@ -82,6 +84,10 @@ class ParamsSpec:
         self._params_spec["epld_image"]["default"] = ""
         self._params_spec["epld_image"]["required"] = False
         self._params_spec["epld_image"]["type"] = "str"
+
+        self._params_spec["name"] = {}
+        self._params_spec["name"]["required"] = True
+        self._params_spec["name"]["type"] = "str"
 
         self._params_spec["platform"] = {}
         self._params_spec["platform"]["required"] = True
@@ -97,10 +103,6 @@ class ParamsSpec:
         self._params_spec["packages"]["required"] = False
         self._params_spec["packages"]["type"] = "list"
 
-        self._params_spec["agnostic"] = {}
-        self._params_spec["agnostic"]["required"] = False
-        self._params_spec["agnostic"]["type"] = "bool"
-        self._params_spec["agnostic"]["default"] = False
 
     def _build_params_spec_for_merged_state_proposed(self) -> None:
         """
@@ -112,33 +114,30 @@ class ParamsSpec:
         """
         # print("Building params spec for merged state PROPOSED")
         self._params_spec: Dict[str, Any] = {}
-        self._params_spec["name"] = {}
-        self._params_spec["name"]["required"] = True
-        self._params_spec["name"]["type"] = "str"
+
+        self._params_spec["agnostic"] = {}
+        self._params_spec["agnostic"]["default"] = False
+        self._params_spec["agnostic"]["required"] = False
+        self._params_spec["agnostic"]["type"] = "bool"
 
         self._params_spec["description"] = {}
         self._params_spec["description"]["default"] = ""
         self._params_spec["description"]["required"] = False
         self._params_spec["description"]["type"] = "str"
 
-        self._params_spec["disabled_rpm"] = {}
-        self._params_spec["disabled_rpm"]["default"] = ""
-        self._params_spec["disabled_rpm"]["required"] = False
-        self._params_spec["disabled_rpm"]["type"] = "str"
-
         self._params_spec["epld_image"] = {}
         self._params_spec["epld_image"]["default"] = ""
         self._params_spec["epld_image"]["required"] = False
         self._params_spec["epld_image"]["type"] = "str"
 
+        self._params_spec["name"] = {}
+        self._params_spec["name"]["required"] = True
+        self._params_spec["name"]["type"] = "str"
+
         self._params_spec["platform"] = {}
         self._params_spec["platform"]["required"] = True
         self._params_spec["platform"]["type"] = "str"
         self._params_spec["platform"]["choices"] = ["N9K", "N7K", "N77", "N6K", "N5K"]
-
-        self._params_spec["release"] = {}
-        self._params_spec["release"]["required"] = True
-        self._params_spec["release"]["type"] = "str"
 
         self._params_spec["packages"] = {}
         self._params_spec["packages"]["default"] = {}
@@ -155,10 +154,14 @@ class ParamsSpec:
         self._params_spec["packages"]["uninstall"]["required"] = False
         self._params_spec["packages"]["uninstall"]["type"] = "list"
 
-        self._params_spec["agnostic"] = {}
-        self._params_spec["agnostic"]["default"] = False
-        self._params_spec["agnostic"]["required"] = False
-        self._params_spec["agnostic"]["type"] = "bool"
+        self._params_spec["release"] = {}
+        self._params_spec["release"]["required"] = True
+        self._params_spec["release"]["type"] = "str"
+
+        self._params_spec["type"] = {}
+        self._params_spec["type"]["default"] = "PLATFORM"
+        self._params_spec["type"]["required"] = False
+        self._params_spec["type"]["type"] = "str"
 
     @property
     def params_spec(self) -> Dict[str, Any]:
