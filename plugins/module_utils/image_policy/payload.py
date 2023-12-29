@@ -32,7 +32,7 @@ class Payload:
         self.ansible_module = ansible_module
 
         self._build_properties()
-    
+
     def _build_properties(self):
         """
         self.properties holds property values for the class
@@ -171,3 +171,23 @@ class Payload2Config(Payload):
             ]["rpmimages"].split(",")
         else:
             self.properties["config"]["packages"]["uninstall"] = []
+
+
+def example_build_payloads(validated_configs) -> None:
+    """
+    Example usage for Config2Payload
+
+    generate the payload for each image policy in
+    validated_configs.
+    """
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common import \
+        AndibleModule
+
+    ansible_module = AndibleModule()
+    config_to_payload = Config2Payload(ansible_module)
+    payloads = []
+    for config in validated_configs:
+        config_to_payload.config = config
+        config_to_payload.commit()
+        payloads.append(config_to_payload.payload)
+    return payloads

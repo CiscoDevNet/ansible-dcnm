@@ -19,15 +19,16 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
-    Log
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+
 
 class ImagePolicyCommon:
     """
     Common methods used by the other classes supporting
     dcnm_image_policy module
 
-    Usage (where ansible_module is an instance of 
+    Usage (where ansible_module is an instance of
     AnsibleModule or MockAnsibleModule):
 
     class MyClass(ImagePolicyCommon):

@@ -103,7 +103,6 @@ class ParamsSpec:
         self._params_spec["packages"]["required"] = False
         self._params_spec["packages"]["type"] = "list"
 
-
     def _build_params_spec_for_merged_state_proposed(self) -> None:
         """
         Build the specs for the parameters expected when state == merged.

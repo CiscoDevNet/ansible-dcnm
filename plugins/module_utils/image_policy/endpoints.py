@@ -78,6 +78,24 @@ class ApiEndpoints:
         return endpoint
 
     @property
+    def policy_delete(self):
+        """
+        return endpoint DELETE /rest/policymgnt/policy
+        This expects a request body with the following:
+
+        policyNames: comma separated list of policy names to delete.
+
+        {
+            "policyNames": "policyA,policyB,etc"
+        }
+        """
+        path = f"{self.endpoint_policy_mgnt}/policy"
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "DELETE"
+        return endpoint
+
+    @property
     def policy_detach(self):
         """
         return endpoint DELETE /rest/policymgnt/detach-policy
@@ -87,7 +105,6 @@ class ApiEndpoints:
         endpoint["path"] = path
         endpoint["verb"] = "DELETE"
         return endpoint
-
 
     @property
     def policy_edit(self):
@@ -99,7 +116,6 @@ class ApiEndpoints:
         endpoint["path"] = path
         endpoint["verb"] = "POST"
         return endpoint
-
 
     @property
     def policy_info(self):
