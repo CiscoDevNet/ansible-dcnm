@@ -47,13 +47,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spe
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
     Config2Payload
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
-    PolicyCreateBulk
+    ImagePolicyCreateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
-    PolicyDelete
+    ImagePolicyDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
-    PolicyReplaceBulk
+    ImagePolicyReplaceBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import \
-    PolicyUpdateBulk
+    ImagePolicyUpdateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.result import \
     Result
 
@@ -161,7 +161,7 @@ class Task(ImagePolicyCommon):
         Replace all policies on the controller that are in want
         """
         method_name = inspect.stack()[0][3]
-        replaced = PolicyReplaceBulk(self.ansible_module)
+        replaced = ImagePolicyReplaceBulk(self.ansible_module)
         replaced.payloads = self.want
         replaced.commit()
         for diff in replaced.diff:
@@ -173,7 +173,7 @@ class Task(ImagePolicyCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        delete = PolicyDelete(self.ansible_module)
+        delete = ImagePolicyDelete(self.ansible_module)
         policy_names_to_delete = []
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.want: {json_pretty(self.want)}"
@@ -207,7 +207,7 @@ class Task(ImagePolicyCommon):
             if have_policy_name not in want_policy_names:
                 policy_names_to_delete.append(have_policy_name)
 
-        delete = PolicyDelete(self.ansible_module)
+        delete = ImagePolicyDelete(self.ansible_module)
         delete.policy_names = policy_names_to_delete
         delete.commit()
 
@@ -332,7 +332,8 @@ class Task(ImagePolicyCommon):
         - self.handle_merged_state()
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        policy_create = PolicyCreateBulk(self.ansible_module)
+
+        policy_create = ImagePolicyCreateBulk(self.ansible_module)
         policy_create.payloads = self.need_create
         policy_create.commit()
         for diff in policy_create.diff:
@@ -346,7 +347,8 @@ class Task(ImagePolicyCommon):
         - self.handle_merged_state()
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        bulk_update = PolicyUpdateBulk(self.ansible_module)
+
+        bulk_update = ImagePolicyUpdateBulk(self.ansible_module)
         bulk_update.payloads = self.need_update
         bulk_update.commit()
         for diff in bulk_update.diff:

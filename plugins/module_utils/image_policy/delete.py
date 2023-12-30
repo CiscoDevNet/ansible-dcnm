@@ -33,13 +33,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send
 
 
-class PolicyDelete(ImagePolicyCommon):
+class ImagePolicyDelete(ImagePolicyCommon):
     """
-    Handle Ansible deleted state for image policie
+    Delete image policies
 
     Usage:
 
-    delete = PolicyDelete(ansible_module)
+    delete = ImagePolicyDelete(ansible_module)
     delete.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
     delete.commit()
     """
@@ -92,16 +92,16 @@ class PolicyDelete(ImagePolicyCommon):
 
     def commit(self):
         """
-        delete policy_names
+        delete each of the image policies in self.policy_names
 
-        1. If policy has ref_count > 0, detach policy from switches first
-        2. Then delete the policy
+        1. TODO: If policy has ref_count > 0, detach policy from switches first
+        2. Delete the policy
         """
         method_name = inspect.stack()[0][3]
         if self.policy_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         path = self.endpoints.policy_delete["path"]
         verb = self.endpoints.policy_delete["verb"]

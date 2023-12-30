@@ -36,7 +36,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send
 
 
-class PolicyReplaceBulk(ImagePolicyCommon):
+class ImagePolicyReplaceBulk(ImagePolicyCommon):
 
     """
     Handle Ansible replaced state for image policies
@@ -54,7 +54,7 @@ class PolicyReplaceBulk(ImagePolicyCommon):
     policyType      str(), required. PLATFORM or UMBRELLA
     rpmimages:      str(), optional. A comma-separated list of packages to uninstall
 
-    Example (updating two policies)):
+    Example (replacing two policies)):
 
     policies = [
         {
@@ -73,7 +73,7 @@ class PolicyReplaceBulk(ImagePolicyCommon):
             "policyName": "BAR,
         },
     ]
-    bulk_replace = PolicyReplaceBulk(ansible_module)
+    bulk_replace = ImagePolicyReplaceBulk(ansible_module)
     bulk_replace.payloads = policies
     bulk_replace.commit()
     """
@@ -214,7 +214,7 @@ class PolicyReplaceBulk(ImagePolicyCommon):
         self.ansible_module.fail_json(msg, **result)
 
 
-class PolicyUpdate(ImagePolicyCommon):
+class ImagePolicyUpdate(ImagePolicyCommon):
     """
     Given a properly-constructed image policy payload (python dict),
     send an image policy update request to the controller.  The payload
@@ -243,7 +243,7 @@ class PolicyUpdate(ImagePolicyCommon):
         "policyType": "PLATFORM",
         "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
     }
-    update = PolicyUpdate(ansible_module)
+    update = ImagePolicyUpdate(ansible_module)
     update.payload = policy
     update.commit()
     """
