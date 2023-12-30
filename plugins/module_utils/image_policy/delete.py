@@ -25,15 +25,17 @@ from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
+    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
 
 
-class PolicyDelete:
+class PolicyDelete(ImagePolicyCommon):
     """
-    Delete image policies
+    Handle Ansible deleted state for image policie
 
     Usage:
 
@@ -43,8 +45,8 @@ class PolicyDelete:
     """
 
     def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self._build_properties()
         self.endpoints = ApiEndpoints()
@@ -53,26 +55,40 @@ class PolicyDelete:
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
+        # self.properties is already set in the parent class
         self.properties["policy_names"] = None
 
     @property
     def policy_names(self):
         """
-        return the policy name
+        return the policy names
         """
         return self.properties["policy_names"]
 
     @policy_names.setter
     def policy_names(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, str):
+        if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_names must be a list. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             self.ansible_module.fail_json(msg)
         self.properties["policy_names"] = value
+
+    def _get_policies_to_delete(self):
+        """
+        Retrieve policies from the controller and return the list of
+        controller policies that are in our policy_names list.
+        """
+        self.image_policies = ImagePolicies(self.ansible_module)
+        self.image_policies.refresh()
+
+        policies_to_delete = []
+        for policy_name in self.policy_names:
+            if policy_name in self.image_policies.all_policies:
+                policies_to_delete.append(policy_name)
+        return policies_to_delete
 
     def commit(self):
         """
@@ -93,9 +109,11 @@ class PolicyDelete:
         policies_to_delete = self._get_policies_to_delete()
 
         if len(policies_to_delete) == 0:
+            self.changed = False
             return
 
-        policy_names = ",".join(policies_to_delete)
+        policy_names = policies_to_delete
+        self.log.log_msg(f"Deleting policies {policy_names}")
         request_body = {"policyNames": policy_names}
 
         response = dcnm_send(
@@ -103,8 +121,11 @@ class PolicyDelete:
         )
         result = self._handle_response(response, verb)
 
+        self.log.log_msg(f"response: {response}")
+
         if result["success"]:
-            self.ansible_module.result["changed"] = True
+            self.changed = True
+            self.diff = request_body
             return
 
         msg = f"{self.class_name}.{method_name}: "
@@ -112,13 +133,3 @@ class PolicyDelete:
         msg += f"policy_names {policies_to_delete}. "
         msg += f"response: {response}"
         self.ansible_module.fail_json(msg)
-
-    def _get_policies_to_delete(self):
-        self.image_policies = ImagePolicies(self.ansible_module)
-        self.image_policies.refresh()
-
-        policies_to_delete = []
-        for policy_name in self.policy_names:
-            if policy_name in self.image_policies.all_policies:
-                policies_to_delete.append(policy_name)
-        return policies_to_delete

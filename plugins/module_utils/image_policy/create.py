@@ -50,7 +50,7 @@ class PolicyCreateBulk(ImagePolicyCommon):
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
+        # properties is already initialized in the parent class
         self.properties["payloads"] = None
 
     @property
@@ -103,13 +103,16 @@ class PolicyCreateBulk(ImagePolicyCommon):
             payloads_to_commit.append(payload)
 
         if len(payloads_to_commit) == 0:
+            self.changed = False
             msg = f"{self.class_name}.{method_name}: "
             msg += "No policies to create."
             self.log.log_msg(msg)
             return
 
         result_ok = []
+        diff_ok = []
         result_nok = []
+        diff_nok = []
         for payload in payloads_to_commit:
             response = dcnm_send(
                 self.ansible_module, verb, path, data=json.dumps(payload)
@@ -118,22 +121,30 @@ class PolicyCreateBulk(ImagePolicyCommon):
 
             if result["success"]:
                 result_ok.append(response)
+                diff_ok.append(payload)
             else:
                 result_nok.append(response)
+                diff_nok.append(payload)
 
         if len(result_ok) == len(payloads_to_commit):
-            self.ansible_module.result["changed"] = True
+            self.changed = True
+            for diff in diff_ok:
+                self.diff = diff
             return
 
+        self.changed = False
         # at least one request succeeded, so set changed to True
         if len(result_nok) != len(payloads_to_commit):
-            self.ansible_module.result["changed"] = True
+            self.changed = True
 
+        result = {}
+        result["changed"] = self.changed
+        result["diff"] = diff_ok
         msg = f"{self.class_name}.{method_name}: "
         msg += "Bad response(s) during policy create. "
         msg += f"policy_name {self.policy_name}. "
         msg += f"response(s): {result_nok}"
-        self.ansible_module.fail_json(msg)
+        self.ansible_module.fail_json(msg, **result)
 
 
 class PolicyCreate(ImagePolicyCommon):
@@ -169,8 +180,8 @@ class PolicyCreate(ImagePolicyCommon):
     """
 
     def __init__(self, ansible_module):
-        self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
+        self.class_name = self.__class__.__name__
 
         self._mandatory_keys = set()
         self._mandatory_keys.add("nxosVersion")
@@ -184,7 +195,7 @@ class PolicyCreate(ImagePolicyCommon):
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
+        # properties is already initialized in the parent class
         self.properties["payload"] = None
 
     def _verify_payload(self, payload):
@@ -194,7 +205,7 @@ class PolicyCreate(ImagePolicyCommon):
             msg += "payload must be a dict. "
             msg += f"gpt type {type(payload).__name__}, "
             msg += f"value {payload}"
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         missing_keys = []
         for key in self._mandatory_keys:
             if key not in payload:
@@ -204,7 +215,7 @@ class PolicyCreate(ImagePolicyCommon):
         msg = f"{self.class_name}.{method_name}: "
         msg += f"payload is missing mandatory keys: "
         msg += f"{sorted(missing_keys)}"
-        self.ansible_module.fail_json(msg)
+        self.ansible_module.fail_json(msg, **self.failed_result)
 
     @property
     def payload(self):
@@ -216,7 +227,7 @@ class PolicyCreate(ImagePolicyCommon):
 
     @payload.setter
     def payload(self, value):
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._verify_payload(value)
         self.properties["payload"] = value
 
@@ -229,7 +240,7 @@ class PolicyCreate(ImagePolicyCommon):
         if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be set prior to calling commit."
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         path = self.endpoints.policy_create["path"]
         verb = self.endpoints.policy_create["verb"]

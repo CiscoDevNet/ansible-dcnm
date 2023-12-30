@@ -28,14 +28,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts impo
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
+    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
 
 
-class PolicyReplaceBulk:
+class PolicyReplaceBulk(ImagePolicyCommon):
+
     """
+    Handle Ansible replaced state for image policies
+
     Given a list of payloads, bulk-replace the image policies therein.
     The payload format is given below.
 
@@ -74,8 +79,8 @@ class PolicyReplaceBulk:
     """
 
     def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self._build_properties()
         self.endpoints = ApiEndpoints()
@@ -84,7 +89,7 @@ class PolicyReplaceBulk:
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
+        # self.properties is already set in the parent class
         self.properties["payloads"] = None
 
     @property
@@ -102,6 +107,7 @@ class PolicyReplaceBulk:
             msg += "payloads must be a list of dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
+            result = self.failed_skipped_result()
             self.ansible_module.fail_json(msg)
         for item in value:
             if not isinstance(item, dict):
@@ -167,7 +173,9 @@ class PolicyReplaceBulk:
             payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
 
         result_ok = []
+        diff_ok = []
         result_nok = []
+        diff_nok = []
 
         path = self.endpoints.policy_edit.get("path")
         verb = self.endpoints.policy_edit.get("verb")
@@ -180,24 +188,33 @@ class PolicyReplaceBulk:
 
             if result["success"]:
                 result_ok.append(response)
+                diff_ok.append(payload)
             else:
                 result_nok.append(response)
+                diff_nok.append(payload)
 
         if len(result_ok) == len(payloads_to_commit):
-            self.ansible_module.result["changed"] = True
+            self.changed = True
+            for payload in diff_ok:
+                self.diff = payload
             return
 
-        # at least one request succeeded, so set changed to True
+        self.changed = False
         if len(result_nok) != len(payloads_to_commit):
-            self.ansible_module.result["changed"] = True
+            self.changed = True
+            for payload in diff_ok:
+                self.diff = payload
 
+        result = {}
+        result["changed"] = self.changed
+        result["diff"] = self.diff
         msg = f"{self.class_name}.{method_name}: "
         msg += "Bad response(s) during policy bulk update. "
         msg += f"response(s): {result_nok}"
-        self.ansible_module.fail_json(msg)
+        self.ansible_module.fail_json(msg, **result)
 
 
-class PolicyUpdate:
+class PolicyUpdate(ImagePolicyCommon):
     """
     Given a properly-constructed image policy payload (python dict),
     send an image policy update request to the controller.  The payload
@@ -232,8 +249,8 @@ class PolicyUpdate:
     """
 
     def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self._mandatory_keys = set()
         self._mandatory_keys.add("policyName")
@@ -245,7 +262,7 @@ class PolicyUpdate:
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
+        # self.properties is already set in the parent class
         self.properties["payload"] = None
 
     def _verify_payload(self, payload):
@@ -305,9 +322,13 @@ class PolicyUpdate:
         )
         result = self._handle_response(response, verb)
 
-        if not result["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Bad response during policy update. "
-            msg += f"policy_name {self.policy_name}. "
-            msg += f"response: {response}"
-            self.ansible_module.fail_json(msg)
+        if result["success"]:
+            self.changed = True
+            self.diff = self.payload
+            return
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Bad response during policy update. "
+        msg += f"policy_name {self.policy_name}. "
+        msg += f"response: {response}"
+        self.ansible_module.fail_json(msg, **self.failed_result)

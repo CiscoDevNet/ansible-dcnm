@@ -54,6 +54,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace im
     PolicyReplaceBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import \
     PolicyUpdateBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.result import \
+    Result
 
 def json_pretty(msg):
     return json.dumps(msg, indent=4, sort_keys=True)
@@ -68,7 +70,6 @@ class Task(ImagePolicyCommon):
         self.logfile = "/tmp/dcnm_image_policy.log"
 
         self.endpoints = ApiEndpoints()
-
         self.have = None
         self.idempotent_want = None
 
@@ -88,10 +89,15 @@ class Task(ImagePolicyCommon):
         # policies which need to be created
         self.need_create = []
         # policies which need to be updated
+        self.need_delete = []
+        # policies which need to be deleted
         self.need_update = []
+        # policies which need to be queried
+        self.need_query = []
         self.validated_configs = []
 
-        self.result = {"changed": False, "diff": [], "response": []}
+        self.result = Result(self.ansible_module)
+        self.result.changed = False
 
     def get_have(self) -> None:
         """
@@ -137,9 +143,8 @@ class Task(ImagePolicyCommon):
             validator.commit()
             self.validated_configs.append(copy.deepcopy(validator.parameters))
 
-        # convert the validated configs to payloads to more easily
-        # compare them to self.have (which consists of the current
-        # image policies on the controller).
+        # convert the validated configs to payloads to more easily compare them
+        # to self.have (the current image policies on the controller).
         for config in self.validated_configs:
             payload = Config2Payload(self.ansible_module)
             payload.config = config
@@ -148,8 +153,8 @@ class Task(ImagePolicyCommon):
 
         # Exit if there's nothing to do
         if len(self.want) == 0:
-            self.result["changed"] = False
-            self.ansible_module.exit_json(**self.result)
+            self.result.changed = False
+            self.ansible_module.exit_json(**self.result.result)
 
     def handle_replaced_state(self) -> None:
         """
@@ -159,6 +164,8 @@ class Task(ImagePolicyCommon):
         replaced = PolicyReplaceBulk(self.ansible_module)
         replaced.payloads = self.want
         replaced.commit()
+        for diff in replaced.diff:
+            self.result.replaced = diff
 
     def handle_deleted_state(self) -> None:
         """
@@ -168,12 +175,20 @@ class Task(ImagePolicyCommon):
 
         delete = PolicyDelete(self.ansible_module)
         policy_names_to_delete = []
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.want: {json_pretty(self.want)}"
+        self.log.log_msg(msg)
         for want in self.want:
             if want["policyName"] in self.have.all_policies:
                 policy_names_to_delete.append(want["policyName"])
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"policy_names_to_delete: {policy_names_to_delete}, type {type(policy_names_to_delete).__name__}"
+        self.log.log_msg(msg)
         delete.policy_names = policy_names_to_delete
         delete.commit()
+        for diff in delete.diff:
+            self.result.deleted = diff
 
     def _delete_policies_not_in_want(self) -> None:
         """
@@ -320,6 +335,8 @@ class Task(ImagePolicyCommon):
         policy_create = PolicyCreateBulk(self.ansible_module)
         policy_create.payloads = self.need_create
         policy_create.commit()
+        for diff in policy_create.diff:
+            self.result.merged = diff
 
     def send_need_update(self) -> None:
         """
@@ -332,6 +349,8 @@ class Task(ImagePolicyCommon):
         bulk_update = PolicyUpdateBulk(self.ansible_module)
         bulk_update.payloads = self.need_update
         bulk_update.commit()
+        for diff in bulk_update.diff:
+            self.result.merged = diff
 
     def _failure(self, response) -> None:
         """
@@ -348,7 +367,7 @@ class Task(ImagePolicyCommon):
                 {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
             )
         response.update({"DATA": data})
-        self.module.fail_json(response)
+        self.module.fail_json(response, self.result.result)
 
 
 parameters = dict()
@@ -379,8 +398,11 @@ def main():
     # ansible_module.config = parameters
 
     task_module = Task(ansible_module)
+    task_module.log.log_msg("CALLING task_module.get_want()")
     task_module.get_want()
+    task_module.log.log_msg("CALLING task_module.get_have()")
     task_module.get_have()
+    task_module.log.log_msg("CALLING if state == deleted")
     if ansible_module.params["state"] == "deleted":
         task_module.handle_deleted_state()
     elif ansible_module.params["state"] == "merged":
@@ -395,7 +417,7 @@ def main():
         msg = f"Unknown state {task_module.ansible_module.params['state']}"
         task_module.ansible_module.fail_json(msg)
 
-    ansible_module.exit_json(**task_module.result)
+    ansible_module.exit_json(**task_module.result.result)
 
 if __name__ == "__main__":
     main()

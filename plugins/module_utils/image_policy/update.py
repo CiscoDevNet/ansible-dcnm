@@ -28,13 +28,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts impo
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
+    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
 
 
-class PolicyUpdateBulk:
+class PolicyUpdateBulk(ImagePolicyCommon):
     """
     Given a list of payloads, bulk-update the image policies therein.
     The payload format is given below.
@@ -74,8 +76,8 @@ class PolicyUpdateBulk:
     """
 
     def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self._build_properties()
         self.endpoints = ApiEndpoints()
@@ -84,7 +86,7 @@ class PolicyUpdateBulk:
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
+        # self.properties is already set in the parent class
         self.properties["payloads"] = None
 
     @property
@@ -147,7 +149,9 @@ class PolicyUpdateBulk:
             policies_to_send.append(copy.deepcopy(merge.dict_merged))
 
         result_ok = []
+        diff_ok = []
         result_nok = []
+        diff_nok = []
         for payload in policies_to_send:
             response = dcnm_send(
                 self.ansible_module, verb, path, data=json.dumps(payload)
@@ -156,24 +160,33 @@ class PolicyUpdateBulk:
 
             if result["success"]:
                 result_ok.append(response)
+                diff_ok.append(payload)
             else:
                 result_nok.append(response)
+                diff_nok.append(payload)
 
         if len(result_ok) == len(policies_to_send):
-            self.ansible_module.result["changed"] = True
+            self.changed = True
+            self.failed = False
+            # self.diff setter appends each policy to self.diff list
+            for policy in diff_ok:
+                self.diff = policy
             return
 
+        result = {}
         # at least one request succeeded, so set changed to True
         if len(result_nok) != len(policies_to_send):
-            self.ansible_module.result["changed"] = True
+            result["changed"] = True
+            result["diff"] = diff_ok
 
+        result["failed"] = True
         msg = f"{self.class_name}.{method_name}: "
         msg += "Bad response(s) during policy bulk update. "
         msg += f"response(s): {result_nok}"
-        self.ansible_module.fail_json(msg)
+        self.ansible_module.fail_json(msg, **result)
 
 
-class PolicyUpdate:
+class PolicyUpdate(ImagePolicyCommon):
     """
     Given a properly-constructed image policy payload (python dict),
     send an image policy update request to the controller.  The payload
@@ -208,8 +221,8 @@ class PolicyUpdate:
     """
 
     def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self._mandatory_keys = set()
         self._mandatory_keys.add("policyName")
@@ -274,6 +287,7 @@ class PolicyUpdate:
         self.image_policies.refresh()
 
         if self.payload.get("policyName") not in self.image_policies.all_policies:
+            self.changed = False
             return
 
         response = dcnm_send(
@@ -281,9 +295,13 @@ class PolicyUpdate:
         )
         result = self._handle_response(response, verb)
 
-        if not result["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Bad response during policy update. "
-            msg += f"policy_name {self.policy_name}. "
-            msg += f"response: {response}"
-            self.ansible_module.fail_json(msg)
+        if result["success"] is True:
+            self.changed = True
+            self.diff = self.payload
+            return
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Bad response during policy update. "
+        msg += f"policy_name {self.policy_name}. "
+        msg += f"response: {response}"
+        self.ansible_module.fail_json(msg, **self.failed_result)

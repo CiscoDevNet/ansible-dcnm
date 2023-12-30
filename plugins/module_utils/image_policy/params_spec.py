@@ -162,6 +162,26 @@ class ParamsSpec:
         self._params_spec["type"]["required"] = False
         self._params_spec["type"]["type"] = "str"
 
+    def _build_params_spec_for_replaced_state(self) -> None:
+        self._build_params_spec_for_merged_state_proposed()
+
+    def _build_params_spec_for_deleted_state(self) -> None:
+        """
+        Build the specs for the parameters expected when state == deleted.
+
+        Caller: _validate_configs()
+        Return: params_spec, a dictionary containing playbook
+                parameter specifications.
+        """
+        self._params_spec: Dict[str, Any] = {}
+
+        self._params_spec["name"] = {}
+        self._params_spec["name"]["required"] = True
+        self._params_spec["name"]["type"] = "str"
+
+    def _build_params_spec_for_replaced_state(self) -> None:
+        self._build_params_spec_for_merged_state_proposed()
+
     @property
     def params_spec(self) -> Dict[str, Any]:
         return self._params_spec

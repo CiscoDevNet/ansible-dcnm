@@ -100,6 +100,9 @@ class Config2Payload(Payload):
             msg += "config is empty"
             self.ansible_module.fail_json(msg)
 
+        if self.ansible_module.params["state"] == "deleted":
+            self.properties["payload"]["policyName"] = self.properties["config"]["name"]
+            return
         self.properties["payload"]["agnostic"] = self.properties["config"]["agnostic"]
         self.properties["payload"]["epldImgName"] = self.properties["config"][
             "epld_image"
