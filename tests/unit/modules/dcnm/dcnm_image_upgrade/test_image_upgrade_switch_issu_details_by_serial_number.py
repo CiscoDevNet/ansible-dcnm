@@ -132,11 +132,11 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00021(
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     instance.refresh()
-    instance.retrieval_key = "FDO21120U5D"
+    instance.filter = "FDO21120U5D"
     assert instance.device_name == "leaf1"
     assert instance.serial_number == "FDO21120U5D"
     # change serial_number to a different switch, expect different information
-    instance.retrieval_key = "FDO2112189M"
+    instance.filter = "FDO2112189M"
     assert instance.device_name == "cvd-2313-leaf"
     assert instance.serial_number == "FDO2112189M"
     # verify remaining properties using current serial_number
@@ -322,7 +322,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00040(
     match += "on the controller."
 
     instance.refresh()
-    instance.retrieval_key = "FOO00000BAR"
+    instance.filter = "FOO00000BAR"
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("serialNumber")  # pylint: disable=protected-access
 
@@ -356,6 +356,6 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00041(
     match += "property name: FOO"
 
     instance.refresh()
-    instance.retrieval_key = "FDO21120U5D"
+    instance.filter = "FDO21120U5D"
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("FOO")  # pylint: disable=protected-access

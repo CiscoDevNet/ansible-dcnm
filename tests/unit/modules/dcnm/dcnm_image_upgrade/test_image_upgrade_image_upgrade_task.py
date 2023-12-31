@@ -130,9 +130,9 @@ def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
 
     instance = image_upgrade_task
     instance.get_have()
-    instance.have.retrieval_key = "1.1.1.1"
+    instance.have.filter = "1.1.1.1"
     assert instance.have.device_name == "leaf1"
-    instance.have.retrieval_key = "2.2.2.2"
+    instance.have.filter = "2.2.2.2"
     assert instance.have.device_name == "cvd-2313-leaf"
     assert instance.have.serial_number == "FDO2112189M"
     assert instance.have.fabric == "hard"

@@ -132,11 +132,11 @@ def test_image_mgmt_switch_issu_details_by_ip_address_00021(
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     instance.refresh()
-    instance.retrieval_key = "172.22.150.102"
+    instance.filter = "172.22.150.102"
     assert instance.device_name == "leaf1"
     assert instance.serial_number == "FDO21120U5D"
     # change ip_address to a different switch, expect different information
-    instance.retrieval_key = "172.22.150.108"
+    instance.filter = "172.22.150.108"
     assert instance.device_name == "cvd-2313-leaf"
     assert instance.serial_number == "FDO2112189M"
     # verify remaining properties using current ip_address
@@ -322,7 +322,7 @@ def test_image_mgmt_switch_issu_details_by_ip_address_00040(
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     instance.refresh()
-    instance.retrieval_key = "1.1.1.1"
+    instance.filter = "1.1.1.1"
     match = "SwitchIssuDetailsByIpAddress._get: 1.1.1.1 does not exist "
     match += "on the controller."
     with pytest.raises(AnsibleFailJson, match=match):
@@ -355,7 +355,7 @@ def test_image_mgmt_switch_issu_details_by_ip_address_00041(
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     instance.refresh()
-    instance.retrieval_key = "172.22.150.102"
+    instance.filter = "172.22.150.102"
     match = "SwitchIssuDetailsByIpAddress._get: 172.22.150.102 unknown "
     match += "property name: FOO"
     with pytest.raises(AnsibleFailJson, match=match):

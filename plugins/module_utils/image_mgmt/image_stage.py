@@ -142,7 +142,7 @@ class ImageStage(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
-            self.issu_detail.retrieval_key = serial_number
+            self.issu_detail.filter = serial_number
             self.issu_detail.refresh()
             if self.issu_detail.image_staged == "Success":
                 self.serial_numbers.remove(serial_number)
@@ -154,7 +154,7 @@ class ImageStage(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
         for serial_number in self.serial_numbers:
-            self.issu_detail.retrieval_key = serial_number
+            self.issu_detail.filter = serial_number
             self.issu_detail.refresh()
 
             if self.issu_detail.image_staged == "Failed":
@@ -233,7 +233,7 @@ class ImageStage(ImageUpgradeCommon):
                 if serial_number in self.serial_numbers_done:
                     continue
 
-                self.issu_detail.retrieval_key = serial_number
+                self.issu_detail.filter = serial_number
                 self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
@@ -266,7 +266,7 @@ class ImageStage(ImageUpgradeCommon):
                 if serial_number in self.serial_numbers_done:
                     continue
 
-                self.issu_detail.retrieval_key = serial_number
+                self.issu_detail.filter = serial_number
                 self.issu_detail.refresh()
                 ip_address = self.issu_detail.ip_address
                 device_name = self.issu_detail.device_name

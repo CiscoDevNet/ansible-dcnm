@@ -200,7 +200,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         for device in self.devices:
-            self.issu_detail.retrieval_key = device.get("ip_address")
+            self.issu_detail.filter = device.get("ip_address")
             self.issu_detail.refresh()
 
             # Any device validation from issu_detail would go here.
@@ -219,7 +219,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        self.issu_detail.retrieval_key = device.get("ip_address")
+        self.issu_detail.filter = device.get("ip_address")
         self.issu_detail.refresh()
 
         self.install_options.serial_number = self.issu_detail.serial_number
@@ -516,7 +516,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                 if ipv4 in self.ipv4_done:
                     continue
 
-                self.issu_detail.retrieval_key = ipv4
+                self.issu_detail.filter = ipv4
                 self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
@@ -552,7 +552,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                 if ipv4 in self.ipv4_done:
                     continue
 
-                self.issu_detail.retrieval_key = ipv4
+                self.issu_detail.filter = ipv4
                 self.issu_detail.refresh()
                 ip_address = self.issu_detail.ip_address
                 device_name = self.issu_detail.device_name

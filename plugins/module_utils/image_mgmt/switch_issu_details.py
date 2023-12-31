@@ -667,7 +667,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
 
     instance = SwitchIssuDetailsByIpAddress(module)
     instance.refresh()
-    instance.retrieval_key = "10.1.1.1"
+    instance.filter = "10.1.1.1"
     image_staged = instance.image_staged
     image_upgraded = instance.image_upgraded
     serial_number = instance.serial_number
@@ -684,7 +684,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     def _init_properties(self):
         super()._init_properties()
         self.method_name = inspect.stack()[0][3]
-        self.properties["retrieval_key"] = None
+        self.properties["filter"] = None
 
     def refresh(self):
         """
@@ -701,46 +701,46 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
 
-        if self.retrieval_key is None:
+        if self.filter is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += "set instance.retrieval_key to a switch ipAddress "
+            msg += "set instance.filter to a switch ipAddress "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.data_subclass.get(self.retrieval_key) is None:
+        if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"{self.retrieval_key} does not exist on the controller."
+            msg += f"{self.filter} does not exist on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.data_subclass[self.retrieval_key].get(item) is None:
+        if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"{self.retrieval_key} unknown property name: {item}."
+            msg += f"{self.filter} unknown property name: {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
-            self.make_boolean(self.data_subclass[self.retrieval_key].get(item))
+            self.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     @property
     def filtered_data(self):
         """
-        Return a dictionary of the switch matching self.retrieval_key.
+        Return a dictionary of the switch matching self.filter.
         Return None if the switch does not exist on the controller.
         """
-        return self.data_subclass.get(self.retrieval_key)
+        return self.data_subclass.get(self.filter)
 
     @property
-    def retrieval_key(self):
+    def filter(self):
         """
         Set the ip_address of the switch to query.
 
         This needs to be set before accessing this class's properties.
         """
-        return self.properties.get("retrieval_key")
+        return self.properties.get("filter")
 
-    @retrieval_key.setter
-    def retrieval_key(self, value):
-        self.properties["retrieval_key"] = value
+    @filter.setter
+    def filter(self, value):
+        self.properties["filter"] = value
 
 
 class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
@@ -752,7 +752,7 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
 
     instance = SwitchIssuDetailsBySerialNumber(module)
     instance.refresh()
-    instance.retrieval_key = "FDO211218GC"
+    instance.filter = "FDO211218GC"
     instance.refresh()
     image_staged = instance.image_staged
     image_upgraded = instance.image_upgraded
@@ -771,7 +771,7 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
     def _init_properties(self):
         super()._init_properties()
         self.method_name = inspect.stack()[0][3]
-        self.properties["retrieval_key"] = None
+        self.properties["filter"] = None
 
     def refresh(self):
         """
@@ -789,25 +789,25 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
 
-        if self.retrieval_key is None:
+        if self.filter is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += "set instance.retrieval_key to a switch serialNumber "
+            msg += "set instance.filter to a switch serialNumber "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.data_subclass.get(self.retrieval_key) is None:
+        if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"{self.retrieval_key} does not exist "
+            msg += f"{self.filter} does not exist "
             msg += "on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.data_subclass[self.retrieval_key].get(item) is None:
+        if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"{self.retrieval_key} unknown property name: {item}."
+            msg += f"{self.filter} unknown property name: {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
-            self.make_boolean(self.data_subclass[self.retrieval_key].get(item))
+            self.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     @property
@@ -816,20 +816,20 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         Return a dictionary of the switch matching self.serial_number.
         Return None of the switch does not exist in NDFC.
         """
-        return self.data_subclass.get(self.retrieval_key)
+        return self.data_subclass.get(self.filter)
 
     @property
-    def retrieval_key(self):
+    def filter(self):
         """
         Set the serial_number of the switch to query.
 
         This needs to be set before accessing this class's properties.
         """
-        return self.properties.get("retrieval_key")
+        return self.properties.get("filter")
 
-    @retrieval_key.setter
-    def retrieval_key(self, value):
-        self.properties["retrieval_key"] = value
+    @filter.setter
+    def filter(self, value):
+        self.properties["filter"] = value
 
 
 class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
@@ -841,7 +841,7 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
 
     instance = SwitchIssuDetailsByDeviceName(module)
     instance.refresh()
-    instance.retrieval_key = "leaf_1"
+    instance.filter = "leaf_1"
     image_staged = instance.image_staged
     image_upgraded = instance.image_upgraded
     ip_address = instance.ip_address
@@ -859,7 +859,7 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
     def _init_properties(self):
         super()._init_properties()
         method_name = inspect.stack()[0][3]
-        self.properties["retrieval_key"] = None
+        self.properties["filter"] = None
 
     def refresh(self):
         """
@@ -876,44 +876,44 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
 
-        if self.retrieval_key is None:
+        if self.filter is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += "set instance.retrieval_key to a switch deviceName "
+            msg += "set instance.filter to a switch deviceName "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.data_subclass.get(self.retrieval_key) is None:
+        if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"{self.retrieval_key} does not exist "
+            msg += f"{self.filter} does not exist "
             msg += "on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.data_subclass[self.retrieval_key].get(item) is None:
+        if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += f"{self.retrieval_key} unknown property name: {item}."
+            msg += f"{self.filter} unknown property name: {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
-            self.make_boolean(self.data_subclass[self.retrieval_key].get(item))
+            self.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     @property
     def filtered_data(self):
         """
-        Return a dictionary of the switch matching self.retrieval_key.
+        Return a dictionary of the switch matching self.filter.
         Return None of the switch does not exist in NDFC.
         """
-        return self.data_subclass.get(self.retrieval_key)
+        return self.data_subclass.get(self.filter)
 
     @property
-    def retrieval_key(self):
+    def filter(self):
         """
         Set the device_name of the switch to query.
 
         This needs to be set before accessing this class's properties.
         """
-        return self.properties.get("retrieval_key")
+        return self.properties.get("filter")
 
-    @retrieval_key.setter
-    def retrieval_key(self, value):
-        self.properties["retrieval_key"] = value
+    @filter.setter
+    def filter(self, value):
+        self.properties["filter"] = value
