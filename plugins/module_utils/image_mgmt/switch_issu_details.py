@@ -123,19 +123,19 @@ class SwitchIssuDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         data = self.response.get("DATA").get("lastOperDataObject")
 
         if data is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "The controller has no switch ISSU information."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if len(data) == 0:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "The controller has no switch ISSU information."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["response_data"] = self.response.get("DATA", {}).get(
             "lastOperDataObject", []
@@ -705,17 +705,17 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "set instance.ip_address before accessing "
             msg += f"property {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.ip_address) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.ip_address} does not exist on the controller."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.ip_address].get(item) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.ip_address} unknown property name: {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.ip_address].get(item))
@@ -793,18 +793,18 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "set instance.serial_number before "
             msg += f"accessing property {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.serial_number) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.serial_number} does not exist "
             msg += "on the controller."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.serial_number].get(item) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.serial_number} unknown property name: {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.serial_number].get(item))
@@ -880,18 +880,18 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "set instance.device_name before "
             msg += f"accessing property {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.device_name) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.device_name} does not exist "
             msg += "on the controller."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.device_name].get(item) is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.device_name} unknown property name: {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.device_name].get(item))

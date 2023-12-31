@@ -149,3 +149,63 @@ class ImageUpgradeCommon:
         if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
             return None
         return value
+
+    @property
+    def failed_result(self):
+        """
+        return a result for a failed task with no changes
+        """
+        result = {}
+        result["changed"] = False
+        result["diff"] = []
+        return result
+
+    @property
+    def changed(self):
+        """
+        bool = whether we changed anything
+        """
+        return self.properties["changed"]
+
+    @changed.setter
+    def changed(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"changed must be a bool. Got {value}"
+            self.ansible_module.fail_json(msg)
+        self.properties["changed"] = value
+
+    @property
+    def diff(self):
+        """
+        List of dicts representing the changes made
+        """
+        return self.properties["diff"]
+
+    @diff.setter
+    def diff(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"diff must be a dict. Got {value}"
+            self.ansible_module.fail_json(msg)
+        self.properties["diff"].append(value)
+
+    @property
+    def failed(self):
+        """
+        bool = whether we failed or not
+        If True, this means we failed to make a change
+        If False, this means we succeeded in making a change
+        """
+        return self.properties["failed"]
+
+    @failed.setter
+    def failed(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"failed must be a bool. Got {value}"
+            self.ansible_module.fail_json(msg)
+        self.properties["failed"] = value

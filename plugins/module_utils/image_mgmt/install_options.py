@@ -172,13 +172,13 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling refresh()"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.serial_number is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_number must be set before "
             msg += "calling refresh()"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         # At least one of epld, issu, or package_install must be True
         # before calling refresh() or the controller will return an error.
@@ -211,14 +211,14 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg += "Bad result when retrieving install-options from "
             msg += f"the controller. Controller response: {self.response}. "
             if self.response_data.get("error", None) is None:
-                self.module.fail_json(msg)
+                self.module.fail_json(msg, **self.failed_result)
             if "does not have package to continue" in self.response_data.get(
                 "error", ""
             ):
                 msg += f"Possible cause: Image policy {self.policy_name} does not have "
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
@@ -271,7 +271,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"policy_name must be a string. Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["policy_name"] = value
 
     @property
@@ -304,7 +304,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"issu must be a boolean value. Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["issu"] = value
 
     @property
@@ -326,7 +326,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"epld must be a boolean value. Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["epld"] = value
 
     @property
@@ -348,7 +348,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "package_install must be a boolean value. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["package_install"] = value
 
     # Retrievable properties

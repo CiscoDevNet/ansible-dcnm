@@ -112,7 +112,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
                     msg += f"{self.switch_issu_details.device_name}. "
                     msg += "Please verify that the switch is managed by "
                     msg += "the controller."
-                    self.module.fail_json(msg)
+                    self.module.fail_json(msg, **self.failed_result)
             self.payloads.append(payload)
 
     def validate_request(self):
@@ -125,13 +125,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.action must be set before "
             msg += "calling commit()"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.policy_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling commit()"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.action == "query":
             return
@@ -140,7 +140,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.image_policies.refresh()
         self.switch_issu_details.refresh()
@@ -155,7 +155,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
                 msg += f"{self.switch_issu_details.platform}. {self.policy_name} "
                 msg += "supports the following platform(s): "
                 msg += f"{self.image_policies.platform}"
-                self.module.fail_json(msg)
+                self.module.fail_json(msg, **self.failed_result)
 
     def commit(self):
         """
@@ -176,7 +176,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         else:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Unknown action {self.action}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
     def _attach_policy(self):
         """
@@ -211,7 +211,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Bad result when attaching policy {self.policy_name} "
                 msg += f"to switch {payload['ipAddr']}."
-                self.module.fail_json(msg)
+                self.module.fail_json(msg, **self.failed_result)
 
             responses.append(response)
             results.append(result)
@@ -245,7 +245,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when detaching policy {self.policy_name} "
             msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
     def _query_policy(self):
         """
@@ -266,7 +266,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when querying image policy {self.policy_name}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["query_result"] = self.response.get("DATA")
 
@@ -297,7 +297,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += "instance.action must be one of "
             msg += f"{','.join(sorted(self.valid_actions))}. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["action"] = value
 
@@ -355,5 +355,5 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["serial_numbers"] = value

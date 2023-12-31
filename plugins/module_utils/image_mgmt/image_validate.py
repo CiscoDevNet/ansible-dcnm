@@ -134,7 +134,7 @@ class ImageValidate(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.serial_number}. "
                 msg += "If this persists, check the switch connectivity to "
                 msg += "the controller and try again."
-                self.module.fail_json(msg)
+                self.module.fail_json(msg, **self.failed_result)
 
     def build_payload(self) -> None:
         """
@@ -157,7 +157,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "call instance.serial_numbers before "
             msg += "calling commit."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if len(self.serial_numbers) == 0:
             return
@@ -176,7 +176,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_validate_to_complete()
@@ -200,6 +200,7 @@ class ImageValidate(ImageUpgradeCommon):
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
+
                 self.issu_detail.serial_number = serial_number
                 self.issu_detail.refresh()
 
@@ -213,7 +214,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
     def _wait_for_image_validate_to_complete(self) -> None:
         """
@@ -252,7 +253,7 @@ class ImageValidate(ImageUpgradeCommon):
                     msg += "check Operations > Image Management > "
                     msg += "Devices > View Details > Validate on the "
                     msg += "controller GUI for more details."
-                    self.module.fail_json(msg)
+                    self.module.fail_json(msg, **self.failed_result)
 
                 if validated_status == "Success":
                     self.serial_numbers_done.add(serial_number)
@@ -264,7 +265,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
     @property
     def serial_numbers(self) -> List[str]:
@@ -284,7 +285,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["serial_numbers"] = value
 
@@ -304,7 +305,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.non_disruptive must be a boolean. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["non_disruptive"] = value
 
@@ -353,7 +354,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.check_interval must be an integer. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["check_interval"] = value
 
@@ -378,5 +379,5 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.check_timeout must be an integer. "
             msg += f"Got {value}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value

@@ -84,7 +84,7 @@ class SwitchDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.response}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         data = self.response.get("DATA")
         self.properties["response_data"] = {}
@@ -98,17 +98,17 @@ class SwitchDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "set instance.ip_address before accessing "
             msg += f"property {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.ip_address not in self.properties["response_data"]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.ip_address} does not exist on the controller."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if item not in self.properties["response_data"][self.ip_address]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.ip_address} does not have a key named {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         return self.make_boolean(
             self.make_none(self.properties["response_data"][self.ip_address].get(item))

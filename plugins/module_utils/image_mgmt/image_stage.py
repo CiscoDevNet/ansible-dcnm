@@ -165,7 +165,7 @@ class ImageStage(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.serial_number}. "
                 msg += "Check the switch connectivity to the controller "
                 msg += "and try again."
-                self.module.fail_json(msg)
+                self.module.fail_json(msg, **self.failed_result)
 
     def commit(self):
         """
@@ -178,7 +178,7 @@ class ImageStage(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.serial_numbers "
             msg += "before calling commit."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if len(self.serial_numbers) == 0:
             return
@@ -208,7 +208,7 @@ class ImageStage(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_stage_to_complete()
@@ -246,7 +246,7 @@ class ImageStage(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
     def _wait_for_image_stage_to_complete(self):
         """
@@ -278,7 +278,7 @@ class ImageStage(ImageUpgradeCommon):
                     msg += f"Seconds remaining {timeout}: stage image failed "
                     msg += f"for {device_name}, {serial_number}, {ip_address}. "
                     msg += f"image staged percent: {staged_percent}"
-                    self.module.fail_json(msg)
+                    self.module.fail_json(msg, **self.failed_result)
 
                 if staged_status == "Success":
                     self.serial_numbers_done.add(serial_number)
@@ -290,7 +290,7 @@ class ImageStage(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
     @property
     def serial_numbers(self):
@@ -308,7 +308,7 @@ class ImageStage(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["serial_numbers"] = value
 
     @property
@@ -347,7 +347,7 @@ class ImageStage(ImageUpgradeCommon):
         if not isinstance(value, int):
             msg = f"{self.__class__.__name__}: instance.check_interval must "
             msg += "be an integer."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
 
     @property
@@ -362,5 +362,5 @@ class ImageStage(ImageUpgradeCommon):
         if not isinstance(value, int):
             msg = f"{self.__class__.__name__}: instance.check_timeout must "
             msg += "be an integer."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value

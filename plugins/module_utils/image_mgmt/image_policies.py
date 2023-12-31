@@ -19,6 +19,8 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import copy
+from typing import Dict, Any, AnyStr
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -61,6 +63,7 @@ class ImagePolicies(ImageUpgradeCommon):
     def _init_properties(self):
         self.method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties = {}
+        self.properties["all_policies"] = None
         self.properties["policy_name"] = None
         self.properties["response_data"] = None
         self.properties["response"] = None
@@ -82,7 +85,7 @@ class ImagePolicies(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retriving image policy "
             msg += "information from the controller."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         data = self.response.get("DATA").get("lastOperDataObject")
 
@@ -90,24 +93,26 @@ class ImagePolicies(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad response when retrieving image policy "
             msg += "information from the controller."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if len(data) == 0:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "the controller has no defined image policies."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         self.properties["response_data"] = {}
-
+        self.properties["all_policies"] = {}
         for policy in data:
             policy_name = policy.get("policyName")
 
             if policy_name is None:
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += "Cannot parse policy information from the controller."
-                self.module.fail_json(msg)
+                self.module.fail_json(msg, **self.failed_result)
 
             self.properties["response_data"][policy_name] = policy
+
+        self.properties["all_policies"] = copy.deepcopy(self.properties["response_data"])
 
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
@@ -116,7 +121,7 @@ class ImagePolicies(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.policy_name must be set before "
             msg += f"accessing property {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         if self.policy_name not in self.properties["response_data"]:
             return None
@@ -127,11 +132,21 @@ class ImagePolicies(ImageUpgradeCommon):
         if item not in self.properties["response_data"][self.policy_name]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.policy_name} does not have a key named {item}."
-            self.module.fail_json(msg)
+            self.module.fail_json(msg, **self.failed_result)
 
         return self.make_boolean(
             self.make_none(self.properties["response_data"][self.policy_name][item])
         )
+
+
+    @property
+    def all_policies(self) -> Dict[AnyStr, Any]:
+        """
+        Return dict containing all policies, keyed on policy_name
+        """
+        if self.properties["all_policies"] is None:
+            return {}
+        return self.properties["all_policies"]
 
     @property
     def description(self):
