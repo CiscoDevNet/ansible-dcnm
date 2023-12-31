@@ -252,7 +252,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._build_payload_reboot_options(device)
         self._build_payload_package(device)
 
-
     def _build_payload_issu_upgrade(self, device) -> None:
         """
         Build the issuUpgrade portion of the payload.
