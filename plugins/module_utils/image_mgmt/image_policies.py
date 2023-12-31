@@ -18,9 +18,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
-import inspect
 import copy
-from typing import Dict, Any, AnyStr
+import inspect
+from typing import Any, AnyStr, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -112,7 +112,9 @@ class ImagePolicies(ImageUpgradeCommon):
 
             self.properties["response_data"][policy_name] = policy
 
-        self.properties["all_policies"] = copy.deepcopy(self.properties["response_data"])
+        self.properties["all_policies"] = copy.deepcopy(
+            self.properties["response_data"]
+        )
 
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
@@ -137,7 +139,6 @@ class ImagePolicies(ImageUpgradeCommon):
         return self.make_boolean(
             self.make_none(self.properties["response_data"][self.policy_name][item])
         )
-
 
     @property
     def all_policies(self) -> Dict[AnyStr, Any]:
