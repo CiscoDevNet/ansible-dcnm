@@ -65,11 +65,11 @@ class MockAnsibleModule:
     supports_check_mode = True
 
     @staticmethod
-    def fail_json(msg) -> AnsibleFailJson:
+    def fail_json(msg, **kwargs) -> AnsibleFailJson:
         """
         mock the fail_json method
         """
-        raise AnsibleFailJson(msg)
+        raise AnsibleFailJson(msg, kwargs)
 
     def public_method_for_pylint(self) -> Any:
         """
