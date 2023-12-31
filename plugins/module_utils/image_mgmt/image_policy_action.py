@@ -96,7 +96,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
-            self.switch_issu_details.serial_number = serial_number
+            self.switch_issu_details.retrieval_key = serial_number
             payload = {}
             payload["policyName"] = self.policy_name
             payload["hostName"] = self.switch_issu_details.device_name
@@ -148,7 +148,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         # Fail if the image policy does not support the switch platform
         self.image_policies.policy_name = self.policy_name
         for serial_number in self.serial_numbers:
-            self.switch_issu_details.serial_number = serial_number
+            self.switch_issu_details.retrieval_key = serial_number
             if self.switch_issu_details.platform not in self.image_policies.platform:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"policy {self.policy_name} does not support platform "

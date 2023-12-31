@@ -573,7 +573,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
         self.log.log_msg(msg)
 
-        self.have.ip_address = want["ip_address"]
+        self.have.retrieval_key = want["ip_address"]
 
         want["policy_changed"] = True
         # The switch does not have an image policy attached.
@@ -664,7 +664,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.log.log_msg(msg)
 
         for want in self.want:
-            self.have.ip_address = want["ip_address"]
+            self.have.retrieval_key = want["ip_address"]
 
             msg = f"DEBUG: {self.class_name}.{method_name}: "
             msg += f"self.have.serial_number: {self.have.serial_number}"
@@ -708,7 +708,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         need = []
         for want in self.want:
-            self.have.ip_address = want["ip_address"]
+            self.have.retrieval_key = want["ip_address"]
             if self.have.serial_number is None:
                 continue
             if self.have.policy is None:
@@ -1270,7 +1270,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.switch_details.ip_address = switch.get("ip_address")
             device = {}
             device["serial_number"] = self.switch_details.serial_number
-            self.have.ip_address = self.switch_details.ip_address
+            self.have.retrieval_key = self.switch_details.ip_address
             device["policy_name"] = switch.get("policy")
             device["ip_address"] = self.switch_details.ip_address
 
@@ -1337,7 +1337,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         query_devices: List[Dict[str, Any]] = []
         for switch in self.need:
-            instance.ip_address = switch.get("ip_address")
+            instance.retrieval_key = switch.get("ip_address")
             if instance.filtered_data is None:
                 continue
             query_devices.append(instance.filtered_data)

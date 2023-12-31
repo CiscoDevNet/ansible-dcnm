@@ -104,7 +104,7 @@ class ImageValidate(ImageUpgradeCommon):
         self.issu_detail.refresh()
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
-            self.issu_detail.serial_number = serial_number
+            self.issu_detail.retrieval_key = serial_number
             if self.issu_detail.validated == "Success":
                 self.serial_numbers.remove(self.issu_detail.serial_number)
 
@@ -124,7 +124,7 @@ class ImageValidate(ImageUpgradeCommon):
         self.method_name = inspect.stack()[0][3]
 
         for serial_number in self.serial_numbers:
-            self.issu_detail.serial_number = serial_number
+            self.issu_detail.retrieval_key = serial_number
             self.issu_detail.refresh()
             if self.issu_detail.validated == "Failed":
                 msg = f"{self.class_name}.{self.method_name}: "
@@ -201,7 +201,7 @@ class ImageValidate(ImageUpgradeCommon):
                 if serial_number in self.serial_numbers_done:
                     continue
 
-                self.issu_detail.serial_number = serial_number
+                self.issu_detail.retrieval_key = serial_number
                 self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
@@ -234,7 +234,7 @@ class ImageValidate(ImageUpgradeCommon):
                 if serial_number in self.serial_numbers_done:
                     continue
 
-                self.issu_detail.serial_number = serial_number
+                self.issu_detail.retrieval_key = serial_number
                 self.issu_detail.refresh()
 
                 ip_address = self.issu_detail.ip_address
