@@ -33,8 +33,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy
     ImagePolicyAction
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
-    Payload2Config, Config2Payload, Payload
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
+    Config2Payload, Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
@@ -44,12 +44,29 @@ class MockAnsibleModule:
     Mock the AnsibleModule class
     """
 
-    params = {"config": {"switches": [{"ip_address": "172.22.150.105"}]}}
+    params = {
+        "state": "merged",
+        "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+    }
     argument_spec = {
         "config": {"required": True, "type": "dict"},
         "state": {"default": "merged", "choices": ["merged", "deleted", "query"]},
     }
     supports_check_mode = True
+
+    @property
+    def state(self):
+        """
+        return the state
+        """
+        return self.params["state"]
+
+    @state.setter
+    def state(self, value):
+        """
+        set the state
+        """
+        self.params["state"] = value
 
     @staticmethod
     def fail_json(msg) -> AnsibleFailJson:
@@ -201,4 +218,3 @@ def data_payload(key: str) -> Dict[str, str]:
     response = load_fixture(response_file).get(key)
     print(f"data_payload: {key} : {response}")
     return response
-
