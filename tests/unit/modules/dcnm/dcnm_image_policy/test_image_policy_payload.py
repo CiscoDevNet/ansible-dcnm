@@ -26,24 +26,21 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from typing import Any, Dict
 import json
+from typing import Any, Dict
 
 # import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
-    Payload2Config, Config2Payload
-
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
+    Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import \
-    (does_not_raise, 
-                    config2payload_fixture,
-                    payload2config_fixture,
-                    MockAnsibleModule)
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
+    MockAnsibleModule, config2payload_fixture, does_not_raise,
+    payload2config_fixture)
 
 
 def test_image_policy_payload_00110(config2payload: Config2Payload) -> None:
@@ -125,6 +122,8 @@ def test_image_policy_payload_00121(config2payload: Config2Payload) -> None:
     config = data.get(key, {}).get("config")
     payload = data.get(key, {}).get("payload")
     with does_not_raise():
+        ansible_module = MockAnsibleModule()
+        ansible_module.state = "merged"
         instance = config2payload
         instance.config = config
         instance.commit()

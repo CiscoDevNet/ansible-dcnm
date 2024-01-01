@@ -108,4 +108,3 @@ def test_image_mgmt_api_00060() -> None:
     endpoints = ApiEndpoints()
     assert endpoints.policy_info.get("verb") == "GET"
     assert endpoints.policy_info.get("path") == path
-
