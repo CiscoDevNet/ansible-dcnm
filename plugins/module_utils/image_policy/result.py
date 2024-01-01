@@ -33,13 +33,29 @@ class Result:
     result.deleted = deleted.diff    # Appends to deleted-state changes
     result.merged = merged.diff  # Appends to deleted-state changes
     etc for other states
-    result.changed = deleted.changed or merged.changed or etc
+    result = result.result
+
+    print(result)
+
+    # output will be a dict with the following structure:
+    {
+        "changed": True, # or False
+        "diff": [
+            {
+                "deleted": [<list of dict representing changes for deleted state>],
+                "merged": [<list of dict representing changes for merged state>],
+                "overridden": [<list of dict representing changes for overridden state>],
+                "query": [<list of dict representing changes for query state>],
+                "replaced": [<list of dict representing changes for replaced state>]
+            }
+        ]
+    }
     """
 
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
-        self.states = ["deleted", "merged", "overridden", "replaced", "query"]
+        self.states = ["deleted", "merged", "overridden", "query", "replaced"]
         self._build_properties()
 
     def _build_properties(self):
@@ -136,8 +152,7 @@ class Result:
         """
         result = {}
         result["changed"] = self.did_anything_change()
-        result["diff"] = []
+        result["diff"] = {}
         for state in self.states:
-            if len(self.properties[state]) != 0:
-                result["diff"].append(self.properties[state])
+            result["diff"][state] = self.properties[state]
         return result
