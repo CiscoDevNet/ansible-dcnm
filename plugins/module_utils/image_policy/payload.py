@@ -21,13 +21,17 @@ __author__ = "Allen Robel"
 import inspect
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
+    ImagePolicyCommon
 
-class Payload:
+
+class Payload(ImagePolicyCommon):
     """
     Base class for Config2Payload and Payload2Config
     """
 
     def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
 
@@ -98,7 +102,7 @@ class Config2Payload(Payload):
         if self.properties["config"] == {}:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is empty"
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.ansible_module.params["state"] == "deleted":
             self.properties["payload"]["policyName"] = self.properties["config"]["name"]
@@ -174,23 +178,3 @@ class Payload2Config(Payload):
             ]["rpmimages"].split(",")
         else:
             self.properties["config"]["packages"]["uninstall"] = []
-
-
-def example_build_payloads(validated_configs) -> None:
-    """
-    Example usage for Config2Payload
-
-    generate the payload for each image policy in
-    validated_configs.
-    """
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common import \
-        AndibleModule
-
-    ansible_module = AndibleModule()
-    config_to_payload = Config2Payload(ansible_module)
-    payloads = []
-    for config in validated_configs:
-        config_to_payload.config = config
-        config_to_payload.commit()
-        payloads.append(config_to_payload.payload)
-    return payloads
