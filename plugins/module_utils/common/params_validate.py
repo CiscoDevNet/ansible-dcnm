@@ -83,7 +83,7 @@ class ParamsValidate:
         self.validation = validation
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug(f"ENTERED")
+        self.log.debug("ENTERED")
 
         self._build_properties()
         self._build_reserved_params()

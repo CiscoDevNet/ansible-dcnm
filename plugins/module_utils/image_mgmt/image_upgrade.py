@@ -136,7 +136,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.class_name = __class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug(f"ENTERED")
+        self.log.debug("ENTERED")
 
         self.endpoints = ApiEndpoints()
         self.ipv4_done = set()
@@ -856,7 +856,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, int):
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"instance.check_interval must be an integer."
+            msg = "instance.check_interval must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
 
@@ -872,7 +872,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, int):
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"instance.check_timeout must be an integer."
+            msg = "instance.check_timeout must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value
 

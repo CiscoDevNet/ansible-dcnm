@@ -77,7 +77,7 @@ class Log:
                 dictConfig(self.config)
                 return
             except ValueError as err:
-                msg = f"error configuring logging from dict. "
+                msg = "error configuring logging from dict. "
                 msg += f"detail: {err}"
                 self.ansible_module.fail_json(msg=msg)
 

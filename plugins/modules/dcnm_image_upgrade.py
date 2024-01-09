@@ -1295,7 +1295,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        self.log.debug(f"ENTERED")
+        self.log.debug("ENTERED")
 
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
