@@ -21,10 +21,35 @@ __author__ = "Allen Robel"
 import logging
 from logging.config import dictConfig
 
-import yaml
+import json
 
 
 class Log:
+    """
+    Create the base dcnm logging object.
+
+    Usage (where ansible_module is an instance of AnsibleModule):
+
+    Below, config.json is a logging config file in JSON format conformant
+    with Python's logging.config.dictConfig.  The file can be located
+    anywhere on the filesystem.  See the following for an example:
+
+    cisco/dcnm/plugins/module_utils/common/logging_config.json
+
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+    log = Log(ansible_module)
+    log.config = "/path/to/logging/config.json"
+    log.commit()
+
+    At this point, a base/parent logger is created for which all other
+    loggers throughout the dcnm collection will be children.
+    This allows for a single logging config to be used for all dcnm
+    modules, and allows for the logging config to be specified in a
+    single place external to the code.
+
+    If log.config is set to None (which is the default if it's not explictely set),
+    then logging is disabled.
+    """
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
@@ -58,7 +83,7 @@ class Log:
 
         try:
             with open(self.config, "r") as file:
-                logging_config = yaml.safe_load(file)
+                logging_config = json.load(file)
         except IOError as err:
             msg = f"error reading logging config from {self.config}. "
             msg += f"detail: {err}"
@@ -71,7 +96,7 @@ class Log:
         Can be either:
 
         1.  None, in which case logging is disabled
-        2.  A YAML file from which logging config is read.
+        2.  A JSON file from which logging config is read.
             Must conform to logging.config.dictConfig
         3.  A dictionary containing logging config
             Must conform to logging.config.dictConfig

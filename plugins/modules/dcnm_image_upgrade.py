@@ -1348,15 +1348,15 @@ def main():
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
-    # Create the base dcnm logger
+    # Create the base/parent logger for the dcnm collection.
     # To disable logging, comment out log.config = <file_path> below
-    # log.config can be either a dictionary, or a path to a yaml file
-    # Both dictionary and yaml file formats must be conformant with
+    # log.config can be either a dictionary, or a path to a JSON file
+    # Both dictionary and JSON file formats must be conformant with
     # logging.config.dictConfig and must not log to the console.
     # For an example configuration, see:
-    # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/log.yaml
+    # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # log.config = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm/plugins/module_utils/common/log.yaml"
+    # log.config = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm/plugins/module_utils/common/logging_config.json"
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)
