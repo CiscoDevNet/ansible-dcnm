@@ -51,7 +51,7 @@ class Log:
     then logging is disabled.
     """
     def __init__(self, ansible_module):
-        self.class_name = self.__class__.__name__
+        self.class_name = type(self).__name__
         self.ansible_module = ansible_module
 
         self._build_properties()

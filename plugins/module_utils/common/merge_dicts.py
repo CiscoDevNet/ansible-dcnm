@@ -49,7 +49,7 @@ class MergeDicts:
     """
 
     def __init__(self, ansible_module):
-        self.class_name = self.__class__.__name__
+        self.class_name = type(self).__name__
         self.ansible_module = ansible_module
 
         self.log = Log(self.ansible_module)

@@ -139,7 +139,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     def __init__(self, module) -> None:
         super().__init__(module)
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
         self.endpoints = ApiEndpoints()
 
         self.path = self.endpoints.install_options.get("path")

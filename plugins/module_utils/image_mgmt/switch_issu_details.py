@@ -89,7 +89,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED")
@@ -679,7 +679,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED")
@@ -769,7 +769,7 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
     def __init__(self, module):
         super().__init__(module)
 
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED")
@@ -861,7 +861,7 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
     def __init__(self, module):
         super().__init__(module)
 
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED")

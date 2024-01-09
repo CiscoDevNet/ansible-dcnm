@@ -452,7 +452,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
         method_name = inspect.stack()[0][3]
 
         self.endpoints = ApiEndpoints()
@@ -505,8 +505,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Update self.want for all switches defined in the playbook
         """
-        method_name = inspect.stack()[0][3]
-
         msg = "Calling _merge_global_and_switch_configs with "
         msg += f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -568,8 +566,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         and the information returned by ImageInstallOptions.
 
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         msg = f"want: {json.dumps(want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -1356,7 +1352,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # log.config = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm/plugins/module_utils/common/logging_config.json"
+    # COLLECTION_PATH="/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    # CONFIG_FILE=f"{COLLECTION_PATH}/plugins/module_utils/common/logging_config.json"
+    # log.config = CONFIG_FILE
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)

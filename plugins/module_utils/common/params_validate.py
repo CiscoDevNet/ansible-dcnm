@@ -78,7 +78,7 @@ class ParamsValidate:
     """
 
     def __init__(self, ansible_module):
-        self.class_name = __class__.__name__
+        self.class_name = type(self).__name__
         self.ansible_module = ansible_module
         self.validation = validation
 

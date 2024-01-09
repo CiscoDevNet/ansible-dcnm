@@ -50,15 +50,12 @@ class SwitchDetails(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.method_name = inspect.stack()[0][3]
+        self.class_name = type(self).__name__
 
-        self.class_name = __class__.__name__
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
-        self.method_name = inspect.stack()[0][3]
-
         # self.properties is already initialized in the parent class
         self.properties["ip_address"] = None
         self.properties["response_data"] = None
@@ -72,7 +69,7 @@ class SwitchDetails(ImageUpgradeCommon):
         Refresh switch_details with current switch details from
         the controller.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         path = self.endpoints.switches_info.get("path")
         verb = self.endpoints.switches_info.get("verb")
@@ -81,7 +78,7 @@ class SwitchDetails(ImageUpgradeCommon):
         self.properties["result"] = self._handle_response(self.response, verb)
 
         if self.response["RETURN_CODE"] != 200:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.response}"
             self.module.fail_json(msg, **self.failed_result)
@@ -92,21 +89,21 @@ class SwitchDetails(ImageUpgradeCommon):
             self.properties["response_data"][switch["ipAddress"]] = switch
 
     def _get(self, item):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.ip_address is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.ip_address before accessing "
             msg += f"property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.ip_address not in self.properties["response_data"]:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.ip_address} does not exist on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
         if item not in self.properties["response_data"][self.ip_address]:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.ip_address} does not have a key named {item}."
             self.module.fail_json(msg, **self.failed_result)
 

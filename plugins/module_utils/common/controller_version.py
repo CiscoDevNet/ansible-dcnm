@@ -66,7 +66,7 @@ class ControllerVersion(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
+        self.class_name = type(self).__name__
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
