@@ -22,6 +22,7 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import json
+import logging
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
@@ -44,6 +45,9 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED ImagePolicyUpdateCommon()")
 
         self.endpoints = ApiEndpoints()
 
@@ -206,6 +210,9 @@ class ImagePolicyUpdateBulk(ImagePolicyUpdateCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED ImagePolicyUpdateBulk()")
+
         self._build_properties()
         self.endpoints = ApiEndpoints()
 
@@ -295,6 +302,9 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyUpdate()")
+
         self._mandatory_keys = set()
         self._mandatory_keys.add("policyName")
 
@@ -318,7 +328,6 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
 
     @payload.setter
     def payload(self, value):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._verify_payload(value)
         self.properties["payload"] = value
 

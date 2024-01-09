@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import logging
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
@@ -34,6 +35,9 @@ class Payload(ImagePolicyCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED Payload()")
 
         self._build_properties()
 
@@ -91,7 +95,9 @@ class Config2Payload(Payload):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED Config2Payload()")
 
     def commit(self):
         """
@@ -104,7 +110,7 @@ class Config2Payload(Payload):
             msg += "config is empty"
             self.ansible_module.fail_json(msg, **self.failed_result)
 
-        if self.ansible_module.params["state"] == "deleted":
+        if self.ansible_module.params["state"] in ["deleted", "query"]:
             self.properties["payload"]["policyName"] = self.properties["config"]["name"]
             return
         self.properties["payload"]["agnostic"] = self.properties["config"]["agnostic"]
@@ -140,7 +146,9 @@ class Payload2Config(Payload):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED Payload2Config()")
 
     def commit(self):
         """

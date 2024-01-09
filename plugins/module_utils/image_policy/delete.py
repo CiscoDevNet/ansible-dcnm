@@ -22,6 +22,7 @@ __author__ = "Allen Robel"
 import inspect
 import json
 from typing import Any, Dict
+import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
@@ -47,6 +48,9 @@ class ImagePolicyDelete(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyDelete()")
 
         self._build_properties()
         self.endpoints = ApiEndpoints()
@@ -113,15 +117,15 @@ class ImagePolicyDelete(ImagePolicyCommon):
             return
 
         policy_names = policies_to_delete
-        self.log.log_msg(f"Deleting policies {policy_names}")
+        self.log.debug(f"Deleting policies {policy_names}")
+ 
         request_body = {"policyNames": policy_names}
-
         response = dcnm_send(
             self.ansible_module, verb, path, data=json.dumps(request_body)
         )
         result = self._handle_response(response, verb)
 
-        self.log.log_msg(f"response: {response}")
+        self.log.debug(f"response: {response}")
 
         if result["success"]:
             self.changed = True

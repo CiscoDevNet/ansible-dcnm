@@ -22,6 +22,7 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import json
+import logging
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
@@ -82,6 +83,9 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED ImagePolicyReplaceBulk()")
+
         self._build_properties()
         self.endpoints = ApiEndpoints()
 
@@ -107,7 +111,6 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             msg += "payloads must be a list of dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            result = self.failed_skipped_result()
             self.ansible_module.fail_json(msg)
         for item in value:
             if not isinstance(item, dict):
@@ -252,6 +255,9 @@ class ImagePolicyUpdate(ImagePolicyCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED ImagePolicyUpdate()")
+
         self._mandatory_keys = set()
         self._mandatory_keys.add("policyName")
 
@@ -294,7 +300,6 @@ class ImagePolicyUpdate(ImagePolicyCommon):
 
     @payload.setter
     def payload(self, value):
-        method_name = inspect.stack()[0][3]
         self._verify_payload(value)
         self.properties["payload"] = value
 

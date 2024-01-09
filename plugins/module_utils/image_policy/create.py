@@ -23,6 +23,7 @@ import copy
 import inspect
 import json
 from typing import Any, Dict
+import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
@@ -43,6 +44,9 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyCreateCommon()")
 
         self.endpoints = ApiEndpoints()
 
@@ -191,6 +195,9 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyCreateBulk()")
+
         self._build_properties()
 
     def _build_properties(self):
@@ -277,6 +284,9 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyCreate()")
+
         self._build_properties()
 
     def _build_properties(self):
@@ -297,7 +307,6 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
 
     @payload.setter
     def payload(self, value):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._verify_payload(value)
         self.properties["payload"] = value
 

@@ -22,52 +22,59 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import json
-from typing import Any, Dict, List
+import logging
+from typing import Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
-    ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
     ParamsMergeDefaults
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+    ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.result import \
+    Result
 # from ansible_collections.cisco.dcnm.plugins.module_utils.common.mock_ansible_module import \
 #     MockAnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
-
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
+    ImagePolicyCreateBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
+    ImagePolicyDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
     ParamsSpec
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
     Config2Payload
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
-    ImagePolicyCreateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
-    ImagePolicyDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
     ImagePolicyReplaceBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import \
     ImagePolicyUpdateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.result import \
-    Result
+
 
 def json_pretty(msg):
+    """
+    Return a pretty-printed JSON string for logging messages
+    """
     return json.dumps(msg, indent=4, sort_keys=True)
 
-class Task(ImagePolicyCommon):
+
+class ImagePolicyTask(ImagePolicyCommon):
+    """
+    Create, delete, query, replace, or update image policies
+    """
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
-        self.debug = True
-        self.logfile = "/tmp/dcnm_image_policy.log"
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyTask()")
 
         self.endpoints = ApiEndpoints()
         self.have = None
@@ -86,18 +93,18 @@ class Task(ImagePolicyCommon):
 
         self.want = []
         self.need = []
-        # policies which need to be created
+        # policies to created
         self.need_create = []
-        # policies which need to be updated
+        # policies to updated
         self.need_delete = []
-        # policies which need to be deleted
+        # policies to deleted
         self.need_update = []
-        # policies which need to be queried
+        # policies to query
         self.need_query = []
         self.validated_configs = []
 
         self.result = Result(self.ansible_module)
-        self.result.changed = False
+        self.result.result["changed"] = False
 
     def get_have(self) -> None:
         """
@@ -105,8 +112,7 @@ class Task(ImagePolicyCommon):
 
         self.have consists of the current image policies on the controller
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
+        self.log.debug("ENTERED")
         self.have = ImagePolicies(self.ansible_module)
         self.have.refresh()
 
@@ -118,8 +124,7 @@ class Task(ImagePolicyCommon):
         2. Convert the validated configs to payloads
         3. Update self.want with this list of payloads
         """
-        method_name = inspect.stack()[0][3]
-
+        self.log.debug("ENTERED")
         # Generate the params_spec used to validate the configs
         params_spec = ParamsSpec(self.ansible_module)
         params_spec.commit()
@@ -160,7 +165,6 @@ class Task(ImagePolicyCommon):
         """
         Replace all policies on the controller that are in want
         """
-        method_name = inspect.stack()[0][3]
         replaced = ImagePolicyReplaceBulk(self.ansible_module)
         replaced.payloads = self.want
         replaced.commit()
@@ -171,20 +175,15 @@ class Task(ImagePolicyCommon):
         """
         1.  Delete all policies in self.want that exist on the controller
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         delete = ImagePolicyDelete(self.ansible_module)
         policy_names_to_delete = []
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.want: {json_pretty(self.want)}"
-        self.log.log_msg(msg)
         for want in self.want:
             if want["policyName"] in self.have.all_policies:
                 policy_names_to_delete.append(want["policyName"])
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"policy_names_to_delete: {policy_names_to_delete}, type {type(policy_names_to_delete).__name__}"
-        self.log.log_msg(msg)
+        msg = f"policy_names_to_delete: {policy_names_to_delete}, "
+        msg += f"type {type(policy_names_to_delete).__name__}"
+        self.log.debug(msg)
         delete.policy_names = policy_names_to_delete
         delete.commit()
         for diff in delete.diff:
@@ -196,7 +195,6 @@ class Task(ImagePolicyCommon):
 
         Caller: handle_overridden_state()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         want_policy_names = set()
         for want in self.want:
             want_policy_names.add(want["policyName"])
@@ -211,12 +209,19 @@ class Task(ImagePolicyCommon):
         delete.policy_names = policy_names_to_delete
         delete.commit()
 
+    def handle_query_state(self) -> None:
+        """
+        1.  query the policies in self.want that exist on the controller
+        """
+        for want in self.want:
+            if want["policyName"] in self.have.all_policies:
+                self.result.query = self.have.all_policies.get(want["policyName"])
+
     def handle_overridden_state(self) -> None:
         """
         1.  Delete all policies on the controller that are not in self.want
         2.  Call handle_merged_state()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._delete_policies_not_in_want()
         self.handle_merged_state()
 
@@ -234,7 +239,6 @@ class Task(ImagePolicyCommon):
                 are identical, do not append the policy to self.need_update
                 (i.e. do nothing).
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         # new policies to be created
         need_create: List[Dict] = []
         # existing policies to be updated
@@ -272,7 +276,6 @@ class Task(ImagePolicyCommon):
 
         Caller: self._merge_policies()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         # Remove keys that the controller adds which are not part
         # of a request payload.
         for key in ["imageName", "ref_count", "platformPolicies"]:
@@ -284,20 +287,14 @@ class Task(ImagePolicyCommon):
 
         # If keys are not set in both have and want, remove them.
         for key in ["agnostic", "epldImgName", "packageName", "rpmimages"]:
-            if (
-                have.get(key, None) is None
-                and want.get(key, None) is None
-            ):
+            if have.get(key, None) is None and want.get(key, None) is None:
                 have.pop(key, None)
                 want.pop(key, None)
 
-            if (
-                have.get(key, None) == ""
-                and want.get(key, None) == ""
-            ):
+            if have.get(key, None) == "" and want.get(key, None) == "":
                 have.pop(key, None)
                 want.pop(key, None)
-        return(have, want)
+        return (have, want)
 
     def _merge_policies(self, have: Dict, want: Dict) -> Dict:
         """
@@ -305,8 +302,6 @@ class Task(ImagePolicyCommon):
 
         Caller: self.handle_merged_state()
         """
-        method_name = inspect.stack()[0][3]
-
         (have, want) = self._prepare_for_merge(have, want)
 
         # Merge the parameters in want with the parameters in have.
@@ -321,7 +316,7 @@ class Task(ImagePolicyCommon):
 
         if have != merged:
             needs_update = True
-        
+
         return (merged, needs_update)
 
     def send_need_create(self) -> None:
@@ -331,8 +326,6 @@ class Task(ImagePolicyCommon):
         Callers:
         - self.handle_merged_state()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         policy_create = ImagePolicyCreateBulk(self.ansible_module)
         policy_create.payloads = self.need_create
         policy_create.commit()
@@ -346,8 +339,6 @@ class Task(ImagePolicyCommon):
         Callers:
         - self.handle_merged_state()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         bulk_update = ImagePolicyUpdateBulk(self.ansible_module)
         bulk_update.payloads = self.need_update
         bulk_update.commit()
@@ -360,51 +351,67 @@ class Task(ImagePolicyCommon):
         """
         msg = f"{self.class_name}._failure: "
         msg += f"response: {json_pretty(response)}"
-        self.log.log_msg(msg)
+        self.log.error(msg)
         if not response.get("DATA"):
-            self.module.fail_json(response)
+            self.ansible_module.fail_json(response)
         data = response.get("DATA", {})
         if response.get("DATA", {}).get("stackTrace", None):
             data.update(
                 {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
             )
         response.update({"DATA": data})
-        self.module.fail_json(response, self.result.result)
+        self.ansible_module.fail_json(response, self.result.result)
 
 
-parameters = dict()
-parameters["name"] = "NR3F"
-parameters["agnostic"] = False
-parameters["description"] = "image policy of 10.3(3)F"
-parameters["platform"] = "N9K"
-parameters["release"] = "10.3.1_nxos64-cs_64bit"
-parameters["packages"] = {}
-parameters["packages"]["install"] = []
-parameters["packages"]["install"].append("mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm")
-parameters["packages"]["install"].append("some-other-package-install")
-parameters["packages"]["uninstall"] = []
-parameters["packages"]["uninstall"].append("mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000")
-parameters["packages"]["uninstall"].append("some-other-package-uninstall")
-parameters["epld_image"] = "n9000-epld.10.3.2.F.img"
-parameters["disabled_rpm"] = ""
+# parameters = {}
+# parameters["name"] = "NR3F"
+# parameters["agnostic"] = False
+# parameters["description"] = "image policy of 10.3(3)F"
+# parameters["platform"] = "N9K"
+# parameters["release"] = "10.3.1_nxos64-cs_64bit"
+# parameters["packages"] = {}
+# parameters["packages"]["install"] = []
+# parameters["packages"]["install"].append("mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm")
+# parameters["packages"]["install"].append("some-other-package-install")
+# parameters["packages"]["uninstall"] = []
+# parameters["packages"]["uninstall"].append(
+#     "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+# )
+# parameters["packages"]["uninstall"].append("some-other-package-uninstall")
+# parameters["epld_image"] = "n9000-epld.10.3.2.F.img"
+# parameters["disabled_rpm"] = ""
 
 
 def main():
+    """
+    main entry point for module execution
+    """
+
     element_spec = {
         "config": {"required": True, "type": "list"},
-        "state": {"default": "merged", "choices": ["deleted", "merged", "overridden", "query", "replaced"]},
+        "state": {
+            "default": "merged",
+            "choices": ["deleted", "merged", "overridden", "query", "replaced"],
+        },
     }
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
-    # ansible_module.state = "merged"
-    # ansible_module.config = parameters
+    # Create the base/parent logger for the dcnm collection.
+    # To disable logging, comment out log.config = <file_path> below
+    # log.config can be either a dictionary, or a path to a JSON file
+    # Both dictionary and JSON file formats must be conformant with
+    # logging.config.dictConfig and must not log to the console.
+    # For an example configuration, see:
+    # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
+    log = Log(ansible_module)
+    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    log.config = config_file
+    log.commit()
 
-    task_module = Task(ansible_module)
-    task_module.log.log_msg("CALLING task_module.get_want()")
+    task_module = ImagePolicyTask(ansible_module)
     task_module.get_want()
-    task_module.log.log_msg("CALLING task_module.get_have()")
     task_module.get_have()
-    task_module.log.log_msg("CALLING if state == deleted")
     if ansible_module.params["state"] == "deleted":
         task_module.handle_deleted_state()
     elif ansible_module.params["state"] == "merged":
@@ -420,6 +427,7 @@ def main():
         task_module.ansible_module.fail_json(msg)
 
     ansible_module.exit_json(**task_module.result.result)
+
 
 if __name__ == "__main__":
     main()

@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import logging
 from typing import Any, Dict
 
 
@@ -30,6 +31,10 @@ class ParamsSpec:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ParamsSpec()")
+
         self._params_spec: Dict[str, Any] = {}
 
     def commit(self):
@@ -168,6 +173,20 @@ class ParamsSpec:
     def _build_params_spec_for_deleted_state(self) -> None:
         """
         Build the specs for the parameters expected when state == deleted.
+
+        Caller: _validate_configs()
+        Return: params_spec, a dictionary containing playbook
+                parameter specifications.
+        """
+        self._params_spec: Dict[str, Any] = {}
+
+        self._params_spec["name"] = {}
+        self._params_spec["name"]["required"] = True
+        self._params_spec["name"]["type"] = "str"
+
+    def _build_params_spec_for_query_state(self) -> None:
+        """
+        Build the specs for the parameters expected when state == query.
 
         Caller: _validate_configs()
         Return: params_spec, a dictionary containing playbook

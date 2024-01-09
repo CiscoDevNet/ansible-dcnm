@@ -19,9 +19,8 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import logging
 from typing import Any, Dict
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 
 
 class ImagePolicyCommon:
@@ -40,21 +39,16 @@ class ImagePolicyCommon:
 
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImagePolicyCommon()")
 
         self.ansible_module = ansible_module
         self.params = ansible_module.params
 
-        self.log = Log(ansible_module)
-        self.log.debug = True
-        self.log.logfile = "/tmp/dcnm_image_policy.log"
-
         self.properties: Dict[str, Any] = {}
         self.properties["changed"] = False
         self.properties["diff"] = []
-
-        msg = f"{self.class_name}.{method_name}: DONE"
-        self.log.log_msg(msg)
 
     def _handle_response(self, response, verb):
         """
