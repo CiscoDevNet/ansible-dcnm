@@ -19,8 +19,9 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
-    Log
+import logging
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 
 
 class ImageUpgradeCommon:
@@ -36,17 +37,17 @@ class ImageUpgradeCommon:
     """
 
     def __init__(self, module):
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED")
 
         self.module = module
         self.params = module.params
-
-        self.log = Log(module)
-        self.log.debug = False
-        self.log.logfile = "/tmp/dcnm_image_upgrade.log"
-
-        self.module = module
-        self.log.log_msg("ImageUpgradeCommon.__init__ DONE")
+        self.properties = {}
+        self.properties["changed"] = False
+        self.properties["diff"] = []
+        self.properties["failed"] = False
 
     def _handle_response(self, response, verb):
         """
@@ -173,7 +174,7 @@ class ImageUpgradeCommon:
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"changed must be a bool. Got {value}"
-            self.ansible_module.fail_json(msg)
+            self.module.fail_json(msg)
         self.properties["changed"] = value
 
     @property
@@ -189,7 +190,7 @@ class ImageUpgradeCommon:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"diff must be a dict. Got {value}"
-            self.ansible_module.fail_json(msg)
+            self.module.fail_json(msg)
         self.properties["diff"].append(value)
 
     @property
@@ -207,5 +208,5 @@ class ImageUpgradeCommon:
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"failed must be a bool. Got {value}"
-            self.ansible_module.fail_json(msg)
+            self.module.fail_json(msg)
         self.properties["failed"] = value

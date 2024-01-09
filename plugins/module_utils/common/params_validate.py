@@ -20,12 +20,12 @@ __author__ = "Allen Robel"
 
 import inspect
 import ipaddress
+import logging
 from collections.abc import MutableMapping as Map
 from typing import Any, List
 
 from ansible.module_utils.common import validation
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
-    Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 
 
 class ParamsValidate:
@@ -78,13 +78,12 @@ class ParamsValidate:
     """
 
     def __init__(self, ansible_module):
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
         self.ansible_module = ansible_module
         self.validation = validation
 
-        self.log = Log(self.ansible_module)
-        self.log.debug = False
-        self.log.logfile = None
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED")
 
         self._build_properties()
         self._build_reserved_params()
@@ -562,34 +561,6 @@ class ParamsValidate:
         msg += f"'{','.join(sorted(self.valid_expected_types))}'. "
         msg += f"Got '{expected_type}'."
         self.ansible_module.fail_json(msg)
-
-    @property
-    def debug(self):
-        """
-        Enable/disable debugging to self.log.logfile
-        """
-        return self.log.debug
-
-    @debug.setter
-    def debug(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid type for debug. Expected bool. "
-            msg += f"Got {type(value)}."
-            self.ansible_module.fail_json(msg)
-        self.log.debug = value
-
-    @property
-    def logfile(self):
-        """
-        Set file to which debug log is written
-        """
-        return self.log.logfile
-
-    @logfile.setter
-    def logfile(self, value):
-        self.log.logfile = value
 
     @property
     def parameters(self):

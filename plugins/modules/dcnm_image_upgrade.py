@@ -406,12 +406,15 @@ import json
 from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+    MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
     ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts \
-    import MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.result import \
+    Result
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
@@ -449,7 +452,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
         method_name = inspect.stack()[0][3]
 
         self.endpoints = ApiEndpoints()
@@ -479,7 +482,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.want = []
         self.need = []
 
-        self.result = {"changed": False, "diff": [], "response": []}
+        self.result = Result(self.module)
+        self.result.result["changed"] = False
 
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
@@ -503,31 +507,28 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += "Calling _merge_global_and_switch_configs with "
+        msg = "Calling _merge_global_and_switch_configs with "
         msg += f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        self.log.debug(msg)
 
         self._merge_global_and_switch_configs(self.config)
 
         self._merge_defaults_to_switch_configs()
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += "Calling _validate_switch_configs with self.switch_configs: "
+        msg = "Calling _validate_switch_configs with self.switch_configs: "
         msg += f"{json.dumps(self.switch_configs, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        self.log.debug(msg)
 
         self._validate_switch_configs()
 
         self.want = self.switch_configs
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.want: {json.dumps(self.want, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        msg = f"self.want: {json.dumps(self.want, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         if len(self.want) == 0:
-            self.result["changed"] = False
-            self.module.exit_json(**self.result)
+            self.result.result["changed"] = False
+            self.module.exit_json(**self.result.result)
 
     def _build_idempotent_want(self, want) -> None:
         """
@@ -569,9 +570,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        msg = f"want: {json.dumps(want, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         self.have.filter = want["ip_address"]
 
@@ -626,26 +626,22 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         )
         instance.refresh()
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += "Calling ImageInstallOptions.response "
-        msg += "instance.response: "
+        msg = "ImageInstallOptions.response: "
         msg += f"{json.dumps(instance.response_data, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        self.log.debug(msg)
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += "self.idempotent_want PRE EPLD CHECK: "
+        msg = "self.idempotent_want PRE EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        self.log.debug(msg)
 
         # if InstallOptions indicates that EPLD is already upgraded,
         # don't upgrade it again.
         if self.needs_epld_upgrade(instance.epld_modules) is False:
             self.idempotent_want["upgrade"]["epld"] = False
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += "self.idempotent_want POST EPLD CHECK: "
+        msg = "self.idempotent_want POST EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        self.log.debug(msg)
 
     def get_need_merged(self) -> None:
         """
@@ -655,28 +651,24 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         our want list that are not in our have list.  These items will
         be sent to the controller.
         """
-        method_name = inspect.stack()[0][3]
         need: List[Dict] = []
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += "self.want: "
+        msg = "self.want: "
         msg += f"{json.dumps(self.want, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        self.log.debug(msg)
 
         for want in self.want:
             self.have.filter = want["ip_address"]
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"self.have.serial_number: {self.have.serial_number}"
-            self.log.log_msg(msg)
+            msg = f"self.have.serial_number: {self.have.serial_number}"
+            self.log.debug(msg)
 
             if self.have.serial_number is not None:
                 self._build_idempotent_want(want)
 
-                msg = f"DEBUG: {self.class_name}.{method_name}: "
-                msg += "self.idempotent_want: "
+                msg = "self.idempotent_want: "
                 msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
-                self.log.log_msg(msg)
+                self.log.debug(msg)
 
                 test_idempotence = set()
                 test_idempotence.add(self.idempotent_want["policy_changed"])
@@ -704,8 +696,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Policies are detached only if the policy name matches.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         need = []
         for want in self.want:
             self.have.filter = want["ip_address"]
@@ -727,21 +717,20 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         policy name is ignored for query state.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         need = []
         for want in self.want:
             need.append(want)
         self.need = copy.copy(need)
 
     def _build_params_spec(self) -> Dict[str, Any]:
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
         if self.module.params["state"] == "merged":
             return self._build_params_spec_for_merged_state()
         if self.module.params["state"] == "deleted":
             return self._build_params_spec_for_merged_state()
         if self.module.params["state"] == "query":
             return self._build_params_spec_for_query_state()
+
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unsupported state: {self.module.params['state']}"
         self.module.fail_json(msg)
@@ -923,15 +912,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             # because merge_dicts modifies it in place
             global_config = copy.deepcopy(config)
             global_config.pop("switches", None)
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += (
+            msg = (
                 f"global_config: {json.dumps(global_config, indent=4, sort_keys=True)}"
             )
-            self.log.log_msg(msg)
+            self.log.debug(msg)
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
-            self.log.log_msg(msg)
+            msg = f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             merge_dicts = MergeDicts(self.module)
             merge_dicts.dict1 = global_config
@@ -939,9 +926,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             merge_dicts.commit()
             switch_config = merge_dicts.dict_merged
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
-            self.log.log_msg(msg)
+            msg = f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             merged_configs.append(switch_config)
         self.switch_configs = copy.copy(merged_configs)
@@ -951,8 +937,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         For any items in config which are not set, apply the default
         value from params_spec (if a default value exists).
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         configs_to_merge = copy.copy(self.switch_configs)
         merged_configs = []
         merge = ParamsMergeDefaults(self.module)
@@ -972,7 +956,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.get_want
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         validator = ParamsValidate(self.module)
         validator.params_spec = self._build_params_spec()
 
@@ -1048,8 +1031,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.handle_merged_state
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         if len(self.payloads) == 0:
             return
 
@@ -1074,11 +1055,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"serial_numbers: {serial_numbers}"
-        self.log.log_msg(msg)
+        msg = f"serial_numbers: {serial_numbers}"
+        self.log.debug(msg)
 
         instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
@@ -1091,11 +1069,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"serial_numbers: {serial_numbers}"
-        self.log.log_msg(msg)
+        msg = f"serial_numbers: {serial_numbers}"
+        self.log.debug(msg)
 
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
@@ -1145,9 +1120,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         verify_devices = copy.deepcopy(devices)
 
         for device in verify_devices:
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
-            self.log.log_msg(msg)
+            msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             self.switch_details.ip_address = device.get("ip_address")
             install_options.serial_number = self.switch_details.serial_number
@@ -1156,12 +1130,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             install_options.issu = device.get("upgrade", {}).get("nxos", False)
             install_options.refresh()
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += "install_options.response_data: "
+            msg = "install_options.response_data: "
             msg += (
                 f"{json.dumps(install_options.response_data, indent=4, sort_keys=True)}"
             )
-            self.log.log_msg(msg)
+            self.log.debug(msg)
 
             if (
                 install_options.status not in ["Success", "Skipped"]
@@ -1174,16 +1147,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += "NX-OS image"
                 self.module.fail_json(msg)
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"install_options.epld: {install_options.epld}"
-            self.log.log_msg(msg)
+            msg = f"install_options.epld: {install_options.epld}"
+            self.log.debug(msg)
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += "install_options.epld_modules: "
+            msg = "install_options.epld_modules: "
             msg += (
                 f"{json.dumps(install_options.epld_modules, indent=4, sort_keys=True)}"
             )
-            self.log.log_msg(msg)
+            self.log.debug(msg)
 
             if install_options.epld_modules is None and install_options.epld is True:
                 msg = f"{self.class_name}.{method_name}: "
@@ -1205,8 +1176,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - self._build_idempotent_want
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         if epld_modules is None:
             return False
         if epld_modules.get("moduleList") is None:
@@ -1218,14 +1187,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             # of the str when converting to int.  An
             # error is thrown without this.
             if int(new_version, 0) > int(old_version, 0):
-                msg = f"DEBUG: {self.class_name}.{method_name}: "
-                msg += f"(device: {module.get('deviceName')}), "
+                msg = f"(device: {module.get('deviceName')}), "
                 msg += f"(IP: {module.get('ipAddress')}), "
                 msg += f"(module#: {module.get('module')}), "
                 msg += f"(module: {module.get('moduleType')}), "
                 msg += f"new_version {new_version} > old_version {old_version}, "
                 msg += "returning True"
-                self.log.log_msg(msg)
+                self.log.debug(msg)
                 return True
         return False
 
@@ -1236,11 +1204,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         upgrade = ImageUpgrade(self.module)
         upgrade.devices = devices
         upgrade.commit()
+        for diff in upgrade.diff:
+            self.result.merged.append(diff)
 
     def handle_merged_state(self) -> None:
         """
@@ -1251,8 +1219,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         self._build_policy_attach_payload()
         self._send_policy_attach_payload()
 
@@ -1263,9 +1229,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.switch_details.refresh()
 
         for switch in self.need:
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
-            self.log.log_msg(msg)
+            msg = f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             self.switch_details.ip_address = switch.get("ip_address")
             device = {}
@@ -1296,8 +1261,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         detach_policy_devices: Dict[str, Any] = {}
 
         self.switch_details.refresh()
@@ -1314,7 +1277,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             )
 
         if len(detach_policy_devices) == 0:
-            self.result = {"changed": False, "diff": [], "response": []}
+            self.result.result["changed"] = False
             return
 
         instance = ImagePolicyAction(self.module)
@@ -1323,6 +1286,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             instance.action = "detach"
             instance.serial_numbers = value
             instance.commit()
+        for diff in instance.diff:
+            self.result.deleted = diff
 
     def handle_query_state(self) -> None:
         """
@@ -1330,21 +1295,16 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self.log.debug(f"ENTERED")
 
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
 
-        query_devices: List[Dict[str, Any]] = []
         for switch in self.need:
             instance.filter = switch.get("ip_address")
             if instance.filtered_data is None:
                 continue
-            query_devices.append(instance.filtered_data)
-
-        self.result["response"] = query_devices
-        self.result["diff"] = []
-        self.result["changed"] = False
+            self.result.query = instance.filtered_data
 
     def _failure(self, resp) -> None:
         """
@@ -1387,6 +1347,18 @@ def main():
     }
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+
+    # Create the base dcnm logger
+    # To disable logging, comment out log.config = <file_path> below
+    # log.config can be either a dictionary, or a path to a yaml file
+    # Both dictionary and yaml file formats must be conformant with
+    # logging.config.dictConfig and must not log to the console.
+    # For an example configuration, see:
+    # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/log.yaml
+    log = Log(ansible_module)
+    # log.config = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm/plugins/module_utils/common/log.yaml"
+    log.commit()
+
     task_module = ImageUpgradeTask(ansible_module)
 
     task_module.get_want()
@@ -1399,15 +1371,15 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.get_need_query()
 
-    task_module.result["changed"] = False
+    task_module.result.result["changed"] = False
     if len(task_module.need) == 0:
-        ansible_module.exit_json(**task_module.result)
+        ansible_module.exit_json(**task_module.result.result)
 
     if ansible_module.check_mode:
-        ansible_module.exit_json(**task_module.result)
+        ansible_module.exit_json(**task_module.result.result)
 
     if ansible_module.params["state"] in ["merged", "deleted"]:
-        task_module.result["changed"] = True
+        task_module.result.result["changed"] = True
 
     if ansible_module.params["state"] == "merged":
         task_module.handle_merged_state()
@@ -1416,7 +1388,7 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.handle_query_state()
 
-    ansible_module.exit_json(**task_module.result)
+    ansible_module.exit_json(**task_module.result.result)
 
 
 if __name__ == "__main__":

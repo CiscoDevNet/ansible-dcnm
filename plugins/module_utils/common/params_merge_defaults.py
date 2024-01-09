@@ -20,11 +20,9 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import logging
 from collections.abc import MutableMapping as Map
 from typing import Any, Dict
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import \
-    Log
 
 
 class ParamsMergeDefaults:
@@ -38,12 +36,11 @@ class ParamsMergeDefaults:
     """
 
     def __init__(self, ansible_module):
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
         self.ansible_module = ansible_module
 
-        self.log = Log(self.ansible_module)
-        self.log.debug = False
-        self.log.logfile = None
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED")
 
         self._build_properties()
         self._build_reserved_params()
@@ -53,13 +50,10 @@ class ParamsMergeDefaults:
         """
         Container for the properties of this class.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties = {}
         self.properties["params_spec"] = None
         self.properties["parameters"] = None
         self.properties["merged_parameters"] = None
-        self.properties["debug"] = False
-        self.properties["logfile"] = None
 
     def _build_reserved_params(self):
         """
@@ -90,8 +84,6 @@ class ParamsMergeDefaults:
             1. they are present in spec
             2. they have a default value defined in spec
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         for spec_key, spec_value in spec.items():
             if spec_key in self.reserved_params:
                 continue
@@ -130,34 +122,6 @@ class ParamsMergeDefaults:
         self.properties["merged_parameters"] = self._merge_default_params(
             self.params_spec, self.parameters
         )
-
-    @property
-    def debug(self):
-        """
-        Enable/disable debugging to self.logfile
-        """
-        return self.log.debug
-
-    @debug.setter
-    def debug(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid type for debug. Expected bool. "
-            msg += f"Got {type(value)}."
-            self.ansible_module.fail_json(msg)
-        self.log.debug = value
-
-    @property
-    def logfile(self):
-        """
-        Set file to which debug log is written
-        """
-        return self.log.logfile
-
-    @logfile.setter
-    def logfile(self, value):
-        self.log.logfile = value
 
     @property
     def merged_parameters(self):

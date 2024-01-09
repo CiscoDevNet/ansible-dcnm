@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import inspect
 import json
+import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -63,7 +64,11 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED")
+
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()
         self._init_properties()
@@ -76,7 +81,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     def _init_properties(self):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.properties = {}
+        # self.properties is already initialized in the parent class
         self.properties["action"] = None
         self.properties["response"] = None
         self.properties["result"] = None
@@ -205,7 +210,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
             msg = f"{self.class_name}.{method_name}: "
             msg += f"response: {json.dumps(response, indent=4)}"
-            self.log.log_msg(msg)
+            self.log.debug(msg)
 
             if not result["success"]:
                 msg = f"{self.class_name}.{method_name}: "
@@ -237,15 +242,14 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"response: {json.dumps(self.response, indent=4)}"
-        self.log.log_msg(msg)
-
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when detaching policy {self.policy_name} "
             msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
             self.module.fail_json(msg, **self.failed_result)
+
+        self.changed = True
+        self.diff = self.response
 
     def _query_policy(self):
         """

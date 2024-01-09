@@ -18,23 +18,13 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-import inspect
+import logging
+from logging.config import dictConfig
+
+import yaml
 
 
 class Log:
-    """
-    A logging utility for use with Ansible modules.
-
-    Log messages to a file.
-
-    Usage:
-
-    instance = Log(ansible_module)
-    instance.debug = True
-    instance.logfile = "/tmp/params_validate.log"
-    instance.log_msg("some message")
-    """
-
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
@@ -43,51 +33,51 @@ class Log:
 
     def _build_properties(self) -> None:
         self.properties = {}
-        self.properties["debug"] = False
-        self.properties["logfile"] = None
+        self.properties["config"] = None
 
-    def log_msg(self, msg):
-        """
-        Open the logfile and write the message to it.
+    def commit(self):
+        if self.config is None:
+            logger = logging.getLogger()
+            for handler in logger.handlers.copy():
+                try:
+                    logger.removeHandler(handler)
+                except ValueError:  # if handler already removed
+                    pass
+            logger.addHandler(logging.NullHandler())
+            logger.propagate = False
+            return
 
-        Call fail_json() if there is an error writing to the logfile.
-        """
-        if self.debug is False:
-            return
-        if self.logfile is None:
-            return
+        if isinstance(self.config, dict):
+            try:
+                dictConfig(self.config)
+                return
+            except ValueError as err:
+                msg = f"error configuring logging from dict. "
+                msg += f"detail: {err}"
+                self.ansible_module.fail_json(msg=msg)
+
         try:
-            with open(f"{self.logfile}", "a+", encoding="UTF-8") as file_handle:
-                file_handle.write(f"{msg}\n")
+            with open(self.config, "r") as file:
+                logging_config = yaml.safe_load(file)
         except IOError as err:
-            msg = f"error writing to logfile {self.logfile}. "
+            msg = f"error reading logging config from {self.config}. "
             msg += f"detail: {err}"
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg=msg)
+        dictConfig(logging_config)
 
     @property
-    def debug(self):
+    def config(self):
         """
-        Enable/disable debugging to self.logfile
-        """
-        return self.properties["debug"]
+        Can be either:
 
-    @debug.setter
-    def debug(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid type for debug. Expected bool. "
-            msg += f"Got {type(value)}."
-            self.ansible_module.fail_json(msg)
-        self.properties["debug"] = value
-
-    @property
-    def logfile(self):
+        1.  None, in which case logging is disabled
+        2.  A YAML file from which logging config is read.
+            Must conform to logging.config.dictConfig
+        3.  A dictionary containing logging config
+            Must conform to logging.config.dictConfig
         """
-        Set file to which messages are written
-        """
-        return self.properties["logfile"]
+        return self.properties["config"]
 
-    @logfile.setter
-    def logfile(self, value):
-        self.properties["logfile"] = value
+    @config.setter
+    def config(self, value):
+        self.properties["config"] = value

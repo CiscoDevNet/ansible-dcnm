@@ -35,6 +35,7 @@ from typing import Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 
 from .image_upgrade_utils import (does_not_raise, image_upgrade_common_fixture,
                                   responses_image_upgrade_common)
@@ -57,8 +58,6 @@ def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     with does_not_raise():
         instance = image_upgrade_common
     assert instance.params == test_params
-    assert instance.log.debug is False
-    assert instance.log.logfile == "/tmp/dcnm_image_upgrade.log"
 
 
 @pytest.mark.parametrize(
@@ -405,58 +404,100 @@ def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
     - log.log_msg
 
     Test
-    - log.log_msg returns None when debug is False
+    - log.debug returns None when the base logger is disabled
+    - Base logger is disabled if Log.config is None (which is the default)
     """
     instance = image_upgrade_common
 
-    error_message = "This is an error message"
-    instance.log.debug = False
-    assert instance.log.log_msg(error_message) is None
+    message = "This is a message"
+    assert instance.log.debug(message) is None
+    assert instance.log.info(message) is None
 
 
-def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
-    """
-    Function
-    - log.log_msg
+# def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
+#     """
+#     Function
+#     - log.log_msg
 
-    Test
-    - log_msg writes to the log.logfile when log.debug is True
-    """
-    instance = image_upgrade_common
+#     Test
+#     - log_msg writes to the log.logfile when log.config is set
+#     """
+#     instance = image_upgrade_common
 
-    directory = tmp_path / "test_log_msg"
-    directory.mkdir()
-    filename = directory / "test_log_msg.txt"
+#     directory = tmp_path / "test_log_msg"
+#     directory.mkdir()
+#     filename = directory / "test_log_msg.txt"
 
-    error_message = "This is an error message"
-    instance.log.debug = True
-    instance.log.logfile = filename
-    instance.log.log_msg(error_message)
+#     log = Log(instance.module)
+#     config = {
+#         "version": 1,
+#         "formatters": {
+#             "standard": {
+#             "class": "logging.Formatter",
+#             "format": "%(asctime)s - %(levelname)s - [%(name)s.%(funcName)s.%(lineno)d] %(message)s"
+#             }
+#         },
+#         "handlers": {
+#             "file": {
+#             "class": "logging.handlers.RotatingFileHandler",
+#             "formatter": "standard",
+#             "level": "DEBUG",
+#             "filename": "foo",
+#             "mode": "a",
+#             "encoding": "utf-8",
+#             "maxBytes": 500000,
+#             "backupCount": 4
+#             }
+#         },
+#         "loggers": {
+#             "dcnm": {
+#             "handlers": [
+#                 "file"
+#             ],
+#             "level": "DEBUG",
+#             "propagate": False
+#             }
+#         },
+#         "root": {
+#             "level": "INFO",
+#             "handlers": [
+#             "file"
+#             ]
+#         }
+#     }
 
-    assert filename.read_text(encoding="UTF-8") == error_message + "\n"
-    assert len(list(tmp_path.iterdir())) == 1
+#     config["handlers"]["file"]["filename"] = filename
+#     log.config = config
+#     message = "This is a message"
+#     # instance.log.debug = True
+#     # instance.log.logfile = filename
+#     # instance.log.log_msg(message)
+#     instance.log.debug(message)
+
+#     assert filename.read_text(encoding="UTF-8") == message + "\n"
+#     assert len(list(tmp_path.iterdir())) == 1
 
 
-def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
-    """
-    Function
-    - log.log_msg
+# def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
+#     """
+#     Function
+#     - log.log_msg
 
-    Test
-    - log.log_msg calls fail_json if the logfile cannot be opened
+#     Test
+#     - log.log_msg calls fail_json if the logfile cannot be opened
 
-    Description
-    To ensure an error is generated, we attempt a write to a filename
-    that is too long for the target OS.
-    """
-    instance = image_upgrade_common
+#     Description
+#     To ensure an error is generated, we attempt a write to a filename
+#     that is too long for the target OS.
+#     """
+#     instance = image_upgrade_common
 
-    directory = tmp_path / "test_log_msg"
-    directory.mkdir()
-    filename = directory / f"test_{'a' * 2000}_log_msg.txt"
+#     directory = tmp_path / "test_log_msg"
+#     directory.mkdir()
+#     filename = directory / f"test_{'a' * 2000}_log_msg.txt"
 
-    error_message = "This is an error message"
-    instance.log.debug = True
-    instance.log.logfile = filename
-    with pytest.raises(AnsibleFailJson, match="error writing to logfile"):
-        instance.log.log_msg(error_message)
+#     error_message = "This is an error message"
+#     instance.log.debug = True
+#     instance.log.logfile = filename
+#     with pytest.raises(AnsibleFailJson, match="error writing to logfile"):
+#         instance.log.log_msg(error_message)

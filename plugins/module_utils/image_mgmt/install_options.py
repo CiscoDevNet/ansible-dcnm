@@ -139,7 +139,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     def __init__(self, module) -> None:
         super().__init__(module)
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
         self.endpoints = ApiEndpoints()
 
         self.path = self.endpoints.install_options.get("path")
@@ -151,7 +151,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self._init_properties()
 
     def _init_properties(self):
-        self.properties = {}
+        # self.properties is already initialized in the parent class
         self.properties["epld"] = False
         self.properties["issu"] = True
         self.properties["response_data"] = None
@@ -185,10 +185,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
         # Mock the response such that the caller knows nothing needs to be
         # done.
         if self.epld is False and self.issu is False and self.package_install is False:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "At least one of epld, issu, or package_install "
+            msg = "At least one of epld, issu, or package_install "
             msg += "must be True before calling refresh(). Skipping."
-            self.log.log_msg(msg)
+            self.log.debug(msg)
             self.compatibility_status = {}
             self.properties["response_data"] = {
                 "compatibilityStatusList": [],
@@ -241,8 +240,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
             "packageInstall": false
         }
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         self.payload: Dict[str, Any] = {}
         self.payload["devices"] = []
         devices = {}
@@ -254,7 +251,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["packageInstall"] = self.package_install
 
     def _get(self, item):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         return self.make_boolean(self.make_none(self.response_data.get(item)))
 
     # Mandatory properties

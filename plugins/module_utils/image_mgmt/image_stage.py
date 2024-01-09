@@ -21,6 +21,7 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import json
+import logging
 from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
@@ -100,8 +101,11 @@ class ImageStage(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED")
+
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.serial_numbers_done = set()
@@ -112,8 +116,7 @@ class ImageStage(ImageUpgradeCommon):
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.properties = {}
+        # self.properties is already initialized in the parent class
         self.properties["serial_numbers"] = None
         self.properties["response_data"] = None
         self.properties["result"] = None
@@ -129,7 +132,6 @@ class ImageStage(ImageUpgradeCommon):
         1.  This cannot go into ImageUpgradeCommon() due to circular
             imports resulting in RecursionError
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         instance = ControllerVersion(self.module)
         instance.refresh()
         self.controller_version = instance.version
@@ -139,7 +141,6 @@ class ImageStage(ImageUpgradeCommon):
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         serial_numbers = copy.copy(self.serial_numbers)
         for serial_number in serial_numbers:
             self.issu_detail.filter = serial_number
@@ -344,8 +345,9 @@ class ImageStage(ImageUpgradeCommon):
 
     @check_interval.setter
     def check_interval(self, value):
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, int):
-            msg = f"{self.__class__.__name__}: instance.check_interval must "
+            msg = f"{self.class_name}.{method_name}: instance.check_interval must "
             msg += "be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
@@ -359,8 +361,9 @@ class ImageStage(ImageUpgradeCommon):
 
     @check_timeout.setter
     def check_timeout(self, value):
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, int):
-            msg = f"{self.__class__.__name__}: instance.check_timeout must "
+            msg = f"{self.class_name}.{method_name}: instance.check_timeout must "
             msg += "be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value

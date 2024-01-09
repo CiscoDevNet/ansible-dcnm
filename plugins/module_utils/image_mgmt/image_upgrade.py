@@ -21,6 +21,7 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import json
+import logging
 from time import sleep
 from typing import Any, Dict, List, Set
 
@@ -132,8 +133,10 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED")
 
         self.endpoints = ApiEndpoints()
         self.ipv4_done = set()
@@ -145,7 +148,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
         self.install_options = ImageInstallOptions(self.module)
-        self.log.log_msg("DEBUG: ImageUpgrade.__init__ DONE")
 
     def _init_properties(self) -> None:
         """
@@ -155,13 +157,11 @@ class ImageUpgrade(ImageUpgradeCommon):
         per-switch given the payload structure is not amenable to that.
         Consider removing some of these.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
         #   self._wait_for_image_upgrade_to_complete()
         self.ip_addresses: Set[str] = set()
-        self.properties: Dict[str, Any] = {}
+        # self.properties is already initialized in the parent class
         self.properties["bios_force"] = False
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
@@ -197,8 +197,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             switches which can be upgraded.  This is used in
             _wait_for_current_actions_to_complete
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
             self.issu_detail.refresh()
@@ -217,8 +215,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Build the request payload to upgrade the switches.
         """
-        method_name = inspect.stack()[0][3]
-
         self.issu_detail.filter = device.get("ip_address")
         self.issu_detail.refresh()
 
@@ -446,9 +442,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
-        self.log.log_msg(msg)
+        msg = f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         if self.devices is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -461,31 +456,27 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.path: str = self.endpoints.image_upgrade.get("path")
         self.verb: str = self.endpoints.image_upgrade.get("verb")
 
-        msg = f"DEBUG: {self.class_name}.{method_name}: "
-        msg += f"self.verb {self.verb}, self.path: {self.path}"
-        self.log.log_msg(msg)
+        msg = f"self.verb {self.verb}, self.path: {self.path}"
+        self.log.debug(msg)
 
         for device in self.devices:
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}"
-            self.log.log_msg(msg)
+            msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             self._build_payload(device)
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.log_msg(msg)
+            msg = f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             self.properties["response"] = dcnm_send(
                 self.module, self.verb, self.path, data=json.dumps(self.payload)
             )
             self.properties["result"] = self._handle_response(self.response, self.verb)
 
-            msg = f"DEBUG: {self.class_name}.{method_name}: "
-            msg += (
+            msg = (
                 f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
             )
-            self.log.log_msg(msg)
+            self.log.debug(msg)
 
             if not self.result["success"]:
                 msg = f"{self.class_name}.{method_name}: "
@@ -495,6 +486,9 @@ class ImageUpgrade(ImageUpgradeCommon):
 
             self.properties["response_data"] = self.response.get("DATA")
         self._wait_for_image_upgrade_to_complete()
+
+        self.changed = True
+        self.diff = self.response
 
     def _wait_for_current_actions_to_complete(self):
         """
@@ -859,9 +853,10 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @check_interval.setter
     def check_interval(self, value):
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, int):
-            msg = f"{self.__class__.__name__}: instance.check_interval must "
-            msg += "be an integer."
+            msg = f"{self.class_name}.{method_name}: "
+            msg = f"instance.check_interval must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
 
@@ -874,9 +869,10 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     @check_timeout.setter
     def check_timeout(self, value):
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, int):
-            msg = f"{self.__class__.__name__}: instance.check_timeout must "
-            msg += "be an integer."
+            msg = f"{self.class_name}.{method_name}: "
+            msg = f"instance.check_timeout must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value
 

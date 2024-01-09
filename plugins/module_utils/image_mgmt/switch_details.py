@@ -52,14 +52,14 @@ class SwitchDetails(ImageUpgradeCommon):
         super().__init__(module)
         self.method_name = inspect.stack()[0][3]
 
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
         self.method_name = inspect.stack()[0][3]
 
-        self.properties = {}
+        # self.properties is already initialized in the parent class
         self.properties["ip_address"] = None
         self.properties["response_data"] = None
         self.properties["response"] = None

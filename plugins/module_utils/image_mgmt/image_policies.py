@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import logging
 from typing import Any, AnyStr, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -55,14 +56,17 @@ class ImagePolicies(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
+        self.class_name = __class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("1. ENTERED")
+
         self.method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
         self.method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.properties = {}
+        # self.properties is already initialized in the parent class
         self.properties["all_policies"] = None
         self.properties["policy_name"] = None
         self.properties["response_data"] = None

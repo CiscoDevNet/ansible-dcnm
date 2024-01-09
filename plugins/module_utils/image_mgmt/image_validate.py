@@ -21,6 +21,7 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import json
+import logging
 from time import sleep
 from typing import Any, Dict, List, Set
 
@@ -69,8 +70,10 @@ class ImageValidate(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug(f"ENTERED")
 
         self.endpoints = ApiEndpoints()
 
@@ -85,7 +88,7 @@ class ImageValidate(ImageUpgradeCommon):
     def _init_properties(self) -> None:
         self.method_name = inspect.stack()[0][3]
 
-        self.properties: Dict[str, Any] = {}
+        # self.properties is already initialized in the parent class
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
         self.properties["response_data"] = {}

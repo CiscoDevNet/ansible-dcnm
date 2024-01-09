@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -88,14 +89,16 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = self.__class__.__name__
-        self.method_name = inspect.stack()[0][3]
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED")
+
         self.endpoints = ApiEndpoints()
         self._init_properties()
 
     def _init_properties(self):
-        self.method_name = inspect.stack()[0][3]
-        self.properties = {}
+        # self.properties is already initialized in the parent class
         self.properties["response"] = None
         self.properties["result"] = None
         self.properties["response_data"] = None
@@ -111,7 +114,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         """
         Refresh current issu details from the controller.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         path = self.endpoints.issu_info.get("path")
         verb = self.endpoints.issu_info.get("verb")
@@ -120,7 +123,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.properties["result"] = self._handle_response(self.response, verb)
 
         if self.result["success"] is False or self.result["found"] is False:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"
             self.module.fail_json(msg, **self.failed_result)
@@ -128,12 +131,12 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         data = self.response.get("DATA").get("lastOperDataObject")
 
         if data is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
             self.module.fail_json(msg, **self.failed_result)
 
         if len(data) == 0:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
             self.module.fail_json(msg, **self.failed_result)
 
@@ -147,8 +150,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         Return True if any actions are in progress
         Return False otherwise
         """
-        self.method_name = inspect.stack()[0][3]
-
         for action_key in self.properties["action_keys"]:
             if self._get(action_key) == "In-Progress":
                 return True
@@ -678,12 +679,15 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-        self.method_name = inspect.stack()[0][3]
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED")
+
         self._init_properties()
 
     def _init_properties(self):
         super()._init_properties()
-        self.method_name = inspect.stack()[0][3]
         self.properties["filter"] = None
 
     def refresh(self):
@@ -693,27 +697,26 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         Refresh ip_address current issu details from the controller
         """
         super().refresh()
-        self.method_name = inspect.stack()[0][3]
         self.data_subclass = {}
         for switch in self.response_data:
             self.data_subclass[switch["ipAddress"]] = switch
 
     def _get(self, item):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.filter is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch ipAddress "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
             self.module.fail_json(msg, **self.failed_result)
 
@@ -765,12 +768,16 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-        self.method_name = inspect.stack()[0][3]
+
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED")
+
         self._init_properties()
 
     def _init_properties(self):
         super()._init_properties()
-        self.method_name = inspect.stack()[0][3]
         self.properties["filter"] = None
 
     def refresh(self):
@@ -780,29 +787,29 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         Refresh serial_number current issu details from NDFC
         """
         super().refresh()
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.data_subclass = {}
         for switch in self.response_data:
             self.data_subclass[switch["serialNumber"]] = switch
 
     def _get(self, item):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.filter is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch serialNumber "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist "
             msg += "on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
             self.module.fail_json(msg, **self.failed_result)
 
@@ -853,12 +860,16 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-        method_name = inspect.stack()[0][3]
+
+        self.class_name = __class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED")
+
         self._init_properties()
 
     def _init_properties(self):
         super()._init_properties()
-        method_name = inspect.stack()[0][3]
         self.properties["filter"] = None
 
     def refresh(self):
@@ -868,28 +879,27 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         Refresh device_name current issu details from NDFC
         """
         super().refresh()
-        self.method_name = inspect.stack()[0][3]
         self.data_subclass = {}
         for switch in self.response_data:
             self.data_subclass[switch["deviceName"]] = switch
 
     def _get(self, item):
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
 
         if self.filter is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch deviceName "
             msg += f"before accessing property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist "
             msg += "on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
             self.module.fail_json(msg, **self.failed_result)
 
