@@ -18,6 +18,8 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import logging
+
 
 class ApiEndpoints:
     """
@@ -25,6 +27,11 @@ class ApiEndpoints:
     """
 
     def __init__(self):
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ApiEndpoints()")
+
         self.endpoint_api_v1 = "/appcenter/cisco/ndfc/api/v1"
 
         self.endpoint_feature_manager = f"{self.endpoint_api_v1}/fm"

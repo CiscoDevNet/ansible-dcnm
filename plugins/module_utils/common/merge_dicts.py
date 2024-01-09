@@ -20,10 +20,9 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import logging
 from collections.abc import MutableMapping as Map
 from typing import Any, Dict
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 
 
 class MergeDicts:
@@ -49,12 +48,11 @@ class MergeDicts:
     """
 
     def __init__(self, ansible_module):
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
 
-        self.log = Log(self.ansible_module)
-        self.log.debug = False
-        self.log.logfile = None
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED MergeDicts()")
 
         self._build_properties()
 
@@ -94,34 +92,6 @@ class MergeDicts:
             else:
                 dict1[key] = dict2[key]
         return copy.deepcopy(dict1)
-
-    @property
-    def debug(self):
-        """
-        Enable/disable debugging to self.logfile
-        """
-        return self.log.debug
-
-    @debug.setter
-    def debug(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid type for debug. Expected bool. "
-            msg += f"Got {type(value)}."
-            self.ansible_module.fail_json(msg)
-        self.log.debug = value
-
-    @property
-    def logfile(self):
-        """
-        Set file to which debug log is written
-        """
-        return self.log.logfile
-
-    @logfile.setter
-    def logfile(self, value):
-        self.log.logfile = value
 
     @property
     def dict_merged(self):

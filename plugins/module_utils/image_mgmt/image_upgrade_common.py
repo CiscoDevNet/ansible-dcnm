@@ -21,8 +21,6 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
-
 
 class ImageUpgradeCommon:
     """
@@ -37,10 +35,11 @@ class ImageUpgradeCommon:
     """
 
     def __init__(self, module):
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED")
+        msg = "ENTERED ImageUpgradeCommon()"
+        self.log.debug(msg)
 
         self.module = module
         self.params = module.params

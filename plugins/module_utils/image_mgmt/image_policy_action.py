@@ -64,10 +64,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED")
+        self.log.debug("ENTERED ImagePolicyAction()")
 
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()

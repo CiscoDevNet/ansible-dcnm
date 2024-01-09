@@ -89,10 +89,10 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED")
+        self.log.debug("ENTERED SwitchIssuDetails()")
 
         self.endpoints = ApiEndpoints()
         self._init_properties()
@@ -159,7 +159,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         """
         overridden in subclasses
         """
-        pass
 
     @property
     def response_data(self):
@@ -679,11 +678,12 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED")
+        self.log.debug("ENTERED SwitchIssuDetailsByIpAddress()")
 
+        self.data_subclass = {}
         self._init_properties()
 
     def _init_properties(self):
@@ -768,12 +768,12 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED")
+        self.log.debug("ENTERED SwitchIssuDetailsBySerialNumber()")
 
+        self.data_subclass = {}
         self._init_properties()
 
     def _init_properties(self):
@@ -860,12 +860,12 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
 
     def __init__(self, module):
         super().__init__(module)
-
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED")
+        self.log.debug("ENTERED SwitchIssuDetailsByDeviceName()")
 
+        self.data_subclass = {}
         self._init_properties()
 
     def _init_properties(self):

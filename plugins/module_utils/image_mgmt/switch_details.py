@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -50,7 +51,10 @@ class SwitchDetails(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED SwitchDetails()")
 
         self.endpoints = ApiEndpoints()
         self._init_properties()

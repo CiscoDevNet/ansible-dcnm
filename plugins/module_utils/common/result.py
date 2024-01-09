@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import logging
 from typing import Any, Dict
 
 
@@ -28,9 +29,23 @@ class Result:
 
     Usage:
 
+    NOTES:
+    1.  Assumes deleted and merged are class instances with diff properties
+        that return the diff for the deleted and merged states.
+    2.  diff must be a dict()
+    3.  result.deleted, etc do not overwrite the existing value.  They append
+        to it.  So, for example:
+        result.deleted = {"foo": "bar"}
+        result.deleted = {"baz": "qux"}
+        print(result.deleted)
+        Output: [{"foo": "bar"}, {"baz": "qux"}]
+
     result = Result(ansible_module)
-    result.deleted = deleted.diff    # Appends to deleted-state changes
-    result.merged = merged.diff  # Appends to merged-state changes
+    result.deleted = deleted.diff # Appends to deleted-state changes
+    result.merged = merged.diff   # Appends to merged-state changes
+    # If a class doesn't have a diff property, then just append the dict
+    # that represents the changes for a given state.
+    result.overridden = {"foo": "bar"}
     etc for other states
     result = result.result
 
@@ -54,6 +69,10 @@ class Result:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED Result()")
+
         self.states = ["deleted", "merged", "overridden", "query", "replaced"]
         self._build_properties()
 

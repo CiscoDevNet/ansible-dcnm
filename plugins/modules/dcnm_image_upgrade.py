@@ -403,6 +403,7 @@ EXAMPLES = """
 import copy
 import inspect
 import json
+import logging
 from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
@@ -452,8 +453,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def __init__(self, module):
         super().__init__(module)
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImageUpgradeTask()")
 
         self.endpoints = ApiEndpoints()
 
@@ -1291,8 +1295,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        self.log.debug("ENTERED")
-
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
 
@@ -1352,9 +1354,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # COLLECTION_PATH="/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # CONFIG_FILE=f"{COLLECTION_PATH}/plugins/module_utils/common/logging_config.json"
-    # log.config = CONFIG_FILE
+    # collection_path="/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    # config_file=f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    # log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)

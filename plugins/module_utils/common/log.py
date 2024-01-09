@@ -18,10 +18,9 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import json
 import logging
 from logging.config import dictConfig
-
-import json
 
 
 class Log:
@@ -50,8 +49,9 @@ class Log:
     If log.config is set to None (which is the default if it's not explictely set),
     then logging is disabled.
     """
+
     def __init__(self, ansible_module):
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
 
         self._build_properties()
@@ -61,6 +61,16 @@ class Log:
         self.properties["config"] = None
 
     def commit(self):
+        """
+        Create the base logger instance from a source conformant with
+        logging.config.dictConfig.
+
+        1.  If self.config is None, then logging is disabled.
+        2.  If self.config is a JSON file, then it is read and logging
+            is configured from the JSON file.
+        3.  If self.config is a dictionary, then logging is configured
+            from the dictionary.
+        """
         if self.config is None:
             logger = logging.getLogger()
             for handler in logger.handlers.copy():
@@ -82,7 +92,7 @@ class Log:
                 self.ansible_module.fail_json(msg=msg)
 
         try:
-            with open(self.config, "r") as file:
+            with open(self.config, "r", encoding="utf-8") as file:
                 logging_config = json.load(file)
         except IOError as err:
             msg = f"error reading logging config from {self.config}. "

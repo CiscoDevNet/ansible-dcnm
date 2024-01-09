@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import inspect
 import json
+import logging
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -139,7 +140,11 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
     def __init__(self, module) -> None:
         super().__init__(module)
-        self.class_name = type(self).__name__
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED ImageInstallOptions()")
+
         self.endpoints = ApiEndpoints()
 
         self.path = self.endpoints.install_options.get("path")
