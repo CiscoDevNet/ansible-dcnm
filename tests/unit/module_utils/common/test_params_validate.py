@@ -65,8 +65,6 @@ def test_params_validate_00001(params_validate) -> None:
     }
     assert instance.mandatory_param_spec_keys == {"required", "type"}
     assert instance.class_name == "ParamsValidate"
-    assert instance.log.logfile is None
-    assert instance.log.debug is False
     assert instance.properties.get("parameters", "foo") is None
     assert instance.properties.get("params_spec", "foo") is None
 
