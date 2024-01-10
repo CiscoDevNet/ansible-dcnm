@@ -93,7 +93,7 @@ def test_log_00010(tmp_path, log) -> None:
     critical_msg = "baz"
     instance.config = config
     instance.commit()
-    log = logging.getLogger(f"dcnm.test_logger")
+    log = logging.getLogger("dcnm.test_logger")
     log.info(info_msg)
     log.debug(debug_msg)
     log.warning(warning_msg)
@@ -125,7 +125,7 @@ def test_log_00011(caplog, log) -> None:
     debug_msg = "bing"
     warning_msg = "bar"
     critical_msg = "baz"
-    log = logging.getLogger(f"dcnm.test_logger")
+    log = logging.getLogger("dcnm.test_logger")
     log.info(info_msg)
     log.debug(debug_msg)
     log.warning(warning_msg)
