@@ -52,8 +52,6 @@ def test_merge_dicts_00001(merge_dicts) -> None:
     assert isinstance(instance, MergeDicts)
     assert isinstance(instance.properties, dict)
     assert instance.class_name == "MergeDicts"
-    assert instance.log.logfile is None
-    assert instance.log.debug is False
     assert instance.properties.get("dict1", "foo") is None
     assert instance.properties.get("dict2", "foo") is None
     assert instance.properties.get("dict_merged", "foo") is None
@@ -150,38 +148,6 @@ def test_merge_dicts_00030(merge_dicts, dict1, dict2, expected) -> None:
             instance.dict2 = dict2
     with expected:
         instance.commit()
-
-
-MATCH_00040 = "Invalid type for debug. Expected bool. "
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [
-        (True, does_not_raise()),
-        (False, does_not_raise()),
-        ([], pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        ((), pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        (1, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        (1.1, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        ("foo", pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-    ],
-)
-def test_merge_dicts_00040(merge_dicts, value, expected) -> None:
-    """
-    Function
-    - debug
-
-    Test
-    - debug accepts boolean values
-    - debug calls fail_json for non-boolean values
-    """
-    with does_not_raise():
-        instance = merge_dicts
-
-    with expected:
-        instance.debug = value
 
 
 def test_merge_dicts_00041(merge_dicts) -> None:
