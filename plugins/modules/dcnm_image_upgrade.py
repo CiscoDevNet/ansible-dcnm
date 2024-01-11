@@ -1208,8 +1208,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         upgrade.devices = devices
         upgrade.commit()
         for diff in upgrade.diff:
-            self.log.debug(f"diff: {json.dumps(diff, indent=4, sort_keys=True)}")
-            # self.result.merged.append(diff)
             self.result.merged = diff
 
     def handle_merged_state(self) -> None:
