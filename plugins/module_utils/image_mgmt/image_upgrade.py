@@ -479,7 +479,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             if not self.result["success"]:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"failed: {self.result}. "
-                msg += f"Controller response: {self.response}"
+                msg += f"Controller response: {response}"
                 self.module.fail_json(msg, **self.failed_result)
 
             response_data = response.get("DATA")

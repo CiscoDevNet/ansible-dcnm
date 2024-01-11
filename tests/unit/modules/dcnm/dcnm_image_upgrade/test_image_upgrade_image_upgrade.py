@@ -90,9 +90,9 @@ def test_image_mgmt_upgrade_00003(image_upgrade) -> None:
     assert instance.properties.get("epld_module") == "ALL"
     assert instance.properties.get("epld_upgrade") is False
     assert instance.properties.get("force_non_disruptive") is False
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("result") == []
     assert instance.properties.get("non_disruptive") is False
     assert instance.properties.get("force_non_disruptive") is False
     assert instance.properties.get("package_install") is False
@@ -1516,7 +1516,7 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
         }
     ]
     instance.commit()
-    assert instance.response_data == 121
+    assert instance.response_data == [121]
 
 
 def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
@@ -1609,7 +1609,7 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1. instance.response is a dict
+    1. instance.response is a list
     """
     instance = image_upgrade
 
@@ -1663,8 +1663,8 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
     ]
     instance.commit()
     print(f"instance.response: {instance.response}")
-    assert isinstance(instance.response, dict)
-    assert instance.response["DATA"] == 121
+    assert isinstance(instance.response, list)
+    assert instance.response[0]["DATA"] == 121
 
 
 # setters
