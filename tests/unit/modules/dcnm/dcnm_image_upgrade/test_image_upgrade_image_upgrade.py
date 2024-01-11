@@ -128,7 +128,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00005a"
+        key = "test_image_mgmt_upgrade_00004a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -136,6 +136,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
     devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
     instance.devices = devices
+
     instance._validate_devices()  # pylint: disable=protected-access
     assert isinstance(instance.ip_addresses, set)
     assert len(instance.ip_addresses) == 2

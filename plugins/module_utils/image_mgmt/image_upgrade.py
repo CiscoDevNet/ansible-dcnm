@@ -199,6 +199,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
+            # See TODO in commit() method regarding removal of this
+            # call to refresh() in the future.
+            self.log.debug("Calling issu_detail.refresh()")
             self.issu_detail.refresh()
 
             # Any device validation from issu_detail would go here.
@@ -215,8 +218,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Build the request payload to upgrade the switches.
         """
+        # issu_detail.refresh() has already been called in _validate_devices()
+        # so no need to call it here.
         self.issu_detail.filter = device.get("ip_address")
-        self.issu_detail.refresh()
 
         self.install_options.serial_number = self.issu_detail.serial_number
         # install_options will fail_json if any of these are invalid
@@ -227,6 +231,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.install_options.package_install = (
             device.get("options", {}).get("package", {}).get("install", None)
         )
+        self.log.debug("Calling install_options.refresh()")
         self.install_options.refresh()
 
         # devices_to_upgrade must currently be a single device
@@ -450,6 +455,13 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "call instance.devices before calling commit."
             self.module.fail_json(msg, **self.failed_result)
 
+        # TODO: We could get rid of calls to issu_detail.refresh()
+        # in _validate_devices() and _build_payload() by calling
+        # it once here.  However, unit test for _validate_devices()
+        # will need to be changed or removed.  I'll work on this
+        # later.
+        # self.issu_detail.refresh()
+
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
@@ -511,6 +523,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                     continue
 
                 self.issu_detail.filter = ipv4
+                self.log.debug("Calling issu_detail.refresh()")
                 self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
@@ -547,6 +560,7 @@ class ImageUpgrade(ImageUpgradeCommon):
                     continue
 
                 self.issu_detail.filter = ipv4
+                self.log.debug("Calling issu_detail.refresh()")
                 self.issu_detail.refresh()
                 ip_address = self.issu_detail.ip_address
                 device_name = self.issu_detail.device_name

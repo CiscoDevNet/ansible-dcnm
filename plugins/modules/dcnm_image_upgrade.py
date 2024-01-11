@@ -1378,9 +1378,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    log.config = config_file
+    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    # log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)
