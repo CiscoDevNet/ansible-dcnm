@@ -1209,6 +1209,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         upgrade.commit()
         for diff in upgrade.diff:
             self.result.merged = diff
+        for response in upgrade.response:
+            self.result.response = response
 
     def handle_merged_state(self) -> None:
         """

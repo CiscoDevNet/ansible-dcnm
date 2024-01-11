@@ -172,9 +172,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["epld_module"] = "ALL"
         self.properties["epld_upgrade"] = False
         self.properties["force_non_disruptive"] = False
-        self.properties["response_data"] = None
-        self.properties["result"] = None
-        self.properties["response"] = None
+        self.properties["response_data"] = []
+        self.properties["result"] = []
+        self.properties["response"] = []
         self.properties["non_disruptive"] = False
         self.properties["package_install"] = False
         self.properties["package_uninstall"] = False
@@ -468,14 +468,12 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg = f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            self.properties["response"] = dcnm_send(
+            response = dcnm_send(
                 self.module, self.verb, self.path, data=json.dumps(self.payload)
             )
-            self.properties["result"] = self._handle_response(self.response, self.verb)
+            self.properties["result"] = self._handle_response(response, self.verb)
 
-            msg = (
-                f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
-            )
+            msg = f"response: {json.dumps(response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             if not self.result["success"]:
@@ -484,11 +482,13 @@ class ImageUpgrade(ImageUpgradeCommon):
                 msg += f"Controller response: {self.response}"
                 self.module.fail_json(msg, **self.failed_result)
 
-            self.properties["response_data"] = self.response.get("DATA")
-        self._wait_for_image_upgrade_to_complete()
+            response_data = response.get("DATA")
 
-        self.changed = True
-        self.diff = self.response
+            self.response = copy.deepcopy(response)
+            self.response_data = response_data
+            self.diff = copy.deepcopy(self.payload)
+
+        self._wait_for_image_upgrade_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
         """
@@ -889,6 +889,10 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         return self.properties.get("response_data")
 
+    @response_data.setter
+    def response_data(self, value):
+        self.properties["response_data"].append(value)
+
     @property
     def result(self):
         """
@@ -906,3 +910,12 @@ class ImageUpgrade(ImageUpgradeCommon):
         instance.commit() must be called first.
         """
         return self.properties.get("response")
+
+    @response.setter
+    def response(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.response must be a dict."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["response"].append(value)
