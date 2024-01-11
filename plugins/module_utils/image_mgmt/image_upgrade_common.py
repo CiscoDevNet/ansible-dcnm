@@ -47,6 +47,7 @@ class ImageUpgradeCommon:
         self.properties["changed"] = False
         self.properties["diff"] = []
         self.properties["failed"] = False
+        self.properties["response"] = []
 
     def _handle_response(self, response, verb):
         """

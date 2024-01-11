@@ -99,6 +99,7 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
             "query": [],
             "replaced": [],
         },
+        "response": []
     }
     assert isinstance(instance.switch_details, SwitchDetails)
     assert isinstance(instance.image_policies, ImagePolicies)

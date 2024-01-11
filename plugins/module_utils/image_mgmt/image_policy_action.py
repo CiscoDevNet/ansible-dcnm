@@ -80,7 +80,6 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.verb = None
 
     def _init_properties(self):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         # self.properties is already initialized in the parent class
         self.properties["action"] = None
         self.properties["response"] = None
@@ -242,6 +241,12 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
+        msg = f"result: {json.dumps(self.result, indent=4)}"
+        self.log.debug(msg)
+
+        msg = f"response: {json.dumps(self.response, indent=4)}"
+        self.log.debug(msg)
+
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when detaching policy {self.policy_name} "
@@ -338,7 +343,6 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @policy_name.setter
     def policy_name(self, value):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.properties["policy_name"] = value
 
     @property

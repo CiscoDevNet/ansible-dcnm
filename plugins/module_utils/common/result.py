@@ -39,6 +39,8 @@ class Result:
         result.deleted = {"baz": "qux"}
         print(result.deleted)
         Output: [{"foo": "bar"}, {"baz": "qux"}]
+    4. result.response is a list of dicts.  Each dict represents a response
+         from the controller.
 
     result = Result(ansible_module)
     result.deleted = deleted.diff # Appends to deleted-state changes
@@ -47,6 +49,8 @@ class Result:
     # that represents the changes for a given state.
     result.overridden = {"foo": "bar"}
     etc for other states
+    # If you want to append a response from the controller, then do this:
+    result.response = response
     result = result.result
 
     print(result)
@@ -63,6 +67,7 @@ class Result:
                 "replaced": [<list of dict representing changes for replaced state>]
             }
         ]
+        "response": [<list of dict representing controller response(s)>]
     }
     """
 
@@ -84,6 +89,7 @@ class Result:
         for state in self.states:
             self.properties[state] = []
         self.properties["changed"] = False
+        self.properties["response"] = []
 
     def did_anything_change(self):
         """
@@ -175,4 +181,17 @@ class Result:
         result["diff"] = {}
         for state in self.states:
             result["diff"][state] = self.properties[state]
+        result["response"] = self.properties["response"]
         return result
+
+    @property
+    def response(self):
+        """
+        return the controller response(s)
+        """
+        return self.properties["response"]
+
+    @response.setter
+    def response(self, value):
+        self._verify_is_dict(value)
+        self.properties["response"].append(value)

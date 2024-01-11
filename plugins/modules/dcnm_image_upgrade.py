@@ -1208,7 +1208,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         upgrade.devices = devices
         upgrade.commit()
         for diff in upgrade.diff:
-            self.result.merged.append(diff)
+            self.log.debug(f"diff: {json.dumps(diff, indent=4, sort_keys=True)}")
+            # self.result.merged.append(diff)
+            self.result.merged = diff
 
     def handle_merged_state(self) -> None:
         """
@@ -1262,32 +1264,52 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Caller: main()
         """
         detach_policy_devices: Dict[str, Any] = {}
-
+        detach_policy_serial_numbers: Dict[str, Any] = {}
         self.switch_details.refresh()
         self.image_policies.refresh()
 
         for switch in self.need:
             self.switch_details.ip_address = switch.get("ip_address")
             self.image_policies.policy_name = switch.get("policy")
+            device = {}
+            device["serial_number"] = self.switch_details.serial_number
+            device["logical_name"] = self.switch_details.logical_name
+            device["ip_address"] = self.switch_details.ip_address
+            device["policy"] = self.image_policies.policy_name
 
             if self.image_policies.name not in detach_policy_devices:
                 detach_policy_devices[self.image_policies.policy_name] = []
-            detach_policy_devices[self.image_policies.policy_name].append(
+            if self.image_policies.name not in detach_policy_serial_numbers:
+                detach_policy_serial_numbers[self.image_policies.policy_name] = []
+
+            detach_policy_serial_numbers[self.image_policies.policy_name].append(
                 self.switch_details.serial_number
             )
+            detach_policy_devices[self.image_policies.policy_name].append(device)
 
         if len(detach_policy_devices) == 0:
-            self.result.result["changed"] = False
             return
 
         instance = ImagePolicyAction(self.module)
-        for key, value in detach_policy_devices.items():
+        detach_results = []
+        for key, value in detach_policy_serial_numbers.items():
+            detach_result = {}
             instance.policy_name = key
             instance.action = "detach"
             instance.serial_numbers = value
             instance.commit()
-        for diff in instance.diff:
-            self.result.deleted = diff
+            self.result.response = copy.deepcopy(instance.response)
+            for device in detach_policy_devices[key]:
+                detach_result["action"] = "detach"
+                detach_result["ip_address"] = device.get("ip_address")
+                detach_result["logical_name"] = device.get("logical_name")
+                detach_result["policy"] = key
+                detach_result["serial_number"] = device.get("serial_number")
+                detach_results.append(copy.deepcopy(detach_result))
+        for item in detach_results:
+            msg = f"item: {json.dumps(item, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.result.deleted = item
 
     def handle_query_state(self) -> None:
         """
@@ -1297,7 +1319,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
-
+        response = copy.deepcopy(instance.response)
+        response.pop("DATA")
+        self.result.response = copy.deepcopy(response)
         for switch in self.need:
             instance.filter = switch.get("ip_address")
             if instance.filtered_data is None:
@@ -1354,9 +1378,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # collection_path="/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # config_file=f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    # log.config = config_file
+    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)
