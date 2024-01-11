@@ -199,9 +199,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
-            # See TODO in commit() method regarding removal of this
-            # call to refresh() in the future.
-            self.log.debug("Calling issu_detail.refresh()")
             self.issu_detail.refresh()
 
             # Any device validation from issu_detail would go here.
@@ -454,13 +451,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.devices before calling commit."
             self.module.fail_json(msg, **self.failed_result)
-
-        # TODO: We could get rid of calls to issu_detail.refresh()
-        # in _validate_devices() and _build_payload() by calling
-        # it once here.  However, unit test for _validate_devices()
-        # will need to be changed or removed.  I'll work on this
-        # later.
-        # self.issu_detail.refresh()
 
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
