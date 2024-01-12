@@ -154,15 +154,25 @@ class ImageValidate(ImageUpgradeCommon):
         Commit the image validation request to the controller and wait
         for the images to be validated.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED commit()"
+        self.log.debug(msg)
 
         if self.serial_numbers is None:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "call instance.serial_numbers before "
-            msg += "calling commit."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "call instance.serial_numbers "
+            msg += "before calling commit."
             self.module.fail_json(msg, **self.failed_result)
 
+        msg = f"self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
+
         if len(self.serial_numbers) == 0:
+            msg = "No serial numbers to validate."
+            self.properties["response"] = {"response": msg}
+            self.properties["response_data"] = {"response": msg}
+            self.properties["result"] = {"success": True}
             return
 
         self.prune_serial_numbers()
@@ -183,13 +193,23 @@ class ImageValidate(ImageUpgradeCommon):
         self.log.debug(msg)
 
         if not self.result["success"]:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
             self.module.fail_json(msg, **self.failed_result)
 
         self.properties["response_data"] = self.response
         self._wait_for_image_validate_to_complete()
+
+        for serial_number in self.serial_numbers_done:
+            self.issu_detail.filter = serial_number
+            diff = {}
+            diff["action"] = "validate"
+            diff["ip_address"] = self.issu_detail.ip_address
+            diff["logical_name"] = self.issu_detail.device_name
+            diff["policy"] = self.issu_detail.policy
+            diff["serial_number"] = serial_number
+            self.diff = copy.deepcopy(diff)
 
     def _wait_for_current_actions_to_complete(self) -> None:
         """

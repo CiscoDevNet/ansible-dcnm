@@ -1076,7 +1076,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
-        self.result.diff_stage = instance.response
+        for diff in instance.diff:
+            self.result.diff_stage = copy.deepcopy(diff)
         instance.response.pop("DATA", None)
         self.result.response_stage = instance.response
 
@@ -1093,7 +1094,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
-        self.result.diff_validate = instance.payload
+        for diff in instance.diff:
+            self.result.diff_validate = copy.deepcopy(diff)
         self.result.response_validate = instance.response
 
     def _verify_install_options(self, devices) -> None:

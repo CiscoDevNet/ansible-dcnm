@@ -186,11 +186,11 @@ class ImageStage(ImageUpgradeCommon):
 
         msg = f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
+
         if len(self.serial_numbers) == 0:
-            self.properties["response"] = {"response": "No serial numbers to stage."}
-            self.properties["response_data"] = {
-                "response": "No serial numbers to stage."
-            }
+            msg = "No serial numbers to stage."
+            self.properties["response"] = {"response": msg}
+            self.properties["response_data"] = {"response": msg}
             self.properties["result"] = {"success": True}
             return
 
@@ -215,25 +215,30 @@ class ImageStage(ImageUpgradeCommon):
         )
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
+        msg = f"payload: {self.payload}"
+        self.log.debug(msg)
+        msg = f"response: {self.response}"
+        self.log.debug(msg)
+        msg = f"result: {self.result}"
+        self.log.debug(msg)
+
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
             self.module.fail_json(msg, **self.failed_result)
 
-        msg = f"self.response: {self.response}"
-        self.log.debug(msg)
         self.properties["response_data"] = self.response.get("DATA", "No Stage DATA")
         self._wait_for_image_stage_to_complete()
 
         for serial_number in self.serial_numbers_done:
             self.issu_detail.filter = serial_number
-            self.issu_detail.refresh()
             diff = {}
-            diff["serial_number"] = serial_number
             diff["action"] = "stage"
-            diff["logical_name"] = self.issu_detail.device_name
             diff["ip_address"] = self.issu_detail.ip_address
+            diff["logical_name"] = self.issu_detail.device_name
+            diff["policy"] = self.issu_detail.policy
+            diff["serial_number"] = serial_number
             self.diff = copy.deepcopy(diff)
 
     def _wait_for_current_actions_to_complete(self):
