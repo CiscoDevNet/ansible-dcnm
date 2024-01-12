@@ -572,6 +572,12 @@ class ImageUpgrade(ImageUpgradeCommon):
 
                 if upgrade_status == "Success":
                     self.ipv4_done.add(ipv4)
+                msg = f"seconds remaining {timeout}"
+                self.log.debug(msg)
+                msg = f"ipv4_done: {self.ipv4_done}"
+                self.log.debug(msg)
+                msg = f"ipv4_todo: {self.ipv4_todo}"
+                self.log.debug(msg)
 
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{method_name}: "

@@ -20,6 +20,9 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
+# Using only for its failed_result property
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
+    ImageUpgradeTaskResult as Result
 
 
 class ImageUpgradeCommon:
@@ -43,6 +46,7 @@ class ImageUpgradeCommon:
 
         self.module = module
         self.params = module.params
+
         self.properties = {}
         self.properties["changed"] = False
         self.properties["diff"] = []
@@ -156,10 +160,26 @@ class ImageUpgradeCommon:
         """
         return a result for a failed task with no changes
         """
-        result = {}
-        result["changed"] = False
-        result["diff"] = []
-        return result
+        result = Result(self.module)
+        return result.failed_result
+
+    # @property
+    # def failed_result(self):
+    #     """
+    #     return a result for a failed task with no changes
+    #     """
+    #     result = {}
+    #     result["changed"] = False
+    #     result["diff"] = {
+    #         "deleted": [],
+    #         "merged": [],
+    #         "overridden": [],
+    #         "query": [],
+    #         "replaced": [],
+    #     }
+    #     result["failed"] = True
+    #     result["response"] = []
+    #     return result
 
     @property
     def changed(self):

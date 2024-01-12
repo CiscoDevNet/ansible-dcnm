@@ -414,8 +414,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.result import \
-    Result
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
+    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
@@ -486,8 +486,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.want = []
         self.need = []
 
-        self.result = Result(self.module)
-        self.result.result["changed"] = False
+        self.result = ImageUpgradeTaskResult(self.module)
+        self.result.changed = False
 
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
@@ -975,6 +975,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
 
         self.payloads = []
+        self.attach_devices = []
         self.switch_details.refresh()
         self.image_policies.refresh()
         for switch in self.need:
@@ -1010,7 +1011,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             payload["ipAddr"] = self.switch_details.ip_address
             payload["platform"] = self.switch_details.platform
             payload["serialNumber"] = self.switch_details.serial_number
-            # payload["bootstrapMode"] = switch.get('bootstrap_mode')
+
+            attach_device: Dict[str, Any] = {}
+            attach_device["action"] = "attach"
+            attach_device["logical_name"] = self.switch_details.logical_name
+            attach_device["ip_address"] = self.switch_details.ip_address
+            attach_device["serial_number"] = self.switch_details.serial_number
+            attach_device["policy"] = self.image_policies.name
 
             for key, value in payload.items():
                 if value is None:
@@ -1021,17 +1028,20 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                     msg += "the controller."
                     self.module.fail_json(msg)
 
-            self.payloads.append(payload)
+            self.payloads.append(copy.deepcopy(payload))
+            self.attach_devices.append(copy.deepcopy(attach_device))
 
     def _send_policy_attach_payload(self) -> None:
         """
-        Send the policy attach payload to the controller and
-        handle the response
+        Send the policy attach payload to the controller
+        Handle the response
+        Set the result and diff
 
         Callers:
             - self.handle_merged_state
         """
         if len(self.payloads) == 0:
+            # TODO: set a proper result and diff here!
             return
 
         self.path = self.endpoints.policy_attach.get("path")
@@ -1043,9 +1053,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.module, self.verb, self.path, data=json.dumps(payload)
         )
         result = self._handle_response(response, self.verb)
+        self.result.response_attach_policy = copy.deepcopy(response)
+        for attach_device in self.attach_devices:
+            msg = f"attach_device: {json.dumps(attach_device, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.result.diff_attach_policy = copy.deepcopy(attach_device)
 
         if not result["success"]:
-            self._failure(response)
+            self._failure(self.result.response_attach_policy)
 
     def _stage_images(self, serial_numbers) -> None:
         """
@@ -1061,6 +1076,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance = ImageStage(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
+        self.result.diff_stage = instance.response
+        instance.response.pop("DATA", None)
+        self.result.response_stage = instance.response
 
     def _validate_images(self, serial_numbers) -> None:
         """
@@ -1075,6 +1093,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance = ImageValidate(self.module)
         instance.serial_numbers = serial_numbers
         instance.commit()
+        self.result.diff_validate = instance.payload
+        self.result.response_validate = instance.response
 
     def _verify_install_options(self, devices) -> None:
         """
@@ -1208,9 +1228,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         upgrade.devices = devices
         upgrade.commit()
         for diff in upgrade.diff:
-            self.result.merged = diff
+            self.result.diff_upgrade = diff
         for response in upgrade.response:
-            self.result.response = response
+            self.result.response_upgrade = response
 
     def handle_merged_state(self) -> None:
         """
@@ -1288,28 +1308,28 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             detach_policy_devices[self.image_policies.policy_name].append(device)
 
         if len(detach_policy_devices) == 0:
+            # TODO: Need to build a proper response here.
             return
 
         instance = ImagePolicyAction(self.module)
-        detach_results = []
         for key, value in detach_policy_serial_numbers.items():
-            detach_result = {}
+            detach_diff = {}
             instance.policy_name = key
             instance.action = "detach"
             instance.serial_numbers = value
             instance.commit()
-            self.result.response = copy.deepcopy(instance.response)
+            self.result.response_detach_policy = copy.deepcopy(instance.response)
             for device in detach_policy_devices[key]:
-                detach_result["action"] = "detach"
-                detach_result["ip_address"] = device.get("ip_address")
-                detach_result["logical_name"] = device.get("logical_name")
-                detach_result["policy"] = key
-                detach_result["serial_number"] = device.get("serial_number")
-                detach_results.append(copy.deepcopy(detach_result))
-        for item in detach_results:
-            msg = f"item: {json.dumps(item, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.result.deleted = item
+                detach_diff["action"] = "detach"
+                detach_diff["ip_address"] = device.get("ip_address")
+                detach_diff["logical_name"] = device.get("logical_name")
+                detach_diff["policy"] = key
+                detach_diff["serial_number"] = device.get("serial_number")
+
+                msg = f"item: {json.dumps(detach_diff, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                self.result.diff_detach_policy = copy.deepcopy(detach_diff)
 
     def handle_query_state(self) -> None:
         """
@@ -1321,12 +1341,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.refresh()
         response = copy.deepcopy(instance.response)
         response.pop("DATA")
-        self.result.response = copy.deepcopy(response)
+        self.result.response_issu_status = copy.deepcopy(response)
         for switch in self.need:
             instance.filter = switch.get("ip_address")
             if instance.filtered_data is None:
                 continue
-            self.result.query = instance.filtered_data
+            self.result.diff_issu_status = instance.filtered_data
 
     def _failure(self, resp) -> None:
         """
@@ -1395,15 +1415,15 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.get_need_query()
 
-    task_module.result.result["changed"] = False
+    task_module.result.changed = False
     if len(task_module.need) == 0:
-        ansible_module.exit_json(**task_module.result.result)
+        ansible_module.exit_json(**task_module.result.module_result)
 
     if ansible_module.check_mode:
-        ansible_module.exit_json(**task_module.result.result)
+        ansible_module.exit_json(**task_module.result.module_result)
 
     if ansible_module.params["state"] in ["merged", "deleted"]:
-        task_module.result.result["changed"] = True
+        task_module.result.changed = True
 
     if ansible_module.params["state"] == "merged":
         task_module.handle_merged_state()
@@ -1412,7 +1432,7 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.handle_query_state()
 
-    ansible_module.exit_json(**task_module.result.result)
+    ansible_module.exit_json(**task_module.result.module_result)
 
 
 if __name__ == "__main__":

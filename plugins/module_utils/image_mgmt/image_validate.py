@@ -175,13 +175,20 @@ class ImageValidate(ImageUpgradeCommon):
         )
         self.properties["result"] = self._handle_response(self.response, self.verb)
 
+        msg = f"payload: {self.payload}"
+        self.log.debug(msg)
+        msg = f"response: {self.response}"
+        self.log.debug(msg)
+        msg = f"result: {self.result}"
+        self.log.debug(msg)
+
         if not self.result["success"]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg = f"failed: {self.result}. "
             msg += f"Controller response: {self.response}"
             self.module.fail_json(msg, **self.failed_result)
 
-        self.properties["response_data"] = self.response.get("DATA")
+        self.properties["response_data"] = self.response
         self._wait_for_image_validate_to_complete()
 
     def _wait_for_current_actions_to_complete(self) -> None:
@@ -260,6 +267,12 @@ class ImageValidate(ImageUpgradeCommon):
 
                 if validated_status == "Success":
                     self.serial_numbers_done.add(serial_number)
+                msg = f"seconds remaining {timeout}"
+                self.log.debug(msg)
+                msg = f"serial_numbers_todo: {serial_numbers_todo}"
+                self.log.debug(msg)
+                msg = f"serial_numbers_done: {self.serial_numbers_done}"
+                self.log.debug(msg)
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{self.method_name}: "

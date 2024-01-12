@@ -175,13 +175,23 @@ class ImageStage(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = "ENTERED commit()"
+        self.log.debug(msg)
+
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.serial_numbers "
             msg += "before calling commit."
             self.module.fail_json(msg, **self.failed_result)
 
+        msg = f"self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
         if len(self.serial_numbers) == 0:
+            self.properties["response"] = {"response": "No serial numbers to stage."}
+            self.properties["response_data"] = {
+                "response": "No serial numbers to stage."
+            }
+            self.properties["result"] = {"success": True}
             return
 
         self.prune_serial_numbers()
@@ -211,7 +221,9 @@ class ImageStage(ImageUpgradeCommon):
             msg += f"Controller response: {self.response}"
             self.module.fail_json(msg, **self.failed_result)
 
-        self.properties["response_data"] = self.response.get("DATA")
+        msg = f"self.response: {self.response}"
+        self.log.debug(msg)
+        self.properties["response_data"] = self.response.get("DATA", "No Stage DATA")
         self._wait_for_image_stage_to_complete()
 
     def _wait_for_current_actions_to_complete(self):
@@ -283,6 +295,13 @@ class ImageStage(ImageUpgradeCommon):
 
                 if staged_status == "Success":
                     self.serial_numbers_done.add(serial_number)
+
+                msg = f"seconds remaining {timeout}"
+                self.log.debug(msg)
+                msg = f"serial_numbers_todo: {serial_numbers_todo}"
+                self.log.debug(msg)
+                msg = f"serial_numbers_done: {self.serial_numbers_done}"
+                self.log.debug(msg)
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "

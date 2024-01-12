@@ -90,16 +90,24 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert instance.validated == {}
     assert instance.want == []
     assert instance.need == []
-    assert instance.result.result == {
+    assert instance.result.module_result == {
         "changed": False,
         "diff": {
-            "deleted": [],
-            "merged": [],
-            "overridden": [],
-            "query": [],
-            "replaced": [],
+            "attach_policy": [],
+            "detach_policy": [],
+            "issu_status": [],
+            "stage": [],
+            "upgrade": [],
+            "validate": [],
         },
-        "response": []
+        "response": {
+            "attach_policy": [],
+            "detach_policy": [],
+            "issu_status": [],
+            "stage": [],
+            "upgrade": [],
+            "validate": [],
+        }, 
     }
     assert isinstance(instance.switch_details, SwitchDetails)
     assert isinstance(instance.image_policies, ImagePolicies)
