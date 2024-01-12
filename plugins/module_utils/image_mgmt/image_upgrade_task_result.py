@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
