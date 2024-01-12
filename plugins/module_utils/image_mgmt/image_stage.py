@@ -226,6 +226,16 @@ class ImageStage(ImageUpgradeCommon):
         self.properties["response_data"] = self.response.get("DATA", "No Stage DATA")
         self._wait_for_image_stage_to_complete()
 
+        for serial_number in self.serial_numbers_done:
+            self.issu_detail.filter = serial_number
+            self.issu_detail.refresh()
+            diff = {}
+            diff["serial_number"] = serial_number
+            diff["action"] = "stage"
+            diff["logical_name"] = self.issu_detail.device_name
+            diff["ip_address"] = self.issu_detail.ip_address
+            self.diff = copy.deepcopy(diff)
+
     def _wait_for_current_actions_to_complete(self):
         """
         The controller will not stage an image if there are any actions in
@@ -298,9 +308,9 @@ class ImageStage(ImageUpgradeCommon):
 
                 msg = f"seconds remaining {timeout}"
                 self.log.debug(msg)
-                msg = f"serial_numbers_todo: {serial_numbers_todo}"
+                msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
                 self.log.debug(msg)
-                msg = f"serial_numbers_done: {self.serial_numbers_done}"
+                msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
                 self.log.debug(msg)
 
         if self.serial_numbers_done != serial_numbers_todo:
