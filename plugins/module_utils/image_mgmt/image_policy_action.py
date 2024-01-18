@@ -281,7 +281,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            diff:Dict[str, Any] = {}
+            diff: Dict[str, Any] = {}
             diff["action"] = self.action
             diff["ip_address"] = self.switch_issu_details.ip_address
             diff["logical_name"] = self.switch_issu_details.device_name
