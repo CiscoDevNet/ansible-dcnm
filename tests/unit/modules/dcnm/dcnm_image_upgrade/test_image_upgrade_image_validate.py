@@ -494,8 +494,8 @@ def test_image_mgmt_validate_00022(image_validate) -> None:
         instance = image_validate
         instance.serial_numbers = []
         instance.commit()
-    assert instance.response == {'response': 'No serial numbers to validate.'}
-    assert instance.result == {'success': True}
+    assert instance.response == {"response": "No serial numbers to validate."}
+    assert instance.result == {"success": True}
 
 
 def test_image_mgmt_validate_00023(monkeypatch, image_validate) -> None:

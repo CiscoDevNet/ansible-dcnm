@@ -414,8 +414,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
-    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
@@ -428,6 +426,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrad
     ImageUpgrade
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
     ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
+    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
@@ -468,9 +468,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         self.path = None
         self.verb = None
-
-        # populated in self._build_policy_attach_payload()
-        self.payloads = []
 
         self.config = module.params.get("config", {})
 
@@ -963,104 +960,65 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             validator.parameters = switch
             validator.commit()
 
-    def _build_policy_attach_payload(self) -> None:
+    def _attach_or_detach_image_policy(self, action=None) -> None:
         """
-        Build the payload for the policy attach request
-        Verify that the image policy exists on the controller
-        Verify that the image policy supports the switch platform
+        Attach or detach image policies to/from switches
+        action valid values: attach, detach
 
-        Callers:
+        Caller:
             - self.handle_merged_state
-        """
-        method_name = inspect.stack()[0][3]
+            - self.handle_deleted_state
 
-        self.payloads = []
-        self.attach_devices = []
+        NOTES:
+        - Sanity checking for action is done in ImagePolicyAction
+        """
+        msg = f"ENTERED: action: {action}"
+        self.log.debug(msg)
+
+        serial_numbers_to_update: Dict[str, Any] = {}
         self.switch_details.refresh()
         self.image_policies.refresh()
-        for switch in self.need:
-            if switch.get("policy_changed") is False:
-                continue
 
+        for switch in self.need:
             self.switch_details.ip_address = switch.get("ip_address")
             self.image_policies.policy_name = switch.get("policy")
+            # ImagePolicyAction wants a policy name and a list of serial_number
+            # Build dictionary, serial_numbers_to_udate, keyed on policy name
+            # whose value is the list of serial numbers to attach/detach.
+            if self.image_policies.name not in serial_numbers_to_update:
+                serial_numbers_to_update[self.image_policies.policy_name] = []
 
-            # Fail if the image policy does not exist.
-            # Image policy creation is handled by a different module.
-            if self.image_policies.name is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"policy {switch.get('policy')} does not exist on "
-                msg += "the controller"
-                self.module.fail_json(msg)
+            serial_numbers_to_update[self.image_policies.policy_name].append(
+                self.switch_details.serial_number
+            )
 
-            # Fail if the image policy does not support the switch platform
-            if self.switch_details.platform not in self.image_policies.platform:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"policy {switch.get('policy')} does not support "
-                msg += f"platform {self.switch_details.platform}. "
-                msg += f"Policy {switch.get('policy')} "
-                msg += "supports the following platform(s): "
-                msg += f"{self.image_policies.platform}"
-                self.module.fail_json(msg)
+        instance = ImagePolicyAction(self.module)
+        if len(serial_numbers_to_update) == 0:
+            msg = f"No policies to {action}"
+            self.log.debug(msg)
 
-            payload: Dict[str, Any] = {}
-            payload["policyName"] = self.image_policies.name
-            # switch_details.host_name is always None in 12.1.2e
-            # so we're using logical_name instead
-            payload["hostName"] = self.switch_details.logical_name
-            payload["ipAddr"] = self.switch_details.ip_address
-            payload["platform"] = self.switch_details.platform
-            payload["serialNumber"] = self.switch_details.serial_number
-
-            attach_device: Dict[str, Any] = {}
-            attach_device["action"] = "attach"
-            attach_device["logical_name"] = self.switch_details.logical_name
-            attach_device["ip_address"] = self.switch_details.ip_address
-            attach_device["serial_number"] = self.switch_details.serial_number
-            attach_device["policy"] = self.image_policies.name
-
-            for key, value in payload.items():
-                if value is None:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"Unable to determine {key} for switch "
-                    msg += f"{switch.get('ip_address')}. "
-                    msg += "Please verify that the switch is managed by "
-                    msg += "the controller."
-                    self.module.fail_json(msg)
-
-            self.payloads.append(copy.deepcopy(payload))
-            self.attach_devices.append(copy.deepcopy(attach_device))
-
-    def _send_policy_attach_payload(self) -> None:
-        """
-        Send the policy attach payload to the controller
-        Handle the response
-        Set the result and diff
-
-        Callers:
-            - self.handle_merged_state
-        """
-        if len(self.payloads) == 0:
-            # TODO: set a proper result and diff here!
+            if action == "attach":
+                self.result.diff_attach_policy = instance.diff_null
+            elif action == "detach":
+                self.result.diff_detach_policy = instance.diff_null
             return
 
-        self.path = self.endpoints.policy_attach.get("path")
-        self.verb = self.endpoints.policy_attach.get("verb")
+        for key, value in serial_numbers_to_update.items():
+            instance.policy_name = key
+            instance.action = action
+            instance.serial_numbers = value
+            instance.commit()
+            self.result.response_attach_policy = copy.deepcopy(instance.response)
 
-        payload: Dict[str, Any] = {}
-        payload["mappingList"] = self.payloads
-        response = dcnm_send(
-            self.module, self.verb, self.path, data=json.dumps(payload)
-        )
-        result = self._handle_response(response, self.verb)
-        self.result.response_attach_policy = copy.deepcopy(response)
-        for attach_device in self.attach_devices:
-            msg = f"attach_device: {json.dumps(attach_device, indent=4, sort_keys=True)}"
+        for diff in instance.diff:
+            msg = (
+                f"{instance.action} diff: {json.dumps(diff, indent=4, sort_keys=True)}"
+            )
             self.log.debug(msg)
-            self.result.diff_attach_policy = copy.deepcopy(attach_device)
-
-        if not result["success"]:
-            self._failure(self.result.response_attach_policy)
+            if action == "attach":
+                self.result.diff_attach_policy = copy.deepcopy(diff)
+            elif action == "detach":
+                self.result.diff_detach_policy = copy.deepcopy(diff)
 
     def _stage_images(self, serial_numbers) -> None:
         """
@@ -1096,6 +1054,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.commit()
         for diff in instance.diff:
             self.result.diff_validate = copy.deepcopy(diff)
+        instance.response.pop("DATA", None)
         self.result.response_validate = instance.response
 
     def _verify_install_options(self, devices) -> None:
@@ -1243,8 +1202,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        self._build_policy_attach_payload()
-        self._send_policy_attach_payload()
+        msg = "ENTERED"
+        self.log.debug(msg)
+
+        self._attach_or_detach_image_policy(action="attach")
 
         stage_devices: List[str] = []
         validate_devices: List[str] = []
@@ -1285,53 +1246,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        detach_policy_devices: Dict[str, Any] = {}
-        detach_policy_serial_numbers: Dict[str, Any] = {}
-        self.switch_details.refresh()
-        self.image_policies.refresh()
+        msg = "ENTERED"
+        self.log.debug(msg)
 
-        for switch in self.need:
-            self.switch_details.ip_address = switch.get("ip_address")
-            self.image_policies.policy_name = switch.get("policy")
-            device = {}
-            device["serial_number"] = self.switch_details.serial_number
-            device["logical_name"] = self.switch_details.logical_name
-            device["ip_address"] = self.switch_details.ip_address
-            device["policy"] = self.image_policies.policy_name
-
-            if self.image_policies.name not in detach_policy_devices:
-                detach_policy_devices[self.image_policies.policy_name] = []
-            if self.image_policies.name not in detach_policy_serial_numbers:
-                detach_policy_serial_numbers[self.image_policies.policy_name] = []
-
-            detach_policy_serial_numbers[self.image_policies.policy_name].append(
-                self.switch_details.serial_number
-            )
-            detach_policy_devices[self.image_policies.policy_name].append(device)
-
-        if len(detach_policy_devices) == 0:
-            # TODO: Need to build a proper response here.
-            return
-
-        instance = ImagePolicyAction(self.module)
-        for key, value in detach_policy_serial_numbers.items():
-            detach_diff = {}
-            instance.policy_name = key
-            instance.action = "detach"
-            instance.serial_numbers = value
-            instance.commit()
-            self.result.response_detach_policy = copy.deepcopy(instance.response)
-            for device in detach_policy_devices[key]:
-                detach_diff["action"] = "detach"
-                detach_diff["ip_address"] = device.get("ip_address")
-                detach_diff["logical_name"] = device.get("logical_name")
-                detach_diff["policy"] = key
-                detach_diff["serial_number"] = device.get("serial_number")
-
-                msg = f"item: {json.dumps(detach_diff, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-
-                self.result.diff_detach_policy = copy.deepcopy(detach_diff)
+        self._attach_or_detach_image_policy("detach")
 
     def handle_query_state(self) -> None:
         """
@@ -1353,25 +1271,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
     def _failure(self, resp) -> None:
         """
         Caller: self.attach_policies()
-
-        This came from dcnm_inventory.py, but doesn't seem to be correct
-        for the case where resp["DATA"] does not exist?
-
-        If resp["DATA"] does not exist, the contents of the
-        if block don't seem to actually do anything:
-            - data will be None
-            - Hence, data.get("stackTrace") will also be None
-            - Hence, data.update() and res.update() are never executed
-
-        So, the only two lines that will actually ever be executed are
-        the happy path:
-
-        res = copy.deepcopy(resp)
-        self.module.fail_json(msg=res)
         """
         res = copy.deepcopy(resp)
 
-        if not resp.get("DATA"):
+        if resp.get("DATA"):
             data = copy.deepcopy(resp.get("DATA"))
             if data.get("stackTrace"):
                 data.update(

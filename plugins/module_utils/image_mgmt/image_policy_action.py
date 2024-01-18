@@ -18,9 +18,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import json
 import logging
+from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
@@ -69,7 +71,6 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyAction()")
 
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()
         self._init_properties()
         self.image_policies = ImagePolicies(self.module)
@@ -96,6 +97,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
         caller _attach_policy()
         """
         method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED"
+        self.log.debug(msg)
+
         self.payloads = []
 
         self.switch_issu_details.refresh()
@@ -125,6 +130,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = "ENTERED"
+        self.log.debug(msg)
+
         if self.action is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.action must be set before "
@@ -149,10 +157,18 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.image_policies.refresh()
         self.switch_issu_details.refresh()
 
-        # Fail if the image policy does not support the switch platform
         self.image_policies.policy_name = self.policy_name
+        # Fail if the image policy does not exist.
+        # Image policy creation is handled by a different module.
+        if self.image_policies.name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"policy {self.policy_name} does not exist on "
+            msg += "the controller"
+            self.module.fail_json(msg)
+
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
+            # Fail if the image policy does not support the switch platform
             if self.switch_issu_details.platform not in self.image_policies.platform:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"policy {self.policy_name} does not support platform "
@@ -170,6 +186,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = "ENTERED"
+        self.log.debug(msg)
+
         self.validate_request()
         if self.action == "attach":
             self._attach_policy()
@@ -186,42 +205,46 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         Attach policy_name to the switch(es) associated with serial_numbers
 
-        NOTES:
-        1. This method creates a list of responses and results which
-        are accessible via properties response and result,
-        respectively.
+        This method creates a list of diffs, one result, and one response.
+        These are accessable via:
+            self.diff = List[Dict[str, Any]]
+            self.result = result from the controller
+            self.response = response from the controller
         """
         method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED"
+        self.log.debug(msg)
 
         self.build_payload()
 
         self.path = self.endpoints.policy_attach.get("path")
         self.verb = self.endpoints.policy_attach.get("verb")
 
-        responses = []
-        results = []
+        payload: Dict[str, Any] = {}
+        payload["mappingList"] = self.payloads
+        response = dcnm_send(
+            self.module, self.verb, self.path, data=json.dumps(payload)
+        )
+        result = self._handle_response(response, self.verb)
+
+        if not result["success"]:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Bad result when attaching policy {self.policy_name} "
+            msg += f"to switch {payload['ipAddr']}."
+            self.module.fail_json(msg, **self.failed_result)
+
+        self.properties["result"] = result
+        self.properties["response"] = response
 
         for payload in self.payloads:
-            response = dcnm_send(
-                self.module, self.verb, self.path, data=json.dumps(payload)
-            )
-            result = self._handle_response(response, self.verb)
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"response: {json.dumps(response, indent=4)}"
-            self.log.debug(msg)
-
-            if not result["success"]:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Bad result when attaching policy {self.policy_name} "
-                msg += f"to switch {payload['ipAddr']}."
-                self.module.fail_json(msg, **self.failed_result)
-
-            responses.append(response)
-            results.append(result)
-
-        self.properties["response"] = responses
-        self.properties["result"] = results
+            diff = {}
+            diff["action"] = self.action
+            diff["ip_address"] = payload["ipAddr"]
+            diff["logical_name"] = payload["hostName"]
+            diff["policy_name"] = payload["policyName"]
+            diff["serial_number"] = payload["serialNumber"]
+            self.diff = copy.deepcopy(diff)
 
     def _detach_policy(self):
         """
@@ -231,6 +254,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
         query_params: ?serialNumber=FDO211218GC,FDO21120U5D
         """
         method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED"
+        self.log.debug(msg)
 
         self.path = self.endpoints.policy_detach.get("path")
         self.verb = self.endpoints.policy_detach.get("verb")
@@ -253,8 +279,16 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
             self.module.fail_json(msg, **self.failed_result)
 
+        for serial_number in self.serial_numbers:
+            self.switch_issu_details.filter = serial_number
+            diff = {}
+            diff["action"] = self.action
+            diff["ip_address"] = self.switch_issu_details.ip_address
+            diff["logical_name"] = self.switch_issu_details.device_name
+            diff["policy_name"] = self.policy_name
+            diff["serial_number"] = serial_number
+            self.diff = copy.deepcopy(diff)
         self.changed = True
-        self.diff = self.response
 
     def _query_policy(self):
         """
@@ -278,6 +312,20 @@ class ImagePolicyAction(ImageUpgradeCommon):
             self.module.fail_json(msg, **self.failed_result)
 
         self.properties["query_result"] = self.response.get("DATA")
+        self.diff = self.response
+
+    @property
+    def diff_null(self):
+        """
+        Convenience property to return a null diff when no action is taken.
+        """
+        diff: Dict[str, Any] = {}
+        diff["action"] = None
+        diff["ip_address"] = None
+        diff["logical_name"] = None
+        diff["policy"] = None
+        diff["serial_number"] = None
+        return diff
 
     @property
     def query_result(self):

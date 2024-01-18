@@ -84,7 +84,6 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert instance.switch_configs == []
     assert instance.path is None
     assert instance.verb is None
-    assert instance.payloads == []
     assert instance.config == {"switches": [{"ip_address": "172.22.150.105"}]}
     assert instance.check_mode is False
     assert instance.validated == {}
