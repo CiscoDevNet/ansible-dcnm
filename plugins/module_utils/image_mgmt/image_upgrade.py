@@ -488,6 +488,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
             self.response = copy.deepcopy(response)
             self.response_data = response_data
+            # See image_upgrade_common.py for the definition of self.diff
             self.diff = copy.deepcopy(self.payload)
 
         self._wait_for_image_upgrade_to_complete()

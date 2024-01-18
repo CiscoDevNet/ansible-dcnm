@@ -209,6 +209,7 @@ class ImageValidate(ImageUpgradeCommon):
             diff["logical_name"] = self.issu_detail.device_name
             diff["policy"] = self.issu_detail.policy
             diff["serial_number"] = serial_number
+            # See image_upgrade_common.py for the definition of self.diff
             self.diff = copy.deepcopy(diff)
 
     def _wait_for_current_actions_to_complete(self) -> None:

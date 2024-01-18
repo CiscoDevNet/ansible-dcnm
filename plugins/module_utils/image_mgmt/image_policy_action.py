@@ -106,7 +106,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            payload = {}
+            payload: Dict[str, Any] = {}
             payload["policyName"] = self.policy_name
             payload["hostName"] = self.switch_issu_details.device_name
             payload["ipAddr"] = self.switch_issu_details.ip_address
@@ -238,7 +238,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.properties["response"] = response
 
         for payload in self.payloads:
-            diff = {}
+            diff: Dict[str, Any] = {}
             diff["action"] = self.action
             diff["ip_address"] = payload["ipAddr"]
             diff["logical_name"] = payload["hostName"]
@@ -281,7 +281,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            diff = {}
+            diff:Dict[str, Any] = {}
             diff["action"] = self.action
             diff["ip_address"] = self.switch_issu_details.ip_address
             diff["logical_name"] = self.switch_issu_details.device_name
