@@ -2,7 +2,10 @@
 # RUNTIME
 ################################################################################
 
-# About 1.5 hours
+# 45 to 50 minutes
+# Some previous runtimes where:
+# - 44:07.93
+# - 49:23.53
 
 ################################################################################
 # STEPS
@@ -11,7 +14,8 @@
 # 1. Create a fabric
 # 2. Merge switches into fabric
 # 3. Upgrade switches using global config
-# 4. Upgrade switches using switch config, overriding policy in global config
+# 4. Detach policies from switches
+# 5. Cleanup
 
 ################################################################################
 # REQUIREMENTS
@@ -57,7 +61,7 @@
 - set_fact:
     rest_fabric_create: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_name }}"
 
-- name: MERGED - Verify if fabric is deployed.
+- name: DELETED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_fabric_create }}"
@@ -70,12 +74,12 @@
     that:
     - result.response.DATA != None
 
-- name: MERGED - setup - Clean up any existing devices
+- name: DELETED - setup - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- name: MERGED - Merge switches
+- name: DELETED - Merge switches
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: merged
@@ -113,14 +117,14 @@
   loop: '{{ result.response }}'
 
 ################################################################################
-# MERGED global_config
+# DELETED - Upgrade all switches using global_config
 ################################################################################
 
-- name: MERGED - Upgrade all switches using global config
+- name: DELETED - Upgrade all switches using global config
   cisco.dcnm.dcnm_image_upgrade: &global_config
     state: merged
     config:
-        policy: "{{ image_policy_1}}"
+        policy: "{{ image_policy_1 }}"
         reboot: false
         stage: true
         validate: true
@@ -170,69 +174,21 @@
     - result.response.validate[0].RETURN_CODE == 200
 
 ################################################################################
-# MERGED IDEMPOTENCE global_config
+# DELETED - Detach policies from two switches and verify
 ################################################################################
 
-- name: MERGED - global_config - Idempotence PAUSE 15 minutes
+- name: DELETED - PAUSE 15 minutes for switches to reboot
   ansible.builtin.pause:
     minutes: 15
 
-- name: MERGED - global_config - Idempotence
-  cisco.dcnm.dcnm_image_upgrade: *global_config
-  register: result
-
-- debug:
-    var: result
-
-- assert:
-    that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff.attach_policy | length) == 0
-    - (result.diff.stage | length) == 0
-    - (result.diff.upgrade | length) == 0
-    - (result.diff.validate | length) == 0
-    - (result.response.attach_policy | length) == 0
-    - (result.response.stage | length) == 0
-    - (result.response.upgrade | length) == 0
-    - (result.response.validate | length) == 0
-
-
-################################################################################
-# MERGED switch_config
-################################################################################
-
-- name: MERGED - Upgrade all switches using global config. Override policy in switch configs.
-  cisco.dcnm.dcnm_image_upgrade: &switch_config
-    state: merged
-    config:
-        policy: "{{ image_policy_1}}"
-        reboot: false
-        stage: true
-        validate: true
-        upgrade:
-            nxos: true
-            epld: false
-        options:
-            nxos:
-                mode: disruptive
-                bios_force: false
-            epld:
-                module: ALL
-                golden: false
-            reboot:
-                config_reload: false
-                write_erase: false
-            package:
-                install: false
-                uninstall: false
-        switches:
-        - ip_address: "{{ leaf1 }}"
-          policy: "{{ image_policy_2 }}"
-        - ip_address: "{{ leaf2 }}"
-          policy: "{{ image_policy_2 }}"
-        - ip_address: "{{ spine1 }}"
-          policy: "{{ image_policy_2 }}"
+- name: DELETED - Detach policies from two switches
+  cisco.dcnm.dcnm_image_upgrade:
+        state: deleted
+        config:
+            policy: "{{ image_policy_1 }}"
+            switches:
+            - ip_address: "{{ leaf1 }}"
+            - ip_address: "{{ leaf2 }}"
   register: result
 
 - debug:
@@ -242,43 +198,45 @@
     that:
     - result.changed == true
     - result.failed == false
-    - result.diff.attach_policy[0].policy_name == image_policy_2
-    - result.diff.attach_policy[1].policy_name == image_policy_2
-    - result.diff.attach_policy[2].policy_name == image_policy_2
-    - result.diff.upgrade[0].devices[0].policyName == image_policy_2
-    - result.diff.upgrade[1].devices[0].policyName == image_policy_2
-    - result.diff.upgrade[2].devices[0].policyName == image_policy_2
-    - result.diff.validate[0].policy == image_policy_2
-    - result.diff.validate[1].policy == image_policy_2
-    - result.diff.validate[2].policy == image_policy_2
-    - result.response.attach_policy[0].RETURN_CODE == 200
-    - result.response.stage[0].RETURN_CODE == 200
-    - result.response.upgrade[0].RETURN_CODE == 200
-    - result.response.upgrade[1].RETURN_CODE == 200
-    - result.response.upgrade[2].RETURN_CODE == 200
-    - result.response.validate[0].RETURN_CODE == 200
-
-################################################################################
-# MERGED IDEMPOTENCE switch_config
-################################################################################
-
-- name: MERGED - switch_config - Idempotence PAUSE 15 minutes
-  ansible.builtin.pause:
-    minutes: 15
-
-- name: MERGED - switch_config - Idempotence
-  cisco.dcnm.dcnm_image_upgrade: *switch_config
-  register: result
-
-- assert:
-    that:
-    - result.changed == false
-    - result.failed == false
     - (result.diff.attach_policy | length) == 0
+    - (result.diff.detach_policy | length) == 2
     - (result.diff.stage | length) == 0
     - (result.diff.upgrade | length) == 0
     - (result.diff.validate | length) == 0
     - (result.response.attach_policy | length) == 0
+    - (result.response.detach_policy | length) == 1
+    - (result.response.stage | length) == 0
+    - (result.response.upgrade | length) == 0
+    - (result.response.validate | length) == 0
+
+
+################################################################################
+# DELETED - Detach policies from remaining switch and verify
+################################################################################
+
+- name: DELETED - Detach policy from one remaining switch
+  cisco.dcnm.dcnm_image_upgrade:
+        state: deleted
+        config:
+            policy: "{{ image_policy_1 }}"
+            switches:
+            - ip_address: "{{ spine1 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff.attach_policy | length) == 0
+    - (result.diff.detach_policy | length) == 1
+    - (result.diff.stage | length) == 0
+    - (result.diff.upgrade | length) == 0
+    - (result.diff.validate | length) == 0
+    - (result.response.attach_policy | length) == 0
+    - (result.response.detach_policy | length) == 1
     - (result.response.stage | length) == 0
     - (result.response.upgrade | length) == 0
     - (result.response.validate | length) == 0
@@ -287,7 +245,7 @@
 # CLEAN-UP
 ################################################################################
 
-- name: MERGED - CLEAN-UP - Remove devices from fabric
+- name: DELETED - cleanup - Remove devices from fabric
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: deleted

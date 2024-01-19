@@ -999,7 +999,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
             if action == "attach":
                 self.result.diff_attach_policy = instance.diff_null
-            elif action == "detach":
+            if action == "detach":
                 self.result.diff_detach_policy = instance.diff_null
             return
 
@@ -1008,7 +1008,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             instance.action = action
             instance.serial_numbers = value
             instance.commit()
-            self.result.response_attach_policy = copy.deepcopy(instance.response)
+            if action == "attach":
+                self.result.response_attach_policy = copy.deepcopy(instance.response)
+            if action == "detach":
+                self.result.response_detach_policy = copy.deepcopy(instance.response)
 
         for diff in instance.diff:
             msg = (
@@ -1303,9 +1306,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    # log.config = config_file
+    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)
