@@ -54,54 +54,54 @@
 # SETUP
 ################################################################################
 
--   set_fact:
-        rest_fabric_create: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_name }}"
+- set_fact:
+    rest_fabric_create: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_name }}"
 
--   name: MERGED - Verify if fabric is deployed.
-    cisco.dcnm.dcnm_rest:
-        method: GET
-        path: "{{ rest_fabric_create }}"
-    register: result
+- name: MERGED - Verify if fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_fabric_create }}"
+  register: result
 
--   debug:
-        var: result
+- debug:
+    var: result
 
--   assert:
-        that:
-        - 'result.response.DATA != None'
+- assert:
+    that:
+    - 'result.response.DATA != None'
 
--   name: MERGED - setup - Clean up any existing devices
-    cisco.dcnm.dcnm_inventory:
-        fabric: "{{ fabric_name }}"
-        state: deleted
+- name: MERGED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name }}"
+    state: deleted
 
--   name: MERGED - Merge switches
-    cisco.dcnm.dcnm_inventory:
-        fabric: "{{ fabric_name }}"
-        state: merged
-        config:
-        -   seed_ip: "{{ ansible_switch1 }}"
-            auth_proto: MD5
-            user_name: "{{ switch_username }}"
-            password: "{{ switch_password }}"
-            max_hops: 0
-            role: leaf
-            preserve_config: False
-        -   seed_ip: "{{ ansible_switch2 }}"
-            auth_proto: MD5
-            user_name: "{{ switch_username }}"
-            password: "{{ switch_password }}"
-            max_hops: 0
-            role: leaf
-            preserve_config: False
-        -   seed_ip: "{{ ansible_switch3 }}"
-            auth_proto: MD5
-            user_name: "{{ switch_username }}"
-            password: "{{ switch_password }}"
-            max_hops: 0
-            role: spine
-            preserve_config: False
-    register: result
+- name: MERGED - Merge switches
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name }}"
+    state: merged
+    config:
+      - seed_ip: "{{ ansible_switch1 }}"
+        auth_proto: MD5
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: False
+      - seed_ip: "{{ ansible_switch2 }}"
+        auth_proto: MD5
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: False
+      - seed_ip: "{{ ansible_switch3 }}"
+        auth_proto: MD5
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: spine
+        preserve_config: False
+  register: result
 
 - assert:
     that:
@@ -109,185 +109,185 @@
 
 - assert:
     that:
-      - 'item["RETURN_CODE"] == 200'
+    - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 ################################################################################
 # MERGED global_config
 ################################################################################
 
--   name: MERGED - Upgrade all switches using global config.
-    cisco.dcnm.dcnm_image_upgrade: &global_config
-        state: merged
-        config:
-            policy: "{{ image_policy_1}}"
-            reboot: false
-            stage: true
-            validate: true
-            upgrade:
-                nxos: true
-                epld: false
-            options:
-                nxos:
-                    mode: disruptive
-                    bios_force: false
-                epld:
-                    module: ALL
-                    golden: false
-                reboot:
-                    config_reload: false
-                    write_erase: false
-                package:
-                    install: false
-                    uninstall: false
-            switches:
-            -   ip_address: "{{ leaf1 }}"
-            -   ip_address: "{{ leaf2 }}"
-            -   ip_address: "{{ spine1 }}"
-    register: result
+- name: MERGED - Upgrade all switches using global config
+  cisco.dcnm.dcnm_image_upgrade: &global_config
+    state: merged
+    config:
+        policy: "{{ image_policy_1}}"
+        reboot: false
+        stage: true
+        validate: true
+        upgrade:
+            nxos: true
+            epld: false
+        options:
+            nxos:
+                mode: disruptive
+                bios_force: false
+            epld:
+                module: ALL
+                golden: false
+            reboot:
+                config_reload: false
+                write_erase: false
+            package:
+                install: false
+                uninstall: false
+        switches:
+          - ip_address: "{{ leaf1 }}"
+          - ip_address: "{{ leaf2 }}"
+          - ip_address: "{{ spine1 }}"
+  register: result
 
--   debug:
-        var: result
+- debug:
+    var: result
 
--   assert:
-        that:
-        - 'result.changed == true'
-        - 'result.failed == false'
-        - 'result.diff.attach_policy[0].policy_name == "{{ image_policy_1 }}"'
-        - 'result.diff.attach_policy[1].policy_name == "{{ image_policy_1 }}"'
-        - 'result.diff.attach_policy[2].policy_name == "{{ image_policy_1 }}"'
-        - 'result.diff.upgrade[0].devices[0].policyName == "{{ image_policy_1 }}"'
-        - 'result.diff.upgrade[1].devices[0].policyName == "{{ image_policy_1 }}"'
-        - 'result.diff.upgrade[2].devices[0].policyName == "{{ image_policy_1 }}"'
-        - 'result.diff.validate[0].policy == "{{ image_policy_1 }}"'
-        - 'result.diff.validate[1].policy == "{{ image_policy_1 }}"'
-        - 'result.diff.validate[2].policy == "{{ image_policy_1 }}"'
-        - 'result.response.attach_policy[0].RETURN_CODE == 200'
-        - 'result.response.stage[0].RETURN_CODE == 200'
-        - 'result.response.upgrade[0].RETURN_CODE == 200'
-        - 'result.response.upgrade[1].RETURN_CODE == 200'
-        - 'result.response.upgrade[2].RETURN_CODE == 200'
-        - 'result.response.validate[0].RETURN_CODE == 200'
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.failed == false'
+    - 'result.diff.attach_policy[0].policy_name == "{{ image_policy_1 }}"'
+    - 'result.diff.attach_policy[1].policy_name == "{{ image_policy_1 }}"'
+    - 'result.diff.attach_policy[2].policy_name == "{{ image_policy_1 }}"'
+    - 'result.diff.upgrade[0].devices[0].policyName == "{{ image_policy_1 }}"'
+    - 'result.diff.upgrade[1].devices[0].policyName == "{{ image_policy_1 }}"'
+    - 'result.diff.upgrade[2].devices[0].policyName == "{{ image_policy_1 }}"'
+    - 'result.diff.validate[0].policy == "{{ image_policy_1 }}"'
+    - 'result.diff.validate[1].policy == "{{ image_policy_1 }}"'
+    - 'result.diff.validate[2].policy == "{{ image_policy_1 }}"'
+    - 'result.response.attach_policy[0].RETURN_CODE == 200'
+    - 'result.response.stage[0].RETURN_CODE == 200'
+    - 'result.response.upgrade[0].RETURN_CODE == 200'
+    - 'result.response.upgrade[1].RETURN_CODE == 200'
+    - 'result.response.upgrade[2].RETURN_CODE == 200'
+    - 'result.response.validate[0].RETURN_CODE == 200'
 
 ################################################################################
 # MERGED IDEMPOTENCE global_config
 ################################################################################
 
--   name: MERGED - global_config - Idempotence PAUSE 15 minutes
-    ansible.builtin.pause:
-         minutes: 15
+- name: MERGED - global_config - Idempotence PAUSE 15 minutes
+  ansible.builtin.pause:
+    minutes: 15
 
--   name: MERGED - global_config - Idempotence
-    cisco.dcnm.dcnm_image_upgrade: *global_config
-    register: result
+- name: MERGED - global_config - Idempotence
+  cisco.dcnm.dcnm_image_upgrade: *global_config
+  register: result
 
--   debug:
-        var: result
+- debug:
+    var: result
 
--   assert:
-        that:
-        - 'result.changed == false'
-        - 'result.failed == false'
-        - '(result.diff.attach_policy | length) == 0'
-        - '(result.diff.stage | length) == 0'
-        - '(result.diff.upgrade | length) == 0'
-        - '(result.diff.validate | length) == 0'
-        - '(result.response.attach_policy | length) == 0'
-        - '(result.response.stage | length) == 0'
-        - '(result.response.upgrade | length) == 0'
-        - '(result.response.validate | length) == 0'
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.failed == false'
+    - '(result.diff.attach_policy | length) == 0'
+    - '(result.diff.stage | length) == 0'
+    - '(result.diff.upgrade | length) == 0'
+    - '(result.diff.validate | length) == 0'
+    - '(result.response.attach_policy | length) == 0'
+    - '(result.response.stage | length) == 0'
+    - '(result.response.upgrade | length) == 0'
+    - '(result.response.validate | length) == 0'
 
 
 ################################################################################
 # MERGED switch_config
 ################################################################################
 
--   name: MERGED - Upgrade all switches using global config. Override policy in switch configs.
-    cisco.dcnm.dcnm_image_upgrade: &switch_config
-        state: merged
-        config:
-            policy: "{{ image_policy_1}}"
-            reboot: false
-            stage: true
-            validate: true
-            upgrade:
-                nxos: true
-                epld: false
-            options:
-                nxos:
-                    mode: disruptive
-                    bios_force: false
-                epld:
-                    module: ALL
-                    golden: false
-                reboot:
-                    config_reload: false
-                    write_erase: false
-                package:
-                    install: false
-                    uninstall: false
-            switches:
-            -   ip_address: "{{ leaf1 }}"
-                policy: "{{ image_policy_2 }}"
-            -   ip_address: "{{ leaf2 }}"
-                policy: "{{ image_policy_2 }}"
-            -   ip_address: "{{ spine1 }}"
-                policy: "{{ image_policy_2 }}"
-    register: result
+- name: MERGED - Upgrade all switches using global config. Override policy in switch configs.
+  cisco.dcnm.dcnm_image_upgrade: &switch_config
+    state: merged
+    config:
+        policy: "{{ image_policy_1}}"
+        reboot: false
+        stage: true
+        validate: true
+        upgrade:
+            nxos: true
+            epld: false
+        options:
+            nxos:
+                mode: disruptive
+                bios_force: false
+            epld:
+                module: ALL
+                golden: false
+            reboot:
+                config_reload: false
+                write_erase: false
+            package:
+                install: false
+                uninstall: false
+        switches:
+        - ip_address: "{{ leaf1 }}"
+          policy: "{{ image_policy_2 }}"
+        - ip_address: "{{ leaf2 }}"
+          policy: "{{ image_policy_2 }}"
+        - ip_address: "{{ spine1 }}"
+          policy: "{{ image_policy_2 }}"
+  register: result
 
--   debug:
-        var: result
+- debug:
+    var: result
 
--   assert:
-        that:
-        - 'result.changed == true'
-        - 'result.failed == false'
-        - 'result.diff.attach_policy[0].policy_name == "{{ image_policy_2 }}"'
-        - 'result.diff.attach_policy[1].policy_name == "{{ image_policy_2 }}"'
-        - 'result.diff.attach_policy[2].policy_name == "{{ image_policy_2 }}"'
-        - 'result.diff.upgrade[0].devices[0].policyName == "{{ image_policy_2 }}"'
-        - 'result.diff.upgrade[1].devices[0].policyName == "{{ image_policy_2 }}"'
-        - 'result.diff.upgrade[2].devices[0].policyName == "{{ image_policy_2 }}"'
-        - 'result.diff.validate[0].policy == "{{ image_policy_2 }}"'
-        - 'result.diff.validate[1].policy == "{{ image_policy_2 }}"'
-        - 'result.diff.validate[2].policy == "{{ image_policy_2 }}"'
-        - 'result.response.attach_policy[0].RETURN_CODE == 200'
-        - 'result.response.stage[0].RETURN_CODE == 200'
-        - 'result.response.upgrade[0].RETURN_CODE == 200'
-        - 'result.response.upgrade[1].RETURN_CODE == 200'
-        - 'result.response.upgrade[2].RETURN_CODE == 200'
-        - 'result.response.validate[0].RETURN_CODE == 200'
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.failed == false'
+    - 'result.diff.attach_policy[0].policy_name == "{{ image_policy_2 }}"'
+    - 'result.diff.attach_policy[1].policy_name == "{{ image_policy_2 }}"'
+    - 'result.diff.attach_policy[2].policy_name == "{{ image_policy_2 }}"'
+    - 'result.diff.upgrade[0].devices[0].policyName == "{{ image_policy_2 }}"'
+    - 'result.diff.upgrade[1].devices[0].policyName == "{{ image_policy_2 }}"'
+    - 'result.diff.upgrade[2].devices[0].policyName == "{{ image_policy_2 }}"'
+    - 'result.diff.validate[0].policy == "{{ image_policy_2 }}"'
+    - 'result.diff.validate[1].policy == "{{ image_policy_2 }}"'
+    - 'result.diff.validate[2].policy == "{{ image_policy_2 }}"'
+    - 'result.response.attach_policy[0].RETURN_CODE == 200'
+    - 'result.response.stage[0].RETURN_CODE == 200'
+    - 'result.response.upgrade[0].RETURN_CODE == 200'
+    - 'result.response.upgrade[1].RETURN_CODE == 200'
+    - 'result.response.upgrade[2].RETURN_CODE == 200'
+    - 'result.response.validate[0].RETURN_CODE == 200'
 
 ################################################################################
 # MERGED IDEMPOTENCE switch_config
 ################################################################################
 
--   name: MERGED - switch_config - Idempotence PAUSE 15 minutes
-    ansible.builtin.pause:
-        minutes: 15
+- name: MERGED - switch_config - Idempotence PAUSE 15 minutes
+  ansible.builtin.pause:
+    minutes: 15
 
--   name: MERGED - switch_config - Idempotence
-    cisco.dcnm.dcnm_image_upgrade: *switch_config
-    register: result
+- name: MERGED - switch_config - Idempotence
+  cisco.dcnm.dcnm_image_upgrade: *switch_config
+  register: result
 
--   assert:
-        that:
-        - 'result.changed == false'
-        - 'result.failed == false'
-        - '(result.diff.attach_policy | length) == 0'
-        - '(result.diff.stage | length) == 0'
-        - '(result.diff.upgrade | length) == 0'
-        - '(result.diff.validate | length) == 0'
-        - '(result.response.attach_policy | length) == 0'
-        - '(result.response.stage | length) == 0'
-        - '(result.response.upgrade | length) == 0'
-        - '(result.response.validate | length) == 0'
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.failed == false'
+    - '(result.diff.attach_policy | length) == 0'
+    - '(result.diff.stage | length) == 0'
+    - '(result.diff.upgrade | length) == 0'
+    - '(result.diff.validate | length) == 0'
+    - '(result.response.attach_policy | length) == 0'
+    - '(result.response.stage | length) == 0'
+    - '(result.response.upgrade | length) == 0'
+    - '(result.response.validate | length) == 0'
 
 ################################################################################
 # CLEAN-UP
 ################################################################################
 
--   name: MERGED - cleanup - Clean up any existing devices
-    cisco.dcnm.dcnm_inventory:
-        fabric: "{{ fabric_name }}"
-        state: deleted
+- name: MERGED - cleanup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name }}"
+    state: deleted
