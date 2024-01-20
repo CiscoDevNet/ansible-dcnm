@@ -97,6 +97,9 @@ class ImageUpgradeTaskResult:
         return True if diffs have been appended to any of the diff lists.
         """
         for key in self.diff_properties.keys():
+            # skip query state diffs
+            if key == "diff_issu_status":
+                continue
             if len(self.properties[key]) != 0:
                 return True
         return False
