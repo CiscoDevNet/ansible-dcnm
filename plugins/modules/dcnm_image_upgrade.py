@@ -599,25 +599,33 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         # if the image is already validated, don't validate it again
         if self.have.validated == "Success":
             self.idempotent_want["validate"] = False
+
+        msg = f"self.have.reason: {self.have.reason}, "
+        msg += f"self.have.policy: {self.have.policy}, "
+        msg += f"idempotent_want[policy]: {self.idempotent_want['policy']}, "
+        msg += f"self.have.upgrade: {self.have.upgrade}"
+        self.log.debug(msg)
+
         # if the image is already upgraded, don't upgrade it again
         if (
-            self.have.status == "In-Sync"
-            and self.have.reason == "Upgrade"
-            and self.have.policy == want["policy"]
+            self.have.reason == "Upgrade"
+            and self.have.policy == self.idempotent_want["policy"]
             # If upgrade is other than Success, we need to try to upgrade
             # again.  So only change upgrade.nxos if upgrade is Success.
             and self.have.upgrade == "Success"
         ):
+            msg = "Set upgrade nxos to False"
+            self.log.debug(msg)
             self.idempotent_want["upgrade"]["nxos"] = False
 
         # Get relevant install options from the controller
-        # based on the options in our want item
+        # based on the options in our idempotent_want item
         instance = ImageInstallOptions(self.module)
-        instance.policy_name = want["policy"]
+        instance.policy_name = self.idempotent_want["policy"]
         instance.serial_number = self.have.serial_number
 
         instance.epld = want.get("upgrade", {}).get("epld", False)
-        instance.issu = want.get("upgrade", {}).get("nxos", False)
+        instance.issu = self.idempotent_want.get("upgrade", {}).get("nxos", False)
         instance.package_install = (
             want.get("options", {}).get("package", {}).get("install", False)
         )
@@ -1306,9 +1314,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    log.config = config_file
+    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    # log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)
