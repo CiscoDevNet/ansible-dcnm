@@ -86,7 +86,9 @@ class ImageValidate(ImageUpgradeCommon):
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self) -> None:
-        self.method_name = inspect.stack()[0][3]
+        """
+        Initialize the properties dictionary
+        """
 
         # self.properties is already initialized in the parent class
         self.properties["check_interval"] = 10  # seconds
@@ -95,14 +97,15 @@ class ImageValidate(ImageUpgradeCommon):
         self.properties["result"] = {}
         self.properties["response"] = {}
         self.properties["non_disruptive"] = False
-        self.properties["serial_numbers"] = None
+        self.properties["serial_numbers"] = []
 
     def prune_serial_numbers(self) -> None:
         """
         If the image is already validated on a switch, remove that switch's
         serial number from the list of serial numbers to validate.
         """
-        self.method_name = inspect.stack()[0][3]
+        msg = f"ENTERED: self.serial_numbers {self.serial_numbers}"
+        self.log.debug(msg)
 
         self.issu_detail.refresh()
         serial_numbers = copy.copy(self.serial_numbers)
@@ -110,6 +113,9 @@ class ImageValidate(ImageUpgradeCommon):
             self.issu_detail.filter = serial_number
             if self.issu_detail.validated == "Success":
                 self.serial_numbers.remove(self.issu_detail.serial_number)
+
+        msg = f"DONE: self.serial_numbers {self.serial_numbers}"
+        self.log.debug(msg)
 
     def validate_serial_numbers(self) -> None:
         """
@@ -156,16 +162,7 @@ class ImageValidate(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = "ENTERED commit()"
-        self.log.debug(msg)
-
-        if self.serial_numbers is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "call instance.serial_numbers "
-            msg += "before calling commit."
-            self.module.fail_json(msg, **self.failed_result)
-
-        msg = f"self.serial_numbers: {self.serial_numbers}"
+        msg = f"ENTERED: self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
         if len(self.serial_numbers) == 0:
