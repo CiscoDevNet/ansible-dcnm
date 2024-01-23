@@ -2,23 +2,27 @@
 # RUNTIME
 ################################################################################
 
-# 45 to 50 minutes
+# 30 minutes
 # Some previous runtimes where:
-# - 47:50.79
+# - 26:19.11
+# - 26:32.97
 
 ################################################################################
 # STEPS
 ################################################################################
 
-# 1. Create a fabric
+# SETUP
+# 1. Verify fabric is deployed
 # 2. Merge switches into fabric
 # 3. Upgrade switches using global config
-# 4. Query and verify ISSU status
+# TEST
+# 4. Query and verify ISSU status image_policy_1 attached to all switches
 # 5. Detach image policies from two of the three switches
-# 6. Query and verify ISSU status
+# 6. Query and verify ISSU status image_policy_1 removed from two switches
 # 7. Detach image policy from remaining switch
-# 8. Query and verify ISSU status
-# 9. Cleanup
+# 8. Query and verify ISSU status image_policy_1 removed from all switches
+# CLEANUP
+# 9. Delete devices from fabric
 
 ################################################################################
 # REQUIREMENTS
@@ -51,9 +55,9 @@
 #   leaf4: 172.22.150.109
 #   # for dcnm_image_upgrade role
 #   test_fabric: "{{ fabric_name }}"
-#   ansible_switch1: "{{ leaf1 }}"
-#   ansible_switch2: "{{ leaf2 }}"
-#   ansible_switch3: "{{ spine1 }}"
+#   ansible_switch_1: "{{ leaf1 }}"
+#   ansible_switch_2: "{{ leaf2 }}"
+#   ansible_switch_3: "{{ spine1 }}"
 #   image_policy_1: "KR5M"
 #   image_policy_2: "NR3F"
 
@@ -64,7 +68,7 @@
 - set_fact:
     rest_fabric_create: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_name }}"
 
-- name: QUERY - Verify if fabric is deployed.
+- name: QUERY - SETUP - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_fabric_create }}"
@@ -77,31 +81,31 @@
     that:
     - result.response.DATA != None
 
-- name: QUERY - setup - Clean up any existing devices
+- name: QUERY - SETUP - Clean up any existing devices
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- name: QUERY - Merge switches
+- name: QUERY - SETUP - Merge switches
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: merged
     config:
-      - seed_ip: "{{ ansible_switch1 }}"
+      - seed_ip: "{{ ansible_switch_1 }}"
         auth_proto: MD5
         user_name: "{{ switch_username }}"
         password: "{{ switch_password }}"
         max_hops: 0
         role: leaf
         preserve_config: False
-      - seed_ip: "{{ ansible_switch2 }}"
+      - seed_ip: "{{ ansible_switch_2 }}"
         auth_proto: MD5
         user_name: "{{ switch_username }}"
         password: "{{ switch_password }}"
         max_hops: 0
         role: leaf
         preserve_config: False
-      - seed_ip: "{{ ansible_switch3 }}"
+      - seed_ip: "{{ ansible_switch_3 }}"
         auth_proto: MD5
         user_name: "{{ switch_username }}"
         password: "{{ switch_password }}"
@@ -120,10 +124,10 @@
   loop: '{{ result.response }}'
 
 ################################################################################
-# QUERY - Upgrade all switches using global_config
+# QUERY - SETUP - Upgrade all switches using global_config
 ################################################################################
 
-- name: QUERY - Upgrade all switches using global config
+- name: QUERY - SETUP - Upgrade all switches using global config
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
@@ -148,9 +152,9 @@
                 install: false
                 uninstall: false
         switches:
-          - ip_address: "{{ ansible_switch1 }}"
-          - ip_address: "{{ ansible_switch2 }}"
-          - ip_address: "{{ ansible_switch3 }}"
+          - ip_address: "{{ ansible_switch_1 }}"
+          - ip_address: "{{ ansible_switch_2 }}"
+          - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
@@ -176,22 +180,35 @@
     - result.response.upgrade[2].RETURN_CODE == 200
     - result.response.validate[0].RETURN_CODE == 200
 
-- name: QUERY - PAUSE 15 minutes for switches to reboot
-  ansible.builtin.pause:
-    minutes: 15
+- name: QUERY - SETUP - Wait for controller response for all three switches
+  cisco.dcnm.dcnm_image_upgrade:
+    state: query
+    config:
+        switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
+  register: result
+  until:
+    - result.diff.issu_status[0].ipAddress == ansible_switch_1
+    - result.diff.issu_status[1].ipAddress == ansible_switch_2
+    - result.diff.issu_status[2].ipAddress == ansible_switch_3
+  retries: 60
+  delay: 5
+  ignore_errors: yes
 
 ################################################################################
-# QUERY - Query and verify ISSU status
+# QUERY - TEST - Verify image_policy_1 attached to all switches
 ################################################################################
 
-- name: QUERY - Query ISSU Status for three switches
+- name: QUERY - TEST - Verify image_policy_1 attached to all switches
   cisco.dcnm.dcnm_image_upgrade:
         state: query
         config:
             switches:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
-            - ip_address: "{{ ansible_switch3 }}"
+            - ip_address: "{{ ansible_switch_1 }}"
+            - ip_address: "{{ ansible_switch_2 }}"
+            - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
@@ -212,9 +229,9 @@
     - (result.response.stage | length) == 0
     - (result.response.upgrade | length) == 0
     - (result.response.validate | length) == 0
-    - (result.diff.issu_status[0].ipAddress) == ansible_switch1
-    - (result.diff.issu_status[1].ipAddress) == ansible_switch2
-    - (result.diff.issu_status[2].ipAddress) == ansible_switch3
+    - (result.diff.issu_status[0].ipAddress) == ansible_switch_1
+    - (result.diff.issu_status[1].ipAddress) == ansible_switch_2
+    - (result.diff.issu_status[2].ipAddress) == ansible_switch_3
     - (result.diff.issu_status[0].policy) == image_policy_1
     - (result.diff.issu_status[1].policy) == image_policy_1
     - (result.diff.issu_status[2].policy) == image_policy_1
@@ -223,17 +240,17 @@
     - (result.diff.issu_status[2].statusPercent) == 100
 
 ################################################################################
-# QUERY - Detach policies from two switches and verify
+# QUERY - TEST - Detach policies from two switches and verify
 ################################################################################
 
-- name: QUERY - Detach policies from two switches
+- name: QUERY - TEST - Detach policies from two switches
   cisco.dcnm.dcnm_image_upgrade:
         state: deleted
         config:
             policy: "{{ image_policy_1 }}"
             switches:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+            - ip_address: "{{ ansible_switch_1 }}"
+            - ip_address: "{{ ansible_switch_2 }}"
   register: result
 
 - debug:
@@ -255,18 +272,17 @@
 
 
 ################################################################################
-# QUERY -   Query ISSU status again and verify that policy for two switches
-#           is set to None
+# QUERY - TEST - Verify image_policy_1 removed from two switches
 ################################################################################
 
-- name: QUERY - Query ISSU Status (two switches should have no image policy)
+- name: QUERY - TEST - Verify image_policy_1 removed from two switches
   cisco.dcnm.dcnm_image_upgrade:
         state: query
         config:
             switches:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
-            - ip_address: "{{ ansible_switch3 }}"
+            - ip_address: "{{ ansible_switch_1 }}"
+            - ip_address: "{{ ansible_switch_2 }}"
+            - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
@@ -287,9 +303,9 @@
     - (result.response.stage | length) == 0
     - (result.response.upgrade | length) == 0
     - (result.response.validate | length) == 0
-    - (result.diff.issu_status[0].ipAddress) == ansible_switch1
-    - (result.diff.issu_status[1].ipAddress) == ansible_switch2
-    - (result.diff.issu_status[2].ipAddress) == ansible_switch3
+    - (result.diff.issu_status[0].ipAddress) == ansible_switch_1
+    - (result.diff.issu_status[1].ipAddress) == ansible_switch_2
+    - (result.diff.issu_status[2].ipAddress) == ansible_switch_3
     - (result.diff.issu_status[0].policy) == "None"
     - (result.diff.issu_status[1].policy) == "None"
     - (result.diff.issu_status[2].policy) == image_policy_1
@@ -298,16 +314,16 @@
     - (result.diff.issu_status[2].statusPercent) == 100
 
 ################################################################################
-# QUERY - Detach policies from remaining switch and verify
+# QUERY - TEST - Detach policies from remaining switch and verify
 ################################################################################
 
-- name: QUERY - Detach policy from remaining switch
+- name: QUERY - TEST - Detach policy from remaining switch
   cisco.dcnm.dcnm_image_upgrade:
         state: deleted
         config:
             policy: "{{ image_policy_1 }}"
             switches:
-            - ip_address: "{{ ansible_switch3 }}"
+            - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
@@ -329,18 +345,17 @@
     - (result.response.validate | length) == 0
 
 ################################################################################
-# QUERY -   Query ISSU status again and verify that policy for all switches
-#           is set to None
+# QUERY - TEST - Verify image_policy_1 removed from all switches
 ################################################################################
 
-- name: QUERY - Query ISSU Status (all switches should have no image policy)
+- name: QUERY - TEST - Verify image_policy_1 removed from all switches
   cisco.dcnm.dcnm_image_upgrade:
         state: query
         config:
             switches:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
-            - ip_address: "{{ ansible_switch3 }}"
+            - ip_address: "{{ ansible_switch_1 }}"
+            - ip_address: "{{ ansible_switch_2 }}"
+            - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
@@ -361,9 +376,9 @@
     - (result.response.stage | length) == 0
     - (result.response.upgrade | length) == 0
     - (result.response.validate | length) == 0
-    - (result.diff.issu_status[0].ipAddress) == ansible_switch1
-    - (result.diff.issu_status[1].ipAddress) == ansible_switch2
-    - (result.diff.issu_status[2].ipAddress) == ansible_switch3
+    - (result.diff.issu_status[0].ipAddress) == ansible_switch_1
+    - (result.diff.issu_status[1].ipAddress) == ansible_switch_2
+    - (result.diff.issu_status[2].ipAddress) == ansible_switch_3
     - (result.diff.issu_status[0].policy) == "None"
     - (result.diff.issu_status[1].policy) == "None"
     - (result.diff.issu_status[2].policy) == "None"
@@ -375,7 +390,7 @@
 # CLEAN-UP
 ################################################################################
 
-- name: QUERY - cleanup - Remove devices from fabric
+- name: QUERY - CLEANUP - Remove devices from fabric
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: deleted
