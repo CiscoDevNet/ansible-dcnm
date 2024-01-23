@@ -21,34 +21,12 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.result import \
-    Result
-
-
-class ImageUpgradeTaskResult(Result):
-    """
-    Storage for ImageUpgradeTask result
-
-    Override properties in Result() for use with ImageUpgradeTask module.
-
-    Specifically, this class adds the following properties:
-
-    stage: dict() - represents the image stage result
-    validate: dict() - represents the image validate result
-    install: dict() - represents the image install result
-
-    stage, validate and install are added to diff["merged"] like so:
-
-    diff["merged"]["stage"] = stage
-    diff["merged"]["validate"] = validate
-    diff["merged"]["install"] = install
-
-    Usage:
-
-    """
-
 
 class ImageUpgradeTaskResult:
+    """
+    Storage for ImageUpgradeTask result
+    """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
@@ -96,7 +74,7 @@ class ImageUpgradeTaskResult:
         """
         return True if diffs have been appended to any of the diff lists.
         """
-        for key in self.diff_properties.keys():
+        for key in self.diff_properties:
             # skip query state diffs
             if key == "diff_issu_status":
                 continue
@@ -123,9 +101,9 @@ class ImageUpgradeTaskResult:
         result["failed"] = True
         result["diff"] = {}
         result["response"] = {}
-        for key in self.diff_properties.keys():
+        for key in self.diff_properties:
             result["diff"][key] = []
-        for key in self.response_properties.keys():
+        for key in self.response_properties:
             result["response"][key] = []
         return result
 

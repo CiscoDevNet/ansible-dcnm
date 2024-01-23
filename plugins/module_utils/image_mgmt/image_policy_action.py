@@ -112,6 +112,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
             payload["ipAddr"] = self.switch_issu_details.ip_address
             payload["platform"] = self.switch_issu_details.platform
             payload["serialNumber"] = self.switch_issu_details.serial_number
+            msg = f"payload: {json.dumps(payload, indent=4)}"
+            self.log.debug(msg)
             for key, value in payload.items():
                 if value is None:
                     msg = f"{self.class_name}.{method_name}: "
