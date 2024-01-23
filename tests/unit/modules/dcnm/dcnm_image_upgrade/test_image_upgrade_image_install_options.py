@@ -82,8 +82,10 @@ def test_image_mgmt_install_options_00002(image_install_options) -> None:
     assert instance.properties.get("policy_name") is None
     assert instance.properties.get("response") is None
     assert instance.properties.get("response_data") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("result") == {}
     assert instance.properties.get("serial_number") is None
+    assert instance.properties.get("timeout") == 300
+    assert instance.properties.get("unit_test") is False
 
 
 def test_image_mgmt_install_options_00003(image_install_options) -> None:
@@ -142,6 +144,7 @@ def test_image_mgmt_install_options_00005(monkeypatch, image_install_options) ->
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
 
     instance = image_install_options
+    instance.unit_test = True
     instance.policy_name = "KRM5"
     instance.serial_number = "BAR"
     instance.refresh()
@@ -188,6 +191,7 @@ def test_image_mgmt_install_options_00006(monkeypatch, image_install_options) ->
     match += "the controller. Controller response:"
 
     instance = image_install_options
+    instance.unit_test = True
     instance.policy_name = "KRM5"
     instance.serial_number = "BAR"
     with pytest.raises(AnsibleFailJson, match=rf"{match}"):
@@ -223,6 +227,7 @@ def test_image_mgmt_install_options_00007(monkeypatch, image_install_options) ->
     instance = image_install_options
     instance.policy_name = "KRM5"
     instance.serial_number = "FDO21120U5D"
+    instance.unit_test = True
     instance.refresh()
     assert isinstance(instance.response, dict)
     assert instance.device_name == "leaf1"
@@ -279,6 +284,7 @@ def test_image_mgmt_install_options_00008(monkeypatch, image_install_options) ->
     instance.epld = True
     instance.issu = True
     instance.package_install = False
+    instance.unit_test = True
     instance.refresh()
     assert isinstance(instance.response, dict)
     assert instance.device_name == "leaf1"
@@ -336,6 +342,7 @@ def test_image_mgmt_install_options_00009(monkeypatch, image_install_options) ->
     instance.epld = True
     instance.issu = False
     instance.package_install = False
+    instance.unit_test = True
     instance.refresh()
     assert isinstance(instance.response, dict)
     assert instance.device_name is None
@@ -397,6 +404,7 @@ def test_image_mgmt_install_options_00010(monkeypatch, image_install_options) ->
     instance.epld = True
     instance.issu = True
     instance.package_install = True
+    instance.unit_test = True
     with pytest.raises(AnsibleFailJson, match=match):
         instance.refresh()
 
@@ -431,6 +439,7 @@ def test_image_mgmt_install_options_00011(image_install_options) -> None:
         instance.epld = False
         instance.issu = False
         instance.package_install = False
+        instance.unit_test = True
         instance.refresh()
 
     assert isinstance(instance.response_data, dict)
@@ -456,6 +465,7 @@ def test_image_mgmt_install_options_00020(image_install_options) -> None:
     instance = image_install_options
     instance.policy_name = "KRM5"
     instance.serial_number = "BAR"
+    instance.unit_test = True
     instance._build_payload()  # pylint: disable=protected-access
     assert instance.payload.get("devices")[0].get("policyName") == "KRM5"
     assert instance.payload.get("devices")[0].get("serialNumber") == "BAR"
@@ -482,6 +492,7 @@ def test_image_mgmt_install_options_00021(image_install_options) -> None:
     instance.issu = False
     instance.epld = True
     instance.package_install = True
+    instance.unit_test = True
     instance._build_payload()  # pylint: disable=protected-access
     assert instance.payload.get("devices")[0].get("policyName") == "KRM5"
     assert instance.payload.get("devices")[0].get("serialNumber") == "BAR"
@@ -502,6 +513,7 @@ def test_image_mgmt_install_options_00022(image_install_options) -> None:
     match += "boolean value"
 
     instance = image_install_options
+    instance.unit_test = True
     with pytest.raises(AnsibleFailJson, match=match):
         instance.issu = "FOO"
 
@@ -518,6 +530,7 @@ def test_image_mgmt_install_options_00023(image_install_options) -> None:
     match += "boolean value"
 
     instance = image_install_options
+    instance.unit_test = True
     with pytest.raises(AnsibleFailJson, match=match):
         instance.epld = "FOO"
 
@@ -534,5 +547,6 @@ def test_image_mgmt_install_options_00024(image_install_options) -> None:
     match += "package_install must be a boolean value"
 
     instance = image_install_options
+    instance.unit_test = True
     with pytest.raises(AnsibleFailJson, match=match):
         instance.package_install = "FOO"

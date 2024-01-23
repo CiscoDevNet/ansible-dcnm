@@ -21,6 +21,7 @@ __author__ = "Allen Robel"
 import inspect
 import json
 import logging
+import time
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -158,14 +159,16 @@ class ImageInstallOptions(ImageUpgradeCommon):
     def _init_properties(self):
         # self.properties is already initialized in the parent class
         self.properties["epld"] = False
+        self.properties["epld_modules"] = None
         self.properties["issu"] = True
-        self.properties["response_data"] = None
-        self.properties["response"] = None
-        self.properties["result"] = None
         self.properties["package_install"] = False
         self.properties["policy_name"] = None
+        self.properties["response"] = None
+        self.properties["response_data"] = None
+        self.properties["result"] = {}
         self.properties["serial_number"] = None
-        self.properties["epld_modules"] = None
+        self.properties["timeout"] = 300
+        self.properties["unit_test"] = False
 
     def refresh(self) -> None:
         """
@@ -185,6 +188,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg += "calling refresh()"
             self.module.fail_json(msg, **self.failed_result)
 
+        msg = f"self.epld {self.epld}, "
+        msg += f"self.issu {self.issu}, "
+        msg += f"self.package_install {self.package_install}"
+        self.log.debug(msg)
         # At least one of epld, issu, or package_install must be True
         # before calling refresh() or the controller will return an error.
         # Mock the response such that the caller knows nothing needs to be
@@ -204,11 +211,34 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
         self._build_payload()
 
-        self.properties["response"] = dcnm_send(
-            self.module, self.verb, self.path, data=json.dumps(self.payload)
-        )
-        self.properties["response_data"] = self.response.get("DATA", {})
-        self.properties["result"] = self._handle_response(self.response, self.verb)
+        timeout = self.timeout
+        sleep_time = 5
+        self.result["success"] = False
+
+        msg = f"Entering dcnm_send loop. timeout {timeout}, sleep_time {sleep_time}"
+        self.log.debug(msg)
+
+        while timeout > 0 and self.result.get("success") is False:
+            msg = "Calling dcnm_send with payload: "
+            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            self.properties["response"] = dcnm_send(
+                self.module, self.verb, self.path, data=json.dumps(self.payload)
+            )
+
+            msg = "Calling dcnm_send DONE"
+            self.log.debug(msg)
+
+            self.properties["response_data"] = self.response.get("DATA", {})
+            self.properties["result"] = self._handle_response(self.response, self.verb)
+
+            msg = f"self.response {self.response}"
+            self.log.debug(msg)
+
+            if self.result.get("success") is False and self.unit_test is False:
+                time.sleep(sleep_time)
+            timeout -= sleep_time
 
         if self.result["success"] is False:
             msg = f"{self.class_name}.{method_name}: "
@@ -255,6 +285,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.payload["epld"] = self.epld
         self.payload["packageInstall"] = self.package_install
 
+        msg = f"self.payload {self.payload}"
+        self.log.debug(msg)
+
     def _get(self, item):
         return self.make_boolean(self.make_none(self.response_data.get(item)))
 
@@ -287,6 +320,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.properties["serial_number"] = value
 
     # Optional properties
+
     @property
     def issu(self):
         """
@@ -351,6 +385,42 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["package_install"] = value
+
+    @property
+    def timeout(self):
+        """
+        Timeout, in seconds, for retrieving install-options from the controller.
+        Valid values: int()
+        Default: 300
+        """
+        return self.properties.get("timeout")
+
+    @timeout.setter
+    def timeout(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, int):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{method_name} must be an int(). Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["timeout"] = value
+
+    @property
+    def unit_test(self):
+        """
+        Is the class running under a unit test.
+        Set this to True in unit tests to speed the test up.
+        Default: False
+        """
+        return self.properties.get("unit_test")
+
+    @unit_test.setter
+    def unit_test(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{method_name} must be a bool(). Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["unit_test"] = value
 
     # Retrievable properties
     @property
