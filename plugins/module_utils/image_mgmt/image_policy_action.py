@@ -80,7 +80,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber(self.module)
         self.valid_actions = {"attach", "detach", "query"}
         self.verb = None
-        self.send_interval = 5 # interval between dcnm_send retries
+        self.send_interval = 5  # interval between dcnm_send retries
 
     def _init_properties(self):
         # self.properties is already initialized in the parent class
