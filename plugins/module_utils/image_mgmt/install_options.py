@@ -386,43 +386,43 @@ class ImageInstallOptions(ImageUpgradeCommon):
             self.module.fail_json(msg, **self.failed_result)
         self.properties["package_install"] = value
 
-    @property
-    def timeout(self):
-        """
-        Timeout, in seconds, for retrieving install-options from the controller.
-        Valid values: int()
-        Default: 300
-        """
-        return self.properties.get("timeout")
+    # @property
+    # def timeout(self):
+    #     """
+    #     Timeout, in seconds, for retrieving responses from the controller.
+    #     Valid values: int()
+    #     Default: 300
+    #     """
+    #     return self.properties.get("timeout")
 
-    @timeout.setter
-    def timeout(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be an int(). Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
-        self.properties["timeout"] = value
+    # @timeout.setter
+    # def timeout(self, value):
+    #     method_name = inspect.stack()[0][3]
+    #     if not isinstance(value, int):
+    #         msg = f"{self.class_name}.{method_name}: "
+    #         msg += f"{method_name} must be an int(). Got {value}."
+    #         self.module.fail_json(msg, **self.failed_result)
+    #     self.properties["timeout"] = value
 
-    @property
-    def unit_test(self):
-        """
-        Is the class running under a unit test.
-        Set this to True in unit tests to speed the test up.
-        Default: False
-        """
-        return self.properties.get("unit_test")
+    # @property
+    # def unit_test(self):
+    #     """
+    #     Is the class running under a unit test.
+    #     Set this to True in unit tests to speed the test up.
+    #     Default: False
+    #     """
+    #     return self.properties.get("unit_test")
 
-    @unit_test.setter
-    def unit_test(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be a bool(). Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
-        self.properties["unit_test"] = value
+    # @unit_test.setter
+    # def unit_test(self, value):
+    #     method_name = inspect.stack()[0][3]
+    #     if not isinstance(value, bool):
+    #         msg = f"{self.class_name}.{method_name}: "
+    #         msg += f"{method_name} must be a bool(). Got {value}."
+    #         self.module.fail_json(msg, **self.failed_result)
+    #     self.properties["unit_test"] = value
 
-    # Retrievable properties
+    # Getter properties
     @property
     def comp_disp(self):
         """
