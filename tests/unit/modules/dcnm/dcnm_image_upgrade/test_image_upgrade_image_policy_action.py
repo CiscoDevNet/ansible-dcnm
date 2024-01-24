@@ -88,8 +88,8 @@ def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
     instance = image_policy_action
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("action") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response") == {}
+    assert instance.properties.get("result") == {}
     assert instance.properties.get("policy_name") is None
     assert instance.properties.get("query_result") is None
     assert instance.properties.get("serial_numbers") is None
