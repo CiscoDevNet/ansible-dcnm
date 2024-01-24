@@ -22,6 +22,7 @@ import copy
 import inspect
 import json
 import logging
+from time import sleep
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -79,12 +80,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber(self.module)
         self.valid_actions = {"attach", "detach", "query"}
         self.verb = None
+        self.send_interval = 5 # interval between dcnm_send retries
 
     def _init_properties(self):
         # self.properties is already initialized in the parent class
         self.properties["action"] = None
-        self.properties["response"] = None
-        self.properties["result"] = None
+        self.properties["response"] = {}
+        self.properties["result"] = {}
         self.properties["policy_name"] = None
         self.properties["query_result"] = None
         self.properties["serial_numbers"] = None
@@ -203,6 +205,60 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += f"Unknown action {self.action}."
             self.module.fail_json(msg, **self.failed_result)
 
+    def safe_send(self, payload=None):
+        """
+        Call dcnm_send() with retries until successful response or timeout is exceeded.
+
+        Properties read:
+            self.send_interval: interval between retries (set in ImageUpgradeCommon)
+            self.timeout: timeout in seconds (set in ImageUpgradeCommon)
+            self.verb: HTTP verb (set in the calling class's commit() method)
+            self.path: HTTP path (set in the calling class's commit() method)
+            payload:
+                - (optionally) passed directly to this function.
+                - Normally only used when verb is POST or PUT.
+
+        Properties written:
+            self.properties["response"]: raw response from the controller
+            # self.properties["response_data"]: response["DATA"]
+            self.properties["result"]: result from self._handle_response() method
+        """
+        caller = inspect.stack()[1][3]
+        try:
+            timeout = self.timeout
+        except AttributeError:
+            timeout = 300
+
+        success = False
+        msg = f"{caller}: Entering safe_send loop. timeout {timeout}, send_interval {self.send_interval}"
+        self.log.debug(msg)
+
+        while timeout > 0 and success is False:
+            if payload is None:
+                msg = f"{caller}: Calling dcnm_send with no payload"
+                self.log.debug(msg)
+                response = dcnm_send(
+                    self.module, self.verb, self.path
+                )
+            else:
+                msg = f"{caller}: Calling dcnm_send with payload: "
+                msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+                response = dcnm_send(
+                    self.module, self.verb, self.path, data=json.dumps(payload)
+                )
+
+            msg = f"{caller}: response {response}"
+            self.log.debug(msg)
+
+            self.properties["response"] = response
+            self.properties["result"] = self._handle_response(response, self.verb)
+            success = self.properties["result"]["success"]
+
+            if success is False and self.unit_test is False:
+                sleep(self.send_interval)
+            timeout -= self.send_interval
+
     def _attach_policy(self):
         """
         Attach policy_name to the switch(es) associated with serial_numbers
@@ -225,19 +281,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         payload: Dict[str, Any] = {}
         payload["mappingList"] = self.payloads
-        response = dcnm_send(
-            self.module, self.verb, self.path, data=json.dumps(payload)
-        )
-        result = self._handle_response(response, self.verb)
+        self.safe_send(payload)
 
-        if not result["success"]:
+        if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when attaching policy {self.policy_name} "
             msg += f"to switch {payload['ipAddr']}."
             self.module.fail_json(msg, **self.failed_result)
-
-        self.properties["result"] = result
-        self.properties["response"] = response
 
         for payload in self.payloads:
             diff: Dict[str, Any] = {}
@@ -266,14 +316,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         query_params = ",".join(self.serial_numbers)
         self.path += f"?serialNumber={query_params}"
 
-        self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
-        self.properties["result"] = self._handle_response(self.response, self.verb)
-
-        msg = f"result: {json.dumps(self.result, indent=4)}"
-        self.log.debug(msg)
-
-        msg = f"response: {json.dumps(self.response, indent=4)}"
-        self.log.debug(msg)
+        self.safe_send()
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
@@ -305,8 +348,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.path = self.path.replace("__POLICY_NAME__", self.policy_name)
 
-        self.properties["response"] = dcnm_send(self.module, self.verb, self.path)
-        self.properties["result"] = self._handle_response(self.response, self.verb)
+        self.safe_send()
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{method_name}: "
