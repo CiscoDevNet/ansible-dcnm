@@ -51,7 +51,7 @@ PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 
 DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
-DCNM_SEND_IMAGE_POLICY_ACTION = PATCH_IMAGE_MGMT + "image_policy_action.dcnm_send"
+DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_send"
 DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.dcnm_send"
 DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
@@ -415,12 +415,12 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    def mock_dcnm_send_image_policy_action(*args) -> Dict[str, Any]:
+    def mock_dcnm_send_image_upgrade_common(*args) -> Dict[str, Any]:
         return responses_image_policy_action(key)
 
     monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
     monkeypatch.setattr(
-        DCNM_SEND_IMAGE_POLICY_ACTION, mock_dcnm_send_image_policy_action
+        DCNM_SEND_IMAGE_UPGRADE_COMMON, mock_dcnm_send_image_upgrade_common
     )
     monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
     monkeypatch.setattr(

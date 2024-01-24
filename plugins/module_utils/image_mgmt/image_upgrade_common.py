@@ -19,8 +19,13 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import json
 import logging
+from time import sleep
 
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
 # Using only for its failed_result property
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
     ImageUpgradeTaskResult
@@ -53,8 +58,63 @@ class ImageUpgradeCommon:
         self.properties["diff"] = []
         self.properties["failed"] = False
         self.properties["response"] = []
+        self.properties["send_interval"] = 5
         self.properties["timeout"] = 300
         self.properties["unit_test"] = False
+
+    def dcnm_send_with_retry(self, payload=None):
+        """
+        Call dcnm_send() with retries until successful response or timeout is exceeded.
+
+        Properties read:
+            self.send_interval: interval between retries (set in ImageUpgradeCommon)
+            self.timeout: timeout in seconds (set in ImageUpgradeCommon)
+            self.verb: HTTP verb (set in the calling class's commit() method)
+            self.path: HTTP path (set in the calling class's commit() method)
+            payload:
+                - (optionally) passed directly to this function.
+                - Normally only used when verb is POST or PUT.
+
+        Properties written:
+            self.properties["response"]: raw response from the controller
+            # self.properties["response_data"]: response["DATA"]
+            self.properties["result"]: result from self._handle_response() method
+        """
+        caller = inspect.stack()[1][3]
+        try:
+            timeout = self.timeout
+        except AttributeError:
+            timeout = 300
+
+        success = False
+        msg = f"{caller}: Entering dcnm_send_with_retry loop. timeout {timeout}, send_interval {self.send_interval}"
+        self.log.debug(msg)
+
+        while timeout > 0 and success is False:
+            if payload is None:
+                msg = f"{caller}: Calling dcnm_send with no payload"
+                self.log.debug(msg)
+                response = dcnm_send(
+                    self.module, self.verb, self.path
+                )
+            else:
+                msg = f"{caller}: Calling dcnm_send with payload: "
+                msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+                response = dcnm_send(
+                    self.module, self.verb, self.path, data=json.dumps(payload)
+                )
+
+            msg = f"{caller}: response {response}"
+            self.log.debug(msg)
+
+            self.properties["response"] = response
+            self.properties["result"] = self._handle_response(response, self.verb)
+            success = self.properties["result"]["success"]
+
+            if success is False and self.unit_test is False:
+                sleep(self.send_interval)
+            timeout -= self.send_interval
 
     def _handle_response(self, response, verb):
         """
@@ -214,6 +274,24 @@ class ImageUpgradeCommon:
             msg += f"failed must be a bool. Got {value}"
             self.module.fail_json(msg)
         self.properties["failed"] = value
+
+    @property
+    def send_interval(self):
+        """
+        Send interval, in seconds, for retrying responses from the controller.
+        Valid values: int()
+        Default: 5
+        """
+        return self.properties.get("send_interval")
+
+    @send_interval.setter
+    def send_interval(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, int):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{method_name} must be an int(). Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["send_interval"] = value
 
     @property
     def timeout(self):
