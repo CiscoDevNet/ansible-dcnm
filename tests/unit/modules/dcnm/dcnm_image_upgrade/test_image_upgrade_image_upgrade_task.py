@@ -89,7 +89,7 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert instance.validated == {}
     assert instance.want == []
     assert instance.need == []
-    assert instance.result.module_result == {
+    assert instance.task_result.module_result == {
         "changed": False,
         "diff": {
             "attach_policy": [],

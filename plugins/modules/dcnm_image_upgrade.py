@@ -483,8 +483,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.want = []
         self.need = []
 
-        self.result = ImageUpgradeTaskResult(self.module)
-        self.result.changed = False
+        self.task_result = ImageUpgradeTaskResult(self.module)
+        self.task_result.changed = False
 
         self.switch_details = SwitchDetails(self.module)
         self.image_policies = ImagePolicies(self.module)
@@ -526,8 +526,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.log.debug(msg)
 
         if len(self.want) == 0:
-            self.result.result["changed"] = False
-            self.module.exit_json(**self.result.result)
+            self.task_result.result["changed"] = False
+            self.module.exit_json(**self.task_result.result)
 
     def _build_idempotent_want(self, want) -> None:
         """
@@ -1006,9 +1006,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.log.debug(msg)
 
             if action == "attach":
-                self.result.diff_attach_policy = instance.diff_null
+                self.task_result.diff_attach_policy = instance.diff_null
             if action == "detach":
-                self.result.diff_detach_policy = instance.diff_null
+                self.task_result.diff_detach_policy = instance.diff_null
             return
 
         for key, value in serial_numbers_to_update.items():
@@ -1017,9 +1017,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             instance.serial_numbers = value
             instance.commit()
             if action == "attach":
-                self.result.response_attach_policy = copy.deepcopy(instance.response)
+                self.task_result.response_attach_policy = copy.deepcopy(instance.response)
             if action == "detach":
-                self.result.response_detach_policy = copy.deepcopy(instance.response)
+                self.task_result.response_detach_policy = copy.deepcopy(instance.response)
 
         for diff in instance.diff:
             msg = (
@@ -1027,9 +1027,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             )
             self.log.debug(msg)
             if action == "attach":
-                self.result.diff_attach_policy = copy.deepcopy(diff)
+                self.task_result.diff_attach_policy = copy.deepcopy(diff)
             elif action == "detach":
-                self.result.diff_detach_policy = copy.deepcopy(diff)
+                self.task_result.diff_detach_policy = copy.deepcopy(diff)
 
     def _stage_images(self, serial_numbers) -> None:
         """
@@ -1046,9 +1046,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.serial_numbers = serial_numbers
         instance.commit()
         for diff in instance.diff:
-            self.result.diff_stage = copy.deepcopy(diff)
+            self.task_result.diff_stage = copy.deepcopy(diff)
         instance.response.pop("DATA", None)
-        self.result.response_stage = instance.response
+        self.task_result.response_stage = instance.response
 
     def _validate_images(self, serial_numbers) -> None:
         """
@@ -1064,9 +1064,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.serial_numbers = serial_numbers
         instance.commit()
         for diff in instance.diff:
-            self.result.diff_validate = copy.deepcopy(diff)
+            self.task_result.diff_validate = copy.deepcopy(diff)
         instance.response.pop("DATA", None)
-        self.result.response_validate = instance.response
+        self.task_result.response_validate = instance.response
 
     def _verify_install_options(self, devices) -> None:
         """
@@ -1200,9 +1200,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         upgrade.devices = devices
         upgrade.commit()
         for diff in upgrade.diff:
-            self.result.diff_upgrade = diff
+            self.task_result.diff_upgrade = diff
         for response in upgrade.response:
-            self.result.response_upgrade = response
+            self.task_result.response_upgrade = response
 
     def handle_merged_state(self) -> None:
         """
@@ -1272,12 +1272,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.refresh()
         response = copy.deepcopy(instance.response)
         response.pop("DATA")
-        self.result.response_issu_status = copy.deepcopy(response)
+        self.task_result.response_issu_status = copy.deepcopy(response)
         for switch in self.need:
             instance.filter = switch.get("ip_address")
             if instance.filtered_data is None:
                 continue
-            self.result.diff_issu_status = instance.filtered_data
+            self.task_result.diff_issu_status = instance.filtered_data
 
     def _failure(self, resp) -> None:
         """
@@ -1331,15 +1331,15 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.get_need_query()
 
-    task_module.result.changed = False
+    task_module.task_result.changed = False
     if len(task_module.need) == 0:
-        ansible_module.exit_json(**task_module.result.module_result)
+        ansible_module.exit_json(**task_module.task_result.module_result)
 
     if ansible_module.check_mode:
-        ansible_module.exit_json(**task_module.result.module_result)
+        ansible_module.exit_json(**task_module.task_result.module_result)
 
     if ansible_module.params["state"] in ["merged", "deleted"]:
-        task_module.result.changed = True
+        task_module.task_result.changed = True
 
     if ansible_module.params["state"] == "merged":
         task_module.handle_merged_state()
@@ -1348,7 +1348,7 @@ def main():
     elif ansible_module.params["state"] == "query":
         task_module.handle_query_state()
 
-    ansible_module.exit_json(**task_module.result.module_result)
+    ansible_module.exit_json(**task_module.task_result.module_result)
 
 
 if __name__ == "__main__":
