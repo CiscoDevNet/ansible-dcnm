@@ -70,7 +70,7 @@ def test_image_mgmt_image_policies_00002(image_policies) -> None:
         instance = image_policies
     assert isinstance(image_policies.properties, dict)
     assert instance.properties.get("policy_name") is None
-    assert instance.properties.get("response_data") is None
+    assert instance.properties.get("response_data") == {}
     assert instance.properties.get("response") is None
     assert instance.properties.get("result") is None
 

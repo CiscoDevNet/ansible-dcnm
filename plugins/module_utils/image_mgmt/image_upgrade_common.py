@@ -77,7 +77,6 @@ class ImageUpgradeCommon:
 
         Properties written:
             self.properties["response"]: raw response from the controller
-            # self.properties["response_data"]: response["DATA"]
             self.properties["result"]: result from self._handle_response() method
         """
         caller = inspect.stack()[1][3]

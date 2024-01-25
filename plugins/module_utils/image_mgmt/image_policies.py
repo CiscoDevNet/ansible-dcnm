@@ -70,7 +70,7 @@ class ImagePolicies(ImageUpgradeCommon):
         # self.properties is already initialized in the parent class
         self.properties["all_policies"] = None
         self.properties["policy_name"] = None
-        self.properties["response_data"] = None
+        self.properties["response_data"] = {}
         self.properties["response"] = None
         self.properties["result"] = None
 
