@@ -50,6 +50,7 @@ DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_s
 DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_MGMT + "install_options.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
+
 def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
     """
     Function
