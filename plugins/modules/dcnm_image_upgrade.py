@@ -436,8 +436,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_detai
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 
 
 class ImageUpgradeTask(ImageUpgradeCommon):
@@ -1017,9 +1015,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             instance.serial_numbers = value
             instance.commit()
             if action == "attach":
-                self.task_result.response_attach_policy = copy.deepcopy(instance.response_current)
+                self.task_result.response_attach_policy = copy.deepcopy(
+                    instance.response_current
+                )
             if action == "detach":
-                self.task_result.response_detach_policy = copy.deepcopy(instance.response_current)
+                self.task_result.response_detach_policy = copy.deepcopy(
+                    instance.response_current
+                )
 
         for diff in instance.diff:
             msg = (

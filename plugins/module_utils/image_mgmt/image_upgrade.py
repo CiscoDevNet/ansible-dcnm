@@ -33,8 +33,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_opti
     ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 
 
 class ImageUpgrade(ImageUpgradeCommon):
