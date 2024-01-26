@@ -81,8 +81,6 @@ class ImagePolicyAction(ImageUpgradeCommon):
     def _init_properties(self):
         # self.properties is already initialized in the parent class
         self.properties["action"] = None
-        self.properties["response"] = {}
-        self.properties["result"] = {}
         self.properties["policy_name"] = None
         self.properties["query_result"] = None
         self.properties["serial_numbers"] = None
@@ -225,7 +223,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         payload["mappingList"] = self.payloads
         self.dcnm_send_with_retry(payload)
 
-        if not self.result["success"]:
+        if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when attaching policy {self.policy_name} "
             msg += f"to switch {payload['ipAddr']}."
@@ -260,7 +258,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.dcnm_send_with_retry()
 
-        if not self.result["success"]:
+        if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when detaching policy {self.policy_name} "
             msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
@@ -292,13 +290,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.dcnm_send_with_retry()
 
-        if not self.result["success"]:
+        if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when querying image policy {self.policy_name}."
             self.module.fail_json(msg, **self.failed_result)
 
-        self.properties["query_result"] = self.response.get("DATA")
-        self.diff = self.response
+        self.query_result = self.response_current.get("DATA")
+        self.diff = self.response_current
 
     @property
     def diff_null(self):
@@ -320,6 +318,16 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         return self.properties.get("query_result")
 
+    @query_result.setter
+    def query_result(self, value):
+        method_name = inspect.stack()[0][3]
+        if isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.query_result must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["query_result"] = value
+
     @property
     def action(self):
         """
@@ -334,37 +342,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
     @action.setter
     def action(self, value):
         method_name = inspect.stack()[0][3]
-
         if value not in self.valid_actions:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.action must be one of "
             msg += f"{','.join(sorted(self.valid_actions))}. "
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
-
         self.properties["action"] = value
-
-    @property
-    def response(self):
-        """
-        Return the raw response from the controller.
-
-        Assumes that commit() has been called.
-
-        In the case of attach, this is a list of responses.
-        """
-        return self.properties.get("response")
-
-    @property
-    def result(self):
-        """
-        Return the raw result.
-
-        Assumes that commit() has been called.
-
-        In the case of attach, this is a list of results.
-        """
-        return self.properties.get("result")
 
     @property
     def policy_name(self):

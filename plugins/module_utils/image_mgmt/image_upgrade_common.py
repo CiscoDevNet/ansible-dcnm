@@ -18,17 +18,17 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import json
 import logging
 from time import sleep
 
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 # Using only for its failed_result property
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
     ImageUpgradeTaskResult
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
+    dcnm_send
 
 
 class ImageUpgradeCommon:
@@ -58,6 +58,9 @@ class ImageUpgradeCommon:
         self.properties["diff"] = []
         self.properties["failed"] = False
         self.properties["response"] = []
+        self.properties["response_current"] = {}
+        self.properties["result"] = []
+        self.properties["result_current"] = {}
         self.properties["send_interval"] = 5
         self.properties["timeout"] = 300
         self.properties["unit_test"] = False
@@ -93,9 +96,7 @@ class ImageUpgradeCommon:
             if payload is None:
                 msg = f"{caller}: Calling dcnm_send with no payload"
                 self.log.debug(msg)
-                response = dcnm_send(
-                    self.module, self.verb, self.path
-                )
+                response = dcnm_send(self.module, self.verb, self.path)
             else:
                 msg = f"{caller}: Calling dcnm_send with payload: "
                 msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
@@ -104,16 +105,34 @@ class ImageUpgradeCommon:
                     self.module, self.verb, self.path, data=json.dumps(payload)
                 )
 
-            msg = f"{caller}: response {response}"
-            self.log.debug(msg)
+            self.response_current = copy.deepcopy(response)
+            self.response = copy.deepcopy(response)
 
-            self.properties["response"] = response
-            self.properties["result"] = self._handle_response(response, self.verb)
-            success = self.properties["result"]["success"]
+            self.result_current = self._handle_response(response, self.verb)
+            self.result = copy.deepcopy(self.result_current)
+
+            success = self.result_current["success"]
 
             if success is False and self.unit_test is False:
                 sleep(self.send_interval)
             timeout -= self.send_interval
+
+        msg = f"{caller}: Exiting dcnm_send_with_retry loop. success {success}. "
+        self.log.debug(msg)
+
+        msg = f"{caller}: self.response_current {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{caller}: self.response {json.dumps(self.response, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{caller}: self.result_current {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = (
+            f"{caller}: self.result {json.dumps(self.result, indent=4, sort_keys=True)}"
+        )
+        self.log.debug(msg)
 
     def _handle_response(self, response, verb):
         """
@@ -273,6 +292,86 @@ class ImageUpgradeCommon:
             msg += f"failed must be a bool. Got {value}"
             self.module.fail_json(msg)
         self.properties["failed"] = value
+
+    @property
+    def response_current(self):
+        """
+        Return the current POST response from the controller
+        instance.commit() must be called first.
+
+        This is a dict of the current response from the controller.
+        """
+        return self.properties.get("response_current")
+
+    @response_current.setter
+    def response_current(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.response_current must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["response_current"] = value
+
+    @property
+    def response(self):
+        """
+        Return the aggregated POST response from the controller
+        instance.commit() must be called first.
+
+        This is a list of responses from the controller.
+        """
+        return self.properties.get("response")
+
+    @response.setter
+    def response(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.response must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["response"].append(value)
+
+    @property
+    def result(self):
+        """
+        Return the aggregated result from the controller
+        instance.commit() must be called first.
+
+        This is a list of results from the controller.
+        """
+        return self.properties.get("result")
+
+    @result.setter
+    def result(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.result must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["result"].append(value)
+
+    @property
+    def result_current(self):
+        """
+        Return the current result from the controller
+        instance.commit() must be called first.
+
+        This is a dict containing the current result.
+        """
+        return self.properties.get("result_current")
+
+    @result_current.setter
+    def result_current(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.result_current must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["result_current"] = value
 
     @property
     def send_interval(self):

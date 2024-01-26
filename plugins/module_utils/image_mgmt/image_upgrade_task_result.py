@@ -294,7 +294,7 @@ class ImageUpgradeTaskResult:
     @property
     def response_upgrade(self):
         """
-        Getter for diff_upgrade property
+        Getter for response_upgrade property
         """
         return self.properties["response_upgrade"]
 

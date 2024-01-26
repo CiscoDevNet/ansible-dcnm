@@ -173,8 +173,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["epld_upgrade"] = False
         self.properties["force_non_disruptive"] = False
         self.properties["response_data"] = []
-        self.properties["result"] = []
-        self.properties["response"] = []
         self.properties["non_disruptive"] = False
         self.properties["package_install"] = False
         self.properties["package_uninstall"] = False
@@ -192,11 +190,22 @@ class ImageUpgrade(ImageUpgradeCommon):
 
     def _validate_devices(self) -> None:
         """
-        1.  Perform any pre-upgrade validations (currently none)
+        1.  Perform any pre-upgrade validations
+            a. Verify that self.devices is set
         2.  Populate self.ip_addresses with the ip_address of all
             switches which can be upgraded.  This is used in
             _wait_for_current_actions_to_complete
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if self.devices is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "call instance.devices before calling commit."
+            self.module.fail_json(msg, **self.failed_result)
+
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
             self.issu_detail.refresh()
@@ -444,14 +453,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if self.devices is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "call instance.devices before calling commit."
-            self.module.fail_json(msg, **self.failed_result)
-
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
@@ -470,24 +471,30 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg = f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            response = dcnm_send(
-                self.module, self.verb, self.path, data=json.dumps(self.payload)
-            )
-            self.properties["result"] = self._handle_response(response, self.verb)
+            self.dcnm_send_with_retry(self.payload)
 
-            msg = f"response: {json.dumps(response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            if not self.result["success"]:
+            if not self.result_current["success"]:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"failed: {self.result}. "
-                msg += f"Controller response: {response}"
+                msg += f"failed: {self.result_current}. "
+                msg += f"Controller response: {self.response_current}"
                 self.module.fail_json(msg, **self.failed_result)
 
-            response_data = response.get("DATA")
+            self.response_data = self.response_current.get("DATA")
 
-            self.response = copy.deepcopy(response)
-            self.response_data = response_data
+            msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = (
+                f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+            )
+            self.log.debug(msg)
+            msg = f"self.response_data: {json.dumps(self.response_data, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
             # See image_upgrade_common.py for the definition of self.diff
             self.diff = copy.deepcopy(self.payload)
 
@@ -887,8 +894,6 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value
 
-    # getter properties
-
     @property
     def response_data(self):
         """
@@ -903,30 +908,3 @@ class ImageUpgrade(ImageUpgradeCommon):
     @response_data.setter
     def response_data(self, value):
         self.properties["response_data"].append(value)
-
-    @property
-    def result(self):
-        """
-        Return the POST result.
-        instance.devices must be set first.
-        instance.commit() must be called first.
-        """
-        return self.properties.get("result")
-
-    @property
-    def response(self):
-        """
-        Return the POST response from the controller
-        instance.devices must be set first.
-        instance.commit() must be called first.
-        """
-        return self.properties.get("response")
-
-    @response.setter
-    def response(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict."
-            self.module.fail_json(msg, **self.failed_result)
-        self.properties["response"].append(value)

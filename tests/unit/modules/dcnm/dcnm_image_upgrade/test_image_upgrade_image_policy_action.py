@@ -88,8 +88,10 @@ def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
     instance = image_policy_action
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("action") is None
-    assert instance.properties.get("response") == {}
-    assert instance.properties.get("result") == {}
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("response_current") == {}
+    assert instance.properties.get("result") == []
+    assert instance.properties.get("result_current") == {}
     assert instance.properties.get("policy_name") is None
     assert instance.properties.get("query_result") is None
     assert instance.properties.get("serial_numbers") is None
@@ -433,15 +435,15 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     instance.action = "detach"
 
     instance.commit()
-    assert isinstance(instance.response, dict)
-    assert instance.response.get("RETURN_CODE") == 200
-    assert instance.response.get("METHOD") == "DELETE"
-    assert instance.response.get("MESSAGE") == "OK"
+    assert isinstance(instance.response_current, dict)
+    assert instance.response_current.get("RETURN_CODE") == 200
+    assert instance.response_current.get("METHOD") == "DELETE"
+    assert instance.response_current.get("MESSAGE") == "OK"
     assert (
-        instance.response.get("DATA") == "Successfully detach the policy from device."
+        instance.response_current.get("DATA") == "Successfully detach the policy from device."
     )
-    assert instance.result.get("success") is True
-    assert instance.result.get("changed") is True
+    assert instance.result_current.get("success") is True
+    assert instance.result_current.get("changed") is True
 
 
 MATCH_00060 = "ImagePolicyAction.action: instance.action must be "

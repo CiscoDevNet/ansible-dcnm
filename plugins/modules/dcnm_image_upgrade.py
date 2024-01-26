@@ -1017,9 +1017,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             instance.serial_numbers = value
             instance.commit()
             if action == "attach":
-                self.task_result.response_attach_policy = copy.deepcopy(instance.response)
+                self.task_result.response_attach_policy = copy.deepcopy(instance.response_current)
             if action == "detach":
-                self.task_result.response_detach_policy = copy.deepcopy(instance.response)
+                self.task_result.response_detach_policy = copy.deepcopy(instance.response_current)
 
         for diff in instance.diff:
             msg = (
@@ -1202,6 +1202,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         for diff in upgrade.diff:
             self.task_result.diff_upgrade = diff
         for response in upgrade.response:
+            msg = f"adding response to response_upgrade: {json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             self.task_result.response_upgrade = response
 
     def handle_merged_state(self) -> None:
