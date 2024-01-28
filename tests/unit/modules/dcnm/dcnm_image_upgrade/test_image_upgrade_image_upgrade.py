@@ -34,10 +34,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.mock_rest_send import \
+from plugins.module_utils.image_mgmt.mock_rest_send import \
     MockRestSend as MockRestSendImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.mock_rest_send import \
-    MockRestSend as MockRestSendInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
     ImageUpgrade
 

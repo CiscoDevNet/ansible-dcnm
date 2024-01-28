@@ -36,6 +36,7 @@ except ImportError as error:
     print(f"Error detail: {error}")
     sys.exit(1)
 
+
 class MockRestSend:
     """
     Send REST requests to the controller with retries, and handle responses.
