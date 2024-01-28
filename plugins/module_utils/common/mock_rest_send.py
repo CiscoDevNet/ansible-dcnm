@@ -113,7 +113,6 @@ class MockRestSend:
         self.log.debug(msg)
 
         while timeout > 0 and success is False:
-            
             if self.payload is None:
                 msg = f"{caller}: Calling load_fixture: file {self.file}, key {self.key} verb {self.verb}, path {self.path}"
                 self.log.debug(msg)
