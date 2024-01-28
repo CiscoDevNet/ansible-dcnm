@@ -80,9 +80,11 @@ def test_image_mgmt_install_options_00002(image_install_options) -> None:
     assert instance.properties.get("issu") is True
     assert instance.properties.get("package_install") is False
     assert instance.properties.get("policy_name") is None
-    assert instance.properties.get("response") is None
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("response_current") == {}
     assert instance.properties.get("response_data") is None
-    assert instance.properties.get("result") == {}
+    assert instance.properties.get("result") == []
+    assert instance.properties.get("result_current") == {}
     assert instance.properties.get("serial_number") is None
     assert instance.properties.get("timeout") == 300
     assert instance.properties.get("unit_test") is False
@@ -100,7 +102,7 @@ def test_image_mgmt_install_options_00003(image_install_options) -> None:
     """
     instance = image_install_options
     instance.serial_number = "FOO"
-    match = "ImageInstallOptions.refresh: "
+    match = "ImageInstallOptions._validate_refresh_parameters: "
     match += "instance.policy_name must be set before "
     match += r"calling refresh\(\)"
     with pytest.raises(AnsibleFailJson, match=match):
@@ -116,7 +118,7 @@ def test_image_mgmt_install_options_00004(image_install_options) -> None:
     - fail_json is called because serial_number is not set when refresh is called
     - fail_json error message is matched
     """
-    match = "ImageInstallOptions.refresh: "
+    match = "ImageInstallOptions._validate_refresh_parameters: "
     match += "instance.serial_number must be set before "
     match += r"calling refresh\(\)"
 
@@ -148,7 +150,8 @@ def test_image_mgmt_install_options_00005(monkeypatch, image_install_options) ->
     instance.policy_name = "KRM5"
     instance.serial_number = "BAR"
     instance.refresh()
-    assert isinstance(instance.response, dict)
+    assert isinstance(instance.response, list)
+    assert isinstance(instance.response_current, dict)
     assert instance.device_name == "cvd-1314-leaf"
     assert instance.err_message is None
     assert instance.epld_modules is None
@@ -168,7 +171,7 @@ def test_image_mgmt_install_options_00005(monkeypatch, image_install_options) ->
     assert instance.version == "10.2.5"
     comp_disp = "show install all impact nxos bootflash:nxos64-cs.10.2.5.M.bin"
     assert instance.comp_disp == comp_disp
-    assert instance.result.get("success") is True
+    assert instance.result_current.get("success") is True
 
 
 def test_image_mgmt_install_options_00006(monkeypatch, image_install_options) -> None:
@@ -229,7 +232,10 @@ def test_image_mgmt_install_options_00007(monkeypatch, image_install_options) ->
     instance.serial_number = "FDO21120U5D"
     instance.unit_test = True
     instance.refresh()
-    assert isinstance(instance.response, dict)
+    assert isinstance(instance.response_current, dict)
+    assert isinstance(instance.response, list)
+    assert isinstance(instance.result_current, dict)
+    assert isinstance(instance.result, list)
     assert instance.device_name == "leaf1"
     assert instance.err_message is None
     assert instance.epld_modules is None
@@ -249,7 +255,7 @@ def test_image_mgmt_install_options_00007(monkeypatch, image_install_options) ->
     assert instance.version == "10.2.5"
     assert instance.version_check == "Compatibility status skipped."
     assert instance.comp_disp == "Compatibility status skipped."
-    assert instance.result.get("success") is True
+    assert instance.result_current.get("success") is True
 
 
 def test_image_mgmt_install_options_00008(monkeypatch, image_install_options) -> None:
@@ -286,7 +292,10 @@ def test_image_mgmt_install_options_00008(monkeypatch, image_install_options) ->
     instance.package_install = False
     instance.unit_test = True
     instance.refresh()
-    assert isinstance(instance.response, dict)
+    assert isinstance(instance.response_current, dict)
+    assert isinstance(instance.response, list)
+    assert isinstance(instance.result_current, dict)
+    assert isinstance(instance.result, list)
     assert instance.device_name == "leaf1"
     assert instance.err_message is None
     assert isinstance(instance.epld_modules, dict)
@@ -307,7 +316,7 @@ def test_image_mgmt_install_options_00008(monkeypatch, image_install_options) ->
     assert instance.version == "10.2.5"
     assert instance.version_check == "Compatibility status skipped."
     assert instance.comp_disp == "Compatibility status skipped."
-    assert instance.result.get("success") is True
+    assert instance.result_current.get("success") is True
 
 
 def test_image_mgmt_install_options_00009(monkeypatch, image_install_options) -> None:
@@ -344,7 +353,10 @@ def test_image_mgmt_install_options_00009(monkeypatch, image_install_options) ->
     instance.package_install = False
     instance.unit_test = True
     instance.refresh()
-    assert isinstance(instance.response, dict)
+    assert isinstance(instance.response_current, dict)
+    assert isinstance(instance.response, list)
+    assert isinstance(instance.result_current, dict)
+    assert isinstance(instance.result, list)
     assert instance.device_name is None
     assert instance.err_message is None
     assert isinstance(instance.epld_modules, dict)
@@ -365,7 +377,7 @@ def test_image_mgmt_install_options_00009(monkeypatch, image_install_options) ->
     assert instance.version is None
     assert instance.version_check is None
     assert instance.comp_disp is None
-    assert instance.result.get("success") is True
+    assert instance.result_current.get("success") is True
 
 
 def test_image_mgmt_install_options_00010(monkeypatch, image_install_options) -> None:

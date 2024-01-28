@@ -221,7 +221,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         payload: Dict[str, Any] = {}
         payload["mappingList"] = self.payloads
-        self.dcnm_send_with_retry(payload)
+        self.dcnm_send_with_retry(self.verb, self.path, payload)
 
         if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
@@ -256,7 +256,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         query_params = ",".join(self.serial_numbers)
         self.path += f"?serialNumber={query_params}"
 
-        self.dcnm_send_with_retry()
+        self.dcnm_send_with_retry(self.verb, self.path)
 
         if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
@@ -288,7 +288,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.path = self.path.replace("__POLICY_NAME__", self.policy_name)
 
-        self.dcnm_send_with_retry()
+        self.dcnm_send_with_retry(self.verb, self.path)
 
         if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "

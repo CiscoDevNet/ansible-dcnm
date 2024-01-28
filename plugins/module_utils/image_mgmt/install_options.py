@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import json
 import logging
@@ -150,6 +151,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
         self.path = self.endpoints.install_options.get("path")
         self.verb = self.endpoints.install_options.get("verb")
+
         self.payload: Dict[str, Any] = {}
 
         self.compatibility_status = {}
@@ -163,19 +165,18 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.properties["issu"] = True
         self.properties["package_install"] = False
         self.properties["policy_name"] = None
-        self.properties["response"] = None
         self.properties["response_data"] = None
-        self.properties["result"] = {}
         self.properties["serial_number"] = None
         self.properties["timeout"] = 300
         self.properties["unit_test"] = False
 
-    def refresh(self) -> None:
+    def _validate_refresh_parameters(self) -> None:
         """
-        Refresh self.response_data with current install-options from the controller
+        Ensure parameters are set correctly for a refresh() call.
+
+        fail_json if not.
         """
         method_name = inspect.stack()[0][3]
-
         if self.policy_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
@@ -187,6 +188,14 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg += "instance.serial_number must be set before "
             msg += "calling refresh()"
             self.module.fail_json(msg, **self.failed_result)
+
+    def refresh(self) -> None:
+        """
+        Refresh self.response_data with current install-options from the controller
+        """
+        method_name = inspect.stack()[0][3]
+
+        self._validate_refresh_parameters()
 
         msg = f"self.epld {self.epld}, "
         msg += f"self.issu {self.issu}, "
@@ -213,37 +222,29 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
         timeout = self.timeout
         sleep_time = 5
-        self.result["success"] = False
+        self.result_current["success"] = False
 
-        msg = f"Entering dcnm_send loop. timeout {timeout}, sleep_time {sleep_time}"
-        self.log.debug(msg)
-
-        while timeout > 0 and self.result.get("success") is False:
-            msg = "Calling dcnm_send with payload: "
+        while timeout > 0 and self.result_current.get("success") is False:
+            msg = f"Calling dcnm_send: verb {self.verb} path {self.path} payload: "
             msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            self.properties["response"] = dcnm_send(
+            response = dcnm_send(
                 self.module, self.verb, self.path, data=json.dumps(self.payload)
             )
 
-            msg = "Calling dcnm_send DONE"
-            self.log.debug(msg)
+            self.properties["response_data"] = response.get("DATA", {})
+            self.result_current = self._handle_response(response, self.verb)
+            self.response_current = copy.deepcopy(response)
 
-            self.properties["response_data"] = self.response.get("DATA", {})
-            self.properties["result"] = self._handle_response(self.response, self.verb)
-
-            msg = f"self.response {self.response}"
-            self.log.debug(msg)
-
-            if self.result.get("success") is False and self.unit_test is False:
+            if self.result_current.get("success") is False and self.unit_test is False:
                 time.sleep(sleep_time)
             timeout -= sleep_time
 
-        if self.result["success"] is False:
+        if self.result_current["success"] is False:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retrieving install-options from "
-            msg += f"the controller. Controller response: {self.response}. "
+            msg += f"the controller. Controller response: {self.response_current}. "
             if self.response_data.get("error", None) is None:
                 self.module.fail_json(msg, **self.failed_result)
             if "does not have package to continue" in self.response_data.get(
@@ -254,6 +255,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
                 msg += f"True in the playbook for device {self.serial_number}."
             self.module.fail_json(msg, **self.failed_result)
 
+        self.response = copy.deepcopy(self.response_current)
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
         else:
@@ -386,42 +388,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
             self.module.fail_json(msg, **self.failed_result)
         self.properties["package_install"] = value
 
-    # @property
-    # def timeout(self):
-    #     """
-    #     Timeout, in seconds, for retrieving responses from the controller.
-    #     Valid values: int()
-    #     Default: 300
-    #     """
-    #     return self.properties.get("timeout")
-
-    # @timeout.setter
-    # def timeout(self, value):
-    #     method_name = inspect.stack()[0][3]
-    #     if not isinstance(value, int):
-    #         msg = f"{self.class_name}.{method_name}: "
-    #         msg += f"{method_name} must be an int(). Got {value}."
-    #         self.module.fail_json(msg, **self.failed_result)
-    #     self.properties["timeout"] = value
-
-    # @property
-    # def unit_test(self):
-    #     """
-    #     Is the class running under a unit test.
-    #     Set this to True in unit tests to speed the test up.
-    #     Default: False
-    #     """
-    #     return self.properties.get("unit_test")
-
-    # @unit_test.setter
-    # def unit_test(self, value):
-    #     method_name = inspect.stack()[0][3]
-    #     if not isinstance(value, bool):
-    #         msg = f"{self.class_name}.{method_name}: "
-    #         msg += f"{method_name} must be a bool(). Got {value}."
-    #         self.module.fail_json(msg, **self.failed_result)
-    #     self.properties["unit_test"] = value
-
     # Getter properties
     @property
     def comp_disp(self):
@@ -503,22 +469,6 @@ class ImageInstallOptions(ImageUpgradeCommon):
         return self.properties.get("response_data", {})
 
     @property
-    def response(self) -> Dict[str, Any]:
-        """
-        Return the controller response.
-        Return empty dict otherwise
-        """
-        return self.properties.get("response", {})
-
-    @property
-    def result(self):
-        """
-        Return the query result.
-        Return empty dict otherwise
-        """
-        return self.properties.get("result", {})
-
-    @property
     def os_type(self):
         """
         Return the osType of the install-options response,
@@ -556,9 +506,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
     def raw_response(self):
         """
         Return the raw response, if it exists.
-        Alias for self.response
+        Alias for self.response_current
         """
-        return self.response
+        return self.response_current
 
     @property
     def rep_status(self):

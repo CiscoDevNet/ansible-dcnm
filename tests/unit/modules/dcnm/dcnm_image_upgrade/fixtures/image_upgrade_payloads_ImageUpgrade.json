@@ -8,7 +8,7 @@
         ],
         "epldOptions": {
             "golden": true,
-            "moduleNumber": 27
+            "moduleNumber": 1
         },
         "epldUpgrade": true,
         "issuUpgrade": false,

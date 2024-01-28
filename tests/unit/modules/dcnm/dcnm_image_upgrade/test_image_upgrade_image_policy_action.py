@@ -440,7 +440,8 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     assert instance.response_current.get("METHOD") == "DELETE"
     assert instance.response_current.get("MESSAGE") == "OK"
     assert (
-        instance.response_current.get("DATA") == "Successfully detach the policy from device."
+        instance.response_current.get("DATA")
+        == "Successfully detach the policy from device."
     )
     assert instance.result_current.get("success") is True
     assert instance.result_current.get("changed") is True

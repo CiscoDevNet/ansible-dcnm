@@ -31,6 +31,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrad
     ImageUpgradeCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
     ImageInstallOptions
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
@@ -140,8 +142,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.ipv4_done = set()
         self.ipv4_todo = set()
         self.payload: Dict[str, Any] = {}
-        self.path = None
-        self.verb = None
+        self.path = self.endpoints.image_upgrade.get("path")
+        self.verb = self.endpoints.image_upgrade.get("verb")
 
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
@@ -224,6 +226,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         # issu_detail.refresh() has already been called in _validate_devices()
         # so no need to call it here.
+        msg = f"ENTERED _build_payload: device {device}"
+        self.log.debug(msg)
+
         self.issu_detail.filter = device.get("ip_address")
 
         self.install_options.serial_number = self.issu_detail.serial_number
@@ -256,6 +261,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._build_payload_reboot(device)
         self._build_payload_reboot_options(device)
         self._build_payload_package(device)
+
+        msg = f"EXITING _build_payload: payload {json.dumps(self.payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _build_payload_issu_upgrade(self, device) -> None:
         """
@@ -454,11 +462,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
-        self.path: str = self.endpoints.image_upgrade.get("path")
-        self.verb: str = self.endpoints.image_upgrade.get("verb")
-
-        msg = f"self.verb {self.verb}, self.path: {self.path}"
-        self.log.debug(msg)
+        self.rest_send = RestSend(self.module)
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
 
         for device in self.devices:
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
@@ -466,32 +472,22 @@ class ImageUpgrade(ImageUpgradeCommon):
 
             self._build_payload(device)
 
-            msg = f"payload : {json.dumps(self.payload, indent=4, sort_keys=True)}"
+            msg = f"calling rest_send: "
+            msg += f"verb {self.verb}, path: {self.path} "
+            msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            self.dcnm_send_with_retry(self.payload)
+            self.rest_send.payload = self.payload
+            self.rest_send.commit()
 
-            if not self.result_current["success"]:
+            if not self.rest_send.result_current["success"]:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"failed: {self.result_current}. "
-                msg += f"Controller response: {self.response_current}"
+                msg += f"failed: {self.rest_send.result_current}. "
+                msg += f"Controller response: {self.rest_send.response_current}"
                 self.module.fail_json(msg, **self.failed_result)
 
-            self.response_data = self.response_current.get("DATA")
-
-            msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = (
-                f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
-            msg = f"self.response_data: {json.dumps(self.response_data, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+            self.response_data = self.rest_send.response_current.get("DATA")
+            self.response = self.rest_send.response_current
 
             # See image_upgrade_common.py for the definition of self.diff
             self.diff = copy.deepcopy(self.payload)
