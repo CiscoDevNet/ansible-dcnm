@@ -472,7 +472,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
             self._build_payload(device)
 
-            msg = f"calling rest_send: "
+            msg = "Calling rest_send: "
             msg += f"verb {self.verb}, path: {self.path} "
             msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
