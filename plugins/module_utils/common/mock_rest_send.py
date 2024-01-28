@@ -22,14 +22,19 @@ import copy
 import inspect
 import json
 import logging
+import sys
 from time import sleep
 
 # Using only for its failed_result property
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
     ImageUpgradeTaskResult
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.fixture import \
-    load_fixture
-
+try:
+    from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.fixture import \
+        load_fixture
+except ImportError as error:
+    print("ImportError: load_fixture() not found. Exiting.")
+    print(f"Error detail: {error}")
+    sys.exit(1)
 
 class MockRestSend:
     """
