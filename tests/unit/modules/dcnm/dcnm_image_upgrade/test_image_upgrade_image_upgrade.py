@@ -34,12 +34,10 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.mock_rest_send import \
-    MockRestSend as MockRestSendImageUpgrade
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
     ImageUpgrade
 
-from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
+from .image_upgrade_utils import (does_not_raise,
                                   image_upgrade_fixture,
                                   issu_details_by_ip_address_fixture,
                                   payloads_image_upgrade,
@@ -49,6 +47,10 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+
+PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT = PATCH_IMAGE_MGMT + "image_upgrade.RestSend.commit"
+PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT = PATCH_IMAGE_MGMT + "image_upgrade.RestSend.response_current"
+PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT = PATCH_IMAGE_MGMT + "image_upgrade.RestSend.result_current"
 
 REST_SEND_IMAGE_UPGRADE = PATCH_IMAGE_MGMT + "image_upgrade.RestSend"
 DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_send"
@@ -282,7 +284,6 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00019a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -296,9 +297,15 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
+
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -327,8 +334,6 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
             "policy_changed": False,
         }
     ]
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     instance.unit_test = True
     instance.commit()
@@ -368,7 +373,6 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00020a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -382,9 +386,15 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
+
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -413,9 +423,6 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     instance.unit_test = True
     instance.commit()
@@ -446,7 +453,6 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00021a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -460,9 +466,13 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -491,9 +501,6 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_issu_options_1: "
     match += "options.nxos.mode must be one of "
@@ -531,7 +538,6 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00022a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -545,9 +551,14 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -576,9 +587,6 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     instance.unit_test = True
     instance.commit()
@@ -614,7 +622,6 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00023a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -628,9 +635,14 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -659,9 +671,6 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     instance.unit_test = True
     instance.commit()
@@ -695,7 +704,6 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00024a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -709,9 +717,13 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -740,9 +752,6 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_issu_options_2: "
     match += r"options.nxos.bios_force must be a boolean. Got FOO\."
@@ -776,7 +785,6 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00025a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -790,9 +798,13 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -821,8 +833,6 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_epld: Invalid configuration for "
     match += "172.22.150.102. If options.epld.golden is True "
@@ -857,7 +867,6 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00026a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -871,9 +880,13 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -902,9 +915,6 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_epld: "
     match += "options.epld.module must either be 'ALL' "
@@ -952,9 +962,16 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -983,8 +1000,6 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_epld: "
     match += r"options.epld.golden must be a boolean. Got FOO\."
@@ -1017,7 +1032,6 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00028a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1031,9 +1045,13 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1062,9 +1080,6 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_reboot: "
     match += r"reboot must be a boolean. Got FOO\."
@@ -1098,7 +1113,6 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00029a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1112,9 +1126,13 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1143,9 +1161,6 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.config_reload must be a boolean. Got FOO\."
@@ -1179,7 +1194,6 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00030a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1193,9 +1207,13 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1224,9 +1242,6 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.write_erase must be a boolean. Got FOO\."
@@ -1265,7 +1280,6 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00031a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1279,9 +1293,13 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1310,9 +1328,6 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageUpgrade._build_payload_package: "
     match += r"options.package.uninstall must be a boolean. Got FOO\."
@@ -1347,7 +1362,6 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00032a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1361,9 +1375,15 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key))
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': False, 'changed': False})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1392,9 +1412,6 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
-    MockRestSendImageUpgrade.unit_test = True
 
     match = "ImageUpgrade.commit: failed: "
     match += r"\{'success': False, 'changed': False\}. "
@@ -1433,7 +1450,6 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00033a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1449,7 +1465,6 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1476,9 +1491,6 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
 
     match = "ImageInstallOptions.epld: "
     match += r"epld must be a boolean value. Got FOO\."
@@ -1530,7 +1542,6 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00045a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
@@ -1538,18 +1549,21 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    def mock_dcnm_send_image_upgrade_commit(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key))
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': True, 'changed': True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1579,10 +1593,6 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
-
-    # instance.unit_test = True
     instance.commit()
     assert instance.response_data == [121]
 
@@ -1590,7 +1600,6 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
 def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - result_current
     - result
 
     Setup:
@@ -1605,13 +1614,11 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
 
     Expected results:
 
-    1. instance.rest_send.result_current == {'success': True, 'changed': True}
-    1. instance.rest_send.result == [{'success': True, 'changed': True}]
+    1. instance.result is a list: [{'success': True, 'changed': True}]
     """
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00046a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
@@ -1625,9 +1632,14 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': True, 'changed': True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1657,13 +1669,9 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
-
     instance.unit_test = True
     instance.commit()
-    assert instance.rest_send.result_current == {"success": True, "changed": True}
-    assert instance.rest_send.result == [{"success": True, "changed": True}]
+    assert instance.result == [{"success": True, "changed": True}]
 
 
 def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
@@ -1688,7 +1696,6 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_mgmt_upgrade_00047a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
@@ -1702,9 +1709,15 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
+    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_upgrade(key)
+
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key))
+    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': True, 'changed': True})
+
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(REST_SEND_IMAGE_UPGRADE, MockRestSendImageUpgrade)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
@@ -1734,10 +1747,6 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    MockRestSendImageUpgrade.key = key
-    MockRestSendImageUpgrade.file = image_upgrade_file
-
-    # instance.unit_test = True
     instance.commit()
     print(f"instance.response: {instance.response}")
     assert isinstance(instance.response, list)
