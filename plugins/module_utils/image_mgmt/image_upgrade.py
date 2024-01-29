@@ -145,6 +145,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.path = self.endpoints.image_upgrade.get("path")
         self.verb = self.endpoints.image_upgrade.get("verb")
 
+        self.rest_send = RestSend(self.module)
+
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
         self.install_options = ImageInstallOptions(self.module)
@@ -462,7 +464,6 @@ class ImageUpgrade(ImageUpgradeCommon):
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
-        self.rest_send = RestSend(self.module)
         self.rest_send.verb = self.verb
         self.rest_send.path = self.path
 
@@ -472,7 +473,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
             self._build_payload(device)
 
-            msg = "Calling rest_send: "
+            msg = "Calling rest_send.commit(): "
             msg += f"verb {self.verb}, path: {self.path} "
             msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -480,14 +481,21 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.rest_send.payload = self.payload
             self.rest_send.commit()
 
+            msg = "DONE rest_send.commit()"
+            self.log.debug(msg)
+
+            self.response = self.rest_send.response_current
+            self.response_current = self.rest_send.response_current
+            self.response_data = self.rest_send.response_current.get("DATA")
+
+            self.result_current = self.rest_send.result_current
+            self.result = self.rest_send.result_current
+
             if not self.rest_send.result_current["success"]:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"failed: {self.rest_send.result_current}. "
                 msg += f"Controller response: {self.rest_send.response_current}"
                 self.module.fail_json(msg, **self.failed_result)
-
-            self.response_data = self.rest_send.response_current.get("DATA")
-            self.response = self.rest_send.response_current
 
             # See image_upgrade_common.py for the definition of self.diff
             self.diff = copy.deepcopy(self.payload)
