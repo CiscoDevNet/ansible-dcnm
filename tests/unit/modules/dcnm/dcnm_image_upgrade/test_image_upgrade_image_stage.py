@@ -50,7 +50,9 @@ PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."
 PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_IMAGE_MGMT + "image_stage.RestSend.commit"
-PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = PATCH_IMAGE_MGMT + "image_stage.RestSend.result_current"
+PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = (
+    PATCH_IMAGE_MGMT + "image_stage.RestSend.result_current"
+)
 
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
 DCNM_SEND_IMAGE_STAGE = PATCH_IMAGE_MGMT + "image_stage.dcnm_send"
@@ -344,8 +346,7 @@ def test_image_mgmt_stage_00008(
     assert expected_serial_number_key in instance.payload.keys()
 
 
-def test_image_mgmt_stage_00009(
-    monkeypatch, image_stage) -> None:
+def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
@@ -364,6 +365,7 @@ def test_image_mgmt_stage_00009(
     When len(serial_numbers) == 0, commit() will set result and
     response properties, and return without doing anything else.
     """
+
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00009a"
         return responses_switch_issu_details(key)
@@ -379,13 +381,8 @@ def test_image_mgmt_stage_00009(
     assert instance.result == [{"success": True, "changed": False}]
     assert instance.result_current == {"success": True, "changed": False}
     assert instance.response_current == {
-                "DATA": [
-                    {
-                        "key": "ALL",
-                        "value": response_msg
-                    }
-                ]
-            }
+        "DATA": [{"key": "ALL", "value": response_msg}]
+    }
     assert instance.response == [instance.response_current]
     assert instance.response_data == [instance.response_current.get("DATA")]
 

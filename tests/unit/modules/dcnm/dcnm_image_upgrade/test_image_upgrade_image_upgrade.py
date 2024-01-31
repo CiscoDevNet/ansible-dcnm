@@ -37,8 +37,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
     ImageUpgrade
 
-from .image_upgrade_utils import (does_not_raise,
-                                  image_upgrade_fixture,
+from .image_upgrade_utils import (does_not_raise, image_upgrade_fixture,
                                   issu_details_by_ip_address_fixture,
                                   payloads_image_upgrade,
                                   responses_image_install_options,
@@ -48,9 +47,15 @@ from .image_upgrade_utils import (does_not_raise,
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 
-PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT = PATCH_IMAGE_MGMT + "image_upgrade.RestSend.commit"
-PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT = PATCH_IMAGE_MGMT + "image_upgrade.RestSend.response_current"
-PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT = PATCH_IMAGE_MGMT + "image_upgrade.RestSend.result_current"
+PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT = (
+    PATCH_IMAGE_MGMT + "image_upgrade.RestSend.commit"
+)
+PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT = (
+    PATCH_IMAGE_MGMT + "image_upgrade.RestSend.response_current"
+)
+PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT = (
+    PATCH_IMAGE_MGMT + "image_upgrade.RestSend.result_current"
+)
 
 REST_SEND_IMAGE_UPGRADE = PATCH_IMAGE_MGMT + "image_upgrade.RestSend"
 DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_send"
@@ -300,7 +305,9 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
     monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -389,7 +396,9 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
     monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -469,7 +478,9 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -554,7 +565,9 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
     monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -638,7 +651,9 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
     monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -720,7 +735,9 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -801,7 +818,9 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -883,7 +902,9 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -968,7 +989,9 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1048,7 +1071,9 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1129,7 +1154,9 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1210,7 +1237,9 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1296,7 +1325,9 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1378,9 +1409,16 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key))
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': False, 'changed': False})
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key)
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT,
+        {"success": False, "changed": False},
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1558,9 +1596,15 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key))
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': True, 'changed': True})
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key)
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1635,8 +1679,12 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': True, 'changed': True})
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -1712,9 +1760,15 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade)
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key))
-    monkeypatch.setattr(PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {'success': True, 'changed': True})
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_image_upgrade(key)
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
+    )
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)

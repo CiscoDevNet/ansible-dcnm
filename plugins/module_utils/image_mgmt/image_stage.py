@@ -187,14 +187,7 @@ class ImageStage(ImageUpgradeCommon):
 
         if len(self.serial_numbers) == 0:
             msg = "No files to stage."
-            response_current = {
-                "DATA": [
-                    {
-                        "key": "ALL",
-                        "value": msg
-                    }
-                ]
-            }
+            response_current = {"DATA": [{"key": "ALL", "value": msg}]}
             self.response_current = response_current
             self.response = response_current
             self.response_data = response_current.get("DATA", "No Stage DATA")
