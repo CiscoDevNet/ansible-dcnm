@@ -186,10 +186,20 @@ class ImageStage(ImageUpgradeCommon):
         self.log.debug(msg)
 
         if len(self.serial_numbers) == 0:
-            msg = "No serial numbers to stage."
-            self.properties["response"] = {"response": msg}
-            self.properties["response_data"] = {"response": msg}
-            self.properties["result"] = {"success": True}
+            msg = "No files to stage."
+            response_current = {
+                "DATA": [
+                    {
+                        "key": "ALL",
+                        "value": msg
+                    }
+                ]
+            }
+            self.response_current = response_current
+            self.response = response_current
+            self.response_data = response_current.get("DATA", "No Stage DATA")
+            self.result = {"changed": False, "success": True}
+            self.result_current = {"changed": False, "success": True}
             return
 
         self.prune_serial_numbers()
@@ -226,6 +236,8 @@ class ImageStage(ImageUpgradeCommon):
         msg = f"response: {json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         msg = f"result: {json.dumps(self.result, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.response_data: {self.response_data}"
         self.log.debug(msg)
 
         if not self.result_current["success"]:

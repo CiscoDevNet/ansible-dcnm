@@ -345,6 +345,52 @@ def test_image_mgmt_stage_00008(
 
 
 def test_image_mgmt_stage_00009(
+    monkeypatch, image_stage) -> None:
+    """
+    Function
+    - commit
+
+    Setup
+    - SwitchIssuDetailsBySerialNumber is mocked to return a successful response
+    - self.serial_numbers is set to [] (empty list)
+
+    Test
+    - commit() sets the following to expected values:
+        - self.result, self.result_current
+        - self.response, self.response_current
+        - self.response_data
+
+    Description
+    When len(serial_numbers) == 0, commit() will set result and
+    response properties, and return without doing anything else.
+    """
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
+        key = "test_image_mgmt_stage_00009a"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
+
+    response_msg = "No files to stage."
+    with does_not_raise():
+        instance = image_stage
+        instance.serial_numbers = []
+        instance.commit()
+    assert instance.result == [{"success": True, "changed": False}]
+    assert instance.result_current == {"success": True, "changed": False}
+    assert instance.response_current == {
+                "DATA": [
+                    {
+                        "key": "ALL",
+                        "value": response_msg
+                    }
+                ]
+            }
+    assert instance.response == [instance.response_current]
+    assert instance.response_data == [instance.response_current.get("DATA")]
+
+
+def test_image_mgmt_stage_00020(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -367,7 +413,7 @@ def test_image_mgmt_stage_00009(
     instance = image_stage
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00009a"
+        key = "test_image_mgmt_stage_00020a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -385,7 +431,7 @@ def test_image_mgmt_stage_00009(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00010(
+def test_image_mgmt_stage_00021(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -410,7 +456,7 @@ def test_image_mgmt_stage_00010(
     instance = image_stage
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00010a"
+        key = "test_image_mgmt_stage_00021a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -432,7 +478,7 @@ def test_image_mgmt_stage_00010(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00011(
+def test_image_mgmt_stage_00022(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -455,7 +501,7 @@ def test_image_mgmt_stage_00011(
     instance = image_stage
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00011a"
+        key = "test_image_mgmt_stage_00022a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -481,7 +527,7 @@ def test_image_mgmt_stage_00011(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00012(
+def test_image_mgmt_stage_00030(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -508,7 +554,7 @@ def test_image_mgmt_stage_00012(
     instance = image_stage
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00012a"
+        key = "test_image_mgmt_stage_00030a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -526,7 +572,7 @@ def test_image_mgmt_stage_00012(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00013(
+def test_image_mgmt_stage_00031(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -543,12 +589,12 @@ def test_image_mgmt_stage_00013(
         imageStaged == "In-Progress"
 
     Description
-    See test_image_mgmt_stage_00012
+    See test_image_mgmt_stage_00030 for functional details.
     """
     instance = image_stage
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00013a"
+        key = "test_image_mgmt_stage_00031a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)

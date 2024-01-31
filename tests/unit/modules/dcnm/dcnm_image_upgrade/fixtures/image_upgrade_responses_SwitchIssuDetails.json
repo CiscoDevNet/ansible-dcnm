@@ -810,6 +810,26 @@
     "test_image_mgmt_stage_00009a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
+            "Using only for RETURN_CODE == 200"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "serialNumber": "FDO21120U5D",
+                    "imageStaged": "Success"
+                }
+            ],
+            "message": ""
+        }
+    },
+    "test_image_mgmt_stage_00020a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
             "DATA.lastOperDataObject.serialNumber is present and is this specific value",
             "DATA.lastOperDataObject.imageStaged == Success",
             "DATA.lastOperDataObject.imageStagedPercent is present",
@@ -842,7 +862,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00010a": {
+    "test_image_mgmt_stage_00021a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
@@ -877,7 +897,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00011a": {
+    "test_image_mgmt_stage_00022a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
@@ -912,7 +932,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00012a": {
+    "test_image_mgmt_stage_00030a": {
         "TEST_NOTES": [
             "FDO21120U5D upgrade, validated, imageStaged == Success",
             "FDO2112189M upgrade, validated, imageStaged == Success"
@@ -940,7 +960,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00013a": {
+    "test_image_mgmt_stage_00031a": {
         "TEST_NOTES": [
             "FDO21120U5D upgrade, validated, imageStaged == Success",
             "FDO2112189M upgrade, validated == Success",
