@@ -49,6 +49,8 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."
+PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_IMAGE_MGMT + "image_stage.RestSend.commit"
+PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = PATCH_IMAGE_MGMT + "image_stage.RestSend.result_current"
 
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
 DCNM_SEND_IMAGE_STAGE = PATCH_IMAGE_MGMT + "image_stage.dcnm_send"
@@ -86,9 +88,9 @@ def test_image_mgmt_stage_00002(image_stage) -> None:
     """
     instance = image_stage
     assert isinstance(instance.properties, dict)
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("result") == []
     assert instance.properties.get("serial_numbers") is None
     assert instance.properties.get("check_interval") == 10
     assert instance.properties.get("check_timeout") == 1800
@@ -232,7 +234,7 @@ def test_image_mgmt_stage_00006(
         key = "test_image_mgmt_stage_00006a"
         return responses_controller_version(key)
 
-    def mock_dcnm_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00006a"
         return responses_image_stage(key)
 
@@ -241,8 +243,9 @@ def test_image_mgmt_stage_00006(
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     instance = image_stage
     if serial_numbers_is_set:
@@ -267,7 +270,7 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
         return responses_controller_version(key)
 
     # Needed only for the 200 return code
-    def mock_dcnm_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00007a"
         return responses_image_stage(key)
 
@@ -276,8 +279,10 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
     module_path += "stagingmanagement/stage-image"
@@ -321,7 +326,7 @@ def test_image_mgmt_stage_00008(
     controller_version_patch += "ImageStage._populate_controller_version"
     monkeypatch.setattr(controller_version_patch, mock_controller_version)
 
-    def mock_dcnm_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_stage_00008a"
         return responses_image_stage(key)
 
@@ -329,8 +334,9 @@ def test_image_mgmt_stage_00008(
         key = "test_image_mgmt_stage_00008a"
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_STAGE, mock_dcnm_send_image_stage)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     instance.serial_numbers = ["FDO21120U5D"]
     instance.commit()

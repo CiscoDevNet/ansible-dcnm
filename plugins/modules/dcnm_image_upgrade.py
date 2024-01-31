@@ -1049,8 +1049,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.commit()
         for diff in instance.diff:
             self.task_result.diff_stage = copy.deepcopy(diff)
-        instance.response.pop("DATA", None)
-        self.task_result.response_stage = instance.response
+        for response in instance.response:
+            if "DATA" in response:
+                response.pop("DATA")
+            self.task_result.response_stage = copy.deepcopy(response)
 
     def _validate_images(self, serial_numbers) -> None:
         """

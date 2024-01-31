@@ -30,10 +30,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
     ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 
 
 class ImageStage(ImageUpgradeCommon):
@@ -107,6 +107,7 @@ class ImageStage(ImageUpgradeCommon):
         self.log.debug("ENTERED ImageStage()")
 
         self.endpoints = ApiEndpoints()
+        self.rest_send = RestSend(self.module)
         self._init_properties()
         self.serial_numbers_done = set()
         self.controller_version = None
@@ -118,9 +119,6 @@ class ImageStage(ImageUpgradeCommon):
     def _init_properties(self):
         # self.properties is already initialized in the parent class
         self.properties["serial_numbers"] = None
-        self.properties["response_data"] = None
-        self.properties["result"] = None
-        self.properties["response"] = None
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
 
@@ -210,25 +208,32 @@ class ImageStage(ImageUpgradeCommon):
         else:
             self.payload["serialNumbers"] = self.serial_numbers
 
-        self.properties["response"] = dcnm_send(
-            self.module, self.verb, self.path, data=json.dumps(self.payload)
-        )
-        self.properties["result"] = self._handle_response(self.response, self.verb)
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
+        self.rest_send.payload = self.payload
 
-        msg = f"payload: {self.payload}"
+        self.rest_send.commit()
+
+        self.response = self.rest_send.response_current
+        self.response_current = self.rest_send.response_current
+        self.response_data = self.response_current.get("DATA", "No Stage DATA")
+
+        self.result = self.rest_send.result_current
+        self.result_current = self.rest_send.result_current
+
+        msg = f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"response: {self.response}"
+        msg = f"response: {json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"result: {self.result}"
+        msg = f"result: {json.dumps(self.result, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.result["success"]:
+        if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"failed: {self.result}. "
-            msg += f"Controller response: {self.response}"
+            msg = f"failed: {self.result_current}. "
+            msg += f"Controller response: {self.response_current}"
             self.module.fail_json(msg, **self.failed_result)
 
-        self.properties["response_data"] = self.response.get("DATA", "No Stage DATA")
         self._wait_for_image_stage_to_complete()
 
         for serial_number in self.serial_numbers_done:
@@ -346,30 +351,6 @@ class ImageStage(ImageUpgradeCommon):
             msg += "python list of switch serial numbers."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["serial_numbers"] = value
-
-    @property
-    def response_data(self):
-        """
-        Return the result of the image staging request
-        for serial_numbers.
-
-        instance.serial_numbers must be set first.
-        """
-        return self.properties.get("response_data")
-
-    @property
-    def result(self):
-        """
-        Return the POST result from the controller
-        """
-        return self.properties.get("result")
-
-    @property
-    def response(self):
-        """
-        Return the POST response from the controller
-        """
-        return self.properties.get("response")
 
     @property
     def check_interval(self):

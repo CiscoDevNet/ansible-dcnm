@@ -59,6 +59,7 @@ class ImageUpgradeCommon:
         self.properties["failed"] = False
         self.properties["response"] = []
         self.properties["response_current"] = {}
+        self.properties["response_data"] = []
         self.properties["result"] = []
         self.properties["result_current"] = {}
         self.properties["send_interval"] = 5
@@ -332,6 +333,17 @@ class ImageUpgradeCommon:
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["response"].append(value)
+
+    @property
+    def response_data(self):
+        """
+        Return the contents of the DATA key within current_response.
+        """
+        return self.properties.get("response_data")
+
+    @response_data.setter
+    def response_data(self, value):
+        self.properties["response_data"].append(value)
 
     @property
     def result(self):
