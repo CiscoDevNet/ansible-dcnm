@@ -41,7 +41,14 @@ from .image_upgrade_utils import (does_not_raise, responses_switch_details,
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
-DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.dcnm_send"
+PATCH_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details."
+PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT = (
+    PATCH_SWITCH_DETAILS + "RestSend.response_current"
+)
+PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT = (
+    PATCH_SWITCH_DETAILS + "RestSend.result_current"
+)
+REST_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.RestSend.commit"
 
 
 def test_image_mgmt_switch_details_00001(switch_details) -> None:
@@ -69,9 +76,11 @@ def test_image_mgmt_switch_details_00002(switch_details) -> None:
 
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("ip_address") is None
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("response_current") == {}
+    assert instance.properties.get("result") == []
+    assert instance.properties.get("result_current") == {}
 
 
 def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
@@ -79,21 +88,33 @@ def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
     Function
     - refresh
 
-    Test
-    - response_data, response, result are dictionaries
+    Test (X == SwitchDetails)
+    - X.response_data, X.response, X.result are lists
+    - X.response_current, X.result_current are dictionaries
+    - X.response_current, X.result_current are set to the mocked RestSend values
     """
-    instance = switch_details
+    key = "test_image_mgmt_switch_details_00020a"
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_details_00020a"
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
-
-    instance.refresh()
-    assert isinstance(instance.response_data, dict)
-    assert isinstance(instance.result, dict)
-    assert isinstance(instance.response, dict)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT, {"success": True, "found": True}
+    )
+    with does_not_raise():
+        instance = switch_details
+        instance.refresh()
+    assert isinstance(instance.response_data, list)
+    assert isinstance(instance.result, list)
+    assert isinstance(instance.response, list)
+    assert isinstance(instance.response_current, dict)
+    assert isinstance(instance.result_current, dict)
+    assert instance.result_current == {"success": True, "found": True}
+    assert instance.response_current == responses_switch_details(key)
 
 
 def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
@@ -108,14 +129,20 @@ def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
     """
     instance = switch_details
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00021a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT, {"success": True, "found": True}
+    )
 
     instance.refresh()
-    assert isinstance(instance.response_data, dict)
+    assert isinstance(instance.response_data, list)
     instance.ip_address = "172.22.150.110"
     assert instance.hostname == "cvd-1111-bgw"
     instance.ip_address = "172.22.150.111"
@@ -153,8 +180,7 @@ def test_image_mgmt_switch_details_00022(
     """
     Function
     - switch_details.refresh
-    - switch_details.result
-    - ImageUpgradeCommon._handle_response
+    - RestSend._handle_response
 
     Test
     - test_image_mgmt_switch_details_00022a
@@ -169,10 +195,13 @@ def test_image_mgmt_switch_details_00022(
     """
     instance = switch_details
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
 
     with expected:
         instance.refresh()
@@ -222,11 +251,14 @@ def test_image_mgmt_switch_details_00023(
     """
     instance = switch_details
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00023a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
 
     instance.refresh()
     instance.ip_address = "172.22.150.110"
@@ -252,11 +284,14 @@ def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
     """
     instance = switch_details
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00024a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
 
     match = "SwitchDetails._get: 1.1.1.1 does not exist "
     match += "on the controller."
@@ -284,11 +319,14 @@ def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
     """
     instance = switch_details
 
-    def mock_dcnm_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_switch_details_00025a"
         return responses_switch_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
 
     match = "SwitchDetails._get: 172.22.150.110 does not have a key named FOO."
 

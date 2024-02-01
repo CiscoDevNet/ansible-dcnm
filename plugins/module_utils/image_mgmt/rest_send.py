@@ -50,7 +50,7 @@ class RestSend:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED SendRest()"
+        msg = "ENTERED RestSend()"
         self.log.debug(msg)
 
         self.ansible_module = ansible_module
@@ -103,11 +103,6 @@ class RestSend:
 
         success = False
         msg = f"{caller}: Entering commit loop. "
-        msg += f"timeout {timeout}, send_interval {self.send_interval}"
-        self.log.debug(msg)
-        msg = f"verb {self.verb}, path {self.path},"
-        self.log.debug(msg)
-        msg = f"payload {json.dumps(self.payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         while timeout > 0 and success is False:
@@ -239,6 +234,17 @@ class RestSend:
         Return a result for a failed task with no changes
         """
         return ImageUpgradeTaskResult(None).failed_result
+
+    @property
+    def payload(self):
+        """
+        Return the payload to send to the controller
+        """
+        return self.properties["payload"]
+
+    @payload.setter
+    def payload(self, value):
+        self.properties["payload"] = value
 
     @property
     def response_current(self):

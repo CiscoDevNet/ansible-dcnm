@@ -367,7 +367,11 @@ class ImageStage(ImageUpgradeCommon):
     def check_interval(self, value):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
-        msg += "must be a positive integer or zero."
+        msg += "must be a positive integer or zero. "
+        msg += f"Got value {value} of type {type(value)}."
+        # isinstance(True, int) is True so we need to check for bool first
+        if isinstance(value, bool):
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
             self.module.fail_json(msg, **self.failed_result)
         if value < 0:
@@ -385,7 +389,11 @@ class ImageStage(ImageUpgradeCommon):
     def check_timeout(self, value):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
-        msg += "must be a positive integer or zero."
+        msg += "must be a positive integer or zero. "
+        msg += f"Got value {value} of type {type(value)}."
+        # isinstance(True, int) is True so we need to check for bool first
+        if isinstance(value, bool):
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
             self.module.fail_json(msg, **self.failed_result)
         if value < 0:

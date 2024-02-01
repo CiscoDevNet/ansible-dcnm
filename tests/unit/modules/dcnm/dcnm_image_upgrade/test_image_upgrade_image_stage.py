@@ -398,7 +398,7 @@ def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
 
     Setup
     - IssuDetailsBySerialNumber is mocked to return a successful response
-    - ImageStage is mocked to return a non-successful response
+    - ImageStage is mocked to return a non-successful (500) response
 
     Test
     - commit() will call fail_json()

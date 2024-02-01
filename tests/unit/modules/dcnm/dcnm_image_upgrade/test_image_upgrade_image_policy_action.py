@@ -52,7 +52,7 @@ PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 
 DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
 DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_send"
-DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.dcnm_send"
+REST_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.RestSend.commit"
 DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
 
@@ -411,7 +411,7 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
 
-    def mock_dcnm_send_switch_details(*args) -> Dict[str, Any]:
+    def mock_rest_send_switch_details(*args) -> Dict[str, Any]:
         return responses_switch_details(key)
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
@@ -424,7 +424,7 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
     monkeypatch.setattr(
         DCNM_SEND_IMAGE_UPGRADE_COMMON, mock_dcnm_send_image_upgrade_common
     )
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
     monkeypatch.setattr(
         DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )

@@ -19,14 +19,15 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
     ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.rest_send import \
+    RestSend
 
 
 class SwitchDetails(ImageUpgradeCommon):
@@ -57,14 +58,13 @@ class SwitchDetails(ImageUpgradeCommon):
         self.log.debug("ENTERED SwitchDetails()")
 
         self.endpoints = ApiEndpoints()
+        self.rest_send = RestSend(self.module)
         self._init_properties()
 
     def _init_properties(self):
         # self.properties is already initialized in the parent class
         self.properties["ip_address"] = None
-        self.properties["response_data"] = None
-        self.properties["response"] = None
-        self.properties["result"] = None
+        self.properties["info"] = {}
 
     def refresh(self):
         """
@@ -78,19 +78,36 @@ class SwitchDetails(ImageUpgradeCommon):
         path = self.endpoints.switches_info.get("path")
         verb = self.endpoints.switches_info.get("verb")
 
-        self.properties["response"] = dcnm_send(self.module, verb, path)
-        self.properties["result"] = self._handle_response(self.response, verb)
+        self.rest_send.verb = verb
+        self.rest_send.path = path
+        self.rest_send.commit()
 
-        if self.response["RETURN_CODE"] != 200:
+        msg = f"self.rest_send.response_current: {self.rest_send.response_current}"
+        self.log.debug(msg)
+
+        msg = f"self.rest_send.result_current: {self.rest_send.result_current}"
+        self.log.debug(msg)
+
+        self.response = self.rest_send.response_current
+        self.response_current = self.rest_send.response_current
+        self.response_data = self.response_current.get("DATA", "No_DATA_SwitchDetails")
+
+        self.result = self.rest_send.result_current
+        self.result_current = self.rest_send.result_current
+
+        if self.response_current["RETURN_CODE"] != 200:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve switch information from the controller. "
-            msg += f"Got response {self.response}"
+            msg += f"Got response {self.response_current}"
             self.module.fail_json(msg, **self.failed_result)
 
-        data = self.response.get("DATA")
-        self.properties["response_data"] = {}
+        data = self.response_current.get("DATA")
+        self.properties["info"] = {}
         for switch in data:
-            self.properties["response_data"][switch["ipAddress"]] = switch
+            self.properties["info"][switch["ipAddress"]] = switch
+
+        msg = f"self.properties[info]: {json.dumps(self.properties['info'], indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _get(self, item):
         method_name = inspect.stack()[0][3]
@@ -101,18 +118,18 @@ class SwitchDetails(ImageUpgradeCommon):
             msg += f"property {item}."
             self.module.fail_json(msg, **self.failed_result)
 
-        if self.ip_address not in self.properties["response_data"]:
+        if self.ip_address not in self.properties["info"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.ip_address} does not exist on the controller."
             self.module.fail_json(msg, **self.failed_result)
 
-        if item not in self.properties["response_data"][self.ip_address]:
+        if item not in self.properties["info"][self.ip_address]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.ip_address} does not have a key named {item}."
             self.module.fail_json(msg, **self.failed_result)
 
         return self.make_boolean(
-            self.make_none(self.properties["response_data"][self.ip_address].get(item))
+            self.make_none(self.properties["info"][self.ip_address].get(item))
         )
 
     @property
@@ -165,30 +182,14 @@ class SwitchDetails(ImageUpgradeCommon):
         return self._get("model")
 
     @property
-    def response_data(self):
+    def info(self):
         """
         Return parsed data from the GET request.
         Return None otherwise
 
         NOTE: Keyed on ip_address
         """
-        return self.properties["response_data"]
-
-    @property
-    def response(self):
-        """
-        Return the raw response from the GET request.
-        Return None otherwise
-        """
-        return self.properties["response"]
-
-    @property
-    def result(self):
-        """
-        Return the raw result of the GET request.
-        Return None otherwise
-        """
-        return self.properties["result"]
+        return self.propertiies["info"]
 
     @property
     def platform(self):
