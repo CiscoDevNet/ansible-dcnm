@@ -827,6 +827,26 @@
             "message": ""
         }
     },
+    "test_image_mgmt_stage_00010a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "Using only for RETURN_CODE == 200"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "serialNumber": "FDO21120U5D",
+                    "imageStaged": "Success"
+                }
+            ],
+            "message": ""
+        }
+    },
     "test_image_mgmt_stage_00020a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",

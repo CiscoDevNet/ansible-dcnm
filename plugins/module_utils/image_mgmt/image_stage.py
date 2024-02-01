@@ -235,7 +235,7 @@ class ImageStage(ImageUpgradeCommon):
 
         if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"failed: {self.result_current}. "
+            msg += f"failed: {self.result_current}. "
             msg += f"Controller response: {self.response_current}"
             self.module.fail_json(msg, **self.failed_result)
 

@@ -53,6 +53,10 @@ PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_IMAGE_MGMT + "image_stage.RestSend.co
 PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = (
     PATCH_IMAGE_MGMT + "image_stage.RestSend.result_current"
 )
+PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
+    "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade."
+    "ImageStage._populate_controller_version"
+)
 
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
 DCNM_SEND_IMAGE_STAGE = PATCH_IMAGE_MGMT + "image_stage.dcnm_send"
@@ -385,6 +389,47 @@ def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
     }
     assert instance.response == [instance.response_current]
     assert instance.response_data == [instance.response_current.get("DATA")]
+
+
+def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
+    """
+    Function
+    - commit
+
+    Setup
+    - IssuDetailsBySerialNumber is mocked to return a successful response
+    - ImageStage is mocked to return a non-successful response
+
+    Test
+    - commit() will call fail_json()
+
+    Description
+    commit() will call fail_json() on non-success response from the controller.
+    """
+
+    def mock_controller_version(*args) -> None:
+        instance.controller_version = "12.1.3b"
+
+    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
+        key = "test_image_mgmt_stage_00010a"
+        return responses_switch_issu_details(key)
+
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_mgmt_stage_00010a"
+        return responses_image_stage(key)
+
+    monkeypatch.setattr(
+        PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION, mock_controller_version
+    )
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": False})
+
+    instance = image_stage
+    instance.serial_numbers = ["FDO21120U5D"]
+    MATCH = "ImageStage.commit: failed"
+    with pytest.raises(AnsibleFailJson, match=MATCH):
+        instance.commit()
 
 
 def test_image_mgmt_stage_00020(
