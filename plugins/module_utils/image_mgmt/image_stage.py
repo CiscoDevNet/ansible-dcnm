@@ -352,8 +352,7 @@ class ImageStage(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.serial_numbers must be a "
-            msg += "python list of switch serial numbers."
+            msg += "must be a python list of switch serial numbers."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["serial_numbers"] = value
 
@@ -367,9 +366,11 @@ class ImageStage(ImageUpgradeCommon):
     @check_interval.setter
     def check_interval(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "must be a positive integer or zero."
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: instance.check_interval must "
-            msg += "be an integer."
+            self.module.fail_json(msg, **self.failed_result)
+        if value < 0:
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
 
@@ -383,8 +384,10 @@ class ImageStage(ImageUpgradeCommon):
     @check_timeout.setter
     def check_timeout(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "must be a positive integer or zero."
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: instance.check_timeout must "
-            msg += "be an integer."
+            self.module.fail_json(msg, **self.failed_result)
+        if value < 0:
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value

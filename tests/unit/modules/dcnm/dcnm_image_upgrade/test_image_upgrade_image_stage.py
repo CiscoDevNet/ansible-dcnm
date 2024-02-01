@@ -660,3 +660,96 @@ def test_image_mgmt_stage_00031(
     assert len(instance.serial_numbers_done) == 1
     assert "FDO21120U5D" in instance.serial_numbers_done
     assert "FDO2112189M" not in instance.serial_numbers_done
+
+
+MATCH_00040 = "ImageStage.check_interval: must be a positive integer or zero."
+
+
+@pytest.mark.parametrize(
+    "input, output, context",
+    [
+        (-1, None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        (10, 10, does_not_raise()),
+        ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+    ],
+)
+def test_image_mgmt_stage_00040(image_stage, input, output, context) -> None:
+    """
+    Function
+    - check_interval
+
+    Test
+    - Verify inputs to check_interval property
+
+    Description
+    check_interval expects a positive integer value, or zero.
+    """
+    with does_not_raise():
+        instance = image_stage
+    with context:
+        instance.check_interval = input
+    if output is not None:
+        assert instance.check_interval == output
+
+
+MATCH_00050 = "ImageStage.check_timeout: must be a positive integer or zero."
+
+
+@pytest.mark.parametrize(
+    "input, output, context",
+    [
+        (-1, None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+        (10, 10, does_not_raise()),
+        ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
+    ],
+)
+def test_image_mgmt_stage_00050(image_stage, input, output, context) -> None:
+    """
+    Function
+    - check_interval
+
+    Test
+    - Verify inputs to check_timeout property
+
+    Description
+    check_timeout expects a positive integer value, or zero.
+    """
+    with does_not_raise():
+        instance = image_stage
+    with context:
+        instance.check_timeout = input
+    if output is not None:
+        assert instance.check_timeout == output
+
+
+MATCH_00060 = (
+    "ImageStage.serial_numbers: must be a python list of switch serial numbers."
+)
+
+
+@pytest.mark.parametrize(
+    "input, output, context",
+    [
+        ("foo", None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        (10, None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        (["DD001115F"], ["DD001115F"], does_not_raise()),
+    ],
+)
+def test_image_mgmt_stage_00060(image_stage, input, output, context) -> None:
+    """
+    Function
+    - serial_numbers
+
+    Test
+    - Verify inputs to serial_numbers property
+    - Verify that fail_json is called if the input is not a list
+
+    Description
+    serial_numbers expects a list of serial numbers.
+    """
+    with does_not_raise():
+        instance = image_stage
+    with context:
+        instance.serial_numbers = input
+    if output is not None:
+        assert instance.serial_numbers == output
