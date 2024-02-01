@@ -29,10 +29,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoint
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
     ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 
 
 class ImageValidate(ImageUpgradeCommon):
@@ -76,6 +76,7 @@ class ImageValidate(ImageUpgradeCommon):
         self.log.debug("ENTERED ImageValidate()")
 
         self.endpoints = ApiEndpoints()
+        self.rest_send = RestSend(self.module)
 
         self.path = self.endpoints.image_validate.get("path")
         self.verb = self.endpoints.image_validate.get("verb")
@@ -93,9 +94,6 @@ class ImageValidate(ImageUpgradeCommon):
         # self.properties is already initialized in the parent class
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
-        self.properties["response_data"] = {}
-        self.properties["result"] = {}
-        self.properties["response"] = {}
         self.properties["non_disruptive"] = False
         self.properties["serial_numbers"] = []
 
@@ -177,22 +175,41 @@ class ImageValidate(ImageUpgradeCommon):
         self._wait_for_current_actions_to_complete()
 
         self.build_payload()
-        self.properties["response"] = dcnm_send(
-            self.module, self.verb, self.path, data=json.dumps(self.payload)
-        )
-        self.properties["result"] = self._handle_response(self.response, self.verb)
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
+        self.rest_send.payload = self.payload
 
-        msg = f"payload: {self.payload}"
-        self.log.debug(msg)
-        msg = f"response: {self.response}"
-        self.log.debug(msg)
-        msg = f"result: {self.result}"
+        self.rest_send.commit()
+
+        msg = f"self.rest_send.response_current: {self.rest_send.response_current}"
         self.log.debug(msg)
 
-        if not self.result["success"]:
+        self.response = self.rest_send.response_current
+        self.response_current = self.rest_send.response_current
+        self.response_data = self.response_current.get("DATA", "No Stage DATA")
+
+        self.result = self.rest_send.result_current
+        self.result_current = self.rest_send.result_current
+
+        msg = f"self.rest_send.result_current: {self.rest_send.result_current}"
+        self.log.debug(msg)
+        msg = f"self.payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.response_data: {self.response_data}"
+        self.log.debug(msg)
+
+        if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"failed: {self.result}. "
-            msg += f"Controller response: {self.response}"
+            msg += f"failed: {self.result_current}. "
+            msg += f"Controller response: {self.response_current}"
             self.module.fail_json(msg, **self.failed_result)
 
         self.properties["response_data"] = self.response
@@ -344,30 +361,6 @@ class ImageValidate(ImageUpgradeCommon):
         self.properties["non_disruptive"] = value
 
     @property
-    def response_data(self):
-        """
-        Return the result of the image staging request
-        for serial_numbers.
-
-        instance.serial_numbers must be set first.
-        """
-        return self.properties.get("response_data")
-
-    @property
-    def result(self):
-        """
-        Return the POST result
-        """
-        return self.properties.get("result")
-
-    @property
-    def response(self):
-        """
-        Return the POST response from the controller
-        """
-        return self.properties.get("response")
-
-    @property
     def check_interval(self):
         """
         Return the validate check interval in seconds
@@ -376,20 +369,17 @@ class ImageValidate(ImageUpgradeCommon):
 
     @check_interval.setter
     def check_interval(self, value):
-        self.method_name = inspect.stack()[0][3]
-
-        result = True
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "must be a positive integer or zero. "
+        msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            result = False
-        if not isinstance(value, int):
-            result = False
-        if result is False:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "instance.check_interval must be an integer. "
-            msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
-
+        if not isinstance(value, int):
+            self.module.fail_json(msg, **self.failed_result)
+        if value < 0:
+            self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
 
     @property
@@ -401,17 +391,15 @@ class ImageValidate(ImageUpgradeCommon):
 
     @check_timeout.setter
     def check_timeout(self, value):
-        self.method_name = inspect.stack()[0][3]
-
-        result = True
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "must be a positive integer or zero. "
+        msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            result = False
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            result = False
-        if result is False:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "instance.check_timeout must be an integer. "
-            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        if value < 0:
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value

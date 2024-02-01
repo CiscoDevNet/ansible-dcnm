@@ -1069,8 +1069,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.commit()
         for diff in instance.diff:
             self.task_result.diff_validate = copy.deepcopy(diff)
-        instance.response.pop("DATA", None)
-        self.task_result.response_validate = instance.response
+        for response in instance.response:
+            if "DATA" in response:
+                response.pop("DATA")
+            self.task_result.response_validate = copy.deepcopy(response)
 
     def _verify_install_options(self, devices) -> None:
         """

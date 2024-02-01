@@ -47,6 +47,12 @@ PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
 DCNM_SEND_IMAGE_VALIDATE = PATCH_IMAGE_MGMT + "image_validate.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT = (
+    PATCH_IMAGE_MGMT + "image_validate.RestSend.commit"
+)
+PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT = (
+    PATCH_IMAGE_MGMT + "image_validate.RestSend.result_current"
+)
 
 
 def test_image_mgmt_validate_00001(image_validate) -> None:
@@ -81,9 +87,9 @@ def test_image_mgmt_validate_00002(image_validate) -> None:
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("check_interval") == 10
     assert instance.properties.get("check_timeout") == 1800
-    assert instance.properties.get("response_data") == {}
-    assert instance.properties.get("response") == {}
-    assert instance.properties.get("result") == {}
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("result") == []
     assert instance.properties.get("non_disruptive") is False
     assert instance.properties.get("serial_numbers") == []
 
@@ -413,7 +419,7 @@ def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
     """
 
     # Needed only for the 200 return code
-    def mock_dcnm_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_validate_00021a"
         return responses_image_validate(key)
 
@@ -421,7 +427,12 @@ def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
         key = "test_image_mgmt_validate_00021a"
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_VALIDATE, mock_dcnm_send_image_validate)
+    monkeypatch.setattr(
+        PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT, {"success": True}
+    )
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
@@ -461,12 +472,11 @@ def test_image_mgmt_validate_00023(monkeypatch, image_validate) -> None:
     - commit
 
     Test
-    -   501 response from controller endpoint:
-        POST /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
+    -   fail_json is called on 501 response from controller
     """
 
     # Needed only for the 501 return code
-    def mock_dcnm_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
+    def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_mgmt_validate_00023a"
         return responses_image_validate(key)
 
@@ -474,17 +484,21 @@ def test_image_mgmt_validate_00023(monkeypatch, image_validate) -> None:
         key = "test_image_mgmt_validate_00023a"
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_VALIDATE, mock_dcnm_send_image_validate)
+    monkeypatch.setattr(
+        PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT,
+        {"success": False, "changed": False},
+    )
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     with does_not_raise():
         instance = image_validate
         instance.serial_numbers = ["FDO21120U5D"]
-    with pytest.raises(AnsibleFailJson, match="failed:"):
+    MATCH = "ImageValidate.commit: failed: "
+    with pytest.raises(AnsibleFailJson, match=MATCH):
         instance.commit()
-    assert instance.result["success"] is False
-    assert instance.result["changed"] is False
-    assert instance.response["RETURN_CODE"] == 501
 
 
 MATCH_00030 = "ImageValidate.serial_numbers: "
@@ -555,7 +569,7 @@ def test_image_mgmt_validate_00040(image_validate, value, expected) -> None:
 
 
 MATCH_00050 = "ImageValidate.check_interval: "
-MATCH_00050 += "instance.check_interval must be an integer."
+MATCH_00050 += "must be a positive integer or zero."
 
 
 @pytest.mark.parametrize(
@@ -587,7 +601,7 @@ def test_image_mgmt_validate_00050(image_validate, value, expected) -> None:
 
 
 MATCH_00060 = "ImageValidate.check_timeout: "
-MATCH_00060 += "instance.check_timeout must be an integer."
+MATCH_00060 += "must be a positive integer or zero."
 
 
 @pytest.mark.parametrize(
