@@ -88,7 +88,7 @@ class ImagePolicies(ImageUpgradeCommon):
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{self.method_name}: "
-            msg += "Bad result when retriving image policy "
+            msg += "Bad result when retrieving image policy "
             msg += "information from the controller."
             self.module.fail_json(msg, **self.failed_result)
 

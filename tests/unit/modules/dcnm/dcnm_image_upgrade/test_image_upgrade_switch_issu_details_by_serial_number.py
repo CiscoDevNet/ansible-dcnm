@@ -72,16 +72,17 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00002(
     - action_keys contains expected values
     """
     instance = issu_details_by_serial_number
-
     action_keys = {"imageStaged", "upgrade", "validated"}
 
     instance._init_properties()  # pylint: disable=protected-access
     assert isinstance(instance.properties, dict)
     assert isinstance(instance.properties.get("action_keys"), set)
     assert instance.properties.get("action_keys") == action_keys
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("response_current") == {}
+    assert instance.properties.get("result") == []
+    assert instance.properties.get("result_current") == {}
     assert instance.properties.get("serial_number") is None
 
 

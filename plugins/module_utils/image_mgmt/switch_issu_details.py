@@ -99,9 +99,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
     def _init_properties(self):
         # self.properties is already initialized in the parent class
-        self.properties["response"] = None
-        self.properties["result"] = None
-        self.properties["response_data"] = None
         # action_keys is used in subclasses to determine if any actions
         # are in progress.
         # Property actions_in_progress returns True if so, False otherwise
@@ -159,29 +156,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         """
         overridden in subclasses
         """
-
-    @property
-    def response_data(self):
-        """
-        Return the raw data retrieved from the controller
-        """
-        return self.properties["response_data"]
-
-    @property
-    def response(self):
-        """
-        Return the raw response from the GET request.
-        Return None otherwise
-        """
-        return self.properties["response"]
-
-    @property
-    def result(self):
-        """
-        Return the raw result of the GET request.
-        Return None otherwise
-        """
-        return self.properties["result"]
 
     @property
     def device_name(self):

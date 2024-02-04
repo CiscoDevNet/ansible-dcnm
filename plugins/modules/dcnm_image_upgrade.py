@@ -1278,11 +1278,15 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         instance = SwitchIssuDetailsByIpAddress(self.module)
         instance.refresh()
-        response = copy.deepcopy(instance.response)
-        response.pop("DATA")
-        self.task_result.response_issu_status = copy.deepcopy(response)
+        response_current = copy.deepcopy(instance.response_current)
+        if "DATA" in response_current:
+            response_current.pop("DATA")
+        self.task_result.response_issu_status = copy.deepcopy(response_current)
         for switch in self.need:
             instance.filter = switch.get("ip_address")
+            msg = f"SwitchIssuDetailsByIpAddress.filter: {instance.filter}, "
+            msg += f"SwitchIssuDetailsByIpAddress.filtered_data: {json.dumps(instance.filtered_data, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             if instance.filtered_data is None:
                 continue
             self.task_result.diff_issu_status = instance.filtered_data
@@ -1322,9 +1326,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    # log.config = config_file
+    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)

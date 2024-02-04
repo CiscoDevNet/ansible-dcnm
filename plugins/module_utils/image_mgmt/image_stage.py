@@ -176,14 +176,15 @@ class ImageStage(ImageUpgradeCommon):
         msg = "ENTERED commit()"
         self.log.debug(msg)
 
+        msg = f"self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
+
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.serial_numbers "
             msg += "before calling commit."
             self.module.fail_json(msg, **self.failed_result)
 
-        msg = f"self.serial_numbers: {self.serial_numbers}"
-        self.log.debug(msg)
 
         if len(self.serial_numbers) == 0:
             msg = "No files to stage."

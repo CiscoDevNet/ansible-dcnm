@@ -59,7 +59,6 @@ PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
 )
 
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
-DCNM_SEND_IMAGE_STAGE = PATCH_IMAGE_MGMT + "image_stage.dcnm_send"
 DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
 
 
@@ -152,12 +151,12 @@ def test_image_mgmt_stage_00004(
     prune_serial_numbers removes serial numbers from the list for which
     imageStaged == "Success" (TODO: AND policy == <target_policy>)
     """
+    key = "test_image_mgmt_stage_00004a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00004a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
     instance = image_stage
     instance.issu_detail = issu_details_by_serial_number
@@ -194,12 +193,12 @@ def test_image_mgmt_stage_00005(
     number and raises fail_json if imageStaged == "Failed" for any serial
     number.
     """
+    key = "test_image_mgmt_stage_00005a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00005a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
     match = "Image staging is failing for the following switch: "
     match += "cvd-2313-leaf, 172.22.150.108, FDO2112189M. "
@@ -235,21 +234,19 @@ def test_image_mgmt_stage_00006(
     - fail_json is called when serial_numbers is None
     - fail_json is not called when serial_numbers is set
     """
+    key = "test_image_mgmt_stage_00006a"
 
     def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00006a"
         return responses_controller_version(key)
 
     def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00006a"
         return responses_image_stage(key)
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00006a"
+    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
@@ -270,22 +267,20 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
     - ImageStage.path is set to:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
     """
+    key = "test_image_mgmt_stage_00007a"
 
     def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00007a"
         return responses_controller_version(key)
 
     # Needed only for the 200 return code
     def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00007a"
         return responses_image_stage(key)
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00007a"
+    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
@@ -322,7 +317,7 @@ def test_image_mgmt_stage_00008(
     commit() will set the payload key name for the serial number
     based on the controller version, per Expected Results below
     """
-    instance = image_stage
+    key = "test_image_mgmt_stage_00008a"
 
     def mock_controller_version(*args) -> None:
         instance.controller_version = controller_version
@@ -333,17 +328,16 @@ def test_image_mgmt_stage_00008(
     monkeypatch.setattr(controller_version_patch, mock_controller_version)
 
     def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00008a"
         return responses_image_stage(key)
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00008a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
+    instance = image_stage
     instance.serial_numbers = ["FDO21120U5D"]
     instance.commit()
     print(f"instance.payload: {instance.payload.keys()}")
@@ -369,12 +363,12 @@ def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
     When len(serial_numbers) == 0, commit() will set result and
     response properties, and return without doing anything else.
     """
+    key = "test_image_mgmt_stage_00009a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00009a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     response_msg = "No files to stage."
@@ -406,22 +400,21 @@ def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
     Description
     commit() will call fail_json() on non-success response from the controller.
     """
+    key = "test_image_mgmt_stage_00010a"
 
     def mock_controller_version(*args) -> None:
         instance.controller_version = "12.1.3b"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00010a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
     def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00010a"
         return responses_image_stage(key)
 
     monkeypatch.setattr(
         PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION, mock_controller_version
     )
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": False})
 
@@ -452,14 +445,14 @@ def test_image_mgmt_stage_00020(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
-    instance = image_stage
+    key = "test_image_mgmt_stage_00020a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00020a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
+    instance = image_stage
     instance.issu_detail = issu_details_by_serial_number
     instance.serial_numbers = [
         "FDO21120U5D",
@@ -495,14 +488,14 @@ def test_image_mgmt_stage_00021(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
-    instance = image_stage
+    key = "test_image_mgmt_stage_00021a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00021a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
+    instance = image_stage
     instance.issu_detail = issu_details_by_serial_number
     instance.serial_numbers = [
         "FDO21120U5D",
@@ -540,14 +533,14 @@ def test_image_mgmt_stage_00022(
     Description
     See test_wait_for_image_stage_to_complete for functional details.
     """
-    instance = image_stage
+    key = "test_image_mgmt_stage_00022a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00022a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
+    instance = image_stage
     instance.issu_detail = issu_details_by_serial_number
     instance.serial_numbers = [
         "FDO21120U5D",
@@ -593,14 +586,14 @@ def test_image_mgmt_stage_00030(
     - upgrade
     - validated
     """
-    instance = image_stage
+    key = "test_image_mgmt_stage_00030a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00030a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
+    instance = image_stage
     instance.issu_detail = issu_details_by_serial_number
     instance.serial_numbers = [
         "FDO21120U5D",
@@ -633,19 +626,19 @@ def test_image_mgmt_stage_00031(
     Description
     See test_image_mgmt_stage_00030 for functional details.
     """
-    instance = image_stage
+    key = "test_image_mgmt_stage_00031a"
 
-    def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_stage_00031a"
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
     match = "ImageStage._wait_for_current_actions_to_complete: "
     match += "Timed out waiting for actions to complete. "
     match += "serial_numbers_done: FDO21120U5D, "
     match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
 
+    instance = image_stage
     instance.issu_detail = issu_details_by_serial_number
     instance.serial_numbers = [
         "FDO21120U5D",

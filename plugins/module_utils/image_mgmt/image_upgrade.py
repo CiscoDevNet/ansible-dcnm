@@ -36,7 +36,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.rest_send im
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
-
 class ImageUpgrade(ImageUpgradeCommon):
     """
     Endpoint:
@@ -139,17 +138,16 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.log.debug("ENTERED ImageUpgrade()")
 
         self.endpoints = ApiEndpoints()
+        self.install_options = ImageInstallOptions(self.module)
+        self.rest_send = RestSend(self.module)
+        self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
         self.ipv4_done = set()
         self.ipv4_todo = set()
         self.payload: Dict[str, Any] = {}
         self.path = self.endpoints.image_upgrade.get("path")
         self.verb = self.endpoints.image_upgrade.get("verb")
 
-        self.rest_send = RestSend(self.module)
-
         self._init_properties()
-        self.issu_detail = SwitchIssuDetailsByIpAddress(self.module)
-        self.install_options = ImageInstallOptions(self.module)
 
     def _init_properties(self) -> None:
         """
@@ -488,13 +486,28 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.response_current = self.rest_send.response_current
             self.response_data = self.rest_send.response_current.get("DATA")
 
-            self.result_current = self.rest_send.result_current
             self.result = self.rest_send.result_current
+            self.result_current = self.rest_send.result_current
 
-            if not self.rest_send.result_current["success"]:
+            msg = f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = f"self.response_data: {self.response_data}"
+            self.log.debug(msg)
+
+            msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            if not self.result_current["success"]:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"failed: {self.rest_send.result_current}. "
-                msg += f"Controller response: {self.rest_send.response_current}"
+                msg += f"failed: {self.result_current}. "
+                msg += f"Controller response: {self.response_current}"
                 self.module.fail_json(msg, **self.failed_result)
 
             # See image_upgrade_common.py for the definition of self.diff
@@ -895,18 +908,3 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg = "instance.check_timeout must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value
-
-    @property
-    def response_data(self):
-        """
-        Return the data retrieved from the controller for the
-        image upgrade request.
-
-        instance.devices must be set first.
-        instance.commit() must be called first.
-        """
-        return self.properties.get("response_data")
-
-    @response_data.setter
-    def response_data(self, value):
-        self.properties["response_data"].append(value)

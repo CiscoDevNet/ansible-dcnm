@@ -76,9 +76,11 @@ def test_image_mgmt_switch_issu_details_by_device_name_00002(
     assert isinstance(instance.properties, dict)
     assert isinstance(instance.properties.get("action_keys"), set)
     assert instance.properties.get("action_keys") == action_keys
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("response_current") == {}
+    assert instance.properties.get("result") == []
+    assert instance.properties.get("result_current") == {}
     assert instance.properties.get("device_name") is None
 
 
@@ -93,7 +95,6 @@ def test_image_mgmt_switch_issu_details_by_device_name_00020(
     - instance.response is a dict
     - instance.response_data is a list
     """
-    instance = issu_details_by_device_name
 
     key = "test_image_mgmt_switch_issu_details_by_device_name_00020a"
 
@@ -102,9 +103,9 @@ def test_image_mgmt_switch_issu_details_by_device_name_00020(
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
+    instance = issu_details_by_device_name
     instance.refresh()
-    assert isinstance(instance.response, dict)
+    assert isinstance(instance.response_current, dict)
     assert isinstance(instance.response_data, list)
 
 

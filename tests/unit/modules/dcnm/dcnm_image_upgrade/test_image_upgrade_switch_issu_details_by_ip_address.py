@@ -78,9 +78,11 @@ def test_image_mgmt_switch_issu_details_by_ip_address_00002(
     assert isinstance(instance.properties, dict)
     assert isinstance(instance.properties.get("action_keys"), set)
     assert instance.properties.get("action_keys") == action_keys
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.properties.get("response") == []
+    assert instance.properties.get("response_current") == {}
+    assert instance.properties.get("response_data") == []
+    assert instance.properties.get("result") == []
+    assert instance.properties.get("result_current") == {}
     assert instance.properties.get("ip_address") is None
 
 
