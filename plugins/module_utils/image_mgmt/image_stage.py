@@ -185,7 +185,6 @@ class ImageStage(ImageUpgradeCommon):
             msg += "before calling commit."
             self.module.fail_json(msg, **self.failed_result)
 
-
         if len(self.serial_numbers) == 0:
             msg = "No files to stage."
             response_current = {"DATA": [{"key": "ALL", "value": msg}]}

@@ -36,6 +36,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.rest_send im
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
+
 class ImageUpgrade(ImageUpgradeCommon):
     """
     Endpoint:
