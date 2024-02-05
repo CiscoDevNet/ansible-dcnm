@@ -42,7 +42,7 @@
 #
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
-#   testcase: merged
+#   testcase: query
 #   fabric_name: f1
 #   username: admin
 #   password: "foobar"
