@@ -525,7 +525,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         if len(self.want) == 0:
             self.task_result.result["changed"] = False
-            self.module.exit_json(**self.task_result.result)
+            self.module.exit_json(**self.task_result.module_result)
 
     def _build_idempotent_want(self, want) -> None:
         """
