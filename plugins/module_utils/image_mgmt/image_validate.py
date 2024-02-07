@@ -165,9 +165,11 @@ class ImageValidate(ImageUpgradeCommon):
 
         if len(self.serial_numbers) == 0:
             msg = "No serial numbers to validate."
-            self.properties["response"] = {"response": msg}
-            self.properties["response_data"] = {"response": msg}
-            self.properties["result"] = {"success": True}
+            self.response_current = {"response": msg}
+            self.result_current = {"success": True}
+            self.response_data = {"response": msg}
+            self.response = self.response_current
+            self.result = self.result_current
             return
 
         self.prune_serial_numbers()

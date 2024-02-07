@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
@@ -107,7 +108,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         self.properties["action_keys"].add("upgrade")
         self.properties["action_keys"].add("validated")
 
-    def refresh(self) -> None:
+    def refresh_super(self) -> None:
         """
         Refresh current issu details from the controller.
         """
@@ -116,16 +117,25 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         path = self.endpoints.issu_info.get("path")
         verb = self.endpoints.issu_info.get("verb")
 
-        self.properties["response"] = dcnm_send(self.module, verb, path)
-        self.properties["result"] = self._handle_response(self.response, verb)
+        msg = f"verb: {verb}, path {path}"
+        self.log.debug(msg)
 
-        if self.result["success"] is False or self.result["found"] is False:
+        self.response_current = dcnm_send(self.module, verb, path)
+        self.result_current = self._handle_response(self.response_current, verb)
+
+        msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if self.result_current["success"] is False or self.result_current["found"] is False:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"
             self.module.fail_json(msg, **self.failed_result)
 
-        data = self.response.get("DATA").get("lastOperDataObject")
+        data = self.response_current.get("DATA").get("lastOperDataObject")
 
         if data is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -136,10 +146,6 @@ class SwitchIssuDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
             self.module.fail_json(msg, **self.failed_result)
-
-        self.properties["response_data"] = self.response.get("DATA", {}).get(
-            "lastOperDataObject", []
-        )
 
     @property
     def actions_in_progress(self):
@@ -658,21 +664,15 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         self.log.debug("ENTERED SwitchIssuDetailsByIpAddress()")
 
         self.data_subclass = {}
-        self._init_properties()
-
-    def _init_properties(self):
-        super()._init_properties()
         self.properties["filter"] = None
 
     def refresh(self):
         """
-        Caller: __init__()
-
         Refresh ip_address current issu details from the controller
         """
-        super().refresh()
+        self.refresh_super()
         self.data_subclass = {}
-        for switch in self.response_data:
+        for switch in self.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["ipAddress"]] = switch
 
     def _get(self, item):
@@ -748,23 +748,16 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         self.log.debug("ENTERED SwitchIssuDetailsBySerialNumber()")
 
         self.data_subclass = {}
-        self._init_properties()
-
-    def _init_properties(self):
-        super()._init_properties()
         self.properties["filter"] = None
 
     def refresh(self):
         """
-        Caller: __init__()
-
         Refresh serial_number current issu details from NDFC
         """
-        super().refresh()
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self.refresh_super()
 
         self.data_subclass = {}
-        for switch in self.response_data:
+        for switch in self.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["serialNumber"]] = switch
 
     def _get(self, item):
@@ -840,21 +833,15 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         self.log.debug("ENTERED SwitchIssuDetailsByDeviceName()")
 
         self.data_subclass = {}
-        self._init_properties()
-
-    def _init_properties(self):
-        super()._init_properties()
         self.properties["filter"] = None
 
     def refresh(self):
         """
-        Caller: __init__()
-
         Refresh device_name current issu details from NDFC
         """
-        super().refresh()
+        self.refresh_super()
         self.data_subclass = {}
-        for switch in self.response_data:
+        for switch in self.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["deviceName"]] = switch
 
     def _get(self, item):

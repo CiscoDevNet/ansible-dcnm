@@ -211,9 +211,10 @@ def test_image_mgmt_switch_issu_details_by_device_name_00022(
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     instance.refresh()
-    assert isinstance(instance.result, dict)
-    assert instance.result.get("found") is True
-    assert instance.result.get("success") is True
+    assert isinstance(instance.result, list)
+    assert isinstance(instance.result_current, dict)
+    assert instance.result_current.get("found") is True
+    assert instance.result_current.get("success") is True
 
 
 def test_image_mgmt_switch_issu_details_by_device_name_00023(
@@ -261,7 +262,7 @@ def test_image_mgmt_switch_issu_details_by_device_name_00024(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    match = "SwitchIssuDetailsByDeviceName.refresh: "
+    match = "SwitchIssuDetailsByDeviceName.refresh_super: "
     match += "The controller has no switch ISSU information."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.refresh()
@@ -288,7 +289,7 @@ def test_image_mgmt_switch_issu_details_by_device_name_00025(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    match = "SwitchIssuDetailsByDeviceName.refresh: "
+    match = "SwitchIssuDetailsByDeviceName.refresh_super: "
     match += "The controller has no switch ISSU information."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.refresh()
