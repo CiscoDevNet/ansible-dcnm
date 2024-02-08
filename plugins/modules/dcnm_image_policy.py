@@ -405,26 +405,6 @@ class ImagePolicyTask(ImagePolicyCommon):
         response.update({"DATA": data})
         self.ansible_module.fail_json(response, **self.task_result.result)
 
-
-# parameters = {}
-# parameters["name"] = "NR3F"
-# parameters["agnostic"] = False
-# parameters["description"] = "image policy of 10.3(3)F"
-# parameters["platform"] = "N9K"
-# parameters["release"] = "10.3.1_nxos64-cs_64bit"
-# parameters["packages"] = {}
-# parameters["packages"]["install"] = []
-# parameters["packages"]["install"].append("mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm")
-# parameters["packages"]["install"].append("some-other-package-install")
-# parameters["packages"]["uninstall"] = []
-# parameters["packages"]["uninstall"].append(
-#     "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
-# )
-# parameters["packages"]["uninstall"].append("some-other-package-uninstall")
-# parameters["epld_image"] = "n9000-epld.10.3.2.F.img"
-# parameters["disabled_rpm"] = ""
-
-
 def main():
     """
     main entry point for module execution
