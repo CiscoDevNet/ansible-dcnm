@@ -86,6 +86,8 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug(f"ENTERED ImagePolicyReplaceBulk()")
 
+        self.action = "replace"
+
         self._build_properties()
         self.endpoints = ApiEndpoints()
 
@@ -149,8 +151,8 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
 
     def commit(self):
         """
-        Replace policies.  Skip any policies that do not exist
-        on the controller.
+        Replace policies that do exist on the controller.
+        Skip any policies that do not exist on the controller.
         """
         method_name = inspect.stack()[0][3]
         if self.payloads is None:
@@ -175,8 +177,10 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             merge.commit()
             payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
 
+        response_ok = []
         result_ok = []
         diff_ok = []
+        response_nok = []
         result_nok = []
         diff_nok = []
 
@@ -190,150 +194,46 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             result = self._handle_response(response, verb)
 
             if result["success"]:
-                result_ok.append(response)
+                response_ok.append(response)
+                result_ok.append(result)
                 diff_ok.append(payload)
             else:
+                response_nok.append(response)
                 result_nok.append(response)
                 diff_nok.append(payload)
 
         if len(result_ok) == len(payloads_to_commit):
             self.changed = True
             for payload in diff_ok:
-                self.diff = payload
+                payload["action"] = self.action
+                self.diff = copy.deepcopy(payload)
+            for response in response_ok:
+                self.response = copy.deepcopy(response)
+                self.response_current = copy.deepcopy(response)
+            for result in result_ok:
+                self.result = copy.deepcopy(result)
+                self.result_current = copy.deepcopy(result)
             return
 
         self.changed = False
         if len(result_nok) != len(payloads_to_commit):
             self.changed = True
             for payload in diff_ok:
-                self.diff = payload
+                payload["action"] = self.action
+                self.diff = copy.deepcopy(payload)
+            for response in response_ok:
+                self.response = copy.deepcopy(response)
+                self.response_current = copy.deepcopy(response)
+            for result in result_ok:
+                self.result = copy.deepcopy(result)
+                self.result_current = copy.deepcopy(result)
 
         result = {}
         result["changed"] = self.changed
         result["diff"] = self.diff
+        result["response"] = self.response
+        result["result"] = self.result
         msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response(s) during policy bulk update. "
-        msg += f"response(s): {result_nok}"
+        msg += "Bad response(s) during policy bulk replace. "
+        msg += f"response(s): {response_nok}"
         self.ansible_module.fail_json(msg, **result)
-
-
-class ImagePolicyUpdate(ImagePolicyCommon):
-    """
-    Given a properly-constructed image policy payload (python dict),
-    send an image policy update request to the controller.  The payload
-    format is given below.
-
-    agnostic        bool(), optional. true or false
-    epldImgName     str(), optional. name of an EPLD image to install.
-    nxosVersion     str(), required. NX-OS version as version_type_arch
-    packageName:    str(), optional, A comma-separated list of packages
-    platform:       str(), optional, one of N9K, N6K, N5K, N3K
-    policyDesc      str(), optional, description for the image policy
-    policyName:     str(), required.  Name of the image policy.
-    policyType      str(), required. PLATFORM or UMBRELLA
-    rpmimages:      str(), optional. A comma-separated list of packages to uninstall
-
-    Example (update one policy):
-
-    policy = {
-        "agnostic": false,
-        "epldImgName": "n9000-epld.10.3.2.F.img",
-        "nxosVersion": "10.3.1_nxos64-cs_64bit",
-        "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
-        "platform": "N9K",
-        "policyDescr": "image policy of 10.3(3)F",
-        "policyName": "FOO",
-        "policyType": "PLATFORM",
-        "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
-    }
-    update = ImagePolicyUpdate(ansible_module)
-    update.payload = policy
-    update.commit()
-    """
-
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
-        self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug(f"ENTERED ImagePolicyUpdate()")
-
-        self._mandatory_keys = set()
-        self._mandatory_keys.add("policyName")
-
-        self._build_properties()
-        self.endpoints = ApiEndpoints()
-
-    def _build_properties(self):
-        """
-        self.properties holds property values for the class
-        """
-        # self.properties is already set in the parent class
-        self.properties["payload"] = None
-
-    def _verify_payload(self, payload):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(payload, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload must be a dict. "
-            msg += f"gpt type {type(payload).__name__}, "
-            msg += f"value {payload}"
-            self.ansible_module.fail_json(msg)
-        missing_keys = []
-        for key in self._mandatory_keys:
-            if key not in payload:
-                missing_keys.append(key)
-        if len(missing_keys) == 0:
-            return
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"payload is missing mandatory keys: "
-        msg += f"{sorted(missing_keys)}"
-        self.ansible_module.fail_json(msg)
-
-    @property
-    def payload(self):
-        """
-        This class expects a properly-defined image policy payload.
-        See class docstring for the payload structure and example usage.
-        """
-        return self.properties["payload"]
-
-    @payload.setter
-    def payload(self, value):
-        self._verify_payload(value)
-        self.properties["payload"] = value
-
-    def commit(self):
-        """
-        Update policy.  If policy does not exist on the controller, do nothing.
-        """
-        method_name = inspect.stack()[0][3]
-        if self.payload is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload must be set prior to calling commit."
-            self.ansible_module.fail_json(msg)
-
-        path = self.endpoints.policy_edit.get("path")
-        verb = self.endpoints.policy_edit.get("verb")
-
-        self.image_policies = ImagePolicies(self.ansible_module)
-        self.image_policies.refresh()
-
-        if self.payload.get("policyName") not in self.image_policies.all_policies:
-            return
-
-        response = dcnm_send(
-            self.ansible_module, verb, path, data=json.dumps(self.payload)
-        )
-        result = self._handle_response(response, verb)
-
-        if result["success"]:
-            self.changed = True
-            self.diff = self.payload
-            return
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response during policy update. "
-        msg += f"policy_name {self.policy_name}. "
-        msg += f"response: {response}"
-        self.ansible_module.fail_json(msg, **self.failed_result)

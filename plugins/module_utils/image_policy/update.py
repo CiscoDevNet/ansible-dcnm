@@ -36,12 +36,14 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints 
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
 
+
 class ImagePolicyUpdateCommon(ImagePolicyCommon):
     """
     Common methods and properties for:
     - ImagePolicyUpdate
     - ImagePolicyUpdateBulk
     """
+
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
@@ -51,6 +53,8 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
 
         self.endpoints = ApiEndpoints()
 
+        self.action = "update"
+
         self.path = self.endpoints.policy_edit.get("path")
         self.verb = self.endpoints.policy_edit.get("verb")
 
@@ -58,7 +62,6 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         self._mandatory_payload_keys.add("nxosVersion")
         self._mandatory_payload_keys.add("policyName")
         self._mandatory_payload_keys.add("policyType")
-
 
     def _verify_payload(self, payload):
         """
@@ -83,7 +86,6 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         msg += f"payload is missing mandatory keys: "
         msg += f"{sorted(missing_keys)}"
         self.ansible_module.fail_json(msg, **self.failed_result)
-
 
     def _build_payloads_to_commit(self):
         """
@@ -115,18 +117,21 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
             merge.commit()
             self._payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
 
-
     def _send_payloads(self):
         """
         Send the payloads to the controller and populate the following lists:
 
-        - self.result_ok   : list of controller responses that succeeded
-        - self.diff_ok     : list of payloads that succeeded
-        - self.result_nok  : list of controller responses that failed
-        - self.diff_nok    : list of payloads that failed
+        - self.response_ok  : list of controller responses associated with success result
+        - self.result_ok    : list of results where success is True
+        - self.diff_ok      : list of payloads for which the request succeeded
+        - self.response_nok : list of controller responses associated with failed result
+        - self.result_nok   : list of results where success is False
+        - self.diff_nok     : list of payloads for which the request failed
         """
+        self.response_ok = []
         self.result_ok = []
         self.diff_ok = []
+        self.response_nok = []
         self.result_nok = []
         self.diff_nok = []
         for payload in self._payloads_to_commit:
@@ -136,19 +141,31 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
             result = self._handle_response(response, self.verb)
 
             if result["success"]:
-                self.result_ok.append(response)
+                self.response_ok.append(response)
+                self.result_ok.append(result)
                 self.diff_ok.append(payload)
             else:
-                self.result_nok.append(response)
+                self.response_nok.append(response)
+                self.result_nok.append(result)
                 self.diff_nok.append(payload)
 
     def _process_responses(self):
         method_name = inspect.stack()[0][3]
 
+        msg = f"len(self.result_ok): {len(self.result_ok)}, "
+        msg += f"len(self._payloads_to_commit): {len(self._payloads_to_commit)}"
+        self.log.debug(msg)
         if len(self.result_ok) == len(self._payloads_to_commit):
             self.changed = True
             for diff in self.diff_ok:
-                self.diff = diff
+                diff["action"] = self.action
+                self.diff = copy.deepcopy(diff)
+            for result in self.result_ok:
+                self.result = copy.deepcopy(result)
+                self.result_current = copy.deepcopy(result)
+            for response in self.response_ok:
+                self.response = copy.deepcopy(response)
+                self.response_current = copy.deepcopy(response)
             return
 
         self.changed = False
@@ -156,16 +173,28 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         if len(self.result_nok) != len(self._payloads_to_commit):
             self.changed = True
 
-        result = {}
-        result["changed"] = self.changed
-        # When failing, provide the diff(s) for the request(s) that succeeded
+        # When failing, provide the info for the request(s) that succeeded
         # Since these represent the change(s) that were made.
-        result["diff"] = self.diff_ok
-        result["failed"] = True
+        result = {}
+        for diff in self.diff_ok:
+            diff["action"] = self.action
+            self.diff = copy.deepcopy(diff)
+        for result in self.result_ok:
+            self.result = copy.deepcopy(result)
+            self.result_current = copy.deepcopy(result)
+        for response in self.response_ok:
+            self.response = copy.deepcopy(response)
+            self.response_current = copy.deepcopy(response)
+        self.failed = True
+        result["diff"] = self.diff
+        result["response"] = self.response
+        result["result"] = self.result
+
         msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response(s) during policy create. "
-        msg += f"response(s): {self.result_nok}"
+        msg += "Bad response(s) during policy update. "
+        msg += f"Bad responses: {self.response_nok}"
         self.ansible_module.fail_json(msg, **result)
+
 
 class ImagePolicyUpdateBulk(ImagePolicyUpdateCommon):
     """
@@ -260,7 +289,11 @@ class ImagePolicyUpdateBulk(ImagePolicyUpdateCommon):
         self._build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
             return
+        msg = f"Calling _send_payloads()"
+        self.log.debug(msg)
         self._send_payloads()
+        msg = f"Calling _process_responses()"
+        self.log.debug(msg)
         self._process_responses()
 
 
@@ -347,5 +380,9 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
 
         if self._payloads_to_commit == []:
             return
+        msg = f"Calling _send_payloads()"
+        self.log.debug(msg)
         self._send_payloads()
+        msg = f"Calling _process_responses()"
+        self.log.debug(msg)
         self._process_responses()

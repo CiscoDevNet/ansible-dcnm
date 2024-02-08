@@ -167,6 +167,9 @@ class ParamsSpec:
         self._params_spec["type"]["required"] = False
         self._params_spec["type"]["type"] = "str"
 
+    def _build_params_spec_for_overridden_state(self) -> None:
+        self._build_params_spec_for_merged_state_proposed()
+
     def _build_params_spec_for_replaced_state(self) -> None:
         self._build_params_spec_for_merged_state_proposed()
 

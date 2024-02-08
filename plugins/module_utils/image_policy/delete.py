@@ -19,10 +19,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import json
-from typing import Any, Dict
 import logging
+from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
@@ -52,6 +53,7 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyDelete()")
 
+        self.action = "delete"
         self._build_properties()
         self.endpoints = ApiEndpoints()
 
@@ -118,7 +120,7 @@ class ImagePolicyDelete(ImagePolicyCommon):
 
         policy_names = policies_to_delete
         self.log.debug(f"Deleting policies {policy_names}")
- 
+
         request_body = {"policyNames": policy_names}
         response = dcnm_send(
             self.ansible_module, verb, path, data=json.dumps(request_body)
@@ -129,11 +131,16 @@ class ImagePolicyDelete(ImagePolicyCommon):
 
         if result["success"]:
             self.changed = True
-            self.diff = request_body
+            request_body["action"] = self.action
+            self.diff = copy.deepcopy(request_body)
+            self.response_current = copy.deepcopy(response)
+            self.response = copy.deepcopy(response)
+            self.result_current = copy.deepcopy(result)
+            self.result = copy.deepcopy(result)
             return
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "Bad response during policies delete. "
         msg += f"policy_names {policies_to_delete}. "
         msg += f"response: {response}"
-        self.ansible_module.fail_json(msg)
+        self.ansible_module.fail_json(msg, **self.failed_result)

@@ -22,6 +22,10 @@ import inspect
 import logging
 from typing import Any, Dict
 
+# Using only for its failed_result property
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
+    ImagePolicyTaskResult
+
 
 class ImagePolicyCommon:
     """
@@ -49,6 +53,12 @@ class ImagePolicyCommon:
         self.properties: Dict[str, Any] = {}
         self.properties["changed"] = False
         self.properties["diff"] = []
+        self.properties["failed"] = False
+        self.properties["response"] = []
+        self.properties["response_current"] = {}
+        self.properties["response_data"] = []
+        self.properties["result"] = []
+        self.properties["result_current"] = {}
 
     def _handle_response(self, response, verb):
         """
@@ -157,10 +167,7 @@ class ImagePolicyCommon:
         """
         return a result for a failed task with no changes
         """
-        result = {}
-        result["changed"] = False
-        result["diff"] = []
-        return result
+        return ImagePolicyTaskResult(None).failed_result
 
     @property
     def changed(self):
@@ -211,3 +218,94 @@ class ImagePolicyCommon:
             msg += f"failed must be a bool. Got {value}"
             self.ansible_module.fail_json(msg)
         self.properties["failed"] = value
+
+    @property
+    def response_current(self):
+        """
+        Return the current POST response from the controller
+        instance.commit() must be called first.
+
+        This is a dict of the current response from the controller.
+        """
+        return self.properties.get("response_current")
+
+    @response_current.setter
+    def response_current(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.response_current must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["response_current"] = value
+
+    @property
+    def response(self):
+        """
+        Return the aggregated POST response from the controller
+        instance.commit() must be called first.
+
+        This is a list of responses from the controller.
+        """
+        return self.properties.get("response")
+
+    @response.setter
+    def response(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.response must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["response"].append(value)
+
+    @property
+    def response_data(self):
+        """
+        Return the contents of the DATA key within current_response.
+        """
+        return self.properties.get("response_data")
+
+    @response_data.setter
+    def response_data(self, value):
+        self.properties["response_data"].append(value)
+
+    @property
+    def result(self):
+        """
+        Return the aggregated result from the controller
+        instance.commit() must be called first.
+
+        This is a list of results from the controller.
+        """
+        return self.properties.get("result")
+
+    @result.setter
+    def result(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.result must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["result"].append(value)
+
+    @property
+    def result_current(self):
+        """
+        Return the current result from the controller
+        instance.commit() must be called first.
+
+        This is a dict containing the current result.
+        """
+        return self.properties.get("result_current")
+
+    @result_current.setter
+    def result_current(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.result_current must be a dict. "
+            msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        self.properties["result_current"] = value

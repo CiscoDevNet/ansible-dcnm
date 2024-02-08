@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import logging
 
+
 class ApiEndpoints:
     """
     Endpoints for image policy API calls
