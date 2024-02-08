@@ -100,10 +100,16 @@ class ImagePolicies(ImageUpgradeCommon):
             msg += "information from the controller."
             self.module.fail_json(msg, **self.failed_result)
 
+        # We cannot fail_json here since dcnm_image_policy merged
+        # state will fail if there are no policies defined.
+        # if len(data) == 0:
+        #     msg = f"{self.class_name}.{self.method_name}: "
+        #     msg += "the controller has no defined image policies."
+        #     self.module.fail_json(msg, **self.failed_result)
+
         if len(data) == 0:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "the controller has no defined image policies."
-            self.module.fail_json(msg, **self.failed_result)
+            msg = "the controller has no defined image policies."
+            self.log.debug(msg)
 
         self.properties["response_data"] = {}
         self.properties["all_policies"] = {}

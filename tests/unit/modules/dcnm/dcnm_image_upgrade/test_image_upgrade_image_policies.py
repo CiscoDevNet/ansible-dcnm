@@ -201,11 +201,17 @@ def test_image_mgmt_image_policies_00023(monkeypatch, image_policies) -> None:
     - refresh
 
     Test
-    - fail_json is called when DATA.lastOperDataObject length == 0
+    - do not fail_json is called when DATA.lastOperDataObject length == 0
     - 200 response
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
+
+    Discussion
+    dcnm_image_policy classes ImagePolicyCreate and ImagePolicyCreateBulk
+    both call ImagePolicies.refresh() when checking if the image policies
+    they are creating already exist on the controller.  Hence, we cannot
+    fail_json when the length of DATA.lastOperDataObject is zero.
     """
     key = "test_image_mgmt_image_policies_00023a"
 
@@ -215,11 +221,8 @@ def test_image_mgmt_image_policies_00023(monkeypatch, image_policies) -> None:
 
     monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
-    match = "ImagePolicies.refresh: "
-    match += "the controller has no defined image policies."
-
     instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
+    with does_not_raise():
         instance.refresh()
 
 
@@ -250,13 +253,6 @@ def test_image_mgmt_image_policies_00024(monkeypatch, image_policies) -> None:
         image_policies.policy_name = "FOO"
 
     assert image_policies.policy is None
-    # match = "ImagePolicies._get: "
-    # match += "policy_name FOO is not defined on the controller."
-
-    # instance = image_policies
-    # with pytest.raises(AnsibleFailJson, match=match):
-    #     if instance.policy_type == "PLATFORM":
-    #         pass
 
 
 def test_image_mgmt_image_policies_00025(monkeypatch, image_policies) -> None:
