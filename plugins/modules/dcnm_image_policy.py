@@ -88,48 +88,48 @@ options:
                         - A list of packages to uninstall.
                         type: list
                         required: false
-                platform:
-                    description:
-                    - The platform to which the image policy applies e.g. N9K.
-                    type: str
-                    required: true
-                release:
-                    description:
-                    - The release to which the image policy applies. e.g. 10.2.5_nxos64-cs_64bit
-                    - The NDFC API documentation describles the format of the release string.
-                    type: str
-                    required: true
-                type:
-                    description:
-                    - The type of the image policy e.g. PLATFORM.
-                    type: str
-                    default: PLATFORM
-                    required: false
+            platform:
+                description:
+                - The platform to which the image policy applies e.g. N9K.
+                type: str
+                required: true
+            release:
+                description:
+                - The release to which the image policy applies. e.g. 10.2.5_nxos64-cs_64bit
+                - The NDFC API documentation describles the format of the release string.
+                type: str
+                required: true
+            type:
+                description:
+                - The type of the image policy e.g. PLATFORM.
+                type: str
+                default: PLATFORM
+                required: false
 """
 
 EXAMPLES = """
-This module supports the following states:
-
-deleted:
-  Delete image policies from the controller.
-  If an image policy has references (i.e. it is attached to a device),
-  the module will fail.  Use dcnm_image_upgrade module, state deleted,
-   to detach the image policy from all devices before deleting it.
-merged:
-  Create one or more image policies.  If an image policy
-  already exists on the controller, do nothing.
-overridden:
-  Create one or more image policies.  If an image policy
-  already exists on the controller, deleted it and update it
-  with the configuration in the playbook task.  Remove any
-  image policies from the controller that are not in the
-  playbook task.
-query:
-  Return information about one or more image policies.
-replaced:
-  Replace image policies on the controller with policies in the playbook task.
-  If an image policy exists on the controller, but it not in the playbook task,
-  do not delete or modify it.
+# This module supports the following states:
+#
+# deleted:
+#   Delete image policies from the controller.
+#   If an image policy has references (i.e. it is attached to a device),
+#   the module will fail.  Use dcnm_image_upgrade module, state deleted,
+#    to detach the image policy from all devices before deleting it.
+# merged:
+#   Create one or more image policies.  If an image policy
+#   already exists on the controller, do nothing.
+# overridden:
+#   Create one or more image policies.  If an image policy
+#   already exists on the controller, deleted it and update it
+#   with the configuration in the playbook task.  Remove any
+#   image policies from the controller that are not in the
+#   playbook task.
+# query:
+#   Return information about one or more image policies.
+# replaced:
+#   Replace image policies on the controller with policies in the playbook task.
+#   If an image policy exists on the controller, but it not in the playbook task,
+#   do not delete or modify it.
 
 # Delete two image policies from the controller.
     -   name: Delete Image policies
