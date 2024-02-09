@@ -22,85 +22,85 @@ __author__ = "Allen Robel"
 DOCUMENTATION = """
 ---
 module: dcnm_image_upgrade
-short_description: Image management for Nexus switches
+short_description: Image policy management for Nexus Dashboard Fabric Controller
 version_added: "0.9.0"
 description:
-    - Stage, validate, upgrade images.
-    - Attach, detach, image policies.
-    - Query device issu details.
+    - Create, delete, modify image policies.
 author: Allen Robel (@quantumonion)
 options:
     state:
         description:
-        - The state of the feature or object after module completion.
+            - The state of the feature or object after module completion.
         type: str
         choices:
-        - deleted
-        - merged
-        - overridden
-        - query
-        - replaced
+            - deleted
+            - merged
+            - overridden
+            - query
+            - replaced
         default: merged
+
     config:
         description:
-        - List of dictionaries containing the image policy parameters.
+            - List of dictionaries containing image policy parameters.
         type: list
         elements: dict
         required: true
         suboptions:
             name:
                 description:
-                - The image policy name.
+                    - The image policy name.
                 type: str
                 required: true
             agnostic:
                 description:
-                - The agnostic flag.
+                    - The agnostic flag.
                 type: bool
                 default: false
                 required: false
             description:
                 description:
-                - The image policy description.
+                    - The image policy description.
                 type: str
                 default: ""
                 required: false
             epld_image:
                 description:
-                - The epld image name.
+                    - The epld image name.
                 type: str
                 default: ""
                 required: false
             packages:
                 description:
-                - A dictionary containing two keys, install and uninstall, described below.
+                    - A dictionary containing two keys, install and uninstall.
                 type: dict
                 required: false
                 suboptions:
                     install:
                         description:
-                        - A list of packages to install.
+                            - A list of packages to install.
                         type: list
                         required: false
                     uninstall:
                         description:
-                        - A list of packages to uninstall.
+                            - A list of packages to uninstall.
                         type: list
                         required: false
             platform:
                 description:
-                - The platform to which the image policy applies e.g. N9K.
+                    - The platform to which the image policy applies e.g. N9K.
                 type: str
                 required: true
             release:
                 description:
-                - The release to which the image policy applies. e.g. 10.2.5_nxos64-cs_64bit
-                - The NDFC API documentation describles the format of the release string.
+                    - The release associated with the image policy.
+                    - Example 10.2.5_nxos64-cs_64bit
+                    - See NDFC API documentation regarding this string
                 type: str
                 required: true
             type:
                 description:
-                - The type of the image policy e.g. PLATFORM.
+                    - The type of the image policy e.g. PLATFORM.
                 type: str
                 default: PLATFORM
                 required: false
@@ -111,25 +111,36 @@ EXAMPLES = """
 #
 # deleted:
 #   Delete image policies from the controller.
+#
 #   If an image policy has references (i.e. it is attached to a device),
 #   the module will fail.  Use dcnm_image_upgrade module, state deleted,
 #    to detach the image policy from all devices before deleting it.
+#
 # merged:
-#   Create one or more image policies.  If an image policy
-#   already exists on the controller, do nothing.
+#   Create one or more image policies.
+#
+#   If an image policy already exists on the controller, do nothing.
+#
 # overridden:
-#   Create one or more image policies.  If an image policy
-#   already exists on the controller, deleted it and update it
-#   with the configuration in the playbook task.  Remove any
-#   image policies from the controller that are not in the
+#   Create/delete one or more image policies.
+#
+#   If an image policy already exists on the controller, delete it and update
+#   it with the configuration in the playbook task.
+#
+#   Remove any image policies from the controller that are not in the
 #   playbook task.
+#
 # query:
-#   Return information about one or more image policies.
+#
+#   Return the configuration for one or more image policies.
+#
 # replaced:
+#
 #   Replace image policies on the controller with policies in the playbook task.
-#   If an image policy exists on the controller, but it not in the playbook task,
-#   do not delete or modify it.
-
+#
+#   If an image policy exists on the controller, but not in the playbook task,
+#   do not delete it or modify it.
+#
 # Delete two image policies from the controller.
 
     -   name: Delete Image policies
@@ -172,7 +183,8 @@ EXAMPLES = """
             var: result
 
 # Override all policies on the controller and replace them with
-# the policies in the playbook task.
+# the policies in the playbook task.  Any policies other than
+# KR5M and NR3F are deleted from the controller.
 
     -   name: Override Image policies
         cisco.dcnm.dcnm_image_policy:
@@ -234,7 +246,6 @@ EXAMPLES = """
             var: result
 """
 
-
 import copy
 import inspect
 import json
@@ -243,34 +254,48 @@ from typing import Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
-    MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
-    ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
-    ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
-    ImagePolicyCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
-    ImagePolicyCreateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
-    ImagePolicyDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
-    ImagePolicyTaskResult
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
-    ParamsSpec
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
-    Config2Payload
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
-    ImagePolicyQuery
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
-    ImagePolicyReplaceBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import \
-    ImagePolicyUpdateBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import (
+    MergeDicts,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import (
+    ParamsMergeDefaults,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import (
+    ParamsValidate,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import (
+    ImagePolicyCommon,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
+    ImagePolicyCreateBulk,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import (
+    ImagePolicyDelete,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import (
+    ApiEndpoints,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import (
+    ImagePolicies,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import (
+    ImagePolicyTaskResult,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import (
+    ParamsSpec,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
+    Config2Payload,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import (
+    ImagePolicyQuery,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import (
+    ImagePolicyReplaceBulk,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import (
+    ImagePolicyUpdateBulk,
+)
 
 
 def json_pretty(msg):
@@ -342,7 +367,8 @@ class ImagePolicyTask(ImagePolicyCommon):
         2. Convert the validated configs to payloads
         3. Update self.want with this list of payloads
         """
-        self.log.debug("ENTERED")
+        msg = "ENTERED"
+        self.log.debug(msg)
         # Generate the params_spec used to validate the configs
         params_spec = ParamsSpec(self.ansible_module)
         params_spec.commit()
@@ -619,6 +645,7 @@ class ImagePolicyTask(ImagePolicyCommon):
             )
         response.update({"DATA": data})
         self.ansible_module.fail_json(response, **self.task_result.result)
+
 
 def main():
     """

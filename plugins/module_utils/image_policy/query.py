@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,12 +20,12 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
+    ImagePolicies
 
 
 class ImagePolicyQuery(ImagePolicyCommon):
