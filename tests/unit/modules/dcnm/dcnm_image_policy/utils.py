@@ -33,8 +33,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy
     ImagePolicyAction
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
+    ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
-    Config2Payload, Payload, Payload2Config)
+    Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
@@ -50,7 +52,10 @@ class MockAnsibleModule:
     }
     argument_spec = {
         "config": {"required": True, "type": "dict"},
-        "state": {"default": "merged", "choices": ["merged", "deleted", "query"]},
+        "state": {
+            "default": "merged",
+            "choices": ["deleted", "overridden", "merged", "query", "replaced"],
+        },
     }
     supports_check_mode = True
 
@@ -69,11 +74,11 @@ class MockAnsibleModule:
         self.params["state"] = value
 
     @staticmethod
-    def fail_json(msg) -> AnsibleFailJson:
+    def fail_json(msg, **kwargs) -> AnsibleFailJson:
         """
         mock the fail_json method
         """
-        raise AnsibleFailJson(msg)
+        raise AnsibleFailJson(msg, kwargs)
 
     def public_method_for_pylint(self) -> Any:
         """
@@ -85,10 +90,27 @@ class MockAnsibleModule:
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
 
+@pytest.fixture(name="image_policy_create")
+def image_policy_create_fixture():
+    """
+    mock ImagePolicyCreate
+    """
+    return ImagePolicyCreate(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_policy_create_bulk")
+def image_policy_create_bulk_fixture():
+    """
+    mock ImagePolicyCreateBulk
+    """
+    return ImagePolicyCreateBulk(MockAnsibleModule)
+
+
 @pytest.fixture(name="controller_version")
 def controller_version_fixture():
     """
     mock ControllerVersion
+    NOT USED CURRENTLY
     """
     return ControllerVersion(MockAnsibleModule)
 
@@ -97,6 +119,7 @@ def controller_version_fixture():
 def image_policy_common_fixture():
     """
     mock ImagePolicyCommon
+    NOT USED CURRENTLY
     """
     return ImagePolicyCommon(MockAnsibleModule)
 
@@ -105,6 +128,7 @@ def image_policy_common_fixture():
 def image_policies_fixture():
     """
     mock ImagePolicies
+    NOT USED CURRENTLY
     """
     return ImagePolicies(MockAnsibleModule)
 
@@ -113,6 +137,7 @@ def image_policies_fixture():
 def image_policy_action_fixture():
     """
     mock ImagePolicyAction
+    NOT USED CURRENTLY
     """
     return ImagePolicyAction(MockAnsibleModule)
 
@@ -121,6 +146,7 @@ def image_policy_action_fixture():
 def params_validate_fixture():
     """
     mock ParamsValidate
+    NOT USED CURRENTLY
     """
     return ParamsValidate(MockAnsibleModule)
 
@@ -129,6 +155,7 @@ def params_validate_fixture():
 def config2payload_fixture():
     """
     mock Config2Payload
+    Used in test_image_policy_payload.py
     """
     return Config2Payload(MockAnsibleModule)
 
@@ -137,6 +164,7 @@ def config2payload_fixture():
 def payload2config_fixture():
     """
     mock Payload2Config
+    Used in test_image_policy_payload.py
     """
     return Payload2Config(MockAnsibleModule)
 
@@ -152,6 +180,7 @@ def does_not_raise():
 def load_playbook_config(key: str) -> Dict[str, str]:
     """
     Return playbook configs for ImagePolicyTask
+    NOT USED CURRENTLY
     """
     playbook_file = "image_policy_playbook_configs"
     playbook_config = load_fixture(playbook_file).get(key)
@@ -162,6 +191,7 @@ def load_playbook_config(key: str) -> Dict[str, str]:
 def payloads_image_policy(key: str) -> Dict[str, str]:
     """
     Return payloads for ImagePolicy
+    NOT USED CURRENTLY
     """
     payload_file = "image_policy_payloads_ImagePolicy"
     payload = load_fixture(payload_file).get(key)
@@ -172,6 +202,7 @@ def payloads_image_policy(key: str) -> Dict[str, str]:
 def responses_controller_version(key: str) -> Dict[str, str]:
     """
     Return ControllerVersion controller responses
+    NOT USED CURRENTLY
     """
     response_file = "image_policy_responses_ControllerVersion"
     response = load_fixture(response_file).get(key)
@@ -182,6 +213,7 @@ def responses_controller_version(key: str) -> Dict[str, str]:
 def responses_image_policies(key: str) -> Dict[str, str]:
     """
     Return ImagePolicies controller responses
+    NOT USED CURRENTLY
     """
     response_file = "image_policy_responses_ImagePolicies"
     response = load_fixture(response_file).get(key)
@@ -192,6 +224,7 @@ def responses_image_policies(key: str) -> Dict[str, str]:
 def responses_image_policy_action(key: str) -> Dict[str, str]:
     """
     Return ImagePolicyAction controller responses
+    NOT USED CURRRENTLY
     """
     response_file = "image_policy_responses_ImagePolicyAction"
     response = load_fixture(response_file).get(key)
@@ -202,6 +235,7 @@ def responses_image_policy_action(key: str) -> Dict[str, str]:
 def responses_image_policy_common(key: str) -> Dict[str, str]:
     """
     Return ImagePolicyCommon controller responses
+    NOT USED CURRENTLY
     """
     response_file = "image_policy_responses_ImagePolicyCommon"
     response = load_fixture(response_file).get(key)
@@ -212,9 +246,29 @@ def responses_image_policy_common(key: str) -> Dict[str, str]:
 
 def data_payload(key: str) -> Dict[str, str]:
     """
-    Return data for Payload unit tests
+    Return data for unit tests of the Payload() class
     """
     response_file = "data_payload"
     response = load_fixture(response_file).get(key)
     print(f"data_payload: {key} : {response}")
     return response
+
+
+def payloads_image_policy_create(key: str) -> Dict[str, str]:
+    """
+    Return payloads for ImagePolicyCreate
+    """
+    payload_file = "payloads_ImagePolicyCreate"
+    payload = load_fixture(payload_file).get(key)
+    print(f"{payload_file}: {key} : {payload}")
+    return payload
+
+
+def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
+    """
+    Return payloads for ImagePolicyCreateBulk
+    """
+    payload_file = "payloads_ImagePolicyCreateBulk"
+    payload = load_fixture(payload_file).get(key)
+    print(f"{payload_file}: {key} : {payload}")
+    return payload

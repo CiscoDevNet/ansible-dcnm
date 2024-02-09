@@ -23,8 +23,11 @@ import logging
 from typing import Any, Dict
 
 # Using only for its failed_result property
+# pylint: disable=line-too-long
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
     ImagePolicyTaskResult
+
+# pylint: enable=line-too-long
 
 
 class ImagePolicyCommon:
@@ -236,7 +239,7 @@ class ImagePolicyCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.response_current must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["response_current"] = value
 
     @property
@@ -256,7 +259,7 @@ class ImagePolicyCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.response must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["response"].append(value)
 
     @property
@@ -287,7 +290,7 @@ class ImagePolicyCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.result must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["result"].append(value)
 
     @property
@@ -307,5 +310,5 @@ class ImagePolicyCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.result_current must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["result_current"] = value

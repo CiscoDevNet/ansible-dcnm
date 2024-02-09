@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# TODO: needs_testing
 
 from __future__ import absolute_import, division, print_function
 
@@ -23,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
@@ -50,8 +48,16 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         self.log.debug("ENTERED ImagePolicyCreateCommon()")
 
         self.endpoints = ApiEndpoints()
+        self._image_policies = ImagePolicies(self.ansible_module)
 
         self.action = "create"
+        self._payloads_to_commit = []
+        self.response_ok = []
+        self.result_ok = []
+        self.diff_ok = []
+        self.response_nok = []
+        self.result_nok = []
+        self.diff_nok = []
 
         self.path = self.endpoints.policy_create.get("path")
         self.verb = self.endpoints.policy_create.get("verb")
@@ -69,7 +75,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         if not isinstance(payload, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be a dict. "
-            msg += f"gpt type {type(payload).__name__}, "
+            msg += f"Got type {type(payload).__name__}, "
             msg += f"value {payload}"
             self.ansible_module.fail_json(msg, **self.failed_result)
 
@@ -81,7 +87,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             return
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"payload is missing mandatory keys: "
+        msg += "payload is missing mandatory keys: "
         msg += f"{sorted(missing_keys)}"
         self.ansible_module.fail_json(msg, **self.failed_result)
 
@@ -96,7 +102,6 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
-        self._image_policies = ImagePolicies(self.ansible_module)
         self._image_policies.refresh()
 
         self._payloads_to_commit = []
@@ -186,6 +191,29 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         msg += f"response(s): {self.response_nok}"
         self.ansible_module.fail_json(msg, **result)
 
+    @property
+    def payloads(self):
+        """
+        Return the image policy payloads
+
+        Payloads must be a list of dict. Each dict is a
+        payload for the image policy create API endpoint.
+        """
+        return self.properties["payloads"]
+
+    @payloads.setter
+    def payloads(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, list):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payloads must be a list of dict. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            self.ansible_module.fail_json(msg, **self.failed_result)
+        for item in value:
+            self._verify_payload(item)
+        self.properties["payloads"] = value
+
 
 class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     """
@@ -240,29 +268,6 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
         """
         # properties dict is already initialized in the parent class
         self.properties["payloads"] = None
-
-    @property
-    def payloads(self):
-        """
-        Return the image policy payloads
-
-        Payloads must be a list of dict. Each dict is a
-        payload for the image policy create API endpoint.
-        """
-        return self.properties["payloads"]
-
-    @payloads.setter
-    def payloads(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payloads must be a list of dict. "
-            msg += f"got {type(value).__name__} for "
-            msg += f"value {value}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        for item in value:
-            self._verify_payload(item)
-        self.properties["payloads"] = value
 
     def commit(self):
         """
@@ -358,7 +363,7 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         self.payloads = [self.payload]
         self._build_payloads_to_commit()
 
-        if self._payloads_to_commit == []:
+        if not self._payloads_to_commit:
             return
 
         self._send_payloads()

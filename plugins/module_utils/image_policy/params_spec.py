@@ -38,9 +38,12 @@ class ParamsSpec:
         self._params_spec: Dict[str, Any] = {}
 
     def commit(self):
+        """
+        build the parameter specification based on the state
+        """
         method_name = inspect.stack()[0][3]
 
-        if self.ansible_module.params["state"] == None:
+        if self.ansible_module.params["state"] is None:
             self.ansible_module.fail_json(msg="state is None")
 
         if self.ansible_module.params["state"] == "merged":
@@ -206,4 +209,7 @@ class ParamsSpec:
 
     @property
     def params_spec(self) -> Dict[str, Any]:
+        """
+        return the parameter specification
+        """
         return self._params_spec

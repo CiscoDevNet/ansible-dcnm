@@ -23,7 +23,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
     ImagePolicies
@@ -53,9 +52,10 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyDelete()")
 
+        self.endpoints = ApiEndpoints()
+        self.image_policies = ImagePolicies(self.ansible_module)
         self.action = "delete"
         self._build_properties()
-        self.endpoints = ApiEndpoints()
 
     def _build_properties(self):
         """
@@ -87,7 +87,6 @@ class ImagePolicyDelete(ImagePolicyCommon):
         Retrieve policies from the controller and return the list of
         controller policies that are in our policy_names list.
         """
-        self.image_policies = ImagePolicies(self.ansible_module)
         self.image_policies.refresh()
 
         policies_to_delete = []
@@ -119,7 +118,8 @@ class ImagePolicyDelete(ImagePolicyCommon):
             return
 
         policy_names = policies_to_delete
-        self.log.debug(f"Deleting policies {policy_names}")
+        msg = f"Deleting policies {policy_names}"
+        self.log.debug(msg)
 
         request_body = {"policyNames": policy_names}
         response = dcnm_send(
@@ -127,7 +127,8 @@ class ImagePolicyDelete(ImagePolicyCommon):
         )
         result = self._handle_response(response, verb)
 
-        self.log.debug(f"response: {response}")
+        msg = f"response: {response}"
+        self.log.debug(msg)
 
         if result["success"]:
             self.changed = True

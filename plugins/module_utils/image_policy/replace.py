@@ -23,7 +23,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
@@ -84,12 +83,21 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug(f"ENTERED ImagePolicyReplaceBulk()")
+        msg = "ENTERED ImagePolicyReplaceBulk()"
+        self.log.debug(msg)
 
         self.action = "replace"
+        self.response_ok = []
+        self.result_ok = []
+        self.diff_ok = []
+        self.response_nok = []
+        self.result_nok = []
+        self.diff_nok = []
+        self._payloads_to_commit = []
 
         self._build_properties()
         self.endpoints = ApiEndpoints()
+        self.image_policies = ImagePolicies(self.ansible_module)
 
     def _build_properties(self):
         """
@@ -118,7 +126,7 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             if not isinstance(item, dict):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "payloads must be a list of dict. "
-                msg += f"got a list, but one of the items is "
+                msg += "got a list, but one of the items is "
                 msg += f"type {type(item).__name__}, "
                 msg += f"value {item}"
                 self.ansible_module.fail_json(msg)
@@ -149,10 +157,12 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         }
         return policy
 
-    def commit(self):
+    def _build_payloads_to_commit(self):
         """
-        Replace policies that do exist on the controller.
-        Skip any policies that do not exist on the controller.
+        Build the payloads to commit to the controller.
+        Populates the list self._payloads_to_commit
+
+        Caller: commit()
         """
         method_name = inspect.stack()[0][3]
         if self.payloads is None:
@@ -160,7 +170,6 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             msg += "payloads must be set prior to calling commit."
             self.ansible_module.fail_json(msg)
 
-        self.image_policies = ImagePolicies(self.ansible_module)
         self.image_policies.refresh()
 
         controller_policies = []
@@ -169,62 +178,90 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
                 continue
             controller_policies.append(payload)
 
-        payloads_to_commit = []
+        self._payloads_to_commit = []
         for payload in controller_policies:
             merge = MergeDicts(self.ansible_module)
             merge.dict1 = copy.deepcopy(self.default_policy(payload["policyName"]))
             merge.dict2 = payload
             merge.commit()
-            payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
+            self._payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
 
-        response_ok = []
-        result_ok = []
-        diff_ok = []
-        response_nok = []
-        result_nok = []
-        diff_nok = []
+    def _send_payloads(self):
+        """
+        Send the payloads in self._payloads_to_commit to the controller
 
+        Populate the following lists:
+
+        - self.response_ok  : Controller responses associated with success result
+        - self.result_ok    : Results where success is True
+        - self.diff_ok      : Payloads for which the request succeeded
+        - self.response_nok : Controller responses associated with failed result
+        - self.result_nok   : Results where success is False
+        - self.diff_nok     : Payloads for which the request failed
+
+        Caller: commit()
+        """
+        self.response_ok = []
+        self.result_ok = []
+        self.diff_ok = []
+        self.response_nok = []
+        self.result_nok = []
+        self.diff_nok = []
         path = self.endpoints.policy_edit.get("path")
         verb = self.endpoints.policy_edit.get("verb")
 
-        for payload in payloads_to_commit:
+        for payload in self._payloads_to_commit:
             response = dcnm_send(
                 self.ansible_module, verb, path, data=json.dumps(payload)
             )
             result = self._handle_response(response, verb)
 
             if result["success"]:
-                response_ok.append(response)
-                result_ok.append(result)
-                diff_ok.append(payload)
+                self.response_ok.append(response)
+                self.result_ok.append(result)
+                self.diff_ok.append(payload)
             else:
-                response_nok.append(response)
-                result_nok.append(response)
-                diff_nok.append(payload)
+                self.response_nok.append(response)
+                self.result_nok.append(response)
+                self.diff_nok.append(payload)
 
-        if len(result_ok) == len(payloads_to_commit):
+    def _process_responses(self):
+        """
+        Process the responses from the controller.
+        Sets the following properties:
+        - self.changed
+        - self.diff
+        - self.response
+        - self.result
+        - self.response_current
+        - self.result_current
+
+        Caller: commit()
+        """
+        method_name = inspect.stack()[0][3]
+        if len(self.result_ok) == len(self._payloads_to_commit):
             self.changed = True
-            for payload in diff_ok:
+            for payload in self.diff_ok:
                 payload["action"] = self.action
                 self.diff = copy.deepcopy(payload)
-            for response in response_ok:
+            for response in self.response_ok:
                 self.response = copy.deepcopy(response)
                 self.response_current = copy.deepcopy(response)
-            for result in result_ok:
+            for result in self.result_ok:
                 self.result = copy.deepcopy(result)
                 self.result_current = copy.deepcopy(result)
             return
 
         self.changed = False
-        if len(result_nok) != len(payloads_to_commit):
+        if len(self.result_nok) != len(self._payloads_to_commit):
             self.changed = True
-            for payload in diff_ok:
+            for payload in self.diff_ok:
                 payload["action"] = self.action
                 self.diff = copy.deepcopy(payload)
-            for response in response_ok:
+            for response in self.response_ok:
                 self.response = copy.deepcopy(response)
                 self.response_current = copy.deepcopy(response)
-            for result in result_ok:
+            for result in self.result_ok:
                 self.result = copy.deepcopy(result)
                 self.result_current = copy.deepcopy(result)
 
@@ -234,6 +271,14 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         result["response"] = self.response
         result["result"] = self.result
         msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response(s) during policy bulk replace. "
-        msg += f"response(s): {response_nok}"
+        msg += "Bad response(s) during image policy bulk replace. "
+        msg += f"response(s): {self.response_nok}"
         self.ansible_module.fail_json(msg, **result)
+
+    def commit(self):
+        """
+        Commit the payloads to the controller
+        """
+        self._build_payloads_to_commit()
+        self._send_payloads()
+        self._process_responses()
