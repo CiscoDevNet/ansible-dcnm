@@ -132,6 +132,7 @@ EXAMPLES = """
 #   do not delete or modify it.
 
 # Delete two image policies from the controller.
+
     -   name: Delete Image policies
         cisco.dcnm.dcnm_image_policy:
             state: deleted
@@ -144,6 +145,7 @@ EXAMPLES = """
             var: result
 
 # Merge two image policies into the controller.
+
     -   name: Merge Image policies
         cisco.dcnm.dcnm_image_policy:
             state: merged
@@ -196,9 +198,6 @@ EXAMPLES = """
 
 # Query the controller for the policies in the playbook task.
 
--   hosts: ndfc
-    gather_facts: false
-    tasks:
     -   name: Query Image policies
         cisco.dcnm.dcnm_image_policy:
             state: query
