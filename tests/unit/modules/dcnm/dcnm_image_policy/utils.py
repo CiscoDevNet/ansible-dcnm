@@ -23,16 +23,6 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
-    ControllerVersion
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
-    ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
-    ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
-    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
     ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
@@ -106,51 +96,6 @@ def image_policy_create_bulk_fixture():
     return ImagePolicyCreateBulk(MockAnsibleModule)
 
 
-@pytest.fixture(name="controller_version")
-def controller_version_fixture():
-    """
-    mock ControllerVersion
-    NOT USED CURRENTLY
-    """
-    return ControllerVersion(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policy_common")
-def image_policy_common_fixture():
-    """
-    mock ImagePolicyCommon
-    NOT USED CURRENTLY
-    """
-    return ImagePolicyCommon(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policies")
-def image_policies_fixture():
-    """
-    mock ImagePolicies
-    NOT USED CURRENTLY
-    """
-    return ImagePolicies(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policy_action")
-def image_policy_action_fixture():
-    """
-    mock ImagePolicyAction
-    NOT USED CURRENTLY
-    """
-    return ImagePolicyAction(MockAnsibleModule)
-
-
-@pytest.fixture(name="params_validate")
-def params_validate_fixture():
-    """
-    mock ParamsValidate
-    NOT USED CURRENTLY
-    """
-    return ParamsValidate(MockAnsibleModule)
-
-
 @pytest.fixture(name="config2payload")
 def config2payload_fixture():
     """
@@ -175,73 +120,6 @@ def does_not_raise():
     A context manager that does not raise an exception.
     """
     yield
-
-
-def load_playbook_config(key: str) -> Dict[str, str]:
-    """
-    Return playbook configs for ImagePolicyTask
-    NOT USED CURRENTLY
-    """
-    playbook_file = "image_policy_playbook_configs"
-    playbook_config = load_fixture(playbook_file).get(key)
-    print(f"load_playbook_config: {key} : {playbook_config}")
-    return playbook_config
-
-
-def payloads_image_policy(key: str) -> Dict[str, str]:
-    """
-    Return payloads for ImagePolicy
-    NOT USED CURRENTLY
-    """
-    payload_file = "image_policy_payloads_ImagePolicy"
-    payload = load_fixture(payload_file).get(key)
-    print(f"payload_data_image_policy: {key} : {payload}")
-    return payload
-
-
-def responses_controller_version(key: str) -> Dict[str, str]:
-    """
-    Return ControllerVersion controller responses
-    NOT USED CURRENTLY
-    """
-    response_file = "image_policy_responses_ControllerVersion"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
-    return response
-
-
-def responses_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return ImagePolicies controller responses
-    NOT USED CURRENTLY
-    """
-    response_file = "image_policy_responses_ImagePolicies"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_policies: {key} : {response}")
-    return response
-
-
-def responses_image_policy_action(key: str) -> Dict[str, str]:
-    """
-    Return ImagePolicyAction controller responses
-    NOT USED CURRRENTLY
-    """
-    response_file = "image_policy_responses_ImagePolicyAction"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_policy_action: {key} : {response}")
-    return response
-
-
-def responses_image_policy_common(key: str) -> Dict[str, str]:
-    """
-    Return ImagePolicyCommon controller responses
-    NOT USED CURRENTLY
-    """
-    response_file = "image_policy_responses_ImagePolicyCommon"
-    response = load_fixture(response_file).get(key)
-    verb = response.get("METHOD")
-    print(f"{key} : {verb} : {response}")
-    return {"response": response, "verb": verb}
 
 
 def data_payload(key: str) -> Dict[str, str]:

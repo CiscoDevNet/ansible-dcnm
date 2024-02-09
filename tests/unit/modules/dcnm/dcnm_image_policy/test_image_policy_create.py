@@ -121,10 +121,6 @@ def test_image_policy_create_00022(image_policy_create, key, match) -> None:
     Test
     - fail_json is called because payload is missing mandatory key
     """
-    match = "ImagePolicyCreate._verify_payload: "
-    match += "payload is missing mandatory keys: "
-    match += rf".*{match}.*"
-
     with does_not_raise():
         instance = image_policy_create
     with pytest.raises(AnsibleFailJson, match=match):

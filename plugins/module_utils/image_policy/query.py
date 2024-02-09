@@ -12,8 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# TODO: needs_testing
-
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -21,7 +19,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
@@ -30,19 +27,20 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common imp
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 
 
-class ImagePolicyDelete(ImagePolicyCommon):
+class ImagePolicyQuery(ImagePolicyCommon):
     """
-    Delete image policies
+    Query image policies
 
     Usage:
 
-    delete = ImagePolicyDelete(ansible_module)
-    delete.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
-    delete.commit()
+    instance = ImagePolicyQuery(ansible_module)
+    instance.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
+    instance.commit()
+    diff = instance.diff # contains the image policy information
+    result = instance.result # contains the result(s) of the query
+    response = instance.response # contains the response(s) from the controller
     """
 
     def __init__(self, ansible_module):
@@ -50,12 +48,15 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImagePolicyDelete()")
+        msg = "ENTERED ImagePolicyQuery()"
+        self.log.debug(msg)
 
+        self._build_properties()
         self.endpoints = ApiEndpoints()
         self.image_policies = ImagePolicies(self.ansible_module)
-        self.action = "delete"
-        self._build_properties()
+
+        self.action = "query"
+        self.changed = False
 
     def _build_properties(self):
         """
@@ -82,25 +83,22 @@ class ImagePolicyDelete(ImagePolicyCommon):
             self.ansible_module.fail_json(msg)
         self.properties["policy_names"] = value
 
-    def _get_policies_to_delete(self):
+    def _get_policies_to_query(self):
         """
         Retrieve policies from the controller and return the list of
         controller policies that are in our policy_names list.
         """
         self.image_policies.refresh()
 
-        policies_to_delete = []
+        policies_to_query = []
         for policy_name in self.policy_names:
             if policy_name in self.image_policies.all_policies:
-                policies_to_delete.append(policy_name)
-        return policies_to_delete
+                policies_to_query.append(policy_name)
+        return policies_to_query
 
     def commit(self):
         """
-        delete each of the image policies in self.policy_names
-
-        1. TODO: If policy has ref_count > 0, detach policy from switches first
-        2. Delete the policy
+        query each of the image policies in self.policy_names
         """
         method_name = inspect.stack()[0][3]
         if self.policy_names is None:
@@ -108,40 +106,23 @@ class ImagePolicyDelete(ImagePolicyCommon):
             msg += "policy_names must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.failed_result)
 
-        path = self.endpoints.policy_delete["path"]
-        verb = self.endpoints.policy_delete["verb"]
+        policies_to_query = self._get_policies_to_query()
 
-        policies_to_delete = self._get_policies_to_delete()
-
-        if len(policies_to_delete) == 0:
-            self.changed = False
+        if len(policies_to_query) == 0:
             return
 
-        policy_names = policies_to_delete
-        msg = f"Deleting policies {policy_names}"
+        msg = f"Querying policies {policies_to_query}"
         self.log.debug(msg)
 
-        request_body = {"policyNames": policy_names}
-        response = dcnm_send(
-            self.ansible_module, verb, path, data=json.dumps(request_body)
-        )
-        result = self._handle_response(response, verb)
+        instance = ImagePolicies(self.ansible_module)
+        instance.refresh()
 
-        msg = f"response: {response}"
-        self.log.debug(msg)
-
-        if result["success"]:
-            self.changed = True
-            request_body["action"] = self.action
-            self.diff = copy.deepcopy(request_body)
-            self.response_current = copy.deepcopy(response)
-            self.response = copy.deepcopy(response)
-            self.result_current = copy.deepcopy(result)
-            self.result = copy.deepcopy(result)
-            return
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response during policies delete. "
-        msg += f"policy_names {policies_to_delete}. "
-        msg += f"response: {response}"
-        self.ansible_module.fail_json(msg, **self.failed_result)
+        for policy_name in policies_to_query:
+            if policy_name in instance.all_policies:
+                policy = copy.deepcopy(instance.all_policies[policy_name])
+                policy["action"] = self.action
+                self.diff = policy
+        self.response = copy.deepcopy(instance.response)
+        self.response_current = copy.deepcopy(instance.response)
+        self.result = copy.deepcopy(instance.result)
+        self.result_current = copy.deepcopy(instance.result_current)

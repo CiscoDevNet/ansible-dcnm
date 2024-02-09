@@ -121,10 +121,6 @@ def test_image_policy_create_bulk_00022(image_policy_create_bulk, key, match) ->
     Test
     - fail_json is called because a payload in the payloads list is missing a mandatory key
     """
-    match = "ImagePolicyCreateBulk._verify_payload: "
-    match += "payload is missing mandatory keys: "
-    match += rf".*{match}.*"
-
     with does_not_raise():
         instance = image_policy_create_bulk
     with pytest.raises(AnsibleFailJson, match=match):
