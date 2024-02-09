@@ -17,7 +17,225 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
+
+DOCUMENTATION = """
+---
+module: dcnm_image_upgrade
+short_description: Image management for Nexus switches
+version_added: "0.9.0"
+description:
+    - Stage, validate, upgrade images.
+    - Attach, detach, image policies.
+    - Query device issu details.
+author: Allen Robel (@quantumonion)
+options:
+    state:
+        description:
+        - The state of the feature or object after module completion.
+        type: str
+        choices:
+        - deleted
+        - merged
+        - overridden
+        - query
+        - replaced
+        default: merged
+    config:
+        description:
+        - List of dictionaries containing the image policy parameters.
+        type: list
+        elements: dict
+        required: true
+        suboptions:
+            name:
+                description:
+                - The image policy name.
+                type: str
+                required: true
+            agnostic:
+                description:
+                - The agnostic flag.
+                type: bool
+                default: false
+                required: false
+            description:
+                description:
+                - The image policy description.
+                type: str
+                default: ""
+                required: false
+            epld_image:
+                description:
+                - The epld image name.
+                type: str
+                default: ""
+                required: false
+            packages:
+                description:
+                - A dictionary containing two keys, install and uninstall, described below.
+                type: dict
+                required: false
+                suboptions:
+                    install:
+                        description:
+                        - A list of packages to install.
+                        type: list
+                        required: false
+                    uninstall:
+                        description:
+                        - A list of packages to uninstall.
+                        type: list
+                        required: false
+                platform:
+                    description:
+                    - The platform to which the image policy applies e.g. N9K.
+                    type: str
+                    required: true
+                release:
+                    description:
+                    - The release to which the image policy applies. e.g. 10.2.5_nxos64-cs_64bit
+                    - The NDFC API documentation describles the format of the release string.
+                    type: str
+                    required: true
+                type:
+                    description:
+                    - The type of the image policy e.g. PLATFORM.
+                    type: str
+                    default: PLATFORM
+                    required: false
+"""
+
+EXAMPLES = """
+This module supports the following states:
+
+deleted:
+  Delete image policies from the controller.
+  If an image policy has references (i.e. it is attached to a device),
+  the module will fail.  Use dcnm_image_upgrade module, state deleted,
+   to detach the image policy from all devices before deleting it.
+merged:
+  Create one or more image policies.  If an image policy
+  already exists on the controller, do nothing.
+overridden:
+  Create one or more image policies.  If an image policy
+  already exists on the controller, deleted it and update it
+  with the configuration in the playbook task.  Remove any
+  image policies from the controller that are not in the
+  playbook task.
+query:
+  Return information about one or more image policies.
+replaced:
+  Replace image policies on the controller with policies in the playbook task.
+  If an image policy exists on the controller, but it not in the playbook task,
+  do not delete or modify it.
+
+# Delete two image policies from the controller.
+    -   name: Delete Image policies
+        cisco.dcnm.dcnm_image_policy:
+            state: deleted
+            config:
+            -   name: KR5M
+            -   name: NR3F
+        register: result
+    -   name: print result
+        ansible.builtin.debug:
+            var: result
+
+# Merge two image policies into the controller.
+    -   name: Merge Image policies
+        cisco.dcnm.dcnm_image_policy:
+            state: merged
+            config:
+            -   name: KR5M
+                agnostic: false
+                description: KR5M
+                epld_image: n9000-epld.10.2.5.M.img
+                packages:
+                   install:
+                   - mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm
+                   uninstall:
+                   - mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000
+                platform: N9K
+                release: 10.2.5_nxos64-cs_64bit
+                type: PLATFORM
+            -   name: NR3F
+                description: NR3F
+                platform: N9K
+                epld_image: n9000-epld.10.3.1.F.img
+                release: 10.3.1_nxos64-cs_64bit
+        register: result
+    -   name: print result
+        ansible.builtin.debug:
+            var: result
+
+# Override all policies on the controller and replace them with
+# the policies in the playbook task.
+
+    -   name: Override Image policies
+        cisco.dcnm.dcnm_image_policy:
+            state: overridden
+            config:
+            -   name: KR5M
+                agnostic: false
+                description: KR5M
+                epld_image: n9000-epld.10.2.5.M.img
+                platform: N9K
+                release: 10.2.5_nxos64-cs_64bit
+                type: PLATFORM
+            -   name: NR3F
+                description: NR3F
+                platform: N9K
+                epld_image: n9000-epld.10.2.5.M.img
+                release: 10.3.1_nxos64-cs_64bit
+        register: result
+    -   name: print result
+        ansible.builtin.debug:
+            var: result
+
+# Query the controller for the policies in the playbook task.
+
+-   hosts: ndfc
+    gather_facts: false
+    tasks:
+    -   name: Query Image policies
+        cisco.dcnm.dcnm_image_policy:
+            state: query
+            config:
+            -   name: NR3F
+            -   name: KR5M
+        register: result
+    -   name: print result
+        ansible.builtin.debug:
+            var: result
+
+# Replace any policies on the controller that are in the playbook task with
+# the configuration given in the playbook task.  Policies not listed in the
+# playbook task are not modified and are not deleted.
+
+    -   name: Replace Image policies
+        cisco.dcnm.dcnm_image_policy:
+            state: replaced
+            config:
+            -   name: KR5M
+                agnostic: false
+                description: KR5M
+                epld_image: n9000-epld.10.2.5.M.img
+                platform: N9K
+                release: 10.2.5_nxos64-cs_64bit
+                type: PLATFORM
+            -   name: NR3F
+                description: Replaced NR3F
+                platform: N9K
+                epld_image: n9000-epld.10.3.1.F.img
+                release: 10.3.1_nxos64-cs_64bit
+        register: result
+    -   name: print result
+        ansible.builtin.debug:
+            var: result
+"""
+
 
 import copy
 import inspect
