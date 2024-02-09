@@ -39,7 +39,7 @@ def test_image_policy_endpoints_00001() -> None:
     )
 
 
-def test_image_mgmt_api_00010() -> None:
+def test_image_policy_endpoints_00010() -> None:
     """
     Endpoints.policies_attached_info
     """
@@ -51,7 +51,7 @@ def test_image_mgmt_api_00010() -> None:
     )
 
 
-def test_image_mgmt_api_00020() -> None:
+def test_image_policy_endpoints_00020() -> None:
     """
     Endpoints.policies_info
     """
@@ -63,7 +63,7 @@ def test_image_mgmt_api_00020() -> None:
     )
 
 
-def test_image_mgmt_api_00030() -> None:
+def test_image_policy_endpoints_00030() -> None:
     """
     Endpoints.policy_attach
     """
@@ -75,7 +75,7 @@ def test_image_mgmt_api_00030() -> None:
     )
 
 
-def test_image_mgmt_api_00040() -> None:
+def test_image_policy_endpoints_00040() -> None:
     """
     Endpoints.policy_create
     """
@@ -87,7 +87,7 @@ def test_image_mgmt_api_00040() -> None:
     )
 
 
-def test_image_mgmt_api_00050() -> None:
+def test_image_policy_endpoints_00050() -> None:
     """
     Endpoints.policy_detach
     """
@@ -99,7 +99,7 @@ def test_image_mgmt_api_00050() -> None:
     )
 
 
-def test_image_mgmt_api_00060() -> None:
+def test_image_policy_endpoints_00060() -> None:
     """
     Endpoints.policy_info
     """
