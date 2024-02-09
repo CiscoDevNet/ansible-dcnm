@@ -26,14 +26,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-import json
-from typing import Any, Dict
 
-# import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \

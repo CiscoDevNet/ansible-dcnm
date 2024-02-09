@@ -16,7 +16,10 @@
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
-# pylint: disable=unused-import redefined-outer-name protected-access unused-argument
+# pylint: disable=unused-import
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
+# pylint: disable=unused-argument
 
 from __future__ import absolute_import, division, print_function
 
