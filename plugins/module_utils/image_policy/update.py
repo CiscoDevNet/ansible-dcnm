@@ -107,10 +107,14 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         self.image_policies.refresh()
 
         _payloads = []
+        _policy_names = []
         for payload in self.payloads:
             if payload.get("policyName", None) not in self.image_policies.all_policies:
                 continue
             _payloads.append(payload)
+            _policy_names.append(payload["policyName"])
+
+        self._verify_image_policy_ref_count(self.image_policies, _policy_names)
 
         # build self._payloads_to_commit by merging _payloads with the policies
         # on the controller.  The parameters in _payloads take precedence.

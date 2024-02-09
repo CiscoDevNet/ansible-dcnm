@@ -498,7 +498,7 @@ class ImagePolicyTask(ImagePolicyCommon):
         self.send_need_create()
         self.send_need_update()
 
-    def _prepare_for_merge(self, have: Dict, want: Dict) -> (Dict, Dict):
+    def _prepare_for_merge(self, have: Dict, want: Dict):
         """
         1.  Remove fields in "have" that are not part of a request payload i.e.
             imageName and ref_count.
@@ -581,6 +581,13 @@ class ImagePolicyTask(ImagePolicyCommon):
         self.update_diff_and_response(instance)
 
     def update_diff_and_response(self, obj) -> None:
+        """
+        Update the appropriate self.task_result diff and response,
+        based on the current ansible state, with the diff and
+        response from obj.
+
+        fail_json if the state is not in self._valid_states
+        """
         state = self.ansible_module.params["state"]
         if state not in self._valid_states:
             msg = f"Inappropriate state {state}"

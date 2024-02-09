@@ -62,6 +62,39 @@ class ImagePolicyCommon:
         self.properties["result"] = []
         self.properties["result_current"] = {}
 
+    def _verify_image_policy_ref_count(self, instance, policy_names):
+        """
+        instance: ImagePolicies() instance
+        policy_names: list of policy names
+
+        Verify that all image policies in policy_names have a
+        ref_count of 0 (i.e. no devices are using the policy).
+
+        If the ref_count is greater than 0, fail_json with a message
+        indicating that the policy, or policies, must be detached from
+        all devices before it/they can be deleted.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED:"
+        msg += f"policy_names: {policy_names}"
+        self.log.debug(msg)
+        _non_zero_ref_counts = {}
+        for policy_name in policy_names:
+            instance.policy_name = policy_name
+            if instance.ref_count == 0:
+                continue
+            _non_zero_ref_counts[policy_name] = instance.ref_count
+        if len(_non_zero_ref_counts) == 0:
+            return
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"One or more policies have devices attached. "
+        msg += "Detach these policies from all devices first using "
+        msg += "the dcnm_image_upgrade module, with state == deleted. "
+        for policy_name in _non_zero_ref_counts:
+            msg += f"policy_name: {policy_name}, "
+            msg += f"ref_count: {_non_zero_ref_counts[policy_name]}. "
+        self.ansible_module.fail_json(msg, **self.failed_result)
+
     def _handle_response(self, response, verb):
         """
         Call the appropriate handler for response based on verb

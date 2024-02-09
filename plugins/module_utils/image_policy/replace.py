@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# TODO: needs_testing
 
 from __future__ import absolute_import, division, print_function
 
@@ -172,10 +171,14 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         self.image_policies.refresh()
 
         controller_policies = []
+        policy_names = []
         for payload in self.payloads:
             if payload.get("policyName", None) not in self.image_policies.all_policies:
                 continue
             controller_policies.append(payload)
+            policy_names.append(payload["policyName"])
+
+        self._verify_image_policy_ref_count(self.image_policies, policy_names)
 
         self._payloads_to_commit = []
         for payload in controller_policies:

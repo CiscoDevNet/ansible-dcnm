@@ -38,9 +38,9 @@ class ImagePolicyDelete(ImagePolicyCommon):
 
     Usage:
 
-    delete = ImagePolicyDelete(ansible_module)
-    delete.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
-    delete.commit()
+    instance = ImagePolicyDelete(ansible_module)
+    instance.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
+    instance.commit()
     """
 
     def __init__(self, ansible_module):
@@ -86,6 +86,7 @@ class ImagePolicyDelete(ImagePolicyCommon):
         controller policies that are in our policy_names list.
         """
         self.image_policies.refresh()
+        self._verify_image_policy_ref_count(self.image_policies, self.policy_names)
 
         policies_to_delete = []
         for policy_name in self.policy_names:
