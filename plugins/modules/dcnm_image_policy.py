@@ -21,7 +21,7 @@ __author__ = "Allen Robel"
 
 DOCUMENTATION = """
 ---
-module: dcnm_image_upgrade
+module: dcnm_image_policy
 short_description: Image policy management for Nexus Dashboard Fabric Controller
 version_added: "0.9.0"
 description:
@@ -30,7 +30,7 @@ author: Allen Robel (@quantumonion)
 options:
     state:
         description:
-            - The state of the feature or object after module completion.
+            - The state of the feature or object after module completion
         type: str
         choices:
             - deleted
@@ -42,7 +42,7 @@ options:
 
     config:
         description:
-            - List of dictionaries containing image policy parameters.
+            - List of dictionaries containing image policy parameters
         type: list
         elements: dict
         required: true
@@ -80,11 +80,13 @@ options:
                         description:
                             - A list of packages to install.
                         type: list
+                        elements: str
                         required: false
                     uninstall:
                         description:
                             - A list of packages to uninstall.
                         type: list
+                        elements: str
                         required: false
             platform:
                 description:
