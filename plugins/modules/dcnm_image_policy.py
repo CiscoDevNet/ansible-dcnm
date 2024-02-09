@@ -256,48 +256,34 @@ from typing import Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import (
-    MergeDicts,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import (
-    ParamsMergeDefaults,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import (
-    ParamsValidate,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import (
-    ImagePolicyCommon,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
-    ImagePolicyCreateBulk,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import (
-    ImagePolicyDelete,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import (
-    ApiEndpoints,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import (
-    ImagePolicies,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import (
-    ImagePolicyTaskResult,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import (
-    ParamsSpec,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
-    Config2Payload,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import (
-    ImagePolicyQuery,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import (
-    ImagePolicyReplaceBulk,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import (
-    ImagePolicyUpdateBulk,
-)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+    MergeDicts
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
+    ParamsMergeDefaults
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+    ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
+    ImagePolicyCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
+    ImagePolicyCreateBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
+    ImagePolicyDelete
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
+    ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
+    ImagePolicyTaskResult
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
+    ParamsSpec
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
+    Config2Payload
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
+    ImagePolicyQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
+    ImagePolicyReplaceBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import \
+    ImagePolicyUpdateBulk
 
 
 def json_pretty(msg):
@@ -597,8 +583,9 @@ class ImagePolicyTask(ImagePolicyCommon):
     def update_diff_and_response(self, obj) -> None:
         state = self.ansible_module.params["state"]
         if state not in self._valid_states:
-            self.log.error(f"Inappropriate state {state}")
-
+            msg = f"Inappropriate state {state}"
+            self.log.error(msg)
+            self.ansible_module.fail_json(msg, **obj.result)
         for diff in obj.diff:
             msg = f"state {state} diff: {json_pretty(diff)}"
             self.log.debug(msg)
@@ -646,7 +633,7 @@ class ImagePolicyTask(ImagePolicyCommon):
                 {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
             )
         response.update({"DATA": data})
-        self.ansible_module.fail_json(response, **self.task_result.result)
+        self.ansible_module.fail_json(response, **self.task_result.module_result)
 
 
 def main():
