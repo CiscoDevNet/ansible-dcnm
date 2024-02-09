@@ -324,4 +324,3 @@
     - (result.response.overridden | length) == 0
     - (result.response.query | length) == 0
     - (result.response.replaced | length) == 0
-
