@@ -19,6 +19,7 @@ __author__ = "Allen Robel"
 
 import sys
 
+
 class MockAnsibleModule:
     """
     Use as a direct replacement for AnsibleModule when developing
@@ -27,6 +28,7 @@ class MockAnsibleModule:
     Doesn't work with dcnm_send currently since it doesn't
     setup sockets, etc.
     """
+
     def __init__(self, argument_spec=None, supports_check_mode=None):
         self.params = {}
         self.params["argument_spec"] = argument_spec
@@ -41,24 +43,27 @@ class MockAnsibleModule:
     def exit_json(self, **kwargs):
         print(kwargs)
         sys.exit(0)
-        
+
     @property
     def argument_spec(self):
         return self.params["argument_spec"]
+
     @argument_spec.setter
     def argument_spec(self, value):
         self.params["argument_spec"] = value
-    
+
     @property
     def supports_check_mode(self):
         return self.params["supports_check_mode"]
+
     @supports_check_mode.setter
     def supports_check_mode(self, value):
         self.params["supports_check_mode"] = value
-    
+
     @property
     def state(self):
         return self.params["state"]
+
     @state.setter
     def state(self, state):
         self.params["state"] = state
@@ -66,6 +71,7 @@ class MockAnsibleModule:
     @property
     def config(self):
         return self.params["config"]
+
     @config.setter
     def config(self, config):
         self.params["config"] = config
