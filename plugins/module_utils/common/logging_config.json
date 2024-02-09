@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "formatters": {
+    "standard": {
+      "class": "logging.Formatter",
+      "format": "%(asctime)s - %(levelname)s - [%(name)s.%(funcName)s.%(lineno)d] %(message)s"
+    }
+  },
+  "handlers": {
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "formatter": "standard",
+      "level": "DEBUG",
+      "filename": "/tmp/dcnm.log",
+      "mode": "a",
+      "encoding": "utf-8",
+      "maxBytes": 50000000,
+      "backupCount": 4
+    }
+  },
+  "loggers": {
+    "dcnm": {
+      "handlers": [
+        "file"
+      ],
+      "level": "DEBUG",
+      "propagate": false
+    }
+  },
+  "root": {
+    "level": "INFO",
+    "handlers": [
+      "file"
+    ]
+  }
+}
