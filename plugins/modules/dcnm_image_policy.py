@@ -17,7 +17,6 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 DOCUMENTATION = """
@@ -627,7 +626,7 @@ def main():
     """
 
     element_spec = {
-        "config": {"required": True, "type": "list"},
+        "config": {"required": True, "type": "list", "elements": "dict"},
         "state": {
             "default": "merged",
             "choices": ["deleted", "merged", "overridden", "query", "replaced"],
@@ -643,9 +642,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    log.config = config_file
+    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    # log.config = config_file
     log.commit()
 
     task_module = ImagePolicyTask(ansible_module)
