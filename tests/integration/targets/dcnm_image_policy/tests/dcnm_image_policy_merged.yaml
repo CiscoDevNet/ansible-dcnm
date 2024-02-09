@@ -1,0 +1,236 @@
+################################################################################
+# RUNTIME
+################################################################################
+
+# Recent run times (MM:SS.ms):
+################################################################################
+# STEPS
+################################################################################
+
+# SETUP
+# 1. The following images must already be uploaded to the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - nxos_image_1
+#    - nxos_image_2
+#    - epld_image_1
+#    - epld_image_2
+# 2. No need for fabric or switches
+# 3. Delete image policies under test, if they exist
+#    - image_policy_1
+#    - image_policy_2
+# TEST
+# 4. Create image policies using merged state and verify result
+#    - image_policy_1
+#    - image_policy_2
+# CLEANUP
+# 7. Delete the image policies created in the test
+
+################################################################################
+# REQUIREMENTS
+################################################################################
+
+# 1. The following images must already be uploaded to the controller
+#    See vars: section below
+#    - nxos_image_1
+#    - nxos_image_2
+#    - epld_image_1
+#    - epld_image_2
+# 2. No need for fabric or switches
+#
+# Example vars for dcnm_image_policy integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: deleted
+#   fabric_name: f1
+#   username: admin
+#   password: "foobar"
+#   switch_username: admin
+#   switch_password: "foobar"
+#   spine1: 172.22.150.114
+#   spine2: 172.22.150.115
+#   leaf1: 172.22.150.106
+#   leaf2: 172.22.150.107
+#   leaf3: 172.22.150.108
+#   leaf4: 172.22.150.109
+#   # for dcnm_image_policy role
+#   image_policy_1: "KR5M"
+#   image_policy_2: "NR3F"
+#   epld_image_1: n9000-epld.10.2.5.M.img
+#   epld_image_2: n9000-epld.10.3.1.F.img
+#   nxos_image_1: n9000-dk9.10.2.5.M.bin
+#   nxos_image_2: n9000-dk9.10.3.1.F.bin
+#   nxos_release_1: 10.2.5_nxos64-cs_64bit
+#   nxos_release_2: 10.3.1_nxos64-cs_64bit
+
+################################################################################
+# SETUP
+################################################################################
+
+- name: MERGED - SETUP - Delete image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: deleted
+    config:
+    - name: "{{ image_policy_1 }}"
+    - name: "{{ image_policy_2 }}"
+  register: result
+
+- debug:
+    var: result
+################################################################################
+# MERGED - TEST - Create two image policies using merged state
+################################################################################
+# Expected diff
+#
+# ok: [dcnm] => {
+#     "result": {
+#         "changed": true,
+#         "diff": {
+#             "deleted": [],
+#             "merged": [
+#                 {
+#                     "agnostic": false,
+#                     "epldImgName": "n9000-epld.10.2.5.M.img",
+#                     "nxosVersion": "10.2.5_nxos64-cs_64bit",
+#                     "platform": "N9K",
+#                     "policyDescr": "KR5M",
+#                     "policyName": "KR5M",
+#                     "policyType": "PLATFORM"
+#                 },
+#                 {
+#                     "agnostic": false,
+#                     "epldImgName": "n9000-epld.10.3.1.F.img",
+#                     "nxosVersion": "10.3.1_nxos64-cs_64bit",
+#                     "platform": "N9K",
+#                     "policyDescr": "NR3F",
+#                     "policyName": "NR3F",
+#                     "policyType": "PLATFORM"
+#                 }
+#             ],
+#             "overridden": [],
+#             "query": [],
+#             "replaced": []
+#         },
+#         "failed": false,
+#         "response": []
+#     }
+# }
+################################################################################
+
+
+- name: MERGED - TEST - Create two image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: merged
+    config:
+    - name: "{{ image_policy_1 }}"
+      agnostic: false
+      description: "{{ image_policy_1 }}"
+      epld_image: "{{ epld_image_1 }}"
+      platform: N9K
+      release: "{{ nxos_release_1 }}"
+      type: PLATFORM
+    - name: "{{ image_policy_2 }}"
+      description: "{{ image_policy_2 }}"
+      epld_image: "{{ epld_image_2 }}"
+      platform: N9K
+      release: "{{ nxos_release_2 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff.deleted | length) == 0
+    - (result.diff.merged | length) == 2
+    - (result.diff.overridden | length) == 0
+    - (result.diff.query | length) == 0
+    - (result.diff.replaced | length) == 0
+    - result.diff.merged[0].policyName == image_policy_1
+    - result.diff.merged[1].policyName == image_policy_2
+    - result.diff.merged[0].policyDescr == image_policy_1
+    - result.diff.merged[1].policyDescr == image_policy_2
+    - result.diff.merged[0].agnostic == false
+    - result.diff.merged[1].agnostic == false
+    - result.diff.merged[0].epldImgName == epld_image_1
+    - result.diff.merged[1].epldImgName == epld_image_2
+    - result.diff.merged[0].nxosVersion == nxos_release_1
+    - result.diff.merged[1].nxosVersion == nxos_release_2
+    - result.diff.merged[0].platform == "N9K"
+    - result.diff.merged[1].platform == "N9K"
+    - result.diff.merged[0].policyType == "PLATFORM"
+    - result.diff.merged[1].policyType == "PLATFORM"
+
+################################################################################
+# MERGED - CLEANUP - Delete image policies
+################################################################################
+# Expected diff and response
+# ok: [dcnm] => {
+#     "result": {
+#         "changed": true,
+#         "diff": {
+#             "deleted": [
+#                 {
+#                     "action": "delete",
+#                     "policyNames": [
+#                         "NR3F",
+#                         "KR5M"
+#                     ]
+#                 }
+#             ],
+#             "merged": [],
+#             "overridden": [],
+#             "query": [],
+#             "replaced": []
+#         },
+#         "failed": false,
+#         "response": {
+#             "deleted": [
+#                 {
+#                     "MESSAGE": "OK",
+#                     "METHOD": "DELETE",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+#                     "RETURN_CODE": 200
+#                 }
+#             ],
+#             "merged": [],
+#             "overridden": [],
+#             "query": [],
+#             "replaced": []
+#         }
+#     }
+# }
+
+- name: MERGED - CLEANUP - Delete image policies
+  cisco.dcnm.dcnm_image_policy:
+      state: deleted
+      config:
+      - name: NR3F
+      - name: KR5M
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff.deleted | length) == 1
+    - (result.diff.merged | length) == 0
+    - (result.diff.overridden | length) == 0
+    - (result.diff.query | length) == 0
+    - (result.diff.replaced | length) == 0
+    - image_policy_1 in result.diff.deleted[0].policyNames
+    - image_policy_2 in result.diff.deleted[0].policyNames
+    - result.response.deleted[0].MESSAGE == "OK"
+    - result.response.deleted[0].METHOD == "DELETE"
+    - result.response.deleted[0].RETURN_CODE == 200
+    - (result.response.deleted | length) == 1
+    - (result.response.merged | length) == 0
+    - (result.response.overridden | length) == 0
+    - (result.response.query | length) == 0
+    - (result.response.replaced | length) == 0
