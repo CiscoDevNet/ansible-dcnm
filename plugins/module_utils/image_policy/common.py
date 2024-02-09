@@ -75,9 +75,6 @@ class ImagePolicyCommon:
         all devices before it/they can be deleted.
         """
         method_name = inspect.stack()[0][3]
-        msg = f"ENTERED:"
-        msg += f"policy_names: {policy_names}"
-        self.log.debug(msg)
         _non_zero_ref_counts = {}
         for policy_name in policy_names:
             instance.policy_name = policy_name
@@ -87,7 +84,7 @@ class ImagePolicyCommon:
         if len(_non_zero_ref_counts) == 0:
             return
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"One or more policies have devices attached. "
+        msg += "One or more policies have devices attached. "
         msg += "Detach these policies from all devices first using "
         msg += "the dcnm_image_upgrade module, with state == deleted. "
         for policy_name in _non_zero_ref_counts:
