@@ -45,6 +45,7 @@ class MockImagePolicies:
     """
     Mock the ImagePolicies class to return various values for all_policies
     """
+
     def __init__(self, key: str) -> None:
         self.key = key
 
@@ -60,6 +61,7 @@ class MockImagePolicies:
         all_policies contains all image policies that exist on the controller
         """
         return image_policies_all_policies(self.key)
+
 
 def test_image_policy_create_bulk_00010(image_policy_create_bulk) -> None:
     """
