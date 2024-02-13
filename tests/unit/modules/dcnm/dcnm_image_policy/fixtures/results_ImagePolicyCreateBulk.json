@@ -1,0 +1,14 @@
+{
+    "test_image_policy_create_bulk_00037a": [
+        {
+            "changed": true,
+            "success": true
+        }
+    ],
+    "test_image_policy_create_bulk_00037b": [
+        {
+            "changed": false,
+            "success": false
+        }
+    ]
+}

@@ -76,6 +76,28 @@ class MockAnsibleModule:
         """
 
 
+class MockImagePolicies:
+    """
+    Mock the ImagePolicies class to return various values for all_policies
+    """
+
+    def __init__(self, key: str) -> None:
+        self.key = key
+
+    def refresh(self) -> None:
+        """
+        bypass dcnm_send
+        """
+
+    @property
+    def all_policies(self, *args):
+        """
+        Mock the return value of all_policies
+        all_policies contains all image policies that exist on the controller
+        """
+        return image_policies_all_policies(self.key)
+
+
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
@@ -152,11 +174,31 @@ def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_image_policy_create(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyCreate
+    """
+    data_file = "responses_ImagePolicyCreate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
     """
     Return responses for ImagePolicyCreateBulk
     """
     data_file = "responses_ImagePolicyCreateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyCreateBulk
+    """
+    data_file = "results_ImagePolicyCreateBulk"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
