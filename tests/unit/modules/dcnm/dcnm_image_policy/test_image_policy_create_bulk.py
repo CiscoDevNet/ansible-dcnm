@@ -21,6 +21,7 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -385,8 +386,8 @@ def test_image_policy_create_bulk_00036(monkeypatch, image_policy_create_bulk) -
     assert instance.result_ok == []
     assert instance.diff_ok == []
     assert instance.response_nok[0]["RETURN_CODE"] == 500
-    assert instance.result_nok[0]["changed"] == False
-    assert instance.result_nok[0]["success"] == False
+    assert instance.result_nok[0]["changed"] is False
+    assert instance.result_nok[0]["success"] is False
     assert instance.diff_nok[0]["agnostic"] is False
     assert instance.diff_nok[0]["policyName"] == "FOO"
 

@@ -133,18 +133,20 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         self.result_nok = []
         self.diff_nok = []
         for payload in self._payloads_to_commit:
-            response = dcnm_send(
+            self.response_current = dcnm_send(
                 self.ansible_module, self.verb, self.path, data=json.dumps(payload)
             )
-            result = self._handle_response(response, self.verb)
+            self.result_current = self._handle_response(
+                self.response_current, self.verb
+            )
 
-            if result["success"]:
-                self.response_ok.append(response)
-                self.result_ok.append(result)
+            if self.result_current["success"]:
+                self.response_ok.append(self.response_current)
+                self.result_ok.append(self.result_current)
                 self.diff_ok.append(payload)
             else:
-                self.response_nok.append(response)
-                self.result_nok.append(result)
+                self.response_nok.append(self.response_current)
+                self.result_nok.append(self.result_current)
                 self.diff_nok.append(payload)
 
             msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
@@ -157,7 +159,9 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             self.log.debug(msg)
             msg = f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            msg = f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
+            msg = (
+                f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
+            )
             self.log.debug(msg)
 
     def _process_responses(self):
@@ -179,6 +183,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
                 self.response_current = copy.deepcopy(response)
             return
 
+        self.failed = True
         self.changed = False
         # at least one request succeeded, so set changed to True
         if len(self.result_nok) != len(self._payloads_to_commit):
@@ -195,7 +200,6 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         for response in self.response_ok:
             self.response = copy.deepcopy(response)
             self.response_current = copy.deepcopy(response)
-        self.failed = True
 
         result = {}
         result["failed"] = self.failed
@@ -235,7 +239,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
 
 class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     """
-    Given a property-constructed list of payloads, bulk-create the
+    Given a properly-constructed list of payloads, bulk-create the
     image policies therein.  The payload format is given below.
 
     Payload format:
@@ -307,6 +311,8 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
 
 class ImagePolicyCreate(ImagePolicyCreateCommon):
     """
+    NOTE: This class is not being used currently.
+
     Given a properly-constructed image policy payload (python dict),
     send an image policy create request to the controller.  The payload
     format is given below.
@@ -364,6 +370,7 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     @payload.setter
     def payload(self, value):
         self._verify_payload(value)
+        self.properties["payloads"] = [value]
         self.properties["payload"] = value
 
     def commit(self):
@@ -377,8 +384,8 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
             msg += "payload must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.failed_result)
 
-        # ImagePolicyCreateCommon expects a list of payloads
-        self.payloads = [self.payload]
+        # # ImagePolicyCreateCommon expects a list of payloads
+        # self.payloads = [self.payload]
         self._build_payloads_to_commit()
 
         if not self._payloads_to_commit:
