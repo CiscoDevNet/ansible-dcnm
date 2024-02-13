@@ -41,6 +41,26 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.ut
     responses_image_policy_create_bulk)
 
 
+class MockImagePolicies:
+    """
+    Mock the ImagePolicies class to return various values for all_policies
+    """
+    def __init__(self, key: str) -> None:
+        self.key = key
+
+    def refresh(self) -> None:
+        """
+        bypass dcnm_send
+        """
+
+    @property
+    def all_policies(self, *args):
+        """
+        Mock the return value of all_policies
+        all_policies contains all image policies that exist on the controller
+        """
+        return image_policies_all_policies(self.key)
+
 def test_image_policy_create_bulk_00010(image_policy_create_bulk) -> None:
     """
     Method
@@ -142,26 +162,9 @@ def test_image_policy_create_bulk_00030(monkeypatch, image_policy_create_bulk) -
     """
     key = "test_image_policy_create_bulk_00030a"
 
-    class MockImagePolicies:
-        """
-        Mock the ImagePolicies class to return various values for all_policies
-        """
-        def refresh(self) -> None:
-            """
-            bypass dcnm_send
-            """
-
-        @property
-        def all_policies(self, *args):
-            """
-            Mock the return value of all_policies
-            all_policies contains all image policies that exist on the controller
-            """
-            return image_policies_all_policies(key)
-
     instance = image_policy_create_bulk
     instance.payloads = payloads_image_policy_create_bulk(key)
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies())
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     instance._build_payloads_to_commit()
     assert instance._payloads_to_commit == []
 
@@ -184,26 +187,9 @@ def test_image_policy_create_bulk_00031(monkeypatch, image_policy_create_bulk) -
     """
     key = "test_image_policy_create_bulk_00031a"
 
-    class MockImagePolicies:
-        """
-        Mock the ImagePolicies class to return various values for all_policies
-        """
-        def refresh(self) -> None:
-            """
-            bypass dcnm_send
-            """
-
-        @property
-        def all_policies(self, *args):
-            """
-            Mock the return value of all_policies
-            all_policies contains all image policies that exist on the controller
-            """
-            return image_policies_all_policies(key)
-
     instance = image_policy_create_bulk
     instance.payloads = payloads_image_policy_create_bulk(key)
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies())
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     instance._build_payloads_to_commit()
     assert instance._payloads_to_commit == payloads_image_policy_create_bulk(key)
 
@@ -228,26 +214,9 @@ def test_image_policy_create_bulk_00032(monkeypatch, image_policy_create_bulk) -
     """
     key = "test_image_policy_create_bulk_00032a"
 
-    class MockImagePolicies:
-        """
-        Mock the ImagePolicies class to return various values for all_policies
-        """
-        def refresh(self) -> None:
-            """
-            bypass dcnm_send
-            """
-
-        @property
-        def all_policies(self, *args):
-            """
-            Mock the return value of all_policies
-            all_policies contains all image policies that exist on the controller
-            """
-            return image_policies_all_policies(key)
-
     instance = image_policy_create_bulk
     instance.payloads = payloads_image_policy_create_bulk(key)
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies())
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     instance._build_payloads_to_commit()
     assert len(instance._payloads_to_commit) == 1
     assert instance._payloads_to_commit[0]["policyName"] == "FOO"
@@ -287,28 +256,11 @@ def test_image_policy_create_bulk_00034(monkeypatch, image_policy_create_bulk) -
     """
     key = "test_image_policy_create_bulk_00034a"
 
-    class MockImagePolicies:
-        """
-        Mock the ImagePolicies class to return various values for all_policies
-        """
-        def refresh(self) -> None:
-            """
-            bypass dcnm_send
-            """
-
-        @property
-        def all_policies(self, *args):
-            """
-            Mock the return value of all_policies
-            all_policies contains all image policies that exist on the controller
-            """
-            return image_policies_all_policies(key)
-
     with does_not_raise():
         instance = image_policy_create_bulk
         instance.payloads = []
 
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies())
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
 
     with does_not_raise():
         instance.commit()
@@ -339,23 +291,6 @@ def test_image_policy_create_bulk_00035(monkeypatch, image_policy_create_bulk) -
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.image_policy.create.dcnm_send"
 
-    class MockImagePolicies:
-        """
-        Mock the ImagePolicies class to return various values for all_policies
-        """
-        def refresh(self) -> None:
-            """
-            bypass dcnm_send
-            """
-
-        @property
-        def all_policies(self, *args):
-            """
-            Mock the return value of all_policies
-            all_policies contains all image policies that exist on the controller
-            """
-            return image_policies_all_policies(key)
-
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_create_bulk(key)
 
@@ -363,7 +298,7 @@ def test_image_policy_create_bulk_00035(monkeypatch, image_policy_create_bulk) -
         instance = image_policy_create_bulk
         instance.payloads = payloads_image_policy_create_bulk(key)
 
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies())
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
