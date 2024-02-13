@@ -103,11 +103,17 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         """
         self._image_policies.refresh()
 
+        msg = f"_image_policies.all_policies: {json.dumps(self._image_policies.all_policies, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         self._payloads_to_commit = []
         for payload in self.payloads:
+            msg = f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             if payload.get("policyName", None) in self._image_policies.all_policies:
                 continue
             self._payloads_to_commit.append(copy.deepcopy(payload))
+        msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _send_payloads(self):
         """
@@ -140,6 +146,19 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
                 self.response_nok.append(response)
                 self.result_nok.append(result)
                 self.diff_nok.append(payload)
+
+            msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"self.result_ok: {json.dumps(self.result_ok, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"self.diff_ok: {json.dumps(self.diff_ok, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"self.response_nok: {json.dumps(self.response_nok, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
     def _process_responses(self):
         method_name = inspect.stack()[0][3]

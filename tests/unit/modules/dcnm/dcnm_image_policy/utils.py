@@ -126,27 +126,47 @@ def data_payload(key: str) -> Dict[str, str]:
     """
     Return data for unit tests of the Payload() class
     """
-    response_file = "data_payload"
-    response = load_fixture(response_file).get(key)
-    print(f"data_payload: {key} : {response}")
-    return response
+    data_file = "data_payload"
+    data = load_fixture(data_file).get(key)
+    print(f"data_payload: {key} : {data}")
+    return data
 
 
 def payloads_image_policy_create(key: str) -> Dict[str, str]:
     """
     Return payloads for ImagePolicyCreate
     """
-    payload_file = "payloads_ImagePolicyCreate"
-    payload = load_fixture(payload_file).get(key)
-    print(f"{payload_file}: {key} : {payload}")
-    return payload
+    data_file = "payloads_ImagePolicyCreate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
 
 
 def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
     """
     Return payloads for ImagePolicyCreateBulk
     """
-    payload_file = "payloads_ImagePolicyCreateBulk"
-    payload = load_fixture(payload_file).get(key)
-    print(f"{payload_file}: {key} : {payload}")
-    return payload
+    data_file = "payloads_ImagePolicyCreateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyCreateBulk
+    """
+    data_file = "responses_ImagePolicyCreateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def image_policies_all_policies(key: str) -> Dict[str, str]:
+    """
+    Return mocked return values for ImagePolicies().all_policies property
+    """
+    data_file = "all_policies_ImagePolicies"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
