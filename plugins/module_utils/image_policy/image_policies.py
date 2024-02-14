@@ -69,9 +69,6 @@ class ImagePolicies(ImagePolicyCommon):
         # self.properties is already initialized in the parent class
         self.properties["all_policies"] = None
         self.properties["policy_name"] = None
-        self.properties["response_data"] = {}
-        self.properties["response"] = None
-        self.properties["result"] = None
 
     def refresh(self):
         """
@@ -185,28 +182,6 @@ class ImagePolicies(ImagePolicyCommon):
         Return None otherwise
         """
         return self._get("policyName")
-
-    @property
-    def response_data(self):
-        """
-        Return the parsed data from the response as a dictionary,
-        keyed on policy_name.
-        """
-        return self.properties["response_data"]
-
-    @property
-    def response(self):
-        """
-        Return the raw response from the controller.
-        """
-        return self.properties["response"]
-
-    @property
-    def result(self):
-        """
-        Return the raw result.
-        """
-        return self.properties["result"]
 
     @property
     def policy_name(self):

@@ -22,8 +22,6 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
 
@@ -50,12 +48,13 @@ class ImagePolicyQuery(ImagePolicyCommon):
         msg = "ENTERED ImagePolicyQuery()"
         self.log.debug(msg)
 
+        self._policies_to_query = []
         self._build_properties()
-        self.endpoints = ApiEndpoints()
-        self.image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies = ImagePolicies(self.ansible_module)
 
         self.action = "query"
         self.changed = False
+        self.failed = False
 
     def _build_properties(self):
         """
@@ -80,20 +79,31 @@ class ImagePolicyQuery(ImagePolicyCommon):
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             self.ansible_module.fail_json(msg)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "policy_names must be a list of at least one string. "
+            msg += f"got {value}."
+            self.ansible_module.fail_json(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "policy_names must be a list of strings. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"value {item}"
+                self.ansible_module.fail_json(msg)
         self.properties["policy_names"] = value
 
-    def _get_policies_to_query(self):
+    def _get_policies_to_query(self) -> None:
         """
-        Retrieve policies from the controller and return the list of
+        Retrieve policies from the controller and set the list of
         controller policies that are in our policy_names list.
         """
-        self.image_policies.refresh()
+        self._image_policies.refresh()
 
-        policies_to_query = []
+        self._policies_to_query = []
         for policy_name in self.policy_names:
-            if policy_name in self.image_policies.all_policies:
-                policies_to_query.append(policy_name)
-        return policies_to_query
+            if policy_name in self._image_policies.all_policies:
+                self._policies_to_query.append(policy_name)
 
     def commit(self):
         """
@@ -105,23 +115,26 @@ class ImagePolicyQuery(ImagePolicyCommon):
             msg += "policy_names must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.failed_result)
 
-        policies_to_query = self._get_policies_to_query()
+        self._get_policies_to_query()
 
-        if len(policies_to_query) == 0:
+        msg = f"self._policies_to_query: {self._policies_to_query}"
+        self.log.debug(msg)
+        if len(self._policies_to_query) == 0:
+            self.changed = False
+            self.failed = False
             return
 
-        msg = f"Querying policies {policies_to_query}"
+        msg = f"Querying policies {self._policies_to_query}"
         self.log.debug(msg)
 
-        instance = ImagePolicies(self.ansible_module)
-        instance.refresh()
+        self._image_policies.refresh()
 
-        for policy_name in policies_to_query:
-            if policy_name in instance.all_policies:
-                policy = copy.deepcopy(instance.all_policies[policy_name])
+        for policy_name in self._policies_to_query:
+            if policy_name in self._image_policies.all_policies:
+                policy = copy.deepcopy(self._image_policies.all_policies[policy_name])
                 policy["action"] = self.action
                 self.diff = policy
-        self.response = copy.deepcopy(instance.response)
-        self.response_current = copy.deepcopy(instance.response)
-        self.result = copy.deepcopy(instance.result)
-        self.result_current = copy.deepcopy(instance.result_current)
+        self.response = copy.deepcopy(self._image_policies.response)
+        self.response_current = copy.deepcopy(self._image_policies.response_current)
+        self.result = copy.deepcopy(self._image_policies.result)
+        self.result_current = copy.deepcopy(self._image_policies.result_current)
