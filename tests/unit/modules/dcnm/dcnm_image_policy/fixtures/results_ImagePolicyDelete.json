@@ -1,7 +1,7 @@
 {
 
     "TEST_NOTES": [
-        "Mocked results for ImagePolicyDelete class.",
+        "Mocked results for ImagePolicyDelete unit tests.",
         "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_delete.py"
     ],
     "test_image_policy_delete_00037a": {

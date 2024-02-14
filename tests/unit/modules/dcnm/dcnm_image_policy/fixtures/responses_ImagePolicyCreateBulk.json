@@ -1,4 +1,8 @@
 {
+    "TEST_NOTES": [
+        "Mocked responses for ImagePolicyCreateBulk unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py"
+    ],
    "test_image_policy_create_bulk_00035a": {
             "DATA": "Policy created successfully.",
             "MESSAGE": "OK",

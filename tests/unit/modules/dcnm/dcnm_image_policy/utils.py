@@ -29,6 +29,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete imp
     ImagePolicyDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
+    ImagePolicyQuery
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
@@ -109,6 +111,34 @@ class MockImagePolicies:
         """
         return image_policies_all_policies(self.key).get("ref_count")
 
+    @property
+    def response(self):
+        """
+        Mock the aggregate response list from the controller
+        """
+        return responses_image_policies(self.key)
+
+    @property
+    def response_current(self):
+        """
+        Mock the current_response dict from the controller
+        """
+        return responses_image_policies(self.key)
+
+    @property
+    def result(self):
+        """
+        Mock the aggregate result list from the controller
+        """
+        return results_image_policies(self.key)
+
+    @property
+    def result_current(self):
+        """
+        Mock the current result dict from the controller
+        """
+        return results_image_policies(self.key)
+
 
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
@@ -136,6 +166,14 @@ def image_policy_delete_fixture():
     mock ImagePolicyDelete
     """
     return ImagePolicyDelete(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_policy_query")
+def image_policy_query_fixture():
+    """
+    mock ImagePolicyQuery
+    """
+    return ImagePolicyQuery(MockAnsibleModule)
 
 
 @pytest.fixture(name="config2payload")
@@ -194,6 +232,17 @@ def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_image_policies(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicies
+    Used in MockImagePolicies
+    """
+    data_file = "responses_ImagePolicies"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_image_policy_create(key: str) -> Dict[str, str]:
     """
     Return responses for ImagePolicyCreate
@@ -219,6 +268,17 @@ def responses_image_policy_delete(key: str) -> Dict[str, str]:
     Return responses for ImagePolicyDelete
     """
     data_file = "responses_ImagePolicyDelete"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policies(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicies
+    Used in MockImagePolicies
+    """
+    data_file = "results_ImagePolicies"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

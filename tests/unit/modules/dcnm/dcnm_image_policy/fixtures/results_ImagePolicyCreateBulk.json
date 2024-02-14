@@ -1,7 +1,7 @@
 {
     "TEST_NOTES": [
-        "Mocked results for ImagePolicyCreateBulk class.",
-        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create.py"
+        "Mocked results for ImagePolicyCreateBulk unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py"
     ],
     "test_image_policy_create_bulk_00037a": [
         {
