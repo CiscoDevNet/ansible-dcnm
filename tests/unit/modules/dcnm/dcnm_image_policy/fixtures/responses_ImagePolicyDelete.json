@@ -1,0 +1,38 @@
+{
+    "TEST_NOTES": [
+        "These responses are not currently used.",
+        "Delete them if they are not used by the time this is merged."
+    ],
+   "test_image_policy_delete_00035a": {
+            "DATA": "Policy created successfully.",
+            "MESSAGE": "OK",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+            "RETURN_CODE": 200
+    },
+    "test_image_policy_delete_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_delete_00037a": [
+        {
+            "DATA": "Policy created successfully.",
+            "MESSAGE": "OK",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+            "RETURN_CODE": 200
+        }
+    ],
+    "test_image_policy_delete_00037b": [
+        {
+            "DATA": "Internal server error.",
+            "MESSAGE": "NOK",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+            "RETURN_CODE": 500
+        }
+    ]
+}

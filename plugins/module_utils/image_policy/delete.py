@@ -51,8 +51,13 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self.log.debug("ENTERED ImagePolicyDelete()")
 
         self.endpoints = ApiEndpoints()
-        self.image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies = ImagePolicies(self.ansible_module)
+
+        self.path = self.endpoints.policy_delete["path"]
+        self.verb = self.endpoints.policy_delete["verb"]
+
         self.action = "delete"
+        self._policies_to_delete = []
         self._build_properties()
 
     def _build_properties(self):
@@ -78,21 +83,29 @@ class ImagePolicyDelete(ImagePolicyCommon):
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             self.ansible_module.fail_json(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "policy_names must be a list of strings. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"value {item}"
+                self.ansible_module.fail_json(msg)
         self.properties["policy_names"] = value
 
-    def _get_policies_to_delete(self):
+    def _get_policies_to_delete(self) -> None:
         """
         Retrieve policies from the controller and return the list of
         controller policies that are in our policy_names list.
         """
-        self.image_policies.refresh()
-        self._verify_image_policy_ref_count(self.image_policies, self.policy_names)
+        self._image_policies.refresh()
+        self._verify_image_policy_ref_count(self._image_policies, self.policy_names)
 
-        policies_to_delete = []
+        self._policies_to_delete = []
         for policy_name in self.policy_names:
-            if policy_name in self.image_policies.all_policies:
-                policies_to_delete.append(policy_name)
-        return policies_to_delete
+            if policy_name in self._image_policies.all_policies:
+                msg = f"Policy {policy_name} exists on the controller"
+                self.log.debug(msg)
+                self._policies_to_delete.append(policy_name)
 
     def commit(self):
         """
@@ -107,40 +120,40 @@ class ImagePolicyDelete(ImagePolicyCommon):
             msg += "policy_names must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.failed_result)
 
-        path = self.endpoints.policy_delete["path"]
-        verb = self.endpoints.policy_delete["verb"]
+        if len(self.policy_names) == 0:
+            self.changed = False
+            msg = "No policies to delete."
+            self.log.debug(msg)
+            return
 
-        policies_to_delete = self._get_policies_to_delete()
+        self._get_policies_to_delete()
 
-        if len(policies_to_delete) == 0:
+        if len(self._policies_to_delete) == 0:
             self.changed = False
             return
 
-        policy_names = policies_to_delete
-        msg = f"Deleting policies {policy_names}"
+        msg = f"Deleting policies {self._policies_to_delete}"
         self.log.debug(msg)
 
-        request_body = {"policyNames": policy_names}
-        response = dcnm_send(
-            self.ansible_module, verb, path, data=json.dumps(request_body)
+        request_body = {"policyNames": self._policies_to_delete}
+        self.response_current = dcnm_send(
+            self.ansible_module, self.verb, self.path, data=json.dumps(request_body)
         )
-        result = self._handle_response(response, verb)
+        self.result_current = self._handle_response(self.response_current, self.verb)
 
-        msg = f"response: {response}"
+        msg = f"response: {self.response_current}"
         self.log.debug(msg)
 
-        if result["success"]:
+        if self.result_current["success"]:
             self.changed = True
             request_body["action"] = self.action
             self.diff = copy.deepcopy(request_body)
-            self.response_current = copy.deepcopy(response)
-            self.response = copy.deepcopy(response)
-            self.result_current = copy.deepcopy(result)
-            self.result = copy.deepcopy(result)
+            self.response = copy.deepcopy(self.response_current)
+            self.result = copy.deepcopy(self.result_current)
             return
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "Bad response during policies delete. "
-        msg += f"policy_names {policies_to_delete}. "
-        msg += f"response: {response}"
+        msg += f"policy_names {self._policies_to_delete}. "
+        msg += f"response: {self.response_current}"
         self.ansible_module.fail_json(msg, **self.failed_result)

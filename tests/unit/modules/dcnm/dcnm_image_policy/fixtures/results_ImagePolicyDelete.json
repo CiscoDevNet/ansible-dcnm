@@ -1,0 +1,19 @@
+{
+
+    "TEST_NOTES": [
+        "These results are not currently used.",
+        "Delete them if they are not used by the time this is merged."
+    ],
+    "test_image_policy_delete_00037a": [
+        {
+            "changed": true,
+            "success": true
+        }
+    ],
+    "test_image_policy_delete_00037b": [
+        {
+            "changed": false,
+            "success": false
+        }
+    ]
+}

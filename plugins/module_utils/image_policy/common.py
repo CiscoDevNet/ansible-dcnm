@@ -78,7 +78,9 @@ class ImagePolicyCommon:
         _non_zero_ref_counts = {}
         for policy_name in policy_names:
             instance.policy_name = policy_name
-            if instance.ref_count == 0:
+            # If the policy does not exist on the controller, the ref_count
+            # will be None. We skip these too.
+            if instance.ref_count in [0, None]:
                 continue
             _non_zero_ref_counts[policy_name] = instance.ref_count
         if len(_non_zero_ref_counts) == 0:
@@ -87,9 +89,9 @@ class ImagePolicyCommon:
         msg += "One or more policies have devices attached. "
         msg += "Detach these policies from all devices first using "
         msg += "the dcnm_image_upgrade module, with state == deleted. "
-        for policy_name in _non_zero_ref_counts:
+        for policy_name, ref_count in _non_zero_ref_counts.items():
             msg += f"policy_name: {policy_name}, "
-            msg += f"ref_count: {_non_zero_ref_counts[policy_name]}. "
+            msg += f"ref_count: {ref_count}. "
         self.ansible_module.fail_json(msg, **self.failed_result)
 
     def _handle_response(self, response, verb):

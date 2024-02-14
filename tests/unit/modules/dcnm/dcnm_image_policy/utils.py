@@ -25,6 +25,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
     ImagePolicyCreate, ImagePolicyCreateBulk)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
+    ImagePolicyDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
@@ -90,12 +92,22 @@ class MockImagePolicies:
         """
 
     @property
-    def all_policies(self, *args):
+    def all_policies(self):
         """
         Mock the return value of all_policies
         all_policies contains all image policies that exist on the controller
         """
         return image_policies_all_policies(self.key)
+
+    @property
+    def ref_count(self):
+        """
+        Return the reference count of the policy matching self.policy_name,
+        if it exists.  The reference count is the number of switches using
+        this policy.
+        Return None otherwise
+        """
+        return image_policies_all_policies(self.key).get("ref_count")
 
 
 # See the following for explanation of why fixtures are explicitely named
@@ -116,6 +128,14 @@ def image_policy_create_bulk_fixture():
     mock ImagePolicyCreateBulk
     """
     return ImagePolicyCreateBulk(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_policy_delete")
+def image_policy_delete_fixture():
+    """
+    mock ImagePolicyDelete
+    """
+    return ImagePolicyDelete(MockAnsibleModule)
 
 
 @pytest.fixture(name="config2payload")
@@ -194,11 +214,31 @@ def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_image_policy_delete(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyDelete
+    """
+    data_file = "responses_ImagePolicyDelete"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
     """
     Return results for ImagePolicyCreateBulk
     """
     data_file = "results_ImagePolicyCreateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policy_delete(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyDelete
+    """
+    data_file = "results_ImagePolicyDelete"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
