@@ -145,6 +145,7 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self.log.debug(msg)
 
         if self.result_current["success"]:
+            self.failed = False
             self.changed = True
             request_body["action"] = self.action
             self.diff = copy.deepcopy(request_body)
@@ -152,6 +153,7 @@ class ImagePolicyDelete(ImagePolicyCommon):
             self.result = copy.deepcopy(self.result_current)
             return
 
+        self.failed = True
         msg = f"{self.class_name}.{method_name}: "
         msg += "Bad response during policies delete. "
         msg += f"policy_names {self._policies_to_delete}. "

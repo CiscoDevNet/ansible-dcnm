@@ -263,5 +263,38 @@
             "ref_count": 0,
             "rpmimages": null
         }
+    },
+    "test_image_policy_delete_00036a": {},
+    "test_image_policy_delete_00037a": {
+        "KR5M": {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.2.5.M.img",
+            "imageName": "nxos64-cs.10.2.5.M.bin",
+            "nxosVersion": "10.2.5_nxos64-cs_64bit",
+            "packageName": "",
+            "platform": "N9K/N3K",
+            "platformPolicies": "",
+            "policyDescr": "KR5M",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "ref_count": 0,
+            "rpmimages": ""
+        }
+    },
+    "test_image_policy_delete_00038a": {
+        "KR5M": {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.2.5.M.img",
+            "imageName": "nxos64-cs.10.2.5.M.bin",
+            "nxosVersion": "10.2.5_nxos64-cs_64bit",
+            "packageName": "",
+            "platform": "N9K/N3K",
+            "platformPolicies": "",
+            "policyDescr": "KR5M",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "ref_count": 0,
+            "rpmimages": ""
+        }
     }
 }

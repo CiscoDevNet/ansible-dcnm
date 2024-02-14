@@ -262,3 +262,155 @@ def test_image_policy_delete_00034(monkeypatch, image_policy_delete) -> None:
         instance.policy_names = []
         instance.commit()
     assert instance.changed is False
+
+
+def test_image_policy_delete_00035(monkeypatch, image_policy_delete) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyDelete
+        - policy_names setter
+        - commit()
+
+    Setup
+    -   ImagePolicyDelete().policy_names is set to an empty list
+
+    Test
+    -   ImagePolicyDelete().commit returns without doing anything
+    -   fail_json is not called
+    -   instance.changed is False
+    """
+    with does_not_raise():
+        instance = image_policy_delete
+        instance.policy_names = []
+        instance.commit()
+    assert instance.changed is False
+
+
+def test_image_policy_delete_00036(monkeypatch, image_policy_delete) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyDelete
+        - policy_names setter
+        - _get_policies_to_delete()
+        - commit()
+
+    Setup
+    -   ImagePolicies().all_policies is mocked to indicate that no policies exist on the controller.
+    -   ImagePolicyDelete().policy_names is set a policy_name that is not on the controller.
+
+    Test
+    -   ImagePolicyDelete()._get_policies_to_delete return an empty list
+    -   ImagePolicyDelete().commit returns without doing anything
+    -   instance.changed is set to False
+    -   fail_json is not called
+    """
+    key = "test_image_policy_delete_00036a"
+    with does_not_raise():
+        instance = image_policy_delete
+        instance.policy_names = ["FOO"]
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+    with does_not_raise():
+        instance.commit()
+    assert len(instance._policies_to_delete) == 0
+    assert instance.changed is False
+
+
+def test_image_policy_delete_00037(monkeypatch, image_policy_delete) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon:
+        - __init__()
+        - _handle_response()
+    - ImagePolicyDelete
+        - _get_policies_to_delete()
+        - policy_names setter
+        - commit()
+
+    Setup
+    -   ImagePolicies().all_policies is mocked to indicate policy (KR5M) exists on the controller.
+    -   ImagePolicyDelete().policy_names is set to contain one payload (KR5M).
+    -   dcnm_send is mocked to return a successful (200) response.
+
+    Test
+    -   fail_json is not called
+    -   commit calls _get_policies_to_delete which returns a list containing policy_name (KR5M)
+    -   commit calls the mocked dcnm_send, which populates instance.response_current
+        with a successful (200) response
+    -   instance.result_current is populated by instance._handle_response()
+    -   instance.result_current contains expected values
+    -   instance.changed is set to True
+    -   instance.diff contains expected values
+    """
+    key = "test_image_policy_delete_00037a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.image_policy.delete.dcnm_send"
+
+    def mock_dcnm_send(*args, **kwargs):
+        return responses_image_policy_delete(key)
+
+    with does_not_raise():
+        instance = image_policy_delete
+        instance.policy_names = ["KR5M"]
+
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
+    with does_not_raise():
+        instance.commit()
+    assert instance._policies_to_delete == ["KR5M"]
+    assert instance.result_current == results_image_policy_delete(key)
+    assert instance.changed is True
+    assert instance.failed is False
+    assert instance.diff == [{"policyNames": ["KR5M"], "action": "delete"}]
+
+
+def test_image_policy_delete_00038(monkeypatch, image_policy_delete) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon:
+        - __init__()
+        - _handle_response()
+    - ImagePolicyDelete
+        - _get_policies_to_delete()
+        - policy_names setter
+        - commit()
+
+    Setup
+    -   ImagePolicies().all_policies is mocked to indicate policy (KR5M) exists on the controller.
+    -   ImagePolicyDelete().policy_names is set to contain one payload (KR5M).
+    -   dcnm_send is mocked to return a failure (500) response.
+
+    Test
+    -   fail_json is called
+    -   commit calls _get_policies_to_delete which returns a list containing policy_name (KR5M)
+    -   commit calls the mocked dcnm_send, which populates instance.response_current
+        with a failure (500) response
+    -   instance.result_current is populated by instance._handle_response()
+    -   instance.result_current contains expected values
+    -   instance.changed is set to False
+    -   instance.diff is an empty list
+    """
+    key = "test_image_policy_delete_00038a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.image_policy.delete.dcnm_send"
+
+    def mock_dcnm_send(*args, **kwargs):
+        return responses_image_policy_delete(key)
+
+    with does_not_raise():
+        instance = image_policy_delete
+        instance.policy_names = ["KR5M"]
+
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
+    match = r"ImagePolicyDelete.commit: Bad response during policies delete\. policy_names \['KR5M'\]\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
+    assert instance._policies_to_delete == ["KR5M"]
+    assert instance.result_current == results_image_policy_delete(key)
+    assert instance.changed is False
+    assert instance.failed is True
+    assert instance.diff == []
