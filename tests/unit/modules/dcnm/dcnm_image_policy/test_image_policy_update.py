@@ -256,6 +256,46 @@ def test_image_policy_update_00033(image_policy_update) -> None:
         instance.commit()
 
 
+def test_image_policy_update_00034(monkeypatch, image_policy_update) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyUpdateCommon
+        - _build_payloads_to_commit()
+    - ImagePolicyUpdate
+        - payload setter
+        - commit()
+
+    Summary
+    Verify that commit() returns without doing anything when payloads
+    is set to a policy that does not exist on the controller.
+
+    Setup
+    -   ImagePolicies().all_policies, is mocked to indicate that no policies
+        exist on the controller.
+    -   ImagePolicyUpdate().payload is set to a policy (FOO) that does not
+        exist on the controller
+
+    Test
+    -   ImagePolicyUpdate().commit returns without doing anything
+    -   ImagePolicyUpdate()._payloads_to_commit is an empty list
+    -   ImagePolicyUpdate().changed is False
+    -   ImagePolicyUpdate().failed is False
+    """
+    key = "test_image_policy_update_00034a"
+
+    with does_not_raise():
+        instance = image_policy_update
+        instance.payload = payloads_image_policy_update(key)
+
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+
+    with does_not_raise():
+        instance.commit()
+    assert instance._payloads_to_commit == []
+    assert instance.changed is False
+    assert instance.failed is False
+
+
 def test_image_policy_update_00035(monkeypatch, image_policy_update) -> None:
     """
     Classes and Methods

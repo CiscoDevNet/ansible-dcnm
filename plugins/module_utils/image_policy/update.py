@@ -133,7 +133,7 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
             updated_payload.pop("imageName", None)
             updated_payload.pop("platformPolicies", None)
             self._payloads_to_commit.append(copy.deepcopy(updated_payload))
-        msg = f"self._payloads to commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+        msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _send_payloads(self):
@@ -381,8 +381,9 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
     @payload.setter
     def payload(self, value):
         self._verify_payload(value)
-        self.properties["payloads"] = [value]
         self.properties["payload"] = value
+        # ImagePolicyUpdateCommon expects a list of payloads
+        self.properties["payloads"] = [value]
 
     def commit(self):
         """
@@ -394,11 +395,9 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
             msg += "payload must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.failed_result)
 
-        # ImagePolicyUpdateCommon expects a list of payloads
-        self.payloads = [self.payload]
         self._build_payloads_to_commit()
 
-        if not self._payloads_to_commit:
+        if len(self._payloads_to_commit) == 0:
             return
         self._send_payloads()
         self._process_responses()

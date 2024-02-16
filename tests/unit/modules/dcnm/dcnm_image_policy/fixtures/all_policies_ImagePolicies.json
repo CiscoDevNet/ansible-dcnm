@@ -600,6 +600,7 @@
             "rpmimages": null
         }
     },
+    "test_image_policy_update_00034a": {},
     "test_image_policy_update_00035a": {
         "KR5M": {
             "agnostic": false,
