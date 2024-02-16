@@ -267,7 +267,7 @@
     - (result.response.query | length) == 0
 
 ################################################################################
-# OVERRIDDEN - CLEANUP - Delete image policies and verify
+# REPLACED - CLEANUP - Delete image policies and verify
 ################################################################################
 # Expected diff and response
 # ok: [dcnm] => {
@@ -306,7 +306,7 @@
 #     }
 # }
 
-- name: OVERRIDDEN - CLEANUP - Delete image policies and verify
+- name: REPLACED - CLEANUP - Delete image policies and verify
   cisco.dcnm.dcnm_image_policy:
       state: deleted
       config:
