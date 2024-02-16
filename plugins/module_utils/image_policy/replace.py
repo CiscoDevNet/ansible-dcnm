@@ -157,32 +157,6 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             self._verify_payload(item)
         self.properties["payloads"] = value
 
-    def _default_policy(self, policy_name):
-        """
-        Return a default policy payload for policy name.
-        """
-        method_name = inspect.stack()[0][3]
-        if not isinstance(policy_name, str):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "policy_name must be a string. "
-            msg += f"Got type {type(policy_name).__name__} for "
-            msg += f"value {policy_name}."
-            self.log.debug(msg)
-            self.ansible_module.fail_json(msg)
-
-        policy = {
-            "agnostic": False,
-            "epldImgName": "",
-            "nxosVersion": "",
-            "packageName": "",
-            "platform": "",
-            "policyDescr": "",
-            "policyName": policy_name,
-            "policyType": "PLATFORM",
-            "rpmimages": "",
-        }
-        return policy
-
     def _build_payloads_to_commit(self):
         """
         Build the payloads to commit to the controller.

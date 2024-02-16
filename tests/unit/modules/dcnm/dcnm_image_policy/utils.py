@@ -33,6 +33,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query impo
     ImagePolicyQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
     ImagePolicyReplaceBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import (
+    ImagePolicyUpdate, ImagePolicyUpdateBulk)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
@@ -89,6 +91,8 @@ class MockImagePolicies:
 
     def __init__(self, key: str) -> None:
         self.key = key
+        self.properties = {}
+        self.properties["policy_name"] = None
 
     def refresh(self) -> None:
         """
@@ -104,6 +108,35 @@ class MockImagePolicies:
         return image_policies_all_policies(self.key)
 
     @property
+    def name(self):
+        """
+        Return the name of the policy matching self.policy_name,
+        if it exists.
+        Return None otherwise
+        """
+        try:
+            return (
+                image_policies_all_policies(self.key)
+                .get(self.policy_name, None)
+                .get("policyName")
+            )
+        except AttributeError:
+            return None
+
+    @property
+    def policy_name(self):
+        """
+        Set the name of the policy to query.
+
+        This must be set prior to accessing any other properties
+        """
+        return self.properties.get("policy_name")
+
+    @policy_name.setter
+    def policy_name(self, value):
+        self.properties["policy_name"] = value
+
+    @property
     def ref_count(self):
         """
         Return the reference count of the policy matching self.policy_name,
@@ -111,7 +144,14 @@ class MockImagePolicies:
         this policy.
         Return None otherwise
         """
-        return image_policies_all_policies(self.key).get("ref_count")
+        try:
+            return (
+                image_policies_all_policies(self.key)
+                .get(self.policy_name, None)
+                .get("ref_count")
+            )
+        except AttributeError:
+            return None
 
     @property
     def response(self):
@@ -186,6 +226,22 @@ def image_policy_replace_bulk_fixture():
     return ImagePolicyReplaceBulk(MockAnsibleModule)
 
 
+@pytest.fixture(name="image_policy_update")
+def image_policy_update_fixture():
+    """
+    mock ImagePolicyUpdate
+    """
+    return ImagePolicyUpdate(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_policy_update_bulk")
+def image_policy_update_bulk_fixture():
+    """
+    mock ImagePolicyUpdateBulk
+    """
+    return ImagePolicyUpdateBulk(MockAnsibleModule)
+
+
 @pytest.fixture(name="config2payload")
 def config2payload_fixture():
     """
@@ -252,6 +308,26 @@ def payloads_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def payloads_image_policy_update(key: str) -> Dict[str, str]:
+    """
+    Return payloads for ImagePolicyUpdate
+    """
+    data_file = "payloads_ImagePolicyUpdate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_image_policy_update_bulk(key: str) -> Dict[str, str]:
+    """
+    Return payloads for ImagePolicyUpdateBulk
+    """
+    data_file = "payloads_ImagePolicyUpdateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_image_policies(key: str) -> Dict[str, str]:
     """
     Return responses for ImagePolicies
@@ -303,6 +379,26 @@ def responses_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_image_policy_update(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyUpdate
+    """
+    data_file = "responses_ImagePolicyUpdate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_image_policy_update_bulk(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyUpdateBulk
+    """
+    data_file = "responses_ImagePolicyUpdateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def results_image_policies(key: str) -> Dict[str, str]:
     """
     Return results for ImagePolicies
@@ -339,6 +435,26 @@ def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     Return results for ImagePolicyReplaceBulk
     """
     data_file = "results_ImagePolicyReplaceBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policy_update(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyUpdate
+    """
+    data_file = "results_ImagePolicyUpdate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policy_update_bulk(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyUpdateBulk
+    """
+    data_file = "results_ImagePolicyUpdateBulk"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

@@ -75,16 +75,14 @@ class ImagePolicyCommon:
         all devices before it/they can be deleted.
         """
         method_name = inspect.stack()[0][3]
-        msg = f"GOT policy_names: {policy_names}. "
-        self.log.debug(msg)
         _non_zero_ref_counts = {}
         for policy_name in policy_names:
             instance.policy_name = policy_name
+            msg = f"instance.policy_name: {instance.policy_name}, "
+            msg += f"instance.ref_count: {instance.ref_count}."
+            self.log.debug(msg)
             # If the policy does not exist on the controller, the ref_count
             # will be None. We skip these too.
-            msg = f"instance.ref_count: {instance.ref_count}. "
-            msg += f"instance.policy_name: {instance.policy_name}."
-            self.log.debug(msg)
             if instance.ref_count in [0, None]:
                 continue
             _non_zero_ref_counts[policy_name] = instance.ref_count
@@ -98,6 +96,32 @@ class ImagePolicyCommon:
             msg += f"policy_name: {policy_name}, "
             msg += f"ref_count: {ref_count}. "
         self.ansible_module.fail_json(msg, **self.failed_result)
+
+    def _default_policy(self, policy_name):
+        """
+        Return a default policy payload for policy name.
+        """
+        method_name = inspect.stack()[0][3]
+        if not isinstance(policy_name, str):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "policy_name must be a string. "
+            msg += f"Got type {type(policy_name).__name__} for "
+            msg += f"value {policy_name}."
+            self.log.debug(msg)
+            self.ansible_module.fail_json(msg)
+
+        policy = {
+            "agnostic": False,
+            "epldImgName": "",
+            "nxosVersion": "",
+            "packageName": "",
+            "platform": "",
+            "policyDescr": "",
+            "policyName": policy_name,
+            "policyType": "PLATFORM",
+            "rpmimages": "",
+        }
+        return policy
 
     def _handle_response(self, response, verb):
         """

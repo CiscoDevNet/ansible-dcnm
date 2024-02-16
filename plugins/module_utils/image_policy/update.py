@@ -50,7 +50,7 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
-        self.image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies = ImagePolicies(self.ansible_module)
 
         self.action = "update"
         self._payloads_to_commit = []
@@ -77,7 +77,7 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         if not isinstance(payload, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be a dict. "
-            msg += f"gpt type {type(payload).__name__}, "
+            msg += f"Got type {type(payload).__name__}, "
             msg += f"value {payload}"
             self.ansible_module.fail_json(msg, **self.failed_result)
 
@@ -96,7 +96,7 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
     def _build_payloads_to_commit(self):
         """
         Build a list of payloads to commit.  Skip any payloads that
-        already exist on the controller.
+        do not exist on the controller.
 
         Expects self.payloads to be a list of dict, with each dict
         being a payload for the image policy edit API endpoint.
@@ -104,27 +104,37 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
-        self.image_policies.refresh()
+        self._image_policies.refresh()
 
         _payloads = []
         _policy_names = []
         for payload in self.payloads:
-            if payload.get("policyName", None) not in self.image_policies.all_policies:
+            if payload.get("policyName", None) not in self._image_policies.all_policies:
                 continue
             _payloads.append(payload)
             _policy_names.append(payload["policyName"])
 
-        self._verify_image_policy_ref_count(self.image_policies, _policy_names)
+        self._verify_image_policy_ref_count(self._image_policies, _policy_names)
 
-        # build self._payloads_to_commit by merging _payloads with the policies
-        # on the controller.  The parameters in _payloads take precedence.
+        # build self._payloads_to_commit by merging each _payload with the
+        # corresponding policy payload on the controller.  The parameters
+        # in _payloads take precedence.
         self._payloads_to_commit = []
         for payload in _payloads:
             merge = MergeDicts(self.ansible_module)
-            merge.dict1 = self.image_policies.all_policies.get(payload["policyName"])
+            merge.dict1 = self._image_policies.all_policies.get(payload["policyName"])
             merge.dict2 = payload
             merge.commit()
-            self._payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
+            updated_payload = copy.deepcopy(merge.dict_merged)
+            # ref_count, imageName, and platformPolicies are returned
+            # by the controller, but are not valid parameters for the
+            # edit-policy endpoint.
+            updated_payload.pop("ref_count", None)
+            updated_payload.pop("imageName", None)
+            updated_payload.pop("platformPolicies", None)
+            self._payloads_to_commit.append(copy.deepcopy(updated_payload))
+        msg = f"self._payloads to commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _send_payloads(self):
         """
@@ -144,19 +154,21 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         self.result_nok = []
         self.diff_nok = []
         for payload in self._payloads_to_commit:
-            response = dcnm_send(
+            self.response_current = dcnm_send(
                 self.ansible_module, self.verb, self.path, data=json.dumps(payload)
             )
-            result = self._handle_response(response, self.verb)
+            self.result_current = self._handle_response(
+                self.response_current, self.verb
+            )
 
-            if result["success"]:
-                self.response_ok.append(response)
-                self.result_ok.append(result)
-                self.diff_ok.append(payload)
+            if self.result_current["success"]:
+                self.response_ok.append(copy.deepcopy(self.response_current))
+                self.result_ok.append(copy.deepcopy(self.result_current))
+                self.diff_ok.append(copy.deepcopy(payload))
             else:
-                self.response_nok.append(response)
-                self.result_nok.append(result)
-                self.diff_nok.append(payload)
+                self.response_nok.append(copy.deepcopy(self.response_current))
+                self.result_nok.append(copy.deepcopy(self.result_current))
+                self.diff_nok.append(copy.deepcopy(payload))
 
     def _process_responses(self):
         method_name = inspect.stack()[0][3]
@@ -200,7 +212,7 @@ class ImagePolicyUpdateCommon(ImagePolicyCommon):
         result["result"] = self.result
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response(s) during policy update. "
+        msg += "Bad response(s) during image policy bulk update. "
         msg += f"Bad responses: {self.response_nok}"
         self.ansible_module.fail_json(msg, **result)
 
@@ -321,7 +333,7 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
 
     Example (update one policy):
 
-    policy = {
+    image_policy_payload = {
         "agnostic": false,
         "epldImgName": "n9000-epld.10.3.2.F.img",
         "nxosVersion": "10.3.1_nxos64-cs_64bit",
@@ -333,7 +345,7 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
         "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
     }
     update = ImagePolicyUpdate(ansible_module)
-    update.payload = policy
+    update.payload = image_policy_payload
     update.commit()
     """
 
@@ -347,8 +359,9 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
         self._mandatory_keys = set()
         self._mandatory_keys.add("policyName")
 
-        self._build_properties()
         self.endpoints = ApiEndpoints()
+
+        self._build_properties()
 
     def _build_properties(self):
         """
@@ -368,6 +381,7 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
     @payload.setter
     def payload(self, value):
         self._verify_payload(value)
+        self.properties["payloads"] = [value]
         self.properties["payload"] = value
 
     def commit(self):
