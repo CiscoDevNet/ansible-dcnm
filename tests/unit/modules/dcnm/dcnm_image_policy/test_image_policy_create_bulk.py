@@ -347,6 +347,18 @@ def test_image_policy_create_bulk_00036(monkeypatch, image_policy_create_bulk) -
     - ImagePolicyCreateBulk
         - commit()
 
+    Summary
+    Simulate a 500 response from the controller during policy create.  In this case,
+    the following holds true:
+    - The bad response is recorded in response_nok, result_nok, and diff_nok.
+    - response_ok, result_ok, and diff_ok are set to empty lists
+    - instance.failed is set to True
+    - instance.changed is set to False
+    - instance.response is set to the bad response
+    - instance.result is set to the bad result
+    - instance.diff is set to the bad diff
+    - fail_json is called with the expected message
+
     Setup
     -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
         is mocked to indicate that no policies exist on the controller.
@@ -399,6 +411,18 @@ def test_image_policy_create_bulk_00037(monkeypatch, image_policy_create_bulk) -
         - _process_responses()
     - ImagePolicyCreateBulk
         - __init__()
+
+    Summary
+    Simulate a succussful response from the controller, followed by a bad response
+    from the controller during policy create.  In this case, the following holds true:
+    - The bad response is recorded in response_nok, result_nok, and diff_nok.
+    - The successful response is recorded in response_ok, result_ok, and diff_ok.
+    - instance.failed is set to True
+    - instance.changed is set to True
+    - instance.response is set to the successful response
+    - instance.result is set to the successful result
+    - instance.diff is set to the successful diff (with action key added)
+    - fail_json is called with the expected message
 
     Setup
     -   result_ok is set to contain one result

@@ -31,6 +31,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload im
     Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
     ImagePolicyQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
+    ImagePolicyReplaceBulk
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
@@ -176,6 +178,14 @@ def image_policy_query_fixture():
     return ImagePolicyQuery(MockAnsibleModule)
 
 
+@pytest.fixture(name="image_policy_replace_bulk")
+def image_policy_replace_bulk_fixture():
+    """
+    mock ImagePolicyReplaceBulk
+    """
+    return ImagePolicyReplaceBulk(MockAnsibleModule)
+
+
 @pytest.fixture(name="config2payload")
 def config2payload_fixture():
     """
@@ -232,6 +242,16 @@ def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def payloads_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+    """
+    Return payloads for ImagePolicyReplaceBulk
+    """
+    data_file = "payloads_ImagePolicyReplaceBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_image_policies(key: str) -> Dict[str, str]:
     """
     Return responses for ImagePolicies
@@ -273,6 +293,16 @@ def responses_image_policy_delete(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyReplaceBulk
+    """
+    data_file = "responses_ImagePolicyReplaceBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def results_image_policies(key: str) -> Dict[str, str]:
     """
     Return results for ImagePolicies
@@ -299,6 +329,16 @@ def results_image_policy_delete(key: str) -> Dict[str, str]:
     Return results for ImagePolicyDelete
     """
     data_file = "results_ImagePolicyDelete"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyReplaceBulk
+    """
+    data_file = "results_ImagePolicyReplaceBulk"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

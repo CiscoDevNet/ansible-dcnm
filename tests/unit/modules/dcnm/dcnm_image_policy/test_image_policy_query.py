@@ -32,12 +32,11 @@ __author__ = "Allen Robel"
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    MockImagePolicies, does_not_raise, image_policies_all_policies, image_policy_query_fixture)
+    MockImagePolicies, does_not_raise, image_policies_all_policies,
+    image_policy_query_fixture)
 
 
 def test_image_policy_query_00010(image_policy_query) -> None:

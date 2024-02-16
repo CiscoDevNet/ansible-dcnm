@@ -84,18 +84,27 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         msg = "ENTERED ImagePolicyReplaceBulk()"
         self.log.debug(msg)
 
+        self.endpoints = ApiEndpoints()
+        self._image_policies = ImagePolicies(self.ansible_module)
+
         self.action = "replace"
-        self.response_ok = []
-        self.result_ok = []
-        self.diff_ok = []
-        self.response_nok = []
-        self.result_nok = []
-        self.diff_nok = []
         self._payloads_to_commit = []
+        self.response_ok = []
+        self.response_nok = []
+        self.result_ok = []
+        self.result_nok = []
+        self.diff_ok = []
+        self.diff_nok = []
+
+        self.path = self.endpoints.policy_edit.get("path")
+        self.verb = self.endpoints.policy_edit.get("verb")
+
+        self._mandatory_payload_keys = set()
+        self._mandatory_payload_keys.add("nxosVersion")
+        self._mandatory_payload_keys.add("policyName")
+        self._mandatory_payload_keys.add("policyType")
 
         self._build_properties()
-        self.endpoints = ApiEndpoints()
-        self.image_policies = ImagePolicies(self.ansible_module)
 
     def _build_properties(self):
         """
@@ -103,6 +112,30 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         """
         # self.properties is already set in the parent class
         self.properties["payloads"] = None
+
+    def _verify_payload(self, payload):
+        """
+        Verify that the payload is a dict and contains all mandatory keys
+        """
+        method_name = inspect.stack()[0][3]
+        if not isinstance(payload, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payload must be a dict. "
+            msg += f"Got type {type(payload).__name__}, "
+            msg += f"value {payload}"
+            self.ansible_module.fail_json(msg, **self.failed_result)
+
+        missing_keys = []
+        for key in self._mandatory_payload_keys:
+            if key not in payload:
+                missing_keys.append(key)
+        if len(missing_keys) == 0:
+            return
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "payload is missing mandatory keys: "
+        msg += f"{sorted(missing_keys)}"
+        self.ansible_module.fail_json(msg, **self.failed_result)
 
     @property
     def payloads(self):
@@ -121,25 +154,20 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             msg += f"value {value}"
             self.ansible_module.fail_json(msg)
         for item in value:
-            if not isinstance(item, dict):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "payloads must be a list of dict. "
-                msg += "got a list, but one of the items is "
-                msg += f"type {type(item).__name__}, "
-                msg += f"value {item}"
-                self.ansible_module.fail_json(msg)
+            self._verify_payload(item)
         self.properties["payloads"] = value
 
-    def default_policy(self, policy_name):
+    def _default_policy(self, policy_name):
         """
-        Return a default policy payload for the given policy name.
+        Return a default policy payload for policy name.
         """
         method_name = inspect.stack()[0][3]
         if not isinstance(policy_name, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_name must be a string. "
-            msg += f"got {type(policy_name).__name__} for "
-            msg += f"value {policy_name}"
+            msg += f"Got type {type(policy_name).__name__} for "
+            msg += f"value {policy_name}."
+            self.log.debug(msg)
             self.ansible_module.fail_json(msg)
 
         policy = {
@@ -168,25 +196,43 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             msg += "payloads must be set prior to calling commit."
             self.ansible_module.fail_json(msg)
 
-        self.image_policies.refresh()
+        self._image_policies.refresh()
 
+        msg = f"self.payloads: {json.dumps(self.payloads, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        # Populate a list of policies on the contoller that match our payloads
         controller_policies = []
         policy_names = []
         for payload in self.payloads:
-            if payload.get("policyName", None) not in self.image_policies.all_policies:
+            if payload.get("policyName", None) not in self._image_policies.all_policies:
                 continue
             controller_policies.append(payload)
             policy_names.append(payload["policyName"])
 
-        self._verify_image_policy_ref_count(self.image_policies, policy_names)
+        msg = f"controller_policies: {json.dumps(controller_policies, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
+        # fail_json if the ref_count for any policy is not 0 (i.e. the policy is in use
+        # and cannot be replaced)
+        self._verify_image_policy_ref_count(self._image_policies, policy_names)
+
+        # If we made it this far, the ref_counts for all policies are 0
+        # Merge the default image policy with the user's payload to create a
+        # complete playload and add it to self._payloads_to_commit
         self._payloads_to_commit = []
         for payload in controller_policies:
             merge = MergeDicts(self.ansible_module)
-            merge.dict1 = copy.deepcopy(self.default_policy(payload["policyName"]))
+            merge.dict1 = copy.deepcopy(self._default_policy(payload["policyName"]))
             merge.dict2 = payload
+            msg = f"merge.dict1: {json.dumps(merge.dict1, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"merge.dict2: {json.dumps(merge.dict2, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             merge.commit()
             self._payloads_to_commit.append(copy.deepcopy(merge.dict_merged))
+        msg = "self._payloads_to_commit: "
+        msg += f"{json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _send_payloads(self):
         """
@@ -209,23 +255,23 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         self.response_nok = []
         self.result_nok = []
         self.diff_nok = []
-        path = self.endpoints.policy_edit.get("path")
-        verb = self.endpoints.policy_edit.get("verb")
 
         for payload in self._payloads_to_commit:
-            response = dcnm_send(
-                self.ansible_module, verb, path, data=json.dumps(payload)
+            self.response_current = dcnm_send(
+                self.ansible_module, self.verb, self.path, data=json.dumps(payload)
             )
-            result = self._handle_response(response, verb)
+            self.result_current = self._handle_response(
+                self.response_current, self.verb
+            )
 
-            if result["success"]:
-                self.response_ok.append(response)
-                self.result_ok.append(result)
-                self.diff_ok.append(payload)
+            if self.result_current["success"]:
+                self.response_ok.append(copy.deepcopy(self.response_current))
+                self.result_ok.append(copy.deepcopy(self.result_current))
+                self.diff_ok.append(copy.deepcopy(payload))
             else:
-                self.response_nok.append(response)
-                self.result_nok.append(response)
-                self.diff_nok.append(payload)
+                self.response_nok.append(copy.deepcopy(self.response_current))
+                self.result_nok.append(copy.deepcopy(self.result_current))
+                self.diff_nok.append(copy.deepcopy(payload))
 
     def _process_responses(self):
         """
@@ -243,6 +289,7 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         method_name = inspect.stack()[0][3]
         if len(self.result_ok) == len(self._payloads_to_commit):
             self.changed = True
+            self.failed = False
             for payload in self.diff_ok:
                 payload["action"] = self.action
                 self.diff = copy.deepcopy(payload)
@@ -254,6 +301,7 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
                 self.result_current = copy.deepcopy(result)
             return
 
+        self.failed = True
         self.changed = False
         if len(self.result_nok) != len(self._payloads_to_commit):
             self.changed = True

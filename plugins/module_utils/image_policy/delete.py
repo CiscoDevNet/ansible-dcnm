@@ -110,9 +110,6 @@ class ImagePolicyDelete(ImagePolicyCommon):
     def commit(self):
         """
         delete each of the image policies in self.policy_names
-
-        1. TODO: If policy has ref_count > 0, detach policy from switches first
-        2. Delete the policy
         """
         method_name = inspect.stack()[0][3]
         if self.policy_names is None:

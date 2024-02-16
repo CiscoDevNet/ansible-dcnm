@@ -75,11 +75,16 @@ class ImagePolicyCommon:
         all devices before it/they can be deleted.
         """
         method_name = inspect.stack()[0][3]
+        msg = f"GOT policy_names: {policy_names}. "
+        self.log.debug(msg)
         _non_zero_ref_counts = {}
         for policy_name in policy_names:
             instance.policy_name = policy_name
             # If the policy does not exist on the controller, the ref_count
             # will be None. We skip these too.
+            msg = f"instance.ref_count: {instance.ref_count}. "
+            msg += f"instance.policy_name: {instance.policy_name}."
+            self.log.debug(msg)
             if instance.ref_count in [0, None]:
                 continue
             _non_zero_ref_counts[policy_name] = instance.ref_count

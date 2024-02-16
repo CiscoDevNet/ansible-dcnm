@@ -44,7 +44,8 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImagePolicyCreateCommon()")
+        msg = "ENTERED ImagePolicyCreateCommon()"
+        self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
         self._image_policies = ImagePolicies(self.ansible_module)
@@ -103,7 +104,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         """
         self._image_policies.refresh()
 
-        msg = f"_image_policies.all_policies: {json.dumps(self._image_policies.all_policies, indent=4, sort_keys=True)}"
+        msg = f"all_policies: {json.dumps(self._image_policies.all_policies, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         self._payloads_to_commit = []
         for payload in self.payloads:
@@ -141,13 +142,13 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             )
 
             if self.result_current["success"]:
-                self.response_ok.append(self.response_current)
-                self.result_ok.append(self.result_current)
-                self.diff_ok.append(payload)
+                self.response_ok.append(copy.deepcopy(self.response_current))
+                self.result_ok.append(copy.deepcopy(self.result_current))
+                self.diff_ok.append(copy.deepcopy(payload))
             else:
-                self.response_nok.append(self.response_current)
-                self.result_nok.append(self.result_current)
-                self.diff_nok.append(payload)
+                self.response_nok.append(copy.deepcopy(self.response_current))
+                self.result_nok.append(copy.deepcopy(self.result_current))
+                self.diff_nok.append(copy.deepcopy(payload))
 
             msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
             self.log.debug(msg)
