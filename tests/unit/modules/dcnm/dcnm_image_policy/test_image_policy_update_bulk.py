@@ -311,7 +311,7 @@ def test_image_policy_update_bulk_00033(image_policy_update_bulk) -> None:
         instance = image_policy_update_bulk
 
     match = (
-        "ImagePolicyUpdateBulk.commit: payloads must be " "set prior to calling commit."
+        "ImagePolicyUpdateBulk.commit: payloads must be set prior to calling commit."
     )
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()

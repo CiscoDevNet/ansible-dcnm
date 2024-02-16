@@ -251,7 +251,7 @@ def test_image_policy_update_00033(image_policy_update) -> None:
     with does_not_raise():
         instance = image_policy_update
 
-    match = "ImagePolicyUpdate.commit: payload must be " "set prior to calling commit."
+    match = "ImagePolicyUpdate.commit: payload must be set prior to calling commit."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
