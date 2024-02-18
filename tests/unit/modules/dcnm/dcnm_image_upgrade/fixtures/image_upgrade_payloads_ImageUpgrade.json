@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_upgrade_00019a": {
+    "test_image_upgrade_upgrade_00019a": {
         "devices": [
             {
                 "policyName": "KR5M",
@@ -28,7 +28,7 @@
             "writeErase": false
         }
     },
-    "test_image_mgmt_upgrade_00020a": {
+    "test_image_upgrade_upgrade_00020a": {
         "devices": [
             {
                 "policyName": "NR3F",
@@ -57,7 +57,7 @@
             "writeErase": false
         }
     },
-    "test_image_mgmt_upgrade_00021a": {
+    "test_image_upgrade_upgrade_00021a": {
         "devices": [
             {
                 "policyName": "NR3F",

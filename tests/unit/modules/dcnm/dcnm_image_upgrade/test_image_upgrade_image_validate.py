@@ -33,9 +33,9 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .image_upgrade_utils import (does_not_raise, image_validate_fixture,
@@ -44,18 +44,18 @@ from .image_upgrade_utils import (does_not_raise, image_validate_fixture,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
-DCNM_SEND_IMAGE_VALIDATE = PATCH_IMAGE_MGMT + "image_validate.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+DCNM_SEND_IMAGE_VALIDATE = PATCH_image_upgrade + "image_validate.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
 PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT = (
-    PATCH_IMAGE_MGMT + "image_validate.RestSend.commit"
+    PATCH_image_upgrade + "image_validate.RestSend.commit"
 )
 PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT = (
-    PATCH_IMAGE_MGMT + "image_validate.RestSend.result_current"
+    PATCH_image_upgrade + "image_validate.RestSend.result_current"
 )
 
 
-def test_image_mgmt_validate_00001(image_validate) -> None:
+def test_image_upgrade_validate_00001(image_validate) -> None:
     """
     Function
     - __init__
@@ -75,7 +75,7 @@ def test_image_mgmt_validate_00001(image_validate) -> None:
     assert instance.verb == "POST"
 
 
-def test_image_mgmt_validate_00002(image_validate) -> None:
+def test_image_upgrade_validate_00002(image_validate) -> None:
     """
     Function
     - _init_properties
@@ -94,7 +94,7 @@ def test_image_mgmt_validate_00002(image_validate) -> None:
     assert instance.properties.get("serial_numbers") == []
 
 
-def test_image_mgmt_validate_00003(
+def test_image_upgrade_validate_00003(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -118,7 +118,7 @@ def test_image_mgmt_validate_00003(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00003a"
+        key = "test_image_upgrade_validate_00003a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -141,7 +141,7 @@ def test_image_mgmt_validate_00003(
     assert "FDO211218GC" not in instance.serial_numbers
 
 
-def test_image_mgmt_validate_00004(
+def test_image_upgrade_validate_00004(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -160,7 +160,7 @@ def test_image_mgmt_validate_00004(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00004a"
+        key = "test_image_upgrade_validate_00004a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -178,7 +178,7 @@ def test_image_mgmt_validate_00004(
         instance.validate_serial_numbers()
 
 
-def test_image_mgmt_validate_00005(
+def test_image_upgrade_validate_00005(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -200,7 +200,7 @@ def test_image_mgmt_validate_00005(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00005a"
+        key = "test_image_upgrade_validate_00005a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -218,7 +218,7 @@ def test_image_mgmt_validate_00005(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_validate_00006(
+def test_image_upgrade_validate_00006(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -242,7 +242,7 @@ def test_image_mgmt_validate_00006(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00006a"
+        key = "test_image_upgrade_validate_00006a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -269,7 +269,7 @@ def test_image_mgmt_validate_00006(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_validate_00007(
+def test_image_upgrade_validate_00007(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -290,7 +290,7 @@ def test_image_mgmt_validate_00007(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00007a"
+        key = "test_image_upgrade_validate_00007a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -316,7 +316,7 @@ def test_image_mgmt_validate_00007(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_validate_00008(
+def test_image_upgrade_validate_00008(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -342,7 +342,7 @@ def test_image_mgmt_validate_00008(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00008a"
+        key = "test_image_upgrade_validate_00008a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -360,7 +360,7 @@ def test_image_mgmt_validate_00008(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_validate_00009(
+def test_image_upgrade_validate_00009(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -381,7 +381,7 @@ def test_image_mgmt_validate_00009(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00009a"
+        key = "test_image_upgrade_validate_00009a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -407,7 +407,7 @@ def test_image_mgmt_validate_00009(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
+def test_image_upgrade_validate_00021(monkeypatch, image_validate) -> None:
     """
     Function
     - commit
@@ -420,11 +420,11 @@ def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
 
     # Needed only for the 200 return code
     def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00021a"
+        key = "test_image_upgrade_validate_00021a"
         return responses_image_validate(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00021a"
+        key = "test_image_upgrade_validate_00021a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
@@ -445,7 +445,7 @@ def test_image_mgmt_validate_00021(monkeypatch, image_validate) -> None:
     assert instance.verb == "POST"
 
 
-def test_image_mgmt_validate_00022(image_validate) -> None:
+def test_image_upgrade_validate_00022(image_validate) -> None:
     """
     Function
     - commit
@@ -466,7 +466,7 @@ def test_image_mgmt_validate_00022(image_validate) -> None:
     assert instance.result == [{"success": True}]
 
 
-def test_image_mgmt_validate_00023(monkeypatch, image_validate) -> None:
+def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
     """
     Function
     - commit
@@ -477,11 +477,11 @@ def test_image_mgmt_validate_00023(monkeypatch, image_validate) -> None:
 
     # Needed only for the 501 return code
     def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00023a"
+        key = "test_image_upgrade_validate_00023a"
         return responses_image_validate(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_validate_00023a"
+        key = "test_image_upgrade_validate_00023a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
@@ -519,7 +519,7 @@ MATCH_00030 += "of switch serial numbers."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
     ],
 )
-def test_image_mgmt_validate_00030(image_validate, value, expected) -> None:
+def test_image_upgrade_validate_00030(image_validate, value, expected) -> None:
     """
     Function
     - serial_numbers.setter
@@ -552,7 +552,7 @@ MATCH_00040 += "instance.non_disruptive must be a boolean."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
     ],
 )
-def test_image_mgmt_validate_00040(image_validate, value, expected) -> None:
+def test_image_upgrade_validate_00040(image_validate, value, expected) -> None:
     """
     Function
     - non_disruptive.setter
@@ -584,7 +584,7 @@ MATCH_00050 += "must be a positive integer or zero."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
     ],
 )
-def test_image_mgmt_validate_00050(image_validate, value, expected) -> None:
+def test_image_upgrade_validate_00050(image_validate, value, expected) -> None:
     """
     Function
     - check_interval.setter
@@ -616,7 +616,7 @@ MATCH_00060 += "must be a positive integer or zero."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
     ],
 )
-def test_image_mgmt_validate_00060(image_validate, value, expected) -> None:
+def test_image_upgrade_validate_00060(image_validate, value, expected) -> None:
     """
     Function
     - check_timeout.setter

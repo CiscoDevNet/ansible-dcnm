@@ -27,23 +27,23 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_versi
     ControllerVersion
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_action import \
     ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
     ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
     SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
     SwitchIssuDetailsByDeviceName, SwitchIssuDetailsByIpAddress,
     SwitchIssuDetailsBySerialNumber)
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \

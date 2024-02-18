@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_image_policies_00010a": {
+    "test_image_upgrade_image_policies_00010a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
@@ -39,7 +39,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policies_00020a": {
+    "test_image_upgrade_image_policies_00020a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
@@ -79,7 +79,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policies_00021a": {
+    "test_image_upgrade_image_policies_00021a": {
         "TEST_NOTES": [
             "404 RETURN_CODE"
         ],
@@ -94,7 +94,7 @@
             "path": "/rest/policymgnt/policiess"
         }
     },
-    "test_image_mgmt_image_policies_00022a": {
+    "test_image_upgrade_image_policies_00022a": {
         "TEST_NOTES": [
             "DATA field is empty"
         ],
@@ -104,7 +104,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "test_image_mgmt_image_policies_00023a": {
+    "test_image_upgrade_image_policies_00023a": {
         "TEST_NOTES": [
             "DATA has no defined image policies"
         ],
@@ -118,7 +118,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policies_00024a": {
+    "test_image_upgrade_image_policies_00024a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "policyName FOO is missing in response"
@@ -148,7 +148,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policies_00025a": {
+    "test_image_upgrade_image_policies_00025a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "policyName key is missing"
@@ -177,7 +177,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00013a": {
+    "test_image_upgrade_image_policy_action_00013a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
@@ -203,7 +203,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00020a": {
+    "test_image_upgrade_image_policy_action_00020a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
@@ -229,7 +229,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00021a": {
+    "test_image_upgrade_image_policy_action_00021a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",

@@ -33,25 +33,25 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
     SwitchDetails
 
 from .image_upgrade_utils import (does_not_raise, responses_switch_details,
                                   switch_details_fixture)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
-PATCH_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details."
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+PATCH_SWITCH_DETAILS = PATCH_image_upgrade + "switch_details."
 PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT = (
     PATCH_SWITCH_DETAILS + "RestSend.response_current"
 )
 PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT = (
     PATCH_SWITCH_DETAILS + "RestSend.result_current"
 )
-REST_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.RestSend.commit"
+REST_SEND_SWITCH_DETAILS = PATCH_image_upgrade + "switch_details.RestSend.commit"
 
 
-def test_image_mgmt_switch_details_00001(switch_details) -> None:
+def test_image_upgrade_switch_details_00001(switch_details) -> None:
     """
     Function
     - __init__
@@ -64,7 +64,7 @@ def test_image_mgmt_switch_details_00001(switch_details) -> None:
     assert instance.class_name == "SwitchDetails"
 
 
-def test_image_mgmt_switch_details_00002(switch_details) -> None:
+def test_image_upgrade_switch_details_00002(switch_details) -> None:
     """
     Function
     - _init_properties
@@ -83,7 +83,7 @@ def test_image_mgmt_switch_details_00002(switch_details) -> None:
     assert instance.properties.get("result_current") == {}
 
 
-def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
+def test_image_upgrade_switch_details_00020(monkeypatch, switch_details) -> None:
     """
     Function
     - refresh
@@ -93,7 +93,7 @@ def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
     - X.response_current, X.result_current are dictionaries
     - X.response_current, X.result_current are set to the mocked RestSend values
     """
-    key = "test_image_mgmt_switch_details_00020a"
+    key = "test_image_upgrade_switch_details_00020a"
 
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_details(key)
@@ -117,7 +117,7 @@ def test_image_mgmt_switch_details_00020(monkeypatch, switch_details) -> None:
     assert instance.response_current == responses_switch_details(key)
 
 
-def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
+def test_image_upgrade_switch_details_00021(monkeypatch, switch_details) -> None:
     """
     Function
     - refresh
@@ -130,7 +130,7 @@ def test_image_mgmt_switch_details_00021(monkeypatch, switch_details) -> None:
     instance = switch_details
 
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_details_00021a"
+        key = "test_image_upgrade_switch_details_00021a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
@@ -163,18 +163,18 @@ MATCH_00022 = "Unable to retrieve switch information from the controller."
 @pytest.mark.parametrize(
     "key,expected",
     [
-        ("test_image_mgmt_switch_details_00022a", does_not_raise()),
+        ("test_image_upgrade_switch_details_00022a", does_not_raise()),
         (
-            "test_image_mgmt_switch_details_00022b",
+            "test_image_upgrade_switch_details_00022b",
             pytest.raises(AnsibleFailJson, match=MATCH_00022),
         ),
         (
-            "test_image_mgmt_switch_details_00022c",
+            "test_image_upgrade_switch_details_00022c",
             pytest.raises(AnsibleFailJson, match=MATCH_00022),
         ),
     ],
 )
-def test_image_mgmt_switch_details_00022(
+def test_image_upgrade_switch_details_00022(
     monkeypatch, switch_details, key, expected
 ) -> None:
     """
@@ -183,13 +183,13 @@ def test_image_mgmt_switch_details_00022(
     - RestSend._handle_response
 
     Test
-    - test_image_mgmt_switch_details_00022a
+    - test_image_upgrade_switch_details_00022a
         - 200 RETURN_CODE, MESSAGE == "OK"
         - result == {'found': True, 'success': True}
-    - test_image_mgmt_switch_details_00022b
+    - test_image_upgrade_switch_details_00022b
         - 404 RETURN_CODE, MESSAGE == "Not Found"
         - result == {'found': False, 'success': True}
-    - test_image_mgmt_switch_details_00022c
+    - test_image_upgrade_switch_details_00022c
         - 500 RETURN_CODE, MESSAGE ~= "Internal Server Error"
         - result == {'found': False, 'success': False}
     """
@@ -222,7 +222,7 @@ def test_image_mgmt_switch_details_00022(
         ("switchRole", "border gateway"),
     ],
 )
-def test_image_mgmt_switch_details_00023(
+def test_image_upgrade_switch_details_00023(
     monkeypatch, switch_details, item, expected
 ) -> None:
     """
@@ -252,7 +252,7 @@ def test_image_mgmt_switch_details_00023(
     instance = switch_details
 
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_details_00023a"
+        key = "test_image_upgrade_switch_details_00023a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
@@ -265,7 +265,7 @@ def test_image_mgmt_switch_details_00023(
     assert instance._get(item) == expected
 
 
-def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
+def test_image_upgrade_switch_details_00024(monkeypatch, switch_details) -> None:
     """
     Function
     - switch_details.refresh
@@ -285,7 +285,7 @@ def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
     instance = switch_details
 
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_details_00024a"
+        key = "test_image_upgrade_switch_details_00024a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
@@ -302,7 +302,7 @@ def test_image_mgmt_switch_details_00024(monkeypatch, switch_details) -> None:
         instance._get("hostName")
 
 
-def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
+def test_image_upgrade_switch_details_00025(monkeypatch, switch_details) -> None:
     """
     Function
     - switch_details.refresh
@@ -320,7 +320,7 @@ def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
     instance = switch_details
 
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_details_00025a"
+        key = "test_image_upgrade_switch_details_00025a"
         return responses_switch_details(key)
 
     monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
@@ -346,7 +346,7 @@ def test_image_mgmt_switch_details_00025(monkeypatch, switch_details) -> None:
         (False, None),
     ],
 )
-def test_image_mgmt_switch_details_00060(
+def test_image_upgrade_switch_details_00060(
     switch_details, ip_address_is_set, expected
 ) -> None:
     """

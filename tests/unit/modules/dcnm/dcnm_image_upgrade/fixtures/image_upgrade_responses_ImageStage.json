@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_stage_00006a": {
+    "test_image_upgrade_stage_00006a": {
         "TEST_NOTES": [
             "Needed only for the 200 return code"
         ],
@@ -14,7 +14,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00007a": {
+    "test_image_upgrade_stage_00007a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "MESSAGE == OK"
@@ -30,7 +30,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00008a": {
+    "test_image_upgrade_stage_00008a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "MESSAGE == OK"
@@ -46,7 +46,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00010a": {
+    "test_image_upgrade_stage_00010a": {
         "TEST_NOTES": [
             "RETURN_CODE == 500",
             "MESSAGE == NOK"

@@ -41,7 +41,7 @@ from .image_upgrade_utils import (does_not_raise, image_upgrade_common_fixture,
                                   responses_image_upgrade_common)
 
 
-def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
+def test_image_upgrade_image_upgrade_common_00001(image_upgrade_common) -> None:
     """
     Function
     - __init__
@@ -64,20 +64,20 @@ def test_image_mgmt_image_upgrade_common_00001(image_upgrade_common) -> None:
     "key, expected",
     [
         (
-            "test_image_mgmt_image_upgrade_common_00020a",
+            "test_image_upgrade_image_upgrade_common_00020a",
             {"success": True, "changed": True},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00020b",
+            "test_image_upgrade_image_upgrade_common_00020b",
             {"success": False, "changed": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00020c",
+            "test_image_upgrade_image_upgrade_common_00020c",
             {"success": False, "changed": False},
         ),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00020(
+def test_image_upgrade_image_upgrade_common_00020(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -107,20 +107,20 @@ def test_image_mgmt_image_upgrade_common_00020(
     "key, expected",
     [
         (
-            "test_image_mgmt_image_upgrade_common_00030a",
+            "test_image_upgrade_image_upgrade_common_00030a",
             {"success": True, "changed": True},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00030b",
+            "test_image_upgrade_image_upgrade_common_00030b",
             {"success": False, "changed": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00030c",
+            "test_image_upgrade_image_upgrade_common_00030c",
             {"success": False, "changed": False},
         ),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00030(
+def test_image_upgrade_image_upgrade_common_00030(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -150,20 +150,20 @@ def test_image_mgmt_image_upgrade_common_00030(
     "key, expected",
     [
         (
-            "test_image_mgmt_image_upgrade_common_00040a",
+            "test_image_upgrade_image_upgrade_common_00040a",
             {"success": True, "changed": True},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00040b",
+            "test_image_upgrade_image_upgrade_common_00040b",
             {"success": False, "changed": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00040c",
+            "test_image_upgrade_image_upgrade_common_00040c",
             {"success": False, "changed": False},
         ),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00040(
+def test_image_upgrade_image_upgrade_common_00040(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -193,24 +193,24 @@ def test_image_mgmt_image_upgrade_common_00040(
     "key, expected",
     [
         (
-            "test_image_mgmt_image_upgrade_common_00050a",
+            "test_image_upgrade_image_upgrade_common_00050a",
             {"success": True, "found": True},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00050b",
+            "test_image_upgrade_image_upgrade_common_00050b",
             {"success": False, "found": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00050c",
+            "test_image_upgrade_image_upgrade_common_00050c",
             {"success": True, "found": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00050d",
+            "test_image_upgrade_image_upgrade_common_00050d",
             {"success": False, "found": False},
         ),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00050(
+def test_image_upgrade_image_upgrade_common_00050(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -230,7 +230,7 @@ def test_image_mgmt_image_upgrade_common_00050(
     assert result.get("changed") == expected.get("changed")
 
 
-def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
+def test_image_upgrade_image_upgrade_common_00060(image_upgrade_common) -> None:
     """
     Function
     - _handle_response
@@ -240,7 +240,7 @@ def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
     """
     instance = image_upgrade_common
 
-    data = responses_image_upgrade_common("test_image_mgmt_image_upgrade_common_00060a")
+    data = responses_image_upgrade_common("test_image_upgrade_image_upgrade_common_00060a")
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
         instance._handle_response(  # pylint: disable=protected-access
             data.get("response"), data.get("verb")
@@ -251,24 +251,24 @@ def test_image_mgmt_image_upgrade_common_00060(image_upgrade_common) -> None:
     "key, expected",
     [
         (
-            "test_image_mgmt_image_upgrade_common_00070a",
+            "test_image_upgrade_image_upgrade_common_00070a",
             {"success": True, "found": True},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00070b",
+            "test_image_upgrade_image_upgrade_common_00070b",
             {"success": False, "found": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00070c",
+            "test_image_upgrade_image_upgrade_common_00070c",
             {"success": True, "found": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00070d",
+            "test_image_upgrade_image_upgrade_common_00070d",
             {"success": False, "found": False},
         ),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00070(
+def test_image_upgrade_image_upgrade_common_00070(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -295,20 +295,20 @@ def test_image_mgmt_image_upgrade_common_00070(
     "key, expected",
     [
         (
-            "test_image_mgmt_image_upgrade_common_00080a",
+            "test_image_upgrade_image_upgrade_common_00080a",
             {"success": True, "changed": True},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00080b",
+            "test_image_upgrade_image_upgrade_common_00080b",
             {"success": False, "changed": False},
         ),
         (
-            "test_image_mgmt_image_upgrade_common_00080c",
+            "test_image_upgrade_image_upgrade_common_00080c",
             {"success": False, "changed": False},
         ),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00080(
+def test_image_upgrade_image_upgrade_common_00080(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -350,7 +350,7 @@ def test_image_mgmt_image_upgrade_common_00080(
         ([1, 2, "3"], [1, 2, "3"]),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00090(
+def test_image_upgrade_image_upgrade_common_00090(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -384,7 +384,7 @@ def test_image_mgmt_image_upgrade_common_00090(
         ([1, 2, "3"], [1, 2, "3"]),
     ],
 )
-def test_image_mgmt_image_upgrade_common_00100(
+def test_image_upgrade_image_upgrade_common_00100(
     image_upgrade_common, key, expected
 ) -> None:
     """
@@ -398,7 +398,7 @@ def test_image_mgmt_image_upgrade_common_00100(
     assert instance.make_none(key) == expected
 
 
-def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
+def test_image_upgrade_image_upgrade_common_00110(image_upgrade_common) -> None:
     """
     Function
     - log.log_msg
@@ -414,7 +414,7 @@ def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
     assert instance.log.info(message) is None
 
 
-# def test_image_mgmt_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
+# def test_image_upgrade_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
 #     """
 #     Function
 #     - log.log_msg
@@ -478,7 +478,7 @@ def test_image_mgmt_image_upgrade_common_00110(image_upgrade_common) -> None:
 #     assert len(list(tmp_path.iterdir())) == 1
 
 
-# def test_image_mgmt_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
+# def test_image_upgrade_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
 #     """
 #     Function
 #     - log.log_msg

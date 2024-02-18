@@ -31,11 +31,11 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_action import \
     ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
@@ -48,15 +48,15 @@ from .image_upgrade_utils import (does_not_raise, image_policies_fixture,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
 
-DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_MGMT + "image_policies.dcnm_send"
-DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_send"
-DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_MGMT + "switch_details.RestSend.commit"
-DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+DCNM_SEND_IMAGE_POLICIES = PATCH_image_upgrade + "image_policies.dcnm_send"
+DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_image_upgrade + "image_upgrade_common.dcnm_send"
+DCNM_SEND_SWITCH_DETAILS = PATCH_image_upgrade + "switch_details.RestSend.commit"
+DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
 
 
-def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
+def test_image_upgrade_image_policy_action_00001(image_policy_action) -> None:
     """
     Function
     - __init__
@@ -77,7 +77,7 @@ def test_image_mgmt_image_policy_action_00001(image_policy_action) -> None:
     assert instance.verb is None
 
 
-def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
+def test_image_upgrade_image_policy_action_00002(image_policy_action) -> None:
     """
     Function
     - _init_properties
@@ -97,7 +97,7 @@ def test_image_mgmt_image_policy_action_00002(image_policy_action) -> None:
     assert instance.properties.get("serial_numbers") is None
 
 
-def test_image_mgmt_image_policy_action_00003(
+def test_image_upgrade_image_policy_action_00003(
     monkeypatch, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
@@ -115,7 +115,7 @@ def test_image_mgmt_image_policy_action_00003(
     """
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_image_policy_action_00003a"
+        key = "test_image_upgrade_image_policy_action_00003a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
@@ -138,7 +138,7 @@ def test_image_mgmt_image_policy_action_00003(
     assert len(instance.payloads) == 5
 
 
-def test_image_mgmt_image_policy_action_00004(
+def test_image_upgrade_image_policy_action_00004(
     monkeypatch, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
@@ -156,7 +156,7 @@ def test_image_mgmt_image_policy_action_00004(
     """
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_mgmt_image_policy_action_00004a"
+        key = "test_image_upgrade_image_policy_action_00004a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
@@ -177,7 +177,7 @@ def test_image_mgmt_image_policy_action_00004(
         instance.build_payload()
 
 
-def test_image_mgmt_image_policy_action_00010(
+def test_image_upgrade_image_policy_action_00010(
     image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
@@ -217,7 +217,7 @@ MATCH_00011 += "instance.policy_name must be set before calling commit()"
         ("query", pytest.raises(AnsibleFailJson, match=MATCH_00011)),
     ],
 )
-def test_image_mgmt_image_policy_action_00011(
+def test_image_upgrade_image_policy_action_00011(
     action, expected, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
@@ -256,7 +256,7 @@ MATCH_00012 += "instance.serial_numbers must be set before calling commit()"
         ("query", does_not_raise()),
     ],
 )
-def test_image_mgmt_image_policy_action_00012(
+def test_image_upgrade_image_policy_action_00012(
     action, expected, image_policy_action, issu_details_by_serial_number
 ) -> None:
     """
@@ -286,7 +286,7 @@ def test_image_mgmt_image_policy_action_00012(
         instance.validate_request()
 
 
-def test_image_mgmt_image_policy_action_00013(
+def test_image_upgrade_image_policy_action_00013(
     monkeypatch, image_policy_action, issu_details_by_serial_number, image_policies
 ) -> None:
     """
@@ -305,7 +305,7 @@ def test_image_mgmt_image_policy_action_00013(
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
-    key = "test_image_mgmt_image_policy_action_00013a"
+    key = "test_image_upgrade_image_policy_action_00013a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -333,7 +333,7 @@ def test_image_mgmt_image_policy_action_00013(
         instance.validate_request()
 
 
-def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) -> None:
+def test_image_upgrade_image_policy_action_00020(monkeypatch, image_policy_action) -> None:
     """
     Function
     - commit
@@ -358,7 +358,7 @@ def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) 
     Since action == "FOO" is not covered in commit()'s if clauses,
     the else clause is taken and fail_json is called.
     """
-    key = "test_image_mgmt_image_policy_action_00020a"
+    key = "test_image_upgrade_image_policy_action_00020a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -388,7 +388,7 @@ def test_image_mgmt_image_policy_action_00020(monkeypatch, image_policy_action) 
         instance.commit()
 
 
-def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) -> None:
+def test_image_upgrade_image_policy_action_00021(monkeypatch, image_policy_action) -> None:
     """
     Function
     - commit
@@ -406,7 +406,7 @@ def test_image_mgmt_image_policy_action_00021(monkeypatch, image_policy_action) 
         action == "detach" : _detach_policy
         action == "query" : _query_policy
     """
-    key = "test_image_mgmt_image_policy_action_00021a"
+    key = "test_image_upgrade_image_policy_action_00021a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
@@ -460,7 +460,7 @@ MATCH_00060 += "one of attach,detach,query. Got FOO."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
     ],
 )
-def test_image_mgmt_image_policy_action_00060(
+def test_image_upgrade_image_policy_action_00060(
     image_policy_action, value, expected
 ) -> None:
     """
@@ -492,7 +492,7 @@ MATCH_00061 += "must be a python list of switch serial numbers. Got FOO."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00061)),
     ],
 )
-def test_image_mgmt_image_policy_action_00061(
+def test_image_upgrade_image_policy_action_00061(
     image_policy_action, value, expected
 ) -> None:
     """

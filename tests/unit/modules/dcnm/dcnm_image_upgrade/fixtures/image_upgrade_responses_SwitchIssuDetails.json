@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_switch_issu_details_by_device_name_00020a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00020a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName is required by the test"
@@ -18,7 +18,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00021a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00021a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "Two switches present",
@@ -79,7 +79,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00022a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00022a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName is required by the test"
@@ -98,7 +98,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00023a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00023a": {
         "TEST_NOTES": [
             "RETURN_CODE 404",
             "MESSAGE != OK",
@@ -115,7 +115,7 @@
             "path": "/bad/path"
         }
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00024a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00024a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA is empty"
@@ -126,7 +126,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00025a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00025a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject is empty"
@@ -141,7 +141,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00040a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00040a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName != FOO is required by the test"
@@ -160,7 +160,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_device_name_00041a": {
+    "test_image_upgrade_switch_issu_details_by_device_name_00041a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName == leaf1 is required by the test"
@@ -179,7 +179,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00020a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00020a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject.ipAddress is required by the test"
@@ -198,7 +198,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00021a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00021a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "Two switches present",
@@ -260,7 +260,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00022a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00022a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.ipAddress is required by the test"
@@ -279,7 +279,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00023a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00023a": {
         "TEST_NOTES": [
             "RETURN_CODE 404",
             "MESSAGE != OK",
@@ -296,7 +296,7 @@
             "path": "/bad/path"
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00024a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00024a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA is empty"
@@ -307,7 +307,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00025a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00025a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject is empty"
@@ -322,7 +322,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00040a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00040a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.ipAddress != 1.1.1.1 is required by the test"
@@ -341,7 +341,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_ip_address_00041a": {
+    "test_image_upgrade_switch_issu_details_by_ip_address_00041a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.ipAddress == 172.22.150.102 is required by the test"
@@ -360,7 +360,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00020a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00020a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject.serialNumber is required by the test"
@@ -379,7 +379,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00021a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00021a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "Two switches present",
@@ -440,7 +440,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00022a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00022a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.serialNumber is required by the test"
@@ -459,7 +459,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00023a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00023a": {
         "TEST_NOTES": [
             "RETURN_CODE 404",
             "MESSAGE != OK",
@@ -476,7 +476,7 @@
             "path": "/bad/path"
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00024a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00024a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA is empty"
@@ -487,7 +487,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00025a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00025a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject is empty"
@@ -502,7 +502,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00040a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00040a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.serialNumber != FOO00000BAR is required by the test"
@@ -521,7 +521,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_switch_issu_details_by_serial_number_00041a": {
+    "test_image_upgrade_switch_issu_details_by_serial_number_00041a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.serialNumber == FDO21120U5D is required by the test"
@@ -540,7 +540,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00004a": {
+    "test_image_upgrade_stage_00004a": {
         "TEST_NOTES": [
             "FDO2112189M: imageStaged == none",
             "FDO211218AX: imageStaged == none",
@@ -579,7 +579,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00005a": {
+    "test_image_upgrade_stage_00005a": {
         "TEST_NOTES": [
             "FDO21120U5D: imageStaged == Success",
             "FDO2112189M: imageStaged == Failed",
@@ -606,7 +606,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00006a": {
+    "test_image_upgrade_stage_00006a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -696,7 +696,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00007a": {
+    "test_image_upgrade_stage_00007a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -786,7 +786,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00008a": {
+    "test_image_upgrade_stage_00008a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "DATA.lastOperDataObject.imageStaged == Success",
@@ -807,7 +807,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00009a": {
+    "test_image_upgrade_stage_00009a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Using only for RETURN_CODE == 200"
@@ -827,7 +827,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00010a": {
+    "test_image_upgrade_stage_00010a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Using only for RETURN_CODE == 200"
@@ -847,7 +847,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00020a": {
+    "test_image_upgrade_stage_00020a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "DATA.lastOperDataObject.serialNumber is present and is this specific value",
@@ -882,7 +882,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00021a": {
+    "test_image_upgrade_stage_00021a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
@@ -917,7 +917,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00022a": {
+    "test_image_upgrade_stage_00022a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
@@ -952,7 +952,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00030a": {
+    "test_image_upgrade_stage_00030a": {
         "TEST_NOTES": [
             "FDO21120U5D upgrade, validated, imageStaged == Success",
             "FDO2112189M upgrade, validated, imageStaged == Success"
@@ -980,7 +980,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_stage_00031a": {
+    "test_image_upgrade_stage_00031a": {
         "TEST_NOTES": [
             "FDO21120U5D upgrade, validated, imageStaged == Success",
             "FDO2112189M upgrade, validated == Success",
@@ -1009,7 +1009,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00003a": {
+    "test_image_upgrade_validate_00003a": {
         "TEST_NOTES": [
             "FDO2112189M validated: none",
             "FDO211218AX validated: none",
@@ -1223,7 +1223,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00004a": {
+    "test_image_upgrade_validate_00004a": {
         "TEST_NOTES": [
             "FDO21120U5D validated: Success",
             "FDO2112189M validated: Failed"
@@ -1317,7 +1317,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00005a": {
+    "test_image_upgrade_validate_00005a": {
         "TEST_NOTES": [
             "FDO21120U5D validated: Success",
             "FDO2112189M validated: Success"
@@ -1411,7 +1411,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00006a": {
+    "test_image_upgrade_validate_00006a": {
         "TEST_NOTES": [
             "FDO21120U5D validated: Success",
             "FDO2112189M validated: Failed"
@@ -1505,7 +1505,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00007a": {
+    "test_image_upgrade_validate_00007a": {
         "TEST_NOTES": [
             "FDO21120U5D validated: Success",
             "FDO21120U5D imageStagedPercent: 100",
@@ -1601,7 +1601,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00008a": {
+    "test_image_upgrade_validate_00008a": {
         "TEST_NOTES": [
             "FDO21120U5D imageStaged, upgrade, validated: Success",
             "FDO2112189M imageStaged, upgrade, validated: Success"
@@ -1695,7 +1695,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00009a": {
+    "test_image_upgrade_validate_00009a": {
         "TEST_NOTES": [
             "FDO21120U5D imageStaged, upgrade, validated: Success",
             "FDO2112189M imageStaged, upgrade: Success",
@@ -1790,7 +1790,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00020a": {
+    "test_image_upgrade_validate_00020a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1880,7 +1880,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00021a": {
+    "test_image_upgrade_validate_00021a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1970,7 +1970,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00023a": {
+    "test_image_upgrade_validate_00023a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2060,7 +2060,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00003a": {
+    "test_image_upgrade_image_policy_action_00003a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2267,7 +2267,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00004a": {
+    "test_image_upgrade_image_policy_action_00004a": {
         "TEST_NOTES": [
             "deviceName: null"
         ],
@@ -2321,7 +2321,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00013a": {
+    "test_image_upgrade_image_policy_action_00013a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2372,7 +2372,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00020a": {
+    "test_image_upgrade_image_policy_action_00020a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2423,7 +2423,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_image_policy_action_00021a": {
+    "test_image_upgrade_image_policy_action_00021a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -2474,7 +2474,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00004a": {
+    "test_image_upgrade_upgrade_00004a": {
         "TEST_NOTES": [
             "FDO21120U5D imageStaged == Success",
             "FDO2112189M imageStage == Success"
@@ -2568,7 +2568,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00005a": {
+    "test_image_upgrade_upgrade_00005a": {
         "TEST_NOTES": [
             "FDO21120U5D imageStaged == Success",
             "FDO2112189M imageStage == Failed"
@@ -2662,7 +2662,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00019a": {
+    "test_image_upgrade_upgrade_00019a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -2713,7 +2713,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00020a": {
+    "test_image_upgrade_upgrade_00020a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -2764,7 +2764,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00021a": {
+    "test_image_upgrade_upgrade_00021a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -2815,7 +2815,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00022a": {
+    "test_image_upgrade_upgrade_00022a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -2866,7 +2866,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00023a": {
+    "test_image_upgrade_upgrade_00023a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -2917,7 +2917,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00024a": {
+    "test_image_upgrade_upgrade_00024a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -2968,7 +2968,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00025a": {
+    "test_image_upgrade_upgrade_00025a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3019,7 +3019,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00026a": {
+    "test_image_upgrade_upgrade_00026a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3070,7 +3070,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00027a": {
+    "test_image_upgrade_upgrade_00027a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3121,7 +3121,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00028a": {
+    "test_image_upgrade_upgrade_00028a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3172,7 +3172,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00029a": {
+    "test_image_upgrade_upgrade_00029a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3223,7 +3223,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00030a": {
+    "test_image_upgrade_upgrade_00030a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3274,7 +3274,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00031a": {
+    "test_image_upgrade_upgrade_00031a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3325,7 +3325,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00032a": {
+    "test_image_upgrade_upgrade_00032a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3376,7 +3376,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00033a": {
+    "test_image_upgrade_upgrade_00033a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3427,7 +3427,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00045a": {
+    "test_image_upgrade_upgrade_00045a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3478,7 +3478,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00046a": {
+    "test_image_upgrade_upgrade_00046a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3529,7 +3529,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00047a": {
+    "test_image_upgrade_upgrade_00047a": {
         "DATA": {
             "lastOperDataObject": [
                 {
@@ -3580,7 +3580,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00080a": {
+    "test_image_upgrade_upgrade_00080a": {
         "TEST_NOTES": [
             "172.22.150.102 validated, upgrade, imageStaged: Success",
             "172.22.150.108 validated, upgrade, imageStaged: Success"
@@ -3674,7 +3674,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00081a": {
+    "test_image_upgrade_upgrade_00081a": {
         "TEST_NOTES": [
             "172.22.150.102 upgrade: Success",
             "172.22.150.108 upgrade: In-Progress",
@@ -3769,7 +3769,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00090a": {
+    "test_image_upgrade_upgrade_00090a": {
         "TEST_NOTES": [
             "172.22.150.102 upgrade: Success",
             "172.22.150.108 upgrade: Failed",
@@ -3864,7 +3864,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_00091a": {
+    "test_image_upgrade_upgrade_00091a": {
         "TEST_NOTES": [
             "172.22.150.102 upgrade: Success",
             "172.22.150.108 upgrade: In-Progress",
@@ -3959,7 +3959,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_upgrade_task_00020a": {
+    "test_image_upgrade_upgrade_task_00020a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "Two switches present",

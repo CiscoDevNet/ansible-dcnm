@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_image_policy_action_00021a": {
+    "test_image_upgrade_image_policy_action_00021a": {
         "RETURN_CODE": 200,
         "METHOD": "DELETE",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO21120U5D,FDO211218GC,FOX2109PGD0",

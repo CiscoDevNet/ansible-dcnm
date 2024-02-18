@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_upgrade_task_00003a": {
+    "test_image_upgrade_upgrade_task_00003a": {
         "TEST_NOTES": [
             "fail_json is called because config.switches is not a list"
         ],
@@ -7,7 +7,7 @@
             "switches": "FOO"
         }
     },
-    "test_image_mgmt_upgrade_task_00004a": {
+    "test_image_upgrade_upgrade_task_00004a": {
         "TEST_NOTES": [
             "fail_json is called because config.switches is empty"
         ],
@@ -15,7 +15,7 @@
             "switches": []
         }
     },
-    "test_image_mgmt_upgrade_task_00005a": {
+    "test_image_upgrade_upgrade_task_00005a": {
         "TEST_NOTES": [
             "fail_json is called because mandatory keys are missing"
         ],
@@ -27,7 +27,7 @@
             ]
         }
     },
-    "test_image_mgmt_upgrade_task_00030a": {
+    "test_image_upgrade_upgrade_task_00030a": {
         "TEST_NOTES": [
             "switch 1.1.1.1 uses default options",
             "switch 2.2.2.2 overrides default options"
@@ -95,7 +95,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00031a": {
+    "test_image_upgrade_upgrade_task_00031a": {
         "TEST_NOTES": [
             "switch 1.1.1.1 overrides global_config.options.nxos.bios_force with default value (False)",
             "switch 1.1.1.1 overrides global_config.options.nxos.mode with a non-default value (non_disruptive)",
@@ -158,7 +158,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00040a": {
+    "test_image_upgrade_upgrade_task_00040a": {
         "config": {
             "switches": [
                 {
@@ -169,7 +169,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00041a": {
+    "test_image_upgrade_upgrade_task_00041a": {
         "config": {
             "switches": [
                 {
@@ -182,7 +182,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00042a": {
+    "test_image_upgrade_upgrade_task_00042a": {
         "config": {
             "switches": [
                 {
@@ -195,7 +195,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00043a": {
+    "test_image_upgrade_upgrade_task_00043a": {
         "config": {
             "switches": [
                 {
@@ -208,7 +208,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00044a": {
+    "test_image_upgrade_upgrade_task_00044a": {
         "config": {
             "switches": [
                 {
@@ -221,7 +221,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00045a": {
+    "test_image_upgrade_upgrade_task_00045a": {
         "config": {
             "switches": [
                 {
@@ -234,7 +234,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00046a": {
+    "test_image_upgrade_upgrade_task_00046a": {
         "config": {
             "switches": [
                 {
@@ -247,7 +247,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00047a": {
+    "test_image_upgrade_upgrade_task_00047a": {
         "config": {
             "switches": [
                 {
@@ -260,7 +260,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00048a": {
+    "test_image_upgrade_upgrade_task_00048a": {
         "config": {
             "switches": [
                 {
@@ -273,7 +273,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00049a": {
+    "test_image_upgrade_upgrade_task_00049a": {
         "config": {
             "switches": [
                 {
@@ -286,7 +286,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00050a": {
+    "test_image_upgrade_upgrade_task_00050a": {
         "config": {
             "switches": [
                 {
@@ -299,7 +299,7 @@
         },
         "state": "merged"
     },
-    "test_image_mgmt_upgrade_task_00051a": {
+    "test_image_upgrade_upgrade_task_00051a": {
         "config": {
             "switches": [
                 {

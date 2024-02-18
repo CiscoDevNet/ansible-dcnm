@@ -38,11 +38,11 @@ from .image_upgrade_utils import (does_not_raise,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00001(
+def test_image_upgrade_switch_issu_details_by_serial_number_00001(
     issu_details_by_serial_number,
 ) -> None:
     """
@@ -58,7 +58,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00001(
     assert isinstance(instance.properties, dict)
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00002(
+def test_image_upgrade_switch_issu_details_by_serial_number_00002(
     issu_details_by_serial_number,
 ) -> None:
     """
@@ -86,7 +86,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00002(
     assert instance.properties.get("serial_number") is None
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00020(
+def test_image_upgrade_switch_issu_details_by_serial_number_00020(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -102,7 +102,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00020(
     """
     instance = issu_details_by_serial_number
 
-    key = "test_image_mgmt_switch_issu_details_by_serial_number_00020a"
+    key = "test_image_upgrade_switch_issu_details_by_serial_number_00020a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         print(f"mock_dcnm_send_issu_details: {responses_switch_issu_details(key)}")
@@ -118,7 +118,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00020(
     assert isinstance(instance.response_data, list)
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00021(
+def test_image_upgrade_switch_issu_details_by_serial_number_00021(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -131,7 +131,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00021(
     """
     instance = issu_details_by_serial_number
 
-    key = "test_image_mgmt_switch_issu_details_by_serial_number_00021a"
+    key = "test_image_upgrade_switch_issu_details_by_serial_number_00021a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -197,7 +197,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00021(
     assert instance.vpc_role2 == "BAR"
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00022(
+def test_image_upgrade_switch_issu_details_by_serial_number_00022(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -210,7 +210,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00022(
     """
     instance = issu_details_by_serial_number
 
-    key = "test_image_mgmt_switch_issu_details_by_serial_number_00022a"
+    key = "test_image_upgrade_switch_issu_details_by_serial_number_00022a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -223,7 +223,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00022(
     assert instance.result_current.get("success") is True
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00023(
+def test_image_upgrade_switch_issu_details_by_serial_number_00023(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -236,7 +236,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00023(
     """
     instance = issu_details_by_serial_number
 
-    key = "test_image_mgmt_switch_issu_details_by_serial_number_00023a"
+    key = "test_image_upgrade_switch_issu_details_by_serial_number_00023a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -248,7 +248,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00023(
         instance.refresh()
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00024(
+def test_image_upgrade_switch_issu_details_by_serial_number_00024(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -261,7 +261,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00024(
     """
     instance = issu_details_by_serial_number
 
-    key = "test_image_mgmt_switch_issu_details_by_serial_number_00024a"
+    key = "test_image_upgrade_switch_issu_details_by_serial_number_00024a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -274,7 +274,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00024(
         instance.refresh()
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00025(
+def test_image_upgrade_switch_issu_details_by_serial_number_00025(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -287,7 +287,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00025(
     """
     instance = issu_details_by_serial_number
 
-    key = "test_image_mgmt_switch_issu_details_by_serial_number_00025a"
+    key = "test_image_upgrade_switch_issu_details_by_serial_number_00025a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -300,7 +300,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00025(
         instance.refresh()
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00040(
+def test_image_upgrade_switch_issu_details_by_serial_number_00040(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -320,7 +320,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00040(
     instance = issu_details_by_serial_number
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_issu_details_by_serial_number_00040a"
+        key = "test_image_upgrade_switch_issu_details_by_serial_number_00040a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -334,7 +334,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00040(
         instance._get("serialNumber")  # pylint: disable=protected-access
 
 
-def test_image_mgmt_switch_issu_details_by_serial_number_00041(
+def test_image_upgrade_switch_issu_details_by_serial_number_00041(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
@@ -354,7 +354,7 @@ def test_image_mgmt_switch_issu_details_by_serial_number_00041(
     instance = issu_details_by_serial_number
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_switch_issu_details_by_serial_number_00041a"
+        key = "test_image_upgrade_switch_issu_details_by_serial_number_00041a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)

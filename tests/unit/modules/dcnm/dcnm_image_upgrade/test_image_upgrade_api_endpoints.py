@@ -19,11 +19,11 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
 
 
-def test_image_mgmt_api_00001() -> None:
+def test_image_upgrade_api_00001() -> None:
     """
     Endpoints.__init__
     """
@@ -53,7 +53,7 @@ def test_image_mgmt_api_00001() -> None:
     )
 
 
-def test_image_mgmt_api_00002() -> None:
+def test_image_upgrade_api_00002() -> None:
     """
     Endpoints.bootflash_info
     """
@@ -65,7 +65,7 @@ def test_image_mgmt_api_00002() -> None:
     )
 
 
-def test_image_mgmt_api_00003() -> None:
+def test_image_upgrade_api_00003() -> None:
     """
     Endpoints.install_options
     """
@@ -77,7 +77,7 @@ def test_image_mgmt_api_00003() -> None:
     )
 
 
-def test_image_mgmt_api_00004() -> None:
+def test_image_upgrade_api_00004() -> None:
     """
     Endpoints.image_stage
     """
@@ -89,7 +89,7 @@ def test_image_mgmt_api_00004() -> None:
     )
 
 
-def test_image_mgmt_api_00005() -> None:
+def test_image_upgrade_api_00005() -> None:
     """
     Endpoints.image_upgrade
     """
@@ -101,7 +101,7 @@ def test_image_mgmt_api_00005() -> None:
     )
 
 
-def test_image_mgmt_api_00006() -> None:
+def test_image_upgrade_api_00006() -> None:
     """
     Endpoints.image_validate
     """
@@ -113,7 +113,7 @@ def test_image_mgmt_api_00006() -> None:
     )
 
 
-def test_image_mgmt_api_00007() -> None:
+def test_image_upgrade_api_00007() -> None:
     """
     Endpoints.issu_info
     """
@@ -125,7 +125,7 @@ def test_image_mgmt_api_00007() -> None:
     )
 
 
-def test_image_mgmt_api_00008() -> None:
+def test_image_upgrade_api_00008() -> None:
     """
     Endpoints.controller_version
     """
@@ -137,7 +137,7 @@ def test_image_mgmt_api_00008() -> None:
     )
 
 
-def test_image_mgmt_api_00009() -> None:
+def test_image_upgrade_api_00009() -> None:
     """
     Endpoints.policies_attached_info
     """
@@ -149,7 +149,7 @@ def test_image_mgmt_api_00009() -> None:
     )
 
 
-def test_image_mgmt_api_00010() -> None:
+def test_image_upgrade_api_00010() -> None:
     """
     Endpoints.policies_info
     """
@@ -161,7 +161,7 @@ def test_image_mgmt_api_00010() -> None:
     )
 
 
-def test_image_mgmt_api_00011() -> None:
+def test_image_upgrade_api_00011() -> None:
     """
     Endpoints.policy_attach
     """
@@ -173,7 +173,7 @@ def test_image_mgmt_api_00011() -> None:
     )
 
 
-def test_image_mgmt_api_00012() -> None:
+def test_image_upgrade_api_00012() -> None:
     """
     Endpoints.policy_create
     """
@@ -185,7 +185,7 @@ def test_image_mgmt_api_00012() -> None:
     )
 
 
-def test_image_mgmt_api_00013() -> None:
+def test_image_upgrade_api_00013() -> None:
     """
     Endpoints.policy_detach
     """
@@ -197,7 +197,7 @@ def test_image_mgmt_api_00013() -> None:
     )
 
 
-def test_image_mgmt_api_00014() -> None:
+def test_image_upgrade_api_00014() -> None:
     """
     Endpoints.policy_info
     """
@@ -208,7 +208,7 @@ def test_image_mgmt_api_00014() -> None:
     assert endpoints.policy_info.get("path") == path
 
 
-def test_image_mgmt_api_00015() -> None:
+def test_image_upgrade_api_00015() -> None:
     """
     Endpoints.stage_info
     """
@@ -220,7 +220,7 @@ def test_image_mgmt_api_00015() -> None:
     )
 
 
-def test_image_mgmt_api_00016() -> None:
+def test_image_upgrade_api_00016() -> None:
     """
     Endpoints.switches_info
     """

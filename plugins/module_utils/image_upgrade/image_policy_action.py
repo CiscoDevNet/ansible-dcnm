@@ -24,13 +24,13 @@ import json
 import logging
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 

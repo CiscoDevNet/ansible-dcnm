@@ -34,7 +34,7 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
 
 from .image_upgrade_utils import (does_not_raise, image_upgrade_fixture,
@@ -45,25 +45,25 @@ from .image_upgrade_utils import (does_not_raise, image_upgrade_fixture,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
 
 PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT = (
-    PATCH_IMAGE_MGMT + "image_upgrade.RestSend.commit"
+    PATCH_image_upgrade + "image_upgrade.RestSend.commit"
 )
 PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT = (
-    PATCH_IMAGE_MGMT + "image_upgrade.RestSend.response_current"
+    PATCH_image_upgrade + "image_upgrade.RestSend.response_current"
 )
 PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT = (
-    PATCH_IMAGE_MGMT + "image_upgrade.RestSend.result_current"
+    PATCH_image_upgrade + "image_upgrade.RestSend.result_current"
 )
 
-REST_SEND_IMAGE_UPGRADE = PATCH_IMAGE_MGMT + "image_upgrade.RestSend"
-DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_MGMT + "image_upgrade_common.dcnm_send"
-DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_MGMT + "install_options.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+REST_SEND_IMAGE_UPGRADE = PATCH_image_upgrade + "image_upgrade.RestSend"
+DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_image_upgrade + "image_upgrade_common.dcnm_send"
+DCNM_SEND_INSTALL_OPTIONS = PATCH_image_upgrade + "install_options.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
 
 
-def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
+def test_image_upgrade_upgrade_00001(image_upgrade) -> None:
     """
     Function
     - __init__
@@ -84,7 +84,7 @@ def test_image_mgmt_upgrade_00001(image_upgrade) -> None:
     assert instance.verb == "POST"
 
 
-def test_image_mgmt_upgrade_00003(image_upgrade) -> None:
+def test_image_upgrade_upgrade_00003(image_upgrade) -> None:
     """
     Function
     - _init_properties
@@ -121,7 +121,7 @@ def test_image_mgmt_upgrade_00003(image_upgrade) -> None:
     }
 
 
-def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00004(monkeypatch, image_upgrade) -> None:
     """
     Function
     - validate_devices
@@ -146,7 +146,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
     instance.devices = devices
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00004a"
+        key = "test_image_upgrade_upgrade_00004a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -158,7 +158,7 @@ def test_image_mgmt_upgrade_00004(monkeypatch, image_upgrade) -> None:
     assert "172.22.150.108" in instance.ip_addresses
 
 
-def test_image_mgmt_upgrade_00005(image_upgrade) -> None:
+def test_image_upgrade_upgrade_00005(image_upgrade) -> None:
     """
     Function
     - commit
@@ -176,7 +176,7 @@ def test_image_mgmt_upgrade_00005(image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00018(monkeypatch, image_upgrade) -> None:
     """
     Function
     - ImageUpgrade.commit
@@ -199,7 +199,7 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00019a"
+    key = "test_image_upgrade_upgrade_00019a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -253,7 +253,7 @@ def test_image_mgmt_upgrade_00018(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
+def test_image_upgrade_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
     """
     Function
     - ImageUpgrade._build_payload
@@ -288,7 +288,7 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
     caplog.set_level(logging.DEBUG)
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00019a"
+    key = "test_image_upgrade_upgrade_00019a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -348,7 +348,7 @@ def test_image_mgmt_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
     assert instance.payload == payloads_image_upgrade(key)
 
 
-def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
+def test_image_upgrade_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
     """
     Function
     - ImageUpgrade.commit
@@ -379,7 +379,7 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
     caplog.set_level(logging.DEBUG)
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00020a"
+    key = "test_image_upgrade_upgrade_00020a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -438,7 +438,7 @@ def test_image_mgmt_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
     assert instance.payload == payloads_image_upgrade(key)
 
 
-def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00021(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -461,7 +461,7 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00021a"
+    key = "test_image_upgrade_upgrade_00021a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -522,7 +522,7 @@ def test_image_mgmt_upgrade_00021(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00022(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -548,7 +548,7 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00022a"
+    key = "test_image_upgrade_upgrade_00022a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -608,7 +608,7 @@ def test_image_mgmt_upgrade_00022(monkeypatch, image_upgrade) -> None:
     assert instance.payload["issuUpgradeOptions1"]["nonDisruptive"] is True
 
 
-def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00023(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -634,7 +634,7 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00023a"
+    key = "test_image_upgrade_upgrade_00023a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -694,7 +694,7 @@ def test_image_mgmt_upgrade_00023(monkeypatch, image_upgrade) -> None:
     assert instance.payload["issuUpgradeOptions1"]["nonDisruptive"] is False
 
 
-def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00024(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -718,7 +718,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00024a"
+    key = "test_image_upgrade_upgrade_00024a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -777,7 +777,7 @@ def test_image_mgmt_upgrade_00024(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00025(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -801,7 +801,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00025a"
+    key = "test_image_upgrade_upgrade_00025a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -862,7 +862,7 @@ def test_image_mgmt_upgrade_00025(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00026(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -885,7 +885,7 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00026a"
+    key = "test_image_upgrade_upgrade_00026a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -945,7 +945,7 @@ def test_image_mgmt_upgrade_00026(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00027(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -968,7 +968,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00027a"
+    key = "test_image_upgrade_upgrade_00027a"
     image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
@@ -1031,7 +1031,7 @@ def test_image_mgmt_upgrade_00027(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00028(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -1054,7 +1054,7 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00028a"
+    key = "test_image_upgrade_upgrade_00028a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1113,7 +1113,7 @@ def test_image_mgmt_upgrade_00028(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00029(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -1137,7 +1137,7 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00029a"
+    key = "test_image_upgrade_upgrade_00029a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1196,7 +1196,7 @@ def test_image_mgmt_upgrade_00029(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00030(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -1220,7 +1220,7 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00030a"
+    key = "test_image_upgrade_upgrade_00030a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1279,7 +1279,7 @@ def test_image_mgmt_upgrade_00030(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00031(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -1308,7 +1308,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00031a"
+    key = "test_image_upgrade_upgrade_00031a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1367,7 +1367,7 @@ def test_image_mgmt_upgrade_00031(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00032(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -1392,7 +1392,7 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00032a"
+    key = "test_image_upgrade_upgrade_00032a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1463,7 +1463,7 @@ def test_image_mgmt_upgrade_00032(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00033(monkeypatch, image_upgrade) -> None:
     """
     Function
     - commit
@@ -1487,7 +1487,7 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00033a"
+    key = "test_image_upgrade_upgrade_00033a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -1540,7 +1540,7 @@ def test_image_mgmt_upgrade_00033(monkeypatch, image_upgrade) -> None:
 # test getter properties
 
 
-def test_image_mgmt_upgrade_00043(image_upgrade) -> None:
+def test_image_upgrade_upgrade_00043(image_upgrade) -> None:
     """
     Function
     - check_interval
@@ -1549,7 +1549,7 @@ def test_image_mgmt_upgrade_00043(image_upgrade) -> None:
     assert instance.check_interval == 10
 
 
-def test_image_mgmt_upgrade_00044(image_upgrade) -> None:
+def test_image_upgrade_upgrade_00044(image_upgrade) -> None:
     """
     Function
     - check_timeout
@@ -1558,7 +1558,7 @@ def test_image_mgmt_upgrade_00044(image_upgrade) -> None:
     assert instance.check_timeout == 1800
 
 
-def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00045(monkeypatch, image_upgrade) -> None:
     """
     Function
     - response_data
@@ -1579,7 +1579,7 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00045a"
+    key = "test_image_upgrade_upgrade_00045a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
@@ -1641,7 +1641,7 @@ def test_image_mgmt_upgrade_00045(monkeypatch, image_upgrade) -> None:
     assert instance.response_data == [121]
 
 
-def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00046(monkeypatch, image_upgrade) -> None:
     """
     Function
     - result
@@ -1662,7 +1662,7 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00046a"
+    key = "test_image_upgrade_upgrade_00046a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
@@ -1722,7 +1722,7 @@ def test_image_mgmt_upgrade_00046(monkeypatch, image_upgrade) -> None:
     assert instance.result == [{"success": True, "changed": True}]
 
 
-def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_upgrade_00047(monkeypatch, image_upgrade) -> None:
     """
     Function
     - response
@@ -1743,7 +1743,7 @@ def test_image_mgmt_upgrade_00047(monkeypatch, image_upgrade) -> None:
     """
     instance = image_upgrade
 
-    key = "test_image_mgmt_upgrade_00047a"
+    key = "test_image_upgrade_upgrade_00047a"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return {}
@@ -1820,7 +1820,7 @@ MATCH_00060 = "ImageUpgrade.bios_force: instance.bios_force must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
     ],
 )
-def test_image_mgmt_upgrade_00060(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00060(image_upgrade, value, expected) -> None:
     """
     Function
     - bios_force setter
@@ -1847,7 +1847,7 @@ MATCH_00061 += "instance.config_reload must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00061)),
     ],
 )
-def test_image_mgmt_upgrade_00061(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00061(image_upgrade, value, expected) -> None:
     """
     Function
     - config_reload setter
@@ -1887,7 +1887,7 @@ DATA_00062_FAIL_3 = [{"bad_key_ip_address": "192.168.1.1"}]
         (DATA_00062_FAIL_3, pytest.raises(AnsibleFailJson, match=MATCH_00062_FAIL_3)),
     ],
 )
-def test_image_mgmt_upgrade_00062(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00062(image_upgrade, value, expected) -> None:
     """
     Function
     - devices setter
@@ -1910,7 +1910,7 @@ MATCH_00063 += "instance.disruptive must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00063)),
     ],
 )
-def test_image_mgmt_upgrade_00063(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00063(image_upgrade, value, expected) -> None:
     """
     Function
     - disruptive setter
@@ -1937,7 +1937,7 @@ MATCH_00064 += "instance.epld_golden must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00064)),
     ],
 )
-def test_image_mgmt_upgrade_00064(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00064(image_upgrade, value, expected) -> None:
     """
     Function
     - epld_golden setter
@@ -1964,7 +1964,7 @@ MATCH_00065 += "instance.epld_upgrade must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00065)),
     ],
 )
-def test_image_mgmt_upgrade_00065(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00065(image_upgrade, value, expected) -> None:
     """
     Function
     - epld_upgrade setter
@@ -1993,7 +1993,7 @@ MATCH_00066_FAIL_1 += "instance.epld_module must be an integer or 'ALL'"
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00066_FAIL_1)),
     ],
 )
-def test_image_mgmt_upgrade_00066(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00066(image_upgrade, value, expected) -> None:
     """
     Function
     - epld_module setter
@@ -2015,7 +2015,7 @@ MATCH_00067 += "instance.force_non_disruptive must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00067)),
     ],
 )
-def test_image_mgmt_upgrade_00067(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00067(image_upgrade, value, expected) -> None:
     """
     Function
     - force_non_disruptive setter
@@ -2042,7 +2042,7 @@ MATCH_00068 += "instance.non_disruptive must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00068)),
     ],
 )
-def test_image_mgmt_upgrade_00068(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00068(image_upgrade, value, expected) -> None:
     """
     Function
     - non_disruptive setter
@@ -2069,7 +2069,7 @@ MATCH_00069 += "instance.package_install must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00069)),
     ],
 )
-def test_image_mgmt_upgrade_00069(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00069(image_upgrade, value, expected) -> None:
     """
     Function
     - package_install setter
@@ -2096,7 +2096,7 @@ MATCH_00070 += "instance.package_uninstall must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00070)),
     ],
 )
-def test_image_mgmt_upgrade_00070(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00070(image_upgrade, value, expected) -> None:
     """
     Function
     - package_uninstall setter
@@ -2123,7 +2123,7 @@ MATCH_00071 += "instance.reboot must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00071)),
     ],
 )
-def test_image_mgmt_upgrade_00071(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00071(image_upgrade, value, expected) -> None:
     """
     Function
     - reboot setter
@@ -2150,7 +2150,7 @@ MATCH_00072 += "instance.write_erase must be a boolean."
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00072)),
     ],
 )
-def test_image_mgmt_upgrade_00072(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00072(image_upgrade, value, expected) -> None:
     """
     Function
     - write_erase setter
@@ -2165,7 +2165,7 @@ def test_image_mgmt_upgrade_00072(image_upgrade, value, expected) -> None:
         assert instance.write_erase == expected
 
 
-def test_image_mgmt_upgrade_00080(
+def test_image_upgrade_upgrade_00080(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2194,7 +2194,7 @@ def test_image_mgmt_upgrade_00080(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00080a"
+        key = "test_image_upgrade_upgrade_00080a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2213,7 +2213,7 @@ def test_image_mgmt_upgrade_00080(
     assert "172.22.150.108" in instance.ipv4_done
 
 
-def test_image_mgmt_upgrade_00081(
+def test_image_upgrade_upgrade_00081(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2224,7 +2224,7 @@ def test_image_mgmt_upgrade_00081(
     - one switch is added to ipv4_done
     - fail_json is called due to timeout
 
-    See test_image_mgmt_upgrade_00080 for functional details.
+    See test_image_upgrade_upgrade_00080 for functional details.
 
     Expectations:
     - instance.ipv4_done is a set()
@@ -2237,7 +2237,7 @@ def test_image_mgmt_upgrade_00081(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00081a"
+        key = "test_image_upgrade_upgrade_00081a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2264,7 +2264,7 @@ def test_image_mgmt_upgrade_00081(
     assert "172.22.150.108" not in instance.ipv4_done
 
 
-def test_image_mgmt_upgrade_00090(
+def test_image_upgrade_upgrade_00090(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2290,7 +2290,7 @@ def test_image_mgmt_upgrade_00090(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00090a"
+        key = "test_image_upgrade_upgrade_00090a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2315,7 +2315,7 @@ def test_image_mgmt_upgrade_00090(
     assert "172.22.150.108" not in instance.ipv4_done
 
 
-def test_image_mgmt_upgrade_00091(
+def test_image_upgrade_upgrade_00091(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2344,7 +2344,7 @@ def test_image_mgmt_upgrade_00091(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_mgmt_upgrade_00091a"
+        key = "test_image_upgrade_upgrade_00091a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)

@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_install_options_00005a": {
+    "test_image_upgrade_install_options_00005a": {
         "TEST_NOTES": [
             "All attributes in compatibilityStatusList are tested",
             "epldModules is tested",
@@ -32,7 +32,7 @@
             "errMessage": ""
         }
     },
-    "test_image_mgmt_install_options_00006a": {
+    "test_image_upgrade_install_options_00006a": {
         "TEST_NOTES": [
             "RETURN_CODE 500 is tested"
         ],
@@ -44,7 +44,7 @@
             "error": "null"
         }
     },
-    "test_image_mgmt_install_options_00007a": {
+    "test_image_upgrade_install_options_00007a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == true, epld == false, packageInstall false",
             "Device has no policy attached",
@@ -81,7 +81,7 @@
             "errMessage": ""
         }
     },
-    "test_image_mgmt_install_options_00008a": {
+    "test_image_upgrade_install_options_00008a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == true, epld == true, packageInstall false",
             "Device has no policy attached",
@@ -146,7 +146,7 @@
             "errMessage": ""
         }
     },
-    "test_image_mgmt_install_options_00009a": {
+    "test_image_upgrade_install_options_00009a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == false, epld == true, packageInstall false",
             "Device has no policy attached",
@@ -195,7 +195,7 @@
             "errMessage": ""
         }
     },
-    "test_image_mgmt_install_options_00010a": {
+    "test_image_upgrade_install_options_00010a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == true, epld == true, packageInstall true",
             "RETURN_CODE is 500 due to packageInstall is true, but policy contains no packages",
@@ -210,7 +210,7 @@
             "error": "Selected policy KR5M does not have package to continue."
         }
     },
-    "test_image_mgmt_upgrade_00019a": {
+    "test_image_upgrade_upgrade_00019a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -265,7 +265,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00020a": {
+    "test_image_upgrade_upgrade_00020a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -320,7 +320,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00021a": {
+    "test_image_upgrade_upgrade_00021a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -375,7 +375,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00022a": {
+    "test_image_upgrade_upgrade_00022a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -430,7 +430,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00023a": {
+    "test_image_upgrade_upgrade_00023a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -485,7 +485,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00024a": {
+    "test_image_upgrade_upgrade_00024a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -540,7 +540,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00025a": {
+    "test_image_upgrade_upgrade_00025a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -595,7 +595,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00026a": {
+    "test_image_upgrade_upgrade_00026a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -650,7 +650,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00027a": {
+    "test_image_upgrade_upgrade_00027a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -705,7 +705,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00028a": {
+    "test_image_upgrade_upgrade_00028a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -760,7 +760,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00029a": {
+    "test_image_upgrade_upgrade_00029a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -815,7 +815,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00030a": {
+    "test_image_upgrade_upgrade_00030a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -870,7 +870,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00031a": {
+    "test_image_upgrade_upgrade_00031a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -925,7 +925,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00032a": {
+    "test_image_upgrade_upgrade_00032a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -980,7 +980,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_mgmt_upgrade_00033a": {
+    "test_image_upgrade_upgrade_00033a": {
         "DATA": {
             "compatibilityStatusList": [
                 {

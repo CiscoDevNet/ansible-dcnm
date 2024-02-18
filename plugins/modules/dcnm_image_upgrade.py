@@ -299,19 +299,19 @@ options:
 
 EXAMPLES = """
 # This module supports the following states:
-#
+
 # merged:
 #   Attach image policy to one or more devices.
 #   Stage image on one or more devices.
 #   Validate image on one or more devices.
 #   Upgrade image on one or more devices.
-#
+
 # query:
 #   Return ISSU details for one or more devices.
-#
+
 # deleted:
 #   Delete image policy from one or more devices
-#
+
 
 # Attach image policy NR3F to two devices
 # Stage and validate the image on two devices but do not upgrade
@@ -414,27 +414,27 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policy_action import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_action import \
     ImagePolicyAction
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_stage import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_common import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_upgrade_task_result import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
     ImageUpgradeTaskResult
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_validate import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
     ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.install_options import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
     SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
 
@@ -1326,9 +1326,9 @@ def main():
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
     log = Log(ansible_module)
-    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    # log.config = config_file
+    collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+    config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+    log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)

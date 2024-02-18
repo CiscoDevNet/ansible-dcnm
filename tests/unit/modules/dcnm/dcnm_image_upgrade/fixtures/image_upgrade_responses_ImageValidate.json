@@ -1,5 +1,5 @@
 {
-    "test_image_mgmt_validate_00020a": {
+    "test_image_upgrade_validate_00020a": {
         "TEST_NOTES": [
             "Needed only for the 200 return code"
         ],
@@ -14,7 +14,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00021a": {
+    "test_image_upgrade_validate_00021a": {
         "TEST_NOTES": [
             "Needed only for the 200 return code",
             "RETURN_CODE == 200",
@@ -31,7 +31,7 @@
             "message": ""
         }
     },
-    "test_image_mgmt_validate_00023a": {
+    "test_image_upgrade_validate_00023a": {
         "TEST_NOTES": [
             "RETURN_CODE == 501",
             "MESSAGE == INTERNAL SERVER ERROR"

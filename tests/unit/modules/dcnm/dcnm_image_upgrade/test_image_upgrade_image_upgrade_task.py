@@ -33,9 +33,9 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.image_policies import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
     ImageUpgradeTask
@@ -50,11 +50,11 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
 
-DCNM_SEND_IMAGE_UPGRADE = PATCH_IMAGE_MGMT + "image_upgrade.dcnm_send"
-DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_MGMT + "install_options.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+DCNM_SEND_IMAGE_UPGRADE = PATCH_image_upgrade + "image_upgrade.dcnm_send"
+DCNM_SEND_INSTALL_OPTIONS = PATCH_image_upgrade + "install_options.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
 
 
 @pytest.fixture(name="image_upgrade_task_bare")
@@ -68,7 +68,7 @@ def image_upgrade_task_bare_fixture():
     return ImageUpgradeTask
 
 
-def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00001(image_upgrade_task_bare) -> None:
     """
     Function
     - __init__
@@ -112,7 +112,7 @@ def test_image_mgmt_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert isinstance(instance.image_policies, ImagePolicies)
 
 
-def test_image_mgmt_upgrade_task_00002(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00002(image_upgrade_task_bare) -> None:
     """
     Function
     - __init__
@@ -130,7 +130,7 @@ def test_image_mgmt_upgrade_task_00002(image_upgrade_task_bare) -> None:
         assert isinstance(instance, ImageUpgradeTask)
 
 
-def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
+def test_image_upgrade_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
     """
     Function
     - get_have
@@ -138,7 +138,7 @@ def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
     Test
     -   SwitchIssuDetailsByIpAddress attributes are set to expected values
     """
-    key = "test_image_mgmt_upgrade_task_00020a"
+    key = "test_image_upgrade_upgrade_task_00020a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -155,7 +155,7 @@ def test_image_mgmt_upgrade_task_00020(monkeypatch, image_upgrade_task) -> None:
     assert instance.have.fabric == "hard"
 
 
-def test_image_mgmt_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -170,7 +170,7 @@ def test_image_mgmt_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) -> 
     -   switch_2 overrides all global_config options
         so all values will be non-default
     """
-    key = "test_image_mgmt_upgrade_task_00030a"
+    key = "test_image_upgrade_upgrade_task_00030a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -216,7 +216,7 @@ def test_image_mgmt_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) -> 
     assert switch_2.get("validate") is False
 
 
-def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -241,7 +241,7 @@ def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> 
         with a non-default value (True)
     - All other values for switch_1 and switch_2 are default
     """
-    key = "test_image_mgmt_upgrade_task_00031a"
+    key = "test_image_upgrade_upgrade_task_00031a"
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -289,7 +289,7 @@ def test_image_mgmt_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) -> 
     assert switch_2.get("validate") is True
 
 
-def test_image_mgmt_upgrade_task_00040(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00040(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -304,7 +304,7 @@ def test_image_mgmt_upgrade_task_00040(image_upgrade_task_bare) -> None:
     Test
     -   instance.switch_configs contains expected default values
     """
-    key = "test_image_mgmt_upgrade_task_00040a"
+    key = "test_image_upgrade_upgrade_task_00040a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -327,7 +327,7 @@ def test_image_mgmt_upgrade_task_00040(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00041(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00041(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -344,7 +344,7 @@ def test_image_mgmt_upgrade_task_00041(image_upgrade_task_bare) -> None:
     -   instance.switch_configs contains expected non-default values
 
     """
-    key = "test_image_mgmt_upgrade_task_00041a"
+    key = "test_image_upgrade_upgrade_task_00041a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -367,7 +367,7 @@ def test_image_mgmt_upgrade_task_00041(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00042(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00042(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -384,7 +384,7 @@ def test_image_mgmt_upgrade_task_00042(image_upgrade_task_bare) -> None:
     -   instance.switch_configs contains expected non-default values
 
     """
-    key = "test_image_mgmt_upgrade_task_00042a"
+    key = "test_image_upgrade_upgrade_task_00042a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -407,7 +407,7 @@ def test_image_mgmt_upgrade_task_00042(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00043(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00043(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -427,7 +427,7 @@ def test_image_mgmt_upgrade_task_00043(image_upgrade_task_bare) -> None:
     Description
     When options is empty, the default values for all sub-options are added
     """
-    key = "test_image_mgmt_upgrade_task_00043a"
+    key = "test_image_upgrade_upgrade_task_00043a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -450,7 +450,7 @@ def test_image_mgmt_upgrade_task_00043(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00044(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00044(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -471,7 +471,7 @@ def test_image_mgmt_upgrade_task_00044(image_upgrade_task_bare) -> None:
     When options.nxos.mode is the only key present in options.nxos,
     options.nxos.bios_force sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00044a"
+    key = "test_image_upgrade_upgrade_task_00044a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -494,7 +494,7 @@ def test_image_mgmt_upgrade_task_00044(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00045(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00045(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -515,7 +515,7 @@ def test_image_mgmt_upgrade_task_00045(image_upgrade_task_bare) -> None:
     When options.nxos.bios_force is the only key present in options.nxos,
     options.nxos.mode sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00045a"
+    key = "test_image_upgrade_upgrade_task_00045a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -538,7 +538,7 @@ def test_image_mgmt_upgrade_task_00045(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00046(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00046(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -559,7 +559,7 @@ def test_image_mgmt_upgrade_task_00046(image_upgrade_task_bare) -> None:
     When options.epld.module is the only key present in options.epld,
     options.epld.golden sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00046a"
+    key = "test_image_upgrade_upgrade_task_00046a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -582,7 +582,7 @@ def test_image_mgmt_upgrade_task_00046(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00047(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00047(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -603,7 +603,7 @@ def test_image_mgmt_upgrade_task_00047(image_upgrade_task_bare) -> None:
     When options.epld.golden is the only key present in options.epld,
     options.epld.module sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00047a"
+    key = "test_image_upgrade_upgrade_task_00047a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -626,7 +626,7 @@ def test_image_mgmt_upgrade_task_00047(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00048(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00048(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -648,7 +648,7 @@ def test_image_mgmt_upgrade_task_00048(image_upgrade_task_bare) -> None:
     When options.reboot.config_reload is the only key present in options.reboot,
     options.reboot.write_erase sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00048a"
+    key = "test_image_upgrade_upgrade_task_00048a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -671,7 +671,7 @@ def test_image_mgmt_upgrade_task_00048(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00049(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00049(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -693,7 +693,7 @@ def test_image_mgmt_upgrade_task_00049(image_upgrade_task_bare) -> None:
     When options.reboot.write_erase is the only key present in options.reboot,
     options.reboot.config_reload sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00049a"
+    key = "test_image_upgrade_upgrade_task_00049a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -716,7 +716,7 @@ def test_image_mgmt_upgrade_task_00049(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00050(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00050(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -738,7 +738,7 @@ def test_image_mgmt_upgrade_task_00050(image_upgrade_task_bare) -> None:
     When options.package.install is the only key present in options.package,
     options.package.uninstall sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00050a"
+    key = "test_image_upgrade_upgrade_task_00050a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
@@ -761,7 +761,7 @@ def test_image_mgmt_upgrade_task_00050(image_upgrade_task_bare) -> None:
     assert instance.switch_configs[0]["options"]["package"]["uninstall"] is False
 
 
-def test_image_mgmt_upgrade_task_00051(image_upgrade_task_bare) -> None:
+def test_image_upgrade_upgrade_task_00051(image_upgrade_task_bare) -> None:
     """
     Function
     - get_want
@@ -783,7 +783,7 @@ def test_image_mgmt_upgrade_task_00051(image_upgrade_task_bare) -> None:
     When options.package.uninstall is the only key present in options.package,
     options.package.install sub-option should be added with default value.
     """
-    key = "test_image_mgmt_upgrade_task_00051a"
+    key = "test_image_upgrade_upgrade_task_00051a"
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)

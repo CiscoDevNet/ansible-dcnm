@@ -34,9 +34,9 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.api_endpoints import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_mgmt.switch_issu_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
@@ -47,11 +47,11 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_MGMT = PATCH_MODULE_UTILS + "image_mgmt."
+PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."
-PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_IMAGE_MGMT + "image_stage.RestSend.commit"
+PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_image_upgrade + "image_stage.RestSend.commit"
 PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = (
-    PATCH_IMAGE_MGMT + "image_stage.RestSend.result_current"
+    PATCH_image_upgrade + "image_stage.RestSend.result_current"
 )
 PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade."
@@ -59,10 +59,10 @@ PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
 )
 
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_MGMT + "switch_issu_details.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
 
 
-def test_image_mgmt_stage_00001(image_stage) -> None:
+def test_image_upgrade_stage_00001(image_stage) -> None:
     """
     Function
     - __init__
@@ -83,7 +83,7 @@ def test_image_mgmt_stage_00001(image_stage) -> None:
     assert isinstance(instance.endpoints, ApiEndpoints)
 
 
-def test_image_mgmt_stage_00002(image_stage) -> None:
+def test_image_upgrade_stage_00002(image_stage) -> None:
     """
     Function
     - _init_properties
@@ -104,18 +104,18 @@ def test_image_mgmt_stage_00002(image_stage) -> None:
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_image_mgmt_stage_00003a", "12.1.2e"),
-        ("test_image_mgmt_stage_00003b", "12.1.3b"),
+        ("test_image_upgrade_stage_00003a", "12.1.2e"),
+        ("test_image_upgrade_stage_00003b", "12.1.3b"),
     ],
 )
-def test_image_mgmt_stage_00003(monkeypatch, image_stage, key, expected) -> None:
+def test_image_upgrade_stage_00003(monkeypatch, image_stage, key, expected) -> None:
     """
     Function
     - _populate_controller_version
 
     Test
-    - test_image_mgmt_stage_00003a -> instance.controller_version == "12.1.2e"
-    - test_image_mgmt_stage_00003b -> instance.controller_version == "12.1.3b"
+    - test_image_upgrade_stage_00003a -> instance.controller_version == "12.1.2e"
+    - test_image_upgrade_stage_00003b -> instance.controller_version == "12.1.3b"
 
     Description
     _populate_controller_version retrieves the controller version from
@@ -134,7 +134,7 @@ def test_image_mgmt_stage_00003(monkeypatch, image_stage, key, expected) -> None
     assert instance.controller_version == expected
 
 
-def test_image_mgmt_stage_00004(
+def test_image_upgrade_stage_00004(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -155,7 +155,7 @@ def test_image_mgmt_stage_00004(
     prune_serial_numbers removes serial numbers from the list for which
     imageStaged == "Success"
     """
-    key = "test_image_mgmt_stage_00004a"
+    key = "test_image_upgrade_stage_00004a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -181,7 +181,7 @@ def test_image_mgmt_stage_00004(
     assert "FDO211218GC" not in instance.serial_numbers
 
 
-def test_image_mgmt_stage_00005(
+def test_image_upgrade_stage_00005(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -200,7 +200,7 @@ def test_image_mgmt_stage_00005(
     number and raises fail_json if imageStaged == "Failed" for any serial
     number.
     """
-    key = "test_image_mgmt_stage_00005a"
+    key = "test_image_upgrade_stage_00005a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -230,7 +230,7 @@ MATCH_00006 += "before calling commit."
         (False, pytest.raises(AnsibleFailJson, match=MATCH_00006)),
     ],
 )
-def test_image_mgmt_stage_00006(
+def test_image_upgrade_stage_00006(
     monkeypatch, image_stage, serial_numbers_is_set, expected
 ) -> None:
     """
@@ -245,7 +245,7 @@ def test_image_mgmt_stage_00006(
     - fail_json is called when serial_numbers is None
     - fail_json is not called when serial_numbers is set
     """
-    key = "test_image_mgmt_stage_00006a"
+    key = "test_image_upgrade_stage_00006a"
 
     def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
         return responses_controller_version(key)
@@ -268,7 +268,7 @@ def test_image_mgmt_stage_00006(
         instance.commit()
 
 
-def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
+def test_image_upgrade_stage_00007(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
@@ -281,7 +281,7 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
     - ImageStage.path is set to:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
     """
-    key = "test_image_mgmt_stage_00007a"
+    key = "test_image_upgrade_stage_00007a"
 
     def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
         return responses_controller_version(key)
@@ -316,7 +316,7 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
         ("12.1.3b", "serialNumbers"),
     ],
 )
-def test_image_mgmt_stage_00008(
+def test_image_upgrade_stage_00008(
     monkeypatch, image_stage, controller_version, expected_serial_number_key
 ) -> None:
     """
@@ -335,7 +335,7 @@ def test_image_mgmt_stage_00008(
     commit() will set the payload key name for the serial number
     based on the controller version, per Expected Results below
     """
-    key = "test_image_mgmt_stage_00008a"
+    key = "test_image_upgrade_stage_00008a"
 
     def mock_controller_version(*args) -> None:
         instance.controller_version = controller_version
@@ -362,7 +362,7 @@ def test_image_mgmt_stage_00008(
     assert expected_serial_number_key in instance.payload.keys()
 
 
-def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
+def test_image_upgrade_stage_00009(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
@@ -385,7 +385,7 @@ def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
     When len(serial_numbers) == 0, commit() will set result and
     response properties, and return without doing anything else.
     """
-    key = "test_image_mgmt_stage_00009a"
+    key = "test_image_upgrade_stage_00009a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -407,7 +407,7 @@ def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
     assert instance.response_data == [instance.response_current.get("DATA")]
 
 
-def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
+def test_image_upgrade_stage_00010(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
@@ -425,7 +425,7 @@ def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
     Description
     commit() will call fail_json() on non-success response from the controller.
     """
-    key = "test_image_mgmt_stage_00010a"
+    key = "test_image_upgrade_stage_00010a"
 
     def mock_controller_version(*args) -> None:
         instance.controller_version = "12.1.3b"
@@ -450,7 +450,7 @@ def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
         instance.commit()
 
 
-def test_image_mgmt_stage_00020(
+def test_image_upgrade_stage_00020(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -474,7 +474,7 @@ def test_image_mgmt_stage_00020(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
-    key = "test_image_mgmt_stage_00020a"
+    key = "test_image_upgrade_stage_00020a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -495,7 +495,7 @@ def test_image_mgmt_stage_00020(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00021(
+def test_image_upgrade_stage_00021(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -522,7 +522,7 @@ def test_image_mgmt_stage_00021(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
-    key = "test_image_mgmt_stage_00021a"
+    key = "test_image_upgrade_stage_00021a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -547,7 +547,7 @@ def test_image_mgmt_stage_00021(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00022(
+def test_image_upgrade_stage_00022(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -572,7 +572,7 @@ def test_image_mgmt_stage_00022(
     Description
     See test_wait_for_image_stage_to_complete for functional details.
     """
-    key = "test_image_mgmt_stage_00022a"
+    key = "test_image_upgrade_stage_00022a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -601,7 +601,7 @@ def test_image_mgmt_stage_00022(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00030(
+def test_image_upgrade_stage_00030(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -629,7 +629,7 @@ def test_image_mgmt_stage_00030(
     - upgrade
     - validated
     """
-    key = "test_image_mgmt_stage_00030a"
+    key = "test_image_upgrade_stage_00030a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -650,7 +650,7 @@ def test_image_mgmt_stage_00030(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_mgmt_stage_00031(
+def test_image_upgrade_stage_00031(
     monkeypatch, image_stage, issu_details_by_serial_number
 ) -> None:
     """
@@ -671,9 +671,9 @@ def test_image_mgmt_stage_00031(
         imageStaged == "In-Progress"
 
     Description
-    See test_image_mgmt_stage_00030 for functional details.
+    See test_image_upgrade_stage_00030 for functional details.
     """
-    key = "test_image_mgmt_stage_00031a"
+    key = "test_image_upgrade_stage_00031a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
@@ -713,7 +713,7 @@ MATCH_00040 = "ImageStage.check_interval: must be a positive integer or zero."
         ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
     ],
 )
-def test_image_mgmt_stage_00040(image_stage, input, output, context) -> None:
+def test_image_upgrade_stage_00040(image_stage, input, output, context) -> None:
     """
     Function
     - check_interval
@@ -746,7 +746,7 @@ MATCH_00050 = "ImageStage.check_timeout: must be a positive integer or zero."
         ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
     ],
 )
-def test_image_mgmt_stage_00050(image_stage, input, output, context) -> None:
+def test_image_upgrade_stage_00050(image_stage, input, output, context) -> None:
     """
     Function
     - check_interval
@@ -781,7 +781,7 @@ MATCH_00060 = (
         (["DD001115F"], ["DD001115F"], does_not_raise()),
     ],
 )
-def test_image_mgmt_stage_00060(image_stage, input, output, context) -> None:
+def test_image_upgrade_stage_00060(image_stage, input, output, context) -> None:
     """
     Function
     - serial_numbers
