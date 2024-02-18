@@ -48,7 +48,6 @@ class ImageStage(ImageUpgradeCommon):
     stage = ImageStage(module)
     stage.serial_numbers = ["FDO211218HH", "FDO211218GC"]
     stage.commit()
-    data = stage.data
 
     Request body (12.1.2e) (yes, serialNum is misspelled):
         {
@@ -140,9 +139,9 @@ class ImageStage(ImageUpgradeCommon):
         serial number from the list of serial numbers to stage.
         """
         serial_numbers = copy.copy(self.serial_numbers)
+        self.issu_detail.refresh()
         for serial_number in serial_numbers:
             self.issu_detail.filter = serial_number
-            self.issu_detail.refresh()
             if self.issu_detail.image_staged == "Success":
                 self.serial_numbers.remove(serial_number)
 
@@ -152,9 +151,9 @@ class ImageStage(ImageUpgradeCommon):
         is Failed.
         """
         method_name = inspect.stack()[0][3]
+        self.issu_detail.refresh()
         for serial_number in self.serial_numbers:
             self.issu_detail.filter = serial_number
-            self.issu_detail.refresh()
 
             if self.issu_detail.image_staged == "Failed":
                 msg = f"{self.class_name}.{method_name}: "
@@ -195,6 +194,7 @@ class ImageStage(ImageUpgradeCommon):
             self.result_current = {"changed": False, "success": True}
             return
 
+        # self.issu_detail.refresh()
         self.prune_serial_numbers()
         self.validate_serial_numbers()
         self._wait_for_current_actions_to_complete()

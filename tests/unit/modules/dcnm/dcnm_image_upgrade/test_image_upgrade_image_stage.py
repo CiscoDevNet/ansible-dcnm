@@ -141,6 +141,10 @@ def test_image_mgmt_stage_00004(
     Function
     - prune_serial_numbers
 
+    Summary
+    Verify that prune_serial_numbers prunes serial numbers that have already
+    been staged.
+
     Test
     -   module.serial_numbers contains only serial numbers
         for which imageStaged == "none" (FDO2112189M, FDO211218AX, FDO211218B5)
@@ -149,12 +153,13 @@ def test_image_mgmt_stage_00004(
 
     Description
     prune_serial_numbers removes serial numbers from the list for which
-    imageStaged == "Success" (TODO: AND policy == <target_policy>)
+    imageStaged == "Success"
     """
     key = "test_image_mgmt_stage_00004a"
 
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
+
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
@@ -183,6 +188,9 @@ def test_image_mgmt_stage_00005(
     """
     Function
     - validate_serial_numbers
+
+    Summary
+    Verify that validate_serial_numbers raises fail_json appropriately.
 
     Test
     - fail_json is not called when imageStaged == "Success"
@@ -230,6 +238,10 @@ def test_image_mgmt_stage_00006(
     Function
     commit
 
+    Summary
+    Verify that commit raises fail_json appropriately based on value of
+    instance.serial_numbers.
+
     Test
     - fail_json is called when serial_numbers is None
     - fail_json is not called when serial_numbers is set
@@ -261,6 +273,9 @@ def test_image_mgmt_stage_00007(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
+
+    Summary
+    Verify that verb is set to POST and path is set to the expected value.
 
     Test
     - ImageStage.verb is set to POST
@@ -309,6 +324,10 @@ def test_image_mgmt_stage_00008(
     Function
     - commit
 
+    Summary
+    Verify that the serial number key name in the payload is set correctly
+    based on the controller version.
+
     Test
     - controller_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
     - controller_version 12.1.3b -> key name "serialNumbers
@@ -348,6 +367,10 @@ def test_image_mgmt_stage_00009(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
+
+    Summary
+    Verify that commit() sets result, response, and response_data
+    appropriately when serial_numbers is empty.
 
     Setup
     - SwitchIssuDetailsBySerialNumber is mocked to return a successful response
@@ -389,6 +412,9 @@ def test_image_mgmt_stage_00010(monkeypatch, image_stage) -> None:
     """
     Function
     - commit
+
+    Summary
+    Verify that commit() calls fail_json() on 500 response from the controller.
 
     Setup
     - IssuDetailsBySerialNumber is mocked to return a successful response
@@ -432,6 +458,10 @@ def test_image_mgmt_stage_00020(
     Function
     - _wait_for_image_stage_to_complete
 
+    Summary
+    Verify proper behavior of _wait_for_image_stage_to_complete when
+    imageStaged is "Success" for all serial numbers.
+
     Test
     -   imageStaged == "Success" for all serial numbers so
         fail_json is not called
@@ -472,6 +502,11 @@ def test_image_mgmt_stage_00021(
     """
     Function
     - _wait_for_image_stage_to_complete
+
+    Summary
+    Verify proper behavior of _wait_for_image_stage_to_complete when
+    imageStaged is "Failed" for one serial number and imageStaged
+    is "Success" for one serial number.
 
     Test
     -   module.serial_numbers_done is a set()
@@ -519,6 +554,11 @@ def test_image_mgmt_stage_00022(
     """
     Function
     - _wait_for_image_stage_to_complete
+
+    Summary
+    Verify proper behavior of _wait_for_image_stage_to_complete when
+    timeout is reached for one serial number (i.e. imageStaged is
+    "In-Progress") and imageStaged is "Success" for one serial number.
 
     Test
     -   module.serial_numbers_done is a set()
@@ -569,6 +609,10 @@ def test_image_mgmt_stage_00030(
     Function
     - _wait_for_current_actions_to_complete
 
+    Summary
+    Verify proper behavior of _wait_for_current_actions_to_complete when
+    there are no actions pending.
+
     Test
     -   instance.serial_numbers_done is a set()
     -   instance.serial_numbers_done has length 2
@@ -613,6 +657,10 @@ def test_image_mgmt_stage_00031(
     """
     Function
     - _wait_for_current_actions_to_complete
+
+    Summary
+    Verify proper behavior of _wait_for_current_actions_to_complete when
+    there is a timeout waiting for one serial number to complete staging.
 
     Test
     -   module.serial_numbers_done is a set()
@@ -671,6 +719,9 @@ def test_image_mgmt_stage_00040(image_stage, input, output, context) -> None:
     Function
     - check_interval
 
+    Summary
+    Verify that check_interval input validation works as expected.
+
     Test
     - Verify inputs to check_interval property
 
@@ -700,6 +751,9 @@ def test_image_mgmt_stage_00050(image_stage, input, output, context) -> None:
     """
     Function
     - check_interval
+
+    Summary
+    Verify that check_timeout input validation works as expected.
 
     Test
     - Verify inputs to check_timeout property
@@ -732,6 +786,9 @@ def test_image_mgmt_stage_00060(image_stage, input, output, context) -> None:
     """
     Function
     - serial_numbers
+
+    Summary
+    Verify that serial_numbers input validation works as expected.
 
     Test
     - Verify inputs to serial_numbers property
