@@ -24,7 +24,7 @@ import logging
 
 class ImagePolicyTaskResult:
     """
-    Storage for ImagePolicyTest result
+    Storage for ImagePolicyTask result
 
     Usage:
 

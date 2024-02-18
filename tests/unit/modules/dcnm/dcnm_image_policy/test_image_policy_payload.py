@@ -44,6 +44,9 @@ def test_image_policy_payload_00110(config2payload: Config2Payload) -> None:
     Function
     - __init__
 
+    Summary
+    Verify Config2Payload is initialized properly
+
     Test
     - Class attributes initialized to expected values
     - fail_json is not called
@@ -51,22 +54,6 @@ def test_image_policy_payload_00110(config2payload: Config2Payload) -> None:
     with does_not_raise():
         instance = config2payload
     assert instance.class_name == "Config2Payload"
-
-
-def test_image_policy_payload_00111(config2payload: Config2Payload) -> None:
-    """
-    Class
-    - Payload
-    - Config2Payload
-    Function
-    - __init__
-    - _build_properties
-
-    Test
-    - Class properties are initialized to expected values
-    """
-    with does_not_raise():
-        instance = config2payload
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("config") == {}
     assert instance.properties.get("payload") == {}
@@ -80,7 +67,11 @@ def test_image_policy_payload_00120(config2payload: Config2Payload) -> None:
     Function
     - commit
 
+    Summary
+    Verify Config2Payload coverts a configuration to a proper payload.
+
     Test
+    - fail_json is not called
     - commit converts config to a proper payload
     """
     key = "test_image_policy_payload_00120"
@@ -132,29 +123,16 @@ def test_image_policy_payload_00210(payload2config: Payload2Config) -> None:
     Function
     - __init__
 
+    Summary
+    Verify Payload2Config is initialized properly
+
     Test
-    - Class attributes initialized to expected values
     - fail_json is not called
+    - Class attributes initialized to expected values
     """
     with does_not_raise():
         instance = payload2config
     assert instance.class_name == "Payload2Config"
-
-
-def test_image_policy_payload_00211(payload2config: Payload2Config) -> None:
-    """
-    Class
-    - Payload
-    - Payload2Config
-    Function
-    - __init__
-    - _build_properties
-
-    Test
-    - Class properties are initialized to expected values
-    """
-    with does_not_raise():
-        instance = payload2config
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("config") == {}
     assert instance.properties.get("payload") == {}
@@ -168,7 +146,11 @@ def test_image_policy_payload_00220(payload2config: Payload2Config) -> None:
     Function
     - commit
 
+    Summary
+    Verify Payload2Config coverts a payload to a proper configuration.
+
     Test
+    - fail_json is not called
     - commit converts the payload to a proper config
     """
     key = "test_image_policy_payload_00220"
@@ -191,6 +173,10 @@ def test_image_policy_payload_00221(payload2config: Payload2Config) -> None:
     - Payload2Config
     Function
     - commit
+
+    Summary
+    Verify Payload2Config coverts a payload to a proper configuration when
+    the payload is missing the rpmimages and packageName keys.
 
     Test
     - payload is missing rpmimages and packageName keys
