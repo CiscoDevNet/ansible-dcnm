@@ -160,7 +160,6 @@ def test_image_mgmt_stage_00004(
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
     instance = image_stage
