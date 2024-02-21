@@ -360,21 +360,9 @@ def test_image_upgrade_image_policy_action_00020(
     Since action == "FOO" is not covered in commit()'s if clauses,
     the else clause is taken and fail_json is called.
     """
-    key = "test_image_upgrade_image_policy_action_00020a"
-
-    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        return responses_image_policies(key)
 
     def mock_validate_request(*args) -> None:
         pass
-
-    monkeypatch.setattr(
-        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
-    )
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
 
     instance = image_policy_action
     monkeypatch.setattr(instance, "validate_request", mock_validate_request)
@@ -415,9 +403,6 @@ def test_image_upgrade_image_policy_action_00021(
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
 
-    def mock_dcnm_send_switch_details(*args) -> Dict[str, Any]:
-        return responses_switch_details(key)
-
     def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
@@ -428,7 +413,6 @@ def test_image_upgrade_image_policy_action_00021(
     monkeypatch.setattr(
         DCNM_SEND_IMAGE_UPGRADE_COMMON, mock_dcnm_send_image_upgrade_common
     )
-    monkeypatch.setattr(DCNM_SEND_SWITCH_DETAILS, mock_dcnm_send_switch_details)
     monkeypatch.setattr(
         DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )

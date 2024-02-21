@@ -48,11 +48,11 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
 PATCH_COMMON = PATCH_MODULE_UTILS + "common."
-PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_image_upgrade + "image_stage.RestSend.commit"
+PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_IMAGE_UPGRADE + "image_stage.RestSend.commit"
 PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = (
-    PATCH_image_upgrade + "image_stage.RestSend.result_current"
+    PATCH_IMAGE_UPGRADE + "image_stage.RestSend.result_current"
 )
 PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
     "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade."
@@ -60,7 +60,7 @@ PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
 )
 
 DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 
 
 def test_image_upgrade_stage_00001(image_stage) -> None:
@@ -476,23 +476,23 @@ MATCH_00040 = "ImageStage.check_interval: must be a positive integer or zero."
 
 
 @pytest.mark.parametrize(
-    "input, output, context",
+    "arg, value, context",
     [
         (-1, None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
         (10, 10, does_not_raise()),
         ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
     ],
 )
-def test_image_upgrade_stage_00040(image_stage, input, output, context) -> None:
+def test_image_upgrade_stage_00040(image_stage, arg, value, context) -> None:
     """
     Function
     - check_interval
 
     Summary
-    Verify that check_interval input validation works as expected.
+    Verify that check_interval argument validation works as expected.
 
     Test
-    - Verify inputs to check_interval property
+    - Verify input arguments to check_interval property
 
     Description
     check_interval expects a positive integer value, or zero.
@@ -500,32 +500,32 @@ def test_image_upgrade_stage_00040(image_stage, input, output, context) -> None:
     with does_not_raise():
         instance = image_stage
     with context:
-        instance.check_interval = input
-    if output is not None:
-        assert instance.check_interval == output
+        instance.check_interval = arg
+    if value is not None:
+        assert instance.check_interval == value
 
 
 MATCH_00050 = "ImageStage.check_timeout: must be a positive integer or zero."
 
 
 @pytest.mark.parametrize(
-    "input, output, context",
+    "arg, value, context",
     [
         (-1, None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
         (10, 10, does_not_raise()),
         ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
     ],
 )
-def test_image_upgrade_stage_00050(image_stage, input, output, context) -> None:
+def test_image_upgrade_stage_00050(image_stage, arg, value, context) -> None:
     """
     Function
     - check_interval
 
     Summary
-    Verify that check_timeout input validation works as expected.
+    Verify that check_timeout argument validation works as expected.
 
     Test
-    - Verify inputs to check_timeout property
+    - Verify input arguments to check_timeout property
 
     Description
     check_timeout expects a positive integer value, or zero.
@@ -533,9 +533,9 @@ def test_image_upgrade_stage_00050(image_stage, input, output, context) -> None:
     with does_not_raise():
         instance = image_stage
     with context:
-        instance.check_timeout = input
-    if output is not None:
-        assert instance.check_timeout == output
+        instance.check_timeout = arg
+    if value is not None:
+        assert instance.check_timeout == value
 
 
 MATCH_00060 = (
@@ -544,20 +544,20 @@ MATCH_00060 = (
 
 
 @pytest.mark.parametrize(
-    "input, output, context",
+    "arg, value, context",
     [
         ("foo", None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
         (10, None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
         (["DD001115F"], ["DD001115F"], does_not_raise()),
     ],
 )
-def test_image_upgrade_stage_00060(image_stage, input, output, context) -> None:
+def test_image_upgrade_stage_00060(image_stage, arg, value, context) -> None:
     """
     Function
     - serial_numbers
 
     Summary
-    Verify that serial_numbers input validation works as expected.
+    Verify that serial_numbers argument validation works as expected.
 
     Test
     - Verify inputs to serial_numbers property
@@ -569,9 +569,9 @@ def test_image_upgrade_stage_00060(image_stage, input, output, context) -> None:
     with does_not_raise():
         instance = image_stage
     with context:
-        instance.serial_numbers = input
-    if output is not None:
-        assert instance.serial_numbers == output
+        instance.serial_numbers = arg
+    if value is not None:
+        assert instance.serial_numbers == value
 
 
 MATCH_00070 = "ImageStage.commit: call instance.serial_numbers "
@@ -740,12 +740,6 @@ def test_image_upgrade_stage_00073(monkeypatch, image_stage) -> None:
     When len(serial_numbers) == 0, commit() will set result and
     response properties, and return without doing anything else.
     """
-    key = "test_image_upgrade_stage_00073a"
-
-    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
     monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
 
     response_msg = "No files to stage."
@@ -800,8 +794,8 @@ def test_image_upgrade_stage_00074(monkeypatch, image_stage) -> None:
 
     instance = image_stage
     instance.serial_numbers = ["FDO21120U5D"]
-    MATCH = "ImageStage.commit: failed"
-    with pytest.raises(AnsibleFailJson, match=MATCH):
+    match = "ImageStage.commit: failed"
+    with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
 
