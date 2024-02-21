@@ -45,22 +45,22 @@ from .image_upgrade_utils import (does_not_raise, image_upgrade_fixture,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
 
 PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT = (
-    PATCH_image_upgrade + "image_upgrade.RestSend.commit"
+    PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend.commit"
 )
 PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT = (
-    PATCH_image_upgrade + "image_upgrade.RestSend.response_current"
+    PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend.response_current"
 )
 PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT = (
-    PATCH_image_upgrade + "image_upgrade.RestSend.result_current"
+    PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend.result_current"
 )
 
-REST_SEND_IMAGE_UPGRADE = PATCH_image_upgrade + "image_upgrade.RestSend"
-DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_image_upgrade + "image_upgrade_common.dcnm_send"
-DCNM_SEND_INSTALL_OPTIONS = PATCH_image_upgrade + "install_options.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
+REST_SEND_IMAGE_UPGRADE = PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend"
+DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_UPGRADE + "image_upgrade_common.dcnm_send"
+DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_UPGRADE + "install_options.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 
 
 def test_image_upgrade_upgrade_00001(image_upgrade) -> None:
@@ -207,29 +207,15 @@ def test_image_upgrade_upgrade_00018(monkeypatch, image_upgrade) -> None:
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
-    def mock_dcnm_send_image_upgrade_commit(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
-
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
         pass
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
-        DCNM_SEND_IMAGE_UPGRADE_COMMON, mock_dcnm_send_image_upgrade_commit
-    )
-    monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -451,8 +437,8 @@ def test_image_upgrade_upgrade_00021(monkeypatch, image_upgrade) -> None:
         to be upgraded
     -   The methods called by commit are mocked to simulate that the
         device has not yet been upgraded to the desired version
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing
+    -   Method called by commit, _wait_for_current_actions_to_complete
+        is mocked to do nothing
     -   instance.devices is set to contain an invalid nxos.mode value
 
     Expected results:
@@ -472,27 +458,12 @@ def test_image_upgrade_upgrade_00021(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -729,27 +700,12 @@ def test_image_upgrade_upgrade_00024(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -812,27 +768,12 @@ def test_image_upgrade_upgrade_00025(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -896,27 +837,12 @@ def test_image_upgrade_upgrade_00026(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -969,7 +895,6 @@ def test_image_upgrade_upgrade_00027(monkeypatch, image_upgrade) -> None:
     instance = image_upgrade
 
     key = "test_image_upgrade_upgrade_00027a"
-    image_upgrade_file = "image_upgrade_responses_ImageUpgrade"
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_install_options(key)
@@ -980,30 +905,12 @@ def test_image_upgrade_upgrade_00027(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -1065,27 +972,12 @@ def test_image_upgrade_upgrade_00028(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -1148,27 +1040,12 @@ def test_image_upgrade_upgrade_00029(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -1231,27 +1108,12 @@ def test_image_upgrade_upgrade_00030(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -1319,27 +1181,12 @@ def test_image_upgrade_upgrade_00031(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -1403,9 +1250,6 @@ def test_image_upgrade_upgrade_00032(monkeypatch, image_upgrade) -> None:
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
     def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_upgrade(key)
 
@@ -1426,11 +1270,6 @@ def test_image_upgrade_upgrade_00032(monkeypatch, image_upgrade) -> None:
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
@@ -1489,29 +1328,17 @@ def test_image_upgrade_upgrade_00033(monkeypatch, image_upgrade) -> None:
 
     key = "test_image_upgrade_upgrade_00033a"
 
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_install_options(key)
-
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         return responses_switch_issu_details(key)
 
     def mock_wait_for_current_actions_to_complete(*args, **kwargs):
         pass
 
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
     monkeypatch.setattr(
         instance,
         "_wait_for_current_actions_to_complete",
         mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
     )
 
     instance.devices = [
