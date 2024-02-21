@@ -81,14 +81,6 @@ class MockAnsibleModule:
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
 
-@pytest.fixture(name="controller_version")
-def controller_version_fixture():
-    """
-    mock ControllerVersion
-    """
-    return ControllerVersion(MockAnsibleModule)
-
-
 @pytest.fixture(name="image_install_options")
 def image_install_options_fixture():
     """
