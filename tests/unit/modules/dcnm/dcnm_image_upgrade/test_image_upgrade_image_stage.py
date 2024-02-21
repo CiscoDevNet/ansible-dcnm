@@ -478,6 +478,7 @@ MATCH_00040 = "ImageStage.check_interval: must be a positive integer or zero."
 @pytest.mark.parametrize(
     "arg, value, context",
     [
+        (True, None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
         (-1, None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
         (10, 10, does_not_raise()),
         ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
