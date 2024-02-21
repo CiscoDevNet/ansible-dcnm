@@ -39,8 +39,8 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_image_install_options)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
-DCNM_SEND_INSTALL_OPTIONS = PATCH_image_upgrade + "install_options.dcnm_send"
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
+DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_UPGRADE + "install_options.dcnm_send"
 
 
 def test_image_upgrade_install_options_00001(image_install_options) -> None:

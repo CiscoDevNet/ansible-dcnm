@@ -37,8 +37,8 @@ from .image_upgrade_utils import (does_not_raise,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
-DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
+DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 
 
 def test_image_upgrade_switch_issu_details_by_ip_address_00001(

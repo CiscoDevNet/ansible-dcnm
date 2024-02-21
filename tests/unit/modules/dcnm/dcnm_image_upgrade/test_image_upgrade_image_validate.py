@@ -44,14 +44,14 @@ from .image_upgrade_utils import (does_not_raise, image_validate_fixture,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
-DCNM_SEND_IMAGE_VALIDATE = PATCH_image_upgrade + "image_validate.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
+DCNM_SEND_IMAGE_VALIDATE = PATCH_IMAGE_UPGRADE + "image_validate.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT = (
-    PATCH_image_upgrade + "image_validate.RestSend.commit"
+    PATCH_IMAGE_UPGRADE + "image_validate.RestSend.commit"
 )
 PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT = (
-    PATCH_image_upgrade + "image_validate.RestSend.result_current"
+    PATCH_IMAGE_UPGRADE + "image_validate.RestSend.result_current"
 )
 
 

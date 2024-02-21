@@ -40,15 +40,15 @@ from .image_upgrade_utils import (does_not_raise, responses_switch_details,
                                   switch_details_fixture)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
-PATCH_SWITCH_DETAILS = PATCH_image_upgrade + "switch_details."
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
+PATCH_SWITCH_DETAILS = PATCH_IMAGE_UPGRADE + "switch_details."
 PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT = (
     PATCH_SWITCH_DETAILS + "RestSend.response_current"
 )
 PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT = (
     PATCH_SWITCH_DETAILS + "RestSend.result_current"
 )
-REST_SEND_SWITCH_DETAILS = PATCH_image_upgrade + "switch_details.RestSend.commit"
+REST_SEND_SWITCH_DETAILS = PATCH_IMAGE_UPGRADE + "switch_details.RestSend.commit"
 
 
 def test_image_upgrade_switch_details_00001(switch_details) -> None:

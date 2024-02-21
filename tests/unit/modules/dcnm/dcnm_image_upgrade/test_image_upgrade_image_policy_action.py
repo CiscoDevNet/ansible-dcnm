@@ -48,12 +48,12 @@ from .image_upgrade_utils import (does_not_raise, image_policies_fixture,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
 
-DCNM_SEND_IMAGE_POLICIES = PATCH_image_upgrade + "image_policies.dcnm_send"
-DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_image_upgrade + "image_upgrade_common.dcnm_send"
-DCNM_SEND_SWITCH_DETAILS = PATCH_image_upgrade + "switch_details.RestSend.commit"
-DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
+DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_UPGRADE + "image_policies.dcnm_send"
+DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_UPGRADE + "image_upgrade_common.dcnm_send"
+DCNM_SEND_SWITCH_DETAILS = PATCH_IMAGE_UPGRADE + "switch_details.RestSend.commit"
+DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 
 
 def test_image_upgrade_image_policy_action_00001(image_policy_action) -> None:
