@@ -177,6 +177,22 @@
             "message": ""
         }
     },
+    "test_image_upgrade_image_policies_00026a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 500",
+            "MESSAGE == NOK"
+        ],
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
+        "MESSAGE": "NOK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+            ],
+            "message": ""
+        }
+    },
     "test_image_upgrade_image_policy_action_00013a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",

@@ -39,8 +39,8 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_image_policies)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
-DCNM_SEND_IMAGE_POLICIES = PATCH_image_upgrade + "image_policies.dcnm_send"
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
+DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_UPGRADE + "image_policies.dcnm_send"
 
 
 def test_image_upgrade_image_policies_00001(image_policies) -> None:
@@ -201,7 +201,7 @@ def test_image_upgrade_image_policies_00023(monkeypatch, image_policies) -> None
     - refresh
 
     Test
-    - do not fail_json is called when DATA.lastOperDataObject length == 0
+    - do not fail_json when DATA.lastOperDataObject length == 0
     - 200 response
 
     Endpoint
@@ -281,6 +281,35 @@ def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None
 
     match = "ImagePolicies.refresh: "
     match += "Cannot parse policy information from the controller."
+
+    instance = image_policies
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.refresh()
+
+
+def test_image_upgrade_image_policies_00026(monkeypatch, image_policies) -> None:
+    """
+    Function
+    - refresh
+
+    Summary
+    Verify that fail_json is called when _handle_response() returns a
+    non-successful result.
+
+    Test
+    - fail_json is called when result["success"] is False.
+
+    """
+    key = "test_image_upgrade_image_policies_00026a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
+        return responses_image_policies(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+
+    match = "ImagePolicies.refresh: Bad result when retrieving image policy "
+    match += r"information from the controller\."
 
     instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
