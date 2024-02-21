@@ -1,5 +1,5 @@
 {
-    "test_image_upgrade_stage_00006a": {
+    "test_image_upgrade_stage_00070a": {
         "TEST_NOTES": [
             "Needed only for the 200 return code"
         ],
@@ -14,7 +14,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00007a": {
+    "test_image_upgrade_stage_00071a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "MESSAGE == OK"
@@ -30,7 +30,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00008a": {
+    "test_image_upgrade_stage_00072a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "MESSAGE == OK"
@@ -46,7 +46,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00010a": {
+    "test_image_upgrade_stage_00074a": {
         "TEST_NOTES": [
             "RETURN_CODE == 500",
             "MESSAGE == NOK"
@@ -60,6 +60,29 @@
             "lastOperDataObject": [
            ],
             "message": ""
+        }
+    },
+    "test_image_upgrade_stage_00070a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-info",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "deviceName": "leaf1",
+                    "imageStaged": "Success",
+                    "imageStagedPercent": 100,
+                    "ipAddress": "172.22.150.102",
+                    "serialNumber": "FDO21120U5D"
+                }
+            ],
+                "message": ""
         }
     }
 }

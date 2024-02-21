@@ -675,6 +675,10 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         for switch in self.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["ipAddress"]] = switch
 
+        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
     def _get(self, item):
         method_name = inspect.stack()[0][3]
 
@@ -760,6 +764,10 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         for switch in self.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["serialNumber"]] = switch
 
+        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
     def _get(self, item):
         method_name = inspect.stack()[0][3]
 
@@ -843,6 +851,10 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         self.data_subclass = {}
         for switch in self.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["deviceName"]] = switch
+
+        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _get(self, item):
         method_name = inspect.stack()[0][3]

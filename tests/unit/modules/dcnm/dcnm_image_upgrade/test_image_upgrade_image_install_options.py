@@ -128,7 +128,9 @@ def test_image_upgrade_install_options_00004(image_install_options) -> None:
         image_install_options.refresh()
 
 
-def test_image_upgrade_install_options_00005(monkeypatch, image_install_options) -> None:
+def test_image_upgrade_install_options_00005(
+    monkeypatch, image_install_options
+) -> None:
     """
     Function
     - refresh
@@ -174,7 +176,9 @@ def test_image_upgrade_install_options_00005(monkeypatch, image_install_options)
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00006(monkeypatch, image_install_options) -> None:
+def test_image_upgrade_install_options_00006(
+    monkeypatch, image_install_options
+) -> None:
     """
     Function
     - refresh
@@ -201,7 +205,9 @@ def test_image_upgrade_install_options_00006(monkeypatch, image_install_options)
         instance.refresh()
 
 
-def test_image_upgrade_install_options_00007(monkeypatch, image_install_options) -> None:
+def test_image_upgrade_install_options_00007(
+    monkeypatch, image_install_options
+) -> None:
     """
     Function
     - refresh
@@ -258,7 +264,9 @@ def test_image_upgrade_install_options_00007(monkeypatch, image_install_options)
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00008(monkeypatch, image_install_options) -> None:
+def test_image_upgrade_install_options_00008(
+    monkeypatch, image_install_options
+) -> None:
     """
     Function
     - refresh
@@ -319,7 +327,9 @@ def test_image_upgrade_install_options_00008(monkeypatch, image_install_options)
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00009(monkeypatch, image_install_options) -> None:
+def test_image_upgrade_install_options_00009(
+    monkeypatch, image_install_options
+) -> None:
     """
     Function
     - refresh
@@ -380,7 +390,9 @@ def test_image_upgrade_install_options_00009(monkeypatch, image_install_options)
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00010(monkeypatch, image_install_options) -> None:
+def test_image_upgrade_install_options_00010(
+    monkeypatch, image_install_options
+) -> None:
     """
     Function
     - refresh

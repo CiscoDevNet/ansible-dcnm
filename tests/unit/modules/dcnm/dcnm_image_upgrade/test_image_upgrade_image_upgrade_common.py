@@ -240,7 +240,9 @@ def test_image_upgrade_image_upgrade_common_00060(image_upgrade_common) -> None:
     """
     instance = image_upgrade_common
 
-    data = responses_image_upgrade_common("test_image_upgrade_image_upgrade_common_00060a")
+    data = responses_image_upgrade_common(
+        "test_image_upgrade_image_upgrade_common_00060a"
+    )
     with pytest.raises(AnsibleFailJson, match=r"Unknown request verb \(FOO\)"):
         instance._handle_response(  # pylint: disable=protected-access
             data.get("response"), data.get("verb")

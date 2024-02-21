@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 from typing import Any, Dict
+from unittest.mock import MagicMock
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
@@ -217,237 +218,6 @@ def test_image_upgrade_stage_00005(
     instance.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
     with pytest.raises(AnsibleFailJson, match=match):
         instance.validate_serial_numbers()
-
-
-MATCH_00006 = "ImageStage.commit: call instance.serial_numbers "
-MATCH_00006 += "before calling commit."
-
-
-@pytest.mark.parametrize(
-    "serial_numbers_is_set, expected",
-    [
-        (True, does_not_raise()),
-        (False, pytest.raises(AnsibleFailJson, match=MATCH_00006)),
-    ],
-)
-def test_image_upgrade_stage_00006(
-    monkeypatch, image_stage, serial_numbers_is_set, expected
-) -> None:
-    """
-    Function
-    commit
-
-    Summary
-    Verify that commit raises fail_json appropriately based on value of
-    instance.serial_numbers.
-
-    Test
-    - fail_json is called when serial_numbers is None
-    - fail_json is not called when serial_numbers is set
-    """
-    key = "test_image_upgrade_stage_00006a"
-
-    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
-        return responses_controller_version(key)
-
-    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_stage(key)
-
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
-
-    instance = image_stage
-    if serial_numbers_is_set:
-        instance.serial_numbers = ["FDO21120U5D"]
-    with expected:
-        instance.commit()
-
-
-def test_image_upgrade_stage_00007(monkeypatch, image_stage) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that verb is set to POST and path is set to the expected value.
-
-    Test
-    - ImageStage.verb is set to POST
-    - ImageStage.path is set to:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
-    """
-    key = "test_image_upgrade_stage_00007a"
-
-    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
-        return responses_controller_version(key)
-
-    # Needed only for the 200 return code
-    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_stage(key)
-
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
-
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
-
-    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
-    module_path += "stagingmanagement/stage-image"
-
-    instance = image_stage
-    instance.serial_numbers = ["FDO21120U5D"]
-    instance.commit()
-    assert instance.path == module_path
-    assert instance.verb == "POST"
-
-
-@pytest.mark.parametrize(
-    "controller_version, expected_serial_number_key",
-    [
-        ("12.1.2e", "sereialNum"),
-        ("12.1.3b", "serialNumbers"),
-    ],
-)
-def test_image_upgrade_stage_00008(
-    monkeypatch, image_stage, controller_version, expected_serial_number_key
-) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that the serial number key name in the payload is set correctly
-    based on the controller version.
-
-    Test
-    - controller_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
-    - controller_version 12.1.3b -> key name "serialNumbers
-
-    Description
-    commit() will set the payload key name for the serial number
-    based on the controller version, per Expected Results below
-    """
-    key = "test_image_upgrade_stage_00008a"
-
-    def mock_controller_version(*args) -> None:
-        instance.controller_version = controller_version
-
-    controller_version_patch = "ansible_collections.cisco.dcnm.plugins."
-    controller_version_patch += "modules.dcnm_image_upgrade."
-    controller_version_patch += "ImageStage._populate_controller_version"
-    monkeypatch.setattr(controller_version_patch, mock_controller_version)
-
-    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_stage(key)
-
-    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
-
-    instance = image_stage
-    instance.serial_numbers = ["FDO21120U5D"]
-    instance.commit()
-    print(f"instance.payload: {instance.payload.keys()}")
-    assert expected_serial_number_key in instance.payload.keys()
-
-
-def test_image_upgrade_stage_00009(monkeypatch, image_stage) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that commit() sets result, response, and response_data
-    appropriately when serial_numbers is empty.
-
-    Setup
-    - SwitchIssuDetailsBySerialNumber is mocked to return a successful response
-    - self.serial_numbers is set to [] (empty list)
-
-    Test
-    - commit() sets the following to expected values:
-        - self.result, self.result_current
-        - self.response, self.response_current
-        - self.response_data
-
-    Description
-    When len(serial_numbers) == 0, commit() will set result and
-    response properties, and return without doing anything else.
-    """
-    key = "test_image_upgrade_stage_00009a"
-
-    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
-
-    response_msg = "No files to stage."
-    with does_not_raise():
-        instance = image_stage
-        instance.serial_numbers = []
-        instance.commit()
-    assert instance.result == [{"success": True, "changed": False}]
-    assert instance.result_current == {"success": True, "changed": False}
-    assert instance.response_current == {
-        "DATA": [{"key": "ALL", "value": response_msg}]
-    }
-    assert instance.response == [instance.response_current]
-    assert instance.response_data == [instance.response_current.get("DATA")]
-
-
-def test_image_upgrade_stage_00010(monkeypatch, image_stage) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that commit() calls fail_json() on 500 response from the controller.
-
-    Setup
-    - IssuDetailsBySerialNumber is mocked to return a successful response
-    - ImageStage is mocked to return a non-successful (500) response
-
-    Test
-    - commit() will call fail_json()
-
-    Description
-    commit() will call fail_json() on non-success response from the controller.
-    """
-    key = "test_image_upgrade_stage_00010a"
-
-    def mock_controller_version(*args) -> None:
-        instance.controller_version = "12.1.3b"
-
-    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_stage(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION, mock_controller_version
-    )
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": False})
-
-    instance = image_stage
-    instance.serial_numbers = ["FDO21120U5D"]
-    MATCH = "ImageStage.commit: failed"
-    with pytest.raises(AnsibleFailJson, match=MATCH):
-        instance.commit()
 
 
 def test_image_upgrade_stage_00020(
@@ -802,3 +572,295 @@ def test_image_upgrade_stage_00060(image_stage, input, output, context) -> None:
         instance.serial_numbers = input
     if output is not None:
         assert instance.serial_numbers == output
+
+
+MATCH_00070 = "ImageStage.commit: call instance.serial_numbers "
+MATCH_00070 += "before calling commit."
+
+
+@pytest.mark.parametrize(
+    "serial_numbers_is_set, expected",
+    [
+        (True, does_not_raise()),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00070)),
+    ],
+)
+def test_image_upgrade_stage_00070(
+    monkeypatch, image_stage, serial_numbers_is_set, expected
+) -> None:
+    """
+    Function
+    commit
+
+    Summary
+    Verify that commit raises fail_json appropriately based on value of
+    instance.serial_numbers.
+
+    Test
+    - fail_json is called when serial_numbers is None
+    - fail_json is not called when serial_numbers is set
+    """
+    key = "test_image_upgrade_stage_00070a"
+
+    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
+        return responses_controller_version(key)
+
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_stage(key)
+
+    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
+
+    instance = image_stage
+    if serial_numbers_is_set:
+        instance.serial_numbers = ["FDO21120U5D"]
+    with expected:
+        instance.commit()
+
+
+def test_image_upgrade_stage_00071(monkeypatch, image_stage) -> None:
+    """
+    Function
+    - commit
+
+    Summary
+    Verify that verb is set to POST and path is set to the expected value.
+
+    Test
+    - ImageStage.verb is set to POST
+    - ImageStage.path is set to:
+    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
+    """
+    key = "test_image_upgrade_stage_00071a"
+
+    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
+        return responses_controller_version(key)
+
+    # Needed only for the 200 return code
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_stage(key)
+
+    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
+
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
+
+    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
+    module_path += "stagingmanagement/stage-image"
+
+    instance = image_stage
+    instance.serial_numbers = ["FDO21120U5D"]
+    instance.commit()
+    assert instance.path == module_path
+    assert instance.verb == "POST"
+
+
+@pytest.mark.parametrize(
+    "controller_version, expected_serial_number_key",
+    [
+        ("12.1.2e", "sereialNum"),
+        ("12.1.3b", "serialNumbers"),
+    ],
+)
+def test_image_upgrade_stage_00072(
+    monkeypatch, image_stage, controller_version, expected_serial_number_key
+) -> None:
+    """
+    Function
+    - commit
+
+    Summary
+    Verify that the serial number key name in the payload is set correctly
+    based on the controller version.
+
+    Test
+    - controller_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
+    - controller_version 12.1.3b -> key name "serialNumbers
+
+    Description
+    commit() will set the payload key name for the serial number
+    based on the controller version, per Expected Results below
+    """
+    key = "test_image_upgrade_stage_00072a"
+
+    def mock_controller_version(*args) -> None:
+        instance.controller_version = controller_version
+
+    controller_version_patch = "ansible_collections.cisco.dcnm.plugins."
+    controller_version_patch += "modules.dcnm_image_upgrade."
+    controller_version_patch += "ImageStage._populate_controller_version"
+    monkeypatch.setattr(controller_version_patch, mock_controller_version)
+
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_stage(key)
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
+
+    instance = image_stage
+    instance.serial_numbers = ["FDO21120U5D"]
+    instance.commit()
+    print(f"instance.payload: {instance.payload.keys()}")
+    assert expected_serial_number_key in instance.payload.keys()
+
+
+def test_image_upgrade_stage_00073(monkeypatch, image_stage) -> None:
+    """
+    Function
+    - commit
+
+    Summary
+    Verify that commit() sets result, response, and response_data
+    appropriately when serial_numbers is empty.
+
+    Setup
+    - SwitchIssuDetailsBySerialNumber is mocked to return a successful response
+    - self.serial_numbers is set to [] (empty list)
+
+    Test
+    - commit() sets the following to expected values:
+        - self.result, self.result_current
+        - self.response, self.response_current
+        - self.response_data
+
+    Description
+    When len(serial_numbers) == 0, commit() will set result and
+    response properties, and return without doing anything else.
+    """
+    key = "test_image_upgrade_stage_00073a"
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
+
+    response_msg = "No files to stage."
+    with does_not_raise():
+        instance = image_stage
+        instance.serial_numbers = []
+        instance.commit()
+    assert instance.result == [{"success": True, "changed": False}]
+    assert instance.result_current == {"success": True, "changed": False}
+    assert instance.response_current == {
+        "DATA": [{"key": "ALL", "value": response_msg}]
+    }
+    assert instance.response == [instance.response_current]
+    assert instance.response_data == [instance.response_current.get("DATA")]
+
+
+def test_image_upgrade_stage_00074(monkeypatch, image_stage) -> None:
+    """
+    Function
+    - commit
+
+    Summary
+    Verify that commit() calls fail_json() on 500 response from the controller.
+
+    Setup
+    - IssuDetailsBySerialNumber is mocked to return a successful response
+    - ImageStage is mocked to return a non-successful (500) response
+
+    Test
+    - commit() will call fail_json()
+
+    Description
+    commit() will call fail_json() on non-success response from the controller.
+    """
+    key = "test_image_upgrade_stage_00074a"
+
+    def mock_controller_version(*args) -> None:
+        instance.controller_version = "12.1.3b"
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_stage(key)
+
+    monkeypatch.setattr(
+        PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION, mock_controller_version
+    )
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": False})
+
+    instance = image_stage
+    instance.serial_numbers = ["FDO21120U5D"]
+    MATCH = "ImageStage.commit: failed"
+    with pytest.raises(AnsibleFailJson, match=MATCH):
+        instance.commit()
+
+
+def test_image_upgrade_stage_00075(monkeypatch, image_stage) -> None:
+    """
+    Function
+    - commit
+
+    Summary
+    Verify that commit() sets self.diff to expected values on 200 response
+    from the controller.
+
+    Setup
+    -   IssuDetailsBySerialNumber is mocked to return a successful response
+    -   ImageStage._populate_controller_version is mocked to 12.1.3b
+    -   ImageStage.rest_send.commit is mocked to return a successful response
+    -   ImageStage.rest_send.current_result is mocked to return a successful result
+    -   ImageStage.validate_serial_numbers is tracked with MagicMock to ensure
+        it's called once
+
+    Test
+    - commit() sets self.diff to the expected values
+    """
+    key = "test_image_upgrade_stage_00075a"
+
+    def mock_controller_version(*args) -> None:
+        instance.controller_version = "12.1.3b"
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_stage(key)
+
+    def mock_wait_for_image_stage_to_complete(*args) -> None:
+        instance.serial_numbers_done = {"FDO21120U5D"}
+
+    monkeypatch.setattr(
+        PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION, mock_controller_version
+    )
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
+    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
+    monkeypatch.setattr(
+        PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
+    )
+    validate_serial_numbers = MagicMock(name="validate_serial_numbers")
+
+    instance = image_stage
+    instance.serial_numbers = ["FDO21120U5D"]
+    monkeypatch.setattr(
+        instance,
+        "_wait_for_image_stage_to_complete",
+        mock_wait_for_image_stage_to_complete,
+    )
+    monkeypatch.setattr(instance, "validate_serial_numbers", validate_serial_numbers)
+    instance.commit()
+    assert validate_serial_numbers.assert_called_once
+    assert instance.serial_numbers_done == {"FDO21120U5D"}
+    assert instance.result_current == {"success": True, "changed": True}
+    assert instance.diff[0]["policy"] == "KR5M"
+    assert instance.diff[0]["ip_address"] == "172.22.150.102"
+    assert instance.diff[0]["serial_number"] == "FDO21120U5D"

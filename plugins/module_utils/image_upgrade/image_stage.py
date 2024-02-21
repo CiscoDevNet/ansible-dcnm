@@ -172,7 +172,7 @@ class ImageStage(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = "ENTERED commit()"
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
         msg = f"self.serial_numbers: {self.serial_numbers}"

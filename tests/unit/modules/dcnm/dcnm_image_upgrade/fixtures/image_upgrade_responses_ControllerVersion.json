@@ -31,7 +31,7 @@
             "is_upgrade_inprogress": "false"
         }
     },
-    "test_image_upgrade_stage_00006a": {
+    "test_image_upgrade_stage_00070a": {
         "TEST_NOTES": [
             "Needed only for the 200 return code"
         ],
@@ -50,7 +50,7 @@
             "is_upgrade_inprogress": "false"
         }
     },
-    "test_image_upgrade_stage_00007a": {
+    "test_image_upgrade_stage_00071a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",

@@ -333,7 +333,9 @@ def test_image_upgrade_image_policy_action_00013(
         instance.validate_request()
 
 
-def test_image_upgrade_image_policy_action_00020(monkeypatch, image_policy_action) -> None:
+def test_image_upgrade_image_policy_action_00020(
+    monkeypatch, image_policy_action
+) -> None:
     """
     Function
     - commit
@@ -388,7 +390,9 @@ def test_image_upgrade_image_policy_action_00020(monkeypatch, image_policy_actio
         instance.commit()
 
 
-def test_image_upgrade_image_policy_action_00021(monkeypatch, image_policy_action) -> None:
+def test_image_upgrade_image_policy_action_00021(
+    monkeypatch, image_policy_action
+) -> None:
     """
     Function
     - commit
