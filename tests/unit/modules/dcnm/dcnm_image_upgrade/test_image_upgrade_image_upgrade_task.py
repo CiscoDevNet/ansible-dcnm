@@ -50,11 +50,11 @@ from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
                                   responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_image_upgrade = PATCH_MODULE_UTILS + "image_upgrade."
+PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
 
-DCNM_SEND_IMAGE_UPGRADE = PATCH_image_upgrade + "image_upgrade.dcnm_send"
-DCNM_SEND_INSTALL_OPTIONS = PATCH_image_upgrade + "install_options.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_image_upgrade + "switch_issu_details.dcnm_send"
+DCNM_SEND_IMAGE_UPGRADE = PATCH_IMAGE_UPGRADE + "image_upgrade.dcnm_send"
+DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_UPGRADE + "install_options.dcnm_send"
+DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 
 
 @pytest.fixture(name="image_upgrade_task_bare")
@@ -172,11 +172,6 @@ def test_image_upgrade_upgrade_task_00030(monkeypatch, image_upgrade_task_bare) 
     """
     key = "test_image_upgrade_upgrade_task_00030a"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
     instance = image_upgrade_task_bare(mock_ansible_module)
@@ -242,11 +237,6 @@ def test_image_upgrade_upgrade_task_00031(monkeypatch, image_upgrade_task_bare) 
     - All other values for switch_1 and switch_2 are default
     """
     key = "test_image_upgrade_upgrade_task_00031a"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
     mock_ansible_module = MockAnsibleModule()
     mock_ansible_module.params = load_playbook_config(key)
