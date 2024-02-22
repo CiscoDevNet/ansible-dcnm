@@ -21,6 +21,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import pytest
+
 __metaclass__ = type
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
@@ -32,7 +34,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload im
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    MockAnsibleModule, config2payload_fixture, does_not_raise,
+    AnsibleFailJson, MockAnsibleModule, config2payload_fixture, does_not_raise,
     payload2config_fixture)
 
 
@@ -115,6 +117,90 @@ def test_image_policy_payload_00121(config2payload: Config2Payload) -> None:
     assert instance.payload == payload
 
 
+MATCH_00130 = (
+    r"Config2Payload.payload: payload must be a dictionary\. got .* for value .*"
+)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ({}, does_not_raise()),
+        ([], pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        ((), pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        (1.1, pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        ("foo", pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00130)),
+    ],
+)
+def test_image_policy_payload_00130(
+    config2payload: Config2Payload, value, expected
+) -> None:
+    """
+    Class
+    - Payload
+    - Config2Payload
+    Function
+    - payload setter
+
+    Summary
+    Verify payload setter error handling
+
+    Test
+    - payload accepts a dictionary
+    - payload calls fail_json for non-dictionary values
+    """
+    with does_not_raise():
+        instance = config2payload
+    with expected:
+        instance.payload = value
+
+
+MATCH_00140 = (
+    r"Config2Payload.config: config must be a dictionary\. got .* for value .*"
+)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ({}, does_not_raise()),
+        ([], pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        ((), pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        (1.1, pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        ("foo", pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00140)),
+    ],
+)
+def test_image_policy_payload_00140(
+    config2payload: Config2Payload, value, expected
+) -> None:
+    """
+    Class
+    - Payload
+    - Payload2Config
+    Function
+    - config setter
+
+    Summary
+    Verify config setter error handling
+
+    Test
+    - config accepts a dictionary
+    - config calls fail_json for non-dictionary values
+    """
+    with does_not_raise():
+        instance = config2payload
+    with expected:
+        instance.config = value
+
+
 def test_image_policy_payload_00210(payload2config: Payload2Config) -> None:
     """
     Class
@@ -193,3 +279,87 @@ def test_image_policy_payload_00221(payload2config: Payload2Config) -> None:
         instance.commit()
     assert config is not None
     assert instance.config == config
+
+
+MATCH_00230 = (
+    r"Payload2Config.payload: payload must be a dictionary\. got .* for value .*"
+)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ({}, does_not_raise()),
+        ([], pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        ((), pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        (1.1, pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        ("foo", pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00230)),
+    ],
+)
+def test_image_policy_payload_00230(
+    payload2config: Payload2Config, value, expected
+) -> None:
+    """
+    Class
+    - Payload
+    - Payload2Config
+    Function
+    - payload setter
+
+    Summary
+    Verify payload setter error handling
+
+    Test
+    - payload accepts a dictionary
+    - payload calls fail_json for non-dictionary values
+    """
+    with does_not_raise():
+        instance = payload2config
+    with expected:
+        instance.payload = value
+
+
+MATCH_00240 = (
+    r"Payload2Config.config: config must be a dictionary\. got .* for value .*"
+)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ({}, does_not_raise()),
+        ([], pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        ((), pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        (1.1, pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        ("foo", pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00240)),
+    ],
+)
+def test_image_policy_payload_00240(
+    payload2config: Payload2Config, value, expected
+) -> None:
+    """
+    Class
+    - Payload
+    - Payload2Config
+    Function
+    - config setter
+
+    Summary
+    Verify config setter error handling
+
+    Test
+    - config accepts a dictionary
+    - config calls fail_json for non-dictionary values
+    """
+    with does_not_raise():
+        instance = payload2config
+    with expected:
+        instance.config = value
