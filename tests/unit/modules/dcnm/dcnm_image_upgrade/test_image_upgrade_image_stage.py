@@ -512,6 +512,7 @@ MATCH_00050 = "ImageStage.check_timeout: must be a positive integer or zero."
 @pytest.mark.parametrize(
     "arg, value, context",
     [
+        (True, None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
         (-1, None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
         (10, 10, does_not_raise()),
         ("a", None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
