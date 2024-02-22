@@ -150,6 +150,37 @@ def test_image_policy_payload_00122(config2payload: Config2Payload) -> None:
         instance.commit()
 
 
+@pytest.mark.parametrize("state", ["deleted", "query"])
+def test_image_policy_payload_00123(config2payload: Config2Payload, state) -> None:
+    """
+    Class
+    - Payload
+    - Config2Payload
+    Function
+    - commit
+
+    Summary
+    Verify Config2Payload.commit() behavior for Ansible states
+    "query" and "deleted".
+
+    Test
+    - payload contains only the policyName key
+    - The value of the policyName key == value of the name key in instance.config
+    - fail_json is not called
+    """
+    key = "test_image_policy_payload_00123a"
+    data = load_fixture("data_payload")
+
+    config = data.get(key, {}).get("config")
+    with does_not_raise():
+        ansible_module = MockAnsibleModule()
+        ansible_module.state = state
+        instance = config2payload
+        instance.config = config
+        instance.commit()
+    assert instance.payload == {"policyName": config["name"]}
+
+
 MATCH_00130 = (
     r"Config2Payload.payload: payload must be a dictionary\. got .* for value .*"
 )

@@ -55,6 +55,29 @@
     "test_image_policy_payload_00122a": {
         "config": {}
     },
+    "test_image_policy_payload_00123a": {
+        "config": {
+            "agnostic": false,
+            "description": "BAR",
+            "epld_image": "",
+            "name": "BAR",
+            "packages": {
+                "install": [],
+                "uninstall": []
+            },
+            "platform": "N9K",
+            "release": "10.3.1_nxos64-cs_64bit"
+        },
+        "payload": {
+            "agnostic": false,
+            "epldImgName": "",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "platform": "N9K",
+            "policyDescr": "BAR",
+            "policyName": "BAR",
+            "policyType": "PLATFORM"
+        }        
+    },
     "test_image_policy_payload_00220a": {
         "config": {
             "agnostic": false,
