@@ -206,6 +206,9 @@ def test_image_policy_create_00033(image_policy_create) -> None:
         - commit()
         - fail_json
 
+    Summary
+    Verify that ImagePolicyCreate.commit() calls fail_json when payload is None.
+
     Setup
     -   ImagePolicyCreate().payload is not set
 
@@ -220,7 +223,46 @@ def test_image_policy_create_00033(image_policy_create) -> None:
         instance.commit()
 
 
-def test_image_policy_create_bulk_00035(monkeypatch, image_policy_create) -> None:
+def test_image_policy_create_00034(monkeypatch, image_policy_create) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCreateCommon
+        - __init__()
+        - _build_payloads_to_commit()
+    - ImagePolicyCreate
+        - __init__()
+        - payload setter
+        - commit()
+
+    Summary
+    Verify that ImagePolicyCreate.commit() works as expected when the image policy
+    already exists on the controller.  This is similar to test_image_policy_create_00030
+    but tests that the commit method returns when _payloads_to_commit is empty.
+
+    Setup
+    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
+        is mocked to indicate that two image policies (KR5M, NR3F) exist on the
+        controller.
+    -   ImagePolicyCreate().payload is set to contain one payload (KR5M)
+        that is present in all_policies.
+
+    Test
+    -   payloads_to_commit will an empty list because all payloads in
+        instance.payloads exist on the controller.
+    -   commit will return without calling _send_payloads
+    -   fail_json is not called
+    """
+    key = "test_image_policy_create_00034a"
+
+    with does_not_raise():
+        instance = image_policy_create
+        instance.payload = payloads_image_policy_create(key)
+        monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+        instance.commit()
+    assert instance._payloads_to_commit == []
+
+
+def test_image_policy_create_00035(monkeypatch, image_policy_create) -> None:
     """
     Classes and Methods
     - ImagePolicyCreateCommon
@@ -229,6 +271,10 @@ def test_image_policy_create_bulk_00035(monkeypatch, image_policy_create) -> Non
     - ImagePolicyCreate
         - payload setter
         - commit()
+
+    Summary
+    Verify that ImagePolicyCreate.commit() works as expected when a 200 response is received from
+    the controller.
 
     Setup
     -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
