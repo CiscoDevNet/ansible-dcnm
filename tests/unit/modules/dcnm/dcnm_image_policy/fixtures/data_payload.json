@@ -1,5 +1,5 @@
 {
-    "test_image_policy_payload_00120": {
+    "test_image_policy_payload_00120a": {
         "config": {
             "agnostic": false,
             "description": "image policy of 10.3(3)F",
@@ -29,7 +29,7 @@
             "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
         }
     },
-    "test_image_policy_payload_00121": {
+    "test_image_policy_payload_00121a": {
         "config": {
             "agnostic": false,
             "description": "BAR",
@@ -52,7 +52,10 @@
             "policyType": "PLATFORM"
         }        
     },
-    "test_image_policy_payload_00220": {
+    "test_image_policy_payload_00122a": {
+        "config": {}
+    },
+    "test_image_policy_payload_00220a": {
         "config": {
             "agnostic": false,
             "description": "image policy of 10.3(3)F",
@@ -82,7 +85,7 @@
             "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
         }
     },
-    "test_image_policy_payload_00221": {
+    "test_image_policy_payload_00221a": {
         "config": {
             "agnostic": false,
             "description": "BAR",
@@ -93,7 +96,8 @@
                 "uninstall": []
             },
             "platform": "N9K",
-            "release": "10.3.1_nxos64-cs_64bit"
+            "release": "10.3.1_nxos64-cs_64bit",
+            "type": "PLATFORM"
         },
         "payload": {
             "agnostic": false,
@@ -104,5 +108,8 @@
             "policyName": "BAR",
             "policyType": "PLATFORM"
         }        
+    },
+    "test_image_policy_payload_00222a": {
+        "payload": {}
     }
 }

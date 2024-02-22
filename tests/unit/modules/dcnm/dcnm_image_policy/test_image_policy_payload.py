@@ -76,7 +76,7 @@ def test_image_policy_payload_00120(config2payload: Config2Payload) -> None:
     - fail_json is not called
     - commit converts config to a proper payload
     """
-    key = "test_image_policy_payload_00120"
+    key = "test_image_policy_payload_00120a"
     data = load_fixture("data_payload")
 
     config = data.get(key, {}).get("config")
@@ -97,12 +97,16 @@ def test_image_policy_payload_00121(config2payload: Config2Payload) -> None:
     Function
     - commit
 
+    Summary
+    Verify Config2Payload coverts a configuration to a proper payload when
+    the packages.install and packages.uninstall keys are empty lists.
+
     Test
     - config packages.install is an empty list
     - config packages.ininstall is an empty list
     - commit converts config to a proper payload
     """
-    key = "test_image_policy_payload_00120"
+    key = "test_image_policy_payload_00121a"
     data = load_fixture("data_payload")
 
     config = data.get(key, {}).get("config")
@@ -115,6 +119,35 @@ def test_image_policy_payload_00121(config2payload: Config2Payload) -> None:
         instance.commit()
     assert payload is not None
     assert instance.payload == payload
+
+
+def test_image_policy_payload_00122(config2payload: Config2Payload) -> None:
+    """
+    Class
+    - Payload
+    - Config2Payload
+    Function
+    - commit
+
+    Summary
+    Verify Config2Payload.commit() calls fail_json when config is an empty dict
+
+    Test
+    - config is set to an empty dict
+    - commit calls fail_json
+    """
+    key = "test_image_policy_payload_00122a"
+    data = load_fixture("data_payload")
+
+    config = data.get(key, {}).get("config")
+    with does_not_raise():
+        ansible_module = MockAnsibleModule()
+        ansible_module.state = "merged"
+        instance = config2payload
+        instance.config = config
+    match = "Config2Payload.commit: config is empty"
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
 
 
 MATCH_00130 = (
@@ -239,7 +272,7 @@ def test_image_policy_payload_00220(payload2config: Payload2Config) -> None:
     - fail_json is not called
     - commit converts the payload to a proper config
     """
-    key = "test_image_policy_payload_00220"
+    key = "test_image_policy_payload_00220a"
     data = load_fixture("data_payload")
 
     config = data.get(key, {}).get("config")
@@ -267,8 +300,9 @@ def test_image_policy_payload_00221(payload2config: Payload2Config) -> None:
     Test
     - payload is missing rpmimages and packageName keys
     - commit converts the payload to a proper config
+    - missing mandatory key "type" is added to the config
     """
-    key = "test_image_policy_payload_00220"
+    key = "test_image_policy_payload_00221a"
     data = load_fixture("data_payload")
 
     config = data.get(key, {}).get("config")
@@ -279,6 +313,35 @@ def test_image_policy_payload_00221(payload2config: Payload2Config) -> None:
         instance.commit()
     assert config is not None
     assert instance.config == config
+
+
+def test_image_policy_payload_00222(payload2config: Payload2Config) -> None:
+    """
+    Class
+    - Payload
+    - Payload2Config
+    Function
+    - commit
+
+    Summary
+    Verify Payload2Config.commit() calls fail_json when payload is an empty dict
+
+    Test
+    - config is set to an empty dict
+    - commit calls fail_json
+    """
+    key = "test_image_policy_payload_00222a"
+    data = load_fixture("data_payload")
+
+    payload = data.get(key, {}).get("payload")
+    with does_not_raise():
+        ansible_module = MockAnsibleModule()
+        ansible_module.state = "merged"
+        instance = payload2config
+        instance.payload = payload
+    match = "Payload2Config.commit: payload is empty"
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
 
 
 MATCH_00230 = (
