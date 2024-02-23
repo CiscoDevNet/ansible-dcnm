@@ -46,18 +46,29 @@ def test_image_upgrade_image_upgrade_common_00001(image_upgrade_common) -> None:
     Function
     - __init__
 
+    Summary
+    Verify that instance.params accepts well-formed input and that the
+    params getter returns the expected value.
+
     Test
     - fail_json is not called
-    - image_upgrade_common.params is a dict
-    - image_upgrade_common.debug is False
-    - image_upgrade_common.fd is None
-    - image_upgrade_common.logfile is /tmp/ansible_dcnm.log
+    - image_upgrade_common.params is set to the expected value
+    - All other instance properties are initialized to expected values
     """
     test_params = {"config": {"switches": [{"ip_address": "172.22.150.105"}]}}
 
     with does_not_raise():
         instance = image_upgrade_common
     assert instance.params == test_params
+    assert instance.changed is False
+    assert instance.response == []
+    assert instance.response_current == {}
+    assert instance.response_data == []
+    assert instance.result == []
+    assert instance.result_current == {}
+    assert instance.send_interval == 5
+    assert instance.timeout == 300
+    assert instance.unit_test is False
 
 
 @pytest.mark.parametrize(
@@ -317,9 +328,15 @@ def test_image_upgrade_image_upgrade_common_00080(
     Function
     - _handle_post_put_delete_response
 
+    Summary
+    Verify that expected values are returned for POST requests.
+
     Test
-    - return expected values for POST requests
     - fail_json is not called
+    - return expected values for POST requests, when:
+    - 00080a. MESSAGE == "OK"
+    - 00080b. MESSAGE != "OK"
+    - 00080c. MESSAGE field is missing
     """
     instance = image_upgrade_common
 
@@ -416,90 +433,52 @@ def test_image_upgrade_image_upgrade_common_00110(image_upgrade_common) -> None:
     assert instance.log.info(message) is None
 
 
-# def test_image_upgrade_image_upgrade_common_00111(tmp_path, image_upgrade_common) -> None:
-#     """
-#     Function
-#     - log.log_msg
+def test_image_upgrade_image_upgrade_common_00120(
+    monkeypatch, image_upgrade_common
+) -> None:
+    """
+    Function
+    - dcnm_send_with_retry
 
-#     Test
-#     - log_msg writes to the log.logfile when log.config is set
-#     """
-#     instance = image_upgrade_common
+    Summary
+    Verify that result and response are set to the expected values when
+    payload is None and the response is successful.
 
-#     directory = tmp_path / "test_log_msg"
-#     directory.mkdir()
-#     filename = directory / "test_log_msg.txt"
+    """
 
-#     log = Log(instance.module)
-#     config = {
-#         "version": 1,
-#         "formatters": {
-#             "standard": {
-#             "class": "logging.Formatter",
-#             "format": "%(asctime)s - %(levelname)s - [%(name)s.%(funcName)s.%(lineno)d] %(message)s"
-#             }
-#         },
-#         "handlers": {
-#             "file": {
-#             "class": "logging.handlers.RotatingFileHandler",
-#             "formatter": "standard",
-#             "level": "DEBUG",
-#             "filename": "foo",
-#             "mode": "a",
-#             "encoding": "utf-8",
-#             "maxBytes": 500000,
-#             "backupCount": 4
-#             }
-#         },
-#         "loggers": {
-#             "dcnm": {
-#             "handlers": [
-#                 "file"
-#             ],
-#             "level": "DEBUG",
-#             "propagate": False
-#             }
-#         },
-#         "root": {
-#             "level": "INFO",
-#             "handlers": [
-#             "file"
-#             ]
-#         }
-#     }
+    def mock_dcnm_send(*args, **kwargs):
+        return {"MESSAGE": "OK", "RETURN_CODE": 200}
 
-#     config["handlers"]["file"]["filename"] = filename
-#     log.config = config
-#     message = "This is a message"
-#     # instance.log.debug = True
-#     # instance.log.logfile = filename
-#     # instance.log.log_msg(message)
-#     instance.log.debug(message)
+    instance = image_upgrade_common
+    instance.timeout = 1
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send)
 
-#     assert filename.read_text(encoding="UTF-8") == message + "\n"
-#     assert len(list(tmp_path.iterdir())) == 1
+    instance.dcnm_send_with_retry("PUT", "https://foo.bar.com/endpoint", None)
+    assert instance.response_current == {"MESSAGE": "OK", "RETURN_CODE": 200}
+    assert instance.result == [{"changed": True, "success": True}]
 
 
-# def test_image_upgrade_image_upgrade_common_00112(tmp_path, image_upgrade_common) -> None:
-#     """
-#     Function
-#     - log.log_msg
+def test_image_upgrade_image_upgrade_common_00121(
+    monkeypatch, image_upgrade_common
+) -> None:
+    """
+    Function
+    - dcnm_send_with_retry
 
-#     Test
-#     - log.log_msg calls fail_json if the logfile cannot be opened
+    Summary
+    Verify that result and response are set to the expected values when
+    payload is set and the response is successful.
 
-#     Description
-#     To ensure an error is generated, we attempt a write to a filename
-#     that is too long for the target OS.
-#     """
-#     instance = image_upgrade_common
+    """
 
-#     directory = tmp_path / "test_log_msg"
-#     directory.mkdir()
-#     filename = directory / f"test_{'a' * 2000}_log_msg.txt"
+    def mock_dcnm_send(*args, **kwargs):
+        return {"MESSAGE": "OK", "RETURN_CODE": 200}
 
-#     error_message = "This is an error message"
-#     instance.log.debug = True
-#     instance.log.logfile = filename
-#     with pytest.raises(AnsibleFailJson, match="error writing to logfile"):
-#         instance.log.log_msg(error_message)
+    with does_not_raise():
+        instance = image_upgrade_common
+        monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send)
+        instance.dcnm_send_with_retry(
+            "PUT", "https://foo.bar.com/endpoint", {"foo": "bar"}
+        )
+    assert instance.response_current == {"MESSAGE": "OK", "RETURN_CODE": 200}
+    assert instance.result == [{"changed": True, "success": True}]

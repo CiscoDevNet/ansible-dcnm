@@ -411,13 +411,11 @@ def test_image_upgrade_image_policy_action_00021(
 
     monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
     monkeypatch.setattr(
-        DCNM_SEND_IMAGE_UPGRADE_COMMON, mock_dcnm_send_image_upgrade_common
-    )
-    monkeypatch.setattr(
         DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
     )
 
     instance = image_policy_action
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
     instance.policy_name = "KR5M"
     instance.serial_numbers = ["FDO2112189M"]
     instance.action = "detach"

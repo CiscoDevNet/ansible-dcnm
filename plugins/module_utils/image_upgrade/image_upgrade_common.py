@@ -66,6 +66,8 @@ class ImageUpgradeCommon:
         self.properties["timeout"] = 300
         self.properties["unit_test"] = False
 
+        self.dcnm_send = dcnm_send
+
     def dcnm_send_with_retry(self, verb: str, path: str, payload=None):
         """
         Call dcnm_send() with retries until successful response or timeout is exceeded.
@@ -90,21 +92,24 @@ class ImageUpgradeCommon:
             timeout = 300
 
         success = False
-        msg = f"{caller}: Entering dcnm_send_with_retry loop. timeout {timeout}, send_interval {self.send_interval}, verb {verb}, path {path}"
+        msg = f"{caller}: Entering dcnm_send_with_retry loop. "
+        msg += f"timeout {timeout}, send_interval {self.send_interval}, "
+        msg += f"verb {verb}, path {path}"
         self.log.debug(msg)
 
+        # self.dcnm_send = dcnm_send
         while timeout > 0 and success is False:
             if payload is None:
                 msg = f"{caller}: Calling dcnm_send: verb {verb}, path {path}"
                 self.log.debug(msg)
-                response = dcnm_send(self.module, verb, path)
+                response = self.dcnm_send(self.module, verb, path)
             else:
                 msg = (
                     f"{caller}: Calling dcnm_send: verb {verb}, path {path}, payload: "
                 )
                 msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-                response = dcnm_send(self.module, verb, path, data=json.dumps(payload))
+                response = self.dcnm_send(self.module, verb, path, data=json.dumps(payload))
 
             self.response_current = copy.deepcopy(response)
             self.result_current = self._handle_response(response, verb)
