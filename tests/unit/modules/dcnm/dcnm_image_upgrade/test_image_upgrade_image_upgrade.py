@@ -254,10 +254,10 @@ def test_image_upgrade_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None
     -   ImageUpgrade.devices is set to a list of one dict for a device
         to be upgraded.
     -   commit -> _build_payload -> issu_details is mocked to simulate
-        that the the image has already been staged and validated and the
+        that the image has already been staged and validated and the
         device has already been upgraded to the desired version.
     -   commit -> _build_payload -> install_options is mocked to simulate
-        that the the image EPLD does not need upgrade.
+        that the EPLD image does not need upgrade.
     -   The following methods, called by commit() are mocked to do nothing:
         - _wait_for_current_actions_to_complete
         - _wait_for_image_upgrade_to_complete
@@ -347,10 +347,10 @@ def test_image_upgrade_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None
     -   ImageUpgrade.devices is set to a list of one dict for a device
         to be upgraded
     -   commit -> _build_payload -> issu_details is mocked to simulate
-        that the the image has already been staged and validated and the
+        that the image has already been staged and validated and the
         device has already been upgraded to the desired version.
     -   commit -> _build_payload -> install_options is mocked to simulate
-        that the the image EPLD does not need upgrade.
+        that the image EPLD does not need upgrade.
     -   The following methods, called by commit() are mocked to do nothing:
         - _wait_for_current_actions_to_complete
         - _wait_for_image_upgrade_to_complete
