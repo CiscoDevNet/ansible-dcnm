@@ -239,7 +239,7 @@ class ImagePolicyCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"changed must be a bool. Got {value}"
+            msg += f"instance.changed must be a bool. Got {value}"
             self.ansible_module.fail_json(msg)
         self.properties["changed"] = value
 
@@ -255,7 +255,7 @@ class ImagePolicyCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"diff must be a dict. Got {value}"
+            msg += f"instance.diff must be a dict. Got {value}"
             self.ansible_module.fail_json(msg)
         self.properties["diff"].append(value)
 
@@ -273,7 +273,7 @@ class ImagePolicyCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed must be a bool. Got {value}"
+            msg += f"instance.failed must be a bool. Got {value}"
             self.ansible_module.fail_json(msg)
         self.properties["failed"] = value
 
