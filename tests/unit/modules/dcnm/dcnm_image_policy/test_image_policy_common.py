@@ -36,7 +36,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints 
     ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
     MockImagePolicies, does_not_raise, image_policy_common_fixture,
-    responses_image_policy_common)
+    responses_image_policy_common, results_image_policy_common)
 
 
 def test_image_policy_common_00010(image_policy_common) -> None:
@@ -260,3 +260,215 @@ def test_image_policy_common_00032(image_policy_common, verb) -> None:
         instance = image_policy_common
         result = instance._handle_response(responses_image_policy_common(key), verb)
     assert result == {"success": False, "changed": False}
+
+
+@pytest.mark.parametrize(
+    "arg, return_value",
+    [
+        (True, True),
+        (False, False),
+        ("True", True),
+        ("False", False),
+        ("true", True),
+        ("false", False),
+        (1, 1),
+        ("tru", "tru"),
+        ("fals", "fals"),
+        (None, None),
+        ({"foo"}, {"foo"}),
+    ],
+)
+def test_image_policy_common_00040(image_policy_common, arg, return_value) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon
+        - __init__()
+        - make_boolean()
+
+    Summary
+    Verify that make_boolean() returns expected values for various inputs.
+
+    Test
+    - make_boolean() returns expected values
+    - fail_json is not called
+    """
+    with does_not_raise():
+        instance = image_policy_common
+        value = instance.make_boolean(arg)
+    assert value == return_value
+
+
+@pytest.mark.parametrize(
+    "arg, return_value",
+    [
+        ("", None),
+        ("none", None),
+        ("None", None),
+        ("NONE", None),
+        ("null", None),
+        ("Null", None),
+        ("NULL", None),
+        (None, None),
+        ("False", "False"),
+        ("true", "true"),
+        (1, 1),
+        ({"foo"}, {"foo"}),
+        (True, True),
+        (False, False),
+    ],
+)
+def test_image_policy_common_00050(image_policy_common, arg, return_value) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon
+        - __init__()
+        - make_none()
+
+    Summary
+    Verify that make_none() returns expected values for various inputs.
+
+    Test
+    - make_none() returns expected values
+    - fail_json is not called
+    """
+    with does_not_raise():
+        instance = image_policy_common
+        value = instance.make_none(arg)
+    assert value == return_value
+
+
+MATCH_00060 = r"ImagePolicyCommon.changed: changed must be a bool\."
+
+
+@pytest.mark.parametrize(
+    "arg, expected, flag",
+    [
+        (True, does_not_raise(), True),
+        (False, does_not_raise(), True),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00060), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060), False),
+    ],
+)
+def test_image_policy_common_00060(image_policy_common, arg, expected, flag) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon
+        - __init__()
+        - @changed getter/setter
+
+    Summary
+    Verify that instance.changed returns expected values and
+    calls fail_json appropriately.
+
+    Test
+    - @changed returns expected values
+    - fail_json is called when unexpected values are passed
+    - fail_json is not called when expected values are passed
+    """
+    with does_not_raise():
+        instance = image_policy_common
+    with expected:
+        instance.changed = arg
+    if flag is True:
+        assert instance.changed == arg
+    else:
+        assert instance.changed == False
+
+
+MATCH_00070 = r"ImagePolicyCommon.diff: diff must be a dict\."
+
+
+@pytest.mark.parametrize(
+    "arg, return_value, expected, flag",
+    [
+        ({}, [{}], does_not_raise(), True),
+        ({"foo": "bar"}, [{"foo": "bar"}], does_not_raise(), True),
+        (None, None, pytest.raises(AnsibleFailJson, match=MATCH_00070), False),
+        ("FOO", None, pytest.raises(AnsibleFailJson, match=MATCH_00070), False),
+    ],
+)
+def test_image_policy_common_00070(
+    image_policy_common, arg, return_value, expected, flag
+) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon
+        - __init__()
+        - @diff getter/setter
+
+    Summary
+    Verify that instance.diff returns expected values and
+    calls fail_json appropriately.
+
+    Test
+    - @diff returns expected values
+    - fail_json is called when unexpected values are passed
+    - fail_json is not called when expected values are passed
+    """
+    with does_not_raise():
+        instance = image_policy_common
+    with expected:
+        instance.diff = arg
+    if flag is True:
+        assert instance.diff == return_value
+    else:
+        assert instance.diff == []
+
+
+MATCH_00080 = r"ImagePolicyCommon.failed: failed must be a bool\."
+
+
+@pytest.mark.parametrize(
+    "arg, expected, flag",
+    [
+        (True, does_not_raise(), True),
+        (False, does_not_raise(), True),
+        (None, pytest.raises(AnsibleFailJson, match=MATCH_00080), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00080), False),
+    ],
+)
+def test_image_policy_common_00080(image_policy_common, arg, expected, flag) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon
+        - __init__()
+        - @failed getter/setter
+
+    Summary
+    Verify that instance.failed returns expected values and
+    calls fail_json appropriately.
+
+    Test
+    - @failed returns expected values
+    - fail_json is called when unexpected values are passed
+    - fail_json is not called when expected values are passed
+    """
+    with does_not_raise():
+        instance = image_policy_common
+    with expected:
+        instance.failed = arg
+    if flag is True:
+        assert instance.failed == arg
+    else:
+        assert instance.failed == False
+
+
+def test_image_policy_common_00090(image_policy_common) -> None:
+    """
+    Classes and Methods
+    - ImagePolicyCommon
+        - __init__()
+        - @failed_result getter
+
+    Summary
+    Verify that failed_result returns expected value.
+
+    Test
+    - @failed_result returns expected value
+    - fail_json is not called
+    """
+    key = "test_image_policy_common_00090a"
+    with does_not_raise():
+        instance = image_policy_common
+        value = instance.failed_result
+    assert value == results_image_policy_common(key)

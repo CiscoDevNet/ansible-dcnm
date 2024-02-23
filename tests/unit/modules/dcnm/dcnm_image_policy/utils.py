@@ -430,6 +430,16 @@ def results_image_policies(key: str) -> Dict[str, str]:
     return data
 
 
+def results_image_policy_common(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyCommon
+    """
+    data_file = "results_ImagePolicyCommon"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
     """
     Return results for ImagePolicyCreateBulk

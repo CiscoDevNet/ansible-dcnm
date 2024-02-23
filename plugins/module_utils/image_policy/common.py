@@ -228,13 +228,6 @@ class ImagePolicyCommon:
         return value
 
     @property
-    def failed_result(self):
-        """
-        return a result for a failed task with no changes
-        """
-        return ImagePolicyTaskResult(None).failed_result
-
-    @property
     def changed(self):
         """
         bool = whether we changed anything
@@ -283,6 +276,13 @@ class ImagePolicyCommon:
             msg += f"failed must be a bool. Got {value}"
             self.ansible_module.fail_json(msg)
         self.properties["failed"] = value
+
+    @property
+    def failed_result(self):
+        """
+        return a result for a failed task with no changes
+        """
+        return ImagePolicyTaskResult(None).failed_result
 
     @property
     def response_current(self):
