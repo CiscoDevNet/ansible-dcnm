@@ -372,7 +372,7 @@ def test_image_policy_common_00060(image_policy_common, arg, expected, flag) -> 
     if flag is True:
         assert instance.changed == arg
     else:
-        assert instance.changed == False
+        assert instance.changed is False
 
 
 MATCH_00070 = r"ImagePolicyCommon.diff: diff must be a dict\."
@@ -450,7 +450,7 @@ def test_image_policy_common_00080(image_policy_common, arg, expected, flag) -> 
     if flag is True:
         assert instance.failed == arg
     else:
-        assert instance.failed == False
+        assert instance.failed is False
 
 
 def test_image_policy_common_00090(image_policy_common) -> None:
