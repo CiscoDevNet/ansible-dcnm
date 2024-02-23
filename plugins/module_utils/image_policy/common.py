@@ -178,14 +178,16 @@ class ImagePolicyCommon:
         Caller:
             - self.self._handle_response()
 
-        Handle POST, PUT responses from the controller.
+        Handle POST, PUT, DELETE responses from the controller.
 
         Returns: dict() with the following keys:
         - changed:
             - True if changes were made to by the controller
+                - ERROR key is not present
+                - MESSAGE == "OK"
             - False otherwise
         - success:
-            - False if RETURN_CODE != 200 or MESSAGE != "OK"
+            - False if MESSAGE != "OK" or ERROR key is present
             - True otherwise
         """
         result = {}

@@ -23,6 +23,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
+    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
     ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
@@ -186,6 +188,14 @@ class MockImagePolicies:
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
 
+@pytest.fixture(name="image_policy_common")
+def image_policy_common_fixture():
+    """
+    mock ImagePolicyCommon
+    """
+    return ImagePolicyCommon(MockAnsibleModule)
+
+
 @pytest.fixture(name="image_policy_create")
 def image_policy_create_fixture():
     """
@@ -334,6 +344,16 @@ def responses_image_policies(key: str) -> Dict[str, str]:
     Used in MockImagePolicies
     """
     data_file = "responses_ImagePolicies"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_image_policy_common(key: str) -> Dict[str, str]:
+    """
+    Return responses for ImagePolicyCommon
+    """
+    data_file = "responses_ImagePolicyCommon"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
