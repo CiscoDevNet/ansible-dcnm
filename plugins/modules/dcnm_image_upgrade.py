@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_image_upgrade
 short_description: Image management for Nexus switches
-version_added: "0.9.0"
+version_added: "3.5.0"
 description:
     - Stage, validate, upgrade images.
     - Attach, detach, image policies.
