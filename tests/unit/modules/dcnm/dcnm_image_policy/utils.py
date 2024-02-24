@@ -29,6 +29,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create imp
     ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
     ImagePolicyDelete
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
+    ImagePolicyTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
@@ -234,6 +236,14 @@ def image_policy_replace_bulk_fixture():
     mock ImagePolicyReplaceBulk
     """
     return ImagePolicyReplaceBulk(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_policy_task_result")
+def image_policy_task_result_fixture():
+    """
+    mock ImagePolicyTaskResult
+    """
+    return ImagePolicyTaskResult(MockAnsibleModule)
 
 
 @pytest.fixture(name="image_policy_update")
@@ -465,6 +475,16 @@ def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     Return results for ImagePolicyReplaceBulk
     """
     data_file = "results_ImagePolicyReplaceBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def results_image_policy_task_result(key: str) -> Dict[str, str]:
+    """
+    Return results for ImagePolicyTaskResult
+    """
+    data_file = "results_ImagePolicyTaskResult"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
