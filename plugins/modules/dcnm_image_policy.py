@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_image_policy
 short_description: Image policy management for Nexus Dashboard Fabric Controller
-version_added: "0.9.0"
+version_added: "3.5.0"
 description:
     - Create, delete, modify image policies.
 author: Allen Robel (@quantumonion)
@@ -119,9 +119,10 @@ EXAMPLES = """
 #    to detach the image policy from all devices before deleting it.
 #
 # merged:
-#   Create one or more image policies.
+#   Create (or update) one or more image policies.
 #
-#   If an image policy already exists on the controller, do nothing.
+#   If an image policy does not exist on the controller, create it.
+#   If an image policy already exists on the controller, edit it.
 #
 # overridden:
 #   Create/delete one or more image policies.
