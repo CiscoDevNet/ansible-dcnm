@@ -49,12 +49,11 @@ class ImagePolicyTaskResult:
     result.overridden = {"foo": "bar"}
     etc for other states
     # If you want to append a response from the controller, then do this:
-    result.response = response
-    result = result.result
+    result.response = response_from_controller
 
-    print(result)
+    print(result.result)
 
-    # output will be a dict with the following structure:
+    # output of the above print() will be a dict with the following structure:
     {
         "changed": True, # or False
         "diff": {
