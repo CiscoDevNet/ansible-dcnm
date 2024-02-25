@@ -490,7 +490,9 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.result = self.rest_send.result_current
             self.result_current = self.rest_send.result_current
 
-            msg = f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+            msg = (
+                f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+            )
             self.log.debug(msg)
 
             msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
@@ -524,21 +526,21 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        self.ipv4_done = set()
+        if self.unit_test is False:
+            # See unit test test_image_upgrade_upgrade_00205
+            self.ipv4_done = set()
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
         timeout = self.check_timeout
 
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+            self.issu_detail.refresh()
 
             for ipv4 in self.ip_addresses:
                 if ipv4 in self.ipv4_done:
                     continue
-
                 self.issu_detail.filter = ipv4
-                self.log.debug("Calling issu_detail.refresh()")
-                self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
                     self.ipv4_done.add(ipv4)
@@ -562,20 +564,21 @@ class ImageUpgrade(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
 
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        self.ipv4_done = set()
+        if self.unit_test is False:
+            # See unit test test_image_upgrade_upgrade_00240
+            self.ipv4_done = set()
         timeout = self.check_timeout
 
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+            self.issu_detail.refresh()
 
             for ipv4 in self.ip_addresses:
                 if ipv4 in self.ipv4_done:
                     continue
-
                 self.issu_detail.filter = ipv4
-                self.log.debug("Calling issu_detail.refresh()")
-                self.issu_detail.refresh()
+
                 ip_address = self.issu_detail.ip_address
                 device_name = self.issu_detail.device_name
                 upgrade_percent = self.issu_detail.upgrade_percent
@@ -888,9 +891,13 @@ class ImageUpgrade(ImageUpgradeCommon):
     @check_interval.setter
     def check_interval(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"instance.{method_name} must be an integer."
+        # isinstance(False, int) returns True, so we need first
+        # to test for this and fail_json specifically for bool values.
+        if isinstance(value, bool):
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg = "instance.check_interval must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_interval"] = value
 
@@ -904,8 +911,12 @@ class ImageUpgrade(ImageUpgradeCommon):
     @check_timeout.setter
     def check_timeout(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"instance.{method_name} must be an integer."
+        # isinstance(False, int) returns True, so we need first
+        # to test for this and fail_json specifically for bool values.
+        if isinstance(value, bool):
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg = "instance.check_timeout must be an integer."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["check_timeout"] = value

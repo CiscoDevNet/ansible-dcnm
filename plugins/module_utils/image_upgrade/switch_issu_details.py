@@ -129,7 +129,10 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if self.result_current["success"] is False or self.result_current["found"] is False:
+        if (
+            self.result_current["success"] is False
+            or self.result_current["found"] is False
+        ):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"

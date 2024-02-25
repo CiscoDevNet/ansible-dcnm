@@ -109,7 +109,9 @@ class ImageUpgradeCommon:
                 )
                 msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-                response = self.dcnm_send(self.module, verb, path, data=json.dumps(payload))
+                response = self.dcnm_send(
+                    self.module, verb, path, data=json.dumps(payload)
+                )
 
             self.response_current = copy.deepcopy(response)
             self.result_current = self._handle_response(response, verb)

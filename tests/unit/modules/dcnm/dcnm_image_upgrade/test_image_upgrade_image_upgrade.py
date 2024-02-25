@@ -1365,24 +1365,8 @@ def test_image_upgrade_upgrade_00033(monkeypatch, image_upgrade) -> None:
 
 
 # test getter properties
-
-
-def test_image_upgrade_upgrade_00043(image_upgrade) -> None:
-    """
-    Function
-    - check_interval
-    """
-    instance = image_upgrade
-    assert instance.check_interval == 10
-
-
-def test_image_upgrade_upgrade_00044(image_upgrade) -> None:
-    """
-    Function
-    - check_timeout
-    """
-    instance = image_upgrade
-    assert instance.check_timeout == 1800
+# check_interval (see test_image_upgrade_upgrade_00070)
+# check_timeout (see test_image_upgrade_upgrade_00075)
 
 
 def test_image_upgrade_upgrade_00045(monkeypatch, image_upgrade) -> None:
@@ -1404,7 +1388,8 @@ def test_image_upgrade_upgrade_00045(monkeypatch, image_upgrade) -> None:
 
     1.  instance.response_data == 121
     """
-    instance = image_upgrade
+    with does_not_raise():
+        instance = image_upgrade
 
     key = "test_image_upgrade_upgrade_00045a"
 
@@ -1487,7 +1472,8 @@ def test_image_upgrade_upgrade_00046(monkeypatch, image_upgrade) -> None:
 
     1. instance.result is a list: [{'success': True, 'changed': True}]
     """
-    instance = image_upgrade
+    with does_not_raise():
+        instance = image_upgrade
 
     key = "test_image_upgrade_upgrade_00046a"
 
@@ -1568,7 +1554,8 @@ def test_image_upgrade_upgrade_00047(monkeypatch, image_upgrade) -> None:
 
     1. instance.response is a list
     """
-    instance = image_upgrade
+    with does_not_raise():
+        instance = image_upgrade
 
     key = "test_image_upgrade_upgrade_00047a"
 
@@ -1634,90 +1621,172 @@ def test_image_upgrade_upgrade_00047(monkeypatch, image_upgrade) -> None:
     assert instance.response[0]["DATA"] == 121
 
 
-# setters
+# test setter properties
 
 MATCH_00060 = "ImageUpgrade.bios_force: instance.bios_force must be a boolean."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060), True),
     ],
 )
-def test_image_upgrade_upgrade_00060(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00060(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - bios_force setter
+
+    Verify that bios_force does not call fail_json if passed a boolean.
+    Verify that bios_force does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
-    instance = image_upgrade
+    with does_not_raise():
+        instance = image_upgrade
 
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00060):
-            instance.bios_force = value
-    else:
+    with expected:
         instance.bios_force = value
-        assert instance.bios_force == expected
+    if raise_flag is False:
+        assert instance.bios_force == value
+    else:
+        assert instance.bios_force is False
 
 
-MATCH_00061 = "ImageUpgrade.config_reload: "
-MATCH_00061 += "instance.config_reload must be a boolean."
+MATCH_00070 = r"ImageUpgrade\.check_interval: instance\.check_interval "
+MATCH_00070 += r"must be an integer\."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00061)),
+        (1, does_not_raise(), False),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00070), True),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00070), True),
     ],
 )
-def test_image_upgrade_upgrade_00061(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00070(
+    image_upgrade, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - check_interval setter
+
+    Summary
+    Verify that check_interval does not call fail_json if the value is an integer
+    and does call fail_json if the value is not an integer.  Verify that the
+    default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
+        instance.check_interval = value
+    if raise_flag is False:
+        assert instance.check_interval == value
+    else:
+        assert instance.check_interval == 10
+
+
+MATCH_00075 = r"ImageUpgrade\.check_timeout: instance\.check_timeout "
+MATCH_00075 += r"must be an integer\."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (1, does_not_raise(), False),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00075), True),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00075), True),
+    ],
+)
+def test_image_upgrade_upgrade_00075(
+    image_upgrade, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - check_timeout setter
+
+    Summary
+    Verify that check_timeout does not call fail_json if the value is an integer
+    and does call fail_json if the value is not an integer.  Verify that the
+    default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
+        instance.check_timeout = value
+    if raise_flag is False:
+        assert instance.check_timeout == value
+    else:
+        assert instance.check_timeout == 1800
+
+
+MATCH_00080 = r"ImageUpgrade\.config_reload: "
+MATCH_00080 += r"instance\.config_reload must be a boolean\."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00080), True),
+    ],
+)
+def test_image_upgrade_upgrade_00080(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - config_reload setter
     """
-    instance = image_upgrade
+    with does_not_raise():
+        instance = image_upgrade
 
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00061):
-            instance.config_reload = value
-    else:
+    with expected:
         instance.config_reload = value
-        assert instance.config_reload == expected
+    if raise_flag is False:
+        assert instance.config_reload == value
+    else:
+        assert instance.config_reload is False
 
 
-MATCH_00062_COMMON = "ImageUpgrade.devices: "
-MATCH_00062_COMMON += "instance.devices must be a python list of dict"
+MATCH_00090_COMMON = "ImageUpgrade.devices: "
+MATCH_00090_COMMON += "instance.devices must be a python list of dict"
 
-MATCH_00062_FAIL_1 = f"{MATCH_00062_COMMON}. Got not a list."
-MATCH_00062_FAIL_2 = rf"{MATCH_00062_COMMON}. Got \['not a dict'\]."
+MATCH_00090_FAIL_1 = f"{MATCH_00090_COMMON}. Got not a list."
+MATCH_00090_FAIL_2 = rf"{MATCH_00090_COMMON}. Got \['not a dict'\]."
 
-MATCH_00062_FAIL_3 = f"{MATCH_00062_COMMON}, where each dict contains "
-MATCH_00062_FAIL_3 += "the following keys: ip_address. "
-MATCH_00062_FAIL_3 += r"Got \[\{'bad_key_ip_address': '192.168.1.1'\}\]."
+MATCH_00090_FAIL_3 = f"{MATCH_00090_COMMON}, where each dict contains "
+MATCH_00090_FAIL_3 += "the following keys: ip_address. "
+MATCH_00090_FAIL_3 += r"Got \[\{'bad_key_ip_address': '192.168.1.1'\}\]."
 
-DATA_00062_PASS = [{"ip_address": "192.168.1.1"}]
-DATA_00062_FAIL_1 = "not a list"
-DATA_00062_FAIL_2 = ["not a dict"]
-DATA_00062_FAIL_3 = [{"bad_key_ip_address": "192.168.1.1"}]
+DATA_00090_PASS = [{"ip_address": "192.168.1.1"}]
+DATA_00090_FAIL_1 = "not a list"
+DATA_00090_FAIL_2 = ["not a dict"]
+DATA_00090_FAIL_3 = [{"bad_key_ip_address": "192.168.1.1"}]
 
 
 @pytest.mark.parametrize(
     "value, expected",
     [
-        (DATA_00062_PASS, does_not_raise()),
-        (DATA_00062_FAIL_1, pytest.raises(AnsibleFailJson, match=MATCH_00062_FAIL_1)),
-        (DATA_00062_FAIL_2, pytest.raises(AnsibleFailJson, match=MATCH_00062_FAIL_2)),
-        (DATA_00062_FAIL_3, pytest.raises(AnsibleFailJson, match=MATCH_00062_FAIL_3)),
+        (DATA_00090_PASS, does_not_raise()),
+        (DATA_00090_FAIL_1, pytest.raises(AnsibleFailJson, match=MATCH_00090_FAIL_1)),
+        (DATA_00090_FAIL_2, pytest.raises(AnsibleFailJson, match=MATCH_00090_FAIL_2)),
+        (DATA_00090_FAIL_3, pytest.raises(AnsibleFailJson, match=MATCH_00090_FAIL_3)),
     ],
 )
-def test_image_upgrade_upgrade_00062(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00090(image_upgrade, value, expected) -> None:
     """
     Function
     - devices setter
+
+    Summary
+    Verify that devices does not call fail_json if passed a list of dicts
+    and does call fail_json if passed a non-list or a list of non-dicts.
     """
     instance = image_upgrade
 
@@ -1725,274 +1794,353 @@ def test_image_upgrade_upgrade_00062(image_upgrade, value, expected) -> None:
         instance.devices = value
 
 
-MATCH_00063 = "ImageUpgrade.disruptive: "
-MATCH_00063 += "instance.disruptive must be a boolean."
+MATCH_00100 = "ImageUpgrade.disruptive: "
+MATCH_00100 += "instance.disruptive must be a boolean."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00063)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00100), True),
     ],
 )
-def test_image_upgrade_upgrade_00063(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00100(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - disruptive setter
+
+    Summary
+    Verify that disruptive does not call fail_json if passed a boolean.
+    Verify that disruptive does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
     instance = image_upgrade
 
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00063):
-            instance.disruptive = value
-    else:
+    with expected:
         instance.disruptive = value
-        assert instance.disruptive == expected
+    if raise_flag is False:
+        assert instance.disruptive == value
+    else:
+        assert instance.disruptive is True
 
 
-MATCH_00064 = "ImageUpgrade.epld_golden: "
-MATCH_00064 += "instance.epld_golden must be a boolean."
+MATCH_00110 = "ImageUpgrade.epld_golden: "
+MATCH_00110 += "instance.epld_golden must be a boolean."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00064)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00110), True),
     ],
 )
-def test_image_upgrade_upgrade_00064(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00110(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - epld_golden setter
+
+    Summary
+    Verify that epld_golden does not call fail_json if passed a boolean.
+    Verify that epld_golden does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
     instance = image_upgrade
 
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00064):
-            instance.epld_golden = value
-    else:
+    with expected:
         instance.epld_golden = value
-        assert instance.epld_golden == expected
+    if raise_flag is False:
+        assert instance.epld_golden == value
+    else:
+        assert instance.epld_golden is False
 
 
-MATCH_00065 = "ImageUpgrade.epld_upgrade: "
-MATCH_00065 += "instance.epld_upgrade must be a boolean."
+MATCH_00120 = "ImageUpgrade.epld_upgrade: "
+MATCH_00120 += "instance.epld_upgrade must be a boolean."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00065)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00120), True),
     ],
 )
-def test_image_upgrade_upgrade_00065(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00120(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - epld_upgrade setter
+
+    Summary
+    Verify that epld_upgrade does not call fail_json if passed a boolean.
+    Verify that epld_upgrade does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
     instance = image_upgrade
 
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00065):
-            instance.epld_upgrade = value
-    else:
+    with expected:
         instance.epld_upgrade = value
-        assert instance.epld_upgrade == expected
+    if raise_flag is False:
+        assert instance.epld_upgrade == value
+    else:
+        assert instance.epld_upgrade is False
 
 
-MATCH_00066_FAIL_1 = "ImageUpgrade.epld_module: "
-MATCH_00066_FAIL_1 += "instance.epld_module must be an integer or 'ALL'"
+MATCH_00130 = "ImageUpgrade.epld_module: "
+MATCH_00130 += "instance.epld_module must be an integer or 'ALL'"
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        ("ALL", does_not_raise()),
-        (1, does_not_raise()),
-        (27, does_not_raise()),
-        ("27", does_not_raise()),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00066_FAIL_1)),
+        ("ALL", does_not_raise(), False),
+        (1, does_not_raise(), False),
+        (27, does_not_raise(), False),
+        ("27", does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00130), True),
     ],
 )
-def test_image_upgrade_upgrade_00066(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00130(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - epld_module setter
+
+    Summary
+    Verify that epld_module does not call fail_json if passed a valid value.
+    Verify that epld_module does call fail_json if passed an invalid value.
+    Verify that the default value is set if fail_json is called.
+    Verify that valid string values are converted to int()
     """
-    instance = image_upgrade
+    with does_not_raise():
+        instance = image_upgrade
     with expected:
         instance.epld_module = value
+    if raise_flag is False:
+        if value == "ALL":
+            assert instance.epld_module == value
+        else:
+            assert instance.epld_module == int(value)
+    else:
+        assert instance.epld_module == "ALL"
 
 
-MATCH_00067 = "ImageUpgrade.force_non_disruptive: "
-MATCH_00067 += "instance.force_non_disruptive must be a boolean."
+MATCH_00140 = r"ImageUpgrade\.force_non_disruptive: "
+MATCH_00140 += r"instance\.force_non_disruptive must be a boolean\."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00067)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00140), True),
     ],
 )
-def test_image_upgrade_upgrade_00067(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00140(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - force_non_disruptive setter
+
+    Summary
+    Verify that force_non_disruptive does not call fail_json if passed a boolean.
+    Verify that force_non_disruptive does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
     instance = image_upgrade
 
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00067):
-            instance.force_non_disruptive = value
-    else:
+    with expected:
         instance.force_non_disruptive = value
-        assert instance.force_non_disruptive == expected
+    if raise_flag is False:
+        assert instance.force_non_disruptive == value
+    else:
+        assert instance.force_non_disruptive is False
 
 
-MATCH_00068 = "ImageUpgrade.non_disruptive: "
-MATCH_00068 += "instance.non_disruptive must be a boolean."
+MATCH_00150 = r"ImageUpgrade\.non_disruptive: "
+MATCH_00150 += r"instance\.non_disruptive must be a boolean\."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00068)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00150), True),
     ],
 )
-def test_image_upgrade_upgrade_00068(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00150(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - non_disruptive setter
+
+    Summary
+    Verify that non_disruptive does not call fail_json if passed a boolean.
+    Verify that non_disruptive does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
-    instance = image_upgrade
-
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00068):
-            instance.non_disruptive = value
-    else:
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
         instance.non_disruptive = value
-        assert instance.non_disruptive == expected
+    if raise_flag is False:
+        assert instance.non_disruptive == value
+    else:
+        assert instance.non_disruptive is False
 
 
-MATCH_00069 = "ImageUpgrade.package_install: "
-MATCH_00069 += "instance.package_install must be a boolean."
+MATCH_00160 = r"ImageUpgrade\.package_install: "
+MATCH_00160 += r"instance\.package_install must be a boolean\."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00069)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00160), True),
     ],
 )
-def test_image_upgrade_upgrade_00069(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00160(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - package_install setter
+
+    Summary
+    Verify that package_install does not call fail_json if passed a boolean.
+    Verify that package_install does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
-    instance = image_upgrade
-
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00069):
-            instance.package_install = value
-    else:
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
         instance.package_install = value
-        assert instance.package_install == expected
+    if raise_flag is False:
+        assert instance.package_install == value
+    else:
+        assert instance.package_install is False
 
 
-MATCH_00070 = "ImageUpgrade.package_uninstall: "
-MATCH_00070 += "instance.package_uninstall must be a boolean."
+MATCH_00170 = "ImageUpgrade.package_uninstall: "
+MATCH_00170 += "instance.package_uninstall must be a boolean."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00070)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00170), True),
     ],
 )
-def test_image_upgrade_upgrade_00070(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00170(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - package_uninstall setter
+
+    Summary
+    Verify that package_uninstall does not call fail_json if passed a boolean.
+    Verify that package_uninstall does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
-    instance = image_upgrade
-
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00070):
-            instance.package_uninstall = value
-    else:
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
         instance.package_uninstall = value
-        assert instance.package_uninstall == expected
+    if raise_flag is False:
+        assert instance.package_uninstall == value
+    else:
+        assert instance.package_uninstall is False
 
 
-MATCH_00071 = "ImageUpgrade.reboot: "
-MATCH_00071 += "instance.reboot must be a boolean."
+MATCH_00180 = r"ImageUpgrade\.reboot: "
+MATCH_00180 += r"instance\.reboot must be a boolean\."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00071)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00180), True),
     ],
 )
-def test_image_upgrade_upgrade_00071(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00180(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - reboot setter
+
+    Summary
+    Verify that reboot does not call fail_json if passed a boolean.
+    Verify that reboot does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
-    instance = image_upgrade
-
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00071):
-            instance.reboot = value
-    else:
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
         instance.reboot = value
-        assert instance.reboot == expected
+    if raise_flag is False:
+        assert instance.reboot == value
+    else:
+        assert instance.reboot is False
 
 
-MATCH_00072 = "ImageUpgrade.write_erase: "
-MATCH_00072 += "instance.write_erase must be a boolean."
+MATCH_00190 = "ImageUpgrade.write_erase: "
+MATCH_00190 += "instance.write_erase must be a boolean."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (True, True),
-        (False, False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00072)),
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00190), True),
     ],
 )
-def test_image_upgrade_upgrade_00072(image_upgrade, value, expected) -> None:
+def test_image_upgrade_upgrade_00190(
+    image_upgrade, value, expected, raise_flag
+) -> None:
     """
     Function
     - write_erase setter
+
+    Summary
+    Verify that write_erase does not call fail_json if passed a boolean.
+    Verify that write_erase does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
-    instance = image_upgrade
-
-    if value == "FOO":
-        with pytest.raises(AnsibleFailJson, match=MATCH_00072):
-            instance.write_erase = value
-    else:
+    with does_not_raise():
+        instance = image_upgrade
+    with expected:
         instance.write_erase = value
-        assert instance.write_erase == expected
+    if raise_flag is False:
+        assert instance.write_erase == value
+    else:
+        assert instance.write_erase is False
 
 
-def test_image_upgrade_upgrade_00080(
+def test_image_upgrade_upgrade_00200(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2021,7 +2169,7 @@ def test_image_upgrade_upgrade_00080(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_upgrade_00080a"
+        key = "test_image_upgrade_upgrade_00200a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2040,7 +2188,69 @@ def test_image_upgrade_upgrade_00080(
     assert "172.22.150.108" in instance.ipv4_done
 
 
-def test_image_upgrade_upgrade_00081(
+def test_image_upgrade_upgrade_00205(
+    monkeypatch, image_upgrade, issu_details_by_ip_address
+) -> None:
+    """
+    Function
+    - _wait_for_current_actions_to_complete
+
+    Summary
+    -   Verify that ipv4_done contains two ip addresses since
+        issu_detail is mocked to indicate that no actions are in
+        progress for either ip address.
+    -   Verify in post analysis that the continue statement is
+        hit in the for loop that iterates over ip addresses since
+        one of the ip addresses is manually added to ipv4_done.
+
+    Setup
+    -   Manually add one ip address to ipv4_done
+    -   Set instance.unit_test to True so that instance.ipv4_done is not
+        initialized to an empty set in _wait_for_current_actions_to_complete
+
+    Description
+    _wait_for_current_actions_to_complete waits until staging, validation,
+    and upgrade actions are complete for all ip addresses.  It calls
+    SwitchIssuDetailsByIpAddress.actions_in_progress() and expects
+    this to return False.  actions_in_progress() returns True until none of
+    the following keys has a value of "In-Progress":
+
+    ["imageStaged", "upgrade", "validated"]
+
+    Expectations:
+    1.  instance.ipv4_done is a set()
+    2.  instance.ipv4_done is length 2
+    3.  instance.ipv4_done contains all ip addresses in
+        instance.ip_addresses
+    4.  fail_json is not called
+    5.  (Post analysis) converage tool indicates tha the continue
+        statement is hit.
+    """
+    instance = image_upgrade
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_upgrade_upgrade_00205a"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    instance.issu_detail = issu_details_by_ip_address
+    instance.ip_addresses = [
+        "172.22.150.102",
+        "172.22.150.108",
+    ]
+    instance.check_interval = 0
+    instance.ipv4_done.add("172.22.150.102")
+    instance.unit_test = True
+    with does_not_raise():
+        instance._wait_for_current_actions_to_complete()
+    assert isinstance(instance.ipv4_done, set)
+    assert len(instance.ipv4_done) == 2
+    assert "172.22.150.102" in instance.ipv4_done
+    assert "172.22.150.108" in instance.ipv4_done
+
+
+def test_image_upgrade_upgrade_00210(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2064,7 +2274,7 @@ def test_image_upgrade_upgrade_00081(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_upgrade_00081a"
+        key = "test_image_upgrade_upgrade_00210a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2091,7 +2301,7 @@ def test_image_upgrade_upgrade_00081(
     assert "172.22.150.108" not in instance.ipv4_done
 
 
-def test_image_upgrade_upgrade_00090(
+def test_image_upgrade_upgrade_00220(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2117,7 +2327,7 @@ def test_image_upgrade_upgrade_00090(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_upgrade_00090a"
+        key = "test_image_upgrade_upgrade_00220a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2142,7 +2352,7 @@ def test_image_upgrade_upgrade_00090(
     assert "172.22.150.108" not in instance.ipv4_done
 
 
-def test_image_upgrade_upgrade_00091(
+def test_image_upgrade_upgrade_00230(
     monkeypatch, image_upgrade, issu_details_by_ip_address
 ) -> None:
     """
@@ -2171,7 +2381,7 @@ def test_image_upgrade_upgrade_00091(
     instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_upgrade_00091a"
+        key = "test_image_upgrade_upgrade_00230a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
@@ -2197,3 +2407,179 @@ def test_image_upgrade_upgrade_00091(
     assert len(instance.ipv4_done) == 1
     assert "172.22.150.102" in instance.ipv4_done
     assert "172.22.150.108" not in instance.ipv4_done
+
+
+def test_image_upgrade_upgrade_00240(
+    monkeypatch, image_upgrade, issu_details_by_ip_address
+) -> None:
+    """
+    Function
+    - _wait_for_image_upgrade_to_complete
+
+    Summary
+    Verify that, when two ip addresses are checked, the method's
+    continue statement is reached.  This is verified in post analysis
+    using the coverage report.
+
+    Setup
+    -   SwitchIssuDetails is mocked to indicate that both ip address
+        upgrade status == Success
+    -   instance.ipv4_done is set manually to contain one of the ip addresses
+    -   Set instance.unit_test to True so that instance.ipv4_done is not
+        initialized to an empty set in _wait_for_image_upgrade_to_complete
+
+    Description
+    _wait_for_image_upgrade_to_complete looks at the upgrade status for each
+    ip address and waits for it to be "Success" or "Failed".
+    In the case where all ip addresses are "Success", the module returns.
+    Since instance.ipv4_done is manually populated with one of the ip addresses,
+    and instance.unit_test is set to True, the method's continue statement is
+    reached.  This is verified in post analysis using the coverage report.
+
+    Expectations:
+    - instance.ipv4_done will have length 2
+    - instance.ipv4_done contains 172.22.150.102 and 172.22.150.108
+    - fail_json is not called
+    """
+    instance = image_upgrade
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_upgrade_upgrade_00240a"
+        return responses_switch_issu_details(key)
+
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    instance.issu_detail = issu_details_by_ip_address
+    instance.ip_addresses = [
+        "172.22.150.102",
+        "172.22.150.108",
+    ]
+    instance.check_interval = 1
+    instance.check_timeout = 1
+    instance.ipv4_done.add("172.22.150.102")
+    instance.unit_test = True
+    with does_not_raise():
+        instance._wait_for_image_upgrade_to_complete()
+    assert isinstance(instance.ipv4_done, set)
+    assert len(instance.ipv4_done) == 2
+    assert "172.22.150.102" in instance.ipv4_done
+    assert "172.22.150.108" in instance.ipv4_done
+
+
+def test_image_upgrade_upgrade_00250(image_upgrade) -> None:
+    """
+    Function
+    - ImageUpgrade._build_payload_issu_upgrade
+
+    Summary
+    Verify that fail_json is called when device.upgrade.nxos is not a boolean
+
+    Setup
+    -   device.upgrade.nxos is set to "FOO"
+    -   device is passed to _build_payload_issu_upgrade
+    """
+    match = r"ImageUpgrade\._build_payload_issu_upgrade: upgrade\.nxos must "
+    match += r"be a boolean\. Got FOO\."
+
+    device = {"upgrade": {"nxos": "FOO"}}
+
+    with does_not_raise():
+        instance = image_upgrade
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._build_payload_issu_upgrade(device)
+
+
+def test_image_upgrade_upgrade_00260(image_upgrade) -> None:
+    """
+    Function
+    - ImageUpgrade._build_payload_issu_options_1
+
+    Summary
+    Verify that fail_json is called when device.options.nxos.mode is
+    set to an invalid value.
+
+    Setup
+    -   device.options.nxos.mode is set to invalid value "FOO"
+    -   device is passed to _build_payload_issu_options_1
+    """
+    match = r"ImageUpgrade\._build_payload_issu_options_1: "
+    match += r"options\.nxos\.mode must be one of.*Got FOO\."
+
+    device = {"options": {"nxos": {"mode": "FOO"}}}
+
+    with does_not_raise():
+        instance = image_upgrade
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._build_payload_issu_options_1(device)
+
+
+def test_image_upgrade_upgrade_00270(image_upgrade) -> None:
+    """
+    Function
+    - ImageUpgrade._build_payload_epld
+
+    Summary
+    Verify that fail_json is called when device.upgrade.epld is not a boolean
+
+    Setup
+    -   device.upgrade.epld is set to "FOO"
+    -   device is passed to _build_payload_epld
+    """
+    match = r"ImageUpgrade\._build_payload_epld: upgrade.epld must be a "
+    match += r"boolean\. Got FOO\."
+
+    device = {"upgrade": {"epld": "FOO"}}
+
+    with does_not_raise():
+        instance = image_upgrade
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._build_payload_epld(device)
+
+
+def test_image_upgrade_upgrade_00280(image_upgrade) -> None:
+    """
+    Function
+    - ImageUpgrade._build_payload_package
+
+    Summary
+    Verify that fail_json is called when device.options.package.install
+    is not a boolean
+
+    Setup
+    -   device.options.package.install is set to "FOO"
+    -   device is passed to _build_payload_package
+    """
+    match = r"ImageUpgrade\._build_payload_package: options.package.install "
+    match += r"must be a boolean\. Got FOO\."
+
+    device = {"options": {"package": {"install": "FOO"}}}
+
+    with does_not_raise():
+        instance = image_upgrade
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._build_payload_package(device)
+
+
+def test_image_upgrade_upgrade_00281(image_upgrade) -> None:
+    """
+    Function
+    - ImageUpgrade._build_payload_package
+
+    Summary
+    Verify that fail_json is called when device.options.package.uninstall
+    is not a boolean
+
+    Setup
+    -   device.options.package.install is set to a boolean
+    -   device.options.package.uninstall is set to "FOO"
+    -   device is passed to _build_payload_package
+    """
+    match = r"ImageUpgrade\._build_payload_package: options.package.uninstall "
+    match += r"must be a boolean\. Got FOO\."
+
+    device = {"options": {"package": {"install": True, "uninstall": "FOO"}}}
+
+    with does_not_raise():
+        instance = image_upgrade
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._build_payload_package(device)
