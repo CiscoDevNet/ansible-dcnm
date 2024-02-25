@@ -207,9 +207,9 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "call instance.devices before calling commit."
             self.module.fail_json(msg, **self.failed_result)
 
+        self.issu_detail.refresh()
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
-            self.issu_detail.refresh()
 
             # Any device validation from issu_detail would go here.
             # We used to fail_json if upgrade == "Failed" but that

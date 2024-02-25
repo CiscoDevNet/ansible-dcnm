@@ -194,7 +194,6 @@ class ImageStage(ImageUpgradeCommon):
             self.result_current = {"changed": False, "success": True}
             return
 
-        # self.issu_detail.refresh()
         self.prune_serial_numbers()
         self.validate_serial_numbers()
         self._wait_for_current_actions_to_complete()
@@ -267,13 +266,13 @@ class ImageStage(ImageUpgradeCommon):
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+            self.issu_detail.refresh()
 
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
 
                 self.issu_detail.filter = serial_number
-                self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
                     self.serial_numbers_done.add(serial_number)
@@ -300,13 +299,13 @@ class ImageStage(ImageUpgradeCommon):
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+            self.issu_detail.refresh()
 
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
 
                 self.issu_detail.filter = serial_number
-                self.issu_detail.refresh()
                 ip_address = self.issu_detail.ip_address
                 device_name = self.issu_detail.device_name
                 staged_percent = self.issu_detail.image_staged_percent

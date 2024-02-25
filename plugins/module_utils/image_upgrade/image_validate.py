@@ -130,9 +130,9 @@ class ImageValidate(ImageUpgradeCommon):
         """
         self.method_name = inspect.stack()[0][3]
 
+        self.issu_detail.refresh()
         for serial_number in self.serial_numbers:
             self.issu_detail.filter = serial_number
-            self.issu_detail.refresh()
             if self.issu_detail.validated == "Failed":
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += "image validation is failing for the following switch: "
@@ -243,13 +243,13 @@ class ImageValidate(ImageUpgradeCommon):
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+            self.issu_detail.refresh()
 
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
 
                 self.issu_detail.filter = serial_number
-                self.issu_detail.refresh()
 
                 if self.issu_detail.actions_in_progress is False:
                     self.serial_numbers_done.add(serial_number)
@@ -276,13 +276,13 @@ class ImageValidate(ImageUpgradeCommon):
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
             sleep(self.check_interval)
             timeout -= self.check_interval
+            self.issu_detail.refresh()
 
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
                     continue
 
                 self.issu_detail.filter = serial_number
-                self.issu_detail.refresh()
 
                 ip_address = self.issu_detail.ip_address
                 device_name = self.issu_detail.device_name
