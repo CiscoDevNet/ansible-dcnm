@@ -44,7 +44,7 @@ from .image_upgrade_utils import (does_not_raise, image_upgrade_common_fixture,
 def test_image_upgrade_image_upgrade_common_00001(image_upgrade_common) -> None:
     """
     Function
-    - __init__
+    - ImageUpgradeCommon.__init__
 
     Summary
     Verify that instance.params accepts well-formed input and that the
@@ -93,7 +93,7 @@ def test_image_upgrade_image_upgrade_common_00020(
 ) -> None:
     """
     Function
-    - _handle_response
+    - ImageUpgradeCommon._handle_response
 
     Test
     - json_fail is not called
@@ -136,7 +136,7 @@ def test_image_upgrade_image_upgrade_common_00030(
 ) -> None:
     """
     Function
-    - _handle_response
+    - ImageUpgradeCommon._handle_response
 
     Test
     - json_fail is not called
@@ -179,7 +179,7 @@ def test_image_upgrade_image_upgrade_common_00040(
 ) -> None:
     """
     Function
-    - _handle_response
+    - ImageUpgradeCommon._handle_response
 
     Test
     - json_fail is not called
@@ -226,7 +226,7 @@ def test_image_upgrade_image_upgrade_common_00050(
 ) -> None:
     """
     Function
-    - _handle_response
+    - ImageUpgradeCommon._handle_response
 
     Test
     - _handle_reponse returns expected values for GET requests
@@ -244,7 +244,7 @@ def test_image_upgrade_image_upgrade_common_00050(
 def test_image_upgrade_image_upgrade_common_00060(image_upgrade_common) -> None:
     """
     Function
-    - _handle_response
+    - ImageUpgradeCommon._handle_response
 
     Test
     - fail_json is called because an unknown request verb is provided
@@ -286,7 +286,7 @@ def test_image_upgrade_image_upgrade_common_00070(
 ) -> None:
     """
     Function
-    - _handle_get_response
+    - ImageUpgradeCommon._handle_get_response
 
     Test
     - fail_json is not called
@@ -326,7 +326,7 @@ def test_image_upgrade_image_upgrade_common_00080(
 ) -> None:
     """
     Function
-    - _handle_post_put_delete_response
+    - ImageUpgradeCommon._handle_post_put_delete_response
 
     Summary
     Verify that expected values are returned for POST requests.
@@ -374,7 +374,7 @@ def test_image_upgrade_image_upgrade_common_00090(
 ) -> None:
     """
     Function
-    - make_boolean
+    - ImageUpgradeCommon.make_boolean
 
     Test
     - expected values are returned for all cases
@@ -408,7 +408,7 @@ def test_image_upgrade_image_upgrade_common_00100(
 ) -> None:
     """
     Function
-    - make_none
+    - ImageUpgradeCommon.make_none
 
     Test
     - expected values are returned for all cases
@@ -420,7 +420,7 @@ def test_image_upgrade_image_upgrade_common_00100(
 def test_image_upgrade_image_upgrade_common_00110(image_upgrade_common) -> None:
     """
     Function
-    - log.log_msg
+    - ImageUpgradeCommon.log.log_msg
 
     Test
     - log.debug returns None when the base logger is disabled
@@ -438,7 +438,7 @@ def test_image_upgrade_image_upgrade_common_00120(
 ) -> None:
     """
     Function
-    - dcnm_send_with_retry
+    - ImageUpgradeCommon.dcnm_send_with_retry
 
     Summary
     Verify that result and response are set to the expected values when
@@ -463,7 +463,7 @@ def test_image_upgrade_image_upgrade_common_00121(
 ) -> None:
     """
     Function
-    - dcnm_send_with_retry
+    - ImageUpgradeCommon.dcnm_send_with_retry
 
     Summary
     Verify that result and response are set to the expected values when
@@ -482,3 +482,350 @@ def test_image_upgrade_image_upgrade_common_00121(
         )
     assert instance.response_current == {"MESSAGE": "OK", "RETURN_CODE": 200}
     assert instance.result == [{"changed": True, "success": True}]
+
+
+MATCH_00130 = "ImageUpgradeCommon.changed: changed must be a bool."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00130), True),
+    ],
+)
+def test_image_upgrade_upgrade_00130(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.changed
+
+    Verify that changed does not call fail_json if passed a boolean.
+    Verify that changed does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.changed = value
+    if raise_flag is False:
+        assert instance.changed == value
+    else:
+        assert instance.changed is False
+
+
+MATCH_00140 = "ImageUpgradeCommon.diff: diff must be a dict."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ({}, does_not_raise(), False),
+        ({"foo": "bar"}, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00140), True),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00140), True),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00140), True),
+    ],
+)
+def test_image_upgrade_upgrade_00140(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.diff
+
+    Verify that diff does not call fail_json if passed a dict.
+    Verify that diff does call fail_json if passed a non-dict.
+    Verify that diff returns list(value) when its getter is called.
+    Verify that the default value ([]) is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.diff = value
+    if raise_flag is False:
+        assert instance.diff == [value]
+    else:
+        assert instance.diff == []
+
+
+MATCH_00150 = "ImageUpgradeCommon.failed: failed must be a bool."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00150), True),
+    ],
+)
+def test_image_upgrade_upgrade_00150(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.failed
+
+    Verify that failed does not call fail_json if passed a boolean.
+    Verify that failed does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.failed = value
+    if raise_flag is False:
+        assert instance.failed == value
+    else:
+        assert instance.failed is False
+
+
+MATCH_00160 = "ImageUpgradeCommon.response_current: response_current must be a dict."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ({}, does_not_raise(), False),
+        ({"foo": "bar"}, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00160), True),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00160), True),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00160), True),
+    ],
+)
+def test_image_upgrade_upgrade_00160(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.response_current
+
+    Verify that response_current does not call fail_json if passed a dict.
+    Verify that response_current does call fail_json if passed a non-dict.
+    Verify that response_current returns value when its getter is called.
+    Verify that the default value ({}) is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.response_current = value
+    if raise_flag is False:
+        assert instance.response_current == value
+    else:
+        assert instance.response_current == {}
+
+
+MATCH_00170 = "ImageUpgradeCommon.response: response must be a dict."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ({}, does_not_raise(), False),
+        ({"foo": "bar"}, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00170), True),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00170), True),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00170), True),
+    ],
+)
+def test_image_upgrade_upgrade_00170(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.response
+
+    Verify that response does not call fail_json if passed a dict.
+    Verify that response does call fail_json if passed a non-dict.
+    Verify that response returns list(value) when its getter is called.
+    Verify that the default value ([]) is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.response = value
+    if raise_flag is False:
+        assert instance.response == [value]
+    else:
+        assert instance.response == []
+
+
+MATCH_00180 = "ImageUpgradeCommon.result: result must be a dict."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ({}, does_not_raise(), False),
+        ({"foo": "bar"}, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00180), True),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00180), True),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00180), True),
+    ],
+)
+def test_image_upgrade_upgrade_00180(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.result
+
+    Verify that result does not call fail_json if passed a dict.
+    Verify that result does call fail_json if passed a non-dict.
+    Verify that result returns list(value) when its getter is called.
+    Verify that the default value ([]) is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.result = value
+    if raise_flag is False:
+        assert instance.result == [value]
+    else:
+        assert instance.result == []
+
+
+MATCH_00190 = "ImageUpgradeCommon.result_current: result_current must be a dict."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ({}, does_not_raise(), False),
+        ({"foo": "bar"}, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00190), True),
+        (True, pytest.raises(AnsibleFailJson, match=MATCH_00190), True),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00190), True),
+    ],
+)
+def test_image_upgrade_upgrade_00190(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.result_current
+
+    Verify that result_current does not call fail_json if passed a dict.
+    Verify that result_current does call fail_json if passed a non-dict.
+    Verify that result_current returns value when its getter is called.
+    Verify that the default value ({}) is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.result_current = value
+    if raise_flag is False:
+        assert instance.result_current == value
+    else:
+        assert instance.result_current == {}
+
+
+MATCH_00200 = r"ImageUpgradeCommon\.send_interval: send_interval "
+MATCH_00200 += r"must be an integer\."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (1, does_not_raise(), False),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00200), True),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00200), True),
+    ],
+)
+def test_image_upgrade_upgrade_00200(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgrade.send_interval
+
+    Summary
+    Verify that send_interval does not call fail_json if the value is an integer
+    and does call fail_json if the value is not an integer.  Verify that the
+    default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+    with expected:
+        instance.send_interval = value
+    if raise_flag is False:
+        assert instance.send_interval == value
+    else:
+        assert instance.send_interval == 5
+
+
+MATCH_00210 = r"ImageUpgradeCommon\.timeout: timeout "
+MATCH_00210 += r"must be an integer\."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (1, does_not_raise(), False),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00210), True),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00210), True),
+    ],
+)
+def test_image_upgrade_upgrade_00210(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgrade.timeout
+
+    Summary
+    Verify that timeout does not call fail_json if the value is an integer
+    and does call fail_json if the value is not an integer.  Verify that the
+    default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+    with expected:
+        instance.timeout = value
+    if raise_flag is False:
+        assert instance.timeout == value
+    else:
+        assert instance.timeout == 300
+
+
+MATCH_00220 = "ImageUpgradeCommon.unit_test: unit_test must be a bool."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        (True, does_not_raise(), False),
+        (False, does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00220), True),
+    ],
+)
+def test_image_upgrade_upgrade_00220(
+    image_upgrade_common, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageUpgradeCommon.unit_test
+
+    Verify that unit_test does not call fail_json if passed a boolean.
+    Verify that unit_test does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
+    """
+    with does_not_raise():
+        instance = image_upgrade_common
+
+    with expected:
+        instance.unit_test = value
+    if raise_flag is False:
+        assert instance.unit_test == value
+    else:
+        assert instance.unit_test is False

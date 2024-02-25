@@ -263,7 +263,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"changed must be a bool. Got {value}"
+            msg += f"{method_name} must be a bool. Got {value}"
             self.module.fail_json(msg)
         self.properties["changed"] = value
 
@@ -279,7 +279,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"diff must be a dict. Got {value}"
+            msg += f"{method_name} must be a dict. Got {value}"
             self.module.fail_json(msg)
         self.properties["diff"].append(value)
 
@@ -297,7 +297,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed must be a bool. Got {value}"
+            msg += f"{method_name} must be a bool. Got {value}"
             self.module.fail_json(msg)
         self.properties["failed"] = value
 
@@ -316,7 +316,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response_current must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["response_current"] = value
@@ -336,7 +336,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["response"].append(value)
@@ -367,7 +367,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["result"].append(value)
@@ -387,7 +387,7 @@ class ImageUpgradeCommon:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result_current must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["result_current"] = value
@@ -404,9 +404,13 @@ class ImageUpgradeCommon:
     @send_interval.setter
     def send_interval(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"{method_name} must be an integer. Got {value}."
+        # isinstance(False, int) returns True, so we need first
+        # to test for this and fail_json specifically for bool values.
+        if isinstance(value, bool):
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be an int(). Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["send_interval"] = value
 
@@ -422,9 +426,13 @@ class ImageUpgradeCommon:
     @timeout.setter
     def timeout(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"{method_name} must be an integer. Got {value}."
+        # isinstance(False, int) returns True, so we need first
+        # to test for this and fail_json specifically for bool values.
+        if isinstance(value, bool):
+            self.module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be an int(). Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["timeout"] = value
 
