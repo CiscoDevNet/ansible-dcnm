@@ -66,7 +66,7 @@ DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 def test_image_upgrade_upgrade_00001(image_upgrade) -> None:
     """
     Function
-    - __init__
+    - ImageUpgrade.__init__
 
     Test
     - Class attributes are initialized to expected values
@@ -87,7 +87,7 @@ def test_image_upgrade_upgrade_00001(image_upgrade) -> None:
 def test_image_upgrade_upgrade_00003(image_upgrade) -> None:
     """
     Function
-    - _init_properties
+    - ImageUpgrade._init_properties
 
     Test
     - Class properties are initialized to expected values
@@ -124,7 +124,7 @@ def test_image_upgrade_upgrade_00003(image_upgrade) -> None:
 def test_image_upgrade_upgrade_00004(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - validate_devices
+    - ImageUpgrade.validate_devices
 
     Test
     -   ip_addresses contains the ip addresses of the devices for which
@@ -161,7 +161,7 @@ def test_image_upgrade_upgrade_00004(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00005(image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - fail_json is called because devices is None
@@ -239,7 +239,7 @@ def test_image_upgrade_upgrade_00018(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_upgrade_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None:
+def test_image_upgrade_upgrade_00019(monkeypatch, image_upgrade) -> None:
     """
     Function
     - ImageUpgrade._build_payload
@@ -271,7 +271,6 @@ def test_image_upgrade_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None
         ansible-playbook against the controller for this scenario, which verifies
         that the non-default values are included in the payload.
     """
-    caplog.set_level(logging.DEBUG)
     instance = image_upgrade
 
     key = "test_image_upgrade_upgrade_00019a"
@@ -334,7 +333,7 @@ def test_image_upgrade_upgrade_00019(monkeypatch, image_upgrade, caplog) -> None
     assert instance.payload == payloads_image_upgrade(key)
 
 
-def test_image_upgrade_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None:
+def test_image_upgrade_upgrade_00020(monkeypatch, image_upgrade) -> None:
     """
     Function
     - ImageUpgrade.commit
@@ -362,7 +361,6 @@ def test_image_upgrade_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None
     1.  instance.payload will equal a payload previously obtained by
         running ansible-playbook against the controller for this scenario
     """
-    caplog.set_level(logging.DEBUG)
     instance = image_upgrade
 
     key = "test_image_upgrade_upgrade_00020a"
@@ -427,7 +425,7 @@ def test_image_upgrade_upgrade_00020(monkeypatch, image_upgrade, caplog) -> None
 def test_image_upgrade_upgrade_00021(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for nxos.mode
@@ -496,7 +494,7 @@ def test_image_upgrade_upgrade_00021(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00022(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Force code coverage of nxos.mode == "non_disruptive" path
@@ -582,7 +580,7 @@ def test_image_upgrade_upgrade_00022(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00023(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Force code coverage of nxos.mode == "force_non_disruptive" path
@@ -668,7 +666,7 @@ def test_image_upgrade_upgrade_00023(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00024(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for options.nxos.bios_force
@@ -736,7 +734,7 @@ def test_image_upgrade_upgrade_00024(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00025(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Incompatible values for options.epld.golden and upgrade.nxos
@@ -806,7 +804,7 @@ def test_image_upgrade_upgrade_00025(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00026(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for epld.module
@@ -874,7 +872,7 @@ def test_image_upgrade_upgrade_00026(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00027(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for epld.golden
@@ -941,7 +939,7 @@ def test_image_upgrade_upgrade_00027(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00028(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for reboot
@@ -1008,7 +1006,7 @@ def test_image_upgrade_upgrade_00028(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00029(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for options.reboot.config_reload
@@ -1076,7 +1074,7 @@ def test_image_upgrade_upgrade_00029(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00030(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for options.reboot.write_erase
@@ -1144,7 +1142,8 @@ def test_image_upgrade_upgrade_00030(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00031(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
+
     Test
     - Invalid value for options.package.uninstall
 
@@ -1217,7 +1216,7 @@ def test_image_upgrade_upgrade_00031(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00032(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Bad result code in image upgrade response
@@ -1305,7 +1304,7 @@ def test_image_upgrade_upgrade_00032(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00033(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - commit
+    - ImageUpgrade.commit
 
     Test
     - Invalid value for upgrade.epld
@@ -1372,7 +1371,8 @@ def test_image_upgrade_upgrade_00033(monkeypatch, image_upgrade) -> None:
 def test_image_upgrade_upgrade_00045(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - response_data
+    - ImageUpgrade.commit
+    - ImageUpgradeCommon.response_data getter
 
     Setup:
     -   ImageUpgrade.devices is set to a list of one dict for a device
@@ -1448,15 +1448,16 @@ def test_image_upgrade_upgrade_00045(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-
-    instance.commit()
+    with does_not_raise():
+        instance.commit()
     assert instance.response_data == [121]
 
 
 def test_image_upgrade_upgrade_00046(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - result
+    - ImageUpgradeCommon.result
+    - ImageUpgrade.commit
 
     Setup:
     -   ImageUpgrade.devices is set to a list of one dict for a device
@@ -1530,15 +1531,17 @@ def test_image_upgrade_upgrade_00046(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    instance.unit_test = True
-    instance.commit()
+    with does_not_raise():
+        instance.unit_test = True
+        instance.commit()
     assert instance.result == [{"success": True, "changed": True}]
 
 
 def test_image_upgrade_upgrade_00047(monkeypatch, image_upgrade) -> None:
     """
     Function
-    - response
+    - ImageUpgradeCommon.response
+    - ImageUpgrade.commit
 
     Setup:
     -   ImageUpgrade.devices is set to a list of one dict for a device
@@ -1615,8 +1618,8 @@ def test_image_upgrade_upgrade_00047(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    instance.commit()
-    print(f"instance.response: {instance.response}")
+    with does_not_raise():
+        instance.commit()
     assert isinstance(instance.response, list)
     assert instance.response[0]["DATA"] == 121
 
@@ -1639,7 +1642,7 @@ def test_image_upgrade_upgrade_00060(
 ) -> None:
     """
     Function
-    - bios_force setter
+    - ImageUpgrade.bios_force
 
     Verify that bios_force does not call fail_json if passed a boolean.
     Verify that bios_force does call fail_json if passed a non-boolean.
@@ -1673,7 +1676,7 @@ def test_image_upgrade_upgrade_00070(
 ) -> None:
     """
     Function
-    - check_interval setter
+    - ImageUpgrade.check_interval
 
     Summary
     Verify that check_interval does not call fail_json if the value is an integer
@@ -1707,7 +1710,7 @@ def test_image_upgrade_upgrade_00075(
 ) -> None:
     """
     Function
-    - check_timeout setter
+    - ImageUpgrade.check_timeout
 
     Summary
     Verify that check_timeout does not call fail_json if the value is an integer
@@ -1741,7 +1744,12 @@ def test_image_upgrade_upgrade_00080(
 ) -> None:
     """
     Function
-    - config_reload setter
+    - ImageUpgrade.config_reload
+
+    Summary
+    Verify that config_reload does not call fail_json if passed a boolean.
+    Verify that config_reload does call fail_json if passed a non-boolean.
+    Verify that the default value is set if fail_json is called.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -1782,7 +1790,7 @@ DATA_00090_FAIL_3 = [{"bad_key_ip_address": "192.168.1.1"}]
 def test_image_upgrade_upgrade_00090(image_upgrade, value, expected) -> None:
     """
     Function
-    - devices setter
+    - ImageUpgrade.devices
 
     Summary
     Verify that devices does not call fail_json if passed a list of dicts
@@ -1811,7 +1819,7 @@ def test_image_upgrade_upgrade_00100(
 ) -> None:
     """
     Function
-    - disruptive setter
+    - ImageUpgrade.disruptive
 
     Summary
     Verify that disruptive does not call fail_json if passed a boolean.
@@ -1845,7 +1853,7 @@ def test_image_upgrade_upgrade_00110(
 ) -> None:
     """
     Function
-    - epld_golden setter
+    - ImageUpgrade.epld_golden
 
     Summary
     Verify that epld_golden does not call fail_json if passed a boolean.
@@ -1879,7 +1887,7 @@ def test_image_upgrade_upgrade_00120(
 ) -> None:
     """
     Function
-    - epld_upgrade setter
+    - ImageUpgrade.epld_upgrade
 
     Summary
     Verify that epld_upgrade does not call fail_json if passed a boolean.
@@ -1915,7 +1923,7 @@ def test_image_upgrade_upgrade_00130(
 ) -> None:
     """
     Function
-    - epld_module setter
+    - ImageUpgrade.epld_module
 
     Summary
     Verify that epld_module does not call fail_json if passed a valid value.
@@ -1953,7 +1961,7 @@ def test_image_upgrade_upgrade_00140(
 ) -> None:
     """
     Function
-    - force_non_disruptive setter
+    - ImageUpgrade.force_non_disruptive
 
     Summary
     Verify that force_non_disruptive does not call fail_json if passed a boolean.
@@ -1987,7 +1995,7 @@ def test_image_upgrade_upgrade_00150(
 ) -> None:
     """
     Function
-    - non_disruptive setter
+    - ImageUpgrade.non_disruptive
 
     Summary
     Verify that non_disruptive does not call fail_json if passed a boolean.
@@ -2021,7 +2029,7 @@ def test_image_upgrade_upgrade_00160(
 ) -> None:
     """
     Function
-    - package_install setter
+    - ImageUpgrade.package_install
 
     Summary
     Verify that package_install does not call fail_json if passed a boolean.
@@ -2055,7 +2063,7 @@ def test_image_upgrade_upgrade_00170(
 ) -> None:
     """
     Function
-    - package_uninstall setter
+    - ImageUpgrade.package_uninstall
 
     Summary
     Verify that package_uninstall does not call fail_json if passed a boolean.
@@ -2089,7 +2097,7 @@ def test_image_upgrade_upgrade_00180(
 ) -> None:
     """
     Function
-    - reboot setter
+    - ImageUpgrade.reboot
 
     Summary
     Verify that reboot does not call fail_json if passed a boolean.
@@ -2123,7 +2131,7 @@ def test_image_upgrade_upgrade_00190(
 ) -> None:
     """
     Function
-    - write_erase setter
+    - ImageUpgrade.write_erase
 
     Summary
     Verify that write_erase does not call fail_json if passed a boolean.
@@ -2145,7 +2153,7 @@ def test_image_upgrade_upgrade_00200(
 ) -> None:
     """
     Function
-    - _wait_for_current_actions_to_complete
+    - ImageUpgrade._wait_for_current_actions_to_complete
 
     Test
     - Two switches are added to ipv4_done
@@ -2193,7 +2201,7 @@ def test_image_upgrade_upgrade_00205(
 ) -> None:
     """
     Function
-    - _wait_for_current_actions_to_complete
+    - ImageUpgrade._wait_for_current_actions_to_complete
 
     Summary
     -   Verify that ipv4_done contains two ip addresses since
@@ -2255,7 +2263,7 @@ def test_image_upgrade_upgrade_00210(
 ) -> None:
     """
     Function
-    - _wait_for_current_actions_to_complete
+    - ImageUpgrade._wait_for_current_actions_to_complete
 
     Test
     - one switch is added to ipv4_done
@@ -2306,7 +2314,7 @@ def test_image_upgrade_upgrade_00220(
 ) -> None:
     """
     Function
-    - _wait_for_image_upgrade_to_complete
+    - ImageUpgrade._wait_for_image_upgrade_to_complete
 
     Test
     - One ip address is added to ipv4_done due to issu_detail.upgrade == "Success"
@@ -2357,7 +2365,8 @@ def test_image_upgrade_upgrade_00230(
 ) -> None:
     """
     Function
-    - _wait_for_image_upgrade_to_complete
+    - ImageUpgrade._wait_for_image_upgrade_to_complete
+
     Test
     -   One ip address is added to ipv4_done as
         issu_detail.upgrade == "Success"
@@ -2414,7 +2423,7 @@ def test_image_upgrade_upgrade_00240(
 ) -> None:
     """
     Function
-    - _wait_for_image_upgrade_to_complete
+    - ImageUpgrade._wait_for_image_upgrade_to_complete
 
     Summary
     Verify that, when two ip addresses are checked, the method's
