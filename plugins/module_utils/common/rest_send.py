@@ -47,7 +47,7 @@ class RestSend:
     response = rest_send.response
     # dict with current controller response
     response_current = rest_send.response_current
-    # list of results from the controller for this session  
+    # list of results from the controller for this session
     result = rest_send.result
     # dict with current controller result
     result_current = rest_send.result_current
@@ -63,6 +63,7 @@ class RestSend:
         self.ansible_module = ansible_module
         self.params = ansible_module.params
 
+        self._valid_verbs = {"GET", "POST", "PUT", "DELETE"}
         self.properties = {}
         self.properties["response"] = []
         self.properties["response_current"] = {}
@@ -140,21 +141,24 @@ class RestSend:
         self.response = copy.deepcopy(response)
         self.result = copy.deepcopy(self.result_current)
 
-        msg = f"{caller}: Exiting dcnm_send_with_retry loop. success {success}. verb {self.verb}, path {self.path}."
+        msg = f"{caller}: Exiting dcnm_send_with_retry loop."
+        msg += f"success {success}. verb {self.verb}, path {self.path}."
         self.log.debug(msg)
 
-        msg = f"{caller}: self.response_current {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+        msg = f"{caller}: self.response_current "
+        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"{caller}: self.response {json.dumps(self.response, indent=4, sort_keys=True)}"
+        msg = f"{caller}: self.response "
+        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"{caller}: self.result_current {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+        msg = f"{caller}: self.result_current "
+        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = (
-            f"{caller}: self.result {json.dumps(self.result, indent=4, sort_keys=True)}"
-        )
+        msg = f"{caller}: self.result "
+        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _handle_response(self, response):
@@ -241,6 +245,18 @@ class RestSend:
         Return a result for a failed task with no changes
         """
         return ImageUpgradeTaskResult(None).failed_result
+
+    @property
+    def path(self):
+        """
+        Endpoint path for the REST request.
+        e.g. "/appcenter/cisco/ndfc/api/v1/...etc..."
+        """
+        return self.properties.get("path")
+
+    @path.setter
+    def path(self, value):
+        self.properties["path"] = value
 
     @property
     def payload(self):
@@ -386,3 +402,21 @@ class RestSend:
             msg += f"{method_name} must be a bool(). Got {value}."
             self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["unit_test"] = value
+
+    @property
+    def verb(self):
+        """
+        Verb for the REST request.
+        One of "GET", "POST", "PUT", "DELETE"
+        """
+        return self.properties.get("verb")
+
+    @verb.setter
+    def verb(self, value):
+        method_name = inspect.stack()[0][3]
+        if value not in self._valid_verbs:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{method_name} must be one of {sorted(self._valid_verbs)}. "
+            msg += f"Got {value}."
+            self.ansible_module.fail_json(msg, **self.failed_result)
+        self.properties["verb"] = value
