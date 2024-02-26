@@ -37,13 +37,20 @@ class RestSend:
 
     Usage (where ansible_module is an instance of AnsibleModule):
 
-    send_rest = RestSend(ansible_module)
-    send_rest.path = "/rest/top-down/fabrics"
-    send_rest.verb = "GET"
-    send_rest.commit()
+    rest_send = RestSend(ansible_module)
+    rest_send.path = "/rest/top-down/fabrics"
+    rest_send.verb = "GET"
+    rest_send.payload = my_payload # Optional
+    rest_send.commit()
 
-    response = send_rest.response
-    result = send_rest.result
+    # list of responses from the controller for this session
+    response = rest_send.response
+    # dict with current controller response
+    response_current = rest_send.response_current
+    # list of results from the controller for this session  
+    result = rest_send.result
+    # dict with current controller result
+    result_current = rest_send.result_current
     """
 
     def __init__(self, ansible_module):

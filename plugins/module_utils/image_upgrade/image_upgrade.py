@@ -31,7 +31,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upg
     ImageUpgradeCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
