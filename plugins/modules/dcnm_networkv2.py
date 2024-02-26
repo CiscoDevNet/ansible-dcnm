@@ -519,9 +519,7 @@ class DcnmNetworkv2:
             )
             w_attach.update(
                 {
-                    "detachSwitchPorts": ",".join(
-                        dtach_sw_ports
-                    )
+                    "detachSwitchPorts": ",".join(dtach_sw_ports)
                     if dtach_sw_ports
                     else ""
                 }
@@ -536,12 +534,12 @@ class DcnmNetworkv2:
                         if tor_w["switch"] == tor_h["switch"]:
                             atch_tor_ports = []
                             h_tor_ports = (
-                                tor_h["torports"].split(",")
+                                tor_h["torports"].split(", ")
                                 if tor_h["torports"]
                                 else []
                             )
                             w_tor_ports = (
-                                tor_w["torports"].split(",")
+                                tor_w["torports"].split(", ")
                                 if tor_w["torports"]
                                 else []
                             )
@@ -556,7 +554,7 @@ class DcnmNetworkv2:
                             else:
                                 atch_tor_ports.extend(h_tor_ports)
 
-                            torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
+                            torconfig = tor_w["switch"] + "(" + (",".join(atch_tor_ports)).strip() + ")"
                             w_attach.update({"torPorts": torconfig})
                 else:
                     torconfig = tor_w["switch"] + "(" + tor_w["torports"] + ")"
@@ -612,9 +610,7 @@ class DcnmNetworkv2:
                                         self.get_attach_ports(attach, h_attach)
                                     if h_attach["torPorts"] or attach["torPorts"]:
                                         self.get_attach_torports(attach, h_attach, replace)
-
                                     self.compute_deploy_diff(attach, diff_deploy)
-                        
                         base.update({"lanAttachList": w_attach_update})
                         diff_attach.append(base)
 
@@ -795,22 +791,29 @@ class DcnmNetworkv2:
                 vlan = attach["vlanId"]             
                 ports = attach["portNames"]
                 attach.update({"torPorts": ""})
-                if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
+                if attach["portNames"] and re.match(r"(\S+\(([Ee]thernet\d+\/\d+,?\s?)+\),?\s?)+", attach["portNames"]):
                     torlist = []
-                    for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
-                        torports = {}
-                        sw = sw_list.split("(")
-                        eth_list = sw[1].split(")")
-                        if idx == 0:
-                            ports = sorted(eth_list[0])
-                            continue
-                        torports.update({"switch": sw[0]})
-                        torports.update({"torports": sorted(eth_list[0])})
-                        torlist.append(torports)
-                    torlist = sorted(torlist, key=lambda torlist: torlist['switch']) 
+                    sw_ports_list = attach["portNames"]
+                    tor_list = sw_ports_list.split(") ")
+                    print("sw is " + str(sw_ports_list))
+                    for idx, tor in enumerate(tor_list):
+                        if tor:
+                            torports = {}
+                            sw_port = tor.split(")")
+                            eth_list = sw_port[0].split("(")
+                            # idx 0 has the switch ports configured
+                            # idx 1 onwards has the tor ports configured
+                            if idx == 0:
+                                ports = (",".join(sorted(eth_list[1].split(",")))).strip()
+                                continue
+                            else:
+                                torports.update({"switch": eth_list[0]})
+                                torports.update({"torports": ",".join(sorted(eth_list[1].split(",")))})
+                                torlist.append(torports)
+                    torlist = sorted(torlist, key=lambda torlist: torlist['switch'])
                     attach.update({"torPorts": torlist})
                 elif attach["portNames"]:
-                    ports = ",".join(sorted(ports.split(",")))
+                    ports = (",".join(sorted(ports.split(",")))).strip()
                     
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
@@ -903,7 +906,7 @@ class DcnmNetworkv2:
         want_attach = []
         want_deploy = {}
 
-        all_networks = ""
+        state = self.params["state"]
 
         if not self.config:
             return
@@ -918,22 +921,56 @@ class DcnmNetworkv2:
                 continue
 
             for attach in net["attach"]:
-                ports = attach["switchPorts"]
-                if ports:
-                    ports = ",".join(sorted(ports.split(",")))
-                else:
-                    ports = ""
-                if attach["torPorts"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["torPorts"]):
+                hports = []
+                htorlist = []
+                if state == "merged":
+                    for atch_h in self.have_attach:
+                        if ( attach["networkName"] == atch_h["networkName"]):
+                            hv_attach = atch_h["lanAttachList"]
+                            for h_attach in hv_attach:
+                                if(attach["serialNumber"] == h_attach["serialNumber"]):
+                                    if h_attach["switchPorts"]:
+                                        hports = sorted(h_attach["switchPorts"].split(","))
+                                    if h_attach["torPorts"]:
+                                        htorlist = h_attach["torPorts"]
+                                    break
+
+                want_ports = attach["switchPorts"]
+                if want_ports:
+                    if state == "merged" and hports:
+                        wports = sorted(want_ports.split(", "))
+                        if wports != hports:
+                            wports = list(set(wports) | set(hports))
+                        wports.sort()
+                        ports = (",".join(wports)).strip()
+                    else:
+                        ports = (",".join(sorted(want_ports.split(", ")))).strip()
+
+                if attach["torPorts"] and re.match(r"(\S+\(([Ee]thernet\d+\/\d+,?\s?)+\),?\s?)+", attach["torPorts"]):
                     torlist = []
-                    for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["torPorts"])):
-                        torports = {}
-                        sw = sw_list.split("(")
-                        eth_list = sw[1].split(")")
-                        torports.update({"switch": sw[0]})
-                        torports.update({"torports": eth_list[0]})
-                        torlist.append(torports)
+                    sw_ports_list = attach["torPorts"]
+                    tor_list = sw_ports_list.split("), ")
+                    print("sw is " + str(sw_ports_list))
+                    for tor in tor_list:
+                        if tor:
+                            torports = {}
+                            dtor_ports = []
+                            sw_port = tor.split(")")
+                            eth_list = sw_port[0].split("(")
+                            switch = eth_list[0]
+                            wtor_ports = sorted(eth_list[1].split(", "))
+                            for htor in htorlist:
+                                if htor["switch"] == switch:
+                                    htor_posts = htor["torports"].split(",")
+                                    if sorted(wtor_ports) != sorted(htor_posts):
+                                        wtor_ports = list(set(wtor_ports) | set(htor_posts))
+                                    wtor_ports.sort()
+                            torports.update({"switch": switch})
+                            torports.update({"torports": ",".join(wtor_ports).strip()})
+                            torlist.append(torports)
                     torlist = sorted(torlist, key=lambda torlist: torlist['switch'])
-                    attach.update({"torPorts": torlist})
+                    if torlist:
+                        attach.update({"torPorts": torlist})
 
                 attach.update({"switchPorts": ports})
                 attach.update({"d_key": "serialNumber"})
@@ -1243,7 +1280,7 @@ class DcnmNetworkv2:
             fabric=dict(required=True, type="str"),
             freeformConfig=dict(type="string", default=""),
             instanceValues=dict(type="string", default=""),
-            networkName=dict(required=True,type="string", default=""),
+            networkName=dict(type="string", default=""),
             serialNumber=dict(required=True, type="string", default=""),
             switchPorts=dict(type="string", default=""),
             torPorts=dict(type="string", default=""),
@@ -1267,7 +1304,6 @@ class DcnmNetworkv2:
                 path = self.paths["TEMPLATE_WITH_NAME"].format(template_name)
                 net_dyn_spec = build_arg_spec(self.module, path)
                 
-                    
                 if net.get("network_template_config"):
                     if net["network_template_config"][0].get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(
@@ -1358,8 +1394,9 @@ def main():
         )
 
     dcnm_netv2.validate_input()
-    dcnm_netv2.get_want()
     dcnm_netv2.get_have()
+    dcnm_netv2.get_want()
+
 
     warn_msg = None
 
