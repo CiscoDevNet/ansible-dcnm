@@ -56,12 +56,19 @@ def test_image_upgrade_switch_details_00001(switch_details) -> None:
     Function
     - __init__
 
+    Summary
+    Verify that the class attributes are initialized to expected values.
+
     Test
     - Class attributes are initialized to expected values
+    - fail_json is not called
     """
-    instance = switch_details
+    with does_not_raise():
+        instance = switch_details
     assert isinstance(instance, SwitchDetails)
     assert instance.class_name == "SwitchDetails"
+    assert instance.verb == "GET"
+    assert instance.path == "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches"
 
 
 def test_image_upgrade_switch_details_00002(switch_details) -> None:
@@ -69,13 +76,18 @@ def test_image_upgrade_switch_details_00002(switch_details) -> None:
     Function
     - _init_properties
 
+    Summary
+    Verify that the class properties are initialized to expected values.
+
     Test
     - Class properties are initialized to expected values
+    - fail_json is not called
     """
-    instance = switch_details
-
+    with does_not_raise():
+        instance = switch_details
     assert isinstance(instance.properties, dict)
     assert instance.properties.get("ip_address") is None
+    assert instance.properties.get("info") == {}
     assert instance.properties.get("response_data") == []
     assert instance.properties.get("response") == []
     assert instance.properties.get("response_current") == {}
@@ -120,14 +132,27 @@ def test_image_upgrade_switch_details_00020(monkeypatch, switch_details) -> None
 def test_image_upgrade_switch_details_00021(monkeypatch, switch_details) -> None:
     """
     Function
-    - refresh
+    - SwitchDetails.refresh
+    - SwitchDetails.ip_address.setter
+    - SwitchDetails.fabric_name
+    - SwitchDetails.hostname
+    - SwitchDetails.logical_name
+    - SwitchDetails.model
+    - SwitchDetails.platform
+    - SwitchDetails.role
+    - SwitchDetails.sserial_number
+
+    Summary
+    Verify that, after refresh() is called, and the ip_address setter
+    property is set, the getter properties return values specific to the
+    ip_address that was set.
 
     Test
     - response_data is a dictionary
     - ip_address is set
     - getter properties will return values specific to ip_address
+    - fail_json is not called
     """
-    instance = switch_details
 
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_switch_details_00021a"
@@ -140,12 +165,17 @@ def test_image_upgrade_switch_details_00021(monkeypatch, switch_details) -> None
     monkeypatch.setattr(
         PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT, {"success": True, "found": True}
     )
-
-    instance.refresh()
+    with does_not_raise():
+        instance = switch_details
+        instance.refresh()
     assert isinstance(instance.response_data, list)
-    instance.ip_address = "172.22.150.110"
+
+    with does_not_raise():
+        instance.ip_address = "172.22.150.110"
     assert instance.hostname == "cvd-1111-bgw"
-    instance.ip_address = "172.22.150.111"
+
+    with does_not_raise():
+        instance.ip_address = "172.22.150.111"
     # We use the above IP address to test the remaining properties
     assert instance.fabric_name == "easy"
     assert instance.hostname == "cvd-1112-bgw"
@@ -179,8 +209,12 @@ def test_image_upgrade_switch_details_00022(
 ) -> None:
     """
     Function
-    - switch_details.refresh
+    - SwitchDetails.refresh
     - RestSend._handle_response
+
+    Summary
+    Verify that RestSend._handle_responmse() returns an appropriate result
+    when SwitchDetails.refresh() is called.
 
     Test
     - test_image_upgrade_switch_details_00022a
@@ -227,12 +261,15 @@ def test_image_upgrade_switch_details_00023(
 ) -> None:
     """
     Function
-    - switch_details.refresh
-    - switch_details.ip_address
-    - switch_details._get
+    - SwitchDetails.refresh
+    - SwitchDetails.ip_address
+    - SwitchDetails._get
+
+    Summary
+    Verify that SwitchDetails._get returns expected property values.
 
     Test
-    - _get returns correct property values
+    - _get returns property values consistent with the controller response.
 
     Description
 
@@ -260,20 +297,25 @@ def test_image_upgrade_switch_details_00023(
         PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
     )
 
-    instance.refresh()
-    instance.ip_address = "172.22.150.110"
+    with does_not_raise():
+        instance.refresh()
+        instance.ip_address = "172.22.150.110"
     assert instance._get(item) == expected
 
 
 def test_image_upgrade_switch_details_00024(monkeypatch, switch_details) -> None:
     """
     Function
-    - switch_details.refresh
-    - switch_details.ip_address
-    - switch_details._get
+    - SwitchDetails.refresh
+    - SwitchDetails.ip_address
+    - SwitchDetails._get
+
+    Summary
+    Verify that fail_json is called when SwitchDetails.ip_address does not exist
+    on the controller and a property associated with ip_address is queried.
 
     Test
-    - _get calls fail_json when switch_details.ip_address is unknown
+    - _get calls fail_json when SwitchDetails.ip_address is unknown
 
     Description
     SwitchDetails._get is called by all getter properties.
@@ -282,8 +324,6 @@ def test_image_upgrade_switch_details_00024(monkeypatch, switch_details) -> None
     It returns the value of the requested property if the user has set a known
     ip_address.
     """
-    instance = switch_details
-
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_switch_details_00024a"
         return responses_switch_details(key)
@@ -296,8 +336,10 @@ def test_image_upgrade_switch_details_00024(monkeypatch, switch_details) -> None
     match = "SwitchDetails._get: 1.1.1.1 does not exist "
     match += "on the controller."
 
-    instance.refresh()
-    instance.ip_address = "1.1.1.1"
+    with does_not_raise():
+        instance = switch_details
+        instance.refresh()
+        instance.ip_address = "1.1.1.1"
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("hostName")
 
@@ -305,9 +347,12 @@ def test_image_upgrade_switch_details_00024(monkeypatch, switch_details) -> None
 def test_image_upgrade_switch_details_00025(monkeypatch, switch_details) -> None:
     """
     Function
-    - switch_details.refresh
-    - switch_details.ip_address
-    - switch_details._get
+    - SwitchDetails.refresh
+    - SwitchDetails.ip_address
+    - SwitchDetails._get
+
+    Summary
+    Verify that fail_json is called when an unknown property name is queried.
 
     Test
     - _get calls fail_json when an unknown property name is queried
@@ -317,8 +362,6 @@ def test_image_upgrade_switch_details_00025(monkeypatch, switch_details) -> None
     It raises AnsibleFailJson if the user has not set ip_address or if
     the ip_address is unknown, or if an unknown property name is queried.
     """
-    instance = switch_details
-
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_switch_details_00025a"
         return responses_switch_details(key)
@@ -330,8 +373,10 @@ def test_image_upgrade_switch_details_00025(monkeypatch, switch_details) -> None
 
     match = "SwitchDetails._get: 172.22.150.110 does not have a key named FOO."
 
-    instance.refresh()
-    instance.ip_address = "172.22.150.110"
+    with does_not_raise():
+        instance = switch_details
+        instance.refresh()
+        instance.ip_address = "172.22.150.110"
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("FOO")
 
@@ -357,8 +402,8 @@ def test_image_upgrade_switch_details_00060(
     - return IP address, if set
     - return None, if not set
     """
-    instance = switch_details
-
-    if ip_address_is_set:
-        instance.ip_address = "1.2.3.4"
+    with does_not_raise():
+        instance = switch_details
+        if ip_address_is_set:
+            instance.ip_address = "1.2.3.4"
     assert instance.ip_address == expected

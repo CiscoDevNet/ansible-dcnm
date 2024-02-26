@@ -58,7 +58,11 @@ class SwitchDetails(ImageUpgradeCommon):
         self.log.debug("ENTERED SwitchDetails()")
 
         self.endpoints = ApiEndpoints()
+        self.path = self.endpoints.switches_info.get("path")
+        self.verb = self.endpoints.switches_info.get("verb")
+
         self.rest_send = RestSend(self.module)
+
         self._init_properties()
 
     def _init_properties(self):
@@ -75,11 +79,8 @@ class SwitchDetails(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        path = self.endpoints.switches_info.get("path")
-        verb = self.endpoints.switches_info.get("verb")
-
-        self.rest_send.verb = verb
-        self.rest_send.path = path
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
         self.rest_send.commit()
 
         msg = f"self.rest_send.response_current: {self.rest_send.response_current}"
