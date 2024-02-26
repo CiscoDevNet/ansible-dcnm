@@ -38,7 +38,8 @@ class ImagePolicies(ImageUpgradeCommon):
 
     Usage (where module is an instance of AnsibleModule):
 
-    instance = ImagePolicies(module).refresh()
+    instance = ImagePolicies(module)
+    instance.refresh()
     instance.policy_name = "NR3F"
     if instance.name is None:
         print("policy NR3F does not exist on the controller")
@@ -47,8 +48,6 @@ class ImagePolicies(ImageUpgradeCommon):
     platform = instance.platform
     epd_image_name = instance.epld_image_name
     etc...
-
-    Policies can be refreshed by calling instance.refresh().
 
     Endpoint:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
@@ -186,28 +185,6 @@ class ImagePolicies(ImageUpgradeCommon):
         Return None otherwise
         """
         return self._get("policyName")
-
-    @property
-    def response_data(self):
-        """
-        Return the parsed data from the response as a dictionary,
-        keyed on policy_name.
-        """
-        return self.properties["response_data"]
-
-    @property
-    def response(self):
-        """
-        Return the raw response from the controller.
-        """
-        return self.properties["response"]
-
-    @property
-    def result(self):
-        """
-        Return the raw result.
-        """
-        return self.properties["result"]
 
     @property
     def policy_name(self):

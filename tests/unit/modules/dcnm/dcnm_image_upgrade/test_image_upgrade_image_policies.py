@@ -46,7 +46,7 @@ DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_UPGRADE + "image_policies.dcnm_send"
 def test_image_upgrade_image_policies_00001(image_policies) -> None:
     """
     Function
-    - __init__
+    - ImagePolicies.__init__
 
     Test
     - Class attributes are initialized to expected values
@@ -61,7 +61,7 @@ def test_image_upgrade_image_policies_00001(image_policies) -> None:
 def test_image_upgrade_image_policies_00002(image_policies) -> None:
     """
     Function
-    - _init_properties
+    - ImagePolicies._init_properties
 
     Test
     - Class properties are initialized to expected values
@@ -78,12 +78,19 @@ def test_image_upgrade_image_policies_00002(image_policies) -> None:
 def test_image_upgrade_image_policies_00010(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+    - ImagePolicies.policy_name
+
+
+    Summary
+    Verify that refresh returns image policy info and that the filtered
+    properties associated with policy_name are the expected values.
 
     Test
-    - properties are initialized to expected values
-    - 200 RETURN_CODE
-    - fail_json is not called
+    -   properties for policy_name are set to reflect the response from
+        the controller
+    -   200 RETURN_CODE
+    -   fail_json is not called
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
@@ -117,10 +124,11 @@ def test_image_upgrade_image_policies_00010(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00020(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+    - ImagePolicies.result
 
     Test
-    - result contains expected key/values on 200 response from endpoint.
+    - Imagepolicies.result contains expected key/values on 200 response from endpoint.
 
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
@@ -144,7 +152,11 @@ def test_image_upgrade_image_policies_00020(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00021(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+
+    Summary
+    Verify that fail_json is called when the response from the controller
+    contains a 404 RETURN_CODE.
 
     Test
     - fail_json is called on 404 RETURN_CODE in response.
@@ -171,7 +183,11 @@ def test_image_upgrade_image_policies_00021(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00022(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+
+    Summary
+    Verify that fail_json is called when the response from the controller
+    contains an empty DATA key.
 
     Test
     - fail_json is called on 200 RETURN_CODE with empty DATA key.
@@ -198,7 +214,11 @@ def test_image_upgrade_image_policies_00022(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00023(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+
+    Summary
+    Verify that fail_json is not called when a 200 response from the controller
+    contains DATA.lastOperDataObject with length == 0.
 
     Test
     - do not fail_json when DATA.lastOperDataObject length == 0
@@ -229,11 +249,17 @@ def test_image_upgrade_image_policies_00023(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00024(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
-    - policy_name
+    - ImagePolicies.refresh
+    - ImagePolicies.policy_name
+
+    Summary
+    Verify when policy_name is set to a policy that does not exist on the
+    controller, instance.policy returns None.
+
+    Setup
+    - instance.policy_name is set to a policy that does not exist on the controller.
 
     Test
-    - instance.policy_name is set to a policy that does not exist on the controller.
     - instance.policy returns None
 
     Endpoint
@@ -258,7 +284,11 @@ def test_image_upgrade_image_policies_00024(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+
+    Summary
+    Verify that fail_json is called when the response from the controller
+    is missing the policyName key.
 
     Test
     - fail_json is called on response with missing policyName key.
@@ -268,8 +298,7 @@ def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None
 
     NOTES
     - This is to cover a check in ImagePolicies.refresh()
-    - This scenario should never happen.
-    - Consider removing this check, and this testcase.
+    - This scenario should happen only with a bug, or API change, on the controller.
     """
     key = "test_image_upgrade_image_policies_00025a"
 
@@ -290,11 +319,12 @@ def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00026(monkeypatch, image_policies) -> None:
     """
     Function
-    - refresh
+    - ImagePolicies.refresh
+    - ImageUpgradeCommon._handle_response
 
     Summary
-    Verify that fail_json is called when _handle_response() returns a
-    non-successful result.
+    Verify that fail_json is called when ImageUpgradeCommon._handle_response()
+    returns a non-successful result.
 
     Test
     - fail_json is called when result["success"] is False.
@@ -319,10 +349,14 @@ def test_image_upgrade_image_policies_00026(monkeypatch, image_policies) -> None
 def test_image_upgrade_image_policies_00040(image_policies) -> None:
     """
     Function
-    - _get
+    - ImagePolicies._get
+
+    Summary
+    Verify that fail_json is called when _get() is called prior to setting policy_name.
 
     Test
     - fail_json is called when _get() is called prior to setting policy_name.
+    - Appropriate error message is provided.
     """
     match = "ImagePolicies._get: instance.policy_name must be "
     match += "set before accessing property imageName."
@@ -330,3 +364,157 @@ def test_image_upgrade_image_policies_00040(image_policies) -> None:
     instance = image_policies
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("imageName")  # pylint: disable=protected-access
+
+
+def test_image_upgrade_image_policies_00041(monkeypatch, image_policies) -> None:
+    """
+    Function
+    - ImagePolicies._get
+
+    Summary
+    Verify that fail_json is called when ImagePolicies._get is called
+    with an argument that does not match an item in the response data
+    for the policy_name returned by the controller.
+
+    Setup
+    -   instance.commit() is called and retrieves a response from the
+        controller containing informationi for policy KR5M.
+    - policy_name is set to KR5M.
+
+    Test
+    - fail_json is called when _get() is called with a bad parameter FOO
+    - An appropriate error message is provided.
+    """
+    key = "test_image_upgrade_image_policies_00041a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
+        return responses_image_policies(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+
+    match = r"ImagePolicies\._get: KR5M does not have a key named FOO\."
+
+    with does_not_raise():
+        instance = image_policies
+        instance.refresh()
+        instance.policy_name = "KR5M"
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance._get("FOO")  # pylint: disable=protected-access
+
+
+def test_image_upgrade_image_policies_00042(monkeypatch, image_policies) -> None:
+    """
+    Function
+    - ImagePolicies._get
+
+    Summary
+    Verify that the correct image policy information is returned when
+    ImagePolicies._get is called with the "policy" arguement.
+
+    Setup
+    -   instance.commit() is called and retrieves a response from the
+        controller containing informationi for policy KR5M.
+    - policy_name is set to KR5M.
+    - _get("policy") is called.
+
+    Test
+    - fail_json is not called
+    - The expected policy information is returned.
+    """
+    key = "test_image_upgrade_image_policies_00042a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
+        return responses_image_policies(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+
+    with does_not_raise():
+        instance = image_policies
+        instance.refresh()
+        instance.policy_name = "KR5M"
+        value = instance._get("policy")  # pylint: disable=protected-access
+    assert value["agnostic"] == "false"
+    assert value["epldImgName"] == "n9000-epld.10.2.5.M.img"
+    assert value["imageName"] == "nxos64-cs.10.2.5.M.bin"
+    assert value["nxosVersion"] == "10.2.5_nxos64-cs_64bit"
+    assert value["packageName"] == ""
+    assert value["platform"] == "N9K/N3K"
+    assert value["platformPolicies"] == ""
+    assert value["policyDescr"] == "10.2.(5) with EPLD"
+    assert value["policyName"] == "KR5M"
+    assert value["policyType"] == "PLATFORM"
+    assert value["ref_count"] == 10
+    assert value["rpmimages"] == ""
+
+
+def test_image_upgrade_image_policies_00050(image_policies) -> None:
+    """
+    Function
+    - ImagePolicies.all_policies
+
+    Summary
+    Verify that all_policies returns an empty dict when no policies exist
+    on the controller.
+
+    Test
+    - fail_json is not called.
+    - all_policies returns an empty dict.
+    """
+    with does_not_raise():
+        instance = image_policies
+        foo = instance.all_policies
+    assert foo == {}
+
+
+def test_image_upgrade_image_policies_00051(monkeypatch, image_policies) -> None:
+    """
+    Function
+    - ImagePolicies.all_policies
+
+    Summary
+    Verify that, when policies exist on the controller, all_policies returns a dict
+    containing these policies.
+
+    Test
+    - fail_json is not called.
+    - all_policies returns a dict containing the controller's policies.
+    """
+    key = "test_image_upgrade_image_policies_00051a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
+        return responses_image_policies(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+
+    instance = image_policies
+    with does_not_raise():
+        instance.refresh()
+        foo = instance.all_policies
+    assert foo["KR5M"]["agnostic"] == "false"
+    assert foo["KR5M"]["epldImgName"] == "n9000-epld.10.2.5.M.img"
+    assert foo["KR5M"]["imageName"] == "nxos64-cs.10.2.5.M.bin"
+    assert foo["KR5M"]["nxosVersion"] == "10.2.5_nxos64-cs_64bit"
+    assert foo["KR5M"]["packageName"] == ""
+    assert foo["KR5M"]["platform"] == "N9K/N3K"
+    assert foo["KR5M"]["platformPolicies"] == ""
+    assert foo["KR5M"]["policyDescr"] == "10.2.(5) with EPLD"
+    assert foo["KR5M"]["policyName"] == "KR5M"
+    assert foo["KR5M"]["policyType"] == "PLATFORM"
+    assert foo["KR5M"]["ref_count"] == 10
+    assert foo["KR5M"]["rpmimages"] == ""
+    assert foo["OR1F"]["agnostic"] == "false"
+    assert foo["OR1F"]["epldImgName"] == "n9000-epld.10.4.1.F.img"
+    assert foo["OR1F"]["imageName"] == "nxos64-cs.10.4.1.F.bin"
+    assert foo["OR1F"]["nxosVersion"] == "10.4.1_nxos64-cs_64bit"
+    assert foo["OR1F"]["packageName"] == ""
+    assert foo["OR1F"]["platform"] == "N9K/N3K"
+    assert foo["OR1F"]["platformPolicies"] == ""
+    assert foo["OR1F"]["policyDescr"] == "OR1F EPLD"
+    assert foo["OR1F"]["policyName"] == "OR1F"
+    assert foo["OR1F"]["policyType"] == "PLATFORM"
+    assert foo["OR1F"]["ref_count"] == 0
+    assert foo["OR1F"]["rpmimages"] == ""
