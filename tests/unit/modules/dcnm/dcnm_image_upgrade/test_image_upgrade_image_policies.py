@@ -465,8 +465,8 @@ def test_image_upgrade_image_policies_00050(image_policies) -> None:
     """
     with does_not_raise():
         instance = image_policies
-        foo = instance.all_policies
-    assert foo == {}
+        value = instance.all_policies
+    assert value == {}
 
 
 def test_image_upgrade_image_policies_00051(monkeypatch, image_policies) -> None:
@@ -493,28 +493,28 @@ def test_image_upgrade_image_policies_00051(monkeypatch, image_policies) -> None
     instance = image_policies
     with does_not_raise():
         instance.refresh()
-        foo = instance.all_policies
-    assert foo["KR5M"]["agnostic"] == "false"
-    assert foo["KR5M"]["epldImgName"] == "n9000-epld.10.2.5.M.img"
-    assert foo["KR5M"]["imageName"] == "nxos64-cs.10.2.5.M.bin"
-    assert foo["KR5M"]["nxosVersion"] == "10.2.5_nxos64-cs_64bit"
-    assert foo["KR5M"]["packageName"] == ""
-    assert foo["KR5M"]["platform"] == "N9K/N3K"
-    assert foo["KR5M"]["platformPolicies"] == ""
-    assert foo["KR5M"]["policyDescr"] == "10.2.(5) with EPLD"
-    assert foo["KR5M"]["policyName"] == "KR5M"
-    assert foo["KR5M"]["policyType"] == "PLATFORM"
-    assert foo["KR5M"]["ref_count"] == 10
-    assert foo["KR5M"]["rpmimages"] == ""
-    assert foo["OR1F"]["agnostic"] == "false"
-    assert foo["OR1F"]["epldImgName"] == "n9000-epld.10.4.1.F.img"
-    assert foo["OR1F"]["imageName"] == "nxos64-cs.10.4.1.F.bin"
-    assert foo["OR1F"]["nxosVersion"] == "10.4.1_nxos64-cs_64bit"
-    assert foo["OR1F"]["packageName"] == ""
-    assert foo["OR1F"]["platform"] == "N9K/N3K"
-    assert foo["OR1F"]["platformPolicies"] == ""
-    assert foo["OR1F"]["policyDescr"] == "OR1F EPLD"
-    assert foo["OR1F"]["policyName"] == "OR1F"
-    assert foo["OR1F"]["policyType"] == "PLATFORM"
-    assert foo["OR1F"]["ref_count"] == 0
-    assert foo["OR1F"]["rpmimages"] == ""
+        value = instance.all_policies
+    assert value["KR5M"]["agnostic"] == "false"
+    assert value["KR5M"]["epldImgName"] == "n9000-epld.10.2.5.M.img"
+    assert value["KR5M"]["imageName"] == "nxos64-cs.10.2.5.M.bin"
+    assert value["KR5M"]["nxosVersion"] == "10.2.5_nxos64-cs_64bit"
+    assert value["KR5M"]["packageName"] == ""
+    assert value["KR5M"]["platform"] == "N9K/N3K"
+    assert value["KR5M"]["platformPolicies"] == ""
+    assert value["KR5M"]["policyDescr"] == "10.2.(5) with EPLD"
+    assert value["KR5M"]["policyName"] == "KR5M"
+    assert value["KR5M"]["policyType"] == "PLATFORM"
+    assert value["KR5M"]["ref_count"] == 10
+    assert value["KR5M"]["rpmimages"] == ""
+    assert value["OR1F"]["agnostic"] == "false"
+    assert value["OR1F"]["epldImgName"] == "n9000-epld.10.4.1.F.img"
+    assert value["OR1F"]["imageName"] == "nxos64-cs.10.4.1.F.bin"
+    assert value["OR1F"]["nxosVersion"] == "10.4.1_nxos64-cs_64bit"
+    assert value["OR1F"]["packageName"] == ""
+    assert value["OR1F"]["platform"] == "N9K/N3K"
+    assert value["OR1F"]["platformPolicies"] == ""
+    assert value["OR1F"]["policyDescr"] == "OR1F EPLD"
+    assert value["OR1F"]["policyName"] == "OR1F"
+    assert value["OR1F"]["policyType"] == "PLATFORM"
+    assert value["OR1F"]["ref_count"] == 0
+    assert value["OR1F"]["rpmimages"] == ""
