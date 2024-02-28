@@ -34,6 +34,8 @@ class ImageUpgradeTaskResult:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImageUpgradeTaskResult()")
 
+        # Used in did_anything_change() to determine if any diffs have been
+        # appended to the diff lists.
         self.diff_properties = {}
         self.diff_properties["diff_attach_policy"] = "attach_policy"
         self.diff_properties["diff_detach_policy"] = "detach_policy"
@@ -41,6 +43,7 @@ class ImageUpgradeTaskResult:
         self.diff_properties["diff_stage"] = "stage"
         self.diff_properties["diff_upgrade"] = "upgrade"
         self.diff_properties["diff_validate"] = "validate"
+        # Used in failed_result() and module_result() to build the result dict()
         self.response_properties = {}
         self.response_properties["response_attach_policy"] = "attach_policy"
         self.response_properties["response_detach_policy"] = "detach_policy"

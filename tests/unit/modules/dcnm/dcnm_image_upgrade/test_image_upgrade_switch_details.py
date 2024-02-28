@@ -68,7 +68,10 @@ def test_image_upgrade_switch_details_00001(switch_details) -> None:
     assert isinstance(instance, SwitchDetails)
     assert instance.class_name == "SwitchDetails"
     assert instance.verb == "GET"
-    assert instance.path == "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches"
+    assert (
+        instance.path
+        == "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches"
+    )
 
 
 def test_image_upgrade_switch_details_00002(switch_details) -> None:
@@ -324,6 +327,7 @@ def test_image_upgrade_switch_details_00024(monkeypatch, switch_details) -> None
     It returns the value of the requested property if the user has set a known
     ip_address.
     """
+
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_switch_details_00024a"
         return responses_switch_details(key)
@@ -362,6 +366,7 @@ def test_image_upgrade_switch_details_00025(monkeypatch, switch_details) -> None
     It raises AnsibleFailJson if the user has not set ip_address or if
     the ip_address is unknown, or if an unknown property name is queried.
     """
+
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_switch_details_00025a"
         return responses_switch_details(key)

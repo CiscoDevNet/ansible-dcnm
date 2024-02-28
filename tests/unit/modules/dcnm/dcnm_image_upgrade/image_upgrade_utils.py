@@ -37,6 +37,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upg
     ImageUpgrade
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
+    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
@@ -135,6 +137,14 @@ def image_upgrade_task_fixture():
     mock ImageUpgradeTask
     """
     return ImageUpgradeTask(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_upgrade_task_result")
+def image_upgrade_task_result_fixture():
+    """
+    mock ImageUpgradeTaskResult
+    """
+    return ImageUpgradeTaskResult(MockAnsibleModule)
 
 
 @pytest.fixture(name="image_validate")
