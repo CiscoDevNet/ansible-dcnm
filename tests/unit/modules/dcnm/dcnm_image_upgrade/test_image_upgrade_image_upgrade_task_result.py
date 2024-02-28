@@ -169,8 +169,8 @@ def test_image_upgrade_upgrade_task_result_00040(image_upgrade_task_result) -> N
         instance = image_upgrade_task_result
         result = instance.failed_result
     assert isinstance(result, dict)
-    assert result["changed"] == False
-    assert result["failed"] == True
+    assert result["changed"] is False
+    assert result["failed"] is True
     for key in test_diff_keys:
         assert result["diff"][key] == []
     for key in test_response_keys:
@@ -198,7 +198,7 @@ def test_image_upgrade_upgrade_task_result_00050(image_upgrade_task_result) -> N
         instance = image_upgrade_task_result
         result = instance.module_result
     assert isinstance(result, dict)
-    assert result["changed"] == False
+    assert result["changed"] is False
     for key in test_keys:
         assert result["diff"][key] == []
     for key in test_keys:
