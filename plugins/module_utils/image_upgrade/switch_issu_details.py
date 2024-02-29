@@ -799,7 +799,7 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
     def filtered_data(self):
         """
         Return a dictionary of the switch matching self.serial_number.
-        Return None if the switch does not exist in NDFC.
+        Return None if the switch does not exist on the controller.
         """
         return self.data_subclass.get(self.filter)
 

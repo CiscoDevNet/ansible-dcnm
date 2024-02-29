@@ -46,7 +46,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00001(
 ) -> None:
     """
     Function
-    - __init__
+    - SwitchIssuDetailsByDeviceName.__init__
 
     Test
     - fail_json is not called
@@ -62,7 +62,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00002(
 ) -> None:
     """
     Function
-    - _init_properties
+    - SwitchIssuDetailsByDeviceName._init_properties
 
     Test
     - Class properties initialized to expected values
@@ -89,7 +89,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00020(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsByDeviceName.refresh
 
     Test
     - instance.response is a dict
@@ -114,7 +114,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00021(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsByDeviceName.refresh
 
     Test
     - Properties are set based on device_name
@@ -187,6 +187,8 @@ def test_image_upgrade_switch_issu_details_by_device_name_00021(
     # NOTE: Values are synthesized in the response for this test
     assert instance.vpc_role == "FOO"
     assert instance.vpc_role2 == "BAR"
+    assert isinstance(instance.filtered_data, dict)
+    assert instance.filtered_data.get("deviceName") == "cvd-2313-leaf"
 
 
 def test_image_upgrade_switch_issu_details_by_device_name_00022(
@@ -194,7 +196,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00022(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsByDeviceName.refresh
 
     Test
     - instance.result is a dict
@@ -222,7 +224,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00023(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsByDeviceName.refresh
 
     Test
     - refresh calls handle_response, which calls json_fail on 404 response
@@ -247,7 +249,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00024(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsByDeviceName.refresh
 
     Test
     - fail_json is called on 200 response with empty DATA key
@@ -273,7 +275,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00025(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsByDeviceName.refresh
 
     Test
     - fail_json is called on 200 response with DATA.lastOperDataObject length 0
@@ -300,17 +302,26 @@ def test_image_upgrade_switch_issu_details_by_device_name_00040(
 ) -> None:
     """
     Function
-    - _get
+    - SwitchIssuDetailsByDeviceName._get
+
+    Summary
+    Verify that _get() calls fail_json because filter is set to an
+    unknown device_name
 
     Test
-    - fail_json is called due to unknown device_name is set
+    - fail_json is called because filter is set to an unknown device_name
     - Error message matches expectation
 
+    Description
     SwitchIssuDetailsByDeviceName._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set device_name or if
-    device_name is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has set a known
-    device_name.
+    It raises AnsibleFailJson if the user has not set filter or if
+    filter is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has filter
+    to a device_name that exists on the controller.
+
+    Expected result
+    1.  fail_json is called with appropriate error message since filter
+    is set to an unknown device_name.
     """
     instance = issu_details_by_device_name
 
@@ -335,16 +346,19 @@ def test_image_upgrade_switch_issu_details_by_device_name_00041(
     Function
     - _get
 
+    Summary
+    Verify that _get() calls fail_json because an unknown property is queried
+
     Test
     - fail_json is called on access of unknown property name
     - Error message matches expectation
 
     Description
     SwitchIssuDetailsByDeviceName._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set device_name or if
-    device_name is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has set a known
-    ip_address.
+    It raises AnsibleFailJson if the user has not set filter or if
+    filter is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has filter
+    to a device_name that exists on the controller.
     """
     instance = issu_details_by_device_name
 
@@ -360,3 +374,30 @@ def test_image_upgrade_switch_issu_details_by_device_name_00041(
     match += "property name: FOO"
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("FOO")  # pylint: disable=protected-access
+
+
+def test_image_upgrade_switch_issu_details_by_device_name_00042(
+    issu_details_by_device_name
+) -> None:
+    """
+    Function
+    - _get
+
+    Test
+    - fail_json is called because instance.filter is not set
+    - Error message matches expectation
+
+    Description
+    SwitchIssuDetailsByDeviceName._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set filter or if
+    filter is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has filter
+    to a device_name that exists on the controller.
+    """
+    with does_not_raise():
+        instance = issu_details_by_device_name
+    match = r"SwitchIssuDetailsByDeviceName\._get: " 
+    match += r"set instance\.filter to a switch deviceName "
+    match += r"before accessing property role\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.role

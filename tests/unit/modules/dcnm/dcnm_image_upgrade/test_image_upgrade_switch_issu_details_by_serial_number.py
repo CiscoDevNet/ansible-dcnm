@@ -47,7 +47,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00001(
 ) -> None:
     """
     Function
-    - __init__
+    - SwitchIssuDetailsBySerialNumber.__init__
 
     Test
     - fail_json is not called
@@ -63,7 +63,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00002(
 ) -> None:
     """
     Function
-    - _init_properties
+    - SwitchIssuDetailsBySerialNumber._init_properties
 
     Test
     - Class properties initialized to expected values
@@ -91,7 +91,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00020(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsBySerialNumber.refresh
 
     Test
     - instance.response is a list
@@ -123,7 +123,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00021(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsBySerialNumber.refresh
 
     Test
     - Properties are set based on device_name
@@ -195,6 +195,8 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00021(
     # NOTE: Values are synthesized in the response for this test
     assert instance.vpc_role == "FOO"
     assert instance.vpc_role2 == "BAR"
+    assert isinstance(instance.filtered_data, dict)
+    assert instance.filtered_data.get("deviceName") == "cvd-2313-leaf"
 
 
 def test_image_upgrade_switch_issu_details_by_serial_number_00022(
@@ -202,7 +204,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00022(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsBySerialNumber.refresh
 
     Test
     - instance.result_current is a dict
@@ -228,7 +230,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00023(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsBySerialNumber.refresh
 
     Test
     - refresh calls handle_response, which calls json_fail on 404 response
@@ -253,7 +255,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00024(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsBySerialNumber.refresh
 
     Test
     - fail_json is called on 200 response with empty DATA key
@@ -279,7 +281,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00025(
 ) -> None:
     """
     Function
-    - refresh
+    - SwitchIssuDetailsBySerialNumber.refresh
 
     Test
     - fail_json is called on 200 response with DATA.lastOperDataObject length 0
@@ -304,18 +306,27 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00040(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
-    Function description:
+    Function
+    - SwitchIssuDetailsBySerialNumber._get
 
+    Summary
+    Verify that _get() calls fail_json because filter is set to an
+    unknown serial_number
+
+    Test
+    - fail_json is called because filter is set to an unknown serial_number
+    - Error message matches expectation
+
+    Description
     SwitchIssuDetailsBySerialNumber._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set serial_number or if
-    serial_number is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has set a known
-    serial_number and the property name is valid.
+    It raises AnsibleFailJson if the user has not set filter or if
+    filter is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has filter
+    to a serial_number that exists on the controller.
 
-    Expected results:
-
-    1.  fail_json is called with appropriate error message since an unknown
-        serial_number is set.
+    Expected result:
+    1.  fail_json is called with appropriate error message since filter
+        is set to an unknown serial_number.
     """
     instance = issu_details_by_serial_number
 
@@ -338,16 +349,24 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00041(
     monkeypatch, issu_details_by_serial_number
 ) -> None:
     """
-    Function description:
+    Function
+    SwitchIssuDetailsBySerialNumber._get
 
+    Summary
+    Verify that _get() calls fail_json because an unknown property is queried
+
+    Test
+    - fail_json is called on access of unknown property name
+    - Error message matches expectation
+
+    Description
     SwitchIssuDetailsBySerialNumber._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set serial_number or if
-    serial_number is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has set a known
-    serial_number and the property name is valid.
+    It raises AnsibleFailJson if the user has not set filter or if
+    filter is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has filter
+    to a serial_number that exists on the controller.
 
-    Expected results:
-
+    Expected results
     1.  fail_json is called with appropriate error message since an unknown
         property is queried.
     """
@@ -366,3 +385,30 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00041(
     instance.filter = "FDO21120U5D"
     with pytest.raises(AnsibleFailJson, match=match):
         instance._get("FOO")  # pylint: disable=protected-access
+
+
+def test_image_upgrade_switch_issu_details_by_serial_number_00042(
+    issu_details_by_serial_number
+) -> None:
+    """
+    Function
+    - SwitchIssuDetailsBySerialNumber._get
+
+    Test
+    - _get() calls fail_json because instance.filter is not set
+    - Error message matches expectation
+
+    Description
+    SwitchIssuDetailsBySerialNumber._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set filter or if
+    filter is unknown, or if an unknown property name is queried.
+    It returns the value of the requested property if the user has filter
+    to a serial_number that exists on the controller.
+    """
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+    match = r"SwitchIssuDetailsBySerialNumber\._get: " 
+    match += r"set instance\.filter to a switch serialNumber "
+    match += r"before accessing property role\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.role
