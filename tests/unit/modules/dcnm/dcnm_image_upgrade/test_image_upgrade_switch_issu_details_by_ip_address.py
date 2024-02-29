@@ -355,7 +355,7 @@ def test_image_upgrade_switch_issu_details_by_ip_address_00041(
     """
     Function
     SwitchIssuDetailsByIpAddress._get
- 
+
     Summary
     Verify that _get() calls fail_json because an unknown property is queried
 
@@ -410,7 +410,7 @@ def test_image_upgrade_switch_issu_details_by_ip_address_00042(
     """
     with does_not_raise():
         instance = issu_details_by_ip_address
-    match = r"SwitchIssuDetailsByIpAddress\._get: " 
+    match = r"SwitchIssuDetailsByIpAddress\._get: "
     match += r"set instance\.filter to a switch ipAddress "
     match += r"before accessing property role\."
     with pytest.raises(AnsibleFailJson, match=match):
