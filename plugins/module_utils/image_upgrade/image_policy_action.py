@@ -161,7 +161,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         if self.image_policies.name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"policy {self.policy_name} does not exist on "
-            msg += "the controller"
+            msg += "the controller."
             self.module.fail_json(msg)
 
         for serial_number in self.serial_numbers:
@@ -223,10 +223,15 @@ class ImagePolicyAction(ImageUpgradeCommon):
         payload["mappingList"] = self.payloads
         self.dcnm_send_with_retry(self.verb, self.path, payload)
 
+        msg = f"result_current: {json.dumps(self.result_current, indent=4)}"
+        self.log.debug(msg)
+        msg = f"response_current: {json.dumps(self.response_current, indent=4)}"
+        self.log.debug(msg)
+
         if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when attaching policy {self.policy_name} "
-            msg += f"to switch {payload['ipAddr']}."
+            msg += f"to switch. Payload: {payload}."
             self.module.fail_json(msg, **self.failed_result)
 
         for payload in self.payloads:
@@ -320,12 +325,6 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
     @query_result.setter
     def query_result(self, value):
-        method_name = inspect.stack()[0][3]
-        if isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.query_result must be a dict. "
-            msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
         self.properties["query_result"] = value
 
     @property
@@ -381,5 +380,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
+            self.module.fail_json(msg, **self.failed_result)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.serial_numbers must contain at least one "
+            msg += "switch serial number."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["serial_numbers"] = value

@@ -59,7 +59,7 @@ DCNM_SEND_SWITCH_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_
 def test_image_upgrade_image_policy_action_00001(image_policy_action) -> None:
     """
     Function
-    - __init__
+    - ImagePolicyAction.__init__
 
     Test
     - Class attributes initialized to expected values
@@ -80,7 +80,7 @@ def test_image_upgrade_image_policy_action_00001(image_policy_action) -> None:
 def test_image_upgrade_image_policy_action_00002(image_policy_action) -> None:
     """
     Function
-    - _init_properties
+    - ImagePolicyAction._init_properties
 
     Test
     - Class properties are initialized to expected values
@@ -102,7 +102,7 @@ def test_image_upgrade_image_policy_action_00003(
 ) -> None:
     """
     Function
-    - build_payload
+    - ImagePolicyAction.build_payload
 
     Test
     - fail_json is not called
@@ -143,7 +143,7 @@ def test_image_upgrade_image_policy_action_00004(
 ) -> None:
     """
     Function
-    - build_payload
+    - ImagePolicyAction.build_payload
 
     Test
     - fail_json is called since deviceName is null in the issu_details_by_serial_number response
@@ -182,14 +182,14 @@ def test_image_upgrade_image_policy_action_00010(
 ) -> None:
     """
     Function
-    - validate_request
+    - ImagePolicyAction.validate_request
 
     Test
     - fail_json is called because image_policy_action.action is None
     - The error message is matched
 
     Description
-    validate_request performs a number of validations prior to calling commit
+    validate_request performs a number of validations prior to calling commit.
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
@@ -222,14 +222,14 @@ def test_image_upgrade_image_policy_action_00011(
 ) -> None:
     """
     Function
-    - validate_request
+    - ImagePolicyAction.validate_request
 
     Test
     - fail_json is called because image_policy_action.policy_name is None
     - The error message is matched
 
     Description
-    validate_request performs a number of validations prior to calling commit
+    validate_request performs a number of validations prior to calling commit.
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
@@ -261,7 +261,7 @@ def test_image_upgrade_image_policy_action_00012(
 ) -> None:
     """
     Function
-    - validate_request
+    - ImagePolicyAction.validate_request
 
     Test
     -   fail_json is called for action == attach because
@@ -273,7 +273,7 @@ def test_image_upgrade_image_policy_action_00012(
     -   The error message, if any, is matched
 
     Description
-    validate_request performs a number of validations prior to calling commit
+    validate_request performs a number of validations prior to calling commit,
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
@@ -291,7 +291,7 @@ def test_image_upgrade_image_policy_action_00013(
 ) -> None:
     """
     Function
-    - validate_request
+    - ImagePolicyAction.validate_request
 
     Test
     -   fail_json is called because policy KR5M supports playform N9K/N3K
@@ -300,8 +300,7 @@ def test_image_upgrade_image_policy_action_00013(
     -   The error message is matched
 
     Description
-    validate_request performs a number of validations prior to calling commit
-    validate_request performs a number of validations prior to calling commit
+    validate_request performs a number of validations prior to calling commit.
     If any of these validations fail, the function calls fail_json with a
     validation-specific error message.
     """
@@ -333,12 +332,58 @@ def test_image_upgrade_image_policy_action_00013(
         instance.validate_request()
 
 
+def test_image_upgrade_image_policy_action_00014(
+    monkeypatch, image_policy_action, issu_details_by_serial_number, image_policies
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.validate_request
+
+    Summary
+    fail_json is called because policy KR5M does not exist on the controller
+
+    Test
+    -   fail_json is called because ImagePolicies returns no policies
+    -   The error message is matched
+
+    Description
+    validate_request performs a number of validations prior to calling commit.
+    If any of these validations fail, the function calls fail_json with a
+    validation-specific error message.
+    """
+    key = "test_image_upgrade_image_policy_action_00014a"
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        return responses_image_policies(key)
+
+    monkeypatch.setattr(
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
+    )
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+
+    instance = image_policy_action
+    instance.switch_issu_details = issu_details_by_serial_number
+    instance.image_policies = image_policies
+    instance.action = "attach"
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+
+    match = r"ImagePolicyAction.validate_request: "
+    match += r"policy KR5M does not exist on the controller\."
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.validate_request()
+
+
 def test_image_upgrade_image_policy_action_00020(
     monkeypatch, image_policy_action
 ) -> None:
     """
     Function
-    - commit
+    - ImagePolicyAction.commit
 
     Test
     -   fail_json is called because action is unknown
@@ -378,15 +423,21 @@ def test_image_upgrade_image_policy_action_00020(
         instance.commit()
 
 
-def test_image_upgrade_image_policy_action_00021(
+def test_image_upgrade_image_policy_action_00030(
     monkeypatch, image_policy_action
 ) -> None:
     """
     Function
-    - commit
+    - ImagePolicyAction.commit
+    - ImagePolicyAction._detach_policy
+
+    Summary
+    Verify that commit behaves as expected when action is "detach"
+    and ImagePolicyAction receives a success (200) response
+    from the controller.
 
     Test
-    -   action is "detach", so ImagePolicyAction._detach_policy is called
+    -   ImagePolicyAction._detach_policy is called
     -   commit is successful given a 200 response from the controller in
         ImagePolicyAction._detach_policy
     -   ImagePolicyAction.response contains RESULT_CODE 200
@@ -398,7 +449,7 @@ def test_image_upgrade_image_policy_action_00021(
         action == "detach" : _detach_policy
         action == "query" : _query_policy
     """
-    key = "test_image_upgrade_image_policy_action_00021a"
+    key = "test_image_upgrade_image_policy_action_00030a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
@@ -433,38 +484,296 @@ def test_image_upgrade_image_policy_action_00021(
     assert instance.result_current.get("changed") is True
 
 
+def test_image_upgrade_image_policy_action_00031(
+    monkeypatch, image_policy_action
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.commit
+    - ImagePolicyAction._detach_policy
+
+    Summary
+    Verify that commit behaves as expected when action is "detach"
+    and ImagePolicyAction receives a failure (500) response
+    from the controller.
+
+    Test
+    -   ImagePolicyAction._detach_policy is called
+    -   commit is unsuccessful given a 500 response from the controller in
+        ImagePolicyAction._detach_policy
+    -   fail_json is called and the error message is matched
+    """
+    key = "test_image_upgrade_image_policy_action_00031a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        return responses_image_policies(key)
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_dcnm_send_image_upgrade_common(*args) -> Dict[str, Any]:
+        return responses_image_policy_action(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
+    )
+
+    with does_not_raise():
+        instance = image_policy_action
+        instance.policy_name = "KR5M"
+        instance.serial_numbers = ["FDO2112189M"]
+        instance.action = "detach"
+        instance.unit_test = True
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
+
+    match = r"ImagePolicyAction\._detach_policy: "
+    match += r"Bad result when detaching policy KR5M "
+    match += r"from the following device\(s\):"
+
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
+
+
+def test_image_upgrade_image_policy_action_00040(
+    monkeypatch, image_policy_action
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.commit
+    - ImagePolicyAction._attach_policy
+
+    Summary
+    Verify that commit behaves as expected when action is "attach"
+    and ImagePolicyAction receives a success (200) response
+    from the controller.
+
+    Test
+    -   ImagePolicyAction._attach_policy is called
+    -   commit is successful given a 200 response from the controller in
+        ImagePolicyAction._attach_policy
+    -   ImagePolicyAction.response contains RESULT_CODE 200
+
+    Description
+    commit calls validate_request() and then calls one of the following
+    functions based on the value of action:
+        action == "attach" : _attach_policy
+        action == "detach" : _detach_policy
+        action == "query" : _query_policy
+    """
+    key = "test_image_upgrade_image_policy_action_00040a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        return responses_image_policies(key)
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_dcnm_send_image_upgrade_common(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_policy_action(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
+    )
+
+    instance = image_policy_action
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+    instance.action = "attach"
+
+    instance.commit()
+    assert isinstance(instance.response_current, dict)
+    assert instance.response_current.get("RETURN_CODE") == 200
+    assert instance.response_current.get("METHOD") == "POST"
+    assert instance.response_current.get("MESSAGE") == "OK"
+    assert instance.response_current.get("DATA") == "[cvd-1313-leaf:Success]"
+    assert instance.result_current.get("success") is True
+    assert instance.result_current.get("changed") is True
+
+
+def test_image_upgrade_image_policy_action_00041(
+    monkeypatch, image_policy_action
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.commit
+    - ImagePolicyAction._attach_policy
+
+    Summary
+    Verify that commit behaves as expected when action is "attach"
+    and ImagePolicyAction receives a failure (500) response
+    from the controller.
+
+    Test
+    -   ImagePolicyAction._attach_policy is called
+    -   commit is unsuccessful given a 500 response from the controller in
+        ImagePolicyAction._attach_policy
+    -   ImagePolicyAction.response contains RESULT_CODE 500
+    """
+    key = "test_image_upgrade_image_policy_action_00041a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        return responses_image_policies(key)
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_dcnm_send_image_upgrade_common(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_policy_action(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
+    )
+    with does_not_raise():
+        instance = image_policy_action
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+    instance.action = "attach"
+    instance.unit_test = True
+
+    match = r"ImagePolicyAction\._attach_policy: "
+    match += r"Bad result when attaching policy KR5M to switch\. Payload:"
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
+
+
+def test_image_upgrade_image_policy_action_00050(
+    monkeypatch, image_policy_action
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.commit
+    - ImagePolicyAction._query_policy
+
+    Summary
+    Verify that commit behaves as expected when action is "query"
+    and ImagePolicyAction receives a success (200) response
+    from the controller.
+
+    Test
+    -   ImagePolicyAction._query_policy is called
+    -   commit is successful given a 200 response from the controller in
+        ImagePolicyAction._query_policy
+    -   ImagePolicyAction.response contains RESULT_CODE 200
+
+    Description
+    commit calls validate_request() and then calls one of the following
+    functions based on the value of action:
+        action == "attach" : _attach_policy
+        action == "detach" : _detach_policy
+        action == "query" : _query_policy
+    """
+    key = "test_image_upgrade_image_policy_action_00050a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        return responses_image_policies(key)
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_dcnm_send_image_upgrade_common(*args) -> Dict[str, Any]:
+        return responses_image_policy_action(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
+    )
+
+    instance = image_policy_action
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+    instance.action = "query"
+
+    instance.commit()
+    assert isinstance(instance.response_current, dict)
+    assert instance.response_current.get("RETURN_CODE") == 200
+    assert instance.response_current.get("METHOD") == "GET"
+    assert instance.response_current.get("MESSAGE") == "OK"
+    assert instance.result_current.get("success") is True
+    assert instance.result_current.get("found") is True
+
+
+def test_image_upgrade_image_policy_action_00051(
+    monkeypatch, image_policy_action
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.commit
+    - ImagePolicyAction._query_policy
+
+    Summary
+    Verify that commit behaves as expected when action is "query"
+    and ImagePolicyAction receives a failure (500) response
+    from the controller.
+
+    Test
+    -   fail_json is called and the error message is matched
+    """
+    key = "test_image_upgrade_image_policy_action_00051a"
+
+    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
+        return responses_image_policies(key)
+
+    def mock_dcnm_send_switch_issu_details(*args) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_dcnm_send_image_upgrade_common(*args) -> Dict[str, Any]:
+        return responses_image_policy_action(key)
+
+    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    monkeypatch.setattr(
+        DCNM_SEND_SWITCH_ISSU_DETAILS, mock_dcnm_send_switch_issu_details
+    )
+
+    instance = image_policy_action
+    monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
+    instance.policy_name = "KR5M"
+    instance.serial_numbers = ["FDO2112189M"]
+    instance.action = "query"
+    instance.unit_test = True
+
+    match = r"ImagePolicyAction\._query_policy: "
+    match += r"Bad result when querying image policy KR5M\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
+
+
 MATCH_00060 = "ImagePolicyAction.action: instance.action must be "
 MATCH_00060 += "one of attach,detach,query. Got FOO."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        ("attach", "attach"),
-        ("detach", "detach"),
-        ("query", "query"),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
+        ("attach", does_not_raise(), False),
+        ("detach", does_not_raise(), False),
+        ("query", does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060), True),
     ],
 )
 def test_image_upgrade_image_policy_action_00060(
-    image_policy_action, value, expected
+    image_policy_action, value, expected, raise_flag
 ) -> None:
     """
     Function
-    - action setter
+    - ImagePolicyAction.action setter
 
     Test
     - Expected values are set
     - fail_json is called when value is not a valid action
     - fail_json error message is matched
     """
-    instance = image_policy_action
-    if value == "FOO":
-        with expected:
-            instance.action = value
-    else:
+    with does_not_raise():
+        instance = image_policy_action
+    with expected:
         instance.action = value
-        assert instance.action == expected
+    if not raise_flag:
+        assert instance.action == value
 
 
 MATCH_00061 = "ImagePolicyAction.serial_numbers: instance.serial_numbers "
@@ -472,28 +781,93 @@ MATCH_00061 += "must be a python list of switch serial numbers. Got FOO."
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "value, expected, raise_flag",
     [
-        (["FDO2112189M", "FDO21120U5D"], ["FDO2112189M", "FDO21120U5D"]),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00061)),
+        (["FDO2112189M", "FDO21120U5D"], does_not_raise(), False),
+        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00061), True),
     ],
 )
 def test_image_upgrade_image_policy_action_00061(
-    image_policy_action, value, expected
+    image_policy_action, value, expected, raise_flag
 ) -> None:
     """
     Function
-    - serial_numbers setter
+    - ImagePolicyAction.serial_numbers setter
 
     Test
     - fail_json is not called with value is a list
     - fail_json is called when value is not a list
     - fail_json error message is matched
     """
-    instance = image_policy_action
-    if value == "FOO":
-        with expected:
-            instance.serial_numbers = value
-    else:
+    with does_not_raise():
+        instance = image_policy_action
+    with expected:
         instance.serial_numbers = value
-        assert instance.serial_numbers == expected
+    if not raise_flag:
+        assert instance.serial_numbers == value
+
+
+def test_image_upgrade_image_policy_action_00062(image_policy_action) -> None:
+    """
+    Function
+    - ImagePolicyAction.serial_numbers setter
+
+    Test
+    - fail_json is called when value is an empty list
+    - fail_json error message is matched
+    """
+    with does_not_raise():
+        instance = image_policy_action
+    match = r"ImagePolicyAction\.serial_numbers: instance.serial_numbers "
+    match += r"must contain at least one switch serial number\."
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.serial_numbers = []
+
+
+MATCH_00070 = r"ImagePolicyAction\.query_result: instance.query_result must be a dict\."
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ({"found": "true", "success": "true"}, does_not_raise(), False),
+        ("FOO", does_not_raise(), False),
+    ],
+)
+def test_image_upgrade_image_policy_action_00070(
+    image_policy_action, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImagePolicyAction.query_result setter
+
+    Summary
+    Verify correct behavior of ImagePolicyAction.query_result
+
+    Test
+    - fail_json is never called
+    """
+    with does_not_raise():
+        instance = image_policy_action
+    with expected:
+        instance.query_result = value
+    if not raise_flag:
+        assert instance.query_result == value
+
+
+def test_image_upgrade_image_policy_action_00080(image_policy_action) -> None:
+    """
+    Function
+    - ImagePolicyAction.diff_null getter
+
+    Summary
+    Verify ImagePolicyAction.diff_null returns the expected value
+    """
+    with does_not_raise():
+        instance = image_policy_action
+        diff_null = instance.diff_null
+    assert diff_null["action"] is None
+    assert diff_null["ip_address"] is None
+    assert diff_null["logical_name"] is None
+    assert diff_null["policy"] is None
+    assert diff_null["serial_number"] is None
