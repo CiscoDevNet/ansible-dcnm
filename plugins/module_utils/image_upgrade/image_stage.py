@@ -106,13 +106,14 @@ class ImageStage(ImageUpgradeCommon):
         self.log.debug("ENTERED ImageStage()")
 
         self.endpoints = ApiEndpoints()
+        self.path = self.endpoints.image_stage.get("path")
+        self.verb = self.endpoints.image_stage.get("verb")
+        self.payload = None
+
         self.rest_send = RestSend(self.module)
         self._init_properties()
         self.serial_numbers_done = set()
         self.controller_version = None
-        self.path = None
-        self.verb = None
-        self.payload = None
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.module)
 
     def _init_properties(self):

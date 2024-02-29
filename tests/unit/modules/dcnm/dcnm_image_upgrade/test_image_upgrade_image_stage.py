@@ -77,11 +77,14 @@ def test_image_upgrade_stage_00001(image_stage) -> None:
     assert isinstance(instance.properties, dict)
     assert isinstance(instance.serial_numbers_done, set)
     assert instance.controller_version is None
-    assert instance.path is None
-    assert instance.verb is None
     assert instance.payload is None
     assert isinstance(instance.issu_detail, SwitchIssuDetailsBySerialNumber)
     assert isinstance(instance.endpoints, ApiEndpoints)
+
+    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
+    module_path += "stagingmanagement/stage-image"
+    assert instance.path == module_path
+    assert instance.verb == "POST"
 
 
 def test_image_upgrade_stage_00002(image_stage) -> None:
@@ -627,47 +630,6 @@ def test_image_upgrade_stage_00070(
         instance.serial_numbers = ["FDO21120U5D"]
     with expected:
         instance.commit()
-
-
-def test_image_upgrade_stage_00071(monkeypatch, image_stage) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that verb is set to POST and path is set to the expected value.
-
-    Test
-    - ImageStage.verb is set to POST
-    - ImageStage.path is set to:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
-    """
-    key = "test_image_upgrade_stage_00071a"
-
-    def mock_dcnm_send_controller_version(*args, **kwargs) -> Dict[str, Any]:
-        return responses_controller_version(key)
-
-    # Needed only for the 200 return code
-    def mock_rest_send_image_stage(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_stage(key)
-
-    def mock_dcnm_send_switch_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(DCNM_SEND_CONTROLLER_VERSION, mock_dcnm_send_controller_version)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
-
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_COMMIT, mock_rest_send_image_stage)
-    monkeypatch.setattr(PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT, {"success": True})
-
-    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
-    module_path += "stagingmanagement/stage-image"
-
-    instance = image_stage
-    instance.serial_numbers = ["FDO21120U5D"]
-    instance.commit()
-    assert instance.path == module_path
-    assert instance.verb == "POST"
 
 
 @pytest.mark.parametrize(
