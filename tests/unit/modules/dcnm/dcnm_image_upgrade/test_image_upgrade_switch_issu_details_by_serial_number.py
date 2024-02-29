@@ -407,7 +407,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00042(
     """
     with does_not_raise():
         instance = issu_details_by_serial_number
-    match = r"SwitchIssuDetailsBySerialNumber\._get: " 
+    match = r"SwitchIssuDetailsBySerialNumber\._get: "
     match += r"set instance\.filter to a switch serialNumber "
     match += r"before accessing property role\."
     with pytest.raises(AnsibleFailJson, match=match):
