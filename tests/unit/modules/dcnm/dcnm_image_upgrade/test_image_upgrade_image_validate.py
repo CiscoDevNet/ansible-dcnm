@@ -197,21 +197,21 @@ def test_image_upgrade_validate_00005(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
-    instance = image_validate
-
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00005a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 0
-    instance._wait_for_image_validate_to_complete()
+    with does_not_raise():
+        instance = image_validate
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+        instance._wait_for_image_validate_to_complete()
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -239,21 +239,22 @@ def test_image_upgrade_validate_00006(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
-    instance = image_validate
-
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00006a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 0
-    match = "Seconds remaining 1800: validate image Failed for "
+    with does_not_raise():
+        instance = image_validate
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+
+    match = "Seconds remaining 1790: validate image Failed for "
     match += "cvd-2313-leaf, 172.22.150.108, FDO2112189M, "
     match += "image validated percent: 100. Check the switch e.g. "
     match += "show install log detail, show incompatibility-all nxos "
@@ -287,21 +288,22 @@ def test_image_upgrade_validate_00007(
     Description
     See test_wait_for_image_stage_to_complete for functional details.
     """
-    instance = image_validate
-
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00007a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
+    with does_not_raise():
+        instance = image_validate
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+        instance.check_interval = 1
+        instance.check_timeout = 1
 
     match = "ImageValidate._wait_for_image_validate_to_complete: "
     match += "Timed out waiting for image validation to complete. "
@@ -339,21 +341,21 @@ def test_image_upgrade_validate_00008(
 
     ["imageStaged", "upgrade", "validated"]
     """
-    instance = image_validate
-
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00008a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 0
-    instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
+    with does_not_raise():
+        instance = image_validate
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+        instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -378,21 +380,22 @@ def test_image_upgrade_validate_00009(
     Description
     See test_wait_for_current_actions_to_complete for functional details.
     """
-    instance = image_validate
-
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00009a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
+    with does_not_raise():
+        instance = image_validate
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+        instance.check_interval = 1
+        instance.check_timeout = 1
 
     match = "ImageValidate._wait_for_current_actions_to_complete: "
     match += "Timed out waiting for actions to complete. "
@@ -538,6 +541,7 @@ MATCH_00050 += "must be a positive integer or zero."
     "value, expected",
     [
         (10, does_not_raise()),
+        (-10, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00050)),
         (False, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
         (None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
@@ -570,6 +574,7 @@ MATCH_00060 += "must be a positive integer or zero."
     "value, expected",
     [
         (10, does_not_raise()),
+        (-10, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
         ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
         (False, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
         (None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),

@@ -241,7 +241,8 @@ class ImageValidate(ImageUpgradeCommon):
         timeout = self.check_timeout
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            sleep(self.check_interval)
+            if self.unit_test is False:
+                sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
 
@@ -274,7 +275,8 @@ class ImageValidate(ImageUpgradeCommon):
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            sleep(self.check_interval)
+            if self.unit_test is False:
+                sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
 

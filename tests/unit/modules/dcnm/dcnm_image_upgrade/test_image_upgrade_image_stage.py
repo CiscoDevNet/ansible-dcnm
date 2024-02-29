@@ -251,14 +251,15 @@ def test_image_upgrade_stage_00020(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
-    instance = image_stage
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 0
-    instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
+    with does_not_raise():
+        instance = image_stage
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+        instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -299,14 +300,16 @@ def test_image_upgrade_stage_00021(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
-    instance = image_stage
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 0
-    match = "Seconds remaining 1800: stage image failed for "
+    with does_not_raise():
+        instance = image_stage
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+
+    match = "Seconds remaining 1790: stage image failed for "
     match += "cvd-2313-leaf, FDO2112189M, 172.22.150.108. image "
     match += "staged percent: 90"
     with pytest.raises(AnsibleFailJson, match=match):
@@ -349,14 +352,14 @@ def test_image_upgrade_stage_00022(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
-    instance = image_stage
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
+    with does_not_raise():
+        instance = image_stage
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
 
     match = "ImageStage._wait_for_image_stage_to_complete: "
     match += "Timed out waiting for image stage to complete. "
@@ -406,14 +409,15 @@ def test_image_upgrade_stage_00030(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_switch_issu_details)
 
-    instance = image_stage
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 0
-    instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
+    with does_not_raise():
+        instance = image_stage
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
+        instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -455,14 +459,14 @@ def test_image_upgrade_stage_00031(
     match += "serial_numbers_done: FDO21120U5D, "
     match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
 
-    instance = image_stage
-    instance.issu_detail = issu_details_by_serial_number
-    instance.serial_numbers = [
-        "FDO21120U5D",
-        "FDO2112189M",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
+    with does_not_raise():
+        instance = image_stage
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_serial_number
+        instance.serial_numbers = [
+            "FDO21120U5D",
+            "FDO2112189M",
+        ]
 
     with pytest.raises(AnsibleFailJson, match=match):
         instance._wait_for_current_actions_to_complete()  # pylint: disable=protected-access
@@ -715,7 +719,6 @@ def test_image_upgrade_stage_00072(
     instance = image_stage
     instance.serial_numbers = ["FDO21120U5D"]
     instance.commit()
-    print(f"instance.payload: {instance.payload.keys()}")
     assert expected_serial_number_key in instance.payload.keys()
 
 

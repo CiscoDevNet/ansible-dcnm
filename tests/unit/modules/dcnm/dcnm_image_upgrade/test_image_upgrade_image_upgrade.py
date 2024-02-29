@@ -2174,21 +2174,21 @@ def test_image_upgrade_upgrade_00200(
         instance.ip_addresses
     4.  fail_json is not called
     """
-    instance = image_upgrade
-
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00200a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_ip_address
-    instance.ip_addresses = [
-        "172.22.150.102",
-        "172.22.150.108",
-    ]
-    instance.check_interval = 0
     with does_not_raise():
+        instance = image_upgrade
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_ip_address
+        instance.ip_addresses = [
+            "172.22.150.102",
+            "172.22.150.108",
+        ]
+        instance.check_interval = 0
         instance._wait_for_current_actions_to_complete()
     assert isinstance(instance.ipv4_done, set)
     assert len(instance.ipv4_done) == 2
@@ -2234,23 +2234,22 @@ def test_image_upgrade_upgrade_00205(
     5.  (Post analysis) converage tool indicates tha the continue
         statement is hit.
     """
-    instance = image_upgrade
-
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00205a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_ip_address
-    instance.ip_addresses = [
-        "172.22.150.102",
-        "172.22.150.108",
-    ]
-    instance.check_interval = 0
-    instance.ipv4_done.add("172.22.150.102")
-    instance.unit_test = True
     with does_not_raise():
+        instance = image_upgrade
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_ip_address
+        instance.ip_addresses = [
+            "172.22.150.102",
+            "172.22.150.108",
+        ]
+        instance.check_interval = 0
+        instance.ipv4_done.add("172.22.150.102")
         instance._wait_for_current_actions_to_complete()
     assert isinstance(instance.ipv4_done, set)
     assert len(instance.ipv4_done) == 2
@@ -2279,21 +2278,22 @@ def test_image_upgrade_upgrade_00210(
     - fail_json is called due to timeout
     - fail_json error message is matched
     """
-    instance = image_upgrade
-
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00210a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_ip_address
-    instance.ip_addresses = [
-        "172.22.150.102",
-        "172.22.150.108",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
+    with does_not_raise():
+        instance = image_upgrade
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_ip_address
+        instance.ip_addresses = [
+            "172.22.150.102",
+            "172.22.150.108",
+        ]
+        instance.check_interval = 1
+        instance.check_timeout = 1
 
     match = "ImageUpgrade._wait_for_current_actions_to_complete: "
     match += "Timed out waiting for actions to complete. "
@@ -2332,7 +2332,6 @@ def test_image_upgrade_upgrade_00220(
     - instance.ipv4_done contains 172.22.150.102, upgrade is "Success"
     - Call fail_json on ip address 172.22.150.108, upgrade is "Failed"
     """
-    instance = image_upgrade
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00220a"
@@ -2340,12 +2339,15 @@ def test_image_upgrade_upgrade_00220(
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_ip_address
-    instance.ip_addresses = [
-        "172.22.150.102",
-        "172.22.150.108",
-    ]
-    instance.check_interval = 0
+    with does_not_raise():
+        instance = image_upgrade
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_ip_address
+        instance.ip_addresses = [
+            "172.22.150.102",
+            "172.22.150.108",
+        ]
+        instance.check_interval = 0
     match = "ImageUpgrade._wait_for_image_upgrade_to_complete: "
     match += "Seconds remaining 1800: "
     match += "upgrade image Failed for cvd-2313-leaf, FDO2112189M, "
@@ -2387,21 +2389,22 @@ def test_image_upgrade_upgrade_00230(
     - instance.ipv4_done contains 172.22.150.102, upgrade is "Success"
     - fail_json is called due to timeout exceeded
     """
-    instance = image_upgrade
-
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00230a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_ip_address
-    instance.ip_addresses = [
-        "172.22.150.102",
-        "172.22.150.108",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
+    with does_not_raise():
+        instance = image_upgrade
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_ip_address
+        instance.ip_addresses = [
+            "172.22.150.102",
+            "172.22.150.108",
+        ]
+        instance.check_interval = 1
+        instance.check_timeout = 1
 
     match = "ImageUpgrade._wait_for_image_upgrade_to_complete: "
     match += r"The following device\(s\) did not complete upgrade: "
@@ -2450,24 +2453,23 @@ def test_image_upgrade_upgrade_00240(
     - instance.ipv4_done contains 172.22.150.102 and 172.22.150.108
     - fail_json is not called
     """
-    instance = image_upgrade
-
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00240a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
-    instance.issu_detail = issu_details_by_ip_address
-    instance.ip_addresses = [
-        "172.22.150.102",
-        "172.22.150.108",
-    ]
-    instance.check_interval = 1
-    instance.check_timeout = 1
-    instance.ipv4_done.add("172.22.150.102")
-    instance.unit_test = True
     with does_not_raise():
+        instance = image_upgrade
+        instance.unit_test = True
+        instance.issu_detail = issu_details_by_ip_address
+        instance.ip_addresses = [
+            "172.22.150.102",
+            "172.22.150.108",
+        ]
+        instance.check_interval = 1
+        instance.check_timeout = 1
+        instance.ipv4_done.add("172.22.150.102")
         instance._wait_for_image_upgrade_to_complete()
     assert isinstance(instance.ipv4_done, set)
     assert len(instance.ipv4_done) == 2
