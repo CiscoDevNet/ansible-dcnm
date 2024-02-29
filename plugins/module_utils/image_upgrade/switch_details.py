@@ -190,7 +190,7 @@ class SwitchDetails(ImageUpgradeCommon):
 
         NOTE: Keyed on ip_address
         """
-        return self.propertiies["info"]
+        return self.properties["info"]
 
     @property
     def platform(self):

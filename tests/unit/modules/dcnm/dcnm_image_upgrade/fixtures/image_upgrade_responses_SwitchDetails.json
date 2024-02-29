@@ -120,6 +120,32 @@
             }
         ]
     },
+    "test_image_upgrade_switch_details_00030a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "model: null",
+            "DATA: key/values removed which are not needed by the test"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "172.22.150.110",
+                "hostName": "cvd-1111-bgw"
+            },
+            {
+                "fabricName": "easy",
+                "hostName": "cvd-1112-bgw",
+                "ipAddress": "172.22.150.111",
+                "logicalName": "cvd-1112-bgw",
+                "model": null,
+                "serialNumber": "FOX2109PGD1",
+                "switchRole": "border gateway"
+            }
+        ]
+    },
     "test_image_upgrade_image_policy_action_00030a": {
         "TEST_NOTES": [
             "RETURN_CODE: 200",

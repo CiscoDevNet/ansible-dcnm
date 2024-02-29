@@ -139,11 +139,12 @@ def test_image_upgrade_switch_details_00021(monkeypatch, switch_details) -> None
     - SwitchDetails.ip_address.setter
     - SwitchDetails.fabric_name
     - SwitchDetails.hostname
+    - SwitchDetails.info
     - SwitchDetails.logical_name
     - SwitchDetails.model
     - SwitchDetails.platform
     - SwitchDetails.role
-    - SwitchDetails.sserial_number
+    - SwitchDetails.serial_number
 
     Summary
     Verify that, after refresh() is called, and the ip_address setter
@@ -188,6 +189,8 @@ def test_image_upgrade_switch_details_00021(monkeypatch, switch_details) -> None
     assert instance.platform == "N9K"
     assert instance.role == "border gateway"
     assert instance.serial_number == "FOX2109PGD1"
+    assert "172.22.150.110" in instance.info.keys()
+    assert instance.info["172.22.150.110"]["hostName"] == "cvd-1111-bgw"
 
 
 MATCH_00022 = "Unable to retrieve switch information from the controller."
@@ -216,7 +219,7 @@ def test_image_upgrade_switch_details_00022(
     - RestSend._handle_response
 
     Summary
-    Verify that RestSend._handle_responmse() returns an appropriate result
+    Verify that RestSend._handle_response() returns an appropriate result
     when SwitchDetails.refresh() is called.
 
     Test
@@ -386,6 +389,66 @@ def test_image_upgrade_switch_details_00025(monkeypatch, switch_details) -> None
         instance._get("FOO")
 
 
+def test_image_upgrade_switch_details_00026(switch_details) -> None:
+    """
+    Function
+    - SwitchDetails.fabric_name
+    - SwitchDetails._get
+
+    Summary
+    Verify that SwitchDetails.fabric_name calls SwitchDetails._get()
+    which then calls fail_json when ip_address has not been set.
+
+    Test
+    - _get calls fail_json when ip_address is None
+
+    Description
+    SwitchDetails._get is called by all getter properties.
+    It raises AnsibleFailJson if the user has not set ip_address or if
+    the ip_address is unknown, or if an unknown property name is queried.
+    """
+    match = r"SwitchDetails\._get: "
+    match += r"set instance\.ip_address before accessing property fabricName\."
+
+    with does_not_raise():
+        instance = switch_details
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.fabric_name
+
+
+def test_image_upgrade_switch_details_00030(monkeypatch, switch_details) -> None:
+    """
+    Function
+    - SwitchDetails.platform
+
+    Summary
+    Verify that, SwitchDetails.platform returns None if SwitchDetails.model is None.
+
+    Test
+    - platform returns None
+    - fail_json is not called
+    """
+    def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
+        key = "test_image_upgrade_switch_details_00030a"
+        return responses_switch_details(key)
+
+    monkeypatch.setattr(REST_SEND_SWITCH_DETAILS, mock_rest_send_switch_details)
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESPONSE_CURRENT, mock_rest_send_switch_details()
+    )
+    monkeypatch.setattr(
+        PATCH_SWITCH_DETAILS_REST_SEND_RESULT_CURRENT, {"success": True, "found": True}
+    )
+    with does_not_raise():
+        instance = switch_details
+        instance.refresh()
+
+    with does_not_raise():
+        instance.ip_address = "172.22.150.111"
+        platform = instance.platform
+    assert platform is None
+
+
 # setters
 
 
@@ -402,6 +465,9 @@ def test_image_upgrade_switch_details_00060(
     """
     Function
     - ip_address.setter
+
+    Summary
+    Verify proper behavior of ip_address setter
 
     Test
     - return IP address, if set
