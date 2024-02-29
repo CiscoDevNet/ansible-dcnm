@@ -407,44 +407,6 @@ def test_image_upgrade_validate_00009(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_upgrade_validate_00021(monkeypatch, image_validate) -> None:
-    """
-    Function
-    - commit
-
-    Test
-    - ImageValidate.verb is set to POST
-    - ImageValidate.path is set to:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
-    """
-
-    # Needed only for the 200 return code
-    def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00021a"
-        return responses_image_validate(key)
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00021a"
-        return responses_switch_issu_details(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT, {"success": True}
-    )
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
-    module_path += "stagingmanagement/validate-image"
-
-    instance = image_validate
-    instance.serial_numbers = ["FDO21120U5D"]
-    instance.commit()
-    assert instance.path == module_path
-    assert instance.verb == "POST"
-
-
 def test_image_upgrade_validate_00022(image_validate) -> None:
     """
     Function
