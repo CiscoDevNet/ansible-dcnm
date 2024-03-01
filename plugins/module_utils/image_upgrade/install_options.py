@@ -306,7 +306,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"policy_name must be a string. Got {value}."
+            msg += f"instance.policy_name must be a string. Got {value}."
             self.module.fail_json(msg, **self.failed_result)
         self.properties["policy_name"] = value
 

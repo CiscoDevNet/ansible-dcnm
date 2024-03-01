@@ -2174,6 +2174,7 @@ def test_image_upgrade_upgrade_00200(
         instance.ip_addresses
     4.  fail_json is not called
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00200a"
         return responses_switch_issu_details(key)
@@ -2234,6 +2235,7 @@ def test_image_upgrade_upgrade_00205(
     5.  (Post analysis) converage tool indicates tha the continue
         statement is hit.
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00205a"
         return responses_switch_issu_details(key)
@@ -2278,6 +2280,7 @@ def test_image_upgrade_upgrade_00210(
     - fail_json is called due to timeout
     - fail_json error message is matched
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00210a"
         return responses_switch_issu_details(key)
@@ -2389,6 +2392,7 @@ def test_image_upgrade_upgrade_00230(
     - instance.ipv4_done contains 172.22.150.102, upgrade is "Success"
     - fail_json is called due to timeout exceeded
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00230a"
         return responses_switch_issu_details(key)
@@ -2453,6 +2457,7 @@ def test_image_upgrade_upgrade_00240(
     - instance.ipv4_done contains 172.22.150.102 and 172.22.150.108
     - fail_json is not called
     """
+
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_upgrade_00240a"
         return responses_switch_issu_details(key)

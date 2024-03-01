@@ -388,7 +388,7 @@ def test_image_upgrade_switch_issu_details_by_serial_number_00041(
 
 
 def test_image_upgrade_switch_issu_details_by_serial_number_00042(
-    issu_details_by_serial_number
+    issu_details_by_serial_number,
 ) -> None:
     """
     Function

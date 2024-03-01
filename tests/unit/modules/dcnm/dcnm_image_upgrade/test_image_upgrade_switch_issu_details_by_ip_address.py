@@ -391,7 +391,7 @@ def test_image_upgrade_switch_issu_details_by_ip_address_00041(
 
 
 def test_image_upgrade_switch_issu_details_by_ip_address_00042(
-    issu_details_by_ip_address
+    issu_details_by_ip_address,
 ) -> None:
     """
     Function

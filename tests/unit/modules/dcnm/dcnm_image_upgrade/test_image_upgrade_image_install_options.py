@@ -90,25 +90,6 @@ def test_image_upgrade_install_options_00002(image_install_options) -> None:
     assert instance.properties.get("unit_test") is False
 
 
-def test_image_upgrade_install_options_00003(image_install_options) -> None:
-    """
-    Function
-    - refresh
-    - serial_number setter
-
-    Test
-    - fail_json is called because policy_name is not set when refresh is called
-    - fail_json error message is matched
-    """
-    instance = image_install_options
-    instance.serial_number = "FOO"
-    match = "ImageInstallOptions._validate_refresh_parameters: "
-    match += "instance.policy_name must be set before "
-    match += r"calling refresh\(\)"
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.refresh()
-
-
 def test_image_upgrade_install_options_00004(image_install_options) -> None:
     """
     Function
@@ -574,3 +555,61 @@ def test_image_upgrade_install_options_00024(image_install_options) -> None:
     instance.unit_test = True
     with pytest.raises(AnsibleFailJson, match=match):
         instance.package_install = "FOO"
+
+
+def test_image_upgrade_install_options_00070(image_install_options) -> None:
+    """
+    Function
+    - refresh
+    - policy_name
+
+    Summary
+    - refresh() calls fail_json if serial_number if policy_name is not set.
+
+    Test
+    - fail_json is called because policy_name is not set when refresh is called
+    - fail_json error message is matched
+    """
+    instance = image_install_options
+    instance.serial_number = "FOO"
+    match = "ImageInstallOptions._validate_refresh_parameters: "
+    match += "instance.policy_name must be set before "
+    match += r"calling refresh\(\)"
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.refresh()
+
+
+MATCH_00080 = r"ImageInstallOptions\.policy_name: "
+MATCH_00080 += r"instance\.policy_name must be a string. Got"
+
+
+@pytest.mark.parametrize(
+    "value, expected, raise_flag",
+    [
+        ("NR3F", does_not_raise(), False),
+        (1, pytest.raises(AnsibleFailJson, match=MATCH_00080), True),
+        (False, pytest.raises(AnsibleFailJson, match=MATCH_00080), True),
+        ({"foo": "bar"}, pytest.raises(AnsibleFailJson, match=MATCH_00080), True),
+        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00080), True),
+    ],
+)
+def test_image_upgrade_install_options_00080(
+    image_install_options, value, expected, raise_flag
+) -> None:
+    """
+    Function
+    - ImageInstallOptions.policy_name
+
+    Summary
+    Verify proper behavior of policy_name property
+
+    Test
+    - fail_json is called when property_name is not a string
+    - fail_json is not called when property_name is a string
+    """
+    with does_not_raise():
+        instance = image_install_options
+    with expected:
+        instance.policy_name = value
+    if raise_flag is False:
+        assert instance.policy_name == value

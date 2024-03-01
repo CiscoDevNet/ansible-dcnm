@@ -377,7 +377,7 @@ def test_image_upgrade_switch_issu_details_by_device_name_00041(
 
 
 def test_image_upgrade_switch_issu_details_by_device_name_00042(
-    issu_details_by_device_name
+    issu_details_by_device_name,
 ) -> None:
     """
     Function

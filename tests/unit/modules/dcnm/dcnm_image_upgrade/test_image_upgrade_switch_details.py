@@ -428,6 +428,7 @@ def test_image_upgrade_switch_details_00030(monkeypatch, switch_details) -> None
     - platform returns None
     - fail_json is not called
     """
+
     def mock_rest_send_switch_details(*args, **kwargs) -> Dict[str, Any]:
         key = "test_image_upgrade_switch_details_00030a"
         return responses_switch_details(key)

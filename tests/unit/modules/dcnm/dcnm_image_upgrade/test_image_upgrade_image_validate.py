@@ -197,6 +197,7 @@ def test_image_upgrade_validate_00005(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
+
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00005a"
         return responses_switch_issu_details(key)
@@ -239,6 +240,7 @@ def test_image_upgrade_validate_00006(
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module calls fail_json.
     """
+
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00006a"
         return responses_switch_issu_details(key)
@@ -288,6 +290,7 @@ def test_image_upgrade_validate_00007(
     Description
     See test_wait_for_image_stage_to_complete for functional details.
     """
+
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00007a"
         return responses_switch_issu_details(key)
@@ -341,6 +344,7 @@ def test_image_upgrade_validate_00008(
 
     ["imageStaged", "upgrade", "validated"]
     """
+
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00008a"
         return responses_switch_issu_details(key)
@@ -380,6 +384,7 @@ def test_image_upgrade_validate_00009(
     Description
     See test_wait_for_current_actions_to_complete for functional details.
     """
+
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
         key = "test_image_upgrade_validate_00009a"
         return responses_switch_issu_details(key)
