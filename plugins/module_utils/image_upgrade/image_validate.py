@@ -193,17 +193,11 @@ class ImageValidate(ImageUpgradeCommon):
         self.result = self.rest_send.result_current
         self.result_current = self.rest_send.result_current
 
-        msg = f"self.rest_send.result_current: {self.rest_send.result_current}"
-        self.log.debug(msg)
         msg = f"self.payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         msg = f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
         msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         msg = f"self.response_data: {self.response_data}"
         self.log.debug(msg)
@@ -227,6 +221,8 @@ class ImageValidate(ImageUpgradeCommon):
             diff["serial_number"] = serial_number
             # See image_upgrade_common.py for the definition of self.diff
             self.diff = copy.deepcopy(diff)
+        msg = f"self.diff: {json.dumps(self.diff, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _wait_for_current_actions_to_complete(self) -> None:
         """
@@ -236,7 +232,8 @@ class ImageValidate(ImageUpgradeCommon):
         """
         self.method_name = inspect.stack()[0][3]
 
-        self.serial_numbers_done: Set[str] = set()
+        if self.unit_test is False:
+            self.serial_numbers_done: Set[str] = set()
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
         timeout = self.check_timeout
 

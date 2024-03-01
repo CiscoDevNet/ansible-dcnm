@@ -166,7 +166,7 @@ class ImageStage(ImageUpgradeCommon):
                 msg += "and try again."
                 self.module.fail_json(msg, **self.failed_result)
 
-    def commit(self):
+    def commit(self) -> None:
         """
         Commit the image staging request to the controller and wait
         for the images to be staged.
@@ -198,9 +198,6 @@ class ImageStage(ImageUpgradeCommon):
         self.prune_serial_numbers()
         self.validate_serial_numbers()
         self._wait_for_current_actions_to_complete()
-
-        self.path = self.endpoints.image_stage.get("path")
-        self.verb = self.endpoints.image_stage.get("verb")
 
         self.payload = {}
         self._populate_controller_version()

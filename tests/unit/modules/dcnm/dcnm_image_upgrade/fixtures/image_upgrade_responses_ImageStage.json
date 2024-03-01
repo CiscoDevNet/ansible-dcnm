@@ -62,7 +62,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00070a": {
+    "test_image_upgrade_stage_00075a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "MESSAGE == OK"

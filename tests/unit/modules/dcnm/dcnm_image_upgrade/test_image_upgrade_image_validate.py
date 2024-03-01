@@ -415,6 +415,10 @@ def test_image_upgrade_validate_00022(image_validate) -> None:
     Function
     - commit
 
+    Summary
+    Verify that instance.commit() returns without calling dcnm_send when
+    instance.serial_numbers is an empty list.
+
     Test
     - instance.response is set to {} because dcnm_send was not called
     - instance.result is set to {} because dcnm_send was not called
@@ -436,17 +440,20 @@ def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
     Function
     - commit
 
+    Summary
+    Verify that instance.commit() calls fail_json on failure response from
+    the controller (501).
+
     Test
     -   fail_json is called on 501 response from controller
     """
+    key = "test_image_upgrade_validate_00023a"
 
     # Needed only for the 501 return code
     def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00023a"
         return responses_image_validate(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00023a"
         return responses_switch_issu_details(key)
 
     monkeypatch.setattr(
@@ -464,6 +471,56 @@ def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
     MATCH = "ImageValidate.commit: failed: "
     with pytest.raises(AnsibleFailJson, match=MATCH):
         instance.commit()
+
+
+def test_image_upgrade_validate_00024(monkeypatch, image_validate) -> None:
+    """
+    Function
+    - commit
+
+    Summary
+    Verify that instance.commit() sets instance.diff appropriately on
+    a successful response from the controller.
+
+    Test
+    -   instance.diff is set to the expected value
+    -   fail_json is not called
+    """
+    key = "test_image_upgrade_validate_00024a"
+
+    def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
+        return responses_image_validate(key)
+
+    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
+        return responses_switch_issu_details(key)
+
+    def mock_wait_for_image_validate_to_complete(*args) -> None:
+        instance.serial_numbers_done = {"FDO21120U5D"}
+
+    monkeypatch.setattr(
+        PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
+    )
+    monkeypatch.setattr(
+        PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT,
+        {"success": True, "changed": True},
+    )
+    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+
+    with does_not_raise():
+        instance = image_validate
+        instance.unit_test = True
+        instance.serial_numbers = ["FDO21120U5D"]
+        monkeypatch.setattr(
+            instance,
+            "_wait_for_image_validate_to_complete",
+            mock_wait_for_image_validate_to_complete,
+        )
+        instance.commit()
+
+    assert instance.diff[0]["action"] == "validate"
+    assert instance.diff[0]["policy"] == "KR5M"
+    assert instance.diff[0]["ip_address"] == "172.22.150.102"
+    assert instance.diff[0]["serial_number"] == "FDO21120U5D"
 
 
 MATCH_00030 = "ImageValidate.serial_numbers: "

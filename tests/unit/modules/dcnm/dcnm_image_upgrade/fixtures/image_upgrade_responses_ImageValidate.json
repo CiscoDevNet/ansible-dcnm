@@ -29,5 +29,18 @@
            ],
             "message": ""
         }
+    },
+    "test_image_upgrade_validate_00024a": {
+        "TEST_NOTES": [],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
     }
 }
