@@ -188,6 +188,43 @@
     fabric: "{{ ansible_it_fabric }}"
     state: deleted
 
+- name: MERGED - Merge a Switch using GreenField Deployment with non zero max hop
+  cisco.dcnm.dcnm_inventory: &conf_hop
+    fabric: "{{ ansible_it_fabric }}"
+    state: merged
+    config:
+    - seed_ip: "{{ ansible_switch1 }}"
+      auth_proto: MD5
+      user_name: "{{ switch_username }}"
+      password: "{{ switch_password }}"
+      max_hops: 2
+      role: leaf
+      preserve_config: False
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- name: MERGED - conf_hope - MH - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_hop
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+
+- name: MERGED - setup - Clean up any existing devices
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+
 - name: MERGED - Merge a Switch without seed_ip
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ ansible_it_fabric }}"

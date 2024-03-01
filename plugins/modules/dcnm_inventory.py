@@ -702,8 +702,12 @@ class DcnmInventory:
             self.module.fail_json(msg=response)
 
         if "DATA" in response:
-            return response["DATA"]
-
+            switch = []
+            for sw in response["DATA"]:
+                if inv["seedIP"] == sw["ipaddr"]:
+                    switch.append(sw)
+                    return switch
+            return 0
         else:
             return 0
 
