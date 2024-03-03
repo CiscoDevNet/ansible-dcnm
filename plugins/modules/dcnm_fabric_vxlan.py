@@ -35,7 +35,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     #get_fabric_inventory_details,
     validate_list_of_dicts,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import (
     VerifyFabricParams,
 )
 
@@ -256,9 +256,9 @@ class FabricVxlanTask:
 
         self.check_mode = False
         self.validated = []
-        self.have_create = []
-        self.want_create = []
-        self.diff_create = []
+        self.have = []
+        self.want = []
+        self.need = []
         self.diff_save = {}
         self.query = []
         self.result = dict(changed=False, diff=[], response=[])
@@ -267,7 +267,7 @@ class FabricVxlanTask:
         self.controller_version = dcnm_version_supported(self.module)
         self.nd = self.controller_version >= 12
 
-        # TODO:4 Will need to revisit bgp_as at some point since the
+        # TODO:4 Revisit bgp_as at some point since the
         # following fabric types don't require it.
         # - Fabric Group
         # - Classis LAN
@@ -320,7 +320,7 @@ class FabricVxlanTask:
         """
         Caller: main()
 
-        Update self.want_create for all fabrics defined in the playbook
+        Update self.want for all fabrics defined in the playbook
         """
         want_create = []
 
@@ -333,25 +333,26 @@ class FabricVxlanTask:
             want_create.append(fabric_config)
         if not want_create:
             return
-        self.want_create = want_create
+        self.want = want_create
 
     def get_diff_merge(self):
         """
         Caller: main()
 
-        Populates self.diff_create list() with items from our want list
-        that are not in our have list.  These items will be sent to NDFC.
+        Populates self.need list() with items from our want list
+        that are not in our have list.  These items will be sent to
+        the controller.
         """
-        diff_create = []
+        need = []
 
-        for want_c in self.want_create:
+        for want in self.want:
             found = False
-            for have_c in self.have_create:
-                if want_c["fabric_name"] == have_c["fabric_name"]:
+            for have in self.have:
+                if want["fabric_name"] == have["fabric_name"]:
                     found = True
             if not found:
-                diff_create.append(want_c)
-        self.diff_create = diff_create
+                need.append(want)
+        self.need = need
 
     @staticmethod
     def _build_params_spec_for_merged_state():
@@ -373,7 +374,7 @@ class FabricVxlanTask:
         params_spec.update(
             advertise_pip_bgp=dict(required=False, type="bool", default=False)
         )
-        # TODO:6 agent_intf (add if needed)
+        # TODO:6 agent_intf (add if required)
         params_spec.update(
             anycast_bgw_advertise_pip=dict(required=False, type="bool", default=False)
         )
@@ -487,7 +488,7 @@ class FabricVxlanTask:
         if self.nd:
             path = self.nd_prefix + path
 
-        for item in self.want_create:
+        for item in self.want:
             fabric = item["fabric_name"]
 
             payload = self.payloads[fabric]
@@ -670,7 +671,7 @@ def main():
     if ansible_module.params["state"] == "merged":
         task.get_diff_merge()
 
-    if task.diff_create:
+    if task.need:
         task.result["changed"] = True
     else:
         ansible_module.exit_json(**task.result)
@@ -679,7 +680,7 @@ def main():
         task.result["changed"] = False
         ansible_module.exit_json(**task.result)
 
-    if task.diff_create:
+    if task.need:
         task.create_fabrics()
 
     ansible_module.exit_json(**task.result)
