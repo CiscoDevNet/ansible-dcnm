@@ -303,6 +303,7 @@ class ImagePolicyTask(ImagePolicyCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyTask()")
@@ -336,7 +337,6 @@ class ImagePolicyTask(ImagePolicyCommon):
         self.validated_configs = []
 
         self.task_result = ImagePolicyTaskResult(self.ansible_module)
-        self.task_result.changed = False
 
     def get_have(self) -> None:
         """
@@ -411,10 +411,6 @@ class ImagePolicyTask(ImagePolicyCommon):
         for want in self.want:
             if want["policyName"] in self.have.all_policies:
                 policy_names_to_delete.append(want["policyName"])
-
-        msg = f"policy_names_to_delete: {policy_names_to_delete}, "
-        msg += f"type {type(policy_names_to_delete).__name__}"
-        self.log.debug(msg)
         instance.policy_names = policy_names_to_delete
         instance.commit()
         self.update_diff_and_response(instance)
@@ -659,16 +655,18 @@ def main():
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     # Create the base/parent logger for the dcnm collection.
-    # To disable logging, comment out log.config = <file_path> below
+    # To enable logging, set enable_logging to True.
     # log.config can be either a dictionary, or a path to a JSON file
     # Both dictionary and JSON file formats must be conformant with
     # logging.config.dictConfig and must not log to the console.
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
+    enable_logging = False
     log = Log(ansible_module)
-    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    # log.config = config_file
+    if enable_logging is True:
+        collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+        config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+        log.config = config_file
     log.commit()
 
     task_module = ImagePolicyTask(ansible_module)

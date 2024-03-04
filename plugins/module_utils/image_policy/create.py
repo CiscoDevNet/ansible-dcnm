@@ -42,6 +42,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED ImagePolicyCreateCommon()"
@@ -134,12 +135,19 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         self.result_nok = []
         self.diff_nok = []
         for payload in self._payloads_to_commit:
-            self.response_current = dcnm_send(
-                self.ansible_module, self.verb, self.path, data=json.dumps(payload)
-            )
-            self.result_current = self._handle_response(
-                self.response_current, self.verb
-            )
+            if self.ansible_module.check_mode is False:
+                self.response_current = dcnm_send(
+                    self.ansible_module, self.verb, self.path, data=json.dumps(payload)
+                )
+                self.result_current = self._handle_response(
+                    self.response_current, self.verb
+                )
+            else:
+                # check_mode is True so skip the request but update the diffs
+                # and responses as if the request succeeded
+                self.result_current = {"success": True}
+                self.response_current = {"msg": "skipped: check_mode"}
+            
 
             if self.result_current["success"]:
                 self.response_ok.append(copy.deepcopy(self.response_current))
@@ -279,6 +287,7 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyCreateBulk()")
@@ -347,6 +356,7 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyCreate()")

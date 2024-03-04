@@ -118,6 +118,9 @@ class ImagePolicyTaskResult:
         """
         return True if diffs have been appended to any of the diff lists.
         """
+        if self.ansible_module.check_mode is True:
+            self.log.debug("check_mode is True.  No changes made.")
+            return False
         for key in self.diff_properties:
             # skip query state diffs
             if key == "diff_query":
