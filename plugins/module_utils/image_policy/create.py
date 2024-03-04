@@ -42,7 +42,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
+        # self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED ImagePolicyCreateCommon()"
@@ -286,7 +286,7 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
+        # self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyCreateBulk()")
@@ -355,7 +355,7 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
+        # self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyCreate()")

@@ -47,8 +47,6 @@ class MockAnsibleModule:
     """
     Mock the AnsibleModule class
     """
-    check_mode = False
-
     params = {
         "state": "merged",
         "config": {"switches": [{"ip_address": "172.22.150.105"}]},
