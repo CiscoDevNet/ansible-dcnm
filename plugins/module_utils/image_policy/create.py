@@ -147,7 +147,6 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
                 # and responses as if the request succeeded
                 self.result_current = {"success": True}
                 self.response_current = {"msg": "skipped: check_mode"}
-            
 
             if self.result_current["success"]:
                 self.response_ok.append(copy.deepcopy(self.response_current))

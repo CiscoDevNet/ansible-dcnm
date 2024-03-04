@@ -47,10 +47,12 @@ class MockAnsibleModule:
     """
     Mock the AnsibleModule class
     """
+    check_mode = False
 
     params = {
         "state": "merged",
         "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+        "check_mode": False,
     }
     argument_spec = {
         "config": {"required": True, "type": "dict"},
@@ -60,6 +62,20 @@ class MockAnsibleModule:
         },
     }
     supports_check_mode = True
+
+    @property
+    def check_mode(self):
+        """
+        return the check_mode
+        """
+        return self.params["check_mode"]
+
+    @check_mode.setter
+    def check_mode(self, value):
+        """
+        set check_mode
+        """
+        self.params["check_mode"] = value
 
     @property
     def state(self):
