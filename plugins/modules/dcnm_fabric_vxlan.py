@@ -30,13 +30,16 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
-    dcnm_version_supported,
-    get_fabric_details,
-    #get_fabric_inventory_details,
     validate_list_of_dicts,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import (
+    ApiEndpoints
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import (
     VerifyFabricParams,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import (
+    FabricTaskResult
 )
 
 __metaclass__ = type
@@ -229,51 +232,39 @@ class FabricVxlanTask:
     Ansible support for Data Center VXLAN EVPN
     """
 
-    def __init__(self, module):
+    def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED FabricVxlanTask()")
 
-        self.module = module
-        self.params = module.params
+        self.endpoints = ApiEndpoints()
+
+        self._implemented_states = set()
+        self._implemented_states.add("merged")
+
+        self.ansible_module = ansible_module
+        self.params = ansible_module.params
         self.verify = VerifyFabricParams()
         # populated in self.validate_input()
         self.payloads = {}
-        # TODO:1 set self.debug to False to disable self.log_msg()
-        self.debug = True
-        # File descriptor set by self.log_msg()
-        self.fd = None
-        # File self.log_msg() logs to
-        self.logfile = "/tmp/dcnm_fabric_vxlan.log"
 
-        self.config = module.params.get("config")
+        self.config = ansible_module.params.get("config")
         if not isinstance(self.config, list):
             msg = "expected list type for self.config. "
             msg = f"got {type(self.config).__name__}"
-            self.module.fail_json(msg=msg)
+            self.ansible_module.fail_json(msg=msg)
 
         self.check_mode = False
         self.validated = []
-        self.have = []
+        self.have = {}
         self.want = []
         self.need = []
-        self.diff_save = {}
         self.query = []
-        self.result = dict(changed=False, diff=[], response=[])
 
-        self.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
-        self.controller_version = dcnm_version_supported(self.module)
-        self.nd = self.controller_version >= 12
+        self.task_result = dict(changed=False, diff=[], response=[])
 
-        # TODO:4 Revisit bgp_as at some point since the
-        # following fabric types don't require it.
-        # - Fabric Group
-        # - Classis LAN
-        # - LAN Monitor
-        # - VXLAN EVPN Multi-Site
-        # We'll cross that bridge when we get to it
         self.mandatory_keys = {"fabric_name", "bgp_as"}
         # Populated in self.get_have()
         self.fabric_details = {}
@@ -281,40 +272,46 @@ class FabricVxlanTask:
         self.inventory_data = {}
         for item in self.config:
             if not self.mandatory_keys.issubset(item):
-                msg = f"missing mandatory keys in {item}. "
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"missing mandatory keys in {item}. "
                 msg += f"expected {self.mandatory_keys}"
-                self.module.fail_json(msg=msg)
+                self.ansible_module.fail_json(msg=msg)
 
     def get_have(self):
         """
         Caller: main()
 
-        Determine current fabric state on NDFC for all existing fabrics
-        """
-        for item in self.config:
-            # mandatory keys have already been checked in __init__()
-            fabric = item["fabric_name"]
-            self.fabric_details[fabric] = get_fabric_details(self.module, fabric)
-            # self.inventory_data[fabric] = get_fabric_inventory_details(
-            #     self.module, fabric
-            # )
+        Build self.have, which is a dict containing the current controller
+        fabrics and their details.
 
-        fabrics_exist = set()
-        for fabric in self.fabric_details:
-            path = f"/rest/control/fabrics/{fabric}"
-            if self.nd:
-                path = self.nd_prefix + path
-            fabric_info = dcnm_send(self.module, "GET", path)
-            result = self._handle_get_response(fabric_info)
-            if result["found"]:
-                fabrics_exist.add(fabric)
-            if not result["success"]:
-                msg = "Unable to retrieve fabric information from NDFC"
-                self.module.fail_json(msg=msg)
-        if fabrics_exist:
-            msg = "Fabric(s) already present on NDFC: "
-            msg += f"{','.join(sorted(fabrics_exist))}"
-            self.module.fail_json(msg=msg)
+        Have is a dict, keyed on fabric_name, where each element is a dict
+        with the following structure:
+
+        {
+            "fabric_name": "fabric_name",
+            "fabric_config": {
+                "fabricName": "fabric_name",
+                "fabricType": "VXLAN EVPN",
+                etc...
+            }
+        }
+        """
+        method_name = inspect.stack()[0][3]
+        endpoint = self.endpoints.fabrics
+        path = endpoint["path"]
+        verb = endpoint["verb"]
+        response = dcnm_send(self.ansible_module, verb, path)
+        result = self._handle_get_response(response)
+        if not result["success"]:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Unable to retrieve fabric information from "
+            msg += "the controller."
+            self.ansible_module.fail_json(msg=msg)
+        self.have = {}
+        for item in response["DATA"]:
+            self.have[item["fabricName"]] = {}
+            self.have[item["fabricName"]]["fabric_name"] = item["fabricName"]
+            self.have[item["fabricName"]]["fabric_config"] = item
 
     def get_want(self):
         """
@@ -322,37 +319,91 @@ class FabricVxlanTask:
 
         Update self.want for all fabrics defined in the playbook
         """
-        want_create = []
-
-        # we don't want to use self.validated here since
-        # validate_list_of_dicts() adds items the user did not set to
-        # self.validated.  self.validate_input() has already been called,
-        # so if we got this far the items in self.config have been validated
-        # to conform to their param spec.
+        self.want = []
         for fabric_config in self.config:
-            want_create.append(fabric_config)
-        if not want_create:
-            return
-        self.want = want_create
+            self.want.append(copy.deepcopy(fabric_config))
 
-    def get_diff_merge(self):
+    def get_need_for_merged_state(self):
+        """
+        Caller: handle_merged_state()
+
+        Build self.need for state merged
+        """
+        method_name = inspect.stack()[0][3]
+        need: List[Dict[str, Any]] = []
+        for want in self.want:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            if want["fabric_name"] in self.have:
+                continue
+            need.append(want)
+        self.need = copy.deepcopy(need)
+
+    def handle_merged_state(self):
         """
         Caller: main()
 
-        Populates self.need list() with items from our want list
-        that are not in our have list.  These items will be sent to
-        the controller.
+        Handle the merged state
         """
-        need = []
+        method_name = inspect.stack()[0][3]
+        self.log.debug(f"{self.class_name}.{method_name}: entered")
 
-        for want in self.want:
-            found = False
-            for have in self.have:
-                if want["fabric_name"] == have["fabric_name"]:
-                    found = True
-            if not found:
-                need.append(want)
-        self.need = need
+        self.get_need_for_merged_state()
+        if self.ansible_module.check_mode:
+            self.task_result["changed"] = False
+            self.task_result["success"] = True
+            self.task_result["diff"] = []
+            self.ansible_module.exit_json(**self.task_result)
+        self.send_need()
+
+    def send_need(self):
+        """
+        Caller: handle_merged_state()
+
+        Build and send the payload to create the
+        fabrics specified in the playbook.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"need: {json.dumps(self.need, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        if len(self.need) == 0:
+            self.task_result["changed"] = False
+            self.task_result["success"] = True
+            self.task_result["diff"] = []
+            self.ansible_module.exit_json(**self.task_result)
+        for item in self.need:
+            fabric_name = item["fabric_name"]
+            self.endpoints.fabric_name = fabric_name
+            self.endpoints.template_name = "Easy_Fabric"
+
+            try:
+                endpoint = self.endpoints.fabric_create
+            except ValueError as error:
+                self.ansible_module.fail_json(error)
+
+            path = endpoint["path"]
+            verb = endpoint["verb"]
+
+            payload = self.payloads[fabric_name]
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"verb: {verb}, path: {path}"
+            self.log.debug(msg)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"fabric_name: {fabric_name}, payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            response = dcnm_send(self.ansible_module, verb, path, data=json.dumps(payload))
+            result = self._handle_post_put_response(response, verb)
+            self.log.debug(f"response]: {json.dumps(response, indent=4, sort_keys=True)}")
+            self.log.debug(f"result: {json.dumps(result, indent=4, sort_keys=True)}")
+            self.task_result["changed"] = result["changed"]
+
+            if not result["success"]:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"failed to create fabric {fabric_name}. "
+                msg += f"response: {response}"
+                self._failure(response)
 
     @staticmethod
     def _build_params_spec_for_merged_state():
@@ -384,11 +435,6 @@ class FabricVxlanTask:
         params_spec.update(
             anycast_lb_id=dict(
                 required=False, type="int", range_min=0, range_max=1023, default=""
-            )
-        )
-        params_spec.update(
-            anycast_rp_ip_range=dict(
-                required=False, type="ipv4_subnet", default="10.254.254.0/24"
             )
         )
         params_spec.update(
@@ -434,9 +480,10 @@ class FabricVxlanTask:
         state = self.params["state"]
 
         # TODO:2 remove this when we implement query state
-        if state != "merged":
-            msg = f"Only merged state is supported. Got state {state}"
-            self.module.fail_json(msg=msg)
+        if state not in self._implemented_states:
+            msg = f"Got state {state}. "
+            msg += f"Expected one of: {','.join(sorted(self._implemented_states))}"
+            self.ansible_module.fail_json(msg=msg)
 
         if state == "merged":
             self._validate_input_for_merged_state()
@@ -446,11 +493,9 @@ class FabricVxlanTask:
             verify = VerifyFabricParams()
             verify.state = state
             verify.config = fabric_config
-            if verify.result is False:
-                self.module.fail_json(msg=verify.msg)
             verify.validate_config()
             if verify.result is False:
-                self.module.fail_json(msg=verify.msg)
+                self.ansible_module.fail_json(msg=verify.msg)
             self.payloads[fabric_config["fabric_name"]] = verify.payload
 
     def _validate_input_for_merged_state(self):
@@ -463,10 +508,10 @@ class FabricVxlanTask:
         msg = None
         if not self.config:
             msg = "config: element is mandatory for state merged"
-            self.module.fail_json(msg=msg)
+            self.ansible_module.fail_json(msg=msg)
 
         valid_params, invalid_params = validate_list_of_dicts(
-            self.config, params_spec, self.module
+            self.config, params_spec, self.ansible_module
         )
         # We're not using self.validated. Keeping this to avoid
         # linter error due to non-use of valid_params
@@ -475,31 +520,7 @@ class FabricVxlanTask:
         if invalid_params:
             msg = "Invalid parameters in playbook: "
             msg += f"{','.join(invalid_params)}"
-            self.module.fail_json(msg=msg)
-
-    def create_fabrics(self):
-        """
-        Caller: main()
-
-        Build and send the payload to create the
-        fabrics specified in the playbook.
-        """
-        path = "/rest/control/fabrics"
-        if self.nd:
-            path = self.nd_prefix + path
-
-        for item in self.want:
-            fabric = item["fabric_name"]
-
-            payload = self.payloads[fabric]
-            response = dcnm_send(self.module, "POST", path, data=json.dumps(payload))
-            result = self._handle_post_put_response(response, "POST")
-
-            if not result["success"]:
-                self.log_msg(
-                    f"create_fabrics: calling self._failure with response {response}"
-                )
-                self._failure(response)
+            self.ansible_module.fail_json(msg=msg)
 
     def _handle_get_response(self, response):
         """
@@ -529,7 +550,7 @@ class FabricVxlanTask:
         # }
         result = {}
         success_return_codes = {200, 404}
-        self.log_msg(f"_handle_get_request: response {response}")
+        #self.log.debug(f"_handle_get_request: response {json.dumps(response, indent=4, sort_keys=True)}")
         if (
             response.get("RETURN_CODE") == 404
             and response.get("MESSAGE") == "Not Found"
@@ -575,7 +596,7 @@ class FabricVxlanTask:
         if verb not in valid_verbs:
             msg = f"invalid verb {verb}. "
             msg += f"expected one of: {','.join(sorted(valid_verbs))}"
-            self.module.fail_json(msg=msg)
+            self.ansible_module.fail_json(msg=msg)
 
         result = {}
         if response.get("MESSAGE") != "OK":
@@ -607,7 +628,7 @@ class FabricVxlanTask:
         the happy path:
 
         res = copy.deepcopy(resp)
-        self.module.fail_json(msg=res)
+        self.ansible_module.fail_json(msg=res)
         """
         res = copy.deepcopy(resp)
 
@@ -619,33 +640,15 @@ class FabricVxlanTask:
                 )
                 res.update({"DATA": data})
 
-        self.module.fail_json(msg=res)
-
-    def log_msg(self, msg):
-        """
-        used for debugging. disable this when committing to main
-        """
-        if self.debug is False:
-            return
-        if self.fd is None:
-            try:
-                self.fd = open(f"{self.logfile}", "a+", encoding="UTF-8")
-            except IOError as err:
-                msg = f"error opening logfile {self.logfile}. "
-                msg += f"detail: {err}"
-                self.module.fail_json(msg=msg)
-
-        self.fd.write(msg)
-        self.fd.write("\n")
-        self.fd.flush()
-
+        self.log.debug("HERE")
+        self.ansible_module.fail_json(msg=res)
 
 def main():
     """main entry point for module execution"""
 
     element_spec = dict(
         config=dict(required=False, type="list", elements="dict"),
-        state=dict(default="merged", choices=["merged"]),
+        state=dict(default="merged", choices=["merged", "query"]),
     )
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
@@ -668,22 +671,12 @@ def main():
     task.get_have()
     task.get_want()
 
+    task.log.debug(f"state: {ansible_module.params['state']}")
+
     if ansible_module.params["state"] == "merged":
-        task.get_diff_merge()
+        task.handle_merged_state()
 
-    if task.need:
-        task.result["changed"] = True
-    else:
-        ansible_module.exit_json(**task.result)
-
-    if ansible_module.check_mode:
-        task.result["changed"] = False
-        ansible_module.exit_json(**task.result)
-
-    if task.need:
-        task.create_fabrics()
-
-    ansible_module.exit_json(**task.result)
+    ansible_module.exit_json(**task.task_result)
 
 
 if __name__ == "__main__":

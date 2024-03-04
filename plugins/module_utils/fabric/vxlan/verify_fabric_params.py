@@ -43,6 +43,7 @@ if verify.result == False:
     sys.exit(1)
 print(f"result {verify.result}, {verify.msg}, payload {verify.payload}")
 """
+import inspect
 import re
 
 
@@ -140,13 +141,17 @@ class VerifyFabricParams:
             return False
         """
         if not isinstance(config, dict):
-            msg = "error: config must be a dictionary"
+            method_name = inspect.stack()[0][3]
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "expected a dict for config. "
+            msg += f"Got {type(config)}."
             self.result = False
             self._append_msg(msg)
             return False
         if not self._mandatory_keys.issubset(config):
             missing_keys = self._mandatory_keys.difference(config.keys())
-            msg = f"error: missing mandatory keys {','.join(sorted(missing_keys))}."
+            msg = f"{self.class_name}.{method_name}: "
+            msg = f"missing mandatory keys {','.join(sorted(missing_keys))}."
             self.result = False
             self._append_msg(msg)
             return False
@@ -243,8 +248,9 @@ class VerifyFabricParams:
         self._default_nv_pairs["ANYCAST_BGW_ADVERTISE_PIP"] = False
         self._default_nv_pairs["ANYCAST_GW_MAC"] = "2020.0000.00aa"
         self._default_nv_pairs["ANYCAST_LB_ID"] = ""
-        self._default_nv_pairs["ANYCAST_RP_IP_RANGE"] = "10.254.254.0/24"
-        self._default_nv_pairs["ANYCAST_RP_IP_RANGE_INTERNAL"] = ""
+        # self._default_nv_pairs["ANYCAST_RP_IP_RANGE"] = "10.254.254.0/24"
+        # self._default_nv_pairs["ANYCAST_RP_IP_RANGE"] = ""
+        # self._default_nv_pairs["ANYCAST_RP_IP_RANGE_INTERNAL"] = ""
         self._default_nv_pairs["AUTO_SYMMETRIC_DEFAULT_VRF"] = False
         self._default_nv_pairs["AUTO_SYMMETRIC_VRF_LITE"] = False
         self._default_nv_pairs["AUTO_VRFLITE_IFC_DEFAULT_VRF"] = False
@@ -339,8 +345,9 @@ class VerifyFabricParams:
         self._default_nv_pairs["ISIS_AUTH_KEYCHAIN_NAME"] = ""
         self._default_nv_pairs["ISIS_LEVEL"] = ""
         self._default_nv_pairs["ISIS_OVERLOAD_ELAPSE_TIME"] = ""
-        self._default_nv_pairs["ISIS_OVERLOAD_ENABLE"] = False
-        self._default_nv_pairs["ISIS_P2P_ENABLE"] = False
+        self._default_nv_pairs["ISIS_OVERLOAD_ENABLE"] = ""
+        # self._default_nv_pairs["ISIS_P2P_ENABLE"] = False
+        self._default_nv_pairs["ISIS_P2P_ENABLE"] = ""
         self._default_nv_pairs["L2_HOST_INTF_MTU"] = "9216"
         self._default_nv_pairs["L2_HOST_INTF_MTU_PREV"] = "9216"
         self._default_nv_pairs["L2_SEGMENT_ID_RANGE"] = "30000-49000"
@@ -432,7 +439,7 @@ class VerifyFabricParams:
         self._default_nv_pairs["UNNUM_DHCP_END_INTERNAL"] = ""
         self._default_nv_pairs["UNNUM_DHCP_START"] = ""
         self._default_nv_pairs["UNNUM_DHCP_START_INTERNAL"] = ""
-        self._default_nv_pairs["USE_LINK_LOCAL"] = False
+        self._default_nv_pairs["USE_LINK_LOCAL"] = ""
         self._default_nv_pairs["V6_SUBNET_RANGE"] = ""
         self._default_nv_pairs["V6_SUBNET_TARGET_MASK"] = ""
         self._default_nv_pairs["VPC_AUTO_RECOVERY_TIME"] = "360"
@@ -630,7 +637,7 @@ class VerifyFabricParams:
 
         Hence, we have the following structure for the
         self._mandatory_params dictionary, to handle the case where
-        underlay_is_v6 is set to True.  Below, we don't case what the
+        underlay_is_v6 is set to True.  Below, we don't care what the
         value for any of the mandatory parameters is.  We only care that
         they are set.
 
@@ -877,13 +884,10 @@ class VerifyFabricParams:
         Build the payload to create the fabric specified self.config
         Caller: _validate_dependencies
         """
-        self.payload = self._default_fabric_params
-        self.payload["fabricName"] = self.config["fabric_name"]
-        self.payload["asn"] = self.config["bgp_as"]
-        self.payload["nvPairs"] = self._default_nv_pairs
+        self.payload = {}
         self._translate_to_ndfc_nv_pairs(self.config)
         for key, value in self._translated_nv_pairs.items():
-            self.payload["nvPairs"][key] = value
+            self.payload[key] = value
 
     @property
     def config(self):

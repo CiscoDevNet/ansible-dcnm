@@ -77,7 +77,7 @@ def translate_vrf_lite_autoconfig(value):
 
 class VerifyFabricParams:
     """
-    Parameter validation for NDFC Easy_Fabric (Data Center VXLAN EVPN)
+    Parameter validation for NDFC Data Center VXLAN EVPN
     """
 
     def __init__(self):
@@ -243,7 +243,8 @@ class VerifyFabricParams:
         self._default_nv_pairs["ANYCAST_BGW_ADVERTISE_PIP"] = False
         self._default_nv_pairs["ANYCAST_GW_MAC"] = "2020.0000.00aa"
         self._default_nv_pairs["ANYCAST_LB_ID"] = ""
-        self._default_nv_pairs["ANYCAST_RP_IP_RANGE"] = "10.254.254.0/24"
+        # self._default_nv_pairs["ANYCAST_RP_IP_RANGE"] = "10.254.254.0/24"
+        self._default_nv_pairs["ANYCAST_RP_IP_RANGE"] = ""
         self._default_nv_pairs["ANYCAST_RP_IP_RANGE_INTERNAL"] = ""
         self._default_nv_pairs["AUTO_SYMMETRIC_DEFAULT_VRF"] = False
         self._default_nv_pairs["AUTO_SYMMETRIC_VRF_LITE"] = False
