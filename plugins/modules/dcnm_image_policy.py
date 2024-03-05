@@ -97,11 +97,10 @@ options:
                 description:
                     - The release associated with the image policy.
                     - This is derived from the image name as follows.
-                    - Given image name: nxos64-cs.10.2.5.M.bin
-                    - We need to extract the following info
-                    - version (10.2.5), platform (nxos64-cs), and bits (64bit)
-                    - The release string has format (version)_(platform)_(bits)
-                    - so will be 10.2.5_nxos64-cs_64bit
+                    - From image name nxos64-cs.10.2.5.M.bin
+                    - we need to extract version (10.2.5), platform (nxos64-cs), and bits (64bit).
+                    - The release string conforms to format (version)_(platform)_(bits)
+                    - so the resulting release string will be 10.2.5_nxos64-cs_64bit
                 type: str
                 required: true
             type:

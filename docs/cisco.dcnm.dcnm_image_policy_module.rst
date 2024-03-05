@@ -207,11 +207,10 @@ Parameters
                 <td>
                         <div>The release associated with the image policy.</div>
                         <div>This is derived from the image name as follows.</div>
-                        <div>{&#x27;Given image name&#x27;: &#x27;nxos64-cs.10.2.5.M.bin&#x27;}</div>
-                        <div>We need to extract the following info</div>
-                        <div>version (10.2.5), platform (nxos64-cs), and bits (64bit)</div>
-                        <div>The release string has format (version)_(platform)_(bits)</div>
-                        <div>so will be 10.2.5_nxos64-cs_64bit</div>
+                        <div>From image name nxos64-cs.10.2.5.M.bin</div>
+                        <div>we need to extract version (10.2.5), platform (nxos64-cs), and bits (64bit).</div>
+                        <div>The release string conforms to format (version)_(platform)_(bits)</div>
+                        <div>so the resulting release string will be 10.2.5_nxos64-cs_64bit</div>
                 </td>
             </tr>
             <tr>
