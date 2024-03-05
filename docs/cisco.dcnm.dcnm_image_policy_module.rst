@@ -206,13 +206,12 @@ Parameters
                 </td>
                 <td>
                         <div>The release associated with the image policy.</div>
-                        <div>{&#x27;This is derived from the image name as follows&#x27;: None}</div>
+                        <div>This is derived from the image name as follows.</div>
                         <div>{&#x27;Given image name&#x27;: &#x27;nxos64-cs.10.2.5.M.bin&#x27;}</div>
-                        <div>{&#x27;We need to extract the following&#x27;: None}</div>
-                        <div>{&#x27;version&#x27;: &#x27;10.2.5&#x27;}</div>
-                        <div>{&#x27;platform&#x27;: &#x27;nxos64-cs (NX-OS 64-bit CloudScale)&#x27;}</div>
-                        <div>{&#x27;Shuffling the above info, we form the following release string&#x27;: None}</div>
-                        <div>10.2.5_nxos64-cs_64bit</div>
+                        <div>We need to extract the following info</div>
+                        <div>version (10.2.5), platform (nxos64-cs), and bits (64bit)</div>
+                        <div>The release string has format (version)_(platform)_(bits)</div>
+                        <div>so will be 10.2.5_nxos64-cs_64bit</div>
                 </td>
             </tr>
             <tr>
