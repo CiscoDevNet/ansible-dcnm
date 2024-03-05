@@ -50,6 +50,8 @@ class ImagePolicyCommon:
         self.log.debug("ENTERED ImagePolicyCommon()")
 
         self.ansible_module = ansible_module
+        self.check_mode = self.ansible_module.check_mode
+
         self.params = ansible_module.params
 
         self.properties: Dict[str, Any] = {}
@@ -282,7 +284,7 @@ class ImagePolicyCommon:
         """
         return a result for a failed task with no changes
         """
-        return ImagePolicyTaskResult(None).failed_result
+        return ImagePolicyTaskResult(self.ansible_module).failed_result
 
     @property
     def response_current(self):

@@ -46,10 +46,12 @@ class ImagePolicyDelete(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        # self.ansible_module = ansible_module
-
+        self.check_mode = self.ansible_module.check_mode
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImagePolicyDelete()")
+
+        msg = "ENTERED ImagePolicyDelete(): "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
         self._image_policies = ImagePolicies(self.ansible_module)
@@ -104,7 +106,8 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self._policies_to_delete = []
         for policy_name in self.policy_names:
             if policy_name in self._image_policies.all_policies:
-                msg = f"Policy {policy_name} exists on the controller"
+                msg = f"Policy {policy_name} exists on the controller. "
+                msg += f"Appending {policy_name} to _policies_to_delete."
                 self.log.debug(msg)
                 self._policies_to_delete.append(policy_name)
 
@@ -134,7 +137,7 @@ class ImagePolicyDelete(ImagePolicyCommon):
         self.log.debug(msg)
 
         request_body = {"policyNames": self._policies_to_delete}
-        if self.ansible_module.check_mode is False:
+        if self.check_mode is False:
             self.response_current = dcnm_send(
                 self.ansible_module, self.verb, self.path, data=json.dumps(request_body)
             )

@@ -303,7 +303,6 @@ class ImagePolicyTask(ImagePolicyCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-        #self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ImagePolicyTask()")

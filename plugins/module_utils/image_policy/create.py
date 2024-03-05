@@ -135,7 +135,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         self.result_nok = []
         self.diff_nok = []
         for payload in self._payloads_to_commit:
-            if self.ansible_module.check_mode is False:
+            if self.check_mode is False:
                 self.response_current = dcnm_send(
                     self.ansible_module, self.verb, self.path, data=json.dumps(payload)
                 )
@@ -355,10 +355,12 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        # self.ansible_module = ansible_module
+        self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImagePolicyCreate()")
+        msg = "ENTERED ImagePolicyCreate(): "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self._build_properties()
 
