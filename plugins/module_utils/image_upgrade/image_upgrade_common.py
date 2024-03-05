@@ -53,7 +53,6 @@ class ImageUpgradeCommon:
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-
         self.params = ansible_module.params
 
         self.properties = {}
