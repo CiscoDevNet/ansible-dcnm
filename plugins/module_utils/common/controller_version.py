@@ -66,8 +66,8 @@ class ControllerVersion(ImageUpgradeCommon):
         }
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -88,19 +88,19 @@ class ControllerVersion(ImageUpgradeCommon):
         """
         path = self.endpoints.controller_version.get("path")
         verb = self.endpoints.controller_version.get("verb")
-        self.properties["response"] = dcnm_send(self.module, verb, path)
+        self.properties["response"] = dcnm_send(self.ansible_module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
         if self.result["success"] is False or self.result["found"] is False:
             msg = f"{self.class_name}.refresh() failed: {self.result}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
         self.properties["response_data"] = self.response.get("DATA")
         if self.response_data is None:
             msg = f"{self.class_name}.refresh() failed: response "
             msg += "does not contain DATA key. Controller response: "
             msg += f"{self.response}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
     def _get(self, item):
         return self.make_boolean(self.make_none(self.response_data.get(item)))

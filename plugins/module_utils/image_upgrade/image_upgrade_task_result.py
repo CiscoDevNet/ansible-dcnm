@@ -30,9 +30,13 @@ class ImageUpgradeTaskResult:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
+        self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImageUpgradeTaskResult()")
+
+        msg = "ENTERED ImageUpgradeTaskResult(): "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         # Used in did_anything_change() to determine if any diffs have been
         # appended to the diff lists.
@@ -77,6 +81,9 @@ class ImageUpgradeTaskResult:
         """
         return True if diffs have been appended to any of the diff lists.
         """
+        if self.check_mode is True:
+            self.log.debug("check_mode is True.  No changes made.")
+            return False
         for key in self.diff_properties:
             # skip query state diffs
             if key == "diff_issu_status":

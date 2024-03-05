@@ -53,7 +53,7 @@ def test_image_upgrade_image_policies_00001(image_policies) -> None:
     """
     with does_not_raise():
         instance = image_policies
-    assert instance.module == MockAnsibleModule
+    assert instance.ansible_module == MockAnsibleModule
     assert instance.class_name == "ImagePolicies"
     assert isinstance(instance.endpoints, ApiEndpoints)
 

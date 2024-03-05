@@ -43,15 +43,18 @@ class ImageUpgradeCommon:
         ...
     """
 
-    def __init__(self, module):
+    def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
+        self.ansible_module = ansible_module
+        self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImageUpgradeCommon()"
+        msg = "ENTERED ImageUpgradeCommon() "
+        msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self.module = module
-        self.params = module.params
+
+        self.params = ansible_module.params
 
         self.properties = {}
         self.properties["changed"] = False
@@ -102,7 +105,7 @@ class ImageUpgradeCommon:
             if payload is None:
                 msg = f"{caller}: Calling dcnm_send: verb {verb}, path {path}"
                 self.log.debug(msg)
-                response = self.dcnm_send(self.module, verb, path)
+                response = self.dcnm_send(self.ansible_module, verb, path)
             else:
                 msg = (
                     f"{caller}: Calling dcnm_send: verb {verb}, path {path}, payload: "
@@ -110,7 +113,7 @@ class ImageUpgradeCommon:
                 msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 response = self.dcnm_send(
-                    self.module, verb, path, data=json.dumps(payload)
+                    self.ansible_module, verb, path, data=json.dumps(payload)
                 )
 
             self.response_current = copy.deepcopy(response)
@@ -157,7 +160,7 @@ class ImageUpgradeCommon:
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unknown request verb ({verb}) for response {response}."
-        self.module.fail_json(msg)
+        self.ansible_module.fail_json(msg)
 
     def _handle_get_response(self, response):
         """
@@ -249,7 +252,7 @@ class ImageUpgradeCommon:
         """
         Return a result for a failed task with no changes
         """
-        return ImageUpgradeTaskResult(None).failed_result
+        return ImageUpgradeTaskResult(self.ansible_module).failed_result
 
     @property
     def changed(self):
@@ -264,7 +267,7 @@ class ImageUpgradeCommon:
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a bool. Got {value}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
         self.properties["changed"] = value
 
     @property
@@ -280,7 +283,7 @@ class ImageUpgradeCommon:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a dict. Got {value}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
         self.properties["diff"].append(value)
 
     @property
@@ -298,7 +301,7 @@ class ImageUpgradeCommon:
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a bool. Got {value}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
         self.properties["failed"] = value
 
     @property
@@ -318,7 +321,7 @@ class ImageUpgradeCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["response_current"] = value
 
     @property
@@ -338,7 +341,7 @@ class ImageUpgradeCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["response"].append(value)
 
     @property
@@ -369,7 +372,7 @@ class ImageUpgradeCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["result"].append(value)
 
     @property
@@ -389,7 +392,7 @@ class ImageUpgradeCommon:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["result_current"] = value
 
     @property
@@ -409,9 +412,9 @@ class ImageUpgradeCommon:
         # isinstance(False, int) returns True, so we need first
         # to test for this and fail_json specifically for bool values.
         if isinstance(value, bool):
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["send_interval"] = value
 
     @property
@@ -431,9 +434,9 @@ class ImageUpgradeCommon:
         # isinstance(False, int) returns True, so we need first
         # to test for this and fail_json specifically for bool values.
         if isinstance(value, bool):
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         if not isinstance(value, int):
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["timeout"] = value
 
     @property
@@ -451,5 +454,5 @@ class ImageUpgradeCommon:
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a bool(). Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["unit_test"] = value

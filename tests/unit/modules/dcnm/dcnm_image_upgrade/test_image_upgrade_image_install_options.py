@@ -54,7 +54,7 @@ def test_image_upgrade_install_options_00001(image_install_options) -> None:
     """
     with does_not_raise():
         instance = image_install_options
-    assert instance.module == MockAnsibleModule
+    assert instance.ansible_module == MockAnsibleModule
     assert instance.class_name == "ImageInstallOptions"
     assert isinstance(instance.endpoints, ApiEndpoints)
     path = "/appcenter/cisco/ndfc/api/v1/imagemanagement"

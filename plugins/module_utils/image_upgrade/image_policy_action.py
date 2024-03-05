@@ -62,8 +62,8 @@ class ImagePolicyAction(ImageUpgradeCommon):
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/__POLICY_NAME__
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -71,10 +71,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         self.endpoints = ApiEndpoints()
         self._init_properties()
-        self.image_policies = ImagePolicies(self.module)
+        self.image_policies = ImagePolicies(self.ansible_module)
         self.path = None
         self.payloads = []
-        self.switch_issu_details = SwitchIssuDetailsBySerialNumber(self.module)
+        self.switch_issu_details = SwitchIssuDetailsBySerialNumber(self.ansible_module)
         self.valid_actions = {"attach", "detach", "query"}
         self.verb = None
 
@@ -119,7 +119,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
                     msg += f"{self.switch_issu_details.device_name}. "
                     msg += "Please verify that the switch is managed by "
                     msg += "the controller."
-                    self.module.fail_json(msg, **self.failed_result)
+                    self.ansible_module.fail_json(msg, **self.failed_result)
             self.payloads.append(payload)
 
     def validate_request(self):
@@ -135,13 +135,13 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.action must be set before "
             msg += "calling commit()"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.policy_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling commit()"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.action == "query":
             return
@@ -150,7 +150,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         self.image_policies.refresh()
         self.switch_issu_details.refresh()
@@ -162,7 +162,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"policy {self.policy_name} does not exist on "
             msg += "the controller."
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
@@ -173,7 +173,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
                 msg += f"{self.switch_issu_details.platform}. {self.policy_name} "
                 msg += "supports the following platform(s): "
                 msg += f"{self.image_policies.platform}"
-                self.module.fail_json(msg, **self.failed_result)
+                self.ansible_module.fail_json(msg, **self.failed_result)
 
     def commit(self):
         """
@@ -197,7 +197,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         else:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Unknown action {self.action}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
     def _attach_policy(self):
         """
@@ -232,7 +232,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when attaching policy {self.policy_name} "
             msg += f"to switch. Payload: {payload}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         for payload in self.payloads:
             diff: Dict[str, Any] = {}
@@ -267,7 +267,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when detaching policy {self.policy_name} "
             msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
@@ -298,7 +298,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         if not self.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when querying image policy {self.policy_name}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         self.query_result = self.response_current.get("DATA")
         self.diff = self.response_current
@@ -346,7 +346,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += "instance.action must be one of "
             msg += f"{','.join(sorted(self.valid_actions))}. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["action"] = value
 
     @property
@@ -380,10 +380,10 @@ class ImagePolicyAction(ImageUpgradeCommon):
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must contain at least one "
             msg += "switch serial number."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["serial_numbers"] = value

@@ -57,10 +57,13 @@ class RestSend:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED RestSend()"
-        self.log.debug(msg)
 
         self.ansible_module = ansible_module
+        self.check_mode = self.ansible_module.check_mode
+
+        msg = f"ENTERED RestSend() check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
         self.params = ansible_module.params
 
         self._valid_verbs = {"GET", "POST", "PUT", "DELETE"}
@@ -244,7 +247,7 @@ class RestSend:
         """
         Return a result for a failed task with no changes
         """
-        return ImageUpgradeTaskResult(None).failed_result
+        return ImageUpgradeTaskResult(self.ansible_module).failed_result
 
     @property
     def path(self):

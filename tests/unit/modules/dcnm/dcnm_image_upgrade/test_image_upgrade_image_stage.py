@@ -72,7 +72,7 @@ def test_image_upgrade_stage_00001(image_stage) -> None:
     - Class attributes are initialized to expected values
     """
     instance = image_stage
-    assert instance.module == MockAnsibleModule
+    assert instance.ansible_module == MockAnsibleModule
     assert instance.class_name == "ImageStage"
     assert isinstance(instance.properties, dict)
     assert isinstance(instance.serial_numbers_done, set)

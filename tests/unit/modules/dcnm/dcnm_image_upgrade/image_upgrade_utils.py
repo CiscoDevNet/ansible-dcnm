@@ -58,11 +58,13 @@ class MockAnsibleModule:
     """
     Mock the AnsibleModule class
     """
+    check_mode = False
 
     params = {"config": {"switches": [{"ip_address": "172.22.150.105"}]}}
     argument_spec = {
         "config": {"required": True, "type": "dict"},
         "state": {"default": "merged", "choices": ["merged", "deleted", "query"]},
+        "check_mode": False
     }
     supports_check_mode = True
 

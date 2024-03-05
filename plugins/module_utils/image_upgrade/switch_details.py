@@ -50,8 +50,8 @@ class SwitchDetails(ImageUpgradeCommon):
     /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -61,7 +61,7 @@ class SwitchDetails(ImageUpgradeCommon):
         self.path = self.endpoints.switches_info.get("path")
         self.verb = self.endpoints.switches_info.get("verb")
 
-        self.rest_send = RestSend(self.module)
+        self.rest_send = RestSend(self.ansible_module)
 
         self._init_properties()
 
@@ -100,7 +100,7 @@ class SwitchDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.response_current}"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         data = self.response_current.get("DATA")
         self.properties["info"] = {}
@@ -117,17 +117,17 @@ class SwitchDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.ip_address before accessing "
             msg += f"property {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.ip_address not in self.properties["info"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.ip_address} does not exist on the controller."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if item not in self.properties["info"][self.ip_address]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.ip_address} does not have a key named {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         return self.make_boolean(
             self.make_none(self.properties["info"][self.ip_address].get(item))

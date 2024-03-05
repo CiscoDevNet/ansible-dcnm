@@ -88,8 +88,8 @@ class SwitchIssuDetails(ImageUpgradeCommon):
 
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -120,7 +120,7 @@ class SwitchIssuDetails(ImageUpgradeCommon):
         msg = f"verb: {verb}, path {path}"
         self.log.debug(msg)
 
-        self.response_current = dcnm_send(self.module, verb, path)
+        self.response_current = dcnm_send(self.ansible_module, verb, path)
         self.result_current = self._handle_response(self.response_current, verb)
 
         msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
@@ -136,19 +136,19 @@ class SwitchIssuDetails(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retriving switch "
             msg += "information from the controller"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         data = self.response_current.get("DATA").get("lastOperDataObject")
 
         if data is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if len(data) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
     @property
     def actions_in_progress(self):
@@ -659,8 +659,8 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     See SwitchIssuDetails for more details.
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -689,17 +689,17 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch ipAddress "
             msg += f"before accessing property {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist on the controller."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.filter].get(item))
@@ -747,8 +747,8 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
 
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -778,18 +778,18 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch serialNumber "
             msg += f"before accessing property {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist "
             msg += "on the controller."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.filter].get(item))
@@ -836,8 +836,8 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
 
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -866,18 +866,18 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch deviceName "
             msg += f"before accessing property {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist "
             msg += "on the controller."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.filter].get(item))

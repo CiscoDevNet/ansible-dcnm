@@ -140,8 +140,8 @@ class ImageInstallOptions(ImageUpgradeCommon):
     }
     """
 
-    def __init__(self, module) -> None:
-        super().__init__(module)
+    def __init__(self, ansible_module) -> None:
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -181,13 +181,13 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.policy_name must be set before "
             msg += "calling refresh()"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.serial_number is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_number must be set before "
             msg += "calling refresh()"
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
     def refresh(self) -> None:
         """
@@ -230,7 +230,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             self.log.debug(msg)
 
             response = dcnm_send(
-                self.module, self.verb, self.path, data=json.dumps(self.payload)
+                self.ansible_module, self.verb, self.path, data=json.dumps(self.payload)
             )
 
             self.properties["response_data"] = response.get("DATA", {})
@@ -246,14 +246,14 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg += "Bad result when retrieving install-options from "
             msg += f"the controller. Controller response: {self.response_current}. "
             if self.response_data.get("error", None) is None:
-                self.module.fail_json(msg, **self.failed_result)
+                self.ansible_module.fail_json(msg, **self.failed_result)
             if "does not have package to continue" in self.response_data.get(
                 "error", ""
             ):
                 msg += f"Possible cause: Image policy {self.policy_name} does not have "
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         self.response = copy.deepcopy(self.response_current)
         if self.response_data.get("compatibilityStatusList") is None:
@@ -307,7 +307,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.policy_name must be a string. Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["policy_name"] = value
 
     @property
@@ -341,7 +341,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"issu must be a boolean value. Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["issu"] = value
 
     @property
@@ -363,7 +363,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"epld must be a boolean value. Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["epld"] = value
 
     @property
@@ -385,7 +385,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "package_install must be a boolean value. "
             msg += f"Got {value}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
         self.properties["package_install"] = value
 
     # Getter properties

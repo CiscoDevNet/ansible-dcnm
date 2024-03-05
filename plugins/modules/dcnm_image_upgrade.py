@@ -449,8 +449,8 @@ class ImageUpgradeTask(ImageUpgradeCommon):
     query: return switch issu details for one or more devices
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
@@ -467,13 +467,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.path = None
         self.verb = None
 
-        self.config = module.params.get("config", {})
+        self.config = ansible_module.params.get("config", {})
 
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
         self.check_mode = False
 
@@ -481,11 +481,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.want = []
         self.need = []
 
-        self.task_result = ImageUpgradeTaskResult(self.module)
+        self.task_result = ImageUpgradeTaskResult(self.ansible_module)
         self.task_result.changed = False
 
-        self.switch_details = SwitchDetails(self.module)
-        self.image_policies = ImagePolicies(self.module)
+        self.switch_details = SwitchDetails(self.ansible_module)
+        self.image_policies = ImagePolicies(self.ansible_module)
 
     def get_have(self) -> None:
         """
@@ -495,7 +495,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        self.have = SwitchIssuDetailsByIpAddress(self.module)
+        self.have = SwitchIssuDetailsByIpAddress(self.ansible_module)
         self.have.refresh()
 
     def get_want(self) -> None:
@@ -525,7 +525,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         if len(self.want) == 0:
             self.task_result.result["changed"] = False
-            self.module.exit_json(**self.task_result.module_result)
+            self.ansible_module.exit_json(**self.task_result.module_result)
 
     def _build_idempotent_want(self, want) -> None:
         """
@@ -618,7 +618,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         # Get relevant install options from the controller
         # based on the options in our idempotent_want item
-        instance = ImageInstallOptions(self.module)
+        instance = ImageInstallOptions(self.ansible_module)
         instance.policy_name = self.idempotent_want["policy"]
         instance.serial_number = self.have.serial_number
 
@@ -727,16 +727,16 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
     def _build_params_spec(self) -> Dict[str, Any]:
         method_name = inspect.stack()[0][3]
-        if self.module.params["state"] == "merged":
+        if self.ansible_module.params["state"] == "merged":
             return self._build_params_spec_for_merged_state()
-        if self.module.params["state"] == "deleted":
+        if self.ansible_module.params["state"] == "deleted":
             return self._build_params_spec_for_merged_state()
-        if self.module.params["state"] == "query":
+        if self.ansible_module.params["state"] == "query":
             return self._build_params_spec_for_query_state()
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"Unsupported state: {self.module.params['state']}"
-        self.module.fail_json(msg)
+        msg += f"Unsupported state: {self.ansible_module.params['state']}"
+        self.ansible_module.fail_json(msg)
 
     @staticmethod
     def _build_params_spec_for_merged_state() -> Dict[str, Any]:
@@ -906,7 +906,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         if not config.get("switches"):
             msg = f"{self.class_name}.{method_name}: "
             msg += "playbook is missing list of switches"
-            self.module.fail_json(msg)
+            self.ansible_module.fail_json(msg)
 
         self.switch_configs = []
         merged_configs = []
@@ -923,7 +923,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg = f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            merge_dicts = MergeDicts(self.module)
+            merge_dicts = MergeDicts(self.ansible_module)
             merge_dicts.dict1 = global_config
             merge_dicts.dict2 = switch
             merge_dicts.commit()
@@ -942,7 +942,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         configs_to_merge = copy.copy(self.switch_configs)
         merged_configs = []
-        merge = ParamsMergeDefaults(self.module)
+        merge = ParamsMergeDefaults(self.ansible_module)
         merge.params_spec = self._build_params_spec()
         for switch_config in configs_to_merge:
             merge.parameters = switch_config
@@ -959,7 +959,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.get_want
         """
-        validator = ParamsValidate(self.module)
+        validator = ParamsValidate(self.ansible_module)
         validator.params_spec = self._build_params_spec()
 
         for switch in self.switch_configs:
@@ -998,7 +998,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 self.switch_details.serial_number
             )
 
-        instance = ImagePolicyAction(self.module)
+        instance = ImagePolicyAction(self.ansible_module)
         if len(serial_numbers_to_update) == 0:
             msg = f"No policies to {action}"
             self.log.debug(msg)
@@ -1044,7 +1044,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         msg = f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
-        instance = ImageStage(self.module)
+        instance = ImageStage(self.ansible_module)
         instance.serial_numbers = serial_numbers
         instance.commit()
         for diff in instance.diff:
@@ -1064,7 +1064,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         msg = f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
-        instance = ImageValidate(self.module)
+        instance = ImageValidate(self.ansible_module)
         instance.serial_numbers = serial_numbers
         instance.commit()
         for diff in instance.diff:
@@ -1112,7 +1112,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         if len(devices) == 0:
             return
 
-        install_options = ImageInstallOptions(self.module)
+        install_options = ImageInstallOptions(self.ansible_module)
         self.switch_details.refresh()
 
         verify_devices = copy.deepcopy(devices)
@@ -1143,7 +1143,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += "NX-OS image"
-                self.module.fail_json(msg)
+                self.ansible_module.fail_json(msg)
 
             msg = f"install_options.epld: {install_options.epld}"
             self.log.debug(msg)
@@ -1160,7 +1160,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += "EPLD image."
-                self.module.fail_json(msg)
+                self.ansible_module.fail_json(msg)
 
     def needs_epld_upgrade(self, epld_modules) -> bool:
         """
@@ -1202,7 +1202,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
         - handle_merged_state
         """
-        upgrade = ImageUpgrade(self.module)
+        upgrade = ImageUpgrade(self.ansible_module)
         upgrade.devices = devices
         upgrade.commit()
         for diff in upgrade.diff:
@@ -1276,7 +1276,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         Caller: main()
         """
-        instance = SwitchIssuDetailsByIpAddress(self.module)
+        instance = SwitchIssuDetailsByIpAddress(self.ansible_module)
         instance.refresh()
         response_current = copy.deepcopy(instance.response_current)
         if "DATA" in response_current:
@@ -1305,7 +1305,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 )
                 res.update({"DATA": data})
 
-        self.module.fail_json(msg=res)
+        self.ansible_module.fail_json(msg=res)
 
 
 def main():

@@ -53,8 +53,8 @@ class ImagePolicies(ImageUpgradeCommon):
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
 
-    def __init__(self, module):
-        super().__init__(module)
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -82,14 +82,14 @@ class ImagePolicies(ImageUpgradeCommon):
         path = self.endpoints.policies_info.get("path")
         verb = self.endpoints.policies_info.get("verb")
 
-        self.properties["response"] = dcnm_send(self.module, verb, path)
+        self.properties["response"] = dcnm_send(self.ansible_module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 
         if not self.result["success"]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad result when retrieving image policy "
             msg += "information from the controller."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         data = self.response.get("DATA").get("lastOperDataObject")
 
@@ -97,14 +97,14 @@ class ImagePolicies(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad response when retrieving image policy "
             msg += "information from the controller."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         # We cannot fail_json here since dcnm_image_policy merged
         # state will fail if there are no policies defined.
         # if len(data) == 0:
         #     msg = f"{self.class_name}.{self.method_name}: "
         #     msg += "the controller has no defined image policies."
-        #     self.module.fail_json(msg, **self.failed_result)
+        #     self.ansible_module.fail_json(msg, **self.failed_result)
 
         if len(data) == 0:
             msg = "the controller has no defined image policies."
@@ -118,7 +118,7 @@ class ImagePolicies(ImageUpgradeCommon):
             if policy_name is None:
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += "Cannot parse policy information from the controller."
-                self.module.fail_json(msg, **self.failed_result)
+                self.ansible_module.fail_json(msg, **self.failed_result)
 
             self.properties["response_data"][policy_name] = policy
 
@@ -133,7 +133,7 @@ class ImagePolicies(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.policy_name must be set before "
             msg += f"accessing property {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         if self.policy_name not in self.properties["response_data"]:
             return None
@@ -144,7 +144,7 @@ class ImagePolicies(ImageUpgradeCommon):
         if item not in self.properties["response_data"][self.policy_name]:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += f"{self.policy_name} does not have a key named {item}."
-            self.module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.failed_result)
 
         return self.make_boolean(
             self.make_none(self.properties["response_data"][self.policy_name][item])
