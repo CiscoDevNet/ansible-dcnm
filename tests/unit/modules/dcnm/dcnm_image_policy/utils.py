@@ -63,7 +63,6 @@ class MockAnsibleModule:
     }
     supports_check_mode = True
 
-
     @property
     def state(self):
         """
