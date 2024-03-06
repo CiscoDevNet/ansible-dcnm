@@ -89,7 +89,9 @@ options:
         required: true
       max_hops:
         description:
-        - Maximum Hops to reach the switch
+        - Maximum Hops to reach the switch.
+        - This parameter is deprecated(as on 2024-03-06)
+        - Defaults to 0 irrespective of configured value.
         type: int
         required: false
         default: 0
@@ -746,7 +748,7 @@ class DcnmInventory:
                 "snmpV3AuthProtocol": pro,
                 "username": inv["user_name"],
                 "password": inv["password"],
-                "maxHops": inv["max_hops"],
+                "maxHops": 0,
                 "cdpSecondTimeout": "5",
                 "role": inv["role"].replace(" ", "_"),
                 "preserveConfig": inv["preserve_config"],
