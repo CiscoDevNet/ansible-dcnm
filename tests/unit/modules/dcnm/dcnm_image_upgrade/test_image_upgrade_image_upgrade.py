@@ -37,12 +37,10 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
 
-from .image_upgrade_utils import (does_not_raise, image_upgrade_fixture,
-                                  issu_details_by_ip_address_fixture,
-                                  payloads_image_upgrade,
-                                  responses_image_install_options,
-                                  responses_image_upgrade,
-                                  responses_switch_issu_details)
+from .utils import (does_not_raise, image_upgrade_fixture,
+                    issu_details_by_ip_address_fixture, payloads_image_upgrade,
+                    responses_image_install_options, responses_image_upgrade,
+                    responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
@@ -1289,7 +1287,7 @@ def test_image_upgrade_upgrade_00032(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    match = "ImageUpgrade.commit: failed: "
+    match = "ImageUpgrade.commit_normal_mode: failed: "
     match += r"\{'success': False, 'changed': False\}. "
     match += r"Controller response: \{'DATA': 123, "
     match += "'MESSAGE': 'Internal Server Error', 'METHOD': 'POST', "

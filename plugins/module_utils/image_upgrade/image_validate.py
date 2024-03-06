@@ -25,12 +25,12 @@ import logging
 from time import sleep
 from typing import List, Set
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
@@ -73,7 +73,9 @@ class ImageValidate(ImageUpgradeCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImageValidate()")
+        msg = "ENTERED ImageValidate() "
+        msg += f"check_mode {self.check_mode}"
+        self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
@@ -154,6 +156,101 @@ class ImageValidate(ImageUpgradeCommon):
         self.payload["nonDisruptive"] = self.non_disruptive
 
     def commit(self) -> None:
+        if self.check_mode is True:
+            self.commit_check_mode()
+        else:
+            self.commit_normal_mode()
+
+    def commit_check_mode(self) -> None:
+        """
+        Simulate a commit of the image validation request to the
+        controller.
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
+
+        if len(self.serial_numbers) == 0:
+            msg = "No serial numbers to validate."
+            self.response_current = {"response": msg}
+            self.result_current = {"success": True}
+            self.response_data = {"response": msg}
+            self.response = self.response_current
+            self.result = self.result_current
+            return
+
+        self.prune_serial_numbers()
+        self.validate_serial_numbers()
+
+        self.build_payload()
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
+        self.rest_send.payload = self.payload
+
+        self.rest_send.check_mode = True
+
+        self.rest_send.commit()
+
+        self.response_current = {}
+        self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
+        self.response_current["MESSAGE"] = "OK"
+        self.response_current["METHOD"] = self.verb
+        self.response_current["REQUEST_PATH"] = self.path
+        self.response_current["RETURN_CODE"] = 200
+        self.response = copy.deepcopy(self.response_current)
+
+        self.response_data = self.response_current.get("DATA")
+
+        self.result_current = self.rest_send._handle_response(self.response_current)
+        self.result = copy.deepcopy(self.result_current)
+
+        msg = "self.payload: "
+        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = "self.response: "
+        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = "self.response_current: "
+        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = "self.response_data: "
+        msg += f"{self.response_data}"
+        self.log.debug(msg)
+
+        msg = "self.result: "
+        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = "self.result_current: "
+        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if not self.result_current["success"]:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"failed: {self.result_current}. "
+            msg += f"Controller response: {self.response_current}"
+            self.ansible_module.fail_json(msg, **self.failed_result)
+
+        for serial_number in self.serial_numbers:
+            self.issu_detail.filter = serial_number
+            diff = {}
+            diff["action"] = "validate"
+            diff["ip_address"] = self.issu_detail.ip_address
+            diff["logical_name"] = self.issu_detail.device_name
+            diff["policy"] = self.issu_detail.policy
+            diff["serial_number"] = serial_number
+            # See image_upgrade_common.py for the definition of self.diff
+            self.diff = copy.deepcopy(diff)
+
+        msg = "self.diff: "
+        msg += f"{json.dumps(self.diff, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def commit_normal_mode(self) -> None:
         """
         Commit the image validation request to the controller and wait
         for the images to be validated.
@@ -181,25 +278,45 @@ class ImageValidate(ImageUpgradeCommon):
         self.rest_send.path = self.path
         self.rest_send.payload = self.payload
 
+        if self.check_mode is True:
+            self.rest_send.check_mode = True
+        else:
+            self.rest_send.check_mode = False
+
         self.rest_send.commit()
 
         msg = f"self.rest_send.response_current: {self.rest_send.response_current}"
         self.log.debug(msg)
 
-        self.response = self.rest_send.response_current
-        self.response_current = self.rest_send.response_current
+        self.response_current = copy.deepcopy(self.rest_send.response_current)
+        self.response = copy.deepcopy(self.rest_send.response_current)
         self.response_data = self.response_current.get("DATA", "No Stage DATA")
 
-        self.result = self.rest_send.result_current
-        self.result_current = self.rest_send.result_current
+        self.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.result = copy.deepcopy(self.rest_send.result_current)
 
-        msg = f"self.payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
+        msg = "self.payload: "
+        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
+
+        msg = "self.response: "
+        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
+
+        msg = "self.response_current: "
+        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"self.response_data: {self.response_data}"
+
+        msg = "self.response_data: "
+        msg += f"{self.response_data}"
+        self.log.debug(msg)
+
+        msg = "self.result: "
+        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = "self.result_current: "
+        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if not self.result_current["success"]:

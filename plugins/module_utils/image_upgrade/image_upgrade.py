@@ -25,14 +25,14 @@ import logging
 from time import sleep
 from typing import Any, Dict, List, Set
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
@@ -456,6 +456,89 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["pacakgeUnInstall"] = package_uninstall
 
     def commit(self) -> None:
+        if self.check_mode is True:
+            self.commit_check_mode()
+        else:
+            self.commit_normal_mode()
+
+    def commit_check_mode(self) -> None:
+        """
+        Simulate a commit of the image upgrade request to
+        the controller.
+        """
+        method_name = inspect.stack()[0][3]
+
+        self._validate_devices()
+
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
+
+        self.rest_send.check_mode = True
+
+        for device in self.devices:
+            msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            self._build_payload(device)
+
+            msg = "Calling rest_send.commit(): "
+            msg += f"verb {self.verb}, path: {self.path} "
+            msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            self.rest_send.payload = self.payload
+            self.rest_send.commit()
+
+            msg = "DONE rest_send.commit()"
+            self.log.debug(msg)
+
+            self.response_current = {}
+            self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
+            self.response_current["MESSAGE"] = "OK"
+            self.response_current["METHOD"] = self.verb
+            self.response_current["REQUEST_PATH"] = self.path
+            self.response_current["RETURN_CODE"] = 200
+            self.response = copy.deepcopy(self.response_current)
+
+            self.response_data = self.response_current.get("DATA")
+
+            self.result_current = self.rest_send._handle_response(self.response_current)
+            self.result = copy.deepcopy(self.result_current)
+
+            msg = "payload: "
+            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = "self.response: "
+            msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = "self.response_current: "
+            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = "self.response_data: "
+            msg += f"{self.response_data}"
+            self.log.debug(msg)
+
+            msg = "self.result: "
+            msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = "self.result_current: "
+            msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            if not self.result_current["success"]:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"failed: {self.result_current}. "
+                msg += f"Controller response: {self.response_current}"
+                self.ansible_module.fail_json(msg, **self.failed_result)
+
+            # See image_upgrade_common.py for the definition of self.diff
+            self.diff = copy.deepcopy(self.payload)
+
+    def commit_normal_mode(self) -> None:
         """
         Commit the image upgrade request to the controller and wait
         for the images to be upgraded.
@@ -467,6 +550,11 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         self.rest_send.verb = self.verb
         self.rest_send.path = self.path
+
+        if self.check_mode is True:
+            self.rest_send.check_mode = True
+        else:
+            self.rest_send.check_mode = False
 
         for device in self.devices:
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
@@ -492,21 +580,28 @@ class ImageUpgrade(ImageUpgradeCommon):
             self.result = self.rest_send.result_current
             self.result_current = self.rest_send.result_current
 
-            msg = (
-                f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}"
-            )
+            msg = "payload: "
+            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
+            msg = "self.response: "
+            msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            msg = f"self.response_data: {self.response_data}"
+            msg = "self.response_current: "
+            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            msg = f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}"
+            msg = "self.response_data: "
+            msg += f"{self.response_data}"
             self.log.debug(msg)
 
-            msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
+            msg = "self.result: "
+            msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = "self.result_current: "
+            msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             if not self.result_current["success"]:

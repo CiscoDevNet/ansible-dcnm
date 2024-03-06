@@ -38,10 +38,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpo
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
-from .image_upgrade_utils import (does_not_raise, image_validate_fixture,
-                                  issu_details_by_serial_number_fixture,
-                                  responses_image_validate,
-                                  responses_switch_issu_details)
+from .utils import (does_not_raise, image_validate_fixture,
+                    issu_details_by_serial_number_fixture,
+                    responses_image_validate, responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
@@ -473,7 +472,7 @@ def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
     with does_not_raise():
         instance = image_validate
         instance.serial_numbers = ["FDO21120U5D"]
-    MATCH = "ImageValidate.commit: failed: "
+    MATCH = "ImageValidate.commit_normal_mode: failed: "
     with pytest.raises(AnsibleFailJson, match=MATCH):
         instance.commit()
 

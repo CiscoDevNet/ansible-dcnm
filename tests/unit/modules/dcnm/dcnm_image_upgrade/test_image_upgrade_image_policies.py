@@ -34,9 +34,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
 
-from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
-                                  image_policies_fixture,
-                                  responses_image_policies)
+from .utils import (MockAnsibleModule, does_not_raise, image_policies_fixture,
+                    responses_image_policies)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."

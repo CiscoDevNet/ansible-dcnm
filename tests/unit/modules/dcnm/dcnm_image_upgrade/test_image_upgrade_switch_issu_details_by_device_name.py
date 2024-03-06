@@ -32,9 +32,8 @@ import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 
-from .image_upgrade_utils import (does_not_raise,
-                                  issu_details_by_device_name_fixture,
-                                  responses_switch_issu_details)
+from .utils import (does_not_raise, issu_details_by_device_name_fixture,
+                    responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."

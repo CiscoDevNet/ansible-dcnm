@@ -40,12 +40,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpo
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
-from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
-                                  image_stage_fixture,
-                                  issu_details_by_serial_number_fixture,
-                                  responses_controller_version,
-                                  responses_image_stage,
-                                  responses_switch_issu_details)
+from .utils import (MockAnsibleModule, does_not_raise, image_stage_fixture,
+                    issu_details_by_serial_number_fixture,
+                    responses_controller_version, responses_image_stage,
+                    responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
@@ -583,7 +581,7 @@ def test_image_upgrade_stage_00060(image_stage, arg, value, context) -> None:
         assert instance.serial_numbers == value
 
 
-MATCH_00070 = "ImageStage.commit: call instance.serial_numbers "
+MATCH_00070 = "ImageStage.commit_normal_mode: call instance.serial_numbers "
 MATCH_00070 += "before calling commit."
 
 
@@ -761,7 +759,7 @@ def test_image_upgrade_stage_00074(monkeypatch, image_stage) -> None:
 
     instance = image_stage
     instance.serial_numbers = ["FDO21120U5D"]
-    match = "ImageStage.commit: failed"
+    match = "ImageStage.commit_normal_mode: failed"
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 

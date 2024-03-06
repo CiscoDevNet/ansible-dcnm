@@ -1048,10 +1048,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.serial_numbers = serial_numbers
         instance.commit()
         for diff in instance.diff:
+            msg = "adding diff to task_result.diff_stage: "
+            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             self.task_result.diff_stage = copy.deepcopy(diff)
         for response in instance.response:
-            if "DATA" in response:
-                response.pop("DATA")
+            msg = "adding response to task_result.response_stage: "
+            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             self.task_result.response_stage = copy.deepcopy(response)
 
     def _validate_images(self, serial_numbers) -> None:
@@ -1068,10 +1072,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         instance.serial_numbers = serial_numbers
         instance.commit()
         for diff in instance.diff:
+            msg = "adding diff to task_result.diff_validate: "
+            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             self.task_result.diff_validate = copy.deepcopy(diff)
         for response in instance.response:
-            if "DATA" in response:
-                response.pop("DATA")
+            msg = "adding response to task_result.response_validate: "
+            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             self.task_result.response_validate = copy.deepcopy(response)
 
     def _verify_install_options(self, devices) -> None:
@@ -1206,11 +1214,15 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         upgrade.devices = devices
         upgrade.commit()
         for diff in upgrade.diff:
-            self.task_result.diff_upgrade = diff
-        for response in upgrade.response:
-            msg = f"adding response to response_upgrade: {json.dumps(response, indent=4, sort_keys=True)}"
+            msg = "adding diff to diff_upgrade: "
+            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            self.task_result.response_upgrade = response
+            self.task_result.diff_upgrade = copy.deepcopy(diff)
+        for response in upgrade.response:
+            msg = "adding response to response_upgrade: "
+            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.task_result.response_upgrade = copy.deepcopy(response)
 
     def handle_merged_state(self) -> None:
         """
@@ -1319,16 +1331,22 @@ def main():
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     # Create the base/parent logger for the dcnm collection.
-    # To disable logging, comment out log.config = <file_path> below
+    # To enable logging, set enable_logging to True.
     # log.config can be either a dictionary, or a path to a JSON file
     # Both dictionary and JSON file formats must be conformant with
     # logging.config.dictConfig and must not log to the console.
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
+    enable_logging = False
     log = Log(ansible_module)
-    # collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-    # config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-    # log.config = config_file
+    if enable_logging is True:
+        collection_path = (
+            "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+        )
+        config_file = (
+            f"{collection_path}/plugins/module_utils/common/logging_config.json"
+        )
+        log.config = config_file
     log.commit()
 
     task_module = ImageUpgradeTask(ansible_module)
@@ -1345,9 +1363,6 @@ def main():
 
     task_module.task_result.changed = False
     if len(task_module.need) == 0:
-        ansible_module.exit_json(**task_module.task_result.module_result)
-
-    if ansible_module.check_mode:
         ansible_module.exit_json(**task_module.task_result.module_result)
 
     if ansible_module.params["state"] in ["merged", "deleted"]:

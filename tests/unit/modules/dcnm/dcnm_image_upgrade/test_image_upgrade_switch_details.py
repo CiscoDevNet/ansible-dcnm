@@ -36,8 +36,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
     SwitchDetails
 
-from .image_upgrade_utils import (does_not_raise, responses_switch_details,
-                                  switch_details_fixture)
+from .utils import (does_not_raise, responses_switch_details,
+                    switch_details_fixture)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."

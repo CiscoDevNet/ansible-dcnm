@@ -59,15 +59,15 @@ class RestSend:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.ansible_module = ansible_module
-        self.check_mode = self.ansible_module.check_mode
 
-        msg = f"ENTERED RestSend() check_mode: {self.check_mode}"
+        msg = "ENTERED RestSend(): "
         self.log.debug(msg)
 
         self.params = ansible_module.params
 
         self._valid_verbs = {"GET", "POST", "PUT", "DELETE"}
         self.properties = {}
+        self.properties["check_mode"] = False
         self.properties["response"] = []
         self.properties["response_current"] = {}
         self.properties["result"] = []
@@ -90,6 +90,70 @@ class RestSend:
             self.ansible_module.fail_json(msg, **self.failed_result)
 
     def commit(self):
+        if self.check_mode is True:
+            self.commit_check_mode()
+        else:
+            self.commit_normal_mode()
+
+    def commit_check_mode(self):
+        """
+        Simulate a dcnm_send() call for check_mode
+
+        Properties read:
+            self.verb: HTTP verb e.g. GET, POST, PUT, DELETE
+            self.path: HTTP path e.g. http://controller_ip/path/to/endpoint
+            self.payload: Optional HTTP payload
+
+        Properties written:
+            self.properties["response_current"]: raw simulated response
+            self.properties["result_current"]: result from self._handle_response() method
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"verb {self.verb}, path {self.path}."
+        self.log.debug(msg)
+
+        self._verify_commit_parameters()
+
+        self.response_current = {}
+        self.response_current["RETURN_CODE"] = 200
+        self.response_current["METHOD"] = self.verb
+        self.response_current["REQUEST_PATH"] = self.path
+        self.response_current["MESSAGE"] = "OK"
+        self.response_current["DATA"] = "[simulated-check-mode-response:Success] "
+        self.result_current = self._handle_response(self.response_current)
+
+        self.response = copy.deepcopy(self.response_current)
+        self.result = copy.deepcopy(self.result_current)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.response_current: "
+        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.response: "
+        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.result_current: "
+        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.result: "
+        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def commit_normal_mode(self):
         """
         Call dcnm_send() with retries until successful response or timeout is exceeded.
 
@@ -104,7 +168,13 @@ class RestSend:
             self.properties["response"]: raw response from the controller
             self.properties["result"]: result from self._handle_response() method
         """
+        method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"verb {self.verb}, path {self.path}."
+        self.log.debug(msg)
 
         self._verify_commit_parameters()
         try:
@@ -136,31 +206,38 @@ class RestSend:
             self.result_current = self._handle_response(response)
 
             success = self.result_current["success"]
-
             if success is False and self.unit_test is False:
                 sleep(self.send_interval)
             timeout -= self.send_interval
-
-        self.response = copy.deepcopy(response)
-        self.result = copy.deepcopy(self.result_current)
 
         msg = f"{caller}: Exiting dcnm_send_with_retry loop."
         msg += f"success {success}. verb {self.verb}, path {self.path}."
         self.log.debug(msg)
 
-        msg = f"{caller}: self.response_current "
+        self.response = copy.deepcopy(self.response_current)
+        self.result = copy.deepcopy(self.result_current)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.response_current: "
         msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"{caller}: self.response "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.response: "
         msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"{caller}: self.result_current "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.result_current: "
         msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"{caller}: self.result "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}.  "
+        msg += f"self.result: "
         msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -241,6 +318,38 @@ class RestSend:
         result["success"] = True
         result["changed"] = True
         return result
+
+    @property
+    def check_mode(self):
+        """
+        Determines if dcnm_send should be called.
+
+        Default: False
+
+        If False, dcnm_send is called. Real controller responses
+        are returned by RestSend()
+
+        If True, dcnm_send is not called. Simulated controller responses
+        are returned by RestSend()
+
+        Discussion:
+        We don't set check_mode from the value of self.ansible_module.check_mode
+        because we want to be able to read data from the controller even when
+        self.ansible_module.check_mode is True. For example, SwitchIssuDetails
+        is a read-only operation, and we want to be able to read this data
+        to provide a realistic simulation of stage, validate, and upgrade
+        tasks.
+        """
+        return self.properties.get("check_mode")
+
+    @check_mode.setter
+    def check_mode(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{method_name} must be a bool(). Got {value}."
+            self.ansible_module.fail_json(msg, **self.failed_result)
+        self.properties["check_mode"] = value
 
     @property
     def failed_result(self):

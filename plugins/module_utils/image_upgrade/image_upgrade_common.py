@@ -46,9 +46,10 @@ class ImageUpgradeCommon:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
-        self.check_mode = self.ansible_module.check_mode
+        self.check_mode = ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         msg = "ENTERED ImageUpgradeCommon() "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)

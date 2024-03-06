@@ -22,12 +22,12 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 
 
 class SwitchDetails(ImageUpgradeCommon):
@@ -83,10 +83,14 @@ class SwitchDetails(ImageUpgradeCommon):
         self.rest_send.path = self.path
         self.rest_send.commit()
 
-        msg = f"self.rest_send.response_current: {self.rest_send.response_current}"
+        msg = "self.rest_send.response_current: "
+        msg += (
+            f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
+        )
         self.log.debug(msg)
 
-        msg = f"self.rest_send.result_current: {self.rest_send.result_current}"
+        msg = "self.rest_send.result_current: "
+        msg += f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         self.response = self.rest_send.response_current
@@ -107,7 +111,8 @@ class SwitchDetails(ImageUpgradeCommon):
         for switch in data:
             self.properties["info"][switch["ipAddress"]] = switch
 
-        msg = f"self.properties[info]: {json.dumps(self.properties['info'], indent=4, sort_keys=True)}"
+        msg = "self.properties[info]: "
+        msg += f"{json.dumps(self.properties['info'], indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _get(self, item):

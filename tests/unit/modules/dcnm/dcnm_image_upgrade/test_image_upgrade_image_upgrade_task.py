@@ -40,14 +40,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_de
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
     ImageUpgradeTask
 
-from .image_upgrade_utils import (MockAnsibleModule, does_not_raise,
-                                  image_upgrade_fixture,
-                                  image_upgrade_task_fixture,
-                                  issu_details_by_ip_address_fixture,
-                                  load_playbook_config, payloads_image_upgrade,
-                                  responses_image_install_options,
-                                  responses_image_upgrade,
-                                  responses_switch_issu_details)
+from .utils import (MockAnsibleModule, does_not_raise, image_upgrade_fixture,
+                    image_upgrade_task_fixture,
+                    issu_details_by_ip_address_fixture, load_playbook_config,
+                    payloads_image_upgrade, responses_image_install_options,
+                    responses_image_upgrade, responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."

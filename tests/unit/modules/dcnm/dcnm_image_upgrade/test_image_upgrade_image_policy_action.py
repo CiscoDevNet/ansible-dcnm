@@ -39,13 +39,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_is
     SwitchIssuDetailsBySerialNumber
 
 from .fixture import load_fixture
-from .image_upgrade_utils import (does_not_raise, image_policies_fixture,
-                                  image_policy_action_fixture,
-                                  issu_details_by_serial_number_fixture,
-                                  responses_image_policies,
-                                  responses_image_policy_action,
-                                  responses_switch_details,
-                                  responses_switch_issu_details)
+from .utils import (does_not_raise, image_policies_fixture,
+                    image_policy_action_fixture,
+                    issu_details_by_serial_number_fixture,
+                    responses_image_policies, responses_image_policy_action,
+                    responses_switch_details, responses_switch_issu_details)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
@@ -527,7 +525,7 @@ def test_image_upgrade_image_policy_action_00031(
         instance.unit_test = True
     monkeypatch.setattr(instance, "dcnm_send", mock_dcnm_send_image_upgrade_common)
 
-    match = r"ImagePolicyAction\._detach_policy: "
+    match = r"ImagePolicyAction\._detach_policy_normal_mode: "
     match += r"Bad result when detaching policy KR5M "
     match += r"from the following device\(s\):"
 
@@ -635,7 +633,7 @@ def test_image_upgrade_image_policy_action_00041(
     instance.action = "attach"
     instance.unit_test = True
 
-    match = r"ImagePolicyAction\._attach_policy: "
+    match = r"ImagePolicyAction\._attach_policy_normal_mode: "
     match += r"Bad result when attaching policy KR5M to switch\. Payload:"
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()

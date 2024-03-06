@@ -37,8 +37,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 
-from .image_upgrade_utils import (does_not_raise, image_upgrade_common_fixture,
-                                  responses_image_upgrade_common)
+from .utils import (does_not_raise, image_upgrade_common_fixture,
+                    responses_image_upgrade_common)
 
 
 def test_image_upgrade_image_upgrade_common_00001(image_upgrade_common) -> None:

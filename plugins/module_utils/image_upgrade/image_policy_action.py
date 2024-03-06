@@ -200,6 +200,41 @@ class ImagePolicyAction(ImageUpgradeCommon):
             self.ansible_module.fail_json(msg, **self.failed_result)
 
     def _attach_policy(self):
+        if self.check_mode is True:
+            self._attach_policy_check_mode()
+        else:
+            self._attach_policy_normal_mode()
+
+    def _attach_policy_check_mode(self):
+        """
+        Simulate _attach_policy()
+        """
+        self.build_payload()
+
+        self.path = self.endpoints.policy_attach.get("path")
+        self.verb = self.endpoints.policy_attach.get("verb")
+
+        payload: Dict[str, Any] = {}
+        payload["mappingList"] = self.payloads
+
+        self.response_current = {}
+        self.response_current["RETURN_CODE"] = 200
+        self.response_current["METHOD"] = self.verb
+        self.response_current["REQUEST_PATH"] = self.path
+        self.response_current["MESSAGE"] = "OK"
+        self.response_current["DATA"] = "[simulated-check-mode-response:Success] "
+        self.result_current = self._handle_response(self.response_current, self.verb)
+
+        for payload in self.payloads:
+            diff: Dict[str, Any] = {}
+            diff["action"] = self.action
+            diff["ip_address"] = payload["ipAddr"]
+            diff["logical_name"] = payload["hostName"]
+            diff["policy_name"] = payload["policyName"]
+            diff["serial_number"] = payload["serialNumber"]
+            self.diff = copy.deepcopy(diff)
+
+    def _attach_policy_normal_mode(self):
         """
         Attach policy_name to the switch(es) associated with serial_numbers
 
@@ -244,11 +279,60 @@ class ImagePolicyAction(ImageUpgradeCommon):
             self.diff = copy.deepcopy(diff)
 
     def _detach_policy(self):
+        if self.check_mode is True:
+            self._detach_policy_check_mode()
+        else:
+            self._detach_policy_normal_mode()
+
+    def _detach_policy_check_mode(self):
+        """
+        Simulate self._detach_policy_normal_mode()
+        verb: DELETE
+        endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
+        query_params(example): ?serialNumber=FDO211218GC,FDO21120U5D
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED"
+        self.log.debug(msg)
+
+        self.path = self.endpoints.policy_detach.get("path")
+        self.verb = self.endpoints.policy_detach.get("verb")
+
+        query_params = ",".join(self.serial_numbers)
+        self.path += f"?serialNumber={query_params}"
+
+        self.response_current = {}
+        self.response_current["RETURN_CODE"] = 200
+        self.response_current["METHOD"] = self.verb
+        self.response_current["REQUEST_PATH"] = self.path
+        self.response_current["MESSAGE"] = "OK"
+        self.response_current["DATA"] = "[simulated-response:Success] "
+        self.result_current = self._handle_response(self.response_current, self.verb)
+
+        if not self.result_current["success"]:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Bad result when detaching policy {self.policy_name} "
+            msg += f"from the following device(s):  {','.join(sorted(self.serial_numbers))}."
+            self.ansible_module.fail_json(msg, **self.failed_result)
+
+        for serial_number in self.serial_numbers:
+            self.switch_issu_details.filter = serial_number
+            diff: Dict[str, Any] = {}
+            diff["action"] = self.action
+            diff["ip_address"] = self.switch_issu_details.ip_address
+            diff["logical_name"] = self.switch_issu_details.device_name
+            diff["policy_name"] = self.policy_name
+            diff["serial_number"] = serial_number
+            self.diff = copy.deepcopy(diff)
+        self.changed = False
+
+    def _detach_policy_normal_mode(self):
         """
         Detach policy_name from the switch(es) associated with serial_numbers
         verb: DELETE
         endpoint: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
-        query_params: ?serialNumber=FDO211218GC,FDO21120U5D
+        query_params(example): ?serialNumber=FDO211218GC,FDO21120U5D
         """
         method_name = inspect.stack()[0][3]
 

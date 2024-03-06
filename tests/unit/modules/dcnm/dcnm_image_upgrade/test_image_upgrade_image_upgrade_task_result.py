@@ -36,8 +36,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
     ImageUpgradeTaskResult
 
-from .image_upgrade_utils import (does_not_raise,
-                                  image_upgrade_task_result_fixture)
+from .utils import does_not_raise, image_upgrade_task_result_fixture
 
 
 def test_image_upgrade_upgrade_task_result_00010(image_upgrade_task_result) -> None:
