@@ -131,25 +131,25 @@ class RestSend:
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.response_current: "
+        msg += "self.response_current: "
         msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.response: "
+        msg += "self.response: "
         msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.result_current: "
+        msg += "self.result_current: "
         msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.result: "
+        msg += "self.result: "
         msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -219,25 +219,25 @@ class RestSend:
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.response_current: "
+        msg += "self.response_current: "
         msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.response: "
+        msg += "self.response: "
         msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.result_current: "
+        msg += "self.result_current: "
         msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
-        msg += f"self.result: "
+        msg += "self.result: "
         msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
