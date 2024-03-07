@@ -36,6 +36,10 @@ class ApiEndpoints:
     except ValueError as error:
         self.ansible_module.fail_json(error)
 
+    rest_send = RestSend(self.ansible_module)
+    rest_send.path = endpoint.get("path")
+    rest_send.verb = endpoint.get("verb")
+    rest_send.commit()
     """
 
     def __init__(self):
