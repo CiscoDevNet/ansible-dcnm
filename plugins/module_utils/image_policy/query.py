@@ -124,10 +124,8 @@ class ImagePolicyQuery(ImagePolicyCommon):
             self.failed = False
             return
 
-        msg = f"Querying policies {self._policies_to_query}"
+        msg = f"Populating diff {self._policies_to_query}"
         self.log.debug(msg)
-
-        self._image_policies.refresh()
 
         for policy_name in self._policies_to_query:
             if policy_name in self._image_policies.all_policies:
