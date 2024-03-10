@@ -76,20 +76,24 @@ class FabricTaskResult:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
+        self.state = self.ansible_module.params["state"]
         self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED FabricTaskResult(): "
+        msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self.states = ["merged", "query"]
+        self.states = ["deleted", "merged", "query"]
 
         self.diff_properties = {}
+        self.diff_properties["diff_deleted"] = "deleted"
         self.diff_properties["diff_merged"] = "merged"
         self.diff_properties["diff_query"] = "query"
         self.response_properties = {}
+        self.response_properties["response_deleted"] = "deleted"
         self.response_properties["response_merged"] = "merged"
         self.response_properties["response_query"] = "query"
 
@@ -100,9 +104,11 @@ class FabricTaskResult:
         Build the properties dict() with default values
         """
         self.properties = {}
+        self.properties["diff_deleted"] = []
         self.properties["diff_merged"] = []
         self.properties["diff_query"] = []
 
+        self.properties["response_deleted"] = []
         self.properties["response_merged"] = []
         self.properties["response_query"] = []
 
@@ -163,11 +169,28 @@ class FabricTaskResult:
 
     # diff properties
     @property
+    def diff_deleted(self):
+        """
+        Getter for diff_deleted property
+
+        This is used for deleted state i.e. delete fabrics
+        """
+        return self.properties["diff_deleted"]
+
+    @diff_deleted.setter
+    def diff_deleted(self, value):
+        """
+        Setter for diff_deleted property
+        """
+        self._verify_is_dict(value)
+        self.properties["diff_deleted"].append(value)
+
+    @property
     def diff_merged(self):
         """
         Getter for diff_merged property
 
-        This is used for merged state i.e. create image policies
+        This is used for merged state i.e. create fabrics
         """
         return self.properties["diff_merged"]
 
@@ -197,6 +220,21 @@ class FabricTaskResult:
         self.properties["diff_query"].append(value)
 
     # response properties
+    @property
+    def response_deleted(self):
+        """
+        Getter for response_deleted property
+        """
+        return self.properties["response_deleted"]
+
+    @response_deleted.setter
+    def response_deleted(self, value):
+        """
+        Setter for response_deleted property
+        """
+        self._verify_is_dict(value)
+        self.properties["response_deleted"].append(value)
+
     @property
     def response_merged(self):
         """

@@ -151,7 +151,7 @@ class VerifyFabricParams:
         if not self._mandatory_keys.issubset(config):
             missing_keys = self._mandatory_keys.difference(config.keys())
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"missing mandatory keys {','.join(sorted(missing_keys))}."
+            msg += f"missing mandatory keys {','.join(sorted(missing_keys))}."
             self.result = False
             self._append_msg(msg)
             return False

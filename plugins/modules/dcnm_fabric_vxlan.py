@@ -220,6 +220,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
+    FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import (
@@ -228,8 +230,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import (
     VerifyFabricParams,
 )
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_create import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
     FabricCreateBulk
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import (
+    FabricDelete
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import (
     FabricTaskResult
@@ -252,7 +257,11 @@ class FabricVxlanTask(FabricCommon):
         method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricVxlanTask()")
+
+        msg = "ENTERED FabricVxlanTask(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
 
@@ -264,7 +273,6 @@ class FabricVxlanTask(FabricCommon):
         self.rest_send = RestSend(self.ansible_module)
         # populated in self.validate_input()
         self.payloads = {}
-        self._valid_states = ["merged", "query"]
 
         self.config = ansible_module.params.get("config")
         if not isinstance(self.config, list):
@@ -302,15 +310,16 @@ class FabricVxlanTask(FabricCommon):
         }
         """
         method_name = inspect.stack()[0][3]
-        self.have = FabricDetailsByName(self.ansible_module)
-        self.have.refresh()
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.have: {self.have.all_data}"
+        msg += "entered"
         self.log.debug(msg)
-        # for item in response["DATA"]:
-        #     self.have[item["fabricName"]] = {}
-        #     self.have[item["fabricName"]]["fabric_name"] = item["fabricName"]
-        #     self.have[item["fabricName"]]["fabric_config"] = item
+        self.have = FabricDetailsByName(self.ansible_module)
+        msg = "Calling self.have.refresh (FabricDetailsByName.refresh)"
+        self.log.debug(msg)
+        self.have.refresh()
+        msg = "Calling self.have.refresh (FabricDetailsByName.refresh) "
+        msg = f"DONE. self.have: {json.dumps(self.have.all_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def get_want(self) -> None:
         """
@@ -319,7 +328,8 @@ class FabricVxlanTask(FabricCommon):
         1. Validate the playbook configs
         2. Update self.want with the playbook configs
         """
-        msg = "ENTERED"
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED"
         self.log.debug(msg)
 
         # Generate the params_spec used to validate the configs
@@ -341,20 +351,12 @@ class FabricVxlanTask(FabricCommon):
         validator = ParamsValidate(self.ansible_module)
         validator.params_spec = params_spec.params_spec
         for config in merged_configs:
-            msg = f"{self.class_name}.get_want(): "
+            msg = f"{self.class_name}.{method_name}: "
             msg += f"config: {json.dumps(config, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             validator.parameters = config
             validator.commit()
             self.want.append(copy.deepcopy(validator.parameters))
-
-        # # convert the validated configs to payloads to more easily compare them
-        # # to self.have (the current image policies on the controller).
-        # for config in self.validated_configs:
-        #     payload = Config2Payload(self.ansible_module)
-        #     payload.config = config
-        #     payload.commit()
-        #     self.want.append(payload.payload)
 
         # Exit if there's nothing to do
         if len(self.want) == 0:
@@ -368,19 +370,19 @@ class FabricVxlanTask(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.have.all_data: {json.dumps(self.have.all_data, indent=4, sort_keys=True)}"
+        msg += "self.have.all_data: "
+        msg += f"{json.dumps(self.have.all_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         need: List[Dict[str, Any]] = []
         state = self.params["state"]
         self.payloads = {}
         for want in self.want:
-            verify = VerifyFabricParams()
-            verify.state = state
-            verify.config = want
-            verify.validate_config()
-            if verify.result is False:
-                self.ansible_module.fail_json(msg=verify.msg)
-            need.append(verify.payload)
+            self.verify.state = state
+            self.verify.config = want
+            self.verify.validate_config()
+            if self.verify.result is False:
+                self.ansible_module.fail_json(msg=self.verify.msg)
+            need.append(self.verify.payload)
         self.need = copy.deepcopy(need)
 
         msg = f"{self.class_name}.validate_input(): "
@@ -403,6 +405,44 @@ class FabricVxlanTask(FabricCommon):
             self.task_result["diff"] = []
             self.ansible_module.exit_json(**self.task_result.module_result)
         self.send_need()
+
+    def handle_query_state(self) -> None:
+        """
+        1.  query the fabrics in self.want that exist on the controller
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "entered"
+        self.log.debug(msg)
+        instance = FabricQuery(self.ansible_module)
+        fabric_names_to_query = []
+        for want in self.want:
+            fabric_names_to_query.append(want["fabric_name"])
+        instance.fabric_names = fabric_names_to_query
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling FabricQuery.commit"
+        self.log.debug(msg)
+        instance.commit()
+        self.update_diff_and_response(instance)
+
+    def handle_deleted_state(self) -> None:
+        """
+        delete the fabrics in self.want that exist on the controller
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "entered"
+        self.log.debug(msg)
+        instance = FabricDelete(self.ansible_module)
+        fabric_names_to_delete = []
+        for want in self.want:
+            fabric_names_to_delete.append(want["fabric_name"])
+        instance.fabric_names = fabric_names_to_delete
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling FabricDelete.commit"
+        self.log.debug(msg)
+        instance.commit()
+        self.update_diff_and_response(instance)
 
     def send_need(self):
         """
@@ -448,7 +488,8 @@ class FabricVxlanTask(FabricCommon):
             self.log.debug(msg)
 
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_name: {fabric_name}, payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+            msg += f"fabric_name: {fabric_name}, "
+            msg += f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             self.rest_send.path = path
@@ -493,163 +534,36 @@ class FabricVxlanTask(FabricCommon):
         self.fabric_create.payloads = self.need
         self.fabric_create.commit()
         self.update_diff_and_response(self.fabric_create)
-        # for payload in self.need:
-        #     self.fabric_create.payload = payload
-        #     self.fabric_create.commit()
-        #     self.update_diff_and_response(self.fabric_create)
-
-    def send_need_normal_mode_orig(self):
-        """
-        Caller: send_need()
-
-        Build and send the payload to create the
-        fabrics specified in the playbook.
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"need: {json.dumps(self.need, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        if len(self.need) == 0:
-            self.ansible_module.exit_json(**self.task_result.module_result)
-        for item in self.need:
-            fabric_name = item.get("FABRIC_NAME")
-            if fabric_name is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "fabric_name is required."
-                self.ansible_module.fail_json(msg)
-            self.endpoints.fabric_name = fabric_name
-            self.endpoints.template_name = "Easy_Fabric"
-
-            try:
-                endpoint = self.endpoints.fabric_create
-            except ValueError as error:
-                self.ansible_module.fail_json(error)
-
-            path = endpoint["path"]
-            verb = endpoint["verb"]
-            payload = item
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"verb: {verb}, path: {path}"
-            self.log.debug(msg)
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_name: {fabric_name}, payload: {json.dumps(payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            self.rest_send.path = path
-            self.rest_send.verb = verb
-            self.rest_send.payload = payload
-            self.rest_send.commit()
-
-            self.result_current = self.rest_send.result_current
-            self.result = self.rest_send.result_current
-            self.response_current = self.rest_send.response_current
-            self.response = self.rest_send.response_current
-
-            self.task_result.response_merged = self.response_current
-            if self.response_current["RETURN_CODE"] == 200:
-                self.task_result.diff_merged = payload
-
-            msg = "self.response_current: "
-            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response: "
-            msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.result_current: "
-            msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.result: "
-            msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
 
     def update_diff_and_response(self, obj) -> None:
         """
         Update the appropriate self.task_result diff and response,
         based on the current ansible state, with the diff and
         response from obj.
-
-        fail_json if the state is not in self._valid_states
         """
-        state = self.ansible_module.params["state"]
-        if state not in self._valid_states:
-            msg = f"Inappropriate state {state}"
-            self.log.error(msg)
-            self.ansible_module.fail_json(msg, **obj.result)
         for diff in obj.diff:
-            msg = f"state {state} diff: {json_pretty(diff)}"
+            msg = f"diff: {json_pretty(diff)}"
             self.log.debug(msg)
-            if state == "deleted":
+            if self.state == "deleted":
                 self.task_result.diff_deleted = diff
-            if state == "merged":
+            if self.state == "merged":
                 self.task_result.diff_merged = diff
-            if state == "query":
+            if self.state == "query":
                 self.task_result.diff_query = diff
 
-        msg = f"PRE_FOR: state {state} response: {json_pretty(obj.response)}"
+        msg = f"PRE_FOR: state {self.state} response: {json_pretty(obj.response)}"
         self.log.debug(msg)
         for response in obj.response:
             if "DATA" in response:
                 response.pop("DATA")
-            msg = f"state {state} response: {json_pretty(response)}"
+            msg = f"state {self.state} response: {json_pretty(response)}"
             self.log.debug(msg)
-            if state == "deleted":
+            if self.state == "deleted":
                 self.task_result.response_deleted = copy.deepcopy(response)
-            if state == "merged":
+            if self.state == "merged":
                 self.task_result.response_merged = copy.deepcopy(response)
-            if state == "query":
+            if self.state == "query":
                 self.task_result.response_query = copy.deepcopy(response)
-
-    def build_payloads(self):
-        """
-        Caller: send_need()
-
-        Validate the playbook parameters
-        Build the payloads for each fabric
-        """
-
-        state = self.params["state"]
-        self.payloads = {}
-        for want in self.want:
-            verify = VerifyFabricParams()
-            verify.state = state
-            verify.config = want
-            verify.validate_config()
-            if verify.result is False:
-                self.ansible_module.fail_json(msg=verify.msg)
-            self.payloads[want["fabric_name"]] = verify.payload
-
-        msg = f"{self.class_name}.validate_input(): "
-        msg += f"payloads: {json.dumps(self.payloads, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-    def build_payloads_orig(self):
-        """
-        Caller: send_need()
-
-        Validate the playbook parameters
-        Build the payloads for each fabric
-        """
-
-        state = self.params["state"]
-        self.payloads = {}
-        for fabric_config in self.config:
-            verify = VerifyFabricParams()
-            verify.state = state
-            verify.config = fabric_config
-            verify.validate_config()
-            if verify.result is False:
-                self.ansible_module.fail_json(msg=verify.msg)
-            self.payloads[fabric_config["fabric_name"]] = verify.payload
-
-        msg = f"{self.class_name}.validate_input(): "
-        msg += f"payloads: {json.dumps(self.payloads, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
     def _failure(self, resp):
         """
@@ -688,7 +602,7 @@ def main():
 
     element_spec = dict(
         config=dict(required=False, type="list", elements="dict"),
-        state=dict(default="merged", choices=["merged", "query"]),
+        state=dict(default="merged", choices=["deleted", "merged", "query"]),
     )
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
@@ -700,7 +614,7 @@ def main():
     # logging.config.dictConfig and must not log to the console.
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
-    enable_logging = True
+    enable_logging = False
     log = Log(ansible_module)
     if enable_logging is True:
         collection_path = (
@@ -714,16 +628,17 @@ def main():
 
     task = FabricVxlanTask(ansible_module)
     task.log.debug(f"state: {ansible_module.params['state']}")
-    # task.log.debug(f"calling task.validate_input()")
-    # task.validate_input()
-    # task.log.debug(f"calling task.validate_input() DONE")
-    task.get_want()
-    task.get_have()
-
-    task.log.debug(f"state: {ansible_module.params['state']}")
 
     if ansible_module.params["state"] == "merged":
+        task.get_want()
+        task.get_have()
         task.handle_merged_state()
+    elif ansible_module.params["state"] == "deleted":
+        task.get_want()
+        task.handle_deleted_state()
+    elif ansible_module.params["state"] == "query":
+        task.get_want()
+        task.handle_query_state()
     else:
         msg = f"Unknown state {task.ansible_module.params['state']}"
         task.ansible_module.fail_json(msg)

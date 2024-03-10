@@ -45,12 +45,16 @@ class FabricCommon:
 
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricCommon()")
-
         self.ansible_module = ansible_module
         self.check_mode = self.ansible_module.check_mode
+        self.state = ansible_module.params["state"]
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        msg = "ENTERED FabricCommon(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self.params = ansible_module.params
 

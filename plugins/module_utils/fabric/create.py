@@ -23,14 +23,17 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
+    FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+    FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_playbook_params import \
+    VerifyPlaybookParams
+
 
 class FabricCreateCommon(FabricCommon):
     """
@@ -38,18 +41,25 @@ class FabricCreateCommon(FabricCommon):
     - FabricCreate
     - FabricCreateBulk
     """
+
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImagePolicyCreateCommon()"
+        msg = "ENTERED FabricCreateCommon()"
         self.log.debug(msg)
 
         self.fabric_details = FabricDetailsByName(self.ansible_module)
         self.endpoints = ApiEndpoints()
-
         self.rest_send = RestSend(self.ansible_module)
+        self._verify_params = VerifyPlaybookParams(self.ansible_module)
+
+        # path and verb cannot be defined here because endpoints.fabric name
+        # must be set first.  Set these to None here and define them later in
+        # the commit() method.
+        self.path = None
+        self.verb = None
 
         self.action = "create"
         self._payloads_to_commit = []
@@ -76,6 +86,17 @@ class FabricCreateCommon(FabricCommon):
             msg += f"value {payload}"
             self.ansible_module.fail_json(msg, **self.failed_result)
 
+        # START = TODO: REMOVE THIS LATER
+        self._verify_params.config = payload
+        self._verify_params.refresh_template()
+        self._verify_params.commit()
+
+        msg = f"HHH instance.config: {json.dumps(self._verify_params.config, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"HHH instance.template: {json.dumps(self._verify_params.template, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        # END - TODO: REMOVE THIS LATER
+
         missing_keys = []
         for key in self._mandatory_payload_keys:
             if key not in payload:
@@ -94,7 +115,7 @@ class FabricCreateCommon(FabricCommon):
         already exist on the controller.
 
         Expects self.payloads to be a list of dict, with each dict
-        being a payload for the image policy create API endpoint.
+        being a payload for the fabric create API endpoint.
 
         Populates self._payloads_to_commit with a list of payloads
         to commit.
@@ -140,10 +161,10 @@ class FabricCreateCommon(FabricCommon):
         self.response_nok = []
         self.result_nok = []
         self.diff_nok = []
-        for payload in self._payloads_to_commit:
-            self.result_current = {"success": True}
-            self.response_current = {"msg": "skipped: check_mode"}
+        self.result_current = {"success": True}
+        self.response_current = {"msg": "skipped: check_mode"}
 
+        for payload in self._payloads_to_commit:
             if self.result_current["success"]:
                 self.response_ok.append(copy.deepcopy(self.response_current))
                 self.result_ok.append(copy.deepcopy(self.result_current))
@@ -153,20 +174,20 @@ class FabricCreateCommon(FabricCommon):
                 self.result_nok.append(copy.deepcopy(self.result_current))
                 self.diff_nok.append(copy.deepcopy(payload))
 
-            msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.result_ok: {json.dumps(self.result_ok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.diff_ok: {json.dumps(self.diff_ok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.response_nok: {json.dumps(self.response_nok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = (
-                f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
+        msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.result_ok: {json.dumps(self.result_ok, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.diff_ok: {json.dumps(self.diff_ok, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.response_nok: {json.dumps(self.response_nok, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = (
+            f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
+        )
+        self.log.debug(msg)
 
     def _send_payloads_normal_mode(self):
         """
@@ -195,14 +216,14 @@ class FabricCreateCommon(FabricCommon):
             self.rest_send.payload = payload
             self.rest_send.commit()
 
-        if self.rest_send.result_current["success"]:
-            self.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-            self.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-            self.diff_ok.append(copy.deepcopy(payload))
-        else:
-            self.response_nok.append(copy.deepcopy(self.response_current))
-            self.result_nok.append(copy.deepcopy(self.result_current))
-            self.diff_nok.append(copy.deepcopy(payload))
+            if self.rest_send.result_current["success"]:
+                self.response_ok.append(copy.deepcopy(self.rest_send.response_current))
+                self.result_ok.append(copy.deepcopy(self.rest_send.result_current))
+                self.diff_ok.append(copy.deepcopy(payload))
+            else:
+                self.response_nok.append(copy.deepcopy(self.response_current))
+                self.result_nok.append(copy.deepcopy(self.result_current))
+                self.diff_nok.append(copy.deepcopy(payload))
 
         msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -212,11 +233,11 @@ class FabricCreateCommon(FabricCommon):
         self.log.debug(msg)
         msg = f"self.response_nok: {json.dumps(self.response_nok, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
         msg = (
-            f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
+            f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
         )
+        self.log.debug(msg)
+        msg = f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _process_responses(self):
@@ -291,7 +312,11 @@ class FabricCreateCommon(FabricCommon):
             self._verify_payload(item)
         self.properties["payloads"] = value
 
+
 class FabricCreateBulk(FabricCreateCommon):
+    """
+    Create fabrics in bulk.  Skip any fabrics that already exist.
+    """
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
@@ -325,10 +350,12 @@ class FabricCreateBulk(FabricCreateCommon):
         self._send_payloads()
         self._process_responses()
 
+
 class FabricCreate(FabricCommon):
     """
     Create a VXLAN fabric on the controller.
     """
+
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
@@ -362,7 +389,7 @@ class FabricCreate(FabricCommon):
         self.log.debug(msg)
 
         if len(self.payload) == 0:
-            self.ansible_module.exit_json(**self.task_result.module_result)
+            self.ansible_module.exit_json(**self.failed_result)
 
         fabric_name = self.payload.get("FABRIC_NAME")
         if fabric_name is None:
@@ -400,10 +427,10 @@ class FabricCreate(FabricCommon):
         self.response = self.rest_send.response_current
 
         if self.response_current["RETURN_CODE"] == 200:
-            self.diff_merged = self.payload
+            self.diff = self.payload
 
-        msg = "self.diff_merged: "
-        msg += f"{json.dumps(self.diff_merged, indent=4, sort_keys=True)}"
+        msg = "self.diff: "
+        msg += f"{json.dumps(self.diff, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = "self.response_current: "
@@ -421,7 +448,6 @@ class FabricCreate(FabricCommon):
         msg = "self.result: "
         msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-
 
     @property
     def payload(self):

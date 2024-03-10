@@ -18,28 +18,34 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
+    FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
+    ApiEndpoints
+
 
 class FabricDetails(FabricCommon):
     """
-    Retrieve fabric details from the controller and provide
-    property accessors for the fabric attributes.
+    Parent class for *FabricDetails() subclasses.
+    See subclass docstrings for details.
     """
+
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricDetails()")
+        msg = "ENTERED FabricDetails()"
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self.data = {}
         self.endpoints = ApiEndpoints()
@@ -49,11 +55,15 @@ class FabricDetails(FabricCommon):
 
     def _init_properties(self):
         # self.properties is already initialized in the parent class
-        self.properties["foo"] = "bar"
+        pass
 
     def refresh_super(self):
         """
-        Refresh the fabric details from the controller.
+        Refresh the fabric details from the controller and
+        populate self.data with the results.
+
+        self.data is a dictionary of fabric details, keyed on
+        fabric name.
         """
         method_name = inspect.stack()[0][3]
         endpoint = self.endpoints.fabrics
@@ -65,6 +75,10 @@ class FabricDetails(FabricCommon):
             self.data[item["fabricName"]] = item
             msg = f"item: {json.dumps(item, indent=4, sort_keys=True)}"
             self.log.debug(msg)
+        self.response_current = self.rest_send.response_current
+        self.response = self.rest_send.response_current
+        self.result_current = self.rest_send.result_current
+        self.result = self.rest_send.result_current
 
     def _get(self, item):
         """
@@ -170,6 +184,7 @@ class FabricDetails(FabricCommon):
         """
         return self._get("templateName")
 
+
 class FabricDetailsByName(FabricDetails):
     """
     Retrieve fabric details from the controller and provide
@@ -180,12 +195,23 @@ class FabricDetailsByName(FabricDetails):
     instance = FabricDetailsByName(module)
     instance.refresh()
     instance.filter = "MyFabric"
-    bgp_as = instance.bgp_as
+    # BGP AS for fabric "MyFabric"
+    bgp_as = instance.asn
+
+    # all fabric details for "MyFabric"
     fabric_dict = instance.filtered_data
     etc...
 
-    See FabricDetails for more details.
+    Or:
+
+    instance.FabricDetailsByName(module)
+    instance.refresh()
+    all_fabrics = instance.all_data
+
+    Where all_fabrics will be a dictionary of all fabrics
+    on the controller, keyed on fabric name.
     """
+
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
@@ -201,15 +227,20 @@ class FabricDetailsByName(FabricDetails):
         Refresh fabric_name current details from the controller
         """
         self.refresh_super()
-        self.data_subclass = {}
-        for item in self.response_current:
-            self.data_subclass[item["fabricName"]] = item
+        self.data_subclass = copy.deepcopy(self.data)
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg = "self.data_subclass: "
         msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _get(self, item):
+        """
+        Retrieve the value of the top-level (non-nvPair)
+        item for the fabric specified (anything not in
+        the nvPairs dictionary).
+
+        See also: _get_nv_pair()
+        """
         method_name = inspect.stack()[0][3]
 
         if self.filter is None:
@@ -233,6 +264,12 @@ class FabricDetailsByName(FabricDetails):
         )
 
     def _get_nv_pair(self, item):
+        """
+        Retrieve the value of the nvPair item
+        for the fabric specified.
+
+        See also: _get()
+        """
         method_name = inspect.stack()[0][3]
 
         if self.filter is None:
@@ -277,3 +314,89 @@ class FabricDetailsByName(FabricDetails):
     @filter.setter
     def filter(self, value):
         self.properties["filter"] = value
+
+class FabricDetailsByNvPair(FabricDetails):
+    """
+    Retrieve fabric details from the controller filtered
+    by nvPair key and value.  This sets the filtered_data
+    property to a dictionary of all fabrics on the controller
+    that match filter_key and filter_value.
+
+    Usage (where ansible_module is an instance of AnsibleModule):
+
+    instance = FabricDetailsNvPair(ansible_module)
+    instance.refresh()
+    instance.filter_key = "DCI_SUBNET_RANGE"
+    instance.filter_value = "10.33.0.0/16"
+    fabrics = instance.filtered_data
+    """
+
+    def __init__(self, ansible_module):
+        super().__init__(ansible_module)
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED FabricDetailsByNvPair()")
+
+        self.data_subclass = {}
+        self.properties["filter_key"] = None
+        self.properties["filter_value"] = None
+
+    def refresh(self):
+        """
+        Refresh fabric_name current details from the controller
+        """
+        if self.filter_key is None:
+            msg = "set instance.filter_key to a nvPair key "
+            msg += "before calling refresh()."
+            self.ansible_module.fail_json(msg, **self.failed_result)
+        if self.filter_value is None:
+            msg = "set instance.filter_value to a nvPair value "
+            msg += "before calling refresh()."
+            self.ansible_module.fail_json(msg, **self.failed_result)
+
+        self.refresh_super()
+        for item in self.data:
+            if self.data[item].get("nvPairs", {}).get(self.filter_key) == self.filter_value:
+                self.data_subclass[item["fabricName"]] = self.data[item]
+
+        msg = "self.data_subclass: "
+        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    @property
+    def filtered_data(self):
+        """
+        Return a dictionary of the fabric(s) matching self.filter_key
+        and self.filter_value.
+        Return None if the fabric does not exist on the controller.
+        """
+        return self.data_subclass
+
+    @property
+    def filter_key(self):
+        """
+        Return the nvPairs key to filter on.
+
+        This should be an exact match for the key in the nvPairs
+        dictionary for the fabric.
+        """
+        return self.properties.get("filter_key")
+
+    @filter_key.setter
+    def filter_key(self, value):
+        self.properties["filter_key"] = value
+
+    @property
+    def filter_value(self):
+        """
+        Return the nvPairs value to filter on.
+
+        This should be an exact match for the value in the nvPairs
+        dictionary for the fabric.
+        """
+        return self.properties.get("filter_value")
+
+    @filter_value.setter
+    def filter_value(self, value):
+        self.properties["filter_value"] = value
