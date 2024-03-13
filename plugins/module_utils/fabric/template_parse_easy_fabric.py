@@ -12,9 +12,11 @@ The template is retieved via the following controller endpoint:
 import json
 import re
 import sys
+
 import yaml
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_parse_common import \
     TemplateParseCommon
+
 
 class TemplateParseEasyFabric(TemplateParseCommon):
     def __init__(self):
@@ -22,10 +24,12 @@ class TemplateParseEasyFabric(TemplateParseCommon):
         self.translation = None
         self.suboptions = None
         self.documentation = None
+        self.ruleset = {}
 
     @property
     def template_all(self):
         return self._properties["template_all"]
+
     @template_all.setter
     def template_all(self, value):
         """
@@ -133,7 +137,11 @@ class TemplateParseEasyFabric(TemplateParseCommon):
         value = "I(deleted), I(merged), and I(query) states are supported."
         self.documentation["options"]["state"]["description"].append(value)
         self.documentation["options"]["state"]["type"] = "str"
-        self.documentation["options"]["state"]["choices"] = ["deleted", "merged", "query"]
+        self.documentation["options"]["state"]["choices"] = [
+            "deleted",
+            "merged",
+            "query",
+        ]
         self.documentation["options"]["state"]["default"] = "merged"
         self.documentation["options"]["config"] = {}
         self.documentation["options"]["config"]["description"] = []
@@ -149,9 +157,9 @@ class TemplateParseEasyFabric(TemplateParseCommon):
                 continue
             if self.is_hidden(item):
                 continue
-            if not item.get('name', None):
+            if not item.get("name", None):
                 continue
-            name = self.translation.get(item['name'], None)
+            name = self.translation.get(item["name"], None)
             if name is None:
                 print(f"WARNING: skipping {item['name']}")
                 continue
@@ -163,7 +171,7 @@ class TemplateParseEasyFabric(TemplateParseCommon):
             default = self.get_default_value(item)
             if default is not None:
                 suboptions[name]["default"] = default
-            choices  = self.get_enum(item)
+            choices = self.get_enum(item)
             if len(choices) > 0:
                 if "TEMPLATES" in str(choices[0]):
                     tag = str(choices[0]).split(".")[1]
@@ -183,11 +191,13 @@ class TemplateParseEasyFabric(TemplateParseCommon):
 
         self.documentation["options"]["config"]["suboptions"] = []
         for key in sorted(suboptions.keys()):
-            self.documentation["options"]["config"]["suboptions"].append({key: suboptions[key]})
+            self.documentation["options"]["config"]["suboptions"].append(
+                {key: suboptions[key]}
+            )
 
     def build_ruleset(self):
         """
-        Build the ruleset for the EasyFabric template, based on 
+        Build the ruleset for the EasyFabric template, based on
         annotations.IsShow in each parameter dictionary.
 
         The ruleset is keyed on parameter name, with values being set of
@@ -212,9 +222,9 @@ class TemplateParseEasyFabric(TemplateParseCommon):
                 continue
             if self.is_hidden(item):
                 continue
-            if not item.get('name', None):
+            if not item.get("name", None):
                 continue
-            name = self.translation.get(item['name'], None)
+            name = self.translation.get(item["name"], None)
             if name is None:
                 print(f"WARNING: skipping {item['name']}")
                 continue
@@ -222,6 +232,9 @@ class TemplateParseEasyFabric(TemplateParseCommon):
         self.ruleset = self.pythonize_ruleset(self.ruleset)
 
     def pythonize_ruleset(self, ruleset):
+        """
+        Convert a template ruleset to python code that can be eval()'d
+        """
         mixed_rules = {}
         for key in ruleset:
             rule = ruleset[key]
@@ -247,18 +260,18 @@ class TemplateParseEasyFabric(TemplateParseCommon):
                 rule = rule.split("and")
                 rule = [x.strip() for x in rule]
                 rule = [re.sub(r"\s{2}+", " ", x) for x in rule]
-                #print(f"POST1: key {key}, len {len(rule)} rule: {rule}")
+                # print(f"POST1: key {key}, len {len(rule)} rule: {rule}")
                 rule = [re.sub(r"\"", "", x) for x in rule]
                 rule = [re.sub(r"\'", "", x) for x in rule]
-                #rule = [re.sub(r"\s{2}+", " ", x) for x in rule]
-                #print(f"POST2: key {key}, len {len(rule)} rule: {rule}")
+                # rule = [re.sub(r"\s{2}+", " ", x) for x in rule]
+                # print(f"POST2: key {key}, len {len(rule)} rule: {rule}")
                 new_rule = []
                 for item in rule:
-                    lhs,op,rhs = item.split(" ")
-                    rhs = rhs.replace("\"", "")
-                    rhs = rhs.replace("\'", "")
+                    lhs, op, rhs = item.split(" ")
+                    rhs = rhs.replace('"', "")
+                    rhs = rhs.replace("'", "")
                     if rhs not in ["True", "False", True, False]:
-                        rhs = f"\"{rhs}\""
+                        rhs = f'"{rhs}"'
                     lhs = self.translation.get(lhs, lhs)
                     # print(f"POST3: key {key}: lhs: {lhs}, op: {op}, rhs: {rhs}")
                     new_rule.append(f"{lhs} {op} {rhs}")
@@ -266,7 +279,6 @@ class TemplateParseEasyFabric(TemplateParseCommon):
                 # print(f"POST4: key {key}: {new_rule}")
                 ruleset[key] = new_rule
         return ruleset
-          
 
     def documentation_yaml(self):
         """

@@ -172,7 +172,7 @@ class VerifyFabricParams:
 
     def _validate_merged_state_config(self):
         """
-        Caller: self._validate_config_for_merged_state()
+        Caller: self.validate_config()
 
         Update self.config with a verified version of the users playbook
         parameters.
@@ -214,6 +214,7 @@ class VerifyFabricParams:
                 self.result = False
                 return
             self.config["anycast_gw_mac"] = result
+
         if "vrf_lite_autoconfig" in self.config:
             result = translate_vrf_lite_autoconfig(self.config["vrf_lite_autoconfig"])
             if result is False:
@@ -224,6 +225,7 @@ class VerifyFabricParams:
                 return
             self.config["vrf_lite_autoconfig"] = result
 
+        # TODO: Discuss with Shangxin/Mike whether we should even do this
         # validate self.config for cross-parameter dependencies
         self._validate_dependencies()
         if self.result is False:

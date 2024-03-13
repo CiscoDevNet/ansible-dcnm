@@ -21,6 +21,7 @@ __author__ = "Allen Robel"
 import logging
 from typing import Any, Dict
 
+
 class Results:
     """
     Return various result templates that AnsibleModule can use.
@@ -28,8 +29,10 @@ class Results:
     results = Results()
     # A generic result that indicates a task failed with no changes
     failed_result = results.failed_result
+
+    TODO: module_result is not yet implemented
     # A generic result that indicates a task succeeded
-    # obj is an instance of a class that has diff, result, and response properties 
+    # obj is an instance of a class that has diff, result, and response properties
     module_result = results.module_result(obj)
 
     # output of the above print() will be a dict with the following structure
@@ -70,10 +73,12 @@ class Results:
         self.diff_keys = ["deleted", "merged", "query"]
         self.response_keys = ["deleted", "merged", "query"]
 
-    def did_anything_change(self, obj):
+    def did_anything_change(self, obj) -> bool:
         """
         return True if obj has any changes
         Caller: module_result
+
+        TODO: Need to implement module_result
         """
         if self.check_mode is True:
             self.log.debug("check_mode is True.  No changes made.")
@@ -83,7 +88,7 @@ class Results:
         return False
 
     @property
-    def failed_result(self):
+    def failed_result(self) -> Dict[str, Any]:
         """
         return a result for a failed task with no changes
         """
@@ -98,30 +103,30 @@ class Results:
             result["response"][key] = []
         return result
 
-    @property
-    def module_result(self, obj) -> Dict[str, Any]:
-        """
-        Return a result that AnsibleModule can use
-        Result is based on the obj properties: diff, response
-        """
-        if not isinstance(list, obj.result):
-            raise ValueError("obj.result must be a list of dict")
-        if not isinstance(list, obj.diff):
-            raise ValueError("obj.diff must be a list of dict")
-        if not isinstance(list, obj.response):
-            raise ValueError("obj.response must be a list of dict")
-        result = {}
-        result["changed"] = self.did_anything_change(obj)
-        result["diff"] = {}
-        result["response"] = {}
-        for key in self.diff_keys:
-            if self.state == key:
-                result["diff"][key] = obj.diff
-            else:
-                result["diff"][key] = []
-        for key in self.response_keys:
-            if self.state == key:
-                result["response"][key] = obj.response
-            else:
-                result["response"][key] = []
-        return result
+    # @property
+    # def module_result(self, obj) -> Dict[str, Any]:
+    #     """
+    #     Return a result that AnsibleModule can use
+    #     Result is based on the obj properties: diff, response
+    #     """
+    #     if not isinstance(list, obj.result):
+    #         raise ValueError("obj.result must be a list of dict")
+    #     if not isinstance(list, obj.diff):
+    #         raise ValueError("obj.diff must be a list of dict")
+    #     if not isinstance(list, obj.response):
+    #         raise ValueError("obj.response must be a list of dict")
+    #     result = {}
+    #     result["changed"] = self.did_anything_change(obj)
+    #     result["diff"] = {}
+    #     result["response"] = {}
+    #     for key in self.diff_keys:
+    #         if self.state == key:
+    #             result["diff"][key] = obj.diff
+    #         else:
+    #             result["diff"][key] = []
+    #     for key in self.response_keys:
+    #         if self.state == key:
+    #             result["response"][key] = obj.response
+    #         else:
+    #             result["response"][key] = []
+    #     return result

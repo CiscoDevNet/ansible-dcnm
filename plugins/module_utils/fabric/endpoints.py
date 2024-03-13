@@ -19,7 +19,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 import re
 
@@ -70,13 +69,53 @@ class ApiEndpoints:
         self.properties["template_name"] = None
 
     @property
+    def fabric_config_deploy(self):
+        """
+        return fabric_config_deploy endpoint
+        verb: POST
+        path: /rest/control/fabrics/<fabric_name>/config-deploy
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if not self.fabric_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_name is required."
+            raise ValueError(msg)
+        path = self.endpoint_fabrics
+        path += (
+            f"/{self.fabric_name}/config-deploy?forceShowRun=false&inclAllMSDSwitches"
+        )
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "POST"
+        return endpoint
+
+    @property
+    def fabric_config_save(self):
+        """
+        return fabric_config_save endpoint
+        verb: POST
+        path: /rest/control/fabrics/<fabric_name>/config-save
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if not self.fabric_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_name is required."
+            raise ValueError(msg)
+        path = self.endpoint_fabrics
+        path += f"/{self.fabric_name}/config-save"
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "POST"
+        return endpoint
+
+    @property
     def fabric_create(self):
         """
         return fabric_create endpoint
         verb: POST
         path: /rest/control/fabrics
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name is required."
@@ -90,9 +129,6 @@ class ApiEndpoints:
         endpoint = {}
         endpoint["path"] = path
         endpoint["verb"] = "POST"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
         return endpoint
 
     @property
@@ -102,7 +138,7 @@ class ApiEndpoints:
         verb: DELETE
         path: /rest/control/fabrics
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name is required."
@@ -112,9 +148,6 @@ class ApiEndpoints:
         endpoint = {}
         endpoint["path"] = path
         endpoint["verb"] = "DELETE"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
         return endpoint
 
     @property
@@ -124,7 +157,7 @@ class ApiEndpoints:
         verb: GET
         path: /rest/control/fabrics/summary
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name is required."
@@ -133,9 +166,29 @@ class ApiEndpoints:
         path = copy.copy(self.endpoint_fabric_summary)
         endpoint["path"] = re.sub("_REPLACE_WITH_FABRIC_NAME_", self.fabric_name, path)
         endpoint["verb"] = "GET"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
+        return endpoint
+
+    @property
+    def fabric_update(self):
+        """
+        return fabric_update endpoint
+        verb: PUT
+        path: /rest/control/fabrics/{FABRIC_NAME}
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if not self.fabric_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_name is required."
+            raise ValueError(msg)
+        if not self.template_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "template_name is required."
+            raise ValueError(msg)
+        path = self.endpoint_fabrics
+        path += f"/{self.fabric_name}/{self.template_name}"
+        endpoint = {}
+        endpoint["path"] = path
+        endpoint["verb"] = "PUT"
         return endpoint
 
     @property
@@ -145,13 +198,10 @@ class ApiEndpoints:
         verb: GET
         path: /rest/control/fabrics
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         endpoint = {}
         endpoint["path"] = self.endpoint_fabrics
         endpoint["verb"] = "GET"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
         return endpoint
 
     @property
@@ -169,7 +219,7 @@ class ApiEndpoints:
         except ValueError as error:
             self.ansible_module.fail_json(error)
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name is required."
@@ -179,9 +229,6 @@ class ApiEndpoints:
         endpoint = {}
         endpoint["path"] = path
         endpoint["verb"] = "GET"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
         return endpoint
 
     @property
@@ -215,7 +262,7 @@ class ApiEndpoints:
         verb: GET
         path: /appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{template_name}
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.template_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "template_name is required."
@@ -225,26 +272,20 @@ class ApiEndpoints:
         endpoint = {}
         endpoint["path"] = path
         endpoint["verb"] = "GET"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
         return endpoint
 
     @property
     def templates(self):
         """
         return the template contents endpoint
-        
+
         This endpoint returns the all template names on the controller.
 
         verb: GET
         path: /appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         endpoint = {}
         endpoint["path"] = self.endpoint_templates
         endpoint["verb"] = "GET"
-        self.log.debug(
-            f"Returning endpoint: {json.dumps(endpoint, indent=4, sort_keys=True)}"
-        )
         return endpoint

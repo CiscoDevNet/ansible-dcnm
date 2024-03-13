@@ -18,7 +18,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \

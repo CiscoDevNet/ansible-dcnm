@@ -97,6 +97,9 @@ class FabricSummary(FabricCommon):
         self._init_properties()
 
     def _init_properties(self):
+        """
+        Initialize properties specific to this class.
+        """
         # self.properties is already initialized in the parent class
         self.properties["border_gateway_count"] = 0
         self.properties["device_count"] = 0
@@ -110,15 +113,25 @@ class FabricSummary(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
         if self.data is None:
-            self.fail(f"refresh() must be called before accessing {method_name}.")
+            msg = f"{self.class_name}.{method_name}: "
+            msg = f"refresh() must be called before accessing {method_name}."
+            self.ansible_module.fail_json(msg, **self.failed_result)
+
         msg = f"{self.class_name}.{method_name}: "
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        self.properties["border_gateway_count"] = self.data.get("switchRoles", {}).get("border gateway", 0)
+
+        self.properties["border_gateway_count"] = self.data.get("switchRoles", {}).get(
+            "border gateway", 0
+        )
         self.properties["leaf_count"] = self.data.get("switchRoles", {}).get("leaf", 0)
-        self.properties["spine_count"] = self.data.get("switchRoles", {}).get("spine", 0)
-        self.properties["device_count"] = self.leaf_count + self.spine_count + self.border_gateway_count
-        
+        self.properties["spine_count"] = self.data.get("switchRoles", {}).get(
+            "spine", 0
+        )
+        self.properties["device_count"] = (
+            self.leaf_count + self.spine_count + self.border_gateway_count
+        )
+
     def refresh(self):
         """
         Refresh the fabric summary info from the controller and
@@ -155,9 +168,9 @@ class FabricSummary(FabricCommon):
 
         self._update_device_counts()
 
-    def verify_refresh(self, method_name):
+    def verify_refresh_has_been_called(self, method_name):
         """
-        If refresh() has not been called, fail with a message.
+        Fail if refresh() has not been called.
         """
         if self.data is None:
             msg = f"refresh() must be called before accessing {method_name}."
@@ -176,7 +189,7 @@ class FabricSummary(FabricCommon):
         Return the number of border gateway devices in fabric fabric_name.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh(method_name)
+        self.verify_refresh_has_been_called(method_name)
         return self.properties["border_gateway_count"]
 
     @property
@@ -185,7 +198,7 @@ class FabricSummary(FabricCommon):
         Return the total number of devices in fabric fabric_name.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh(method_name)
+        self.verify_refresh_has_been_called(method_name)
         return self.properties["device_count"]
 
     @property
@@ -194,7 +207,7 @@ class FabricSummary(FabricCommon):
         Return True if the fabric is empty.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh(method_name)
+        self.verify_refresh_has_been_called(method_name)
         if self.device_count == 0:
             return True
         return False
@@ -216,7 +229,7 @@ class FabricSummary(FabricCommon):
         Return the number of leaf devices in fabric fabric_name.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh(method_name)
+        self.verify_refresh_has_been_called(method_name)
         return self.properties["leaf_count"]
 
     @property
@@ -225,8 +238,5 @@ class FabricSummary(FabricCommon):
         Return the number of spine devices in fabric fabric_name.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh(method_name)
+        self.verify_refresh_has_been_called(method_name)
         return self.properties["spine_count"]
-
-
-

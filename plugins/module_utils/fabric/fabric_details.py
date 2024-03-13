@@ -20,7 +20,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
@@ -65,7 +64,7 @@ class FabricDetails(FabricCommon):
         self.data is a dictionary of fabric details, keyed on
         fabric name.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         endpoint = self.endpoints.fabrics
         self.rest_send.path = endpoint.get("path")
         self.rest_send.verb = endpoint.get("verb")
@@ -73,8 +72,6 @@ class FabricDetails(FabricCommon):
         self.data = {}
         for item in self.rest_send.response_current["DATA"]:
             self.data[item["fabricName"]] = item
-            msg = f"item: {json.dumps(item, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
         self.response_current = self.rest_send.response_current
         self.response = self.rest_send.response_current
         self.result_current = self.rest_send.result_current
@@ -229,15 +226,10 @@ class FabricDetailsByName(FabricDetails):
         self.refresh_super()
         self.data_subclass = copy.deepcopy(self.data)
 
-        msg = "self.data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
     def _get(self, item):
         """
-        Retrieve the value of the top-level (non-nvPair)
-        item for the fabric specified (anything not in
-        the nvPairs dictionary).
+        Retrieve the value of the top-level (non-nvPair) item for fabric_name
+        (anything not in the nvPairs dictionary).
 
         See also: _get_nv_pair()
         """
@@ -265,8 +257,7 @@ class FabricDetailsByName(FabricDetails):
 
     def _get_nv_pair(self, item):
         """
-        Retrieve the value of the nvPair item
-        for the fabric specified.
+        Retrieve the value of the nvPair item for fabric_name.
 
         See also: _get()
         """
@@ -315,6 +306,7 @@ class FabricDetailsByName(FabricDetails):
     def filter(self, value):
         self.properties["filter"] = value
 
+
 class FabricDetailsByNvPair(FabricDetails):
     """
     Retrieve fabric details from the controller filtered
@@ -356,13 +348,12 @@ class FabricDetailsByNvPair(FabricDetails):
             self.ansible_module.fail_json(msg, **self.failed_result)
 
         self.refresh_super()
-        for item in self.data:
-            if self.data[item].get("nvPairs", {}).get(self.filter_key) == self.filter_value:
-                self.data_subclass[item["fabricName"]] = self.data[item]
-
-        msg = "self.data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        for item, value in self.data.items():
+            if (
+                value.get("nvPairs", {}).get(self.filter_key)
+                == self.filter_value
+            ):
+                self.data_subclass[item] = value
 
     @property
     def filtered_data(self):

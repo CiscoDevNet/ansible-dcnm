@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
@@ -30,15 +31,17 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
+    FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_playbook_params import \
     VerifyPlaybookParams
 
 
-class FabricCreateCommon(FabricCommon):
+class FabricUpdateCommon(FabricCommon):
     """
     Common methods and properties for:
-    - FabricCreate
-    - FabricCreateBulk
+    - FabricUpdate
+    - FabricUpdateBulk
     """
 
     def __init__(self, ansible_module):
@@ -48,11 +51,12 @@ class FabricCreateCommon(FabricCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.check_mode = self.ansible_module.check_mode
-        msg = "ENTERED FabricCreateCommon(): "
+        msg = "ENTERED FabricUpdateCommon(): "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
         self.fabric_details = FabricDetailsByName(self.ansible_module)
+        self._fabric_summary = FabricSummary(self.ansible_module)
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
         self._verify_params = VerifyPlaybookParams(self.ansible_module)
@@ -62,8 +66,15 @@ class FabricCreateCommon(FabricCommon):
         # the commit() method.
         self.path = None
         self.verb = None
+        # List of fabrics that have the deploy flag set to True
+        # and that are not empty.
+        # Updated in _build_fabrics_to_config_deploy()
+        self._fabrics_to_config_deploy = []
+        # List of fabrics that have the deploy flag set to True
+        # Updated in _build_fabrics_to_config_save()
+        self._fabrics_to_config_save = []
 
-        self.action = "create"
+        self.action = "update"
         self._payloads_to_commit = []
         self.response_ok = []
         self.result_ok = []
@@ -72,9 +83,34 @@ class FabricCreateCommon(FabricCommon):
         self.result_nok = []
         self.diff_nok = []
 
+        # Number of successful fabric update payloads
+        # Used to determine if all fabric updates were successful
+        self.successful_fabric_payloads = 0
+
+        self.cannot_deploy_fabric_reason = ""
+
         self._mandatory_payload_keys = set()
         self._mandatory_payload_keys.add("FABRIC_NAME")
-        self._mandatory_payload_keys.add("BGP_AS")
+        self._mandatory_payload_keys.add("DEPLOY")
+
+    def _can_fabric_be_deployed(self, fabric_name):
+        """
+        return True if the fabric configuration can be saved and deployed
+        return False otherwise
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "ENTERED"
+        self.log.debug(msg)
+        self._fabric_summary.fabric_name = fabric_name
+        self._fabric_summary.refresh()
+        msg = "self._fabric_summary.fabric_is_empty: "
+        msg += f"{self._fabric_summary.fabric_is_empty}"
+        self.log.debug(msg)
+        if self._fabric_summary.fabric_is_empty is True:
+            self.cannot_deploy_fabric_reason = "Fabric is not empty"
+            return False
+        return True
 
     def _verify_payload(self, payload):
         """
@@ -100,21 +136,6 @@ class FabricCreateCommon(FabricCommon):
         msg += f"{sorted(missing_keys)}"
         self.ansible_module.fail_json(msg, **self.failed_result)
 
-    def _fixup_payloads_to_commit(self):
-        """
-        Make any modifications to the payloads prior to sending them
-        to the controller.
-
-        Add any modifications to the list below.
-
-        - Translate ANYCAST_GW_MAC to a format the controller understands
-        """
-        for payload in self._payloads_to_commit:
-            if "ANYCAST_GW_MAC" in payload:
-                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
-                    payload["ANYCAST_GW_MAC"]
-                )
-
     def _build_payloads_to_commit(self):
         """
         Build a list of payloads to commit.  Skip any payloads that
@@ -131,42 +152,22 @@ class FabricCreateCommon(FabricCommon):
         self._payloads_to_commit = []
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
-                continue
-            self._payloads_to_commit.append(copy.deepcopy(payload))
+                self._payloads_to_commit.append(copy.deepcopy(payload))
 
-    def _get_endpoint(self):
+    def _fixup_payloads_to_commit(self):
         """
-        Get the endpoint for the fabric create API call.
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.endpoints.fabric_name = self._payloads_to_commit[0].get("FABRIC_NAME")
-        self.endpoints.template_name = "Easy_Fabric"
-        try:
-            endpoint = self.endpoints.fabric_create
-        except ValueError as error:
-            self.ansible_module.fail_json(error)
+        Make any modifications to the payloads prior to sending them
+        to the controller.
 
-        self.path = endpoint["path"]
-        self.verb = endpoint["verb"]
+        Add any modifications to the list below.
 
-    def _set_fabric_create_endpoint(self, payload):
+        - Translate ANYCAST_GW_MAC to a format the controller understands
         """
-        Set the endpoint for the fabric create API call.
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.endpoints.fabric_name = payload.get("FABRIC_NAME")
-        self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
-        self.endpoints.template_name = self.fabric_type_to_template_name(
-            self.fabric_type
-        )
-        try:
-            endpoint = self.endpoints.fabric_create
-        except ValueError as error:
-            self.ansible_module.fail_json(error)
-
-        payload.pop("FABRIC_TYPE", None)
-        self.path = endpoint["path"]
-        self.verb = endpoint["verb"]
+        for payload in self._payloads_to_commit:
+            if "ANYCAST_GW_MAC" in payload:
+                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
+                    payload["ANYCAST_GW_MAC"]
+                )
 
     def _send_payloads(self):
         """
@@ -190,32 +191,172 @@ class FabricCreateCommon(FabricCommon):
         self.response_nok = []
         self.result_nok = []
         self.diff_nok = []
+
+        self._build_fabrics_to_config_deploy()
+        self._fixup_payloads_to_commit()
         for payload in self._payloads_to_commit:
-            self._set_fabric_create_endpoint(payload)
+            self._send_payload(payload)
 
-            # For FabricUpdate, the DEPLOY key is mandatory.
-            # For FabricCreate, it is not.
-            # Remove it if it exists.
-            payload.pop("DEPLOY", None)
+        # Skip config-save if any errors were encountered with fabric updates.
+        if len(self.result_nok) != 0:
+            return
+        self._config_save()
+        # Skip config-deploy if any errors were encountered with config-save.
+        if len(self.result_nok) != 0:
+            return
+        self._config_deploy()
 
-            # We don't want RestSend to retry on errors since the likelihood of a
-            # timeout error when updating a fabric is low, and there are many cases
-            # of permanent errors for which we don't want to retry.
-            self.rest_send.timeout = 1
+    def _build_fabrics_to_config_deploy(self):
+        """
+        Build a list of fabrics to config-deploy and config-save
+
+        This also removes the DEPLOY key from the payload
+
+        Skip:
+        - payloads without FABRIC_NAME key (shouldn't happen, but just in case)
+        - fabrics with DEPLOY key set to False
+        - Empty fabrics (these cannot be config-deploy'ed or config-save'd)
+        """
+        method_name = inspect.stack()[0][3]
+        for payload in self._payloads_to_commit:
+            fabric_name = payload.get("FABRIC_NAME", None)
+            if fabric_name is None:
+                continue
+            deploy = payload.pop("DEPLOY", None)
+            if deploy is not True:
+                continue
+            if self._can_fabric_be_deployed(fabric_name) is False:
+                continue
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"_can_fabric_be_deployed: {self._can_fabric_be_deployed(fabric_name)}, "
+            msg += (
+                f"self.cannot_deploy_fabric_reason: {self.cannot_deploy_fabric_reason}"
+            )
+            self.log.debug(msg)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Adding fabric_name: {fabric_name}"
+            self.log.debug(msg)
+
+            self._fabrics_to_config_deploy.append(fabric_name)
+            self._fabrics_to_config_save.append(fabric_name)
+
+    def _set_fabric_update_endpoint(self, payload):
+        """
+        Set the endpoint for the fabric create API call.
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self.endpoints.fabric_name = payload.get("FABRIC_NAME")
+        self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
+        self.endpoints.template_name = self.fabric_type_to_template_name(
+            self.fabric_type
+        )
+        try:
+            endpoint = self.endpoints.fabric_update
+        except ValueError as error:
+            self.ansible_module.fail_json(error)
+
+        payload.pop("FABRIC_TYPE", None)
+        self.path = endpoint["path"]
+        self.verb = endpoint["verb"]
+
+    def _send_payload(self, payload):
+        """
+        Send one fabric update payload
+        """
+        method_name = inspect.stack()[0][3]
+        self._set_fabric_update_endpoint(payload)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"verb: {self.verb}, path: {self.path}, "
+        msg += f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        # We don't want RestSend to retry on errors since the likelihood of a
+        # timeout error when updating a fabric is low, and there are many cases
+        # of permanent errors for which we don't want to retry.
+        self.rest_send.timeout = 1
+
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
+        self.rest_send.payload = payload
+        self.rest_send.commit()
+
+        if self.rest_send.result_current["success"]:
+            self.response_ok.append(copy.deepcopy(self.rest_send.response_current))
+            self.result_ok.append(copy.deepcopy(self.rest_send.result_current))
+            self.diff_ok.append(copy.deepcopy(payload))
+        else:
+            self.response_nok.append(copy.deepcopy(self.rest_send.response_current))
+            self.result_nok.append(copy.deepcopy(self.rest_send.result_current))
+            self.diff_nok.append(copy.deepcopy(payload))
+
+    def _config_save(self):
+        """
+        Save the fabric configuration to the controller
+        """
+        method_name = inspect.stack()[0][3]
+        for fabric_name in self._fabrics_to_config_save:
+            msg = f"{self.class_name}.{method_name}: fabric_name: {fabric_name}"
+            self.log.debug(msg)
+
+            try:
+                self.endpoints.fabric_name = fabric_name
+                self.path = self.endpoints.fabric_config_save.get("path")
+                self.verb = self.endpoints.fabric_config_save.get("verb")
+            except ValueError as error:
+                self.ansible_module.fail_json(error, **self.failed_result)
 
             self.rest_send.path = self.path
             self.rest_send.verb = self.verb
-            self.rest_send.payload = payload
+            self.rest_send.payload = None
             self.rest_send.commit()
 
             if self.rest_send.result_current["success"]:
                 self.response_ok.append(copy.deepcopy(self.rest_send.response_current))
                 self.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-                self.diff_ok.append(copy.deepcopy(payload))
+                self.diff_ok.append({"FABRIC_NAME": fabric_name, "config_save": "OK"})
             else:
                 self.response_nok.append(copy.deepcopy(self.rest_send.response_current))
                 self.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-                self.diff_nok.append(copy.deepcopy(payload))
+                self.diff_nok.append(
+                    copy.deepcopy({"FABRIC_NAME": fabric_name, "config_save": "FAILED"})
+                )
+
+    def _config_deploy(self):
+        """
+        Deploy the fabric configuration to the controller
+        """
+        method_name = inspect.stack()[0][3]
+        for fabric_name in self._fabrics_to_config_deploy:
+            msg = f"{self.class_name}.{method_name}: fabric_name: {fabric_name}"
+            self.log.debug(msg)
+
+            try:
+                self.endpoints.fabric_name = fabric_name
+                self.path = self.endpoints.fabric_config_deploy.get("path")
+                self.verb = self.endpoints.fabric_config_deploy.get("verb")
+            except ValueError as error:
+                self.ansible_module.fail_json(error, **self.failed_result)
+
+            self.rest_send.path = self.path
+            self.rest_send.verb = self.verb
+            self.rest_send.payload = None
+            self.rest_send.commit()
+
+            if self.rest_send.result_current["success"]:
+                self.response_ok.append(copy.deepcopy(self.rest_send.response_current))
+                self.result_ok.append(copy.deepcopy(self.rest_send.result_current))
+                self.diff_ok.append({"FABRIC_NAME": fabric_name, "config_deploy": "OK"})
+            else:
+                self.response_nok.append(copy.deepcopy(self.rest_send.response_current))
+                self.result_nok.append(copy.deepcopy(self.rest_send.result_current))
+                self.diff_nok.append(
+                    copy.deepcopy(
+                        {"FABRIC_NAME": fabric_name, "config_deploy": "FAILED"}
+                    )
+                )
 
     def _process_responses(self):
         method_name = inspect.stack()[0][3]
@@ -234,14 +375,16 @@ class FabricCreateCommon(FabricCommon):
                 self.response_current = copy.deepcopy(response)
             return
 
+        # At least one request failed.
+        # Set failed to true, set changed appropriately,
+        # build response/result/diff, and call fail_json
         self.failed = True
         self.changed = False
-        # at least one request succeeded, so set changed to True
-        if len(self.result_nok) != len(self._payloads_to_commit):
+        # At least one request succeeded, so set changed to True
+        if self.result_ok != 0:
             self.changed = True
 
-        # Provide the info for the request(s) that succeeded
-        # and the request(s) that failed
+        # Provide the results for all (failed and successful) requests
 
         # Add an "OK" result to the response(s) that succeeded
         for diff in self.diff_ok:
@@ -312,7 +455,7 @@ class FabricCreateCommon(FabricCommon):
         self.properties["payloads"] = value
 
 
-class FabricCreateBulk(FabricCreateCommon):
+class FabricUpdateBulk(FabricUpdateCommon):
     """
     Create fabrics in bulk.  Skip any fabrics that already exist.
     """
@@ -322,7 +465,7 @@ class FabricCreateBulk(FabricCreateCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricCreateBulk()")
+        self.log.debug("ENTERED FabricUpdateBulk()")
 
         self._build_properties()
 
@@ -347,14 +490,13 @@ class FabricCreateBulk(FabricCreateCommon):
         self._build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
             return
-        self._fixup_payloads_to_commit()
         self._send_payloads()
         self._process_responses()
 
 
-class FabricCreate(FabricCommon):
+class FabricUpdate(FabricCommon):
     """
-    Create a VXLAN fabric on the controller.
+    Update a VXLAN fabric on the controller.
     """
 
     def __init__(self, ansible_module):
@@ -362,7 +504,7 @@ class FabricCreate(FabricCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricCreate()")
+        self.log.debug("ENTERED FabricUpdate()")
 
         self.data = {}
         self.endpoints = ApiEndpoints()

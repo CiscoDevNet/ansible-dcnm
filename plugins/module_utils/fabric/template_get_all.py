@@ -18,16 +18,18 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
 import inspect
-import json
 import logging
 from typing import Any, Dict
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
+    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
     Results
+
 
 class TemplateGetAll:
     """
@@ -39,6 +41,7 @@ class TemplateGetAll:
     instance.refresh()
     templates = instance.templates
     """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
@@ -52,9 +55,17 @@ class TemplateGetAll:
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self._endpoints = ApiEndpoints()
-        self._rest_send = RestSend()
+        self.endpoints = ApiEndpoints()
+        self.rest_send = RestSend(self.ansible_module)
         self._results = Results(self.ansible_module)
+        self.path = None
+        self.verb = None
+
+        self.response = []
+        self.response_current = {}
+        self.result = []
+        self.result_current = {}
+
         self._init_properties()
 
     def _init_properties(self) -> None:
@@ -72,25 +83,35 @@ class TemplateGetAll:
     def templates(self, value: Dict[str, Any]) -> None:
         self._properties["templates"] = value
 
+    def _set_templates_endpoint(self) -> None:
+        """
+        Set the endpoint for the template to be retrieved from the controller.
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        try:
+            endpoint = self.endpoints.templates
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        self.path = endpoint.get("path")
+        self.verb = endpoint.get("verb")
+
     def refresh(self):
         """
         Retrieve the templates from the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self._set_templates_endpoint()
 
-        try:
-            self.endpoint = self._endpoints.templates
-        except ValueError as error:
-            raise ValueError(error)
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
+        self.rest_send.commit()
 
-        self._rest_send.path = self.endpoint.get("path")
-        self._rest_send.verb = self.endpoint.get("verb")
-        self._rest_send.commit()
-
-        self.response_current = self._rest_send.response_current
-        self.response = self._rest_send.response_current
-        self.result_current = self._rest_send.result_current
-        self.result = self._rest_send.result_current
+        self.response_current = copy.deepcopy(self.rest_send.response_current)
+        self.response.append(copy.deepcopy(self.rest_send.response_current))
+        self.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.result.append(copy.deepcopy(self.rest_send.result_current))
 
         if self.response_current.get("RETURN_CODE", None) != 200:
             msg = f"{self.class_name}.{method_name}: "
@@ -99,6 +120,3 @@ class TemplateGetAll:
             self.ansible_module.fail_json(msg, **self._results.failed_result)
 
         self.templates = self.result_current
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"templates: {json.dumps(self.templates, indent=4, sort_keys=True)}"

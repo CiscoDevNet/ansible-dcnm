@@ -6,40 +6,27 @@ Description:
 Superclass for NdfcTemplateEasyFabric() and NdfcTemplateAll()
 """
 import re
-import sys
-import json
+
 
 class TemplateParseCommon:
     """
     Superclass for TemplateParse*() classes
     """
+
     def __init__(self):
         self._properties = {}
         self._properties["template"] = None
-        self._properties["template_json"] = None
 
     @property
     def template(self):
+        """
+        The template contents supported by the subclass
+        """
         return self._properties["template"]
 
     @template.setter
     def template(self, value):
-        """
-        The template contents supported by the subclass
-        """
         self._properties["template"] = value
-
-    @property
-    def template_json(self):
-        return self._properties["template_json"]
-
-    @template_json.setter
-    def template_json(self, value):
-        """
-        Full path to a file containing the template content
-        in JSON format
-        """
-        self._properties["template_json"] = value
 
     @staticmethod
     def delete_key(key, dictionary):
@@ -51,6 +38,10 @@ class TemplateParseCommon:
         return dictionary
 
     def get_default_value_meta_properties(self, item):
+        """
+        Return defaultValue of metaProperties item, if any
+        Return None otherwise
+        """
         try:
             result = item["metaProperties"]["defaultValue"]
         except KeyError:
@@ -58,6 +49,10 @@ class TemplateParseCommon:
         return self.clean_string(result)
 
     def get_default_value_root(self, item):
+        """
+        Return defaultValue of a root item, if any
+        Return None otherwise
+        """
         try:
             result = item["defaultValue"]
         except KeyError:
@@ -68,7 +63,6 @@ class TemplateParseCommon:
         """
         Return the default value for item, if it exists.
         Return None otherwise.
-        item["metaProperties"]["defaultValue"]
         """
         result = self.get_default_value_meta_properties(item)
         if result is not None:
@@ -76,14 +70,13 @@ class TemplateParseCommon:
         result = self.get_default_value_root(item)
         return result
 
-
     def get_description(self, item):
         """
         Return the description of an item, i.e.:
         item['annotations']['Description']
         """
         try:
-            description = item['annotations']['Description']
+            description = item["annotations"]["Description"]
         except KeyError:
             description = "unknown"
         return self.clean_string(description)
@@ -97,9 +90,10 @@ class TemplateParseCommon:
         """
         if not isinstance(dictionary, dict):
             return None
-        if key in dictionary: return dictionary[key]
-        for k, v in dictionary.items():
-            if isinstance(v,dict):
+        if key in dictionary:
+            return dictionary[key]
+        for k, v in dictionary.items():  # pylint: disable=unused-variable
+            if isinstance(v, dict):
                 item = self.get_dict_value(v, key)
                 if item is not None:
                     return item
@@ -199,7 +193,7 @@ class TemplateParseCommon:
         Typically, item['name']
         """
         try:
-            result = item['name']
+            result = item["name"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -212,16 +206,16 @@ class TemplateParseCommon:
         result = self.get_dict_value(item, "IsInternal")
         return self.make_bool(result)
 
-    def is_optional(self,item):
+    def is_optional(self, item):
         """
         Return the optional status of an item (True or False) if it exists.
 
         Otherwise return None
         """
-        result = self.make_bool(item.get('optional', None))
+        result = self.make_bool(item.get("optional", None))
         return result
 
-    def get_parameter_type(self, item):
+    def get_parameter_type(self, item):  # pylint: disable=too-many-return-statements
         """
         Return the parameter type of an item if it exists.
         Otherwise return None
@@ -235,7 +229,7 @@ class TemplateParseCommon:
         ipV4Address -> ipv4
         etc.
         """
-        result = self.get_dict_value(item, 'parameterType')
+        result = self.get_dict_value(item, "parameterType")
         if result is None:
             return None
         if result in ["STRING", "string", "str"]:
@@ -271,7 +265,7 @@ class TemplateParseCommon:
         template['type']
         """
         try:
-            result = template['contentType']
+            result = template["contentType"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -283,7 +277,7 @@ class TemplateParseCommon:
         template['description']
         """
         try:
-            result = template['description']
+            result = template["description"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -295,7 +289,7 @@ class TemplateParseCommon:
         template['name']
         """
         try:
-            result = template['name']
+            result = template["name"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -307,7 +301,7 @@ class TemplateParseCommon:
         template['templateSubType']
         """
         try:
-            result = template['templateSubType']
+            result = template["templateSubType"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -319,7 +313,7 @@ class TemplateParseCommon:
         template['supportedPlatforms']
         """
         try:
-            result = template['supportedPlatforms']
+            result = template["supportedPlatforms"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -331,7 +325,7 @@ class TemplateParseCommon:
         template['tags']
         """
         try:
-            result = template['tags']
+            result = template["tags"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -343,7 +337,7 @@ class TemplateParseCommon:
         template['templateType']
         """
         try:
-            result = template['templateType']
+            result = template["templateType"]
         except KeyError:
             result = "unknown"
         return self.clean_string(result)
@@ -387,20 +381,19 @@ class TemplateParseCommon:
             return True
         return False
 
-    def is_required(self,item):
+    def is_required(self, item):
         """
         Return the required status of an item (True or False)
         The inverse of item['optional']
-        
+
         Otherwise return None
         """
-        result = self.make_bool(item.get('optional', None))
+        result = self.make_bool(item.get("optional", None))
         if result is True:
             return False
         if result is False:
             return True
         return None
-
 
     @staticmethod
     def make_bool(value):
@@ -421,15 +414,15 @@ class TemplateParseCommon:
         if string is None:
             return ""
         string = string.strip()
-        string = re.sub('<br />', ' ', string)
-        string = re.sub('&#39;', '', string)
-        string = re.sub('&#43;', '+', string)
-        string = re.sub('&#61;', '=', string)
-        string = re.sub('amp;', '', string)
-        string = re.sub(r'\[', '', string)
-        string = re.sub(r'\]', '', string)
-        string = re.sub('\"', '', string)
-        string = re.sub("\'", '', string)
+        string = re.sub("<br />", " ", string)
+        string = re.sub("&#39;", "", string)
+        string = re.sub("&#43;", "+", string)
+        string = re.sub("&#61;", "=", string)
+        string = re.sub("amp;", "", string)
+        string = re.sub(r"\[", "", string)
+        string = re.sub(r"\]", "", string)
+        string = re.sub('"', "", string)
+        string = re.sub("'", "", string)
         string = re.sub(r"\s+", " ", string)
         string = self.make_bool(string)
         try:
@@ -442,16 +435,3 @@ class TemplateParseCommon:
             except ValueError:
                 pass
         return string
-
-    def load(self):
-        """
-        Load the template from a JSON file
-        """
-        if self.template_json is None:
-            msg = "exiting. set instance.template_json to the file "
-            msg += "path of the JSON content before calling "
-            msg += "load_template()"
-            print(f"{msg}")
-            sys.exit(1)
-        with open(self.template_json, 'r', encoding="utf-8") as handle:
-            self.template = json.load(handle)

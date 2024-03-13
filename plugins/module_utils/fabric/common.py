@@ -19,12 +19,15 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
+import re
 from typing import Any, Dict
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import \
+    FabricTaskResult
 
 # Using only for its failed_result property
 # pylint: disable=line-too-long
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import \
-    FabricTaskResult
+
 
 # pylint: enable=line-too-long
 
@@ -61,12 +64,33 @@ class FabricCommon:
         self.properties: Dict[str, Any] = {}
         self.properties["changed"] = False
         self.properties["diff"] = []
+        # Default to VXLAN_EVPN
+        self.properties["fabric_type"] = "VXLAN_EVPN"
         self.properties["failed"] = False
         self.properties["response"] = []
         self.properties["response_current"] = {}
         self.properties["response_data"] = []
         self.properties["result"] = []
         self.properties["result_current"] = {}
+
+        self._valid_fabric_types = {"VXLAN_EVPN"}
+
+        self.fabric_type_to_template_name_map = {}
+        self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
+
+    @staticmethod
+    def translate_mac_address(mac_addr):
+        """
+        Accept mac address with any (or no) punctuation and convert it
+        into the dotted-quad format that the controller expects.
+
+        Return mac address formatted for the controller on success
+        Return False on failure.
+        """
+        mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
+        if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
+            return False
+        return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
 
     def _handle_response(self, response, verb):
         """
@@ -148,6 +172,17 @@ class FabricCommon:
         result["changed"] = True
         return result
 
+    def fabric_type_to_template_name(self, value):
+        """
+        Return the template name for a given fabric type
+        """
+        method_name = inspect.stack()[0][3]
+        if value not in self.fabric_type_to_template_name_map:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Unknown fabric type: {value}"
+            self.ansible_module.fail_json(msg, **self.failed_result)
+        return self.fabric_type_to_template_name_map[value]
+
     def make_boolean(self, value):
         """
         Return value converted to boolean, if possible.
@@ -203,6 +238,26 @@ class FabricCommon:
             msg += f"instance.diff must be a dict. Got {value}"
             self.ansible_module.fail_json(msg)
         self.properties["diff"].append(value)
+
+    @property
+    def fabric_type(self):
+        """
+        The type of fabric to create/update.
+
+        See self._valid_fabric_types for valid values
+        """
+        return self.properties["fabric_type"]
+
+    @fabric_type.setter
+    def fabric_type(self, value):
+        method_name = inspect.stack()[0][3]
+        if value not in self._valid_fabric_types:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"FABRIC_TYPE must be one of "
+            msg += f"{sorted(self._valid_fabric_types)}. "
+            msg += f"Got {value}"
+            self.ansible_module.fail_json(msg, **self.failed_result)
+        self.properties["fabric_type"] = value
 
     @property
     def failed(self):
