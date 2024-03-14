@@ -77,69 +77,69 @@ options:
         - Name of the extension config template to be used
         type: str
         default: 'Default_Network_Extension_Universal'
-      vlan_id:
+      network_template_config:
         description:
-        - VLAN ID for the network.
-        - If not specified in the playbook, DCNM will auto-select an available vlan_id
-        type: int
-        required: false
-      attach:
-        description:
-        - List of network attachment details
+        - To specifiy the network specific values for the network being managed using
+          the config params and values specified in the network template/extension template.
         type: list
         elements: dict
         suboptions:
-          fabric:
+          attach:
             description:
-            - Fabric name where the switch to attach is present
-            type: str
-            required: true
-          networkName:
-            description:
-            - Name of the network to which the switch is to be attached
-            type: str
-            required: true
-          serialNumber:
-            description:
-            - Serial number of the switch to be attached to network
-            type: str
-            required: true
-          deployment:
-            description:
-            - To specify if the switch should be attached/detached to/from network
-            type: bool
-            default: true
-          vlan:
-            description:
-            - VLAN ID for the attachment.
-            type: int
-            default: -1
-          switchPorts:
-            description:
-            - List of switch ports to be attached to network
-            type: str
-            default: ""
-          torPorts:
-            description:
-            - List of TOR ports to be attached to network
-            type: str
-            default: ""
-          detachSwitchPorts:
-            description:
-            - List of switch ports to be detached from network
-            type: str
-            default: ""
-          instanceValues:
-            description:
-            - Switch specific values for the attachment
-            type: str
-            default: ""
-          deploy:
-            description:
-            - To specify if the attachment to network is to be deployed
-            type: bool
-            default: true
-
+            - List of network attachment details
+            type: list
+            elements: dict
+            suboptions:
+              fabric:
+                description:
+                - Fabric name where the switch to attach is present
+                type: str
+                required: true
+              networkName:
+                description:
+                - Name of the network to which the switch is to be attached
+                type: str
+                required: true
+              serialNumber:
+                description:
+                - Serial number of the switch to be attached to network
+                type: str
+                required: true
+              deployment:
+                description:
+                - To specify if the switch should be attached/detached to/from network
+                type: bool
+                default: true
+              vlan:
+                description:
+                - VLAN ID for the attachment.
+                type: int
+                default: -1
+              switchPorts:
+                description:
+                - List of switch ports to be attached to network
+                type: str
+                default: ""
+              torPorts:
+                description:
+                - List of TOR ports to be attached to network
+                type: str
+                default: ""
+              detachSwitchPorts:
+                description:
+                - List of switch ports to be detached from network
+                type: str
+                default: ""
+              instanceValues:
+                description:
+                - Switch specific values for the attachment
+                type: str
+                default: ""
+              deploy:
+                description:
+                - To specify if the attachment to network is to be deployed
+                type: bool
+                default: true
 """
 
 EXAMPLES = """
@@ -206,6 +206,7 @@ class DcnmNetworkv2:
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}",
+            "BULK_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/bulk-create/networks"
         },
     }
 
@@ -243,6 +244,7 @@ class DcnmNetworkv2:
         self.diff_undeploy = {}
         self.diff_delete = {}
         self.diff_input_format = []
+        self.dyn_arg_spec = {}
         self.query = []
         self.dcnm_version = dcnm_version_supported(self.module)
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
@@ -273,7 +275,6 @@ class DcnmNetworkv2:
         all_nets = ""
 
         if self.config:
-
             for want_c in self.want_create:
                 if not next(
                     (
@@ -303,9 +304,10 @@ class DcnmNetworkv2:
                 for a_h in atch_h:
                     if a_h["deployment"]:
                         a_h.update({"deployment": False})
+                        a_h.update({"torPorts": ""})
                         to_del.append(a_h)
                         if diff_undeploy.get(a_h["serialNumber"]):
-                            diff_undeploy[a_h["serialNumber"]].extend(a_h["networkName"])
+                            diff_undeploy[a_h["serialNumber"]].append(a_h["networkName"])
                         else:
                             diff_undeploy[a_h["serialNumber"]] = [a_h["networkName"]]
                 if to_del:
@@ -318,9 +320,10 @@ class DcnmNetworkv2:
                 for a_h in atch_h:
                     if a_h["deployment"]:
                         a_h.update({"deployment": False})
+                        a_h.update({"torPorts": ""})
                         to_del.append(a_h)
                         if diff_undeploy.get(a_h["serialNumber"]):
-                            diff_undeploy[a_h["serialNumber"]].extend(a_h["networkName"])
+                            diff_undeploy[a_h["serialNumber"]].append(a_h["networkName"])
                         else:
                             diff_undeploy[a_h["serialNumber"]] = [a_h["networkName"]]
                 if to_del:
@@ -364,9 +367,10 @@ class DcnmNetworkv2:
                 for a_h in atch_h:
                     if a_h["deployment"]:
                         a_h.update({"deployment": False})
+                        a_h.update({"torPorts": ""})
                         to_del.append(a_h)
                         if diff_undeploy.get(a_h["serialNumber"]):
-                            diff_undeploy[a_h["serialNumber"]].extend(a_h["networkName"])
+                            diff_undeploy[a_h["serialNumber"]].append(a_h["networkName"])
                         else:
                             diff_undeploy[a_h["serialNumber"]] = [a_h["networkName"]]
 
@@ -420,7 +424,7 @@ class DcnmNetworkv2:
                             a_h.update({"deployment": False})
                             r_net_list.append(a_h)
                             if diff_deploy.get(a_h["serialNumber"]):
-                                diff_deploy[a_h["serialNumber"]].extend(a_h["networkName"]) 
+                                diff_deploy[a_h["serialNumber"]].append(a_h["networkName"]) 
                             else:
                                 diff_deploy[a_h["serialNumber"]] = [a_h["networkName"]]
                     break
@@ -445,7 +449,7 @@ class DcnmNetworkv2:
                         a_h.update({"deployment": False})
                         r_net_list.append(a_h)
                         if diff_deploy.get(a_h["serialNumber"]):
-                            diff_deploy[a_h["serialNumber"]].extend(a_h["networkName"])
+                            diff_deploy[a_h["serialNumber"]].append(a_h["networkName"])
                         else:
                             diff_deploy[a_h["serialNumber"]] = [a_h["networkName"]]
 
@@ -471,33 +475,34 @@ class DcnmNetworkv2:
     
     def get_deploy_diff(self, diff_deploy):
             
-            for w_deploy in self.want_deploy:
-                if diff_deploy.get(w_deploy):
-                    for net in self.want_deploy[w_deploy]:
-                        if net in diff_deploy[w_deploy]:
-                            continue
+        for w_deploy in self.want_deploy:
+            if diff_deploy.get(w_deploy):
+                for net in self.want_deploy[w_deploy]:
+                    if net in diff_deploy[w_deploy]:
+                        continue
+                    else:
+                        if diff_deploy.get(w_deploy):
+                            diff_deploy[w_deploy].append(net)
                         else:
-                            if diff_deploy.get(w_deploy):
-                                diff_deploy[w_deploy].extend(net)
-                            else:
-                                diff_deploy[w_deploy] = [net]
-                else:
-                    if self.have_deploy.get(w_deploy):
-                        for net in self.want_deploy[w_deploy]:
-                            if net in self.have_deploy[w_deploy]:
-                                continue
-                            else:
-                                if diff_deploy.get(w_deploy):
-                                    diff_deploy[w_deploy].extend(net)
-                                else:
-                                    diff_deploy[w_deploy] = [net]
+                            diff_deploy[w_deploy] = [net]
+            elif self.have_deploy.get(w_deploy):
+                for net in self.want_deploy[w_deploy]:
+                    if net in self.have_deploy[w_deploy]:
+                        continue
+                    else:
+                        if diff_deploy.get(w_deploy):
+                            diff_deploy[w_deploy].append(net)
+                        else:
+                            diff_deploy[w_deploy] = [net]
+            else:
+                diff_deploy[w_deploy] = self.want_deploy[w_deploy]
                             
     def compute_deploy_diff(self, w_attach, diff_deploy):
         
         if self.want_deploy.get(w_attach["serialNumber"]):
             if w_attach["networkName"] in self.want_deploy[w_attach["serialNumber"]]:
                 if diff_deploy.get(w_attach["serialNumber"]):
-                  diff_deploy[w_attach["serialNumber"]].extend(w_attach["networkName"])
+                    diff_deploy[w_attach["serialNumber"]].append(w_attach["networkName"])
                 else:
                     diff_deploy[w_attach["serialNumber"]] = [w_attach["networkName"]]
 
@@ -505,12 +510,12 @@ class DcnmNetworkv2:
 
         if w_attach["switchPorts"] != h_attach["switchPorts"]:
             h_sw_ports = (
-                h_attach["switchPorts"].split(",")
+                re.split(", |,", h_attach["switchPorts"])
                 if h_attach["switchPorts"]
                 else []
             )
             w_sw_ports = (
-                w_attach["switchPorts"].split(",")
+                re.split(", |,", w_attach["switchPorts"])
                 if w_attach["switchPorts"]
                 else []
             )
@@ -534,12 +539,12 @@ class DcnmNetworkv2:
                         if tor_w["switch"] == tor_h["switch"]:
                             atch_tor_ports = []
                             h_tor_ports = (
-                                tor_h["torports"].split(", ")
+                                re.split(", |,", tor_h["torports"])
                                 if tor_h["torports"]
                                 else []
                             )
                             w_tor_ports = (
-                                tor_w["torports"].split(", ")
+                                re.split(", |,", tor_w["torports"])
                                 if tor_w["torports"]
                                 else []
                             )
@@ -610,6 +615,7 @@ class DcnmNetworkv2:
                                         self.get_attach_ports(attach, h_attach)
                                     if h_attach["torPorts"] or attach["torPorts"]:
                                         self.get_attach_torports(attach, h_attach, replace)
+
                                     self.compute_deploy_diff(attach, diff_deploy)
                         base.update({"lanAttachList": w_attach_update})
                         diff_attach.append(base)
@@ -617,6 +623,10 @@ class DcnmNetworkv2:
             if not found and want_a.get("lanAttachList"):
                 diff_attach.append(want_a)
                 for attach in want_a.get("lanAttachList"):
+                    if attach.get("torPorts") != "":
+                        for tor_h in attach.get("torPorts"):
+                            torconfig = tor_h["switch"] + "(" + tor_h["torports"] + ")"
+                            attach.update({"torPorts": torconfig})
                     self.compute_deploy_diff(attach, diff_deploy)
 
         self.get_deploy_diff(diff_deploy)
@@ -795,7 +805,6 @@ class DcnmNetworkv2:
                     torlist = []
                     sw_ports_list = attach["portNames"]
                     tor_list = sw_ports_list.split(") ")
-                    print("sw is " + str(sw_ports_list))
                     for idx, tor in enumerate(tor_list):
                         if tor:
                             torports = {}
@@ -804,21 +813,25 @@ class DcnmNetworkv2:
                             # idx 0 has the switch ports configured
                             # idx 1 onwards has the tor ports configured
                             if idx == 0:
-                                ports = (",".join(sorted(eth_list[1].split(",")))).strip()
+                                ports = (",".join(sorted(re.split(", |,", eth_list[1])))).strip()
                                 continue
                             else:
                                 torports.update({"switch": eth_list[0]})
-                                torports.update({"torports": ",".join(sorted(eth_list[1].split(",")))})
+                                torports.update({"torports": ",".join(sorted(re.split(", |,", eth_list[1])))})
                                 torlist.append(torports)
                     torlist = sorted(torlist, key=lambda torlist: torlist['switch'])
                     attach.update({"torPorts": torlist})
                 elif attach["portNames"]:
-                    ports = (",".join(sorted(ports.split(",")))).strip()
+                    ports = (",".join(sorted(re.split(", |,", ports)))).strip()
                     
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
                 # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
                 # on the attach section of outgoing payload.
+
+                if (state == "deleted" and
+                    (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING" or attach["lanAttachState"] == "FAILED")):
+                    deployment = True
 
                 del attach["vlanId"]
                 del attach["switchSerialNo"]
@@ -869,7 +882,7 @@ class DcnmNetworkv2:
             "net_extension_template", "Default_Network_Extension_Universal"
         )
 
-        if state == "deleted":
+        if state == "deleted" or state == "query":
             net_upd = {
                 "fabric": self.fabric,
                 "networkName": net["net_name"],
@@ -887,15 +900,14 @@ class DcnmNetworkv2:
                 "networkTemplate": n_template,
                 "networkExtensionTemplate": ne_template,
             }
-
-        net_upd.update({"networkTemplateConfig": net["network_template_config"]})
-        #net_upd.update({"networkTemplateConfig": json.dumps(net["network_template_config"])})
-        # del net_upd["networkTemplateConfig"]["nveId"]
-        if not net_upd["networkTemplateConfig"]["trmEnabled"]:
-            net_upd["networkTemplateConfig"]["igmpVersion"] = ""
-        # del net_upd["networkTemplateConfig"]["enableIR"]
-        # if not net_upd["networkTemplateConfig"]["dhcpServers"]:
-        #    del net_upd["networkTemplateConfig"]["dhcpServers"]
+            net_upd.update({"networkTemplateConfig": net["network_template_config"]})
+            #net_upd.update({"networkTemplateConfig": json.dumps(net["network_template_config"])})
+            # del net_upd["networkTemplateConfig"]["nveId"]
+            if not net_upd["networkTemplateConfig"]["trmEnabled"]:
+                net_upd["networkTemplateConfig"]["igmpVersion"] = ""
+            # del net_upd["networkTemplateConfig"]["enableIR"]
+            # if not net_upd["networkTemplateConfig"]["dhcpServers"]:
+            #    del net_upd["networkTemplateConfig"]["dhcpServers"]
         
 
         return net_upd
@@ -917,7 +929,7 @@ class DcnmNetworkv2:
 
             want_create.append(self.update_create_params(net))
 
-            if not net.get("attach"):
+            if not net.get("attach") or state == "deleted" or state == "query":
                 continue
 
             for attach in net["attach"]:
@@ -929,8 +941,10 @@ class DcnmNetworkv2:
                             hv_attach = atch_h["lanAttachList"]
                             for h_attach in hv_attach:
                                 if(attach["serialNumber"] == h_attach["serialNumber"]):
+                                    if attach["vlan"] == "-1":
+                                        attach.update({"vlan": h_attach["vlan"]})
                                     if h_attach["switchPorts"]:
-                                        hports = sorted(h_attach["switchPorts"].split(","))
+                                        hports = sorted(re.split(", |,", h_attach["switchPorts"]))
                                     if h_attach["torPorts"]:
                                         htorlist = h_attach["torPorts"]
                                     break
@@ -938,19 +952,18 @@ class DcnmNetworkv2:
                 want_ports = attach["switchPorts"]
                 if want_ports:
                     if state == "merged" and hports:
-                        wports = sorted(want_ports.split(", "))
+                        wports = sorted(re.split(", |,", want_ports))
                         if wports != hports:
                             wports = list(set(wports) | set(hports))
                         wports.sort()
                         ports = (",".join(wports)).strip()
                     else:
-                        ports = (",".join(sorted(want_ports.split(", ")))).strip()
+                        ports = (",".join(sorted(re.split(", |,", want_ports)))).strip()
 
                 if attach["torPorts"] and re.match(r"(\S+\(([Ee]thernet\d+\/\d+,?\s?)+\),?\s?)+", attach["torPorts"]):
                     torlist = []
                     sw_ports_list = attach["torPorts"]
-                    tor_list = sw_ports_list.split("), ")
-                    print("sw is " + str(sw_ports_list))
+                    tor_list = re.split("\), |\), ",sw_ports_list)
                     for tor in tor_list:
                         if tor:
                             torports = {}
@@ -958,10 +971,10 @@ class DcnmNetworkv2:
                             sw_port = tor.split(")")
                             eth_list = sw_port[0].split("(")
                             switch = eth_list[0]
-                            wtor_ports = sorted(eth_list[1].split(", "))
+                            wtor_ports = sorted(re.split(", |,", eth_list[1]))
                             for htor in htorlist:
                                 if htor["switch"] == switch:
-                                    htor_posts = htor["torports"].split(",")
+                                    htor_posts = re.split(", |,", htor["torports"])
                                     if sorted(wtor_ports) != sorted(htor_posts):
                                         wtor_ports = list(set(wtor_ports) | set(htor_posts))
                                     wtor_ports.sort()
@@ -977,10 +990,10 @@ class DcnmNetworkv2:
                 networks.append(attach)
                 if attach["deploy"]:
                     if want_deploy.get(attach["serialNumber"]):
-                        want_deploy[attach["serialNumber"]].extend(attach["networkName"])
+                        want_deploy[attach["serialNumber"]].append(attach["networkName"])
                     else:
                         want_deploy[attach["serialNumber"]] = [attach["networkName"]]
-                    del attach["deploy"]
+                del attach["deploy"]
 
             net_attach.update({"networkName": net["net_name"]})
             net_attach.update({"lanAttachList": networks})
@@ -1113,9 +1126,9 @@ class DcnmNetworkv2:
 
         if self.wait_for_del_ready():
             for net, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC":
-                    del_failure += net + ","
-                    continue
+                # if state == "OUT-OF-SYNC":
+                #     del_failure += net + ","
+                #     continue
                 delete_path = path + "/" + net
                 resp = dcnm_send(self.module, method, delete_path)
                 self.result["response"].append(resp)
@@ -1138,33 +1151,33 @@ class DcnmNetworkv2:
 
         for net in self.diff_create:
             json_to_dict = net["networkTemplateConfig"]
-            vlanId = json_to_dict.get("vlanId", "")
+        #   vlanId = json_to_dict.get("vlanId", "")
 
-            if not vlanId:
-                vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-                vlan_data = dcnm_send(self.module, "GET", vlan_path)
+        #     if not vlanId:
+        #         vlan_path = self.paths["GET_VLAN"].format(self.fabric)
+        #         vlan_data = dcnm_send(self.module, "GET", vlan_path)
 
-                if vlan_data["RETURN_CODE"] != 200:
-                    self.module.fail_json(
-                        msg="Failure getting autogenerated vlan_id {0}".format(
-                            vlan_data
-                        )
-                    )
-                vlanId = vlan_data["DATA"]
-                json_to_dict["vlanId"] = vlanId
-
+        #         if vlan_data["RETURN_CODE"] != 200:
+        #             self.module.fail_json(
+        #                 msg="Failure getting autogenerated vlan_id {0}".format(
+        #                     vlan_data
+        #                 )
+        #             )
+        #         vlanId = vlan_data["DATA"]
+        #         json_to_dict["vlanId"] = vlanId
 
             net.update({"networkTemplateConfig": json.dumps(json_to_dict)})
 
-            method = "POST"
-            resp = dcnm_send(self.module, method, path, json.dumps(net))
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "create")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
+        method = "POST"
+        bulk_path = self.paths["BULK_NET"]
+        resp = dcnm_send(self.module, method, bulk_path, json.dumps(self.diff_create))
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "create")
+        if fail:
+            if is_rollback:
+                self.failed_to_rollback = True
+                return
+            self.failure(resp)
 
     def push_to_remote_attach(self, path, is_rollback=False):
 
@@ -1295,15 +1308,29 @@ class DcnmNetworkv2:
             valid_net, invalid_params = validate_list_of_dicts(
                 self.config, net_static_spec
             )
+
+            if state == "deleted" or state == "query":
+                if invalid_params:
+                    msg = "Invalid parameters in playbook: {0}".format(
+                        "\n".join(invalid_params)
+                    )
+                    self.module.fail_json(msg=msg)
+                self.validated = valid_net
+                return
+
             for net in valid_net:
                 att_present=False
                 if self.is_ms_fabric:
                     template_name = net.get("net_extension_template", False)
                 else:
-                    template_name = net.get("net_template", False) 
-                path = self.paths["TEMPLATE_WITH_NAME"].format(template_name)
-                net_dyn_spec = build_arg_spec(self.module, path)
-                
+                    template_name = net.get("net_template", False)
+                if self.dyn_arg_spec.get(template_name):
+                    net_dyn_spec = self.dyn_arg_spec[template_name]
+                else:
+                    path = self.paths["TEMPLATE_WITH_NAME"].format(template_name)
+                    net_dyn_spec = build_arg_spec(self.module, path)
+                    self.dyn_arg_spec.update({template_name: net_dyn_spec})
+
                 if net.get("network_template_config"):
                     if net["network_template_config"][0].get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(
@@ -1368,7 +1395,52 @@ class DcnmNetworkv2:
         return fail, changed
     
     def failure(self, resp):
-        return
+
+        # # Donot Rollback for Multi-site fabrics
+        # if self.is_ms_fabric:
+        #     self.failed_to_rollback = True
+        #     self.module.fail_json(msg=resp)
+        #     return
+
+        # # Implementing a per task rollback logic here so that we rollback DCNM to the have state
+        # # whenever there is a failure in any of the APIs.
+        # # The idea would be to run overridden state with want=have and have=dcnm_state
+        # self.want_create = self.have_create
+        # self.want_attach = self.have_attach
+        # self.want_deploy = self.have_deploy
+
+        # self.have_create = []
+        # self.have_attach = []
+        # self.have_deploy = {}
+        # self.get_have()
+        # self.get_diff_override()
+
+        # self.push_to_remote(True)
+
+        # if self.failed_to_rollback:
+        #     msg1 = "FAILED - Attempted rollback of the task has failed, may need manual intervention"
+        # else:
+        #     msg1 = "SUCCESS - Attempted rollback of the task has succeeded"
+
+        # res = copy.deepcopy(resp)
+        # if isinstance(res, str):
+        #     self.module.fail_json(msg=res)
+
+        # res.update({"ROLLBACK_RESULT": msg1})
+
+        # if not resp.get("DATA"):
+        #     data = copy.deepcopy(resp.get("DATA"))
+        #     if data.get("stackTrace"):
+        #         data.update(
+        #             {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
+        #         )
+        #         res.update({"DATA": data})
+
+        # if self.module._verbosity >= 5:
+        #     self.module.fail_json(msg=res)
+
+        self.module.fail_json(msg=resp)
+
 
 def main():
     """main entry point for module execution"""
@@ -1396,7 +1468,6 @@ def main():
     dcnm_netv2.validate_input()
     dcnm_netv2.get_have()
     dcnm_netv2.get_want()
-
 
     warn_msg = None
 

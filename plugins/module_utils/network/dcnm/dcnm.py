@@ -23,6 +23,17 @@ import sys
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
+import datetime
+import inspect
+
+def log(msg):
+    with open('/tmp/netv2.log', 'a') as of:
+        callerframerecord = inspect.stack()[1]
+        frame = callerframerecord[0]
+        info = inspect.getframeinfo(frame)
+        d = datetime.datetime.now().replace(microsecond=0).isoformat()
+        of.write("---- %s ---- %s@%s ---- %s \n" % (d, info.lineno, info.function, msg))
+
 
 def validate_ip_address_format(type, item, invalid_params):
 
@@ -88,10 +99,10 @@ def validate_list_of_dicts(param_list, spec, module=None):
                 if type == "str" or type == "string" or type == "string[]":
                     item = v.check_type_str(item)
                     if spec[param].get("length_max"):
-                        if 1 <= len(item) <= spec[param].get("length_max"):
+                        if 1 <= len(item) <= int(spec[param].get("length_max")):
                             pass
                         elif param == "vrf_name" and (
-                            len(item) <= spec[param].get("length_max")
+                            len(item) <= int(spec[param].get("length_max"))
                         ):
                             pass
                         else:
@@ -105,9 +116,9 @@ def validate_list_of_dicts(param_list, spec, module=None):
                     item = v.check_type_int(item)
                     min_value = 1
                     if spec[param].get("range_min") is not None:
-                        min_value = spec[param].get("range_min")
+                        min_value = int(spec[param].get("range_min"))
                     if spec[param].get("range_max"):
-                        if min_value <= item <= spec[param].get("range_max"):
+                        if min_value <= item <= int(spec[param].get("range_max")):
                             pass
                         else:
                             invalid_params.append(
@@ -549,8 +560,8 @@ def build_arg_spec(module, path):
                     name = i[key]
                 if key == "parameterType":
                     type = i[key]
-                # if key ==  "defaultValue":
-                #     default = i[key]
+                #if key ==  "defaultValue":
+                #    default = i[key]
                 if key == "optional":
                     required = not i[key]
                 if key == "annotations":
@@ -586,6 +597,8 @@ def build_arg_spec(module, path):
                 if reqcode:
                     required = False
                 vars()[name] = dict(type=type, required=required)
+                if type == "stuctureArray":
+                    vars()[name].update({"element": "dict"})
                 if default:
                     vars()[name].update({"default": default})
                 else:
@@ -624,8 +637,8 @@ def get_diff (have, want):
             found = False
             for ha in have:
                 #update_param = False
+                match = False
                 if key_list:
-                    match = False
                     for key in key_list:
                         if wa[key] == ha[key]:
                             match = True
@@ -651,6 +664,7 @@ def get_diff (have, want):
                                 needs_update = True
                     if needs_update:
                         diff_create_update.append(wa)
+                    break
             if not found:
                 diff_create.append(wa)
 
@@ -673,24 +687,25 @@ def get_diff (have, want):
                     match = False
         else:
             match = True
-            if match:
-                diff_not_w_in_h = {}
-                found = True
-                wa_keys = list(want.keys())
-                needs_update = False
-                for wkey in wa_keys:
-                    if wkey == "d_key":
-                        continue
-                    if str(have[wkey]) != str(want[wkey]):
-                        if isinstance(have[wkey], dict):
-                            nest_create, nest_create_update, nest_diff_not_w_in_h = get_diff(have[wkey], want[wkey])
-                            if nest_create or nest_create_update:
-                                needs_update = True
-                        else:
+
+        if match:
+            diff_not_w_in_h = {}
+            found = True
+            wa_keys = list(want.keys())
+            needs_update = False
+            for wkey in wa_keys:
+                if wkey == "d_key":
+                    continue
+                if str(have[wkey]) != str(want[wkey]):
+                    if isinstance(have[wkey], dict):
+                        nest_create, nest_create_update, nest_diff_not_w_in_h = get_diff(have[wkey], want[wkey])
+                        if nest_create or nest_create_update:
                             needs_update = True
-                if needs_update:
-                        diff_create_update.update(want)
-            if not found:
-                diff_create.update(want)
+                    else:
+                        needs_update = True
+            if needs_update:
+                    diff_create_update.update(want)
+        if not found:
+            diff_create.update(want)
 
         return diff_create, diff_create_update, diff_not_w_in_h
