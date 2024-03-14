@@ -216,46 +216,43 @@ from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
-    MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
-    ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.params_spec import \
-    ParamsSpec
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
-    ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
-    FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import (
-    ApiEndpoints
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import (
-    VerifyFabricParams,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
+    FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
     FabricCreateBulk
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
+    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+    FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import \
     FabricTaskResult
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
+    FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
-)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import \
+    VerifyFabricParams
+
+# from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+#     MergeDicts
+# from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
+#     ParamsMergeDefaults
+# from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.params_spec import \
+#     ParamsSpec
+# from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+#     ParamsValidate
+
 
 def json_pretty(msg):
     """
     Return a pretty-printed JSON string for logging messages
     """
     return json.dumps(msg, indent=4, sort_keys=True)
+
 
 class TaskCommon(FabricCommon):
     def __init__(self, ansible_module):
@@ -362,7 +359,8 @@ class TaskCommon(FabricCommon):
 class QueryTask(TaskCommon):
     """
     Query state for FabricVxlanTask
-    """    
+    """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
@@ -391,10 +389,12 @@ class QueryTask(TaskCommon):
         instance.commit()
         self.update_diff_and_response(instance)
 
+
 class DeletedTask(TaskCommon):
     """
     deleted state for FabricVxlanTask
-    """    
+    """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
@@ -521,6 +521,7 @@ class MergedTask(TaskCommon):
         self.fabric_update.payloads = self.need_update
         self.fabric_update.commit()
         self.update_diff_and_response(self.fabric_update)
+
 
 def main():
     """main entry point for module execution"""
