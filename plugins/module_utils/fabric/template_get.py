@@ -27,8 +27,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
-    Results
 
 
 class TemplateGet:
@@ -47,19 +45,18 @@ class TemplateGet:
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         self.ansible_module = ansible_module
-        self.state = self.ansible_module.params["state"]
+        self.state = self.ansible_module.params.get("state")
         self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED Template(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg = "ENTERED TemplateGet(): "
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"state: {self.state}"
         self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
-        self._results = Results(self.ansible_module)
         self.path = None
         self.verb = None
 
@@ -74,6 +71,7 @@ class TemplateGet:
         self._properties = {}
         self._properties["template_name"] = None
         self._properties["template"] = None
+        self._properties["results"] = None
 
     @property
     def template(self):
@@ -139,9 +137,21 @@ class TemplateGet:
             msg = f"{self.class_name}.{method_name}: "
             msg = "Exiting. Failed to retrieve template."
             self.log.error(msg)
-            self.ansible_module.fail_json(msg, **self._results.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self.template = {}
         self.template["parameters"] = self.response_current.get("DATA", {}).get(
             "parameters", []
         )
+
+    @property
+    def results(self):
+        """
+        An instance of the Results class.
+        """
+        return self.properties["results"]
+
+    @results.setter
+    def results(self, value):
+        method_name = inspect.stack()[0][3]
+        self.properties["results"] = value

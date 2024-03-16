@@ -114,37 +114,28 @@ class FabricQuery(FabricCommon):
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self._get_fabrics_to_query()
 
         msg = f"self._fabrics_to_query: {self._fabrics_to_query}"
         self.log.debug(msg)
         if len(self._fabrics_to_query) == 0:
-            self.changed = False
-            self.failed = False
+            self.results.changed = False
+            self.results.failed = False
             return
 
         msg = f"Populating diff {self._fabrics_to_query}"
         self.log.debug(msg)
 
         for fabric_name in self._fabrics_to_query:
-            if fabric_name in self._fabric_details.all_data:
-                fabric = copy.deepcopy(self._fabric_details.all_data[fabric_name])
-                fabric["action"] = self.action
-                self.diff = fabric
-        self.response = copy.deepcopy(self._fabric_details.response_current)
-        self.response_current = copy.deepcopy(self._fabric_details.response_current)
-        self.result = copy.deepcopy(self._fabric_details.result_current)
-        self.result_current = copy.deepcopy(self._fabric_details.result_current)
+            if fabric_name not in self._fabric_details.all_data:
+                continue
+            fabric = copy.deepcopy(self._fabric_details.all_data[fabric_name])
+            fabric["action"] = self.action
+            self.results.diff_ok.append(fabric)
+        self.results.response_ok.append(copy.deepcopy(self._fabric_details.response_current))
+        self.results.result_ok.append(copy.deepcopy(self._fabric_details.result_current))
 
-        msg = f"self.diff: {self.diff}"
-        self.log.debug(msg)
-        msg = f"self.response: {self.response}"
-        self.log.debug(msg)
-        msg = f"self.result: {self.result}"
-        self.log.debug(msg)
-        msg = f"self.response_current: {self.response_current}"
-        self.log.debug(msg)
-        msg = f"self.result_current: {self.result_current}"
-        self.log.debug(msg)
+        self.results.action = self.action
+        self.results.register_task_results()

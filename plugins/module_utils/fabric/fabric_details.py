@@ -49,6 +49,10 @@ class FabricDetails(FabricCommon):
         self.data = {}
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
+        # We always want to get the controller's current fabric state
+        # so we set check_mode to False here so the request will be
+        # sent to the controller
+        self.rest_send.check_mode = False
 
         self._init_properties()
 
@@ -70,7 +74,9 @@ class FabricDetails(FabricCommon):
         self.rest_send.verb = endpoint.get("verb")
         self.rest_send.commit()
         self.data = {}
-        for item in self.rest_send.response_current["DATA"]:
+        if self.rest_send.response_current.get("DATA") is None:
+            return
+        for item in self.rest_send.response_current.get("DATA"):
             self.data[item["fabricName"]] = item
         self.response_current = self.rest_send.response_current
         self.response = self.rest_send.response_current

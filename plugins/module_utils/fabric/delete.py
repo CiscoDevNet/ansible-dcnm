@@ -18,7 +18,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
@@ -52,11 +51,9 @@ class FabricDelete(FabricCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
+        self.action = "delete"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED FabricDelete(): "
-        msg += f"state: {self.state}"
-        self.log.debug(msg)
 
         self._fabrics_to_delete = []
         self._build_properties()
@@ -73,15 +70,11 @@ class FabricDelete(FabricCommon):
         self.path = None
         self.verb = None
 
-        self.action = "delete"
-        self.changed = False
-        self.failed = False
-        self.response_ok = []
-        self.result_ok = []
-        self.diff_ok = []
-        self.response_nok = []
-        self.result_nok = []
-        self.diff_nok = []
+        msg = "ENTERED FabricDelete(): "
+        msg += f"action: {self.action}, "
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"state: {self.state}"
+        self.log.debug(msg)
 
     def _build_properties(self):
         """
@@ -137,10 +130,7 @@ class FabricDelete(FabricCommon):
         return True if the fabric can be deleted
         return False otherwise
         """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "ENTERED"
-        self.log.debug(msg)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._fabric_summary.fabric_name = fabric_name
         self._fabric_summary.refresh()
         if self._fabric_summary.fabric_is_empty is False:
@@ -156,7 +146,7 @@ class FabricDelete(FabricCommon):
         try:
             endpoint = self._endpoints.fabric_delete
         except ValueError as error:
-            self.ansible_module.fail_json(error, **self.failed_result)
+            self.ansible_module.fail_json(error, **self.results.failed_result)
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
 
@@ -164,11 +154,11 @@ class FabricDelete(FabricCommon):
         """
         validate the parameters for commit
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     def commit(self):
         """
@@ -181,14 +171,11 @@ class FabricDelete(FabricCommon):
 
         msg = f"self._fabrics_to_delete: {self._fabrics_to_delete}"
         self.log.debug(msg)
-        if len(self._fabrics_to_delete) == 0:
-            self.changed = False
-            self.failed = False
-            return
-
-        self._send_requests()
-        self._process_responses()
-
+        if len(self._fabrics_to_delete) != 0:
+            self._send_requests()
+        self.results.action = "delete"
+        self.results.register_task_results()
+            
     def _send_requests(self):
         """
         If check_mode is False, send the requests to the controller
@@ -204,13 +191,6 @@ class FabricDelete(FabricCommon):
         - self.diff_nok     : list of payloads for which the request failed
         """
         self.rest_send.check_mode = self.check_mode
-
-        self.response_ok = []
-        self.result_ok = []
-        self.diff_ok = []
-        self.response_nok = []
-        self.result_nok = []
-        self.diff_nok = []
 
         # We don't want RestSend to retry on errors since the likelihood of a
         # timeout error when deleting a fabric is low, and there are cases
@@ -233,9 +213,10 @@ class FabricDelete(FabricCommon):
         self.rest_send.commit()
 
         if self.rest_send.result_current["success"]:
-            self.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-            self.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-            self.diff_ok.append({"fabric_name": fabric_name})
+            self.results.changed = True
+            self.results.response_ok.append(copy.deepcopy(self.rest_send.response_current))
+            self.results.result_ok.append(copy.deepcopy(self.rest_send.result_current))
+            self.results.diff_ok.append({"fabric_name": fabric_name})
         else:
             # Improve the controller's error message to include the fabric_name
             response_current = copy.deepcopy(self.rest_send.response_current)
@@ -243,84 +224,6 @@ class FabricDelete(FabricCommon):
                 if "Failed to delete the fabric." in response_current["DATA"]:
                     msg = f"Failed to delete fabric {fabric_name}."
                     response_current["DATA"] = msg
-            self.response_nok.append(copy.deepcopy(response_current))
-            self.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-            self.diff_nok.append({"fabric_name": fabric_name})
-
-    def _process_responses(self):
-        method_name = inspect.stack()[0][3]
-
-        # All requests succeeded, set changed to True and return
-        if len(self.result_nok) == 0:
-            self.changed = True
-            for diff in self.diff_ok:
-                diff["action"] = self.action
-                self.diff = copy.deepcopy(diff)
-            for result in self.result_ok:
-                self.result = copy.deepcopy(result)
-                self.result_current = copy.deepcopy(result)
-            for response in self.response_ok:
-                self.response = copy.deepcopy(response)
-                self.response_current = copy.deepcopy(response)
-            return
-
-        # At least one request failed.
-        # Set failed to true, set changed appropriately,
-        # build response/result/diff, and call fail_json
-        self.failed = True
-        self.changed = False
-        # At least one request succeeded, so set changed to True
-        if self.result_ok != 0:
-            self.changed = True
-
-        # Provide the results for all (failed and successful) requests
-
-        # Add an "OK" result to the response(s) that succeeded
-        for diff in self.diff_ok:
-            diff["action"] = self.action
-            diff["result"] = "OK"
-            self.diff = copy.deepcopy(diff)
-        for result in self.result_ok:
-            result["result"] = "OK"
-            self.result = copy.deepcopy(result)
-            self.result_current = copy.deepcopy(result)
-        for response in self.response_ok:
-            response["result"] = "OK"
-            self.response = copy.deepcopy(response)
-            self.response_current = copy.deepcopy(response)
-
-        # Add a "FAILED" result to the response(s) that failed
-        for diff in self.diff_nok:
-            diff["action"] = self.action
-            diff["result"] = "FAILED"
-            self.diff = copy.deepcopy(diff)
-        for result in self.result_nok:
-            result["result"] = "FAILED"
-            self.result = copy.deepcopy(result)
-            self.result_current = copy.deepcopy(result)
-        for response in self.response_nok:
-            response["result"] = "FAILED"
-            self.response = copy.deepcopy(response)
-            self.response_current = copy.deepcopy(response)
-
-        result = {}
-        result["diff"] = {}
-        result["response"] = {}
-        result["result"] = {}
-        result["failed"] = self.failed
-        result["changed"] = self.changed
-        result["diff"]["OK"] = self.diff_ok
-        result["response"]["OK"] = self.response_ok
-        result["result"]["OK"] = self.result_ok
-        result["diff"]["FAILED"] = self.diff_nok
-        result["response"]["FAILED"] = self.response_nok
-        result["result"]["FAILED"] = self.result_nok
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Bad response(s) during fabric {self.action}. "
-        msg += f"result: {json.dumps(result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Bad response(s) during fabric {self.action}. "
-        self.ansible_module.fail_json(msg, **result)
+            self.results.response_nok.append(copy.deepcopy(response_current))
+            self.results.result_nok.append(copy.deepcopy(self.rest_send.result_current))
+            self.results.diff_nok.append({"fabric_name": fabric_name})
