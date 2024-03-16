@@ -370,7 +370,39 @@ class FabricUpdateCommon(FabricCommon):
 
 class FabricUpdateBulk(FabricUpdateCommon):
     """
-    Create fabrics in bulk.  Skip any fabrics that already exist.
+    Update fabrics in bulk.
+
+    Usage:
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
+        FabricUpdateBulk
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+        Results
+
+    payloads = [ 
+        { "FABRIC_NAME": "fabric1", "BGP_AS": 65000, "DEPLOY": True },
+        { "FABRIC_NAME": "fabric2", "BGP_AS": 65001, "DEPLOY: False }
+    ]
+    results = Results()
+    instance = FabricUpdateBulk(ansible_module)
+    instance.payloads = payloads
+    instance.results = results
+    instance.commit()
+    results.build_final_result()
+
+    # diff contains a dictionary of payloads that succeeded and/or failed
+    diff = results.diff
+    # result contains the result(s) of the fabric create request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Fabric update(s) failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
     """
 
     def __init__(self, ansible_module):
@@ -391,8 +423,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
 
     def commit(self):
         """
-        create fabrics.  Skip any fabrics that already exist
-        on the controller,
+        Update fabrics.
         """
         method_name = inspect.stack()[0][3]
         if self.payloads is None:
@@ -410,7 +441,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
 
 class FabricUpdate(FabricUpdateCommon):
     """
-    Update a VXLAN fabric on the controller.
+    Update a fabric on the controller.
     """
 
     def __init__(self, ansible_module):

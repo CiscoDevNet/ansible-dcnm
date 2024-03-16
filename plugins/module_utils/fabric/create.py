@@ -232,6 +232,38 @@ class FabricCreateCommon(FabricCommon):
 class FabricCreateBulk(FabricCreateCommon):
     """
     Create fabrics in bulk.  Skip any fabrics that already exist.
+
+    Usage:
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
+        FabricCreateBulk
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+        Results
+
+    payloads = [ 
+        { "FABRIC_NAME": "fabric1", "BGP_AS": 65000 },
+        { "FABRIC_NAME": "fabric2", "BGP_AS": 65001 }
+    ]
+    results = Results()
+    instance = FabricCreateBulk(ansible_module)
+    instance.payloads = payloads
+    instance.results = results
+    instance.commit()
+    results.build_final_result()
+
+    # diff contains a dictionary of payloads that succeeded and/or failed
+    diff = results.diff
+    # result contains the result(s) of the fabric create request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Fabric create failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
     """
 
     def __init__(self, ansible_module):

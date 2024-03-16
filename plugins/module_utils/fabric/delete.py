@@ -40,12 +40,31 @@ class FabricDelete(FabricCommon):
 
     Usage:
 
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
+        FabricDelete
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+        Results
+
     instance = FabricDelete(ansible_module)
     instance.fabric_names = ["FABRIC_1", "FABRIC_2"]
+    instance.results = self.results
     instance.commit()
-    diff = instance.diff # contains list of deleted fabrics
-    result = instance.result # contains the result(s) of the delete request
-    response = instance.response # contains the response(s) from the controller
+    results.build_final_result()
+
+    # diff contains a dictionary of changes made
+    diff = results.diff
+    # result contains the result(s) of the delete request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Query failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
     """
 
     def __init__(self, ansible_module):

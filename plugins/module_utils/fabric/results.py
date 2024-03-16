@@ -29,14 +29,16 @@ class Results:
     Collect results across tasks.
 
     Provides a mechanism to collect results across tasks.  The task classes
-    must do the following:
+    must support this Results class.  Specifically, they must implement the
+    following:
 
     1.  Accept an instantiation of Results
         -   Typically a class property is used for this
     2.  Populate the Results instance with the results of the task
         -   Typically done by transferring RestSend's responses to the
             Results instance
-    3. Register the results of the task with Results.register_task_results()
+    3. Register the results of the task with Results, using:
+        -   Results.register_task_results()
         -   Typically done after the task is complete
 
     Results should be instantiated in the main Ansible Task class and passed
@@ -118,24 +120,22 @@ class Results:
     ansible_module.exit_json(**task.results.final_result)
 
 
-    # output of the above print() will be a dict with the following structure
-    # specific keys within the diff and response dictionaries will vary depending
-    # on the obj properties
+    # results.final_result will be a dict with the following structure
+
     {
         "changed": True, # or False
+        "failed": True,  # or False
         "diff": {
-            "deleted": [<list of dict representing changes for deleted state>],
-            "merged": [<list of dict representing changes for merged state>],
-            "overridden": [<list of dict representing changes for overridden state>],
-            "query": [<list of dict representing changes for query state>],
-            "replaced": [<list of dict representing changes for replaced state>]
+            "OK": [<list of dict containing changes that succeeded>],
+            "FAILED": [<list of dict containing changes that failed>]
         }
         "response": {
-            "deleted": [<list of dict representing responses from the controller>],
-            "merged": [<list of dict representing responses from the controller>],
-            "overridden": [<list of dict representing responses from the controller>],
-            "query": [<list of dict representing responses from the controller>],
-            "replaced": [<list of dict representing responses from the controller>]
+            "OK": [<list of dict containing successful controller responses>],
+            "FAILED": [<list of dict containing failed controller responses>]
+        }
+        "result": {
+            "OK": [<list of dict containing successful controller responses>],
+            "FAILED": [<list of dict containing failed controller responses>]
         }
     }
     """

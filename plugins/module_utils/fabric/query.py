@@ -31,13 +31,31 @@ class FabricQuery(FabricCommon):
     Query fabrics
 
     Usage:
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import Results
 
+    results = Results()
     instance = FabricQuery(ansible_module)
     instance.fabric_names = ["FABRIC_1", "FABRIC_2"]
+    instance.results = results
     instance.commit()
-    diff = instance.diff # contains the fabric information
-    result = instance.result # contains the result(s) of the query
-    response = instance.response # contains the response(s) from the controller
+    results.build_final_result()
+
+    # diff contains a dictionary of fabric details for each fabric
+    # in instance.fabric_names
+    diff = results.diff
+    # result contains the result(s) of the query request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Query failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
     """
 
     def __init__(self, ansible_module):
@@ -102,9 +120,21 @@ class FabricQuery(FabricCommon):
         self._fabric_details.refresh()
 
         self._fabrics_to_query = []
+
+        if self._fabric_details.result_current.get("success") is False:
+            self.results.failed = True
+            self.results.changed = False
+            self.results.response_nok.append(copy.deepcopy(self._fabric_details.response_current))
+            self.results.result_nok.append(copy.deepcopy(self._fabric_details.result_current))
+            return
+
         for fabric_name in self.fabric_names:
             if fabric_name in self._fabric_details.all_data:
                 self._fabrics_to_query.append(fabric_name)
+
+        if len(self._fabrics_to_query) == 0:
+            self.results.changed = False
+            self.results.failed = False
 
     def commit(self):
         """
@@ -121,16 +151,14 @@ class FabricQuery(FabricCommon):
         msg = f"self._fabrics_to_query: {self._fabrics_to_query}"
         self.log.debug(msg)
         if len(self._fabrics_to_query) == 0:
-            self.results.changed = False
-            self.results.failed = False
+            # Don't modify results.changed or results.failed here.
+            # These are set in _get_fabrics_to_query()
             return
 
         msg = f"Populating diff {self._fabrics_to_query}"
         self.log.debug(msg)
 
         for fabric_name in self._fabrics_to_query:
-            if fabric_name not in self._fabric_details.all_data:
-                continue
             fabric = copy.deepcopy(self._fabric_details.all_data[fabric_name])
             fabric["action"] = self.action
             self.results.diff_ok.append(fabric)
