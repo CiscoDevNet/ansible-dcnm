@@ -403,7 +403,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
     Usage:
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
         FabricUpdateBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
         Results
 
     payloads = [ 

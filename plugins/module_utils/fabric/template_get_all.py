@@ -27,7 +27,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 
 

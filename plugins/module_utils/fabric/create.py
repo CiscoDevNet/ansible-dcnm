@@ -237,7 +237,7 @@ class FabricCreateBulk(FabricCreateCommon):
     Usage:
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
         FabricCreateBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
         Results
 
     payloads = [ 

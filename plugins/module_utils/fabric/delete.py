@@ -42,7 +42,7 @@ class FabricDelete(FabricCommon):
 
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
         FabricDelete
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
         Results
 
     instance = FabricDelete(ansible_module)

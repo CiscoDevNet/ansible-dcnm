@@ -32,7 +32,7 @@ class FabricQuery(FabricCommon):
 
     Usage:
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
 
     results = Results()
     instance = FabricQuery(ansible_module)
