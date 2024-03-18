@@ -192,8 +192,15 @@ class FabricDelete(FabricCommon):
         self.log.debug(msg)
         if len(self._fabrics_to_delete) != 0:
             self._send_requests()
-        self.results.action = "delete"
-        self.results.register_task_results()
+        else:
+            self.results.action = self.action
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.diff_current = {}
+            self.results.result_current = {"success": True, "changed": False}
+            msg = "No fabrics to delete"
+            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+            self.log.debug(msg)
             
     def _send_requests(self):
         """
@@ -230,19 +237,30 @@ class FabricDelete(FabricCommon):
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
         self.rest_send.commit()
+        self.register_result(fabric_name)
 
+    def register_result(self, fabric_name):
+        """
+        Register the result of the fabric create request
+        """
         if self.rest_send.result_current["success"]:
-            self.results.changed = True
-            self.results.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-            self.results.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-            self.results.diff_ok.append({"fabric_name": fabric_name})
+            self.results.diff_current = {"fabric_name": fabric_name}
+            # need this to match the else clause below since we
+            # pass response_current (altered or not) to the results object
+            response_current = copy.deepcopy(self.rest_send.response_current)
         else:
+            self.results.diff_current = {}
             # Improve the controller's error message to include the fabric_name
             response_current = copy.deepcopy(self.rest_send.response_current)
             if "DATA" in response_current:
                 if "Failed to delete the fabric." in response_current["DATA"]:
                     msg = f"Failed to delete fabric {fabric_name}."
                     response_current["DATA"] = msg
-            self.results.response_nok.append(copy.deepcopy(response_current))
-            self.results.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-            self.results.diff_nok.append({"fabric_name": fabric_name})
+
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.response_current = response_current
+        self.results.result_current = self.rest_send.result_current
+
+        self.results.register_task_result()

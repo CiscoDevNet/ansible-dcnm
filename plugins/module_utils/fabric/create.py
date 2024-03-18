@@ -195,15 +195,16 @@ class FabricCreateCommon(FabricCommon):
             self.rest_send.payload = payload
             self.rest_send.commit()
 
-            if self.rest_send.result_current["success"]:
-                self.results.changed = True
-                self.results.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-                self.results.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-                self.results.diff_ok.append(copy.deepcopy(payload))
+            if self.rest_send.result_current["success"] is False:
+                self.results.diff_current = {}
             else:
-                self.results.response_nok.append(copy.deepcopy(self.rest_send.response_current))
-                self.results.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-                self.results.diff_nok.append(copy.deepcopy(payload))
+                self.results.diff_current = copy.deepcopy(payload)
+            self.results.action = self.action
+            self.results.state = self.state
+            self.results.check_mode = self.check_mode
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
 
     @property
     def payloads(self):
@@ -298,9 +299,6 @@ class FabricCreateBulk(FabricCreateCommon):
             return
         self._fixup_payloads_to_commit()
         self._send_payloads()
-        self.results.action = self.action
-        self.results.register_task_results()
-
 
 class FabricCreate(FabricCommon):
     """
@@ -332,7 +330,7 @@ class FabricCreate(FabricCommon):
         if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Exiting. Missing mandatory property: payload"
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         if len(self.payload) == 0:
             self.ansible_module.exit_json(**self.results.failed_result)
@@ -341,14 +339,14 @@ class FabricCreate(FabricCommon):
         if fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload is missing mandatory FABRIC_NAME key."
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self.endpoints.fabric_name = fabric_name
         self.endpoints.template_name = "Easy_Fabric"
         try:
             endpoint = self.endpoints.fabric_create
         except ValueError as error:
-            self.ansible_module.fail_json(error)
+            self.ansible_module.fail_json(error, **self.results.failed_result)
 
         path = endpoint["path"]
         verb = endpoint["verb"]
@@ -358,16 +356,23 @@ class FabricCreate(FabricCommon):
         self.rest_send.payload = self.payload
         self.rest_send.commit()
 
-        self.results.result_current = self.rest_send.result_current
-        self.results.result = self.rest_send.result_current
-        self.results.response_current = self.rest_send.response_current
-        self.results.response = self.rest_send.response_current
+        self.register_result()
 
-        if self.results.response_current["RETURN_CODE"] == 200:
-            self.results.diff = self.payload
+    def register_result(self):
+        """
+        Register the result of the fabric create request
+        """
+        if self.rest_send.result_current["success"]:
+            self.results.diff_current = self.payload
+        else:
+            self.results.diff_current = {}
 
         self.results.action = self.action
-        self.results.register_task_results()
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.result_current = self.rest_send.result_current
+        self.results.response_current = self.rest_send.response_current
+        self.results.register_task_result()
 
     @property
     def payload(self):

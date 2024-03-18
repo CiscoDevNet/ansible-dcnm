@@ -50,7 +50,7 @@ class TemplateParseEasyFabric(TemplateParseCommon):
         This method builds a dictionary which maps between NDFC's expected
         parameter names and the corresponding playbook names.
         e.g.:
-        DEAFULT_QUEUING_POLICY_CLOUDSCALE -> default_queuing_policy_cloudscale
+        DEAFULT_QUEUING_POLICY_CLOUDSCALE -> DEFAULT_QUEUING_POLICY_CLOUDSCALE
 
         The dictionary excludes hidden and internal parameters.
         """
@@ -61,22 +61,22 @@ class TemplateParseEasyFabric(TemplateParseCommon):
         re_uppercase_dunder = "^[A-Z0-9_]+$"
         self.translation = {}
         typo_keys = {
-            "DEAFULT_QUEUING_POLICY_CLOUDSCALE": "default_queuing_policy_cloudscale",
-            "DEAFULT_QUEUING_POLICY_OTHER": "default_queuing_policy_other",
-            "DEAFULT_QUEUING_POLICY_R_SERIES": "default_queuing_policy_r_series",
+            "DEAFULT_QUEUING_POLICY_CLOUDSCALE": "DEFAULT_QUEUING_POLICY_CLOUDSCALE",
+            "DEAFULT_QUEUING_POLICY_OTHER": "DEFAULT_QUEUING_POLICY_OTHER",
+            "DEAFULT_QUEUING_POLICY_R_SERIES": "DEFAULT_QUEUING_POLICY_R_SERIES",
         }
         camel_keys = {
-            "enableRealTimeBackup": "enable_real_time_backup",
-            "enableScheduledBackup": "enable_scheduled_backup",
-            "scheduledTime": "scheduled_time",
+            "enableRealTimeBackup": "ENABLE_REAL_TIME_BACKUP",
+            "enableScheduledBackup": "ENABLE_SCHEDULED_BACKUP",
+            "scheduledTime": "SCHEDULED_TIME",
         }
         other_keys = {
-            "VPC_ENABLE_IPv6_ND_SYNC": "vpc_enable_ipv6_nd_sync",
-            "default_vrf": "default_vrf",
-            "default_network": "default_network",
-            "vrf_extension_template": "vrf_extension_template",
-            "network_extension_template": "network_extension_template",
-            "default_pvlan_sec_network": "default_pvlan_sec_network",
+            "VPC_ENABLE_IPv6_ND_SYNC": "VPC_ENABLE_IPV6_ND_SYNC",
+            "default_vrf": "DEFAULT_VRF",
+            "default_network": "DEFAULT_NETWORK",
+            "vrf_extension_template": "VRF_EXTENSION_TEMPLATE",
+            "network_extension_template": "NETWORK_EXTENSION_TEMPLATE",
+            "default_pvlan_sec_network": "DEFAULT_PVLAN_SEC_NETWORK",
         }
         for item in self.template.get("parameters"):
             if self.is_internal(item):
@@ -95,8 +95,7 @@ class TemplateParseEasyFabric(TemplateParseCommon):
             if name in other_keys:
                 self.translation[name] = other_keys[name]
                 continue
-            if re.search(re_uppercase_dunder, name):
-                self.translation[name] = name.lower()
+            self.translation[name] = name.upper()
 
     def validate_base_prerequisites(self):
         """
@@ -200,14 +199,14 @@ class TemplateParseEasyFabric(TemplateParseCommon):
         Build the ruleset for the EasyFabric template, based on
         annotations.IsShow in each parameter dictionary.
 
-        The ruleset is keyed on parameter name, with values being set of
+        The ruleset is keyed on parameter name, with values being a set of
         rules that determine whether a given parameter is mandatory, based
         on the state of other parameters.
 
         Usage:
 
         template.build_ruleset()
-        parameter = "unnum_dhcp_end"
+        parameter = "UNNUM_DHCP_END"
         try:
             result = eval(template.ruleset[parameter])
         except:
@@ -222,7 +221,7 @@ class TemplateParseEasyFabric(TemplateParseCommon):
                 continue
             if self.is_hidden(item):
                 continue
-            if not item.get("name", None):
+            if item.get("name", None) is None:
                 continue
             name = self.translation.get(item["name"], None)
             if name is None:

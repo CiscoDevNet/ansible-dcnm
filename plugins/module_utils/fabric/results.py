@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
+import json
 import inspect
 import logging
 from typing import Any, Dict
@@ -158,9 +159,8 @@ class Results:
         self.response_nok = []
         self.result_nok = []
 
-        # Assign a unique sequence number to each diff to enable tracking
-        # of the order in which it was executed
-        self.diff_sequence_number = 0
+        # Assign a unique sequence number to each registered task
+        self.task_sequence_number = 0
 
         self.final_result = {}
         self._build_properties()
@@ -171,7 +171,9 @@ class Results:
         self.properties["changed"] = set()
         self.properties["check_mode"] = False
         self.properties["diff"] = []
+        self.properties["diff_current"] = {}
         self.properties["failed"] = set()
+        self.properties["metadata"] = []
         self.properties["response"] = []
         self.properties["response_current"] = {}
         self.properties["response_data"] = []
@@ -179,12 +181,13 @@ class Results:
         self.properties["result_current"] = {}
         self.properties["state"] = None
 
-    def get_diff_sequence_number(self) -> int:
+    def increment_task_sequence_number(self) -> None:
         """
-        Return a unique sequence number for the current result
+        Increment a unique task sequence number.
         """
-        self.diff_sequence_number += 1
-        return self.diff_sequence_number
+        self.task_sequence_number += 1
+        msg = f"self.task_sequence_number: {self.task_sequence_number}"
+        self.log.debug(msg)
 
     def did_anything_change(self) -> bool:
         """
@@ -197,107 +200,67 @@ class Results:
             return True
         return False
 
-    def register_task_results(self):
+    def register_task_result(self):
         """
-        Register a task's results
+        Register a task's result.
 
-        - self.response_ok  : list of controller responses associated with success result
-        - self.result_ok    : list of results where success is True
-        - self.diff_ok      : list of payloads for which the request succeeded
-        - self.response_nok : list of controller responses associated with failed result
-        - self.result_nok   : list of results where success is False
-        - self.diff_nok     : list of payloads for which the request failed
+        1.  Append result_current, response_current, diff_current and
+            metadata_current their respective lists (result, response, diff, 
+            and metadata)
+        2.  Set self.changed based on current_diff.
+            If current_diff is empty, it is assumed that no changes were made
+            and self.changed is set to False.  Else, self.changed is set to True.
+        3.  Set self.failed based on current_result.  If current_result["success"]
+            is True, self.failed is set to False.  Else, self.failed is set to True.
+        4.  Set self.metadata based on current_metadata.
+
+        - self.response  : list of controller responses
+        - self.result    : list of results returned by the handler
+        - self.diff      : list of diffs
+        - self.metadata  : list of metadata
         """
         method_name = inspect.stack()[0][3]
 
-        self.changed = self.did_anything_change()
-        # All requests succeeded, set changed to True and return
-        if len(self.result_nok) == 0:
+        if self.did_anything_change() is False:
+            self.changed = False
+        else:
+            self.changed = True
+
+        if self.result_current.get("success") is True:
             self.failed = False
         else:
             self.failed = True
+        self.increment_task_sequence_number()
+        self.metadata = self.metadata_current
+        self.response = self.response_current
+        self.result = self.result_current
+        self.diff = self.diff_current
 
-        # Provide the results for all (failed and successful) requests
-
-        # Add a sequence number, action, and "OK" result to the
-        # response(s) that succeeded
-        result_string = "OK"
-        for diff in self.diff_ok:
-            if diff.get("metadata") is None:
-                diff["metadata"] = {}
-                diff["metadata"]["action"] = self.action
-                diff["metadata"]["check_mode"] = self.check_mode
-                diff["metadata"]["sequence_number"] = self.get_diff_sequence_number()
-                diff["metadata"]["result"] = result_string
-            self.diff = copy.deepcopy(diff)
-        for result in self.result_ok:
-            if result.get("metadata") is None:
-                result["metadata"] = {}
-                result["metadata"]["action"] = self.action
-                result["metadata"]["check_mode"] = self.check_mode
-                result["metadata"]["result"] = result_string
-            self.result = copy.deepcopy(result)
-            self.result_current = copy.deepcopy(result)
-        for response in self.response_ok:
-            if response.get("metadata") is None:
-                response["metadata"] = {}
-                response["metadata"]["action"] = self.action
-                response["metadata"]["check_mode"] = self.check_mode
-                response["metadata"]["result"] = result_string
-            self.response = copy.deepcopy(response)
-            self.response_current = copy.deepcopy(response)
-
-        # Add a "FAILED" result to the response(s) that failed
-        result_string = "FAILED"
-        for diff in self.diff_nok:
-            if diff.get("metadata") is None:
-                diff["metadata"] = {}
-                diff["metadata"]["action"] = self.action
-                diff["metadata"]["check_mode"] = self.check_mode
-                diff["metadata"]["sequence_number"] = self.get_diff_sequence_number()
-                diff["metadata"]["result"] = result_string
-            self.diff = copy.deepcopy(diff)
-        for result in self.result_nok:
-            if result.get("metadata") is None:
-                result["metadata"] = {}
-                result["metadata"]["action"] = self.action
-                result["metadata"]["check_mode"] = self.check_mode
-                result["metadata"]["result"] = result_string
-            self.result = copy.deepcopy(result)
-            self.result_current = copy.deepcopy(result)
-        for response in self.response_nok:
-            if response.get("metadata") is None:
-                response["metadata"] = {}
-                response["metadata"]["action"] = self.action
-                response["metadata"]["check_mode"] = self.check_mode
-                response["metadata"]["result"] = result_string
-            self.response = copy.deepcopy(response)
-            self.response_current = copy.deepcopy(response)
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.metadata: {json.dumps(self.metadata, indent=4, sort_keys=True)}, "
+        self.log.debug(msg)
 
     def build_final_result(self):
         """
         Build the final result
         """
-        self.final_result = {}
-        self.final_result["diff"] = {}
-        self.final_result["response"] = {}
-        self.final_result["result"] = {}
+        msg = f"self.changed: {self.changed}, "
+        msg = f"self.failed: {self.failed}, "
+        self.log.debug(msg)
+
         if True in self.failed:
             self.final_result["failed"] = True
         else:
             self.final_result["failed"] = False
-        msg = f"self.changed: {self.changed}"
-        self.log.debug(msg)
+
         if True in self.changed:
             self.final_result["changed"] = True
         else:
             self.final_result["changed"] = False
-        self.final_result["diff"]["OK"] = self.diff_ok
-        self.final_result["response"]["OK"] = self.response_ok
-        self.final_result["result"]["OK"] = self.result_ok
-        self.final_result["diff"]["FAILED"] = self.diff_nok
-        self.final_result["response"]["FAILED"] = self.response_nok
-        self.final_result["result"]["FAILED"] = self.result_nok
+        self.final_result["diff"] = self.diff
+        self.final_result["response"] = self.response
+        self.final_result["result"] = self.result
+        self.final_result["metadata"] = self.metadata
 
     @property
     def failed_result(self) -> Dict[str, Any]:
@@ -307,12 +270,9 @@ class Results:
         result = {}
         result["changed"] = False
         result["failed"] = True
-        result["diff"] = {}
-        result["response"] = {}
-        for key in self.diff_keys:
-            result["diff"][key] = []
-        for key in self.response_keys:
-            result["response"][key] = []
+        result["diff"] = [{}]
+        result["response"] = [{}]
+        result["result"] = [{}]
         return result
 
 
@@ -321,7 +281,7 @@ class Results:
         """
         Added to results to indicate the action that was taken
         """
-        return self.properties.get("action")
+        return self.properties["action"]
 
     @action.setter
     def action(self, value):
@@ -359,7 +319,7 @@ class Results:
         """
         check_mode
         """
-        return self.properties.get("check_mode")
+        return self.properties["check_mode"]
 
     @check_mode.setter
     def check_mode(self, value):
@@ -387,7 +347,29 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.diff must be a dict. Got {value}"
             raise ValueError(msg)
-        self.properties["diff"].append(value)
+        value["sequence_number"] = self.task_sequence_number
+        self.properties["diff"].append(copy.deepcopy(value))
+
+    @property
+    def diff_current(self):
+        """
+        Return the current diff
+
+        This is a dict of the current diff set by the handler.
+        """
+        value = self.properties.get("diff_current")
+        value["sequence_number"] = self.task_sequence_number
+        return value
+
+    @diff_current.setter
+    def diff_current(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.diff_current must be a dict. "
+            msg += f"Got {value}."
+            raise ValueError(msg)
+        self.properties["diff_current"] = value
 
     @property
     def failed(self):
@@ -411,6 +393,39 @@ class Results:
         self.properties["failed"].add(value)
 
     @property
+    def metadata(self):
+        """
+        List of dicts representing the metadata (if any)
+        for each diff.
+
+        raise ValueError if value is not a dict
+        """
+        return self.properties["metadata"]
+
+    @metadata.setter
+    def metadata(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"instance.metadata must be a dict. Got {value}"
+            raise ValueError(msg)
+        value["sequence_number"] = self.task_sequence_number
+        self.properties["metadata"].append(copy.deepcopy(value))
+
+    @property
+    def metadata_current(self):
+        """
+        Return the current metadata which is comprised of the
+        properties action, check_mode, and state.
+        """
+        value = {}
+        value["action"] = self.action
+        value["check_mode"] = self.check_mode
+        value["state"] = self.state
+        value["sequence_number"] = self.task_sequence_number
+        return value
+
+    @property
     def response_current(self):
         """
         Return the current POST response from the controller
@@ -418,7 +433,9 @@ class Results:
 
         This is a dict of the current response from the controller.
         """
-        return self.properties.get("response_current")
+        value = self.properties.get("response_current")
+        value["sequence_number"] = self.task_sequence_number
+        return value
 
     @response_current.setter
     def response_current(self, value):
@@ -448,7 +465,8 @@ class Results:
             msg += "instance.response must be a dict. "
             msg += f"Got {value}."
             raise ValueError(msg)
-        self.properties["response"].append(value)
+        value["sequence_number"] = self.task_sequence_number
+        self.properties["response"].append(copy.deepcopy(value))
 
     @property
     def response_data(self):
@@ -479,7 +497,8 @@ class Results:
             msg += "instance.result must be a dict. "
             msg += f"Got {value}."
             raise ValueError(msg)
-        self.properties["result"].append(value)
+        value["sequence_number"] = self.task_sequence_number
+        self.properties["result"].append(copy.deepcopy(value))
 
     @property
     def result_current(self):
@@ -489,7 +508,9 @@ class Results:
 
         This is a dict containing the current result.
         """
-        return self.properties.get("result_current")
+        value = self.properties.get("result_current")
+        value["sequence_number"] = self.task_sequence_number
+        return value
 
     @result_current.setter
     def result_current(self, value):
@@ -506,7 +527,7 @@ class Results:
         """
         Ansible state
         """
-        return self.properties.get("state")
+        return self.properties["state"]
 
     @state.setter
     def state(self, value):

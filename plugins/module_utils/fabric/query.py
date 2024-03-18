@@ -112,30 +112,6 @@ class FabricQuery(FabricCommon):
                 self.ansible_module.fail_json(msg)
         self.properties["fabric_names"] = value
 
-    def _get_fabrics_to_query(self) -> None:
-        """
-        Retrieve fabric info from the controller and set the list of
-        controller fabrics that are in our fabric_names list.
-        """
-        self._fabric_details.refresh()
-
-        self._fabrics_to_query = []
-
-        if self._fabric_details.result_current.get("success") is False:
-            self.results.failed = True
-            self.results.changed = False
-            self.results.response_nok.append(copy.deepcopy(self._fabric_details.response_current))
-            self.results.result_nok.append(copy.deepcopy(self._fabric_details.result_current))
-            return
-
-        for fabric_name in self.fabric_names:
-            if fabric_name in self._fabric_details.all_data:
-                self._fabrics_to_query.append(fabric_name)
-
-        if len(self._fabrics_to_query) == 0:
-            self.results.changed = False
-            self.results.failed = False
-
     def commit(self):
         """
         query each of the fabrics in self.fabric_names
@@ -146,24 +122,23 @@ class FabricQuery(FabricCommon):
             msg += "fabric_names must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        self._get_fabrics_to_query()
-
-        msg = f"self._fabrics_to_query: {self._fabrics_to_query}"
-        self.log.debug(msg)
-        if len(self._fabrics_to_query) == 0:
-            # Don't modify results.changed or results.failed here.
-            # These are set in _get_fabrics_to_query()
-            return
-
-        msg = f"Populating diff {self._fabrics_to_query}"
-        self.log.debug(msg)
-
-        for fabric_name in self._fabrics_to_query:
-            fabric = copy.deepcopy(self._fabric_details.all_data[fabric_name])
-            fabric["action"] = self.action
-            self.results.diff_ok.append(fabric)
-        self.results.response_ok.append(copy.deepcopy(self._fabric_details.response_current))
-        self.results.result_ok.append(copy.deepcopy(self._fabric_details.result_current))
+        self._fabric_details.refresh()
 
         self.results.action = self.action
-        self.results.register_task_results()
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+
+        if self._fabric_details.result_current.get("success") is False:
+            self.results.diff_current = {}
+            self.results.response_current = copy.deepcopy(self._fabric_details.response_current)
+            self.results.result_current = copy.deepcopy(self._fabric_details.result_current)
+            self.results.register_task_result()
+            return
+
+        for fabric_name in self.fabric_names:
+            if fabric_name not in self._fabric_details.all_data:
+                continue
+            self.results.diff_current = copy.deepcopy(self._fabric_details.all_data[fabric_name])
+            self.results.response_current = copy.deepcopy(self._fabric_details.response_current)
+            self.results.result_current = copy.deepcopy(self._fabric_details.result_current)
+            self.results.register_task_result()

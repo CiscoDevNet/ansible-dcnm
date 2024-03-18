@@ -89,6 +89,13 @@ class FabricUpdateCommon(FabricCommon):
         self._mandatory_payload_keys.add("FABRIC_NAME")
         self._mandatory_payload_keys.add("DEPLOY")
 
+        # key: fabric_name, value: boolean
+        # If True, the operation was successful
+        # If False, the operation was not successful
+        self.config_save_result = {}
+        self.config_deploy_result = {}
+        self.send_payload_result = {}
+
     def _can_fabric_be_deployed(self, fabric_name):
         """
         return True if the fabric configuration can be saved and deployed
@@ -266,15 +273,18 @@ class FabricUpdateCommon(FabricCommon):
         self.rest_send.payload = payload
         self.rest_send.commit()
 
-        if self.rest_send.result_current["success"]:
-            self.results.changed = True
-            self.results.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-            self.results.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-            self.results.diff_ok.append(copy.deepcopy(payload))
+        if self.rest_send.result_current["success"] is False:
+            self.results.diff_current = {}
         else:
-            self.results.response_nok.append(copy.deepcopy(self.rest_send.response_current))
-            self.results.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-            self.results.diff_nok.append(copy.deepcopy(payload))
+            self.results.diff_current = copy.deepcopy(payload)
+
+        self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.results.register_task_result()
 
     def _config_save(self):
         """
@@ -284,6 +294,17 @@ class FabricUpdateCommon(FabricCommon):
         for fabric_name in self._fabrics_to_config_save:
             msg = f"{self.class_name}.{method_name}: fabric_name: {fabric_name}"
             self.log.debug(msg)
+            if fabric_name not in self.send_payload_result:
+                # Skip config-save if send_payload failed
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"WARNING: fabric_name: {fabric_name} not in send_payload_result"
+                self.log.debug(msg)
+                continue
+            if self.send_payload_result[fabric_name] is False:
+                # Skip config-save if send_payload failed
+                # Set config_save_result to False so that config_deploy is skipped
+                self.config_save_result[fabric_name] = False
+                continue
 
             try:
                 self.endpoints.fabric_name = fabric_name
@@ -297,17 +318,20 @@ class FabricUpdateCommon(FabricCommon):
             self.rest_send.payload = None
             self.rest_send.commit()
 
-            if self.rest_send.result_current["success"]:
-                self.results.changed = True
-                self.results.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-                self.results.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-                self.results.diff_ok.append({"FABRIC_NAME": fabric_name, "config_save": "OK"})
+            self.config_save_result[fabric_name] = self.rest_send.result_current["success"]
+            if self.rest_send.result_current["success"] is False:
+                self.results.diff_current = {}
             else:
-                self.results.response_nok.append(copy.deepcopy(self.rest_send.response_current))
-                self.results.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-                self.results.diff_nok.append(
-                    copy.deepcopy({"FABRIC_NAME": fabric_name, "config_save": "FAILED"})
-                )
+                self.results.diff_current = {"FABRIC_NAME": fabric_name, "config_save": "OK"}
+
+            self.results.action = "config_save"
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
+
+            self.config_save_result = self.rest_send.result_current
 
     def _config_deploy(self):
         """
@@ -317,6 +341,10 @@ class FabricUpdateCommon(FabricCommon):
         for fabric_name in self._fabrics_to_config_deploy:
             msg = f"{self.class_name}.{method_name}: fabric_name: {fabric_name}"
             self.log.debug(msg)
+
+            if self.config_save_result.get(fabric_name) is False:
+                # Skip config-deploy if config-save failed
+                continue
 
             try:
                 self.endpoints.fabric_name = fabric_name
@@ -330,19 +358,19 @@ class FabricUpdateCommon(FabricCommon):
             self.rest_send.payload = None
             self.rest_send.commit()
 
-            if self.rest_send.result_current["success"]:
-                self.results.changed = True
-                self.results.response_ok.append(copy.deepcopy(self.rest_send.response_current))
-                self.results.result_ok.append(copy.deepcopy(self.rest_send.result_current))
-                self.results.diff_ok.append({"FABRIC_NAME": fabric_name, "config_deploy": "OK"})
+            self.config_deploy_result = self.rest_send.result_current["success"]
+            if self.rest_send.result_current["success"] is False:
+                self.results.diff_current = {}
+                self.results.diff = {"FABRIC_NAME": fabric_name, "config_deploy": "OK"}
             else:
-                self.results.response_nok.append(copy.deepcopy(self.rest_send.response_current))
-                self.results.result_nok.append(copy.deepcopy(self.rest_send.result_current))
-                self.results.diff_nok.append(
-                    copy.deepcopy(
-                        {"FABRIC_NAME": fabric_name, "config_deploy": "FAILED"}
-                    )
-                )
+                self.results.diff_current = {"FABRIC_NAME": fabric_name, "config_deploy": "OK"}
+
+            self.results.action = "config_deploy"
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
 
     @property
     def payloads(self):
@@ -431,12 +459,20 @@ class FabricUpdateBulk(FabricUpdateCommon):
             msg += "payloads must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+
         self._build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
+            self.results.diff_current = {}
+            self.results.result_current = {"success": True}
+            msg = "No fabrics to create."
+            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+            self.results.register_task_result()
             return
         self._send_payloads()
-        self.results.action = self.action
-        self.results.register_task_results()
+        
 
 
 class FabricUpdate(FabricUpdateCommon):
@@ -495,15 +531,17 @@ class FabricUpdate(FabricUpdateCommon):
         self.rest_send.payload = self.payload
         self.rest_send.commit()
 
-        self.results.result_current = self.rest_send.result_current
-        self.results.result = self.rest_send.result_current
-        self.results.response_current = self.rest_send.response_current
-        self.results.response = self.rest_send.response_current
+        if self.rest_send.result_current["success"] is False:
+            self.results.diff_current = {}
+        else:
+            self.results.diff_current = self.payload
 
-        if self.results.response_current["RETURN_CODE"] == 200:
-            self.results.diff = self.payload
         self.results.action = self.action
-        self.results.register_task_results()
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.result_current = self.rest_send.result_current
+        self.results.response_current = self.rest_send.response_current
+        self.results.register_task_result()
 
     @property
     def payload(self):
