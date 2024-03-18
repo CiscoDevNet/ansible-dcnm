@@ -23,7 +23,7 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
     TemplateGet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_parse_easy_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.template_parse_easy_fabric import \
     TemplateParseEasyFabric
 
 
