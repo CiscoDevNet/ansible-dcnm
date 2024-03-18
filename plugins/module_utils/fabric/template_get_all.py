@@ -23,7 +23,7 @@ import inspect
 import logging
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints

@@ -26,8 +26,8 @@ import re
 from time import sleep
 
 # Using only for its failed_result property
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
-    ImageUpgradeTaskResult
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
 
@@ -322,7 +322,7 @@ class RestSend:
         """
         Return a result for a failed task with no changes
         """
-        return ImageUpgradeTaskResult(self.ansible_module).failed_result
+        return Results().failed_result
 
     @property
     def path(self):

@@ -22,7 +22,7 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon

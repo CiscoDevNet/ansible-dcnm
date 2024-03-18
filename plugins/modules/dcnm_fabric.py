@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -216,7 +215,7 @@ from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
@@ -230,15 +229,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import \
-    FabricTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import \
     VerifyFabricParams
-
 # from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
 #     ParamsMergeDefaults
 # from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.params_spec import \
@@ -286,15 +282,13 @@ class Common(FabricCommon):
         self.config = ansible_module.params.get("config")
         if not isinstance(self.config, list):
             msg = "expected list type for self.config. "
-            msg = f"got {type(self.config).__name__}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += f"got {type(self.config).__name__}"
+            self.ansible_module.fail_json(msg, **self.rest_send.failed_result)
 
         self.validated = []
         self.have = {}
         self.want = []
         self.query = []
-
-        self.task_result = FabricTaskResult(self.ansible_module)
 
     def get_have(self):
         """
@@ -326,7 +320,7 @@ class Common(FabricCommon):
         1. Validate the playbook configs
         2. Update self.want with the playbook configs
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         merged_configs = []
         for config in self.config:
             merged_configs.append(copy.deepcopy(config))
@@ -335,9 +329,6 @@ class Common(FabricCommon):
         for config in merged_configs:
             self.want.append(copy.deepcopy(config))
 
-        # Exit if there's nothing to do
-        if len(self.want) == 0:
-            self.ansible_module.exit_json(**self.task_result.module_result)
 
 class Query(Common):
     """
@@ -374,10 +365,12 @@ class Query(Common):
         fabric_query.fabric_names = copy.copy(fabric_names_to_query)
         fabric_query.commit()
 
+
 class Deleted(Common):
     """
     Handle deleted state
     """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
@@ -411,6 +404,7 @@ class Deleted(Common):
         self.fabric_delete.fabric_names = fabric_names_to_delete
         self.fabric_delete.results = self.results
         self.fabric_delete.commit()
+
 
 class Merged(Common):
     """
@@ -461,7 +455,8 @@ class Merged(Common):
         Commit the merged state request
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.log.debug(f"{self.class_name}.{method_name}: entered")
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
 
         self.get_want()
         self.get_have()
@@ -564,6 +559,7 @@ def main():
         msg = "Module failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+
 
 if __name__ == "__main__":
     main()
