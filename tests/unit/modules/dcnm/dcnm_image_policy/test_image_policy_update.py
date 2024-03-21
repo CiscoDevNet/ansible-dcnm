@@ -34,14 +34,14 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
     MockImagePolicies, does_not_raise, image_policy_update_fixture,
     payloads_image_policy_update, responses_image_policy_update,
-    results_image_policy_update)
+    rest_send_result_current, results_image_policy_update)
 
 
 def test_image_policy_update_00010(image_policy_update) -> None:
@@ -60,10 +60,10 @@ def test_image_policy_update_00010(image_policy_update) -> None:
     with does_not_raise():
         instance = image_policy_update
     assert instance.class_name == "ImagePolicyUpdate"
-
-    assert isinstance(instance.endpoints, ApiEndpoints)
-
     assert instance.action == "update"
+    assert instance.state == "merged"
+    assert instance.check_mode is False
+    assert isinstance(instance.endpoints, ApiEndpoints)
     assert instance.path == ApiEndpoints().policy_edit["path"]
     assert instance.verb == ApiEndpoints().policy_edit["verb"]
     assert instance._mandatory_payload_keys == {
@@ -73,12 +73,6 @@ def test_image_policy_update_00010(image_policy_update) -> None:
     }
     assert instance.payload is None
     assert instance._payloads_to_commit == []
-    assert instance.response_ok == []
-    assert instance.response_nok == []
-    assert instance.result_ok == []
-    assert instance.result_nok == []
-    assert instance.diff_ok == []
-    assert instance.diff_nok == []
 
 
 def test_image_policy_update_00020(image_policy_update) -> None:
@@ -127,6 +121,7 @@ def test_image_policy_update_00021(image_policy_update) -> None:
 
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance.payload = payloads_image_policy_update(key)
     assert instance.payload is None
@@ -147,12 +142,17 @@ def test_image_policy_update_00022(image_policy_update, key, match) -> None:
         - __init__
         - payload setter
 
+    Summary
+    Verify that the payload setter calls fail_json when a payload is missing
+    a mandatory key
+
     Test
     - fail_json is called because payload is missing a mandatory key
     - instance.payload is not modified, hence it retains its initial value of None
     """
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance.payload = payloads_image_policy_update(key)
     assert instance.payload is None
@@ -187,11 +187,16 @@ def test_image_policy_update_00030(monkeypatch, image_policy_update) -> None:
     """
     key = "test_image_policy_update_00030a"
 
-    instance = image_policy_update
-    instance.payload = payloads_image_policy_update(key)
+    with does_not_raise():
+        instance = image_policy_update
+        instance.results = Results()
+        instance.payload = payloads_image_policy_update(key)
+
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+
     with does_not_raise():
         instance._build_payloads_to_commit()
+
     assert instance._payloads_to_commit == [payloads_image_policy_update(key)]
     assert instance._payloads_to_commit[0]["policyName"] == "KR5M"
     assert instance._payloads_to_commit[0]["policyDescr"] == "KR5M updated"
@@ -207,7 +212,9 @@ def test_image_policy_update_00031(monkeypatch, image_policy_update) -> None:
         - payload setter
 
     Summary
-    Simulate a request to update a policy that does not exist on the controller
+    Verify that instance._build_payloads_to_commit() does not add a payload
+    to the payloads_to_commit list when a request is made to update an
+    image policy that does not exist on the controller.
 
     Setup
     -   ImagePolicies().all_policies, is mocked to indicate that two image policies
@@ -224,6 +231,7 @@ def test_image_policy_update_00031(monkeypatch, image_policy_update) -> None:
 
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
         instance.payload = payloads_image_policy_update(key)
         monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
         instance._build_payloads_to_commit()
@@ -250,6 +258,7 @@ def test_image_policy_update_00033(image_policy_update) -> None:
     """
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
 
     match = "ImagePolicyUpdate.commit: payload must be set prior to calling commit."
     with pytest.raises(AnsibleFailJson, match=match):
@@ -278,13 +287,14 @@ def test_image_policy_update_00034(monkeypatch, image_policy_update) -> None:
     Test
     -   ImagePolicyUpdate().commit returns without doing anything
     -   ImagePolicyUpdate()._payloads_to_commit is an empty list
-    -   ImagePolicyUpdate().changed is False
-    -   ImagePolicyUpdate().failed is False
+    -   ImagePolicyUpdate().results.changed is empty
+    -   ImagePolicyUpdate().results.failed is empty
     """
     key = "test_image_policy_update_00034a"
 
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
         instance.payload = payloads_image_policy_update(key)
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
@@ -292,8 +302,8 @@ def test_image_policy_update_00034(monkeypatch, image_policy_update) -> None:
     with does_not_raise():
         instance.commit()
     assert instance._payloads_to_commit == []
-    assert instance.changed is False
-    assert instance.failed is False
+    assert len(instance.results.changed) == 0
+    assert len(instance.results.failed) == 0
 
 
 def test_image_policy_update_00035(monkeypatch, image_policy_update) -> None:
@@ -306,8 +316,8 @@ def test_image_policy_update_00035(monkeypatch, image_policy_update) -> None:
         - commit()
 
     Summary
-    Simulate a successful commit for a payload and verify that instance
-    attributes are set to the expected values.
+    Verify that ImagePolicyUpdate.commit() behaves as expected when the
+    controller responds to an image policy update request with a 200 response.
 
     Setup
     -   ImagePolicies().all_policies, is mocked to indicate that two policies
@@ -317,44 +327,58 @@ def test_image_policy_update_00035(monkeypatch, image_policy_update) -> None:
     -   dcnm_send is mocked to return a successful (200) response.
 
     Test
-    -   commit calls _build_payloads_to_commit which returns one payload
-    -   commit calls _send_payloads, which populates response_ok, result_ok,
-        diff_ok, response_nok, result_nok, and diff_nok based on the payload
-        returned from _build_payloads_to_commit
-    -  length of instance._payloads_to_commit is 1
-    -  response_ok, result_ok, and diff_ok are set to the expected values
-    -  response_nok, result_nok, and diff_nok are set to empty lists
+    Test
+    -   commit calls _build_payloads_to_commit which returns one payload.
+    -   commit calls _send_payloads, which calls rest_send, which populates
+        diff_current with the payload due to result_current indicating
+        success.
+    -   results.result_current is set to the expected value
+    -   results.diff_current is set to the expected value
+    -   results.response_current is set to the expected value
+    -   results.action is set to "update"
     """
     key = "test_image_policy_update_00035a"
-
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.image_policy.update.dcnm_send"
 
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_update(key)
 
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
     with does_not_raise():
         instance = image_policy_update
-        instance.payload = payloads_image_policy_update(key)
+        instance.results = Results()
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
         instance.payload = payloads_image_policy_update(key)
         instance.commit()
 
-    assert instance.response_current == responses_image_policy_update(key)
-    assert len(instance._payloads_to_commit) == 1
-    assert instance.response_ok[0]["RETURN_CODE"] == 200
-    assert instance.result_ok[0]["changed"] is True
-    assert instance.result_ok[0]["success"] is True
-    assert instance.diff_ok[0]["agnostic"] is False
-    assert instance.diff_ok[0]["policyName"] == "KR5M"
-    assert instance.diff_ok[0]["policyDescr"] == "KR5M updated"
-    assert instance.response_nok == []
-    assert instance.result_nok == []
-    assert instance.diff_nok == []
+    response_current = responses_image_policy_update(key)
+    response_current["sequence_number"] = 1
+
+    result_current = rest_send_result_current(key)
+    result_current["sequence_number"] = 1
+
+    payload = payloads_image_policy_update(key)
+    payload["sequence_number"] = 1
+
+    assert instance.results.action == "update"
+    assert instance.rest_send.result_current == rest_send_result_current(key)
+    assert instance.results.result_current == result_current
+    assert instance.results.response_current == response_current
+    assert instance.results.diff_current == payload
+    assert False in instance.results.failed
+    assert True not in instance.results.failed
+    assert False not in instance.results.changed
+    assert True in instance.results.changed
+    assert len(instance.results.metadata) == 1
+    assert instance.results.metadata[0]["action"] == "update"
+    assert instance.results.metadata[0]["state"] == "merged"
+    assert instance.results.metadata[0]["sequence_number"] == 1
 
 
 def test_image_policy_update_00036(monkeypatch, image_policy_update) -> None:
@@ -367,16 +391,8 @@ def test_image_policy_update_00036(monkeypatch, image_policy_update) -> None:
         - commit()
 
     Summary
-    Simulate a 500 response from the controller during policy update.
-    In this case, the following holds true:
-    - The bad response is recorded in response_nok, result_nok, and diff_nok.
-    - response_ok, result_ok, and diff_ok are set to empty lists
-    - instance.failed is set to True
-    - instance.changed is set to False
-    - instance.response is set to the bad response
-    - instance.result is set to the bad result
-    - instance.diff is set to the bad diff
-    - fail_json is called with the expected message
+    Verify that ImagePolicyUpdate.commit() behaves as expected when the
+    controller responds to an image policy update request with a 500 response.
 
     Setup
     -   ImagePolicies().all_policies, is mocked to indicate that one policy
@@ -395,34 +411,44 @@ def test_image_policy_update_00036(monkeypatch, image_policy_update) -> None:
     """
     key = "test_image_policy_update_00036a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.image_policy.update.dcnm_send"
-
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_update(key)
 
-    with does_not_raise():
-        instance = image_policy_update
-        instance.payload = payloads_image_policy_update(key)
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    with pytest.raises(AnsibleFailJson):
+    with does_not_raise():
+        instance = image_policy_update
+        instance.rest_send.unit_test = True
+        instance.results = Results()
+
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+
+    with does_not_raise():
         instance.payload = payloads_image_policy_update(key)
         instance.commit()
 
-    assert instance.response_current == responses_image_policy_update(key)
-    assert len(instance._payloads_to_commit) == 1
-    assert instance.response_ok == []
-    assert instance.result_ok == []
-    assert instance.diff_ok == []
-    assert instance.response_nok[0]["RETURN_CODE"] == 500
-    assert instance.result_nok[0]["changed"] is False
-    assert instance.result_nok[0]["success"] is False
-    assert instance.diff_nok[0]["agnostic"] is False
-    assert instance.diff_nok[0]["policyName"] == "KR5M"
-    assert instance.diff_nok[0]["policyDescr"] == "KR5M updated"
+    response_current = responses_image_policy_update(key)
+    response_current["sequence_number"] = 1
+
+    result_current = rest_send_result_current(key)
+    result_current["sequence_number"] = 1
+
+    assert instance.results.action == "update"
+    assert instance.rest_send.result_current == rest_send_result_current(key)
+    assert instance.results.result_current == result_current
+    assert instance.results.response_current == response_current
+    assert instance.results.diff_current == {"sequence_number": 1}
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
+    assert True not in instance.results.changed
+    assert False in instance.results.changed
+    assert len(instance.results.metadata) == 1
+    assert instance.results.metadata[0]["action"] == "update"
+    assert instance.results.metadata[0]["state"] == "merged"
+    assert instance.results.metadata[0]["sequence_number"] == 1
 
 
 def test_image_policy_update_00040(image_policy_update) -> None:
@@ -445,6 +471,7 @@ def test_image_policy_update_00040(image_policy_update) -> None:
 
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance._default_policy([])
 
@@ -459,8 +486,9 @@ def test_image_policy_update_00050(monkeypatch, image_policy_update) -> None:
         - commit()
 
     Summary
-    Simulate an attempt to update an image policy for which ref_count is != 0
-    on the controller, i.e. switches are attached to the image policy.
+    Verify that fail_json is called when an image policy update request is made
+    for an image policy which has a ref_count != 0 on the controller, i.e.
+    switches are attached to the image policy.
 
     Setup
     -   ImagePolicies().all_policies, is mocked to indicate that one policy
@@ -477,6 +505,7 @@ def test_image_policy_update_00050(monkeypatch, image_policy_update) -> None:
 
     with does_not_raise():
         instance = image_policy_update
+        instance.results = Results()
         instance.payload = payloads_image_policy_update(key)
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))

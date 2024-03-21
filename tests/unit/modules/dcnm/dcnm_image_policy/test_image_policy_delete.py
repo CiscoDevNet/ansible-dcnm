@@ -32,6 +32,8 @@ __author__ = "Allen Robel"
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
@@ -59,6 +61,7 @@ def test_image_policy_delete_00010(image_policy_delete) -> None:
         instance = image_policy_delete
     assert instance.class_name == "ImagePolicyDelete"
     assert instance.action == "delete"
+    assert instance.state == "deleted"
     assert isinstance(instance.endpoints, ApiEndpoints)
     assert instance.verb == "DELETE"
     assert (
@@ -261,10 +264,10 @@ def test_image_policy_delete_00033(image_policy_delete) -> None:
     """
     with does_not_raise():
         instance = image_policy_delete
+        instance.results = Results()
 
-    match = (
-        "ImagePolicyDelete.commit: policy_names must be set prior to calling commit."
-    )
+    match = r"ImagePolicyDelete\._validate_commit_parameters: "
+    match += r"policy_names must be set prior to calling commit\."
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
@@ -281,17 +284,36 @@ def test_image_policy_delete_00034(monkeypatch, image_policy_delete) -> None:
 
     Setup
     -   ImagePolicyDelete().policy_names is set to an empty list
+    -   ImagePolicies.all_policies is mocked to indicate that no policies
+        exist on the controller.
+    -   RestSend.dcnm_send is mocked to return a successful (200) response.
 
     Test
     -   ImagePolicyDelete().commit returns without doing anything
     -   fail_json is not called
-    -   instance.changed is False
+    -   instance.results.changed set() contains False
+    -   instance.results.failed set() contains False
     """
+    key = "test_image_policy_delete_00034a"
+
+    def mock_dcnm_send(*args, **kwargs):
+        return responses_image_policy_delete(key)
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
     with does_not_raise():
         instance = image_policy_delete
+        instance.results = Results()
         instance.policy_names = []
+
+    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+    with does_not_raise():
         instance.commit()
-    assert instance.changed is False
+    assert False in instance.results.changed
+    assert False in instance.results.failed
 
 
 def test_image_policy_delete_00036(monkeypatch, image_policy_delete) -> None:
@@ -312,18 +334,21 @@ def test_image_policy_delete_00036(monkeypatch, image_policy_delete) -> None:
     Test
     -   ImagePolicyDelete()._get_policies_to_delete return an empty list
     -   ImagePolicyDelete().commit returns without doing anything
-    -   instance.changed is set to False
+    -   instance.results.changed set() contains False
+    -   instance.results.failed set() contains False
     -   fail_json is not called
     """
     key = "test_image_policy_delete_00036a"
     with does_not_raise():
         instance = image_policy_delete
+        instance.results = Results()
         instance.policy_names = ["FOO"]
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     with does_not_raise():
         instance.commit()
     assert len(instance._policies_to_delete) == 0
-    assert instance.changed is False
+    assert False in instance.results.changed
+    assert False in instance.results.failed
 
 
 def test_image_policy_delete_00037(monkeypatch, image_policy_delete) -> None:
@@ -360,13 +385,14 @@ def test_image_policy_delete_00037(monkeypatch, image_policy_delete) -> None:
     key = "test_image_policy_delete_00037a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.image_policy.delete.dcnm_send"
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_delete(key)
 
     with does_not_raise():
         instance = image_policy_delete
+        instance.results = Results()
         instance.policy_names = ["KR5M"]
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
@@ -375,10 +401,10 @@ def test_image_policy_delete_00037(monkeypatch, image_policy_delete) -> None:
     with does_not_raise():
         instance.commit()
     assert instance._policies_to_delete == ["KR5M"]
-    assert instance.result_current == results_image_policy_delete(key)
-    assert instance.changed is True
-    assert instance.failed is False
-    assert instance.diff == [{"policyNames": ["KR5M"], "action": "delete"}]
+    assert instance.results.result_current == results_image_policy_delete(key)
+    assert True in instance.results.changed
+    assert False in instance.results.failed
+    assert instance.results.diff == [{"policyNames": ["KR5M"], "sequence_number": 1}]
 
 
 def test_image_policy_delete_00038(monkeypatch, image_policy_delete) -> None:
@@ -415,25 +441,29 @@ def test_image_policy_delete_00038(monkeypatch, image_policy_delete) -> None:
     """
     key = "test_image_policy_delete_00038a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.image_policy.delete.dcnm_send"
-
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_delete(key)
 
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
     with does_not_raise():
         instance = image_policy_delete
+        instance.rest_send.unit_test = True
+        instance.results = Results()
         instance.policy_names = ["KR5M"]
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    match = r"ImagePolicyDelete.commit: Bad response during policies delete\. "
-    match += r"policy_names \['KR5M'\]\."
-    with pytest.raises(AnsibleFailJson, match=match):
+    # match = r"ImagePolicyDelete.commit: Bad response during policies delete\. "
+    # match += r"policy_names \['KR5M'\]\."
+    with does_not_raise():
         instance.commit()
+
     assert instance._policies_to_delete == ["KR5M"]
-    assert instance.result_current == results_image_policy_delete(key)
-    assert instance.changed is False
-    assert instance.failed is True
-    assert instance.diff == []
+    assert instance.results.result_current == results_image_policy_delete(key)
+    assert True in instance.results.failed
+    assert False in instance.results.changed
+    # assert instance.diff == []

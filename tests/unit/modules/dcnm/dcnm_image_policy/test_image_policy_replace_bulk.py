@@ -34,13 +34,16 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    MockImagePolicies, does_not_raise, image_policy_replace_bulk_fixture,
-    payloads_image_policy_replace_bulk, responses_image_policy_replace_bulk,
+    GenerateResponses, MockImagePolicies, does_not_raise,
+    image_policy_replace_bulk_fixture, payloads_image_policy_replace_bulk,
+    responses_image_policy_replace_bulk, rest_send_result_current,
     results_image_policy_replace_bulk)
 
 
@@ -60,11 +63,10 @@ def test_image_policy_replace_bulk_00010(image_policy_replace_bulk) -> None:
     with does_not_raise():
         instance = image_policy_replace_bulk
     assert instance.class_name == "ImagePolicyReplaceBulk"
-
-    assert isinstance(instance.endpoints, ApiEndpoints)
-    assert isinstance(instance._image_policies, ImagePolicies)
-
     assert instance.action == "replace"
+    assert instance.state == "replaced"
+    assert instance.check_mode is False
+    assert isinstance(instance.endpoints, ApiEndpoints)
     assert instance.path == ApiEndpoints().policy_edit["path"]
     assert instance.verb == ApiEndpoints().policy_edit["verb"]
     assert instance._mandatory_payload_keys == {
@@ -74,12 +76,7 @@ def test_image_policy_replace_bulk_00010(image_policy_replace_bulk) -> None:
     }
     assert instance.payloads is None
     assert instance._payloads_to_commit == []
-    assert instance.response_ok == []
-    assert instance.response_nok == []
-    assert instance.result_ok == []
-    assert instance.result_nok == []
-    assert instance.diff_ok == []
-    assert instance.diff_nok == []
+    assert isinstance(instance._image_policies, ImagePolicies)
 
 
 def test_image_policy_replace_bulk_00020(image_policy_replace_bulk) -> None:
@@ -151,6 +148,7 @@ def test_image_policy_replace_bulk_00022(image_policy_replace_bulk, key, match) 
     """
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance.payloads = payloads_image_policy_replace_bulk(key)
     assert instance.payloads is None
@@ -178,6 +176,7 @@ def test_image_policy_replace_bulk_00023(image_policy_replace_bulk) -> None:
 
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance.payloads = payloads_image_policy_replace_bulk(key)
     assert instance.payloads is None
@@ -194,6 +193,11 @@ def test_image_policy_replace_bulk_00030(
         - _verify_image_policy_ref_count()
         - payloads setter
 
+    Summary
+    Verify _build_payloads_to_commit() behavior when a request contains one
+    image policy that exists on the controller and the caller has requested to
+    replace it.  The replaced image policy contains a different policyDescr.
+
     Setup
     -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
         is mocked to indicate that two image policies (KR5M, NR3F) exist on the
@@ -208,11 +212,15 @@ def test_image_policy_replace_bulk_00030(
     """
     key = "test_image_policy_replace_bulk_00030a"
 
-    instance = image_policy_replace_bulk
-    instance.payloads = payloads_image_policy_replace_bulk(key)
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-    instance._build_payloads_to_commit()
+    with does_not_raise():
+        instance = image_policy_replace_bulk
+        instance.results = Results()
+        instance.payloads = payloads_image_policy_replace_bulk(key)
+        monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+        instance._build_payloads_to_commit()
     assert instance._payloads_to_commit == payloads_image_policy_replace_bulk(key)
+    assert instance._payloads_to_commit[0]["policyName"] == "KR5M"
+    assert instance._payloads_to_commit[0]["policyDescr"] == "KR5M Replaced"
 
 
 def test_image_policy_replace_bulk_00031(
@@ -227,7 +235,8 @@ def test_image_policy_replace_bulk_00031(
         - payloads setter
 
     Summary
-    Simulate a request to replace a policy that does not exist on the controller
+    Verify behavior when a request to replace an image policy is sent for
+    an image policy that does not exist on the controller
 
     Setup
     -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
@@ -245,6 +254,7 @@ def test_image_policy_replace_bulk_00031(
 
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.results = Results()
         instance.payloads = payloads_image_policy_replace_bulk(key)
         monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
         instance._build_payloads_to_commit()
@@ -282,10 +292,12 @@ def test_image_policy_replace_bulk_00032(
     """
     key = "test_image_policy_replace_bulk_00032a"
 
-    instance = image_policy_replace_bulk
-    instance.payloads = payloads_image_policy_replace_bulk(key)
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-    instance._build_payloads_to_commit()
+    with does_not_raise():
+        instance = image_policy_replace_bulk
+        instance.results = Results()
+        instance.payloads = payloads_image_policy_replace_bulk(key)
+        monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
+        instance._build_payloads_to_commit()
     assert len(instance._payloads_to_commit) == 1
     assert instance._payloads_to_commit[0]["policyName"] == "KR5M"
 
@@ -343,6 +355,7 @@ def test_image_policy_replace_bulk_00034(
 
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.results = Results()
         instance.payloads = []
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
@@ -363,8 +376,8 @@ def test_image_policy_replace_bulk_00035(
         - commit()
 
     Summary
-    Simulate a successful commit for two payloads and verify that instance
-    attributes are set to the expected values.
+    Verify behavior when a request is made to replace two image policies
+    that exist on the controller.
 
     Setup
     -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
@@ -375,23 +388,23 @@ def test_image_policy_replace_bulk_00035(
 
     Test
     -   commit calls _build_payloads_to_commit which returns two payloads
-    -   commit calls _send_payloads, which populates response_ok, result_ok,
-        diff_ok, response_nok, result_nok, and diff_nok based on the payloads
-        returned from _build_payloads_to_commit
-    -  response_ok, result_ok, and diff_ok are set to the expected values
-    -  response_nok, result_nok, and diff_nok are set to empty lists
+    -   commit calls _send_payloads, which calls results.register_task_result()
+        to update the results.
+    -  results.* are set to the expected values
     """
     key = "test_image_policy_replace_bulk_00035a"
-
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.image_policy.replace.dcnm_send"
 
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_replace_bulk(key)
 
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
     with does_not_raise():
         instance = image_policy_replace_bulk
-        instance.payloads = payloads_image_policy_replace_bulk(key)
+        instance.results = Results()
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
@@ -400,18 +413,35 @@ def test_image_policy_replace_bulk_00035(
         instance.payloads = payloads_image_policy_replace_bulk(key)
         instance.commit()
 
-    assert instance.response_current == responses_image_policy_replace_bulk(key)
-    assert instance.response_ok[0]["RETURN_CODE"] == 200
-    assert instance.result_ok[0]["changed"] is True
-    assert instance.result_ok[0]["success"] is True
-    assert instance.diff_ok[0]["agnostic"] is False
-    assert instance.diff_ok[0]["policyName"] == "KR5M"
-    assert instance.diff_ok[0]["policyDescr"] == "KR5M replaced"
-    assert instance.diff_ok[1]["policyName"] == "NR3F"
-    assert instance.diff_ok[1]["policyDescr"] == "NR3F replaced"
-    assert instance.response_nok == []
-    assert instance.result_nok == []
-    assert instance.diff_nok == []
+    payload_0 = payloads_image_policy_replace_bulk(key)[0]
+    # sequence_number is added by the Results class
+    payload_0["sequence_number"] = 1
+
+    payload_1 = payloads_image_policy_replace_bulk(key)[1]
+    payload_1["sequence_number"] = 2
+
+    assert instance.results.action == "replace"
+    assert instance.rest_send.result_current == rest_send_result_current(key)
+    assert len(instance.results.diff) == 2
+    assert len(instance.results.result) == 2
+    assert len(instance.results.response) == 2
+    assert instance.results.result[0].get("sequence_number") == 1
+    assert instance.results.result[1].get("sequence_number") == 2
+    assert instance.results.diff[0] == payload_0
+    assert instance.results.diff[1] == payload_1
+    assert instance.results.diff[0].get("policyDescr") == "KR5M replaced"
+    assert instance.results.diff[1].get("policyDescr") == "NR3F replaced"
+    assert False in instance.results.failed
+    assert True not in instance.results.failed
+    assert False not in instance.results.changed
+    assert True in instance.results.changed
+    assert len(instance.results.metadata) == 2
+    assert instance.results.metadata[0]["action"] == "replace"
+    assert instance.results.metadata[0]["state"] == "replaced"
+    assert instance.results.metadata[0]["sequence_number"] == 1
+    assert instance.results.metadata[1]["action"] == "replace"
+    assert instance.results.metadata[1]["state"] == "replaced"
+    assert instance.results.metadata[1]["sequence_number"] == 2
 
 
 def test_image_policy_replace_bulk_00036(
@@ -426,16 +456,8 @@ def test_image_policy_replace_bulk_00036(
         - commit()
 
     Summary
-    Simulate a 500 response from the controller during policy replace.
-    In this case, the following holds true:
-    - The bad response is recorded in response_nok, result_nok, and diff_nok.
-    - response_ok, result_ok, and diff_ok are set to empty lists
-    - instance.failed is set to True
-    - instance.changed is set to False
-    - instance.response is set to the bad response
-    - instance.result is set to the bad result
-    - instance.diff is set to the bad diff
-    - fail_json is called with the expected message
+    Verify behavior when the controller returns a 500 response to an
+    image policy replace request
 
     Setup
     -   ImagePolicies().all_policies, is mocked to indicate that one policy
@@ -455,31 +477,37 @@ def test_image_policy_replace_bulk_00036(
     key = "test_image_policy_replace_bulk_00036a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.image_policy.replace.dcnm_send"
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def mock_dcnm_send(*args, **kwargs):
         return responses_image_policy_replace_bulk(key)
 
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.rest_send.unit_test = True
+        instance.results = Results()
         instance.payloads = payloads_image_policy_replace_bulk(key)
 
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    with pytest.raises(AnsibleFailJson):
-        instance.payloads = payloads_image_policy_replace_bulk(key)
+    with does_not_raise():
         instance.commit()
 
-    assert instance.response_current == responses_image_policy_replace_bulk(key)
-    assert instance.response_ok == []
-    assert instance.result_ok == []
-    assert instance.diff_ok == []
-    assert instance.response_nok[0]["RETURN_CODE"] == 500
-    assert instance.result_nok[0]["changed"] is False
-    assert instance.result_nok[0]["success"] is False
-    assert instance.diff_nok[0]["agnostic"] is False
-    assert instance.diff_nok[0]["policyName"] == "KR5M"
+    response_current = responses_image_policy_replace_bulk(key)
+    response_current["sequence_number"] = 1
+    assert instance.results.response_current == response_current
+    assert instance.results.diff_current == {"sequence_number": 1}
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
+    assert True not in instance.results.changed
+    assert False in instance.results.changed
+    assert len(instance.results.metadata) == 1
+    assert len(instance.results.diff) == 1
+    assert instance.results.diff[0] == {"sequence_number": 1}
+    assert instance.results.metadata[0]["action"] == "replace"
+    assert instance.results.metadata[0]["state"] == "replaced"
+    assert instance.results.metadata[0]["sequence_number"] == 1
 
 
 def test_image_policy_replace_bulk_00037(
@@ -493,77 +521,61 @@ def test_image_policy_replace_bulk_00037(
         - __init__()
 
     Summary
-    Simulate a succussful response from the controller, followed by a bad response
-    from the controller during policy replace.  In this case, the following holds true:
-    - The bad response is recorded in response_nok, result_nok, and diff_nok.
-    - The successful response is recorded in response_ok, result_ok, and diff_ok.
-    - instance.failed is set to True
-    - instance.changed is set to True
-    - instance.response is set to the successful response
-    - instance.result is set to the successful result
-    - instance.diff is set to the successful diff (with action key added)
-    - fail_json is called with the expected message
+    Verify behavior when the controller returns a 200 response to an image policy
+    replace request, followed by a 500 response to a subsequent image policy replace
+    request.
 
     Setup
-    -   result_ok is set to contain one result
-    -   result_nok is set to contain one result
-    -   response_ok is set to contain one response
-    -   response_nok is set to contain one response
-    -   diff_ok is set to contain one diff
-    -   diff_nok is set to contain one diff
-    -   _payloads_to_commit is set to contain two payloads
+    -   instance.payloads is set to contain two payloads
 
     Test
-    -   instance._process_responses() will call fail_json with the expected message
-    -   instance.result will be set to the successful result
-    -   instance.response will be set to the successful response
-    -   instance.diff will be set to the successful diff (with action key added)
-    -   instance.changed will be set to True
-    -   instanced.failed will be set to True
+    - Both successful and bad responses are recorded with separate sequence_numbers.
+    - instance.results.failed will be a set() containing both True and False
+    - instance.results.changed will be a set() containing both True and False
+    - instance.results.response contains two responses
+    - instance.results.result contains two results
+    - instance.results.diff contains two diffs
     """
-    key_ok = "test_image_policy_replace_bulk_00037a"
-    key_nok = "test_image_policy_replace_bulk_00037b"
-    key_payloads = "test_image_policy_replace_bulk_00037c"
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    key_policies = "test_image_policy_replace_bulk_00037a"
+    key_ok = "test_image_policy_replace_bulk_00037b"
+    key_nok = "test_image_policy_replace_bulk_00037c"
+    key_payloads = "test_image_policy_replace_bulk_00037d"
+
+    def responses():
+        yield responses_image_policy_replace_bulk(key_policies)
+        yield responses_image_policy_replace_bulk(key_ok)
+        yield responses_image_policy_replace_bulk(key_nok)
+
+    gen = GenerateResponses(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
 
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.rest_send.unit_test = True
+        instance.results = Results()
+        instance.payloads = payloads_image_policy_replace_bulk(key_payloads)
 
-    monkeypatch.setattr(instance, "diff_ok", payloads_image_policy_replace_bulk(key_ok))
-    monkeypatch.setattr(
-        instance, "diff_nok", payloads_image_policy_replace_bulk(key_nok)
-    )
-    monkeypatch.setattr(
-        instance,
-        "_payloads_to_commit",
-        payloads_image_policy_replace_bulk(key_payloads),
-    )
-    monkeypatch.setattr(
-        instance, "response_ok", responses_image_policy_replace_bulk(key_ok)
-    )
-    monkeypatch.setattr(
-        instance, "response_nok", responses_image_policy_replace_bulk(key_nok)
-    )
-    monkeypatch.setattr(
-        instance, "result_ok", results_image_policy_replace_bulk(key_ok)
-    )
-    monkeypatch.setattr(
-        instance, "result_nok", results_image_policy_replace_bulk(key_nok)
-    )
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    match = r"ImagePolicyReplaceBulk._process_responses: Bad response\(s\) "
-    match += r"during image policy bulk replace\."
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance._process_responses()
+    with does_not_raise():
+        instance.commit()
 
-    assert len(instance.diff) == 1  # only the succcessful payload
-    # We need to add an "action" key to success payload to form the expected diff
-    diff = payloads_image_policy_replace_bulk(key_ok)
-    diff[0]["action"] = "replace"
-    assert instance.diff[0] == diff[0]
-    assert instance.result == results_image_policy_replace_bulk(key_ok)
-    assert instance.response == responses_image_policy_replace_bulk(key_ok)
-    assert instance.changed is True
-    assert instance.failed is True
+    assert len(instance.results.diff) == 2
+    assert len(instance.results.result) == 2
+    assert len(instance.results.response) == 2
+    assert len(instance.results.metadata) == 2
+    assert instance.results.response[0]["RETURN_CODE"] == 200
+    assert instance.results.response[1]["RETURN_CODE"] == 500
+    assert False in instance.results.changed
+    assert True in instance.results.changed
+    assert False in instance.results.failed
+    assert True in instance.results.failed
 
 
 def test_image_policy_replace_bulk_00040(image_policy_replace_bulk) -> None:
@@ -586,5 +598,6 @@ def test_image_policy_replace_bulk_00040(image_policy_replace_bulk) -> None:
 
     with does_not_raise():
         instance = image_policy_replace_bulk
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance._default_policy([])

@@ -29,8 +29,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create imp
     ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
     ImagePolicyDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
-    ImagePolicyTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
@@ -43,10 +41,47 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fi
     load_fixture
 
 
+class GenerateResponses:
+    """
+    Given a generator, return the items in the generator with
+    each call to the next property
+
+    For usage in the context of dcnm_image_policy unit tests, see:
+        test: test_image_policy_create_bulk_00037
+        file: tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py
+
+    Simplified usage example below.
+
+    def responses():
+        yield {"key1": "value1"}
+        yield {"key2": "value2"}
+
+    gen = GenerateResponses(responses())
+
+    print(gen.next) # {"key1": "value1"}
+    print(gen.next) # {"key2": "value2"}
+    """
+
+    def __init__(self, gen):
+        self.gen = gen
+
+    @property
+    def next(self):
+        """
+        Return the next item in the generator
+        """
+        return next(self.gen)
+
+    def public_method_for_pylint(self) -> Any:
+        """
+        Add one public method to appease pylint
+        """
+
 class MockAnsibleModule:
     """
     Mock the AnsibleModule class
     """
+
     check_mode = False
 
     params = {
@@ -89,7 +124,6 @@ class MockAnsibleModule:
         Add one public method to appease pylint
         """
 
-
 class MockImagePolicies:
     """
     Mock the ImagePolicies class to return various values for all_policies
@@ -99,6 +133,7 @@ class MockImagePolicies:
         self.key = key
         self.properties = {}
         self.properties["policy_name"] = None
+        self.properties["results"] = None
 
     def refresh(self) -> None:
         """
@@ -160,32 +195,15 @@ class MockImagePolicies:
             return None
 
     @property
-    def response(self):
+    def results(self):
         """
-        Mock the aggregate response list from the controller
+        An instance of the Results class.
         """
-        return responses_image_policies(self.key)
+        return self.properties["results"]
 
-    @property
-    def response_current(self):
-        """
-        Mock the current_response dict from the controller
-        """
-        return responses_image_policies(self.key)
-
-    @property
-    def result(self):
-        """
-        Mock the aggregate result list from the controller
-        """
-        return results_image_policies(self.key)
-
-    @property
-    def result_current(self):
-        """
-        Mock the current result dict from the controller
-        """
-        return results_image_policies(self.key)
+    @results.setter
+    def results(self, value):
+        self.properties["results"] = value
 
 
 # See the following for explanation of why fixtures are explicitely named
@@ -197,7 +215,9 @@ def image_policy_common_fixture():
     """
     mock ImagePolicyCommon
     """
-    return ImagePolicyCommon(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return ImagePolicyCommon(instance)
 
 
 @pytest.fixture(name="image_policy_create")
@@ -205,7 +225,9 @@ def image_policy_create_fixture():
     """
     mock ImagePolicyCreate
     """
-    return ImagePolicyCreate(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return ImagePolicyCreate(instance)
 
 
 @pytest.fixture(name="image_policy_create_bulk")
@@ -213,7 +235,9 @@ def image_policy_create_bulk_fixture():
     """
     mock ImagePolicyCreateBulk
     """
-    return ImagePolicyCreateBulk(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return ImagePolicyCreateBulk(instance)
 
 
 @pytest.fixture(name="image_policy_delete")
@@ -221,7 +245,9 @@ def image_policy_delete_fixture():
     """
     mock ImagePolicyDelete
     """
-    return ImagePolicyDelete(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "deleted"
+    return ImagePolicyDelete(instance)
 
 
 @pytest.fixture(name="image_policy_query")
@@ -229,7 +255,9 @@ def image_policy_query_fixture():
     """
     mock ImagePolicyQuery
     """
-    return ImagePolicyQuery(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "query"
+    return ImagePolicyQuery(instance)
 
 
 @pytest.fixture(name="image_policy_replace_bulk")
@@ -237,15 +265,9 @@ def image_policy_replace_bulk_fixture():
     """
     mock ImagePolicyReplaceBulk
     """
-    return ImagePolicyReplaceBulk(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policy_task_result")
-def image_policy_task_result_fixture():
-    """
-    mock ImagePolicyTaskResult
-    """
-    return ImagePolicyTaskResult(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "replaced"
+    return ImagePolicyReplaceBulk(instance)
 
 
 @pytest.fixture(name="image_policy_update")
@@ -253,7 +275,9 @@ def image_policy_update_fixture():
     """
     mock ImagePolicyUpdate
     """
-    return ImagePolicyUpdate(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return ImagePolicyUpdate(instance)
 
 
 @pytest.fixture(name="image_policy_update_bulk")
@@ -261,7 +285,9 @@ def image_policy_update_bulk_fixture():
     """
     mock ImagePolicyUpdateBulk
     """
-    return ImagePolicyUpdateBulk(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return ImagePolicyUpdateBulk(instance)
 
 
 @pytest.fixture(name="config2payload")
@@ -270,7 +296,9 @@ def config2payload_fixture():
     mock Config2Payload
     Used in test_image_policy_payload.py
     """
-    return Config2Payload(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return Config2Payload(instance)
 
 
 @pytest.fixture(name="payload2config")
@@ -279,7 +307,9 @@ def payload2config_fixture():
     mock Payload2Config
     Used in test_image_policy_payload.py
     """
-    return Payload2Config(MockAnsibleModule)
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return Payload2Config(instance)
 
 
 @contextmanager
@@ -517,6 +547,26 @@ def image_policies_all_policies(key: str) -> Dict[str, str]:
     Return mocked return values for ImagePolicies().all_policies property
     """
     data_file = "all_policies_ImagePolicies"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def rest_send_response_current(key: str) -> Dict[str, str]:
+    """
+    Mocked return values for RestSend().response_current property
+    """
+    data_file = "response_current_RestSend"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def rest_send_result_current(key: str) -> Dict[str, str]:
+    """
+    Mocked return values for RestSend().result_current property
+    """
+    data_file = "result_current_RestSend"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

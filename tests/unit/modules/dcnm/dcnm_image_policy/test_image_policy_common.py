@@ -32,9 +32,11 @@ __author__ = "Allen Robel"
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    does_not_raise, image_policy_common_fixture,
-    responses_image_policy_common, results_image_policy_common)
+    does_not_raise, image_policy_common_fixture, responses_image_policy_common,
+    results_image_policy_common)
 
 
 def test_image_policy_common_00010(image_policy_common) -> None:
@@ -53,15 +55,17 @@ def test_image_policy_common_00010(image_policy_common) -> None:
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     assert instance.class_name == "ImagePolicyCommon"
-    assert instance.changed is False
-    assert instance.failed is False
-    assert instance.response == []
-    assert instance.response_current == {}
-    assert instance.result == []
-    assert instance.result_current == {}
-    assert instance.diff == []
-    assert instance.response_data == []
+    assert len(instance.results.changed) == 0
+    assert len(instance.results.failed) == 0
+    assert instance.results.response == []
+    assert instance.results.response_current == {"sequence_number": 0}
+    assert instance.results.result == []
+    assert instance.results.result_current == {"sequence_number": 0}
+    assert instance.results.diff_current == {"sequence_number": 0}
+    assert instance.results.diff == []
+    assert instance.results.response_data == []
 
 
 def test_image_policy_common_00020(image_policy_common) -> None:
@@ -183,9 +187,10 @@ def test_image_policy_common_00023(image_policy_common) -> None:
     match = r"ImagePolicyCommon\._handle_unknown_request_verbs: Unknown request verb \(FOOBAR\)"
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with pytest.raises(AnsibleFailJson, match=match):
         instance._handle_response(responses_image_policy_common(key), verb)
-    assert instance.result == []
+    assert instance.results.result == []
 
 
 @pytest.mark.parametrize("verb", ["POST", "PUT", "DELETE"])
@@ -365,7 +370,7 @@ def test_image_policy_common_00050(image_policy_common, arg, return_value) -> No
     assert value == return_value
 
 
-MATCH_00060 = r"ImagePolicyCommon\.changed: instance\.changed must be a bool\."
+MATCH_00060 = r"Results\.changed: instance\.changed must be a bool\."
 
 
 @pytest.mark.parametrize(
@@ -373,8 +378,8 @@ MATCH_00060 = r"ImagePolicyCommon\.changed: instance\.changed must be a bool\."
     [
         (True, does_not_raise(), True),
         (False, does_not_raise(), True),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00060), False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060), False),
+        (None, pytest.raises(ValueError, match=MATCH_00060), False),
+        ("FOO", pytest.raises(ValueError, match=MATCH_00060), False),
     ],
 )
 def test_image_policy_common_00060(image_policy_common, arg, expected, flag) -> None:
@@ -382,37 +387,43 @@ def test_image_policy_common_00060(image_policy_common, arg, expected, flag) -> 
     Classes and Methods
     - ImagePolicyCommon
         - __init__()
-        - @changed getter/setter
+        - instance.results.changed getter/setter
 
     Summary
     Verify that instance.changed returns expected values and
     calls fail_json appropriately.
 
     Test
-    - @changed returns expected values
+    - instance.results.changed returns expected values
     - fail_json is called when unexpected values are passed
     - fail_json is not called when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.changed = arg
+        instance.results.changed = arg
     if flag is True:
-        assert instance.changed == arg
+        assert arg in instance.results.changed
     else:
-        assert instance.changed is False
+        assert len(instance.results.changed) == 0
 
 
-MATCH_00070 = r"ImagePolicyCommon\.diff: instance\.diff must be a dict\."
+MATCH_00070 = r"Results\.diff: instance\.diff must be a dict\."
 
 
 @pytest.mark.parametrize(
     "arg, return_value, expected, flag",
     [
-        ({}, [{}], does_not_raise(), True),
-        ({"foo": "bar"}, [{"foo": "bar"}], does_not_raise(), True),
-        (None, None, pytest.raises(AnsibleFailJson, match=MATCH_00070), False),
-        ("FOO", None, pytest.raises(AnsibleFailJson, match=MATCH_00070), False),
+        ({}, [{"sequence_number": 0}], does_not_raise(), True),
+        (
+            {"foo": "bar"},
+            [{"foo": "bar", "sequence_number": 0}],
+            does_not_raise(),
+            True,
+        ),
+        (None, None, pytest.raises(ValueError, match=MATCH_00070), False),
+        ("FOO", None, pytest.raises(ValueError, match=MATCH_00070), False),
     ],
 )
 def test_image_policy_common_00070(
@@ -435,15 +446,16 @@ def test_image_policy_common_00070(
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.diff = arg
+        instance.results.diff = arg
     if flag is True:
-        assert instance.diff == return_value
+        assert instance.results.diff == return_value
     else:
-        assert instance.diff == []
+        assert instance.results.diff == []
 
 
-MATCH_00080 = r"ImagePolicyCommon\.failed: instance\.failed must be a bool\."
+MATCH_00080 = r"Results\.failed: instance\.failed must be a bool\."
 
 
 @pytest.mark.parametrize(
@@ -451,8 +463,8 @@ MATCH_00080 = r"ImagePolicyCommon\.failed: instance\.failed must be a bool\."
     [
         (True, does_not_raise(), True),
         (False, does_not_raise(), True),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00080), False),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00080), False),
+        (None, pytest.raises(ValueError, match=MATCH_00080), False),
+        ("FOO", pytest.raises(ValueError, match=MATCH_00080), False),
     ],
 )
 def test_image_policy_common_00080(image_policy_common, arg, expected, flag) -> None:
@@ -473,12 +485,13 @@ def test_image_policy_common_00080(image_policy_common, arg, expected, flag) -> 
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.failed = arg
+        instance.results.failed = arg
     if flag is True:
-        assert instance.failed == arg
+        assert arg in instance.results.failed
     else:
-        assert instance.failed is False
+        assert True in instance.results.failed
 
 
 def test_image_policy_common_00090(image_policy_common) -> None:
@@ -498,22 +511,21 @@ def test_image_policy_common_00090(image_policy_common) -> None:
     key = "test_image_policy_common_00090a"
     with does_not_raise():
         instance = image_policy_common
-        value = instance.failed_result
+        instance.results = Results()
+        value = instance.results.failed_result
     assert value == results_image_policy_common(key)
 
 
-MATCH_00100 = (
-    r"ImagePolicyCommon\.response_current: instance\.response_current must be a dict\."
-)
+MATCH_00100 = r"Results\.response_current: instance\.response_current must be a dict\."
 
 
 @pytest.mark.parametrize(
     "arg, return_value, expected, flag",
     [
-        ({}, {}, does_not_raise(), True),
-        ({"foo": "bar"}, {"foo": "bar"}, does_not_raise(), True),
-        (None, None, pytest.raises(AnsibleFailJson, match=MATCH_00100), False),
-        ("FOO", None, pytest.raises(AnsibleFailJson, match=MATCH_00100), False),
+        ({}, {"sequence_number": 0}, does_not_raise(), True),
+        ({"foo": "bar"}, {"foo": "bar", "sequence_number": 0}, does_not_raise(), True),
+        (None, None, pytest.raises(ValueError, match=MATCH_00100), False),
+        ("FOO", None, pytest.raises(ValueError, match=MATCH_00100), False),
     ],
 )
 def test_image_policy_common_00100(
@@ -526,34 +538,40 @@ def test_image_policy_common_00100(
         - @response_current getter/setter
 
     Summary
-    Verify that instance.response_current returns expected values and
-    calls fail_json appropriately.
+    Verify that instance.results.response_current returns expected values and
+    raises ValueError appropriately.
 
     Test
-    - @response_current returns expected values
-    - fail_json is called when unexpected values are passed
-    - fail_json is not called when expected values are passed
+    - instance.results.response_current returns expected values
+    - ValueError is raised when unexpected values are passed
+    - ValueError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.response_current = arg
+        instance.results.response_current = arg
     if flag is True:
-        assert instance.response_current == return_value
+        assert instance.results.response_current == return_value
     else:
-        assert instance.response_current == {}
+        assert instance.results.response_current == {"sequence_number": 0}
 
 
-MATCH_00110 = r"ImagePolicyCommon\.response: instance\.response must be a dict\."
+MATCH_00110 = r"Results\.response: instance\.response must be a dict\."
 
 
 @pytest.mark.parametrize(
     "arg, return_value, expected, flag",
     [
-        ({}, [{}], does_not_raise(), True),
-        ({"foo": "bar"}, [{"foo": "bar"}], does_not_raise(), True),
-        (None, None, pytest.raises(AnsibleFailJson, match=MATCH_00110), False),
-        ("FOO", None, pytest.raises(AnsibleFailJson, match=MATCH_00110), False),
+        ({}, [{"sequence_number": 0}], does_not_raise(), True),
+        (
+            {"foo": "bar"},
+            [{"foo": "bar", "sequence_number": 0}],
+            does_not_raise(),
+            True,
+        ),
+        (None, None, pytest.raises(ValueError, match=MATCH_00110), False),
+        ("FOO", None, pytest.raises(ValueError, match=MATCH_00110), False),
     ],
 )
 def test_image_policy_common_00110(
@@ -566,22 +584,23 @@ def test_image_policy_common_00110(
         - @response getter/setter
 
     Summary
-    Verify that instance.response returns expected values and
-    calls fail_json appropriately.
+    Verify that instance.results.response returns expected values and
+    raises ValueError appropriately.
 
     Test
-    - @response returns expected values
-    - fail_json is called when unexpected values are passed
-    - fail_json is not called when expected values are passed
+    - instance.results.response returns expected value
+    - ValueError is raised when unexpected values are passed
+    - ValueError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.response = arg
+        instance.results.response = arg
     if flag is True:
-        assert instance.response == return_value
+        assert instance.results.response == return_value
     else:
-        assert instance.response == []
+        assert instance.results.response == []
 
 
 @pytest.mark.parametrize(
@@ -603,32 +622,38 @@ def test_image_policy_common_00120(image_policy_common, arg, return_value) -> No
     Classes and Methods
     - ImagePolicyCommon
         - __init__()
-        - @response_data getter/setter
+        - @results
 
     Summary
-    Verify that instance.response_data returns expected values and
+    Verify that instance.results.response_data returns expected values and
     never calls fail_json.
 
     Test
-    - @response_data returns expected values
+    - instance.results.response_datea returns expected values
     - fail_json is not called
     """
     with does_not_raise():
         instance = image_policy_common
-        instance.response_data = arg
-    assert instance.response_data == return_value
+        instance.results = Results()
+        instance.results.response_data = arg
+    assert instance.results.response_data == return_value
 
 
-MATCH_00130 = r"ImagePolicyCommon\.result: instance\.result must be a dict\."
+MATCH_00130 = r"Results\.result: instance\.result must be a dict\."
 
 
 @pytest.mark.parametrize(
     "arg, return_value, expected, flag",
     [
-        ({}, [{}], does_not_raise(), True),
-        ({"foo": "bar"}, [{"foo": "bar"}], does_not_raise(), True),
-        (None, None, pytest.raises(AnsibleFailJson, match=MATCH_00130), False),
-        ("FOO", None, pytest.raises(AnsibleFailJson, match=MATCH_00130), False),
+        ({}, [{"sequence_number": 0}], does_not_raise(), True),
+        (
+            {"foo": "bar"},
+            [{"foo": "bar", "sequence_number": 0}],
+            does_not_raise(),
+            True,
+        ),
+        (None, None, pytest.raises(ValueError, match=MATCH_00130), False),
+        ("FOO", None, pytest.raises(ValueError, match=MATCH_00130), False),
     ],
 )
 def test_image_policy_common_00130(
@@ -641,36 +666,35 @@ def test_image_policy_common_00130(
         - @result getter/setter
 
     Summary
-    Verify that instance.result returns expected values and
-    calls fail_json appropriately.
+    Verify that instance.results.result returns expected values and
+    raises ValueError appropriately.
 
     Test
-    - @result returns expected values
-    - fail_json is called when unexpected values are passed
-    - fail_json is not called when expected values are passed
+    - instance.results.result returns expected values
+    - ValueError is raised when unexpected values are passed
+    - ValueError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.result = arg
+        instance.results.result = arg
     if flag is True:
-        assert instance.result == return_value
+        assert instance.results.result == return_value
     else:
-        assert instance.result == []
+        assert instance.results.result == []
 
 
-MATCH_00140 = (
-    r"ImagePolicyCommon\.result_current: instance\.result_current must be a dict\."
-)
+MATCH_00140 = r"Results\.result_current: instance\.result_current must be a dict\."
 
 
 @pytest.mark.parametrize(
     "arg, return_value, expected, flag",
     [
-        ({}, {}, does_not_raise(), True),
-        ({"foo": "bar"}, {"foo": "bar"}, does_not_raise(), True),
-        (None, None, pytest.raises(AnsibleFailJson, match=MATCH_00140), False),
-        ("FOO", None, pytest.raises(AnsibleFailJson, match=MATCH_00140), False),
+        ({}, {"sequence_number": 0}, does_not_raise(), True),
+        ({"foo": "bar"}, {"foo": "bar", "sequence_number": 0}, does_not_raise(), True),
+        (None, None, pytest.raises(ValueError, match=MATCH_00140), False),
+        ("FOO", None, pytest.raises(ValueError, match=MATCH_00140), False),
     ],
 )
 def test_image_policy_common_00140(
@@ -680,22 +704,23 @@ def test_image_policy_common_00140(
     Classes and Methods
     - ImagePolicyCommon
         - __init__()
-        - @result_current getter/setter
+        - instance.results.result_current getter/setter
 
     Summary
     Verify that instance.result_current returns expected values and
     calls fail_json appropriately.
 
     Test
-    - @result_current returns expected values
-    - fail_json is called when unexpected values are passed
-    - fail_json is not called when expected values are passed
+    - instance.results.result_current returns expected values
+    - ValueError is raised when unexpected values are passed
+    - ValueError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
+        instance.results = Results()
     with expected:
-        instance.result_current = arg
+        instance.results.result_current = arg
     if flag is True:
-        assert instance.result_current == return_value
+        assert instance.results.result_current == return_value
     else:
-        assert instance.result_current == {}
+        assert instance.results.result_current == {"sequence_number": 0}

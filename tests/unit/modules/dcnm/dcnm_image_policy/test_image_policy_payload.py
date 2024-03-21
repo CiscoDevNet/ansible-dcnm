@@ -21,6 +21,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import json
+
 import pytest
 
 __metaclass__ = type
@@ -29,6 +31,8 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
@@ -81,9 +85,19 @@ def test_image_policy_payload_00120(config2payload: Config2Payload) -> None:
 
     config = data.get(key, {}).get("config")
     payload = data.get(key, {}).get("payload")
+
+    print(f"config: {json.dumps(config, indent=4, sort_keys=True)}")
+    print(f"payload: {json.dumps(payload, indent=4, sort_keys=True)}")
+
     with does_not_raise():
         instance = config2payload
         instance.config = config
+        instance.log.debug(
+            f"00120: config: {json.dumps(config, indent=4, sort_keys=True)}"
+        )
+        instance.log.debug(
+            f"00120: payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+        )
         instance.commit()
     assert payload is not None
     assert instance.payload == payload
@@ -140,10 +154,12 @@ def test_image_policy_payload_00122(config2payload: Config2Payload) -> None:
     data = load_fixture("data_payload")
 
     config = data.get(key, {}).get("config")
+
     with does_not_raise():
         ansible_module = MockAnsibleModule()
         ansible_module.state = "merged"
         instance = config2payload
+        instance.results = Results()
         instance.config = config
     match = "Config2Payload.commit: config is empty"
     with pytest.raises(AnsibleFailJson, match=match):
