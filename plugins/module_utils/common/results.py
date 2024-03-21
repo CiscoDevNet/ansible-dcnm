@@ -50,7 +50,6 @@ class Results:
     TaskDelete() class.  The Results instance can then be used to build the
     final result, by calling Results.build_final_result().
 
-
     Example Usage:
 
     We assume an Ansible module structure as follows:
@@ -151,7 +150,7 @@ class Results:
     }
 
     An examplke of a metadata dict would be (sequence_number is added by Results):
-    
+
     {
         "action": "merge",
         "check_mode": false,
