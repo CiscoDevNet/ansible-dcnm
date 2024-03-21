@@ -127,18 +127,41 @@ class Results:
         "changed": True, # or False
         "failed": True,  # or False
         "diff": {
-            "OK": [<list of dict containing changes that succeeded>],
-            "FAILED": [<list of dict containing changes that failed>]
+            [<list of dict containing changes>],
         }
         "response": {
-            "OK": [<list of dict containing successful controller responses>],
-            "FAILED": [<list of dict containing failed controller responses>]
+            [<list of dict containing controller responses>],
         }
         "result": {
-            "OK": [<list of dict containing successful controller responses>],
-            "FAILED": [<list of dict containing failed controller responses>]
+            [<list of dict containing results (from handle_response() functions)>],
+        }
+        "metadata": {
+            [<list of dict containing metadata>],
         }
     }
+
+    diff, response, and result dicts are per the Ansible DCNM Collection standard output.
+
+    An example of a result dict would be (sequence_number is added by Results):
+
+    {
+        "found": true,
+        "sequence_number": 0,
+        "success": true
+    }
+
+    An examplke of a metadata dict would be (sequence_number is added by Results):
+    
+    {
+        "action": "merge",
+        "check_mode": false,
+        "state": "merged",
+        "sequence_number": 0
+    }
+
+    sequence_number indicates the order in which the task was registered with Results.
+    It provides a way to correlate the diff, response, result, and metadata across all
+    tasks.
     """
 
     def __init__(self):
