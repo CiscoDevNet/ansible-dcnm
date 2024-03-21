@@ -328,7 +328,7 @@ class Results:
         self.properties["action"] = value
 
     @property
-    def changed(self) -> set[bool]:
+    def changed(self) -> set:
         """
         bool = whether we changed anything
 
@@ -403,7 +403,7 @@ class Results:
         self.properties["diff_current"] = value
 
     @property
-    def failed(self) -> set[bool]:
+    def failed(self) -> set:
         """
         A set() of Boolean values indicating whether any tasks failed
 
