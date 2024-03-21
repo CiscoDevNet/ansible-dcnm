@@ -201,7 +201,6 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         for payload in self._payloads_to_commit:
             self._send_payload(payload)
 
-
     def _send_payload(self, payload):
         """
         Send one payload to the controller

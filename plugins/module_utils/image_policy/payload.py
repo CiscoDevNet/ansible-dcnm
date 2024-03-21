@@ -148,6 +148,7 @@ class Config2Payload(Payload):
         msg += f"properties[payload] {json.dumps(self.properties['payload'], indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+
 class Payload2Config(Payload):
     """
     Convert an image-policy endpoint payload into a playbook

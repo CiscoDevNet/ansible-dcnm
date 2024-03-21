@@ -77,6 +77,7 @@ class GenerateResponses:
         Add one public method to appease pylint
         """
 
+
 class MockAnsibleModule:
     """
     Mock the AnsibleModule class
@@ -123,6 +124,7 @@ class MockAnsibleModule:
         """
         Add one public method to appease pylint
         """
+
 
 class MockImagePolicies:
     """

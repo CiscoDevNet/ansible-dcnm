@@ -95,6 +95,9 @@ class RestSend:
             self.ansible_module.fail_json(msg, **self.failed_result)
 
     def commit(self):
+        """
+        Send the REST request to the controller
+        """
         msg = f"{self.class_name}.commit: "
         msg += f"check_mode: {self.check_mode}."
         self.log.debug(msg)
@@ -133,7 +136,9 @@ class RestSend:
         self.response_current["MESSAGE"] = "OK"
         self.response_current["CHECK_MODE"] = True
         self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.result_current = self._handle_response(copy.deepcopy(self.response_current))
+        self.result_current = self._handle_response(
+            copy.deepcopy(self.response_current)
+        )
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
@@ -173,9 +178,11 @@ class RestSend:
             msg += f"Calling dcnm_send: verb {self.verb}, path {self.path}"
             if self.payload is None:
                 self.log.debug(msg)
-                self.response_current = dcnm_send(self.ansible_module, self.verb, self.path)
+                self.response_current = dcnm_send(
+                    self.ansible_module, self.verb, self.path
+                )
             else:
-                msg += f", payload: "
+                msg += ", payload: "
                 msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 self.response_current = dcnm_send(
@@ -201,9 +208,10 @@ class RestSend:
             )
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}.  "
-            msg += f"response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}."
+            msg += "response_current: "
+            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}."
             self.log.debug(msg)
-        
+
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
 

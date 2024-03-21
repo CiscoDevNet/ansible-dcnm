@@ -248,6 +248,7 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
             return
         self._send_payloads()
 
+
 class ImagePolicyCreate(ImagePolicyCreateCommon):
     """
     NOTE: This class is not being used currently.

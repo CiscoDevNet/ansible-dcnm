@@ -19,8 +19,8 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
-import json
 import inspect
+import json
 import logging
 from typing import Any, Dict
 
@@ -164,7 +164,7 @@ class Results:
 
         self.final_result = {}
         self._build_properties()
-    
+
     def _build_properties(self):
         self.properties: Dict[str, Any] = {}
         self.properties["action"] = None
@@ -219,7 +219,7 @@ class Results:
         Register a task's result.
 
         1.  Append result_current, response_current, diff_current and
-            metadata_current their respective lists (result, response, diff, 
+            metadata_current their respective lists (result, response, diff,
             and metadata)
         2.  Set self.changed based on current_diff.
             If current_diff is empty, it is assumed that no changes were made
@@ -280,12 +280,12 @@ class Results:
         msg = f"self.failed: {self.failed}, "
         self.log.debug(msg)
 
-        if True in self.failed:
+        if True in self.failed:  # pylint: disable=unsupported-membership-test
             self.final_result["failed"] = True
         else:
             self.final_result["failed"] = False
 
-        if True in self.changed:
+        if True in self.changed:  # pylint: disable=unsupported-membership-test
             self.final_result["changed"] = True
         else:
             self.final_result["changed"] = False
@@ -306,7 +306,6 @@ class Results:
         result["response"] = [{}]
         result["result"] = [{}]
         return result
-
 
     @property
     def action(self):
@@ -329,7 +328,7 @@ class Results:
         self.properties["action"] = value
 
     @property
-    def changed(self):
+    def changed(self) -> set[bool]:
         """
         bool = whether we changed anything
 
@@ -404,7 +403,7 @@ class Results:
         self.properties["diff_current"] = value
 
     @property
-    def failed(self):
+    def failed(self) -> set[bool]:
         """
         A set() of Boolean values indicating whether any tasks failed
 

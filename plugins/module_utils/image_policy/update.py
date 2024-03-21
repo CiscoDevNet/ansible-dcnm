@@ -281,6 +281,7 @@ class ImagePolicyUpdateBulk(ImagePolicyUpdateCommon):
             return
         self._send_payloads()
 
+
 class ImagePolicyUpdate(ImagePolicyUpdateCommon):
     """
     Given a properly-constructed image policy payload (python dict),

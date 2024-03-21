@@ -78,7 +78,6 @@ class ImagePolicies(ImagePolicyCommon):
         self.properties["response_data"] = None
         self.properties["policy_name"] = None
 
-
     def refresh(self):
         """
         Refresh the image policy details from the controller and
