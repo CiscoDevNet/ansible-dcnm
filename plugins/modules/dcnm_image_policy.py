@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=wrong-import-position
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -266,6 +266,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
@@ -276,8 +280,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints 
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
-    ImagePolicyTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
     ParamsSpec
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
@@ -297,37 +299,45 @@ def json_pretty(msg):
     return json.dumps(msg, indent=4, sort_keys=True)
 
 
-class ImagePolicyTask(ImagePolicyCommon):
+class Common(ImagePolicyCommon):
     """
-    Create, delete, query, replace, or update image policies
+    Common methods for all states
     """
-
     def __init__(self, ansible_module):
-        super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self.state = self.ansible_module.params.get("state")
+        if self.ansible_module.params.get("check_mode") is True:
+            self.check_mode = True
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImagePolicyTask()")
+
+        msg = "ENTERED Common(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
-        self.have = None
-        self.idempotent_want = None
 
-        self.path = None
-        self.verb = None
-
-        self.config = ansible_module.params.get("config", {})
+        self._implemented_states = set()
         self._valid_states = ["deleted", "merged", "overridden", "query", "replaced"]
 
-        if not isinstance(self.config, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "expected list type for self.config. "
-            msg += f"got {type(self.config).__name__}"
-            self.ansible_module.fail_json(msg)
+        self.params = ansible_module.params
+        self.rest_send = RestSend(self.ansible_module)
 
+        self.config = ansible_module.params.get("config")
+        if not isinstance(self.config, list):
+            msg = "expected list type for self.config. "
+            msg += f"got {type(self.config).__name__}"
+            self.ansible_module.fail_json(msg, **self.rest_send.failed_result)
+
+        self.validated = []
+        self.have = {}
         self.want = []
-        self.need = []
+        self.query = []
+        self.idempotent_want = None
+
         # policies to created
         self.need_create = []
         # policies to updated
@@ -338,7 +348,13 @@ class ImagePolicyTask(ImagePolicyCommon):
         self.need_query = []
         self.validated_configs = []
 
-        self.task_result = ImagePolicyTaskResult(self.ansible_module)
+        self.build_properties()
+
+    def build_properties(self):
+        """
+        self.properties holds property values for the class
+        """
+        self.properties["results"] = None
 
     def get_have(self) -> None:
         """
@@ -348,6 +364,7 @@ class ImagePolicyTask(ImagePolicyCommon):
         """
         self.log.debug("ENTERED")
         self.have = ImagePolicies(self.ansible_module)
+        self.have.results = self.results
         self.have.refresh()
 
     def get_want(self) -> None:
@@ -393,29 +410,166 @@ class ImagePolicyTask(ImagePolicyCommon):
 
         # Exit if there's nothing to do
         if len(self.want) == 0:
-            self.ansible_module.exit_json(**self.task_result.module_result)
+            self.ansible_module.exit_json(**self.results.module_result)
 
-    def handle_replaced_state(self) -> None:
+    @property
+    def results(self):
+        return self.properties["results"]
+
+    @results.setter
+    def results(self, value):
+        self.properties["results"] = value
+
+
+class Replaced(Common):
+    def __init__(self, ansible_module):
+        self.class_name = self.__class__.__name__
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        msg = "ENTERED Replaced(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        self._implemented_states.add("replaced")
+
+    def commit(self) -> None:
         """
         Replace all policies on the controller that are in want
         """
-        instance = ImagePolicyReplaceBulk(self.ansible_module)
-        instance.payloads = self.want
-        instance.commit()
-        self.update_diff_and_response(instance)
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
 
-    def handle_deleted_state(self) -> None:
+        self.get_want()
+        self.get_have()
+
+        image_policy_replace = ImagePolicyReplaceBulk(self.ansible_module)
+        image_policy_replace.results = self.results
+        image_policy_replace.payloads = self.want
+        image_policy_replace.commit()
+
+
+class Deleted(Common):
+    """
+    Handle deleted state
+    """
+
+    def __init__(self, ansible_module):
+        self.class_name = self.__class__.__name__
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self.image_policy_delete = ImagePolicyDelete(self.ansible_module)
+
+        msg = "ENTERED Deleted(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        self._implemented_states.add("deleted")
+
+    def commit(self) -> None:
         """
         1.  Delete all policies in self.want that exist on the controller
         """
-        instance = ImagePolicyDelete(self.ansible_module)
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+
+        self.get_want()
+        self.get_have()
         policy_names_to_delete = []
         for want in self.want:
             if want["policyName"] in self.have.all_policies:
                 policy_names_to_delete.append(want["policyName"])
-        instance.policy_names = policy_names_to_delete
-        instance.commit()
-        self.update_diff_and_response(instance)
+        self.image_policy_delete.policy_names = policy_names_to_delete
+        self.image_policy_delete.results = self.results
+        self.image_policy_delete.commit()
+
+
+class Query(Common):
+    """
+    Handle query state
+    """
+
+    def __init__(self, ansible_module):
+        self.class_name = self.__class__.__name__
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        msg = "ENTERED Query(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        self._implemented_states.add("query")
+
+    def commit(self) -> None:
+        """
+        1.  query the fabrics in self.want that exist on the controller
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+
+        self.get_want()
+
+        image_policy_query = ImagePolicyQuery(self.ansible_module)
+        image_policy_query.results = self.results
+        policy_names_to_query = []
+        for want in self.want:
+            policy_names_to_query.append(want["policyName"])
+        image_policy_query.policy_names = policy_names_to_query
+        image_policy_query.commit()
+
+
+class Overridden(Common):
+    def __init__(self, ansible_module):
+        self.class_name = self.__class__.__name__
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        msg = "ENTERED Overridden(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        self._implemented_states.add("overridden")
+
+    def commit(self) -> None:
+        """
+        1.  Delete all policies on the controller that are not in self.want
+        2.  Instantiate Merged() and call Merged().commit()
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+
+        self.get_want()
+        self.get_have()
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.want: {json_pretty(self.want)}"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.have.all_policies: {json_pretty(self.have.all_policies)}"
+        self.log.debug(msg)
+
+        self._delete_policies_not_in_want()
+        task = Merged(self.ansible_module)
+        task.results = self.results
+        task.commit()
 
     def _delete_policies_not_in_want(self) -> None:
         """
@@ -423,42 +577,63 @@ class ImagePolicyTask(ImagePolicyCommon):
 
         Caller: handle_overridden_state()
         """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         want_policy_names = set()
         for want in self.want:
             want_policy_names.add(want["policyName"])
 
         policy_names_to_delete = []
         for policy_name in self.have.all_policies:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"policy_name: {policy_name}"
+            self.log.debug(msg)
             if policy_name not in want_policy_names:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Appending to policy_names_to_delete: {policy_name}"
+                self.log.debug(msg)
                 policy_names_to_delete.append(policy_name)
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"policy_names_to_delete: {policy_names_to_delete}"
+        self.log.debug(msg)
+
         instance = ImagePolicyDelete(self.ansible_module)
+        instance.results = self.results
         instance.policy_names = policy_names_to_delete
         instance.commit()
-        self.update_diff_and_response(instance)
 
-    def handle_query_state(self) -> None:
-        """
-        1.  query the policies in self.want that exist on the controller
-        """
-        instance = ImagePolicyQuery(self.ansible_module)
-        policy_names_to_query = []
-        for want in self.want:
-            policy_names_to_query.append(want["policyName"])
-        instance.policy_names = policy_names_to_query
-        instance.commit()
-        self.update_diff_and_response(instance)
 
-    def handle_overridden_state(self) -> None:
-        """
-        1.  Delete all policies on the controller that are not in self.want
-        2.  Call handle_merged_state()
-        """
-        self._delete_policies_not_in_want()
-        self.handle_merged_state()
+class Merged(Common):
+    """
+    Handle merged state
+    """
 
-    def handle_merged_state(self) -> None:
+    def __init__(self, ansible_module):
+        self.class_name = self.__class__.__name__
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.image_policy_create = ImagePolicyCreateBulk(self.ansible_module)
+        self.image_policy_update = ImagePolicyUpdateBulk(self.ansible_module)
+
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        # new policies to be created
+        self.need_create: List[Dict] = []
+        # existing policies to be updated
+        self.need_update: List[Dict] = []
+
+        self._implemented_states.add("merged")
+
+    def get_need(self):
         """
+        Caller: commit()
+
+        Build self.need for merged state
         1.  Populate self.need_create with items from self.want that are
             not in self.have
         2.  Populate self.need_update with updated policies.  We update
@@ -471,17 +646,12 @@ class ImagePolicyTask(ImagePolicyCommon):
                 are identical, do not append the policy to self.need_update
                 (i.e. do nothing).
         """
-        # new policies to be created
-        need_create: List[Dict] = []
-        # existing policies to be updated
-        need_update: List[Dict] = []
-
         for want in self.want:
             self.have.policy_name = want.get("policyName")
 
             # Policy does not exist on the controller so needs to be created.
             if self.have.policy is None:
-                need_create.append(copy.deepcopy(want))
+                self.need_create.append(copy.deepcopy(want))
                 continue
 
             # The policy exists on the controller.  Merge want parameters with
@@ -491,9 +661,18 @@ class ImagePolicyTask(ImagePolicyCommon):
             merged, needs_update = self._merge_policies(have, want)
 
             if needs_update is True:
-                need_update.append(copy.deepcopy(merged))
-        self.need_create = copy.copy(need_create)
-        self.need_update = copy.copy(need_update)
+                self.need_update.append(copy.deepcopy(merged))
+
+    def commit(self) -> None:
+        """
+        Commit the merged state requests
+        """
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+
+        self.get_want()
+        self.get_have()
+        self.get_need()
         self.send_need_create()
         self.send_need_update()
 
@@ -532,7 +711,7 @@ class ImagePolicyTask(ImagePolicyCommon):
         """
         Merge the parameters in want with the parameters in have.
 
-        Caller: self.handle_merged_state()
+        Caller: self.commit()
         """
         (have, want) = self._prepare_for_merge(have, want)
 
@@ -558,12 +737,9 @@ class ImagePolicyTask(ImagePolicyCommon):
         Callers:
         - self.handle_merged_state()
         """
-        msg = "ENTERED"
-        self.log.debug(msg)
-        instance = ImagePolicyCreateBulk(self.ansible_module)
-        instance.payloads = self.need_create
-        instance.commit()
-        self.update_diff_and_response(instance)
+        self.image_policy_create.results = self.results
+        self.image_policy_create.payloads = self.need_create
+        self.image_policy_create.commit()
 
     def send_need_update(self) -> None:
         """
@@ -572,74 +748,9 @@ class ImagePolicyTask(ImagePolicyCommon):
         Callers:
         - self.handle_merged_state()
         """
-        msg = "ENTERED"
-        self.log.debug(msg)
-        instance = ImagePolicyUpdateBulk(self.ansible_module)
-        instance.payloads = self.need_update
-        instance.commit()
-        self.update_diff_and_response(instance)
-
-    def update_diff_and_response(self, obj) -> None:
-        """
-        Update the appropriate self.task_result diff and response,
-        based on the current ansible state, with the diff and
-        response from obj.
-
-        fail_json if the state is not in self._valid_states
-        """
-        state = self.ansible_module.params["state"]
-        if state not in self._valid_states:
-            msg = f"Inappropriate state {state}"
-            self.log.error(msg)
-            self.ansible_module.fail_json(msg, **obj.result)
-        for diff in obj.diff:
-            msg = f"state {state} diff: {json_pretty(diff)}"
-            self.log.debug(msg)
-            if state == "deleted":
-                self.task_result.diff_deleted = diff
-            if state == "overridden":
-                self.task_result.diff_overridden = diff
-            if state == "merged":
-                self.task_result.diff_merged = diff
-            if state == "query":
-                self.task_result.diff_query = diff
-            if state == "replaced":
-                self.task_result.diff_replaced = diff
-
-        msg = f"PRE_FOR: state {state} response: {json_pretty(obj.response)}"
-        self.log.debug(msg)
-        for response in obj.response:
-            if "DATA" in response:
-                response.pop("DATA")
-            msg = f"state {state} response: {json_pretty(response)}"
-            self.log.debug(msg)
-            if state == "deleted":
-                self.task_result.response_deleted = copy.deepcopy(response)
-            if state == "overridden":
-                self.task_result.response_overridden = copy.deepcopy(response)
-            if state == "merged":
-                self.task_result.response_merged = copy.deepcopy(response)
-            if state == "query":
-                self.task_result.response_query = copy.deepcopy(response)
-            if state == "replaced":
-                self.task_result.response_replaced = copy.deepcopy(response)
-
-    def _failure(self, response) -> None:
-        """
-        fail_json with the response
-        """
-        msg = f"{self.class_name}._failure: "
-        msg += f"response: {json_pretty(response)}"
-        self.log.error(msg)
-        if not response.get("DATA"):
-            self.ansible_module.fail_json(msg, **response)
-        data = response.get("DATA", {})
-        if response.get("DATA", {}).get("stackTrace", None):
-            data.update(
-                {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
-            )
-        response.update({"DATA": data})
-        self.ansible_module.fail_json(response, **self.task_result.module_result)
+        self.image_policy_update.results = self.results
+        self.image_policy_update.payloads = self.need_update
+        self.image_policy_update.commit()
 
 
 def main():
@@ -666,29 +777,52 @@ def main():
     enable_logging = False
     log = Log(ansible_module)
     if enable_logging is True:
-        collection_path = "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-        config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+        collection_path = (
+            "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
+        )
+        config_file = (
+            f"{collection_path}/plugins/module_utils/common/logging_config.json"
+        )
         log.config = config_file
     log.commit()
 
-    task_module = ImagePolicyTask(ansible_module)
-    task_module.get_want()
-    task_module.get_have()
+    results = Results()
     if ansible_module.params["state"] == "deleted":
-        task_module.handle_deleted_state()
+        task = Deleted(ansible_module)
+        task.results = results
+        task.commit()
     elif ansible_module.params["state"] == "merged":
-        task_module.handle_merged_state()
+        task = Merged(ansible_module)
+        task.results = results
+        task.commit()
     elif ansible_module.params["state"] == "overridden":
-        task_module.handle_overridden_state()
+        task = Overridden(ansible_module)
+        task.results = results
+        task.commit()
     elif ansible_module.params["state"] == "query":
-        task_module.handle_query_state()
+        task = Query(ansible_module)
+        task.results = results
+        task.commit()
     elif ansible_module.params["state"] == "replaced":
-        task_module.handle_replaced_state()
+        task = Replaced(ansible_module)
+        task.results = results
+        task.commit()
     else:
-        msg = f"Unknown state {task_module.ansible_module.params['state']}"
-        task_module.ansible_module.fail_json(msg)
+        msg = f"Unknown state {task.ansible_module.params['state']}"
+        ansible_module.fail_json(msg)
 
-    ansible_module.exit_json(**task_module.task_result.module_result)
+    results.build_final_result()
+
+    if True in results.failed:
+        msg = "Module failed."
+        ansible_module.fail_json(msg, **results.final_result)
+    ansible_module.exit_json(**results.final_result)
+
+    # task.results.build_final_result()
+    # if True in task.results.failed:
+    #     msg = "Module failed."
+    #     ansible_module.fail_json(msg, **task.results.final_result)
+    # ansible_module.exit_json(**task.results.final_result)
 
 
 if __name__ == "__main__":

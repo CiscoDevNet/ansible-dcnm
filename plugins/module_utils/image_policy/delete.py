@@ -22,14 +22,16 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 
 
 class ImagePolicyDelete(ImagePolicyCommon):
@@ -46,22 +48,25 @@ class ImagePolicyDelete(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.check_mode = self.ansible_module.check_mode
+        self.action = "delete"
+
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED ImagePolicyDelete(): "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
-
+        self._policies_to_delete = []
+        self._build_properties()
         self.endpoints = ApiEndpoints()
         self._image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies.results = Results()
+        self.rest_send = RestSend(self.ansible_module)
 
         self.path = self.endpoints.policy_delete["path"]
         self.verb = self.endpoints.policy_delete["verb"]
 
-        self.action = "delete"
-        self._policies_to_delete = []
-        self._build_properties()
+        msg = "ENTERED ImagePolicyDelete(): "
+        msg += f"action: {self.action}, "
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"state: {self.state}"
+        self.log.debug(msg)
 
     def _build_properties(self):
         """
@@ -69,6 +74,109 @@ class ImagePolicyDelete(ImagePolicyCommon):
         """
         # self.properties is already set in the parent class
         self.properties["policy_names"] = None
+
+    def _get_policies_to_delete(self) -> None:
+        """
+        Retrieve policies from the controller and return the list of
+        controller policies that are in our policy_names list.
+        """
+        self._image_policies.refresh()
+        self._verify_image_policy_ref_count(self._image_policies, self.policy_names)
+
+        self._policies_to_delete = []
+        for policy_name in self.policy_names:
+            if policy_name in self._image_policies.all_policies:
+                msg = f"Policy {policy_name} exists on the controller. "
+                msg += f"Appending {policy_name} to _policies_to_delete."
+                self.log.debug(msg)
+                self._policies_to_delete.append(policy_name)
+
+    def _validate_commit_parameters(self):
+        """
+        validate the parameters for commit
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if self.policy_names is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "policy_names must be set prior to calling commit."
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
+
+    def commit(self):
+        """
+        delete each of the image policies in self.policy_names
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        self._validate_commit_parameters()
+
+        self._get_policies_to_delete()
+
+        msg = f"self._policies_to_delete: {self._policies_to_delete}"
+        self.log.debug(msg)
+        if len(self._policies_to_delete) != 0:
+            self._send_requests()
+        else:
+            self.results.action = self.action
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.diff_current = {}
+            self.results.result_current = {"success": True, "changed": False}
+            msg = "No image policies to delete"
+            self.results.changed = False
+            self.results.failed = False
+            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+            self.log.debug(msg)
+
+    def _send_requests(self):
+        """
+        If check_mode is False, send the requests to the controller
+        If check_mode is True, do not send the requests to the controller
+
+        In both cases, populate the following lists:
+
+        - self.response_ok  : list of controller responses associated with success result
+        - self.result_ok    : list of results where success is True
+        - self.diff_ok      : list of payloads for which the request succeeded
+        - self.response_nok : list of controller responses associated with failed result
+        - self.result_nok   : list of results where success is False
+        - self.diff_nok     : list of payloads for which the request failed
+        """
+        self.rest_send.check_mode = self.check_mode
+
+        # We don't want RestSend to retry on errors since the likelihood of a
+        # timeout error when deleting image policies is low, and there
+        # are cases of permanent errors for which we don't want to retry.
+        self.rest_send.timeout = 1
+
+        msg = f"Deleting policies {self._policies_to_delete}"
+        self.log.debug(msg)
+
+        self.payload = {"policyNames": self._policies_to_delete}
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
+        self.rest_send.payload = copy.deepcopy(self.payload)
+        self.rest_send.commit()
+
+        self.register_result()
+
+    def register_result(self):
+        """
+        Register the result of the fabric create request
+        """
+        msg = f"self.rest_send.result_current: {self.rest_send.result_current}"
+        self.log.debug(msg)
+        if self.rest_send.result_current["success"]:
+            self.results.failed = False
+            self.results.diff_current = self.payload
+        else:
+            self.results.diff_current = {}
+            self.results.failed = True
+
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.result_current = self.rest_send.result_current
+        self.results.response_current = self.rest_send.response_current
+        self.results.register_task_result()
 
     @property
     def policy_names(self):
@@ -94,75 +202,3 @@ class ImagePolicyDelete(ImagePolicyCommon):
                 msg += f"value {item}"
                 self.ansible_module.fail_json(msg)
         self.properties["policy_names"] = value
-
-    def _get_policies_to_delete(self) -> None:
-        """
-        Retrieve policies from the controller and return the list of
-        controller policies that are in our policy_names list.
-        """
-        self._image_policies.refresh()
-        self._verify_image_policy_ref_count(self._image_policies, self.policy_names)
-
-        self._policies_to_delete = []
-        for policy_name in self.policy_names:
-            if policy_name in self._image_policies.all_policies:
-                msg = f"Policy {policy_name} exists on the controller. "
-                msg += f"Appending {policy_name} to _policies_to_delete."
-                self.log.debug(msg)
-                self._policies_to_delete.append(policy_name)
-
-    def commit(self):
-        """
-        delete each of the image policies in self.policy_names
-        """
-        method_name = inspect.stack()[0][3]
-        if self.policy_names is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "policy_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        if len(self.policy_names) == 0:
-            self.changed = False
-            msg = "No policies to delete."
-            self.log.debug(msg)
-            return
-
-        self._get_policies_to_delete()
-
-        if len(self._policies_to_delete) == 0:
-            self.changed = False
-            return
-
-        msg = f"Deleting policies {self._policies_to_delete}"
-        self.log.debug(msg)
-
-        request_body = {"policyNames": self._policies_to_delete}
-        if self.check_mode is False:
-            self.response_current = dcnm_send(
-                self.ansible_module, self.verb, self.path, data=json.dumps(request_body)
-            )
-            self.result_current = self._handle_response(self.response_current, self.verb)
-        else:
-            # check_mode is True so skip the request but update the diffs
-            # and responses as if the request succeeded
-            self.result_current = {"success": True}
-            self.response_current = {"msg": "skipped: check_mode"}
-
-        msg = f"response: {self.response_current}"
-        self.log.debug(msg)
-
-        if self.result_current["success"]:
-            self.failed = False
-            self.changed = True
-            request_body["action"] = self.action
-            self.diff = copy.deepcopy(request_body)
-            self.response = copy.deepcopy(self.response_current)
-            self.result = copy.deepcopy(self.result_current)
-            return
-
-        self.failed = True
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response during policies delete. "
-        msg += f"policy_names {self._policies_to_delete}. "
-        msg += f"response: {self.response_current}"
-        self.ansible_module.fail_json(msg, **self.failed_result)

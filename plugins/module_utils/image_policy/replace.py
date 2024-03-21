@@ -22,6 +22,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
@@ -30,8 +32,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints 
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 
 
 class ImagePolicyReplaceBulk(ImagePolicyCommon):
@@ -79,24 +81,22 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.check_mode = self.ansible_module.check_mode
+        self.action = "replace"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED ImagePolicyReplaceBulk(): "
+        msg += f"action: {self.action}, "
         msg += f"check_mode: {self.check_mode}"
+        msg += f"state: {self.state}"
         self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
         self._image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies.results = Results()
 
-        self.action = "replace"
+        self.rest_send = RestSend(self.ansible_module)
+
         self._payloads_to_commit = []
-        self.response_ok = []
-        self.response_nok = []
-        self.result_ok = []
-        self.result_nok = []
-        self.diff_ok = []
-        self.diff_nok = []
 
         self.path = self.endpoints.policy_edit.get("path")
         self.verb = self.endpoints.policy_edit.get("verb")
@@ -125,7 +125,7 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
             msg += "payload must be a dict. "
             msg += f"Got type {type(payload).__name__}, "
             msg += f"value {payload}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         missing_keys = []
         for key in self._mandatory_payload_keys:
@@ -137,27 +137,7 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         msg = f"{self.class_name}.{method_name}: "
         msg += "payload is missing mandatory keys: "
         msg += f"{sorted(missing_keys)}"
-        self.ansible_module.fail_json(msg, **self.failed_result)
-
-    @property
-    def payloads(self):
-        """
-        return the policy payloads
-        """
-        return self.properties["payloads"]
-
-    @payloads.setter
-    def payloads(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payloads must be a list of dict. "
-            msg += f"got {type(value).__name__} for "
-            msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
-        for item in value:
-            self._verify_payload(item)
-        self.properties["payloads"] = value
+        self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     def _build_payloads_to_commit(self):
         """
@@ -214,98 +194,46 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         """
         Send the payloads in self._payloads_to_commit to the controller
 
-        Populate the following lists:
-
-        - self.response_ok  : Controller responses associated with success result
-        - self.result_ok    : Results where success is True
-        - self.diff_ok      : Payloads for which the request succeeded
-        - self.response_nok : Controller responses associated with failed result
-        - self.result_nok   : Results where success is False
-        - self.diff_nok     : Payloads for which the request failed
-
         Caller: commit()
         """
-        self.response_ok = []
-        self.result_ok = []
-        self.diff_ok = []
-        self.response_nok = []
-        self.result_nok = []
-        self.diff_nok = []
+        self.rest_send.check_mode = self.check_mode
 
         for payload in self._payloads_to_commit:
-            if self.check_mode is False:
-                self.response_current = dcnm_send(
-                    self.ansible_module, self.verb, self.path, data=json.dumps(payload)
-                )
-                self.result_current = self._handle_response(
-                    self.response_current, self.verb
-                )
-            else:
-                # check_mode is True so skip the request but update the diffs
-                # and responses as if the request succeeded
-                self.result_current = {"success": True}
-                self.response_current = {"msg": "skipped: check_mode"}
+            self._send_payload(payload)
 
-            if self.result_current["success"]:
-                self.response_ok.append(copy.deepcopy(self.response_current))
-                self.result_ok.append(copy.deepcopy(self.result_current))
-                self.diff_ok.append(copy.deepcopy(payload))
-            else:
-                self.response_nok.append(copy.deepcopy(self.response_current))
-                self.result_nok.append(copy.deepcopy(self.result_current))
-                self.diff_nok.append(copy.deepcopy(payload))
 
-    def _process_responses(self):
+    def _send_payload(self, payload):
         """
-        Process the responses from the controller.
-        Sets the following properties:
-        - self.changed
-        - self.diff
-        - self.response
-        - self.result
-        - self.response_current
-        - self.result_current
-
-        Caller: commit()
+        Send one payload to the controller
         """
-        method_name = inspect.stack()[0][3]
-        if len(self.result_ok) == len(self._payloads_to_commit):
-            self.changed = True
-            self.failed = False
-            for payload in self.diff_ok:
-                payload["action"] = self.action
-                self.diff = copy.deepcopy(payload)
-            for response in self.response_ok:
-                self.response = copy.deepcopy(response)
-                self.response_current = copy.deepcopy(response)
-            for result in self.result_ok:
-                self.result = copy.deepcopy(result)
-                self.result_current = copy.deepcopy(result)
-            return
-
-        self.failed = True
-        self.changed = False
-        if len(self.result_nok) != len(self._payloads_to_commit):
-            self.changed = True
-            for payload in self.diff_ok:
-                payload["action"] = self.action
-                self.diff = copy.deepcopy(payload)
-            for response in self.response_ok:
-                self.response = copy.deepcopy(response)
-                self.response_current = copy.deepcopy(response)
-            for result in self.result_ok:
-                self.result = copy.deepcopy(result)
-                self.result_current = copy.deepcopy(result)
-
-        result = {}
-        result["changed"] = self.changed
-        result["diff"] = self.diff
-        result["response"] = self.response
-        result["result"] = self.result
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response(s) during image policy bulk replace. "
-        msg += f"response(s): {self.response_nok}"
-        self.ansible_module.fail_json(msg, **result)
+        msg += f"verb: {self.verb}, path: {self.path}, "
+        msg += f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        # We don't want RestSend to retry on errors since the likelihood of a
+        # timeout error when updating image policies is low, and there are
+        # many cases of permanent errors for which we don't want to retry.
+        self.rest_send.timeout = 1
+
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
+        self.rest_send.payload = payload
+        self.rest_send.commit()
+
+        if self.rest_send.result_current["success"] is False:
+            self.results.diff_current = {}
+        else:
+            self.results.diff_current = copy.deepcopy(payload)
+
+        # self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.results.register_task_result()
 
     def commit(self):
         """
@@ -313,4 +241,23 @@ class ImagePolicyReplaceBulk(ImagePolicyCommon):
         """
         self._build_payloads_to_commit()
         self._send_payloads()
-        self._process_responses()
+
+    @property
+    def payloads(self):
+        """
+        return the policy payloads
+        """
+        return self.properties["payloads"]
+
+    @payloads.setter
+    def payloads(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, list):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payloads must be a list of dict. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            self.ansible_module.fail_json(msg)
+        for item in value:
+            self._verify_payload(item)
+        self.properties["payloads"] = value

@@ -179,7 +179,7 @@
             "rpmimages": ""
         }
     ],
-    "test_image_policy_create_bulk_00037c": [
+    "test_image_policy_create_bulk_00037d": [
         {
             "agnostic": false,
             "epldImgName": "n9000-epld.10.3.2.F.img",

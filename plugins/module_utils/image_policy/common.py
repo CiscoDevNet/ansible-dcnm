@@ -21,13 +21,6 @@ import inspect
 import logging
 from typing import Any, Dict
 
-# Using only for its failed_result property
-# pylint: disable=line-too-long
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policy_task_result import \
-    ImagePolicyTaskResult
-
-# pylint: enable=line-too-long
-
 
 class ImagePolicyCommon:
     """
@@ -51,18 +44,12 @@ class ImagePolicyCommon:
 
         self.ansible_module = ansible_module
         self.check_mode = self.ansible_module.check_mode
+        self.state = ansible_module.params["state"]
 
         self.params = ansible_module.params
 
         self.properties: Dict[str, Any] = {}
-        self.properties["changed"] = False
-        self.properties["diff"] = []
-        self.properties["failed"] = False
-        self.properties["response"] = []
-        self.properties["response_current"] = {}
-        self.properties["response_data"] = []
-        self.properties["result"] = []
-        self.properties["result_current"] = {}
+        self.properties["results"] = None
 
     def _verify_image_policy_ref_count(self, instance, policy_names):
         """
@@ -97,7 +84,7 @@ class ImagePolicyCommon:
         for policy_name, ref_count in _non_zero_ref_counts.items():
             msg += f"policy_name: {policy_name}, "
             msg += f"ref_count: {ref_count}. "
-        self.ansible_module.fail_json(msg, **self.failed_result)
+        self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     def _default_policy(self, policy_name):
         """
@@ -110,7 +97,7 @@ class ImagePolicyCommon:
             msg += f"Got type {type(policy_name).__name__} for "
             msg += f"value {policy_name}."
             self.log.debug(msg)
-            self.ansible_module.fail_json(msg)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         policy = {
             "agnostic": False,
@@ -230,149 +217,12 @@ class ImagePolicyCommon:
         return value
 
     @property
-    def changed(self):
+    def results(self):
         """
-        bool = whether we changed anything
+        An instance of the Results class.
         """
-        return self.properties["changed"]
+        return self.properties["results"]
 
-    @changed.setter
-    def changed(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.changed must be a bool. Got {value}"
-            self.ansible_module.fail_json(msg)
-        self.properties["changed"] = value
-
-    @property
-    def diff(self):
-        """
-        List of dicts representing the changes made
-        """
-        return self.properties["diff"]
-
-    @diff.setter
-    def diff(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.diff must be a dict. Got {value}"
-            self.ansible_module.fail_json(msg)
-        self.properties["diff"].append(value)
-
-    @property
-    def failed(self):
-        """
-        bool = whether we failed or not
-        If True, this means we failed to make a change
-        If False, this means we succeeded in making a change
-        """
-        return self.properties["failed"]
-
-    @failed.setter
-    def failed(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.failed must be a bool. Got {value}"
-            self.ansible_module.fail_json(msg)
-        self.properties["failed"] = value
-
-    @property
-    def failed_result(self):
-        """
-        return a result for a failed task with no changes
-        """
-        return ImagePolicyTaskResult(self.ansible_module).failed_result
-
-    @property
-    def response_current(self):
-        """
-        Return the current POST response from the controller
-        instance.commit() must be called first.
-
-        This is a dict of the current response from the controller.
-        """
-        return self.properties.get("response_current")
-
-    @response_current.setter
-    def response_current(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response_current must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["response_current"] = value
-
-    @property
-    def response(self):
-        """
-        Return the aggregated POST response from the controller
-        instance.commit() must be called first.
-
-        This is a list of responses from the controller.
-        """
-        return self.properties.get("response")
-
-    @response.setter
-    def response(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["response"].append(value)
-
-    @property
-    def response_data(self):
-        """
-        Return the contents of the DATA key within current_response.
-        """
-        return self.properties.get("response_data")
-
-    @response_data.setter
-    def response_data(self, value):
-        self.properties["response_data"].append(value)
-
-    @property
-    def result(self):
-        """
-        Return the aggregated result from the controller
-        instance.commit() must be called first.
-
-        This is a list of results from the controller.
-        """
-        return self.properties.get("result")
-
-    @result.setter
-    def result(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["result"].append(value)
-
-    @property
-    def result_current(self):
-        """
-        Return the current result from the controller
-        instance.commit() must be called first.
-
-        This is a dict containing the current result.
-        """
-        return self.properties.get("result_current")
-
-    @result_current.setter
-    def result_current(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result_current must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["result_current"] = value
+    @results.setter
+    def results(self, value):
+        self.properties["results"] = value

@@ -22,14 +22,16 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 
 
 class ImagePolicyCreateCommon(ImagePolicyCommon):
@@ -42,31 +44,31 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        # self.ansible_module = ansible_module
+        self.action = "create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImagePolicyCreateCommon()"
-        self.log.debug(msg)
+
+        self._image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies.results = Results()
 
         self.endpoints = ApiEndpoints()
-        self._image_policies = ImagePolicies(self.ansible_module)
-
-        self.action = "create"
-        self._payloads_to_commit = []
-        self.response_ok = []
-        self.result_ok = []
-        self.diff_ok = []
-        self.response_nok = []
-        self.result_nok = []
-        self.diff_nok = []
+        self.rest_send = RestSend(self.ansible_module)
 
         self.path = self.endpoints.policy_create.get("path")
         self.verb = self.endpoints.policy_create.get("verb")
+
+        self._payloads_to_commit = []
 
         self._mandatory_payload_keys = set()
         self._mandatory_payload_keys.add("nxosVersion")
         self._mandatory_payload_keys.add("policyName")
         self._mandatory_payload_keys.add("policyType")
+
+        msg = "ENTERED ImagePolicyCreateCommon(): "
+        msg += f"action: {self.action}, "
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"state: {self.state}"
+        self.log.debug(msg)
 
     def _verify_payload(self, payload):
         """
@@ -78,7 +80,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             msg += "payload must be a dict. "
             msg += f"Got type {type(payload).__name__}, "
             msg += f"value {payload}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         missing_keys = []
         for key in self._mandatory_payload_keys:
@@ -90,7 +92,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         msg = f"{self.class_name}.{method_name}: "
         msg += "payload is missing mandatory keys: "
         msg += f"{sorted(missing_keys)}"
-        self.ansible_module.fail_json(msg, **self.failed_result)
+        self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     def _build_payloads_to_commit(self):
         """
@@ -105,12 +107,8 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         """
         self._image_policies.refresh()
 
-        msg = f"all_policies: {json.dumps(self._image_policies.all_policies, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
         self._payloads_to_commit = []
         for payload in self.payloads:
-            msg = f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
             if payload.get("policyName", None) in self._image_policies.all_policies:
                 continue
             self._payloads_to_commit.append(copy.deepcopy(payload))
@@ -119,107 +117,39 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
 
     def _send_payloads(self):
         """
-        Send the payloads to the controller and populate the following lists:
+        If check_mode is False, send the payloads to the controller
+        If check_mode is True, do not send the payloads to the controller
 
-        - self.response_ok  : list of controller responses associated with success result
-        - self.result_ok    : list of results where success is True
-        - self.diff_ok      : list of payloads for which the request succeeded
-        - self.response_nok : list of controller responses associated with failed result
-        - self.result_nok   : list of results where success is False
-        - self.diff_nok     : list of payloads for which the request failed
+        In both cases, update results
         """
-        self.response_ok = []
-        self.result_ok = []
-        self.diff_ok = []
-        self.response_nok = []
-        self.result_nok = []
-        self.diff_nok = []
+        self.rest_send.check_mode = self.check_mode
+
         for payload in self._payloads_to_commit:
-            if self.check_mode is False:
-                self.response_current = dcnm_send(
-                    self.ansible_module, self.verb, self.path, data=json.dumps(payload)
-                )
-                self.result_current = self._handle_response(
-                    self.response_current, self.verb
-                )
+
+            # We don't want RestSend to retry on errors since the likelihood of a
+            # timeout error when creating an image policy is low, and there are
+            # cases of permanent errors for which we don't want to retry.
+            self.rest_send.timeout = 1
+
+            self.rest_send.path = self.path
+            self.rest_send.verb = self.verb
+            self.rest_send.payload = payload
+            self.rest_send.commit()
+
+            msg = f"rest_send.result_current: {json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            if self.rest_send.result_current["success"] is False:
+                self.results.diff_current = {}
             else:
-                # check_mode is True so skip the request but update the diffs
-                # and responses as if the request succeeded
-                self.result_current = {"success": True}
-                self.response_current = {"msg": "skipped: check_mode"}
+                self.results.diff_current = copy.deepcopy(payload)
 
-            if self.result_current["success"]:
-                self.response_ok.append(copy.deepcopy(self.response_current))
-                self.result_ok.append(copy.deepcopy(self.result_current))
-                self.diff_ok.append(copy.deepcopy(payload))
-            else:
-                self.response_nok.append(copy.deepcopy(self.response_current))
-                self.result_nok.append(copy.deepcopy(self.result_current))
-                self.diff_nok.append(copy.deepcopy(payload))
-
-            msg = f"self.response_ok: {json.dumps(self.response_ok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.result_ok: {json.dumps(self.result_ok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.diff_ok: {json.dumps(self.diff_ok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.response_nok: {json.dumps(self.response_nok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = f"self.result_nok: {json.dumps(self.result_nok, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = (
-                f"self.diff_nok: {json.dumps(self.diff_nok, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
-
-    def _process_responses(self):
-        method_name = inspect.stack()[0][3]
-
-        msg = f"len(self.result_ok): {len(self.result_ok)}, "
-        msg += f"len(self._payloads_to_commit): {len(self._payloads_to_commit)}"
-        self.log.debug(msg)
-        if len(self.result_ok) == len(self._payloads_to_commit):
-            self.changed = True
-            for diff in self.diff_ok:
-                diff["action"] = self.action
-                self.diff = copy.deepcopy(diff)
-            for result in self.result_ok:
-                self.result = copy.deepcopy(result)
-                self.result_current = copy.deepcopy(result)
-            for response in self.response_ok:
-                self.response = copy.deepcopy(response)
-                self.response_current = copy.deepcopy(response)
-            return
-
-        self.failed = True
-        self.changed = False
-        # at least one request succeeded, so set changed to True
-        if len(self.result_nok) != len(self._payloads_to_commit):
-            self.changed = True
-
-        # When failing, provide the info for the request(s) that succeeded
-        # Since these represent the change(s) that were made.
-        for diff in self.diff_ok:
-            diff["action"] = self.action
-            self.diff = copy.deepcopy(diff)
-        for result in self.result_ok:
-            self.result = copy.deepcopy(result)
-            self.result_current = copy.deepcopy(result)
-        for response in self.response_ok:
-            self.response = copy.deepcopy(response)
-            self.response_current = copy.deepcopy(response)
-
-        result = {}
-        result["failed"] = self.failed
-        result["changed"] = self.changed
-        result["diff"] = self.diff_ok
-        result["response"] = self.response_ok
-        result["result"] = self.result_ok
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "Bad response(s) during policy create. "
-        msg += f"response(s): {self.response_nok}"
-        self.ansible_module.fail_json(msg, **result)
+            self.results.action = self.action
+            self.results.state = self.state
+            self.results.check_mode = self.check_mode
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
 
     @property
     def payloads(self):
@@ -239,7 +169,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             msg += "payloads must be a list of dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
         for item in value:
             self._verify_payload(item)
         self.properties["payloads"] = value
@@ -288,7 +218,9 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImagePolicyCreateBulk()")
+
+        msg = "ENTERED ImagePolicyCreateBulk():"
+        self.log.debug(msg)
 
         self._build_properties()
 
@@ -305,17 +237,16 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
         on the controller,
         """
         method_name = inspect.stack()[0][3]
+
         if self.payloads is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self._build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
             return
         self._send_payloads()
-        self._process_responses()
-
 
 class ImagePolicyCreate(ImagePolicyCreateCommon):
     """
@@ -354,16 +285,18 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         msg = "ENTERED ImagePolicyCreate(): "
-        msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self._build_properties()
+        self.data = {}
+        self.rest_send = RestSend(self.ansible_module)
 
-    def _build_properties(self):
+        self._init_properties()
+
+    def _init_properties(self):
         """
         Add properties specific to this class
         """
@@ -386,21 +319,17 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
 
     def commit(self):
         """
-        create policy.  If policy already exists
-        on the controller, do nothing.
+        Create policy.
+        If policy already exists on the controller, do nothing.
         """
         method_name = inspect.stack()[0][3]
         if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        # # ImagePolicyCreateCommon expects a list of payloads
-        # self.payloads = [self.payload]
         self._build_payloads_to_commit()
 
-        if not self._payloads_to_commit:
+        if len(self._payloads_to_commit) == 0:
             return
-
         self._send_payloads()
-        self._process_responses()

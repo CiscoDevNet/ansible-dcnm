@@ -22,12 +22,12 @@ import inspect
 import logging
 from typing import Any, AnyStr, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
 
 
 class ImagePolicies(ImagePolicyCommon):
@@ -62,46 +62,44 @@ class ImagePolicies(ImagePolicyCommon):
 
         self.method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.endpoints = ApiEndpoints()
+        self.rest_send = RestSend(self.ansible_module)
+
+        # We always want to get the controller's current image policy
+        # state so we set check_mode to False here so the request will be
+        # sent to the controller
+        self.rest_send.check_mode = False
+
         self._init_properties()
 
     def _init_properties(self):
         self.method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         # self.properties is already initialized in the parent class
         self.properties["all_policies"] = None
+        self.properties["response_data"] = None
         self.properties["policy_name"] = None
+
 
     def refresh(self):
         """
-        Refresh self.image_policies with current image policies from the controller
+        Refresh the image policy details from the controller and
+        populate self.data with the results.
+
+        self.data is a dictionary of image policy details, keyed on
+        image policy name.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        path = self.endpoints.policies_info.get("path")
-        verb = self.endpoints.policies_info.get("verb")
+        self.rest_send.path = self.endpoints.policies_info.get("path")
+        self.rest_send.verb = self.endpoints.policies_info.get("verb")
+        self.rest_send.commit()
 
-        self.properties["response"] = dcnm_send(self.ansible_module, verb, path)
-        self.properties["result"] = self._handle_response(self.response, verb)
-
-        if not self.result["success"]:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "Bad result when retrieving image policy "
-            msg += "information from the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        data = self.response.get("DATA").get("lastOperDataObject")
+        data = self.rest_send.response_current.get("DATA", {}).get("lastOperDataObject")
 
         if data is None:
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "Bad response when retrieving image policy "
             msg += "information from the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        # We cannot fail_json here since dcnm_image_policy merged
-        # state will fail if there are no policies defined.
-        # if len(data) == 0:
-        #     msg = f"{self.class_name}.{self.method_name}: "
-        #     msg += "the controller has no defined image policies."
-        #     self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         if len(data) == 0:
             msg = "the controller has no defined image policies."
@@ -109,19 +107,25 @@ class ImagePolicies(ImagePolicyCommon):
 
         self.properties["response_data"] = {}
         self.properties["all_policies"] = {}
+        self.data = {}
+
         for policy in data:
             policy_name = policy.get("policyName")
-
             if policy_name is None:
                 msg = f"{self.class_name}.{self.method_name}: "
                 msg += "Cannot parse policy information from the controller."
-                self.ansible_module.fail_json(msg, **self.failed_result)
-
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
+            self.data[policy_name] = policy
             self.properties["response_data"][policy_name] = policy
 
         self.properties["all_policies"] = copy.deepcopy(
             self.properties["response_data"]
         )
+
+        self.results.response_current = self.rest_send.response_current
+        self.results.response = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.result = self.rest_send.result_current
 
     def _get(self, item):
         self.method_name = inspect.stack()[0][3]
@@ -213,6 +217,15 @@ class ImagePolicies(ImagePolicyCommon):
         Return None otherwise
         """
         return self._get("policyType")
+
+    @property
+    def response_data(self) -> Dict[AnyStr, Any]:
+        """
+        Return dict containing the DATA portion of a controller response, keyed on policy_name
+        """
+        if self.properties["response_data"] is None:
+            return {}
+        return self.properties["response_data"]
 
     @property
     def nxos_version(self):

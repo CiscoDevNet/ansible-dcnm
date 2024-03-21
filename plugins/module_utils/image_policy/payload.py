@@ -18,6 +18,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import json
 import logging
 from typing import Any, Dict
 
@@ -44,9 +45,9 @@ class Payload(ImagePolicyCommon):
         """
         self.properties holds property values for the class
         """
-        self.properties: Dict[str, Any] = {}
-        self.properties["payload"]: Dict[str, Any] = {}
-        self.properties["config"]: Dict[str, Any] = {}
+        # self.properties is instantiated in ImagePolicyCommon
+        self.properties["payload"] = {}
+        self.properties["config"] = {}
 
     @property
     def payload(self):
@@ -104,10 +105,18 @@ class Config2Payload(Payload):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"properties[config] {json.dumps(self.properties['config'], indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         if self.properties["config"] == {}:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is empty"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"HERE 1 STATE: {self.ansible_module.params['state']}"
+        self.log.debug(msg)
 
         if self.ansible_module.params["state"] in ["deleted", "query"]:
             self.properties["payload"]["policyName"] = self.properties["config"]["name"]
@@ -135,6 +144,9 @@ class Config2Payload(Payload):
                 self.properties["config"]["packages"]["uninstall"]
             )
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"properties[payload] {json.dumps(self.properties['payload'], indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
 class Payload2Config(Payload):
     """

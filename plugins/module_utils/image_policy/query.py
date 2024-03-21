@@ -24,6 +24,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common imp
     ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 
 
 class ImagePolicyQuery(ImagePolicyCommon):
@@ -44,17 +46,19 @@ class ImagePolicyQuery(ImagePolicyCommon):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImagePolicyQuery()"
-        self.log.debug(msg)
-
         self._policies_to_query = []
         self._build_properties()
         self._image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies.results = Results()
 
         self.action = "query"
-        self.changed = False
-        self.failed = False
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        msg = "ENTERED ImagePolicyQuery(): "
+        msg += f"action {self.action}, "
+        msg += f"check_mode {self.check_mode}, "
+        msg += f"state {self.state}"
+        self.log.debug(msg)
 
     def _build_properties(self):
         """
@@ -93,18 +97,6 @@ class ImagePolicyQuery(ImagePolicyCommon):
                 self.ansible_module.fail_json(msg)
         self.properties["policy_names"] = value
 
-    def _get_policies_to_query(self) -> None:
-        """
-        Retrieve policies from the controller and set the list of
-        controller policies that are in our policy_names list.
-        """
-        self._image_policies.refresh()
-
-        self._policies_to_query = []
-        for policy_name in self.policy_names:
-            if policy_name in self._image_policies.all_policies:
-                self._policies_to_query.append(policy_name)
-
     def commit(self):
         """
         query each of the image policies in self.policy_names
@@ -113,26 +105,36 @@ class ImagePolicyQuery(ImagePolicyCommon):
         if self.policy_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        self._get_policies_to_query()
+        self._image_policies.refresh()
 
-        msg = f"self._policies_to_query: {self._policies_to_query}"
-        self.log.debug(msg)
-        if len(self._policies_to_query) == 0:
-            self.changed = False
-            self.failed = False
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+
+        if self._image_policies.results.result_current.get("success") is False:
+            self.results.diff_current = {}
+            self.results.failed = True
+            self.results.response_current = copy.deepcopy(self._image_policies.results.response_current)
+            self.results.result_current = copy.deepcopy(self._image_policies.results.result_current)
+            self.results.register_task_result()
             return
 
-        msg = f"Populating diff {self._policies_to_query}"
-        self.log.debug(msg)
+        self.results.failed = False
+        registered_a_result = False
+        for policy_name in self.policy_names:
+            if policy_name not in self._image_policies.all_policies:
+                continue
+            self.results.diff_current = copy.deepcopy(self._image_policies.all_policies[policy_name])
+            self.results.response_current = copy.deepcopy(self._image_policies.results.response_current)
+            self.results.result_current = copy.deepcopy(self._image_policies.results.result_current)
+            self.results.register_task_result()
+            registered_a_result = True
 
-        for policy_name in self._policies_to_query:
-            if policy_name in self._image_policies.all_policies:
-                policy = copy.deepcopy(self._image_policies.all_policies[policy_name])
-                policy["action"] = self.action
-                self.diff = policy
-        self.response = copy.deepcopy(self._image_policies.response)
-        self.response_current = copy.deepcopy(self._image_policies.response_current)
-        self.result = copy.deepcopy(self._image_policies.result)
-        self.result_current = copy.deepcopy(self._image_policies.result_current)
+        if registered_a_result is False:
+            self.results.failed = False
+            self.results.diff_current = {}
+            # Avoid a failed result if none of the policies were found
+            self.results.result_current = {"success": True}
+            self.results.register_task_result()

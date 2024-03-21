@@ -6,19 +6,14 @@
     "test_image_policy_common_00090a": {
         "changed": false,
         "failed": true,
-        "diff": {
-            "diff_deleted": [],
-            "diff_merged": [],
-            "diff_overridden": [],
-            "diff_query": [],
-            "diff_replaced": []
-        },
-        "response": {
-            "response_deleted": [],
-            "response_merged": [],
-            "response_overridden": [],
-            "response_query": [],
-            "response_replaced": []
-        }
+        "diff": [
+            {}
+        ],
+        "response": [
+            {}
+        ],
+        "result": [
+            {}
+        ]
     }
 }
