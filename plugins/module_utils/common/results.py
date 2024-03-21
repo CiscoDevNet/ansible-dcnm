@@ -330,6 +330,19 @@ class Results:
         return result
 
     @property
+    def ok_result(self) -> Dict[str, Any]:
+        """
+        return a result for a successful task with no changes
+        """
+        result = {}
+        result["changed"] = False
+        result["failed"] = False
+        result["diff"] = [{}]
+        result["response"] = [{}]
+        result["result"] = [{}]
+        return result
+
+    @property
     def action(self):
         """
         Added to results to indicate the action that was taken

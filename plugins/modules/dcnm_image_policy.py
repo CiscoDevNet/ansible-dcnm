@@ -303,6 +303,7 @@ class Common(ImagePolicyCommon):
     """
     Common methods for all states
     """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
@@ -322,14 +323,15 @@ class Common(ImagePolicyCommon):
 
         self._implemented_states = set()
         self._valid_states = ["deleted", "merged", "overridden", "query", "replaced"]
+        self._states_require_config = {"merged", "overridden", "replaced", "query"}
 
         self.params = ansible_module.params
         self.rest_send = RestSend(self.ansible_module)
 
         self.config = ansible_module.params.get("config")
-        if not isinstance(self.config, list):
-            msg = "expected list type for self.config. "
-            msg += f"got {type(self.config).__name__}"
+
+        if self.state in self._states_require_config and not self.config:
+            msg = f"'config' parameter is required for state {self.state}"
             self.ansible_module.fail_json(msg, **self.rest_send.failed_result)
 
         self.validated = []
@@ -410,7 +412,7 @@ class Common(ImagePolicyCommon):
 
         # Exit if there's nothing to do
         if len(self.want) == 0:
-            self.ansible_module.exit_json(**self.results.module_result)
+            self.ansible_module.exit_json(**self.results.ok_result)
 
     @property
     def results(self):
@@ -422,6 +424,10 @@ class Common(ImagePolicyCommon):
 
 
 class Replaced(Common):
+    """
+    Handle replaced state
+    """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
@@ -475,20 +481,34 @@ class Deleted(Common):
 
     def commit(self) -> None:
         """
-        1.  Delete all policies in self.want that exist on the controller
+        If config is present, delete all policies in self.want that exist on the controller
+        If config is not present, delete all policies on the controller
         """
         self.results.state = self.state
         self.results.check_mode = self.check_mode
+        self.image_policy_delete.policy_names = self.get_policies_to_delete()
+        self.image_policy_delete.results = self.results
+        self.image_policy_delete.commit()
 
+    def get_policies_to_delete(self) -> List[str]:
+        """
+        Return a list of policy names to delete
+
+        -   In config is present, return list of image policy names
+            in self.want that exist on the controller
+        -   If config is not present, return list of all image policy
+            names on the controller
+        """
+        if not self.config:
+            self.get_have()
+            return list(self.have.all_policies.keys())
         self.get_want()
         self.get_have()
         policy_names_to_delete = []
         for want in self.want:
             if want["policyName"] in self.have.all_policies:
                 policy_names_to_delete.append(want["policyName"])
-        self.image_policy_delete.policy_names = policy_names_to_delete
-        self.image_policy_delete.results = self.results
-        self.image_policy_delete.commit()
+        return policy_names_to_delete
 
 
 class Query(Common):
@@ -531,6 +551,10 @@ class Query(Common):
 
 
 class Overridden(Common):
+    """
+    Handle overridden state
+    """
+
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
@@ -614,6 +638,13 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        msg = f"params: {json_pretty(self.ansible_module.params)}"
+        self.log.debug(msg)
+        if not ansible_module.params.get("config"):
+            msg = f"playbook config is required for {self.state}"
+            ansible_module.fail_json(msg, **self.results.failed_result)
+
         self.image_policy_create = ImagePolicyCreateBulk(self.ansible_module)
         self.image_policy_update = ImagePolicyUpdateBulk(self.ansible_module)
 
@@ -759,7 +790,12 @@ def main():
     """
 
     element_spec = {
-        "config": {"required": True, "type": "list", "elements": "dict"},
+        "config": {
+            "required": False,
+            "type": "list",
+            "elements": "dict",
+            "default": [],
+        },
         "state": {
             "default": "merged",
             "choices": ["deleted", "merged", "overridden", "query", "replaced"],
@@ -817,12 +853,6 @@ def main():
         msg = "Module failed."
         ansible_module.fail_json(msg, **results.final_result)
     ansible_module.exit_json(**results.final_result)
-
-    # task.results.build_final_result()
-    # if True in task.results.failed:
-    #     msg = "Module failed."
-    #     ansible_module.fail_json(msg, **task.results.final_result)
-    # ansible_module.exit_json(**task.results.final_result)
 
 
 if __name__ == "__main__":
