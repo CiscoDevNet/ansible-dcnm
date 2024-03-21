@@ -22,11 +22,12 @@ import copy
 import inspect
 import json
 import logging
+import re
 from time import sleep
 
 # Using only for its failed_result property
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
-    ImageUpgradeTaskResult
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
     dcnm_send
 
@@ -55,13 +56,9 @@ class RestSend:
 
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
         self.ansible_module = ansible_module
 
-        msg = "ENTERED RestSend(): "
-        self.log.debug(msg)
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.params = ansible_module.params
 
@@ -79,6 +76,14 @@ class RestSend:
         self.properties["path"] = None
         self.properties["payload"] = None
 
+        self.check_mode = self.ansible_module.check_mode
+        self.state = self.params.get("state")
+
+        msg = "ENTERED RestSend(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
     def _verify_commit_parameters(self):
         if self.verb is None:
             msg = f"{self.class_name}._verify_commit_parameters: "
@@ -90,6 +95,12 @@ class RestSend:
             self.ansible_module.fail_json(msg, **self.failed_result)
 
     def commit(self):
+        """
+        Send the REST request to the controller
+        """
+        msg = f"{self.class_name}.commit: "
+        msg += f"check_mode: {self.check_mode}."
+        self.log.debug(msg)
         if self.check_mode is True:
             self.commit_check_mode()
         else:
@@ -123,35 +134,14 @@ class RestSend:
         self.response_current["METHOD"] = self.verb
         self.response_current["REQUEST_PATH"] = self.path
         self.response_current["MESSAGE"] = "OK"
-        self.response_current["DATA"] = "[simulated-check-mode-response:Success] "
-        self.result_current = self._handle_response(self.response_current)
+        self.response_current["CHECK_MODE"] = True
+        self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
+        self.result_current = self._handle_response(
+            copy.deepcopy(self.response_current)
+        )
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
     def commit_normal_mode(self):
         """
@@ -171,11 +161,6 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += f"verb {self.verb}, path {self.path}."
-        self.log.debug(msg)
-
         self._verify_commit_parameters()
         try:
             timeout = self.timeout
@@ -184,62 +169,64 @@ class RestSend:
 
         success = False
         msg = f"{caller}: Entering commit loop. "
+        msg += f"timeout: {timeout}, unit_test: {self.unit_test}."
         self.log.debug(msg)
 
         while timeout > 0 and success is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}.  "
+            msg += f"Calling dcnm_send: verb {self.verb}, path {self.path}"
             if self.payload is None:
-                msg = f"{caller}: Calling dcnm_send: verb {self.verb}, path {self.path}"
                 self.log.debug(msg)
-                response = dcnm_send(self.ansible_module, self.verb, self.path)
+                self.response_current = dcnm_send(
+                    self.ansible_module, self.verb, self.path
+                )
             else:
-                msg = f"{caller}: Calling dcnm_send: verb {self.verb}, path {self.path}, payload: "
+                msg += ", payload: "
                 msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-                response = dcnm_send(
+                self.response_current = dcnm_send(
                     self.ansible_module,
                     self.verb,
                     self.path,
                     data=json.dumps(self.payload),
                 )
+            self.result_current = self._handle_response(self.response_current)
 
-            self.response_current = copy.deepcopy(response)
-            self.result_current = self._handle_response(response)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}.  "
+            msg += f"result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}."
+            self.log.debug(msg)
 
             success = self.result_current["success"]
             if success is False and self.unit_test is False:
                 sleep(self.send_interval)
             timeout -= self.send_interval
 
-        msg = f"{caller}: Exiting dcnm_send_with_retry loop."
-        msg += f"success {success}. verb {self.verb}, path {self.path}."
-        self.log.debug(msg)
+            self.response_current = self._strip_invalid_json_from_response_data(
+                self.response_current
+            )
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}.  "
+            msg += "response_current: "
+            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}."
+            self.log.debug(msg)
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+    def _strip_invalid_json_from_response_data(self, response):
+        """
+        Strip "Invalid JSON response:" from response["DATA"] if present
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"caller: {caller}.  "
-        msg += "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        This just clutters up the output and is not useful to the user.
+        """
+        if "DATA" not in response:
+            return response
+        if not isinstance(response["DATA"], str):
+            return response
+        response["DATA"] = re.sub(r"Invalid JSON response:\s*", "", response["DATA"])
+        return response
 
     def _handle_response(self, response):
         """
@@ -256,7 +243,7 @@ class RestSend:
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unknown request verb ({self.verb}) for response {response}."
-        self.ansible_module.fail_json(msg)
+        self.ansible_module.fail_json(msg, **self.failed_result)
 
     def _handle_get_response(self, response):
         """
@@ -356,7 +343,7 @@ class RestSend:
         """
         Return a result for a failed task with no changes
         """
-        return ImageUpgradeTaskResult(self.ansible_module).failed_result
+        return Results().failed_result
 
     @property
     def path(self):

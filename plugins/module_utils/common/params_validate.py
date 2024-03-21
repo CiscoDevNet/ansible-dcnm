@@ -427,7 +427,7 @@ class ParamsValidate:
 
     def _verify_preferred_type_for_standard_types(
         self, preferred_type: str, value: Any
-    ) -> (bool, Any):
+    ) -> tuple:
         """
         If preferred_type is one of the standard python types
         we use isinstance() to check if we are able to convert
@@ -448,7 +448,7 @@ class ParamsValidate:
 
     def _verify_preferred_type_for_ipaddress_types(
         self, preferred_type: str, value: Any
-    ) -> (bool, Any):
+    ) -> tuple:
         """
         We can't use isinstance() to verify ipaddress types.
         Hence, we check these types separately.
