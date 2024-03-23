@@ -165,21 +165,32 @@
     that:
     - result.changed == true
     - result.failed == false
-    - result.diff.attach_policy[0].policy_name == image_policy_1
-    - result.diff.attach_policy[1].policy_name == image_policy_1
-    - result.diff.attach_policy[2].policy_name == image_policy_1
-    - result.diff.upgrade[0].devices[0].policyName == image_policy_1
-    - result.diff.upgrade[1].devices[0].policyName == image_policy_1
-    - result.diff.upgrade[2].devices[0].policyName == image_policy_1
-    - result.diff.validate[0].policy == image_policy_1
-    - result.diff.validate[1].policy == image_policy_1
-    - result.diff.validate[2].policy == image_policy_1
-    - result.response.attach_policy[0].RETURN_CODE == 200
-    - result.response.stage[0].RETURN_CODE == 200
-    - result.response.upgrade[0].RETURN_CODE == 200
-    - result.response.upgrade[1].RETURN_CODE == 200
-    - result.response.upgrade[2].RETURN_CODE == 200
-    - result.response.validate[0].RETURN_CODE == 200
+    - result.diff[0].action == "attach"
+    - result.diff[1].action == "attach"
+    - result.diff[2].action == "attach"
+    - result.diff[0].policy_name == image_policy_1
+    - result.diff[1].policy_name == image_policy_1
+    - result.diff[2].policy_name == image_policy_1
+    - result.diff[3].action == "stage"
+    - result.diff[4].action == "stage"
+    - result.diff[5].action == "stage"
+    - result.diff[3].policy == image_policy_1
+    - result.diff[4].policy == image_policy_1
+    - result.diff[5].policy == image_policy_1
+    - result.diff[6].action == "validate"
+    - result.diff[7].action == "validate"
+    - result.diff[8].action == "validate"
+    - result.diff[6].policy == image_policy_1
+    - result.diff[7].policy == image_policy_1
+    - result.diff[8].policy == image_policy_1
+    - result.diff[9].devices[0].policyName == image_policy_1
+    - result.diff[10].devices[0].policyName == image_policy_1
+    - result.diff[11].devices[0].policyName == image_policy_1
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[3].RETURN_CODE == 200
+    - result.response[4].RETURN_CODE == 200
+    - result.response[5].RETURN_CODE == 200
 
 - name: QUERY - SETUP - Wait for controller response for all three switches
   cisco.dcnm.dcnm_image_upgrade:
@@ -191,9 +202,9 @@
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
   until:
-    - result.diff.issu_status[0].ipAddress == ansible_switch_1
-    - result.diff.issu_status[1].ipAddress == ansible_switch_2
-    - result.diff.issu_status[2].ipAddress == ansible_switch_3
+    - result.diff[0].ipAddress == ansible_switch_1
+    - result.diff[1].ipAddress == ansible_switch_2
+    - result.diff[2].ipAddress == ansible_switch_3
   retries: 60
   delay: 5
   ignore_errors: yes
@@ -219,32 +230,23 @@
     that:
     - result.changed == false
     - result.failed == false
-    - (result.diff.issu_status | length) == 3
-    - (result.diff.detach_policy | length) == 0
-    - (result.diff.stage | length) == 0
-    - (result.diff.upgrade | length) == 0
-    - (result.diff.validate | length) == 0
-    - (result.response.issu_status | length) == 1
-    - (result.response.attach_policy | length) == 0
-    - (result.response.detach_policy | length) == 0
-    - (result.response.stage | length) == 0
-    - (result.response.upgrade | length) == 0
-    - (result.response.validate | length) == 0
-    - (result.diff.issu_status[0].ipAddress) == ansible_switch_1
-    - (result.diff.issu_status[1].ipAddress) == ansible_switch_2
-    - (result.diff.issu_status[2].ipAddress) == ansible_switch_3
-    - (result.diff.issu_status[0].policy) == image_policy_1
-    - (result.diff.issu_status[1].policy) == image_policy_1
-    - (result.diff.issu_status[2].policy) == image_policy_1
-    - (result.diff.issu_status[0].statusPercent) == 100
-    - (result.diff.issu_status[1].statusPercent) == 100
-    - (result.diff.issu_status[2].statusPercent) == 100
+    - (result.diff | length) == 3
+    - (result.response | length) == 1
+    - (result.diff[0].ipAddress) == ansible_switch_1
+    - (result.diff[1].ipAddress) == ansible_switch_2
+    - (result.diff[2].ipAddress) == ansible_switch_3
+    - (result.diff[0].policy) == image_policy_1
+    - (result.diff[1].policy) == image_policy_1
+    - (result.diff[2].policy) == image_policy_1
+    - (result.diff[0].statusPercent) == 100
+    - (result.diff[1].statusPercent) == 100
+    - (result.diff[2].statusPercent) == 100
 
 ################################################################################
 # QUERY - TEST - Detach policies from two switches and verify
 ################################################################################
 
-- name: QUERY - TEST - Detach policies from two switches
+- name: QUERY - TEST - Detach policies from two switches and verify
   cisco.dcnm.dcnm_image_upgrade:
         state: deleted
         config:
@@ -261,15 +263,14 @@
     that:
     - result.changed == true
     - result.failed == false
-    - (result.diff.detach_policy | length) == 2
-    - (result.diff.stage | length) == 0
-    - (result.diff.upgrade | length) == 0
-    - (result.diff.validate | length) == 0
-    - (result.response.attach_policy | length) == 0
-    - (result.response.detach_policy | length) == 1
-    - (result.response.stage | length) == 0
-    - (result.response.upgrade | length) == 0
-    - (result.response.validate | length) == 0
+    - (result.diff | length) == 2
+    - (result.response | length) == 1
+    - result.diff[0]["action"] == "detach"
+    - result.diff[1]["action"] == "detach"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].DATA == "Successfully detach the policy from device."
+    - result.response[0].METHOD == "DELETE"
+
 
 
 ################################################################################
@@ -293,26 +294,17 @@
     that:
     - result.changed == false
     - result.failed == false
-    - (result.diff.issu_status | length) == 3
-    - (result.diff.detach_policy | length) == 0
-    - (result.diff.stage | length) == 0
-    - (result.diff.upgrade | length) == 0
-    - (result.diff.validate | length) == 0
-    - (result.response.issu_status | length) == 1
-    - (result.response.attach_policy | length) == 0
-    - (result.response.detach_policy | length) == 0
-    - (result.response.stage | length) == 0
-    - (result.response.upgrade | length) == 0
-    - (result.response.validate | length) == 0
-    - (result.diff.issu_status[0].ipAddress) == ansible_switch_1
-    - (result.diff.issu_status[1].ipAddress) == ansible_switch_2
-    - (result.diff.issu_status[2].ipAddress) == ansible_switch_3
-    - (result.diff.issu_status[0].policy) == "None"
-    - (result.diff.issu_status[1].policy) == "None"
-    - (result.diff.issu_status[2].policy) == image_policy_1
-    - (result.diff.issu_status[0].statusPercent) == 0
-    - (result.diff.issu_status[1].statusPercent) == 0
-    - (result.diff.issu_status[2].statusPercent) == 100
+    - (result.diff | length) == 3
+    - (result.response | length) == 1
+    - (result.diff[0].ipAddress) == ansible_switch_1
+    - (result.diff[1].ipAddress) == ansible_switch_2
+    - (result.diff[2].ipAddress) == ansible_switch_3
+    - (result.diff[0].policy) == "None"
+    - (result.diff[1].policy) == "None"
+    - (result.diff[2].policy) == image_policy_1
+    - (result.diff[0].statusPercent) == 0
+    - (result.diff[1].statusPercent) == 0
+    - (result.diff[2].statusPercent) == 100
 
 ################################################################################
 # QUERY - TEST - Detach policies from remaining switch and verify
@@ -334,16 +326,8 @@
     that:
     - result.changed == true
     - result.failed == false
-    - (result.diff.attach_policy | length) == 0
-    - (result.diff.detach_policy | length) == 1
-    - (result.diff.stage | length) == 0
-    - (result.diff.upgrade | length) == 0
-    - (result.diff.validate | length) == 0
-    - (result.response.attach_policy | length) == 0
-    - (result.response.detach_policy | length) == 1
-    - (result.response.stage | length) == 0
-    - (result.response.upgrade | length) == 0
-    - (result.response.validate | length) == 0
+    - (result.diff | length) == 1
+    - (result.response | length) == 1
 
 ################################################################################
 # QUERY - TEST - Verify image_policy_1 removed from all switches
@@ -366,26 +350,17 @@
     that:
     - result.changed == false
     - result.failed == false
-    - (result.diff.issu_status | length) == 3
-    - (result.diff.detach_policy | length) == 0
-    - (result.diff.stage | length) == 0
-    - (result.diff.upgrade | length) == 0
-    - (result.diff.validate | length) == 0
-    - (result.response.issu_status | length) == 1
-    - (result.response.attach_policy | length) == 0
-    - (result.response.detach_policy | length) == 0
-    - (result.response.stage | length) == 0
-    - (result.response.upgrade | length) == 0
-    - (result.response.validate | length) == 0
-    - (result.diff.issu_status[0].ipAddress) == ansible_switch_1
-    - (result.diff.issu_status[1].ipAddress) == ansible_switch_2
-    - (result.diff.issu_status[2].ipAddress) == ansible_switch_3
-    - (result.diff.issu_status[0].policy) == "None"
-    - (result.diff.issu_status[1].policy) == "None"
-    - (result.diff.issu_status[2].policy) == "None"
-    - (result.diff.issu_status[0].statusPercent) == 0
-    - (result.diff.issu_status[1].statusPercent) == 0
-    - (result.diff.issu_status[2].statusPercent) == 0
+    - (result.diff | length) == 3
+    - (result.response | length) == 1
+    - (result.diff[0].ipAddress) == ansible_switch_1
+    - (result.diff[1].ipAddress) == ansible_switch_2
+    - (result.diff[2].ipAddress) == ansible_switch_3
+    - (result.diff[0].policy) == "None"
+    - (result.diff[1].policy) == "None"
+    - (result.diff[2].policy) == "None"
+    - (result.diff[0].statusPercent) == 0
+    - (result.diff[1].statusPercent) == 0
+    - (result.diff[2].statusPercent) == 0
 
 ################################################################################
 # CLEAN-UP

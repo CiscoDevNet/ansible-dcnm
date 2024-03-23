@@ -1005,8 +1005,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
             if action == "attach":
                 self.task_result.diff_attach_policy = instance.diff_null
+                self.task_result.diff = instance.diff_null
             if action == "detach":
                 self.task_result.diff_detach_policy = instance.diff_null
+                self.task_result.diff = instance.diff_null
             return
 
         for key, value in serial_numbers_to_update.items():
@@ -1018,8 +1020,14 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 self.task_result.response_attach_policy = copy.deepcopy(
                     instance.response_current
                 )
+                self.task_result.response = copy.deepcopy(
+                    instance.response_current
+                )
             if action == "detach":
                 self.task_result.response_detach_policy = copy.deepcopy(
+                    instance.response_current
+                )
+                self.task_result.response = copy.deepcopy(
                     instance.response_current
                 )
 
@@ -1030,8 +1038,10 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.log.debug(msg)
             if action == "attach":
                 self.task_result.diff_attach_policy = copy.deepcopy(diff)
+                self.task_result.diff = copy.deepcopy(diff)
             elif action == "detach":
                 self.task_result.diff_detach_policy = copy.deepcopy(diff)
+                self.task_result.diff = copy.deepcopy(diff)
 
     def _stage_images(self, serial_numbers) -> None:
         """
@@ -1052,11 +1062,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.task_result.diff_stage = copy.deepcopy(diff)
+            self.task_result.diff = copy.deepcopy(diff)
         for response in instance.response:
             msg = "adding response to task_result.response_stage: "
             msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.task_result.response_stage = copy.deepcopy(response)
+            self.task_result.response = copy.deepcopy(response)
 
     def _validate_images(self, serial_numbers) -> None:
         """
@@ -1076,11 +1088,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.task_result.diff_validate = copy.deepcopy(diff)
+            self.task_result.diff = copy.deepcopy(diff)
         for response in instance.response:
             msg = "adding response to task_result.response_validate: "
             msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.task_result.response_validate = copy.deepcopy(response)
+            self.task_result.response = copy.deepcopy(response)
 
     def _verify_install_options(self, devices) -> None:
         """
@@ -1218,11 +1232,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.task_result.diff_upgrade = copy.deepcopy(diff)
+            self.task_result.diff = copy.deepcopy(diff)
         for response in upgrade.response:
             msg = "adding response to response_upgrade: "
             msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.task_result.response_upgrade = copy.deepcopy(response)
+            self.task_result.response = copy.deepcopy(response)
 
     def handle_merged_state(self) -> None:
         """
@@ -1294,6 +1310,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         if "DATA" in response_current:
             response_current.pop("DATA")
         self.task_result.response_issu_status = copy.deepcopy(response_current)
+        self.task_result.response = copy.deepcopy(response_current)
         for switch in self.need:
             instance.filter = switch.get("ip_address")
             msg = f"SwitchIssuDetailsByIpAddress.filter: {instance.filter}, "
@@ -1302,6 +1319,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             if instance.filtered_data is None:
                 continue
             self.task_result.diff_issu_status = instance.filtered_data
+            self.task_result.diff = instance.filtered_data
 
     def _failure(self, resp) -> None:
         """

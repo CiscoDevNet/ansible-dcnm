@@ -18,6 +18,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import logging
 
@@ -63,6 +64,7 @@ class ImageUpgradeTaskResult:
         Build the properties dict() with default values
         """
         self.properties = {}
+        self.properties["diff"] = []
         self.properties["diff_attach_policy"] = []
         self.properties["diff_detach_policy"] = []
         self.properties["diff_issu_status"] = []
@@ -70,6 +72,7 @@ class ImageUpgradeTaskResult:
         self.properties["diff_upgrade"] = []
         self.properties["diff_validate"] = []
 
+        self.properties["response"] = []
         self.properties["response_attach_policy"] = []
         self.properties["response_issu_status"] = []
         self.properties["response_detach_policy"] = []
@@ -118,7 +121,7 @@ class ImageUpgradeTaskResult:
         return result
 
     @property
-    def module_result(self):
+    def module_result_orig(self):
         """
         return a result that AnsibleModule can use
         """
@@ -132,7 +135,37 @@ class ImageUpgradeTaskResult:
             result["response"][response_key] = self.properties[key]
         return result
 
+    @property
+    def module_result(self):
+        """
+        return a result that AnsibleModule can use
+        """
+        result = {}
+        result["changed"] = self.did_anything_change()
+        result["diff"] = {}
+        result["response"] = {}
+        result["diff"] = copy.deepcopy(self.diff)
+        result["response"] = copy.deepcopy(self.response)
+        return result
+
     # diff properties
+    @property
+    def diff(self):
+        """
+        Getter for diff property
+
+        Used for all diffs
+        """
+        return self.properties["diff"]
+
+    @diff.setter
+    def diff(self, value):
+        """
+        Setter for diff property
+        """
+        self._verify_is_dict(value)
+        self.properties["diff"].append(value)
+
     @property
     def diff_attach_policy(self):
         """
@@ -232,6 +265,23 @@ class ImageUpgradeTaskResult:
         self.properties["diff_validate"].append(value)
 
     # response properties
+    @property
+    def response(self):
+        """
+        Getter for response property
+
+        Used for all responses
+        """
+        return self.properties["response"]
+
+    @response.setter
+    def response(self, value):
+        """
+        Setter for response_attach_policy property
+        """
+        self._verify_is_dict(value)
+        self.properties["response"].append(value)
+
     @property
     def response_attach_policy(self):
         """

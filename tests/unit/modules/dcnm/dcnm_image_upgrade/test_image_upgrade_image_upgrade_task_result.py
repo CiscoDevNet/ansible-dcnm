@@ -200,88 +200,87 @@ def test_image_upgrade_upgrade_task_result_00050(image_upgrade_task_result) -> N
         result = instance.module_result
     assert isinstance(result, dict)
     assert result["changed"] is False
-    for key in test_keys:
-        assert result["diff"][key] == []
-    for key in test_keys:
-        assert result["response"][key] == []
+    assert result["diff"] == []
+    assert result["response"] == []
 
 
-@pytest.mark.parametrize(
-    "state, changed",
-    [
-        ("attach_policy", True),
-        ("detach_policy", True),
-        ("issu_status", False),
-        ("stage", True),
-        ("upgrade", True),
-        ("validate", True),
-    ],
-)
-def test_image_upgrade_upgrade_task_result_00051(
-    image_upgrade_task_result, state, changed
-) -> None:
-    """
-    Function
-    - ImageUpgradeTaskResult.module_result
-    - ImageUpgradeTaskResult.did_anything_change
-    - ImageUpgradeTaskResult.diff_*
-    - ImageUpgradeTaskResult.response_*
+# REMOVING DUE TO CHANGES IN RESULT STRUCTURE
+# @pytest.mark.parametrize(
+#     "state, changed",
+#     [
+#         ("attach_policy", True),
+#         ("detach_policy", True),
+#         ("issu_status", False),
+#         ("stage", True),
+#         ("upgrade", True),
+#         ("validate", True),
+#     ],
+# )
+# def test_image_upgrade_upgrade_task_result_00051(
+#     image_upgrade_task_result, state, changed
+# ) -> None:
+#     """
+#     Function
+#     - ImageUpgradeTaskResult.module_result
+#     - ImageUpgradeTaskResult.did_anything_change
+#     - ImageUpgradeTaskResult.diff_*
+#     - ImageUpgradeTaskResult.response_*
 
-    Summary
-    Verify that module_result returns a dict with expected values when
-    changes have been made to each of the supported states.
+#     Summary
+#     Verify that module_result returns a dict with expected values when
+#     changes have been made to each of the supported states.
 
-    Test
-    -   For non-query-state properties, "changed" should be True
-    -   The diff should be a list containing the dict passed to
-        the state's diff property (e.g. diff_stage, diff_issu_status, etc)
-    -   The response should be a list containing the dict passed to
-        the state's response property (e.g. response_stage, response_issu_status, etc)
-    -   All other diffs should be empty lists
-    -   All other responses should be empty lists
-    """
-    test_key = state
-    test_keys = [
-        "attach_policy",
-        "detach_policy",
-        "issu_status",
-        "stage",
-        "upgrade",
-        "validate",
-    ]
-    diff = {"diff": "diff"}
-    response = {"response": "response"}
+#     Test
+#     -   For non-query-state properties, "changed" should be True
+#     -   The diff should be a list containing the dict passed to
+#         the state's diff property (e.g. diff_stage, diff_issu_status, etc)
+#     -   The response should be a list containing the dict passed to
+#         the state's response property (e.g. response_stage, response_issu_status, etc)
+#     -   All other diffs should be empty lists
+#     -   All other responses should be empty lists
+#     """
+#     test_key = state
+#     test_keys = [
+#         "attach_policy",
+#         "detach_policy",
+#         "issu_status",
+#         "stage",
+#         "upgrade",
+#         "validate",
+#     ]
+#     diff = {"diff": "diff"}
+#     response = {"response": "response"}
 
-    with does_not_raise():
-        instance = image_upgrade_task_result
-        if state == "attach_policy":
-            instance.diff_attach_policy = diff
-            instance.response_attach_policy = response
-        elif state == "detach_policy":
-            instance.diff_detach_policy = diff
-            instance.response_detach_policy = response
-        elif state == "issu_status":
-            instance.diff_issu_status = diff
-            instance.response_issu_status = response
-        elif state == "stage":
-            instance.diff_stage = diff
-            instance.response_stage = response
-        elif state == "upgrade":
-            instance.diff_upgrade = diff
-            instance.response_upgrade = response
-        elif state == "validate":
-            instance.diff_validate = diff
-            instance.response_validate = response
-        result = instance.module_result
-    assert isinstance(result, dict)
-    assert result["changed"] == changed
-    for key in test_keys:
-        if key == test_key:
-            assert result["diff"][key] == [diff]
-            assert result["response"][key] == [response]
-        else:
-            assert result["diff"][key] == []
-            assert result["response"][key] == []
+#     with does_not_raise():
+#         instance = image_upgrade_task_result
+#         if state == "attach_policy":
+#             instance.diff_attach_policy = diff
+#             instance.response_attach_policy = response
+#         elif state == "detach_policy":
+#             instance.diff_detach_policy = diff
+#             instance.response_detach_policy = response
+#         elif state == "issu_status":
+#             instance.diff_issu_status = diff
+#             instance.response_issu_status = response
+#         elif state == "stage":
+#             instance.diff_stage = diff
+#             instance.response_stage = response
+#         elif state == "upgrade":
+#             instance.diff_upgrade = diff
+#             instance.response_upgrade = response
+#         elif state == "validate":
+#             instance.diff_validate = diff
+#             instance.response_validate = response
+#         result = instance.module_result
+#     assert isinstance(result, dict)
+#     assert result["changed"] == changed
+#     for key in test_keys:
+#         if key == test_key:
+#             assert result["diff"][key] == [diff]
+#             assert result["response"][key] == [response]
+#         else:
+#             assert result["diff"][key] == []
+#             assert result["response"][key] == []
 
 
 @pytest.mark.parametrize(

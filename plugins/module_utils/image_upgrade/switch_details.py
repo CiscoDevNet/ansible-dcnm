@@ -79,6 +79,9 @@ class SwitchDetails(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        # Regardless of ansible_module.check_mode, we need to get the switch details
+        # So, set check_mode to False
+        self.rest_send.check_mode = False
         self.rest_send.verb = self.verb
         self.rest_send.path = self.path
         self.rest_send.commit()

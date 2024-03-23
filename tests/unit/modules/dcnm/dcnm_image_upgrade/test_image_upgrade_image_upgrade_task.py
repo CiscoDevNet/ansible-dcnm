@@ -65,6 +65,50 @@ def image_upgrade_task_bare_fixture():
     return ImageUpgradeTask
 
 
+# def test_image_upgrade_upgrade_task_00001(image_upgrade_task_bare) -> None:
+#     """
+#     Function
+#     - __init__
+
+#     Test
+#     - Class attributes are initialized to expected values
+#     """
+#     instance = image_upgrade_task_bare(MockAnsibleModule)
+#     assert isinstance(instance, ImageUpgradeTask)
+#     assert instance.class_name == "ImageUpgradeTask"
+#     assert instance.have is None
+#     assert instance.idempotent_want is None
+#     assert instance.switch_configs == []
+#     assert instance.path is None
+#     assert instance.verb is None
+#     assert instance.config == {"switches": [{"ip_address": "172.22.150.105"}]}
+#     assert instance.check_mode is False
+#     assert instance.validated == {}
+#     assert instance.want == []
+#     assert instance.need == []
+#     assert instance.task_result.module_result == {
+#         "changed": False,
+#         "diff": {
+#             "attach_policy": [],
+#             "detach_policy": [],
+#             "issu_status": [],
+#             "stage": [],
+#             "upgrade": [],
+#             "validate": [],
+#         },
+#         "response": {
+#             "attach_policy": [],
+#             "detach_policy": [],
+#             "issu_status": [],
+#             "stage": [],
+#             "upgrade": [],
+#             "validate": [],
+#         },
+#     }
+#     assert isinstance(instance.switch_details, SwitchDetails)
+#     assert isinstance(instance.image_policies, ImagePolicies)
+
+
 def test_image_upgrade_upgrade_task_00001(image_upgrade_task_bare) -> None:
     """
     Function
@@ -88,22 +132,8 @@ def test_image_upgrade_upgrade_task_00001(image_upgrade_task_bare) -> None:
     assert instance.need == []
     assert instance.task_result.module_result == {
         "changed": False,
-        "diff": {
-            "attach_policy": [],
-            "detach_policy": [],
-            "issu_status": [],
-            "stage": [],
-            "upgrade": [],
-            "validate": [],
-        },
-        "response": {
-            "attach_policy": [],
-            "detach_policy": [],
-            "issu_status": [],
-            "stage": [],
-            "upgrade": [],
-            "validate": [],
-        },
+        "diff": [],
+        "response": [],
     }
     assert isinstance(instance.switch_details, SwitchDetails)
     assert isinstance(instance.image_policies, ImagePolicies)
