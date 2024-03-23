@@ -544,4 +544,3 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name }}"
     state: deleted
-
