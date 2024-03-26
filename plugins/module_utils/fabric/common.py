@@ -205,7 +205,7 @@ class FabricCommon:
         method_name = inspect.stack()[0][3]
         if value not in self._valid_fabric_types:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"FABRIC_TYPE must be one of "
+            msg += "FABRIC_TYPE must be one of "
             msg += f"{sorted(self._valid_fabric_types)}. "
             msg += f"Got {value}"
             self.ansible_module.fail_json(msg, **self.results.failed_result)

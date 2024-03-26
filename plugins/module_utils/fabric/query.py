@@ -134,9 +134,15 @@ class FabricQuery(FabricCommon):
         add_to_diff = {}
         for fabric_name in self.fabric_names:
             if fabric_name in self._fabric_details.all_data:
-                add_to_diff[fabric_name] = copy.deepcopy(self._fabric_details.all_data[fabric_name])
+                add_to_diff[fabric_name] = copy.deepcopy(
+                    self._fabric_details.all_data[fabric_name]
+                )
 
         self.results.diff_current = add_to_diff
-        self.results.response_current = copy.deepcopy(self._fabric_details.response_current)
-        self.results.result_current = copy.deepcopy(self._fabric_details.result_current)
+        self.results.response_current = copy.deepcopy(
+            self._fabric_details.results.response_current
+        )
+        self.results.result_current = copy.deepcopy(
+            self._fabric_details.results.result_current
+        )
         self.results.register_task_result()

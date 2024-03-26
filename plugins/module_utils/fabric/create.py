@@ -31,8 +31,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_playbook_params import \
-    VerifyPlaybookParams
+
+# from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_playbook_params import \
+#     VerifyPlaybookParams
 
 
 class FabricCreateCommon(FabricCommon):
@@ -45,22 +46,22 @@ class FabricCreateCommon(FabricCommon):
     def __init__(self, ansible_module):
         super().__init__(ansible_module)
         self.class_name = self.__class__.__name__
-        self.action = "create"
+        self.action: str = "create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.fabric_details = FabricDetailsByName(self.ansible_module)
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
-        #self._verify_params = VerifyPlaybookParams(self.ansible_module)
+        # self._verify_params = VerifyPlaybookParams(self.ansible_module)
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in
         # the commit() method.
-        self.path = None
-        self.verb = None
+        self.path: str = None
+        self.verb: str = None
 
-        self._payloads_to_commit = []
+        self._payloads_to_commit: list = []
 
         self._mandatory_payload_keys = set()
         self._mandatory_payload_keys.add("FABRIC_NAME")
@@ -72,7 +73,7 @@ class FabricCreateCommon(FabricCommon):
         msg += f"state: {self.state}"
         self.log.debug(msg)
 
-    def _verify_payload(self, payload):
+    def _verify_payload(self, payload) -> None:
         """
         Verify that the payload is a dict and contains all mandatory keys
         """
@@ -100,7 +101,7 @@ class FabricCreateCommon(FabricCommon):
         msg += f"{sorted(missing_keys)}"
         self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-    def _fixup_payloads_to_commit(self):
+    def _fixup_payloads_to_commit(self) -> None:
         """
         Make any modifications to the payloads prior to sending them
         to the controller.
@@ -115,7 +116,7 @@ class FabricCreateCommon(FabricCommon):
                     payload["ANYCAST_GW_MAC"]
                 )
 
-    def _build_payloads_to_commit(self):
+    def _build_payloads_to_commit(self) -> None:
         """
         Build a list of payloads to commit.  Skip any payloads that
         already exist on the controller.
@@ -128,36 +129,11 @@ class FabricCreateCommon(FabricCommon):
         """
         self.fabric_details.refresh()
 
-        msg = f"self.fabric_details.all_data: {json.dumps(self.fabric_details.all_data, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
         self._payloads_to_commit = []
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
                 continue
-
-            msg = f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
             self._payloads_to_commit.append(copy.deepcopy(payload))
-
-            msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-    def _get_endpoint(self):
-        """
-        Get the endpoint for the fabric create API call.
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.endpoints.fabric_name = self._payloads_to_commit[0].get("FABRIC_NAME")
-        self.endpoints.template_name = "Easy_Fabric"
-        try:
-            endpoint = self.endpoints.fabric_create
-        except ValueError as error:
-            self.ansible_module.fail_json(error)
-
-        self.path = endpoint["path"]
-        self.verb = endpoint["verb"]
 
     def _set_fabric_create_endpoint(self, payload):
         """
@@ -212,7 +188,9 @@ class FabricCreateCommon(FabricCommon):
             self.results.action = self.action
             self.results.state = self.state
             self.results.check_mode = self.check_mode
-            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
 
@@ -313,14 +291,18 @@ class FabricCreateBulk(FabricCreateCommon):
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self._build_payloads_to_commit()
-        msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+
+        msg = "self._payloads_to_commit: "
+        msg += f"{json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
         if len(self._payloads_to_commit) == 0:
             return
         self._fixup_payloads_to_commit()
         self._send_payloads()
 
-class FabricCreate(FabricCommon):
+
+class FabricCreate(FabricCreateCommon):
     """
     Create a VXLAN fabric on the controller.
     """

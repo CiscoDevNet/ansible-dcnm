@@ -209,24 +209,17 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     fabrics exist on the controller and the RestSend() RETURN_CODE is 200.
 
     Code Flow
-    -   main.Merge() is instantiated and instantiates FabricQuery()
-    -   FabricQuery() instantiates FabricDetailsByName()
-    -   FabricQuery.fabric_names is set to contain one fabric_name (f1)
+    -   FabricCreateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.
-    -   FabricQuery().commit() calls FabricDetailsByName().refresh() which
-        calls FabricDetails.refresh_super()
-    -   FabricDetails.refresh_super() calls RestSend().commit() which sets
-        RestSend().response_current to a dict with keys DATA == [], 
-        RETURN_CODE == 200, MESSAGE="OK"
-    -   Hence, FabricDetails().data is set to an empty dict: {}
-    -   Hence, FabricDetailsByName().data_subclass is set to an empty dict: {}
-    -   Since FabricDetails().all_data is an empty dict, FabricQuery().commit() sets:
-        -   instance.results.diff_current to an empty dict
-        -   instance.results.response_current to the RestSend().response_current
-        -   instance.results.result_current to the RestSend().result_current
-    -   FabricQuery.commit() calls Results().register_task_result()
-    -   Results().register_task_result() adds sequence_number (with value 1) to
-        each of the results dicts 
+    -   FabricCreateBulk.commit() calls FabricCreate()._build_payloads_to_commit()
+    -   FabricCreate()._build_payloads_to_commit() calls FabricDetails().refresh()
+        which returns a dict with keys DATA == [], RETURN_CODE == 200
+    -   FabricCreate()._build_payloads_to_commit() sets FabricCreate()._payloads_to_commit
+        to a list containing fabric f1 payload
+    -   FabricCreateBulk.commit() calls RestSend().commit() which sets RestSend().response_current
+        to a dict with keys:
+        -   DATA == {f1 fabric data dict}
+            RETURN_CODE == 200
     """
     key = "test_fabric_create_bulk_00030a"
 
@@ -250,7 +243,6 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
         instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance.fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
 
@@ -340,7 +332,6 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
-        instance.fabric_details.results = Results()
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     with does_not_raise():
@@ -413,7 +404,6 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
         instance.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance.fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
 

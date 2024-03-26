@@ -31,6 +31,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
+    FabricUpdateCommon, FabricUpdate, FabricUpdateBulk
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
     load_fixture
 
@@ -173,6 +175,16 @@ def fabric_query_fixture():
     return FabricQuery(instance)
 
 
+@pytest.fixture(name="fabric_update_bulk")
+def fabric_update_bulk_fixture():
+    """
+    mock FabricUpdateBulk
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricUpdateBulk(instance)
+
+
 @contextmanager
 def does_not_raise():
     """
@@ -201,11 +213,11 @@ def payloads_fabric_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details(key: str) -> Dict[str, str]:
+def payloads_fabric_update_bulk(key: str) -> Dict[str, str]:
     """
-    Return responses for FabricDetails
+    Return payloads for FabricUpdateBulk
     """
-    data_file = "responses_FabricDetails"
+    data_file = "payloads_FabricUpdateBulk"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -246,6 +258,36 @@ def responses_fabric_delete(key: str) -> Dict[str, str]:
     Return responses for FabricDelete
     """
     data_file = "responses_FabricDelete"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_details(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetails
+    """
+    data_file = "responses_FabricDetails"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_summary(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricSummary
+    """
+    data_file = "responses_FabricSummary"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_update_bulk(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricUpdateBulk
+    """
+    data_file = "responses_FabricUpdateBulk"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

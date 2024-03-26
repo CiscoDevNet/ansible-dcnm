@@ -171,7 +171,7 @@ class FabricDelete(FabricCommon):
             msg = "No fabrics to delete"
             self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
             self.log.debug(msg)
-            
+
     def _send_requests(self):
         """
         If check_mode is False, send the requests to the controller
