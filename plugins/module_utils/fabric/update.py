@@ -51,11 +51,6 @@ class FabricUpdateCommon(FabricCommon):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED FabricUpdateCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
-        self.log.debug(msg)
 
         self.fabric_details = FabricDetailsByName(self.ansible_module)
         self._fabric_summary = FabricSummary(self.ansible_module)
@@ -95,6 +90,12 @@ class FabricUpdateCommon(FabricCommon):
         self.config_save_result = {}
         self.config_deploy_result = {}
         self.send_payload_result = {}
+
+        msg = "ENTERED FabricUpdateCommon(): "
+        msg += f"action: {self.action}, "
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"state: {self.state}"
+        self.log.debug(msg)
 
     def _can_fabric_be_deployed(self, fabric_name):
         """

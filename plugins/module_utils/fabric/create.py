@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
@@ -48,12 +49,6 @@ class FabricCreateCommon(FabricCommon):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED FabricCreateCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
-        self.log.debug(msg)
-
         self.fabric_details = FabricDetailsByName(self.ansible_module)
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
@@ -72,6 +67,7 @@ class FabricCreateCommon(FabricCommon):
         self._mandatory_payload_keys.add("BGP_AS")
 
         msg = "ENTERED FabricCreateCommon(): "
+        msg += f"action: {self.action}, "
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
@@ -81,6 +77,10 @@ class FabricCreateCommon(FabricCommon):
         Verify that the payload is a dict and contains all mandatory keys
         """
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"payload: {payload}"
+        self.log.debug(msg)
+
         if not isinstance(payload, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be a dict. "
@@ -128,11 +128,21 @@ class FabricCreateCommon(FabricCommon):
         """
         self.fabric_details.refresh()
 
+        msg = f"self.fabric_details.all_data: {json.dumps(self.fabric_details.all_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self._payloads_to_commit = []
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
                 continue
+
+            msg = f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
             self._payloads_to_commit.append(copy.deepcopy(payload))
+
+            msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
     def _get_endpoint(self):
         """
@@ -206,6 +216,9 @@ class FabricCreateCommon(FabricCommon):
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
 
+            msg = f"self.results.diff: {json.dumps(self.results.diff, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
     @property
     def payloads(self):
         """
@@ -219,6 +232,11 @@ class FabricCreateCommon(FabricCommon):
     @payloads.setter
     def payloads(self, value):
         method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value: {value}"
+        self.log.debug(msg)
+
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be a list of dict. "
@@ -295,6 +313,8 @@ class FabricCreateBulk(FabricCreateCommon):
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self._build_payloads_to_commit()
+        msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         if len(self._payloads_to_commit) == 0:
             return
         self._fixup_payloads_to_commit()
@@ -319,6 +339,9 @@ class FabricCreate(FabricCommon):
         self._init_properties()
 
     def _init_properties(self):
+        """
+        Add properties specific to this class
+        """
         # self.properties is already initialized in the parent class
         self.properties["payload"] = None
 

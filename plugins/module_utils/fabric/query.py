@@ -18,6 +18,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
@@ -128,17 +129,14 @@ class FabricQuery(FabricCommon):
         self.results.check_mode = self.check_mode
         self.results.state = self.state
 
-        if self._fabric_details.result_current.get("success") is False:
-            self.results.diff_current = {}
-            self.results.response_current = copy.deepcopy(self._fabric_details.response_current)
-            self.results.result_current = copy.deepcopy(self._fabric_details.result_current)
-            self.results.register_task_result()
-            return
-
+        msg = f"self.fabric_names: {self.fabric_names}"
+        self.log.debug(msg)
+        add_to_diff = {}
         for fabric_name in self.fabric_names:
-            if fabric_name not in self._fabric_details.all_data:
-                continue
-            self.results.diff_current = copy.deepcopy(self._fabric_details.all_data[fabric_name])
-            self.results.response_current = copy.deepcopy(self._fabric_details.response_current)
-            self.results.result_current = copy.deepcopy(self._fabric_details.result_current)
-            self.results.register_task_result()
+            if fabric_name in self._fabric_details.all_data:
+                add_to_diff[fabric_name] = copy.deepcopy(self._fabric_details.all_data[fabric_name])
+
+        self.results.diff_current = add_to_diff
+        self.results.response_current = copy.deepcopy(self._fabric_details.response_current)
+        self.results.result_current = copy.deepcopy(self._fabric_details.result_current)
+        self.results.register_task_result()

@@ -330,42 +330,6 @@ class Common(FabricCommon):
             self.want.append(copy.deepcopy(config))
 
 
-class Query(Common):
-    """
-    Handle query state
-    """
-
-    def __init__(self, ansible_module):
-        self.class_name = self.__class__.__name__
-        super().__init__(ansible_module)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
-        msg = "ENTERED Query(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
-
-        self._implemented_states.add("query")
-
-    def commit(self) -> None:
-        """
-        1.  query the fabrics in self.want that exist on the controller
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        self.get_want()
-
-        fabric_query = FabricQuery(self.ansible_module)
-        fabric_query.results = self.results
-        fabric_names_to_query = []
-        for want in self.want:
-            fabric_names_to_query.append(want["fabric_name"])
-        fabric_query.fabric_names = copy.copy(fabric_names_to_query)
-        fabric_query.commit()
-
-
 class Deleted(Common):
     """
     Handle deleted state
@@ -507,6 +471,42 @@ class Merged(Common):
         self.fabric_update.results = self.results
         self.fabric_update.payloads = self.need_update
         self.fabric_update.commit()
+
+
+class Query(Common):
+    """
+    Handle query state
+    """
+
+    def __init__(self, ansible_module):
+        self.class_name = self.__class__.__name__
+        super().__init__(ansible_module)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        msg = "ENTERED Query(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        self._implemented_states.add("query")
+
+    def commit(self) -> None:
+        """
+        1.  query the fabrics in self.want that exist on the controller
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.get_want()
+
+        fabric_query = FabricQuery(self.ansible_module)
+        fabric_query.results = self.results
+        fabric_names_to_query = []
+        for want in self.want:
+            fabric_names_to_query.append(want["fabric_name"])
+        fabric_query.fabric_names = copy.copy(fabric_names_to_query)
+        fabric_query.commit()
 
 
 def main():

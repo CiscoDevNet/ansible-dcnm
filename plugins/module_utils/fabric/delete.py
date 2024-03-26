@@ -102,36 +102,6 @@ class FabricDelete(FabricCommon):
         # self.properties is already set in the parent class
         self.properties["fabric_names"] = None
 
-    @property
-    def fabric_names(self):
-        """
-        return the fabric names
-        """
-        return self.properties["fabric_names"]
-
-    @fabric_names.setter
-    def fabric_names(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_names must be a list. "
-            msg += f"got {type(value).__name__} for "
-            msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
-        if len(value) == 0:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_names must be a list of at least one string. "
-            msg += f"got {value}."
-            self.ansible_module.fail_json(msg)
-        for item in value:
-            if not isinstance(item, str):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "fabric_names must be a list of strings. "
-                msg += f"got {type(item).__name__} for "
-                msg += f"value {item}"
-                self.ansible_module.fail_json(msg)
-        self.properties["fabric_names"] = value
-
     def _get_fabrics_to_delete(self) -> None:
         """
         Retrieve fabric info from the controller and set the list of
@@ -264,3 +234,33 @@ class FabricDelete(FabricCommon):
         self.results.result_current = self.rest_send.result_current
 
         self.results.register_task_result()
+
+    @property
+    def fabric_names(self):
+        """
+        return the fabric names
+        """
+        return self.properties["fabric_names"]
+
+    @fabric_names.setter
+    def fabric_names(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, list):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be a list. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            self.ansible_module.fail_json(msg)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be a list of at least one string. "
+            msg += f"got {value}."
+            self.ansible_module.fail_json(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "fabric_names must be a list of strings. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"value {item}"
+                self.ansible_module.fail_json(msg)
+        self.properties["fabric_names"] = value

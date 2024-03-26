@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import copy
+import json
 import inspect
 import logging
 
@@ -78,6 +79,14 @@ class FabricDetails(FabricCommon):
             return
         for item in self.rest_send.response_current.get("DATA"):
             self.data[item["fabricName"]] = item
+
+        msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"self.rest_send.response_current: "
+        msg += f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.response_current = self.rest_send.response_current
         self.response = self.rest_send.response_current
         self.result_current = self.rest_send.result_current
@@ -96,7 +105,7 @@ class FabricDetails(FabricCommon):
     @property
     def all_data(self):
         """
-        Return all fabric details from the controller.
+        Return all fabric details from the controller (i.e. self.data)
         """
         return self.data
 
@@ -241,6 +250,10 @@ class FabricDetailsByName(FabricDetails):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"instance.filter {self.filter} "
+        self.log.debug(msg)
+
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a fabric name "
@@ -268,6 +281,10 @@ class FabricDetailsByName(FabricDetails):
         See also: _get()
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"instance.filter {self.filter} "
+        self.log.debug(msg)
 
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "

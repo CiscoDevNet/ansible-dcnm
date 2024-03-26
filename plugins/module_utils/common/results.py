@@ -19,8 +19,8 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
-import json
 import inspect
+import json
 import logging
 from typing import Any, Dict
 
@@ -49,7 +49,6 @@ class Results:
     (as in the example below, where FabricDelete() class is called from the
     TaskDelete() class.  The Results instance can then be used to build the
     final result, by calling Results.build_final_result().
-
 
     Example Usage:
 
@@ -127,18 +126,41 @@ class Results:
         "changed": True, # or False
         "failed": True,  # or False
         "diff": {
-            "OK": [<list of dict containing changes that succeeded>],
-            "FAILED": [<list of dict containing changes that failed>]
+            [<list of dict containing changes>],
         }
         "response": {
-            "OK": [<list of dict containing successful controller responses>],
-            "FAILED": [<list of dict containing failed controller responses>]
+            [<list of dict containing controller responses>],
         }
         "result": {
-            "OK": [<list of dict containing successful controller responses>],
-            "FAILED": [<list of dict containing failed controller responses>]
+            [<list of dict containing results (from handle_response() functions)>],
+        }
+        "metadata": {
+            [<list of dict containing metadata>],
         }
     }
+
+    diff, response, and result dicts are per the Ansible DCNM Collection standard output.
+
+    An example of a result dict would be (sequence_number is added by Results):
+
+    {
+        "found": true,
+        "sequence_number": 0,
+        "success": true
+    }
+
+    An examplke of a metadata dict would be (sequence_number is added by Results):
+
+    {
+        "action": "merge",
+        "check_mode": false,
+        "state": "merged",
+        "sequence_number": 0
+    }
+
+    sequence_number indicates the order in which the task was registered with Results.
+    It provides a way to correlate the diff, response, result, and metadata across all
+    tasks.
     """
 
     def __init__(self):
@@ -164,7 +186,7 @@ class Results:
 
         self.final_result = {}
         self._build_properties()
-    
+
     def _build_properties(self):
         self.properties: Dict[str, Any] = {}
         self.properties["action"] = None
@@ -191,10 +213,24 @@ class Results:
 
     def did_anything_change(self) -> bool:
         """
-        return True if there were any changes
+        Return True if there were any changes
+        Otherwise, return False
         """
+        msg = f"{self.class_name}.did_anything_change(): ENTERED: "
+        msg += f"self.action: {self.action}, "
+        msg += f"self.result_current: {self.result_current}, "
+        msg += f"self.diff: {self.diff}"
+        self.log.debug(msg)
         if self.check_mode is True:
-            self.log.debug("check_mode is True.  No changes made.")
+            return False
+        if self.action == "query":
+            msg = f"{self.class_name}.did_anything_change(): "
+            msg += f"self.action: {self.action}"
+            self.log.debug(msg)
+            return False
+        if self.result_current.get("changed", None) is True:
+            return True
+        if self.result_current.get("changed", None) is False:
             return False
         if len(self.diff) != 0:
             return True
@@ -205,7 +241,7 @@ class Results:
         Register a task's result.
 
         1.  Append result_current, response_current, diff_current and
-            metadata_current their respective lists (result, response, diff, 
+            metadata_current their respective lists (result, response, diff,
             and metadata)
         2.  Set self.changed based on current_diff.
             If current_diff is empty, it is assumed that no changes were made
@@ -221,6 +257,17 @@ class Results:
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"ENTERED: self.action: {self.action}, "
+        msg += f"self.result_current: {self.result_current}"
+        self.log.debug(msg)
+
+        self.increment_task_sequence_number()
+        self.metadata = self.metadata_current
+        self.response = self.response_current
+        self.result = self.result_current
+        self.diff = self.diff_current
+
         if self.did_anything_change() is False:
             self.changed = False
         else:
@@ -230,14 +277,21 @@ class Results:
             self.failed = False
         else:
             self.failed = True
-        self.increment_task_sequence_number()
-        self.metadata = self.metadata_current
-        self.response = self.response_current
-        self.result = self.result_current
-        self.diff = self.diff_current
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.metadata: {json.dumps(self.metadata, indent=4, sort_keys=True)}, "
+        msg += f"self.diff: {json.dumps(self.diff, indent=4, sort_keys=True)}, "
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.metadata: {json.dumps(self.metadata, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.response: {json.dumps(self.response, indent=4, sort_keys=True)}, "
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}, "
         self.log.debug(msg)
 
     def build_final_result(self):
@@ -248,12 +302,12 @@ class Results:
         msg = f"self.failed: {self.failed}, "
         self.log.debug(msg)
 
-        if True in self.failed:
+        if True in self.failed:  # pylint: disable=unsupported-membership-test
             self.final_result["failed"] = True
         else:
             self.final_result["failed"] = False
 
-        if True in self.changed:
+        if True in self.changed:  # pylint: disable=unsupported-membership-test
             self.final_result["changed"] = True
         else:
             self.final_result["changed"] = False
@@ -275,6 +329,18 @@ class Results:
         result["result"] = [{}]
         return result
 
+    @property
+    def ok_result(self) -> Dict[str, Any]:
+        """
+        return a result for a successful task with no changes
+        """
+        result = {}
+        result["changed"] = False
+        result["failed"] = False
+        result["diff"] = [{}]
+        result["response"] = [{}]
+        result["result"] = [{}]
+        return result
 
     @property
     def action(self):
@@ -297,7 +363,7 @@ class Results:
         self.properties["action"] = value
 
     @property
-    def changed(self):
+    def changed(self) -> set:
         """
         bool = whether we changed anything
 
@@ -372,7 +438,7 @@ class Results:
         self.properties["diff_current"] = value
 
     @property
-    def failed(self):
+    def failed(self) -> set:
         """
         A set() of Boolean values indicating whether any tasks failed
 
@@ -387,6 +453,9 @@ class Results:
     def failed(self, value):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
+            # Setting failed, itself failed(!)
+            # Add True to failed to indicate this.
+            self.properties["failed"].add(True)
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.failed must be a bool. Got {value}"
             raise ValueError(msg)

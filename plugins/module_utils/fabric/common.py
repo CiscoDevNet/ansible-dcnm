@@ -220,5 +220,4 @@ class FabricCommon:
 
     @results.setter
     def results(self, value):
-        method_name = inspect.stack()[0][3]
         self.properties["results"] = value

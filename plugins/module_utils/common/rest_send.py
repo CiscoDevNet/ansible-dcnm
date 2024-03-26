@@ -95,6 +95,12 @@ class RestSend:
             self.ansible_module.fail_json(msg, **self.failed_result)
 
     def commit(self):
+        """
+        Send the REST request to the controller
+        """
+        msg = f"{self.class_name}.commit: "
+        msg += f"check_mode: {self.check_mode}."
+        self.log.debug(msg)
         if self.check_mode is True:
             self.commit_check_mode()
         else:
@@ -130,7 +136,9 @@ class RestSend:
         self.response_current["MESSAGE"] = "OK"
         self.response_current["CHECK_MODE"] = True
         self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.result_current = self._handle_response(copy.deepcopy(self.response_current))
+        self.result_current = self._handle_response(
+            copy.deepcopy(self.response_current)
+        )
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
@@ -161,6 +169,7 @@ class RestSend:
 
         success = False
         msg = f"{caller}: Entering commit loop. "
+        msg += f"timeout: {timeout}, unit_test: {self.unit_test}."
         self.log.debug(msg)
 
         while timeout > 0 and success is False:
@@ -169,9 +178,11 @@ class RestSend:
             msg += f"Calling dcnm_send: verb {self.verb}, path {self.path}"
             if self.payload is None:
                 self.log.debug(msg)
-                self.response_current = dcnm_send(self.ansible_module, self.verb, self.path)
+                self.response_current = dcnm_send(
+                    self.ansible_module, self.verb, self.path
+                )
             else:
-                msg += f", payload: "
+                msg += ", payload: "
                 msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 self.response_current = dcnm_send(
@@ -182,6 +193,11 @@ class RestSend:
                 )
             self.result_current = self._handle_response(self.response_current)
 
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}.  "
+            msg += f"result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}."
+            self.log.debug(msg)
+
             success = self.result_current["success"]
             if success is False and self.unit_test is False:
                 sleep(self.send_interval)
@@ -190,6 +206,11 @@ class RestSend:
             self.response_current = self._strip_invalid_json_from_response_data(
                 self.response_current
             )
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}.  "
+            msg += "response_current: "
+            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}."
+            self.log.debug(msg)
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
