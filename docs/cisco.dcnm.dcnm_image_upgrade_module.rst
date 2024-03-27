@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_image_upgrade
 **Image management for Nexus switches**
 
 
-Version added: 0.9.0
+Version added: 3.5.0
 
 .. contents::
    :local:
@@ -862,7 +862,7 @@ Parameters
                 <td>
                         <div>Enable (True) or disable (False) EPLD upgrade</div>
                         <div>If upgrade.nxos is false, epld and packages cannot both be true</div>
-                        <div>If epld is true, nxos_option must be disruptive</div>
+                        <div>If epld is true, options.nxos.mode must be set to disruptive</div>
                 </td>
             </tr>
             <tr>
@@ -904,8 +904,8 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Validate (True) or do not validate (False) the image</div>
-                        <div>after staging</div>
+                        <div>Validate (True) or do not validate (False) the image after staging.</div>
+                        <div>If True, triggers NX-OS to validate that the image is compatible with the switch platform hardware.</div>
                 </td>
             </tr>
 
@@ -942,19 +942,19 @@ Examples
 .. code-block:: yaml
 
     # This module supports the following states:
-    #
+
     # merged:
     #   Attach image policy to one or more devices.
     #   Stage image on one or more devices.
     #   Validate image on one or more devices.
     #   Upgrade image on one or more devices.
-    #
+
     # query:
     #   Return ISSU details for one or more devices.
-    #
+
     # deleted:
     #   Delete image policy from one or more devices
-    #
+
 
     # Attach image policy NR3F to two devices
     # Stage and validate the image on two devices but do not upgrade
@@ -987,7 +987,7 @@ Examples
                         epld: false
                     options:
                         nxos:
-                            type: disruptive
+                            mode: disruptive
                         epld:
                             module: ALL
                             golden: false
@@ -1008,7 +1008,7 @@ Examples
                                 epld: true
                             options:
                                 nxos:
-                                    type: disruptive
+                                    mode: disruptive
                                 epld:
                                     module: ALL
                                     golden: false

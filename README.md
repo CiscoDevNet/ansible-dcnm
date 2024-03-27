@@ -34,6 +34,7 @@ Name | Description
 ### Modules
 Name | Description
 --- | ---
+[cisco.dcnm.dcnm_image_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_policy_module.rst)|Image policy management for Nexus Dashboard Fabric Controller
 [cisco.dcnm.dcnm_image_upgrade](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upgrade_module.rst)|Image management for Nexus switches
 [cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
 [cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
