@@ -37,8 +37,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    GenerateResponses, does_not_raise, fabric_query_fixture,
-    rest_send_response_current)
+    ResponseGenerator, does_not_raise, fabric_query_fixture, responses_fabric_query)
 
 
 def test_fabric_query_00010(fabric_query) -> None:
@@ -225,9 +224,9 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield rest_send_response_current(key)
+        yield responses_fabric_query(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -241,16 +240,20 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
     instance._fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.result) == 1
     assert len(instance.results.response) == 1
+
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.result[0].get("found", None) == True
     assert instance.results.result[0].get("success", None) == True
+
     assert False in instance.results.failed
     assert True not in instance.results.failed
     assert False in instance.results.changed
@@ -323,9 +326,9 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield rest_send_response_current(key)
+        yield responses_fabric_query(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -339,16 +342,20 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     instance._fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.result) == 1
     assert len(instance.results.response) == 1
+
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.result[0].get("found", None) == True
     assert instance.results.result[0].get("success", None) == True
+
     assert False in instance.results.failed
     assert True not in instance.results.failed
     assert False in instance.results.changed
@@ -413,9 +420,9 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield rest_send_response_current(key)
+        yield responses_fabric_query(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -428,20 +435,25 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
         instance._fabric_details.rest_send.timeout = 1
         instance._fabric_details.rest_send.send_interval = 1
         instance.fabric_names = ["f1"]
+
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     instance._fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.result) == 1
     assert len(instance.results.response) == 1
+
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 500
     assert instance.results.result[0].get("found", None) == False
     assert instance.results.result[0].get("success", None) == False
+
     assert True in instance.results.failed
     assert False not in instance.results.failed
     assert False in instance.results.changed
@@ -500,9 +512,9 @@ def test_fabric_query_00033(monkeypatch, fabric_query) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield rest_send_response_current(key)
+        yield responses_fabric_query(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -516,18 +528,24 @@ def test_fabric_query_00033(monkeypatch, fabric_query) -> None:
     instance._fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.result) == 1
     assert len(instance.results.response) == 1
+
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("f1", {}).get("asn", None) == "65001"
     assert instance.results.diff[0].get("f1", {}).get("nvPairs", {}).get("BGP_AS") == "65001"
+
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
+
     assert instance.results.result[0].get("found", None) == True
     assert instance.results.result[0].get("success", None) == True
+
     assert False in instance.results.failed
     assert True not in instance.results.failed
     assert False in instance.results.changed

@@ -37,7 +37,7 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture 
     load_fixture
 
 
-class GenerateResponses:
+class ResponseGenerator:
     """
     Given a generator, return the items in the generator with
     each call to the next property
@@ -52,7 +52,7 @@ class GenerateResponses:
         yield {"key1": "value1"}
         yield {"key2": "value2"}
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     print(gen.next) # {"key1": "value1"}
     print(gen.next) # {"key2": "value2"}
@@ -268,6 +268,16 @@ def responses_fabric_details(key: str) -> Dict[str, str]:
     Return responses for FabricDetails
     """
     data_file = "responses_FabricDetails"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_query(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricQuery
+    """
+    data_file = "responses_FabricQuery"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

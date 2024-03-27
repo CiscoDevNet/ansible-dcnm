@@ -37,7 +37,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    GenerateResponses, does_not_raise, fabric_create_bulk_fixture, payloads_fabric_create_bulk,
+    ResponseGenerator, does_not_raise, fabric_create_bulk_fixture, payloads_fabric_create_bulk,
     responses_fabric_create_bulk, responses_fabric_details, rest_send_response_current)
 
 
@@ -230,7 +230,7 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
         yield responses_fabric_details(key)
         yield responses_fabric_create_bulk(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -249,6 +249,7 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1
@@ -321,7 +322,7 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
     def responses():
         yield responses_fabric_details(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -390,7 +391,7 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
         yield responses_fabric_details(key)
         yield responses_fabric_create_bulk(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -410,6 +411,7 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1

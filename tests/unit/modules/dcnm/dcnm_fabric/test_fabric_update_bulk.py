@@ -37,9 +37,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    GenerateResponses, does_not_raise, fabric_update_bulk_fixture, payloads_fabric_update_bulk,
-    responses_fabric_update_bulk, responses_fabric_details, responses_fabric_summary,
-    rest_send_response_current)
+    ResponseGenerator, does_not_raise, fabric_update_bulk_fixture, payloads_fabric_update_bulk,
+    responses_fabric_update_bulk, responses_fabric_details, responses_fabric_summary)
 
 
 def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
@@ -234,7 +233,7 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
         yield responses_fabric_details(key)
         yield responses_fabric_update_bulk(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -253,6 +252,7 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1
@@ -344,7 +344,7 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -363,6 +363,7 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1
@@ -454,7 +455,7 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -474,6 +475,7 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1
@@ -569,7 +571,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         yield responses_fabric_details(key)
         yield responses_fabric_summary(key)
 
-    gen = GenerateResponses(responses())
+    gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
@@ -590,6 +592,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
+
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1
