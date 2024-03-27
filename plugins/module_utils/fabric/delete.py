@@ -129,7 +129,7 @@ class FabricDelete(FabricCommon):
 
     def _set_fabric_delete_endpoint(self, fabric_name):
         """
-        return the endpoint for the fabric_name
+        Set the fabric delete endpoint for fabric_name
         """
         self._endpoints.fabric_name = fabric_name
         try:
@@ -174,29 +174,27 @@ class FabricDelete(FabricCommon):
 
     def _send_requests(self):
         """
-        If check_mode is False, send the requests to the controller
-        If check_mode is True, do not send the requests to the controller
+        1.  Update RestSend() parameters:
+            - check_mode : Enables or disables sending the request
+            - timeout : Reduce to 1 second from default of 300 seconds
+        2.  Call _send_request() for each fabric to be deleted.
 
-        In both cases, populate the following lists:
-
-        - self.response_ok  : list of controller responses associated with success result
-        - self.result_ok    : list of results where success is True
-        - self.diff_ok      : list of payloads for which the request succeeded
-        - self.response_nok : list of controller responses associated with failed result
-        - self.result_nok   : list of results where success is False
-        - self.diff_nok     : list of payloads for which the request failed
+        NOTES:
+        -   We don't want RestSend to retry on errors since the likelihood of a
+            timeout error when deleting a fabric is low, and there are cases of
+            permanent errors for which we don't want to retry.  Hence, we set
+            timeout to 1 second.
         """
         self.rest_send.check_mode = self.check_mode
-
-        # We don't want RestSend to retry on errors since the likelihood of a
-        # timeout error when deleting a fabric is low, and there are cases
-        # of permanent errors for which we don't want to retry.
         self.rest_send.timeout = 1
 
         for fabric_name in self._fabrics_to_delete:
             self._send_request(fabric_name)
 
     def _send_request(self, fabric_name):
+        """
+        Send a delete request to the controller and register the result.
+        """
         method_name = inspect.stack()[0][3]
         self._set_fabric_delete_endpoint(fabric_name)
 

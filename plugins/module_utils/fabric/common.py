@@ -101,7 +101,7 @@ class FabricCommon:
         into the dotted-quad format that the controller expects.
 
         Return mac address formatted for the controller on success
-        Return False on failure.
+        Raise ValueError on failure.
         """
         mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):

@@ -157,7 +157,7 @@ class FabricCreateCommon(FabricCommon):
             payload.pop("DEPLOY", None)
 
             # We don't want RestSend to retry on errors since the likelihood of a
-            # timeout error when updating a fabric is low, and there are many cases
+            # timeout error when creating a fabric is low, and there are many cases
             # of permanent errors for which we don't want to retry.
             self.rest_send.timeout = 1
 
@@ -290,6 +290,11 @@ class FabricCreateBulk(FabricCreateCommon):
 class FabricCreate(FabricCreateCommon):
     """
     Create a VXLAN fabric on the controller.
+
+    NOTES:
+    -   FabricCreateBulk is used currently.
+    -   FabricCreate may be useful in the future, but is not currently used
+        and could be deleted if not needed.
     """
 
     def __init__(self, ansible_module):
@@ -325,24 +330,12 @@ class FabricCreate(FabricCreateCommon):
         if len(self.payload) == 0:
             self.ansible_module.exit_json(**self.results.failed_result)
 
-        fabric_name = self.payload.get("FABRIC_NAME")
-        if fabric_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload is missing mandatory FABRIC_NAME key."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+        self._set_fabric_create_endpoint(self.payload)
 
-        self.endpoints.fabric_name = fabric_name
-        self.endpoints.template_name = "Easy_Fabric"
-        try:
-            endpoint = self.endpoints.fabric_create
-        except ValueError as error:
-            self.ansible_module.fail_json(error, **self.results.failed_result)
-
-        path = endpoint["path"]
-        verb = endpoint["verb"]
-
-        self.rest_send.path = path
-        self.rest_send.verb = verb
+        self.rest_send.check_mode = self.check_mode
+        self.rest_send.timeout = 1
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
         self.rest_send.payload = self.payload
         self.rest_send.commit()
 

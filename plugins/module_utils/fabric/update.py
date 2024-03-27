@@ -141,8 +141,8 @@ class FabricUpdateCommon(FabricCommon):
 
     def _build_payloads_to_commit(self):
         """
-        Build a list of payloads to commit.  Skip any payloads that
-        already exist on the controller.
+        Build a list of payloads to commit.  Skip payloads for fabrics
+        that do not exist on the controller
 
         Expects self.payloads to be a list of dict, with each dict
         being a payload for the fabric create API endpoint.
