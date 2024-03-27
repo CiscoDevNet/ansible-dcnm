@@ -1,0 +1,161 @@
+{
+    "test_image_upgrade_image_upgrade_common_00020a": {
+        "RETURN_CODE": 200,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00020b": {
+        "RETURN_CODE": 400,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "error: image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00020c": {
+        "RETURN_CODE": 200,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://blah_noop",
+        "ERROR": "image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00030a": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00030b": {
+        "RETURN_CODE": 400,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "error: image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00030c": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "ERROR": "image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00040a": {
+        "RETURN_CODE": 200,
+        "METHOD": "PUT",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00040b": {
+        "RETURN_CODE": 400,
+        "METHOD": "PUT",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "error: image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00040c": {
+        "RETURN_CODE": 200,
+        "METHOD": "PUT",
+        "REQUEST_PATH": "https://blah_noop",
+        "ERROR": "image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00050a": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00050b": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "not OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00050c": {
+        "RETURN_CODE": 404,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "Not Found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00050d": {
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00060a": {
+        "RETURN_CODE": 200,
+        "METHOD": "FOO",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "not OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00070a": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00070b": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "not OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00070c": {
+        "RETURN_CODE": 404,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "Not Found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00070d": {
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00080a": {
+        "TEST_NOTES": [
+            "RETURN_CODE does not matter",
+            "_handle_delete_post_put_response() considers only the MESSAGE field"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00080b": {
+        "TEST_NOTES": [
+            "RETURN_CODE does not matter",
+            "_handle_delete_post_put_response() considers only the MESSAGE field"
+        ],
+        "RETURN_CODE": 400,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "MESSAGE": "error: image not found",
+        "DATA": {}
+    },
+    "test_image_upgrade_image_upgrade_common_00080c": {
+        "TEST_NOTES": [
+            "RETURN_CODE does not matter",
+            "_handle_delete_post_put_response() considers only the MESSAGE field"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://blah_noop",
+        "ERROR": "image not found",
+        "DATA": {}
+    }
+}
