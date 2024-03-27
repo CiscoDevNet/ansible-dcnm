@@ -25,14 +25,14 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
-    FabricCreateCommon, FabricCreate, FabricCreateBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
+    FabricCreate, FabricCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-    FabricUpdateCommon, FabricUpdate, FabricUpdateBulk
+    FabricUpdateBulk
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
     load_fixture
 

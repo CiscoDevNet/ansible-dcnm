@@ -37,8 +37,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_create_bulk_fixture, payloads_fabric_create_bulk,
-    responses_fabric_create_bulk, responses_fabric_details, rest_send_response_current)
+    ResponseGenerator, does_not_raise, fabric_create_bulk_fixture,
+    payloads_fabric_create_bulk, responses_fabric_create_bulk,
+    responses_fabric_details, rest_send_response_current)
 
 
 def test_fabric_create_bulk_00010(fabric_create_bulk) -> None:
@@ -265,11 +266,17 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("BGP_AS", None) == "65001"
+    assert (
+        instance.results.response[0]
+        .get("DATA", {})
+        .get("nvPairs", {})
+        .get("BGP_AS", None)
+        == "65001"
+    )
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
-    assert instance.results.result[0].get("changed", None) == True
-    assert instance.results.result[0].get("success", None) == True
+    assert instance.results.result[0].get("changed", None) is True
+    assert instance.results.result[0].get("success", None) is True
 
     assert False in instance.results.failed
     assert True not in instance.results.failed
@@ -311,7 +318,7 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
     -   FabricCreate()._build_payloads_to_commit() sets FabricCreate()._payloads_to_commit
         to an empty list since fabric f1 already exists on the controller
     -   FabricCreateBulk.commit() returns without doing anything.
-    
+
     Test
     """
     key = "test_fabric_create_bulk_00031a"
@@ -425,14 +432,16 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 500
-    assert instance.results.response[0].get("DATA", {}) == "Error in validating provided name value pair: [BGP_AS]"
+    assert (
+        instance.results.response[0].get("DATA", {})
+        == "Error in validating provided name value pair: [BGP_AS]"
+    )
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
-    assert instance.results.result[0].get("changed", None) == False
-    assert instance.results.result[0].get("success", None) == False
+    assert instance.results.result[0].get("changed", None) is False
+    assert instance.results.result[0].get("success", None) is False
 
     assert True in instance.results.failed
     assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
-

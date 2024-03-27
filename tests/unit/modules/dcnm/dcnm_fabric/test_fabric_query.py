@@ -37,7 +37,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_query_fixture, responses_fabric_query)
+    ResponseGenerator, does_not_raise, fabric_query_fixture,
+    responses_fabric_query)
 
 
 def test_fabric_query_00010(fabric_query) -> None:
@@ -206,7 +207,7 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
     -   FabricQuery().commit() calls FabricDetailsByName().refresh() which
         calls FabricDetails.refresh_super()
     -   FabricDetails.refresh_super() calls RestSend().commit() which sets
-        RestSend().response_current to a dict with keys DATA == [], 
+        RestSend().response_current to a dict with keys DATA == [],
         RETURN_CODE == 200, MESSAGE="OK"
     -   Hence, FabricDetails().data is set to an empty dict: {}
     -   Hence, FabricDetailsByName().data_subclass is set to an empty dict: {}
@@ -216,7 +217,7 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
         -   instance.results.result_current to the RestSend().result_current
     -   FabricQuery.commit() calls Results().register_task_result()
     -   Results().register_task_result() adds sequence_number (with value 1) to
-        each of the results dicts 
+        each of the results dicts
     """
     key = "test_fabric_query_00030a"
 
@@ -251,8 +252,8 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.result[0].get("found", None) == True
-    assert instance.results.result[0].get("success", None) == True
+    assert instance.results.result[0].get("found", None) is True
+    assert instance.results.result[0].get("success", None) is True
 
     assert False in instance.results.failed
     assert True not in instance.results.failed
@@ -292,7 +293,7 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     -   FabricQuery().commit() calls FabricDetailsByName().refresh() which
         calls FabricDetails.refresh_super()
     -   FabricDetails.refresh_super() calls RestSend().commit() which sets
-        RestSend().response_current to a dict with keys DATA == [{f2 fabric data dict}], 
+        RestSend().response_current to a dict with keys DATA == [{f2 fabric data dict}],
         RETURN_CODE == 200, MESSAGE="OK"
     -   Hence, FabricDetails().data is set to: { "f2": {f2 fabric data dict} }
     -   Hence, FabricDetailsByName().data_subclass is set to: { "f2": {f2 fabric data dict} }
@@ -305,7 +306,7 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     -   FabricQuery.commit() calls Results().register_task_result()
     -   Results().register_task_result() adds sequence_number (with value 1) to
         each of the results dicts
-    
+
     Test
     -   FabricQuery.commit() calls instance._fabric_details() which sets
         instance._fabric_details.all_data to a list of dict containing
@@ -353,8 +354,8 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.result[0].get("found", None) == True
-    assert instance.results.result[0].get("success", None) == True
+    assert instance.results.result[0].get("found", None) is True
+    assert instance.results.result[0].get("success", None) is True
 
     assert False in instance.results.failed
     assert True not in instance.results.failed
@@ -393,7 +394,7 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
     -   FabricQuery().commit() calls FabricDetailsByName().refresh() which
         calls FabricDetails.refresh_super()
     -   FabricDetails.refresh_super() calls RestSend().commit() which sets
-        RestSend().response_current to a dict with keys DATA == [{f2 fabric data dict}], 
+        RestSend().response_current to a dict with keys DATA == [{f2 fabric data dict}],
         RETURN_CODE == 200, MESSAGE="OK"
     -   Hence, FabricDetails().data is set to: { "f2": {f2 fabric data dict} }
     -   Hence, FabricDetailsByName().data_subclass is set to: { "f2": {f2 fabric data dict} }
@@ -406,7 +407,7 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
     -   FabricQuery.commit() calls Results().register_task_result()
     -   Results().register_task_result() adds sequence_number (with value 1) to
         each of the results dicts
-    
+
     Setup
     -   RestSend().commit() is mocked to return a dict with key RETURN_CODE == 500
     -   RestSend().timeout is set to 1
@@ -451,8 +452,8 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 500
-    assert instance.results.result[0].get("found", None) == False
-    assert instance.results.result[0].get("success", None) == False
+    assert instance.results.result[0].get("found", None) is False
+    assert instance.results.result[0].get("success", None) is False
 
     assert True in instance.results.failed
     assert False not in instance.results.failed
@@ -492,7 +493,7 @@ def test_fabric_query_00033(monkeypatch, fabric_query) -> None:
     -   FabricQuery().commit() calls FabricDetailsByName().refresh() which
         calls FabricDetails.refresh_super()
     -   FabricDetails.refresh_super() calls RestSend().commit() which sets
-        RestSend().response_current to a dict with keys DATA == [{f1 fabric data dict}], 
+        RestSend().response_current to a dict with keys DATA == [{f1 fabric data dict}],
         RETURN_CODE == 200, MESSAGE="OK"
     -   Hence, FabricDetails().data is set to: { "f1": {f1 fabric data dict} }
     -   Hence, FabricDetailsByName().data_subclass is set to: { "f1": {f1 fabric data dict} }
@@ -539,12 +540,15 @@ def test_fabric_query_00033(monkeypatch, fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("f1", {}).get("asn", None) == "65001"
-    assert instance.results.diff[0].get("f1", {}).get("nvPairs", {}).get("BGP_AS") == "65001"
+    assert (
+        instance.results.diff[0].get("f1", {}).get("nvPairs", {}).get("BGP_AS")
+        == "65001"
+    )
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
 
-    assert instance.results.result[0].get("found", None) == True
-    assert instance.results.result[0].get("success", None) == True
+    assert instance.results.result[0].get("found", None) is True
+    assert instance.results.result[0].get("success", None) is True
 
     assert False in instance.results.failed
     assert True not in instance.results.failed
