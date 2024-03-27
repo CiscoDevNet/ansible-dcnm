@@ -43,7 +43,7 @@
                 "ALLOW_NXC": "true",
                 "ALLOW_NXC_PREV": "",
                 "ANYCAST_BGW_ADVERTISE_PIP": "false",
-                "ANYCAST_GW_MAC": "2020.0000.00aa",
+                "ANYCAST_GW_MAC": "0001.aabb.ccdd",
                 "ANYCAST_LB_ID": "",
                 "ANYCAST_RP_IP_RANGE": "10.254.254.0/24",
                 "ANYCAST_RP_IP_RANGE_INTERNAL": "",

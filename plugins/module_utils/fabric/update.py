@@ -157,21 +157,6 @@ class FabricUpdateCommon(FabricCommon):
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
                 self._payloads_to_commit.append(copy.deepcopy(payload))
 
-    def _fixup_payloads_to_commit(self):
-        """
-        Make any modifications to the payloads prior to sending them
-        to the controller.
-
-        Add any modifications to the list below.
-
-        - Translate ANYCAST_GW_MAC to a format the controller understands
-        """
-        for payload in self._payloads_to_commit:
-            if "ANYCAST_GW_MAC" in payload:
-                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
-                    payload["ANYCAST_GW_MAC"]
-                )
-
     def _send_payloads(self):
         """
         If check_mode is False, send the payloads to the controller

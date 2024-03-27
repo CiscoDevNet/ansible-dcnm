@@ -62,6 +62,40 @@ class FabricCommon:
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
 
+    def _fixup_payloads_to_commit(self) -> None:
+        """
+        Make any modifications to the payloads prior to sending them
+        to the controller.
+
+        Add any modifications to the list below.
+
+        - Translate ANYCAST_GW_MAC to a format the controller understands
+        """
+        method_name = inspect.stack()[0][3]
+        for payload in self._payloads_to_commit:
+            if not "ANYCAST_GW_MAC" in payload:
+                continue
+            try:
+                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
+                    payload["ANYCAST_GW_MAC"]
+                )
+            except ValueError as error:
+                fabric_name = "UNKNOWN"
+                anycast_gw_mac = "UNKNOWN"
+                if "FABRIC_NAME" in payload:
+                    fabric_name = payload["FABRIC_NAME"]
+                if "ANYCAST_GW_MAC" in payload:
+                    anycast_gw_mac = payload["ANYCAST_GW_MAC"]
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error translating ANYCAST_GW_MAC: "
+                msg += f"for fabric {fabric_name}, "
+                msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
+                msg += f"Error detail: {error}"
+                self.results.failed = True
+                self.results.changed = False
+                self.results.register_task_result()
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
+
     @staticmethod
     def translate_mac_address(mac_addr):
         """
@@ -73,7 +107,7 @@ class FabricCommon:
         """
         mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
-            return False
+            raise ValueError(f"Invalid MAC address: {mac_addr}")
         return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
 
     def _handle_response(self, response, verb) -> Dict[str, Any]:

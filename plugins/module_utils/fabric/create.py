@@ -101,21 +101,6 @@ class FabricCreateCommon(FabricCommon):
         msg += f"{sorted(missing_keys)}"
         self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-    def _fixup_payloads_to_commit(self) -> None:
-        """
-        Make any modifications to the payloads prior to sending them
-        to the controller.
-
-        Add any modifications to the list below.
-
-        - Translate ANYCAST_GW_MAC to a format the controller understands
-        """
-        for payload in self._payloads_to_commit:
-            if "ANYCAST_GW_MAC" in payload:
-                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
-                    payload["ANYCAST_GW_MAC"]
-                )
-
     def _build_payloads_to_commit(self) -> None:
         """
         Build a list of payloads to commit.  Skip any payloads that

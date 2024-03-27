@@ -24,7 +24,8 @@
             "BGP_AS": 65001,
             "DEPLOY": true,
             "FABRIC_NAME": "f1",
-            "FABRIC_TYPE": "VXLAN_EVPN"
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "0001aabbccdd"
         }
     ],
     "test_fabric_update_bulk_00032a": [
@@ -34,6 +35,15 @@
             "DEPLOY": true,
             "FABRIC_NAME": "f1",
             "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00033a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "0001zzbbccdd"
         }
     ]
 }
