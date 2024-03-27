@@ -80,20 +80,18 @@ class FabricCommon:
                     payload["ANYCAST_GW_MAC"]
                 )
             except ValueError as error:
-                fabric_name = "UNKNOWN"
-                anycast_gw_mac = "UNKNOWN"
-                if "FABRIC_NAME" in payload:
-                    fabric_name = payload["FABRIC_NAME"]
-                if "ANYCAST_GW_MAC" in payload:
-                    anycast_gw_mac = payload["ANYCAST_GW_MAC"]
+                fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
+                anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
+
+                self.results.failed = True
+                self.results.changed = False
+                self.results.register_task_result()
+
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error translating ANYCAST_GW_MAC: "
                 msg += f"for fabric {fabric_name}, "
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
-                self.results.failed = True
-                self.results.changed = False
-                self.results.register_task_result()
                 self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     @staticmethod
