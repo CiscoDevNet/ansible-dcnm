@@ -1,0 +1,199 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_image_upload.log
+
+- name: Delete all images from controller
+  cisco.dcnm.dcnm_image_upload:
+    state: deleted                                # choose form [merged, deleted, overridden, query], default is merged
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Upload images to controller
+      cisco.dcnm.dcnm_image_upload:
+        state: merged                             # choose form [merged, deleted, overridden, query], default is merged
+        files:
+          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
+            source: sftp                          # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp], default is local
+
+          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
+            source: scp                           # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 3'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Successfully uploaded selected image file(s)." in item["DATA"]'
+      loop: '{{ result.response }}'
+
+##############################################
+##             OVERRIDDEN                   ##
+##############################################
+
+    - name: Override without any config
+      cisco.dcnm.dcnm_image_upload:
+        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 3'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Image(s) Deleted Successfully" in item["DATA"]'
+      loop: '{{ result.response }}'
+
+##############################################
+##              OVERRIDDEN                  ##
+##############################################
+
+    - name: Override with a new config
+      cisco.dcnm.dcnm_image_upload: &image_override
+        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        files:
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp], default is local
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Successfully uploaded selected image file(s)." in item["DATA"]'
+      loop: '{{ result.response }}'
+
+##############################################
+##             IDEMPOTENCE                  ##
+##############################################
+
+    - name: Override - Idempotence
+      cisco.dcnm.dcnm_image_upload: *image_override
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+
+##############################################
+##             OVERRIDDEN                   ##
+##############################################
+
+    - name: Override with new images
+      cisco.dcnm.dcnm_image_upload:
+        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        files:
+          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
+            source: sftp                          # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+
+          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
+            source: scp                           # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 1'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+##############################################
+##             OVERRIDDEN                   ##
+##############################################
+
+    - name: Override with new images including existing images
+      cisco.dcnm.dcnm_image_upload:
+        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        files:
+          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
+            source: sftp                          # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp], default is local
+
+          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
+            source: scp                           # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+##############################################
+##                CLEANUP                   ##
+##############################################
+
+  always:
+
+    - name: Delete all images from controller
+      cisco.dcnm.dcnm_image_upload:
+        state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+      register: result
+      when: IT_CONTEXT is not defined
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
