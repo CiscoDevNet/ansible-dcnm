@@ -2597,7 +2597,7 @@ class DcnmVrf:
                             if "ip_address" not in attach:
                                 msg = "ip_address is mandatory under attach parameters"
             else:
-                if state == "merged" or state == "overridden" or state == "replaced":
+                if state == "merged" or state == "replaced":
                     msg = "config: element is mandatory for this state {0}".format(
                         state
                     )
