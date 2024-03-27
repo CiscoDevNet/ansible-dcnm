@@ -189,6 +189,52 @@ def test_fabric_create_bulk_00024(fabric_create_bulk) -> None:
     assert instance.payloads == []
 
 
+def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - payloads setter
+    - FabricCreateBulk
+        - __init__()
+
+    Summary
+    Verify behavior when payloads contains a dict with an unexpected
+    value for the FABRIC_TYPE key.
+
+    Setup
+    -   FabricCreatebulk().payloads is set to contain a dict with FABRIC_TYPE
+        set to "INVALID_FABRIC_TYPE"
+
+    Test
+    -   fail_json is called because the value of FABRIC_TYPE is invalid
+    """
+    key = "test_fabric_create_bulk_00025a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_details(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
+    with does_not_raise():
+        instance = fabric_create_bulk
+        instance.results = Results()
+        instance.payloads = payloads_fabric_create_bulk(key)
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
+    match = r"FabricCreateBulk\.fabric_type: FABRIC_TYPE must be one of"
+    with pytest.raises(AnsibleFailJson, match=match):
+        instance.commit()
+
+
 def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     """
     Classes and Methods
