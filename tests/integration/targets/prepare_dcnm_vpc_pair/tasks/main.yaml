@@ -1,0 +1,82 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- set_fact:
+    controller_version: '12'
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( 'response' in result and result.response['RETURN_CODE'] == 200 and result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
+  when: ( 'response' in result and result.response['RETURN_CODE'] == 200 and result.response['DATA']['version'] is search("\d\d.\d+") )
+  ignore_errors: yes
+
+- name: Determine version of DCNM or NDFC
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /fm/fmrest/about/version
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    controller_version: '11'
+  when: ( 'response' in result and result.response['RETURN_CODE'] == 200 and result.response['DATA']['version'] == 'DEVEL' )
+  ignore_errors: yes
+
+- name: Initialise fabric type
+  set_fact:
+    fabric_type: ""
+
+- name: Get the Fabric associations
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == '11'
+  register: result
+  ignore_errors: yes
+
+- name: Setting fact
+  set_fact:
+    fabric_type: "{{ result.response['DATA']['fabricTechnology'] }}"
+  when: (controller_version == '11' and 'response' in result and result.response['RETURN_CODE'] == 200)
+  ignore_errors: yes
+
+- name: Show the Fabric Type
+  debug:
+    var: fabric_type
+
+- name: Get the Fabric Type
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
+  when: controller_version == '12'
+  register: result
+  ignore_errors: yes
+
+- name: Setting fact
+  set_fact:
+    fabric_type: "{{ result.response['DATA']['fabricTechnology'] }}"
+  when: (controller_version == '12' and 'response' in result and result.response['RETURN_CODE'] == 200)
+  ignore_errors: yes
+
+- name: Show the fabric type
+  debug:
+    var: fabric_type
