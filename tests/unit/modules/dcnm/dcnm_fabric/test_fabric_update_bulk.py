@@ -319,7 +319,7 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         -  instance.results.result_current to a synthesized result dict
            {"success": True, "changed": False}
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
-    -   FabricUpdateCommon()._send_payloads() calls 
+    -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._build_fabrics_to_config_deploy()
     -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
         FabricUpdateCommon()._can_be_deployed()
@@ -433,39 +433,14 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
     -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
         which returns a dict with fabric f1 information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() appends the payload in
-        FabricUpdateBulk.payloads to FabricUpdatee()._payloads_to_commit
-    -   FabricUpdateBulk.commit() updates the following:
-        -   instance.results.diff_current to an empty dict
-        -   instance.results.response_current a synthesized response dict
-            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
-        -  instance.results.result_current to a synthesized result dict
-           {"success": True, "changed": False}
-    -   FabricUpdateBulk.commit() calls
-        FabricUpdateCommon()._send_payloads()
-    -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._build_fabrics_to_config_deploy()
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
-        FabricUpdateCommon()._can_be_deployed()
-    -   FabricUpdateCommon()._can_be_deployed() calls
-        FabricSummary().refresh() and then references
-        FabricSummary().fabric_is_empty to determine if the fabric is empty.
-        If the fabric is empty, it can be deployed, otherwise it cannot.
-        Hence, _can_be_deployed() returns either True or False.
-        In this testcase, the fabric is empty, so
-        FabricUpdateCommon()._can_be_deployed() returns True.
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() appends fabric f1 to both:
-        -   FabricUpdateCommon()._fabrics_to_config_deploy
-        -   FabricUpdateCommon()._fabrics_to_config_save
-    -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._fixup_payloads_to_commit()
-    -   FabricUpdateCommon()._fixup_payloads_to_commit() updates
-        ANYCAST_GW_MAC, if present, to conform with the controller's
-        requirements.
-    -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._send_payload() for each fabric in
-        FabricUpdateCommon()._payloads_to_commit
-
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._fabric_needs_update() which updates:
+        -   Results().result_current to add a synthesized failed result dict
+        -   Results().changed adding False
+        -   Results().failed adding True
+        -   Results().failed_result to add a message indicating the reason for the failure
+        And calls Results().register_task_result()
+        It then calls fail_json() because the payload contains an invalid key.
     """
     key = "test_fabric_update_bulk_00032a"
 
@@ -488,10 +463,13 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
+        instance.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
-        instance.rest_send.unit_test = True
+
+    match = r"FabricUpdateBulk\._fabric_needs_update: Invalid key:.*found in payload for fabric.*"
+
+    with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -509,13 +487,6 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
-
-    assert instance.results.response[0].get("RETURN_CODE", None) == 500
-    error_message = "Failed to update the fabric, due to invalid field [BOO] "
-    error_message += "in payload, please provide valid fields for fabric-settings"
-    assert instance.results.response[0].get("DATA", None) == error_message
-    assert instance.results.response[0].get("METHOD", None) == "PUT"
-    assert instance.results.response[0].get("MESSAGE", None) == "Internal Server Error"
 
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is False
@@ -546,49 +517,28 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         - commit()
 
     Summary
-    Verify behavior when user attempts to update a fabric and the
-    fabric exists on the controller and the RestSend() RETURN_CODE is 500.
-    The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
-    with the controller's requirements, and not able to be fixed by
+    Verify behavior when user attempts to update a fabric when the payload
+    includes ANYCAST_GW_MAC, formatted to be incompatible with the controller's
+    expectations, and not able to be fixed by
     FabricUpdateCommon()._fixup_payloads_to_commit().
+
+    Setup
+    -   FabricUpdateBulk().payloads is set to contain one payload for a fabric (f1)
+        that exists on the controller, and the payload includes ANYCAST_GW_MAC
+        formatted to be incompatible with the controller's expectations.
 
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
         that exists on the controller.
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
-        which returns a dict with fabric f1 information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() appends the payload in
-        FabricUpdateBulk.payloads to FabricUpdate()._payloads_to_commit
-    -   FabricUpdateBulk.commit() updates the following:
-        -   instance.results.action to self.action
-        -   instance.results.state to self.state
-        -   instance.results.check_mode to self.check_mode
-    -   FabricUpdateBulk.commit() calls
-        FabricUpdateCommon()._send_payloads()
-    -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._build_fabrics_to_config_deploy()
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
-        FabricUpdateCommon()._can_be_deployed()
-    -   FabricUpdateCommon()._can_be_deployed() calls
-        FabricSummary().refresh() and then references
-        FabricSummary().fabric_is_empty to determine if the fabric is empty.
-        If the fabric is empty, it can be deployed, otherwise it cannot.
-        Hence, _can_be_deployed() returns either True or False.
-        In this testcase, the fabric is empty, so _can_be_deployed() returns True.
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() appends fabric f1 to both:
-        -   FabricUpdateCommon()._fabrics_to_config_deploy
-        -   FabricUpdateCommon()._fabrics_to_config_save
-    -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._fixup_payloads_to_commit()
-    -   FabricCommon()._fixup_payloads_to_commit() calls
-        FabricCommon().translate_mac_address() to update ANYCAST_GW_MAC
-        to conform with the controller's requirements, but the mac address
-        is not convertable, so translate_mac_address() raises ValueError.
-    -   FabricCommon()._fixup_payloads_to_commit() responds to the ValueError
-        by taking the except path of its try/except block, which:
-        -   Updates results and calls results.register_task_result()
-        -   Calls fail_json()
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._fabric_needs_update()
+    -   FabricUpdateCommon()._fabric_needs_update() calls
+        FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison() because ANYCAST_GW_MAC
+        key is present in the payload.
+    -   FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison():
+        -   Updates Results()
+        -   Calls fail_json() because the mac address is not convertable.
     """
     key = "test_fabric_update_bulk_00033a"
 
@@ -612,7 +562,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    match = r"FabricUpdateBulk\._fixup_payloads_to_commit: "
+    match = r"FabricUpdateBulk\._prepare_anycast_gw_mac_for_comparison: "
     match += r"Error translating ANYCAST_GW_MAC"
     with pytest.raises(AnsibleFailJson, match=match):
         instance.commit()

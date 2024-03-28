@@ -33,8 +33,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_playbook_params import \
-    VerifyPlaybookParams
 
 
 class FabricUpdateCommon(FabricCommon):
@@ -99,6 +97,10 @@ class FabricUpdateCommon(FabricCommon):
         """
         return True if the fabric configuration can be saved and deployed
         return False otherwise
+
+        NOTES:
+        -   If the fabric is empty, the controller will throw an error when
+            attempting to deploy the fabric.
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
@@ -110,7 +112,7 @@ class FabricUpdateCommon(FabricCommon):
         msg += f"{self._fabric_summary.fabric_is_empty}"
         self.log.debug(msg)
         if self._fabric_summary.fabric_is_empty is True:
-            self.cannot_deploy_fabric_reason = "Fabric is not empty"
+            self.cannot_deploy_fabric_reason = "Fabric is empty"
             return False
         return True
 
@@ -139,6 +141,129 @@ class FabricUpdateCommon(FabricCommon):
         msg += f"payload: {sorted(payload)}"
         self.ansible_module.fail_json(msg, **self.results.failed_result)
 
+    def _prepare_payload_value_for_comparison(self, value):
+        """
+        convert payload values to controller formats
+
+        Comparison order is important.
+        bool needs to be checked before int since:
+            isinstance(True, int) == True
+            isinstance(False, int) == True
+        """
+        if isinstance(value, bool):
+            return str(value).lower()
+        if isinstance(value, int):
+            return str(value)
+        if isinstance(value, float):
+            return str(value)
+        return value
+
+    def _prepare_anycast_gw_mac_for_comparison(self, fabric_name, mac_address):
+        """
+        Try to translate the ANYCAST_GW_MAC payload value to the format
+        expected by the controller.
+
+        Return the translated mac_address if successful
+        Otherwise:
+        -   Set results.failed to True
+        -   Set results.changed to False
+        -   Register the task result
+        -   Call fail_json()
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            mac_address = self.translate_mac_address(mac_address)
+        except ValueError as error:
+            self.results.failed = True
+            self.results.changed = False
+            self.results.register_task_result()
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error translating ANYCAST_GW_MAC: "
+            msg += f"for fabric {fabric_name}, "
+            msg += f"ANYCAST_GW_MAC: {mac_address}, "
+            msg += f"Error detail: {error}"
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
+        return mac_address
+
+    def _fabric_needs_update(self, payload):
+        """
+        -   Return True if the fabric needs to be updated.
+        -   Return False otherwise.
+        -   Call fail_json() if any payload key would raise an
+            error on the controller.
+
+        The fabric needs to be updated if any of the following are true:
+        -   A key in the payload has a different value than the corresponding
+            key in fabric configuration on the controller.
+        """
+        method_name = inspect.stack()[0][3]
+        fabric_name = payload.get("FABRIC_NAME", None)
+        if fabric_name is None:
+            return False
+
+        if fabric_name not in self.fabric_details.all_data:
+            return False
+
+        nv_pairs = self.fabric_details.all_data[fabric_name].get("nvPairs", {})
+
+        for payload_key, payload_value in payload.items():
+            # Translate payload keys to equivilent keys on the controller
+            # if necessary.  This handles cases where the controller key
+            # is misspelled and we want our users to use the correct
+            # spelling.
+            if payload_key in self._key_translations:
+                key = self._key_translations[payload_key]
+            else:
+                key = payload_key
+
+            # Skip the FABRIC_TYPE key since the payload FABRIC_TYPE value
+            # will be e.g. "VXLAN_EVPN", whereas the fabric configuration will
+            # be something along the lines of "Switch_Fabric"
+            if key == "FABRIC_TYPE":
+                continue
+
+            # self._key_translations returns None for any keys that would not
+            # be found in the controller configuration (e.g. DEPLOY).
+            # Skip these keys.
+            if key is None:
+                continue
+
+            # If a key is in the payload that is not in the fabric
+            # configuration on the controller:
+            # - Update Results()
+            # - Call fail_json()
+            if nv_pairs.get(key) is None:
+                self.results.diff_current = {}
+                self.results.result_current = {"success": False, "changed": False}
+                self.results.failed = True
+                self.results.changed = False
+                self.results.failed_result["msg"] = (
+                    f"Key {key} not found in fabric configuration for "
+                    f"fabric {fabric_name}"
+                )
+                self.results.register_task_result()
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Invalid key: {key} found in payload for "
+                msg += f"fabric {fabric_name}"
+                self.log.debug(msg)
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
+
+            value = self._prepare_payload_value_for_comparison(payload_value)
+
+            if key == "ANYCAST_GW_MAC":
+                value = self._prepare_anycast_gw_mac_for_comparison(fabric_name, value)
+
+            if value != nv_pairs.get(key):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"key {key}: "
+                msg += f"payload_value [{value}] != "
+                msg += f"fabric_value: [{nv_pairs.get(key)}]: "
+                msg += "Fabric needs update."
+                self.log.debug(msg)
+                return True
+        return False
+
     def _build_payloads_to_commit(self):
         """
         Build a list of payloads to commit.  Skip payloads for fabrics
@@ -155,6 +280,8 @@ class FabricUpdateCommon(FabricCommon):
         self._payloads_to_commit = []
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
+                if self._fabric_needs_update(payload) is False:
+                    continue
                 self._payloads_to_commit.append(copy.deepcopy(payload))
 
     def _send_payloads(self):
@@ -470,83 +597,3 @@ class FabricUpdateBulk(FabricUpdateCommon):
             self.results.register_task_result()
             return
         self._send_payloads()
-
-
-class FabricUpdate(FabricUpdateCommon):
-    """
-    Update a fabric on the controller.
-    """
-
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
-        self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricUpdate()")
-
-        self.data = {}
-        self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
-
-        self._init_properties()
-
-    def _init_properties(self):
-        # self.properties is already initialized in the parent class
-        self.properties["payload"] = None
-
-    def commit(self):
-        """
-        Send the fabric create request to the controller.
-        """
-        method_name = inspect.stack()[0][3]
-        if self.payload is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Exiting. Missing mandatory property: payload"
-            self.ansible_module.fail_json(msg)
-
-        if len(self.payload) == 0:
-            self.ansible_module.exit_json(**self.results.failed_result)
-
-        fabric_name = self.payload.get("FABRIC_NAME")
-        if fabric_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload is missing mandatory FABRIC_NAME key."
-            self.ansible_module.fail_json(msg)
-
-        self.endpoints.fabric_name = fabric_name
-        self.endpoints.template_name = "Easy_Fabric"
-        try:
-            endpoint = self.endpoints.fabric_create
-        except ValueError as error:
-            self.ansible_module.fail_json(error)
-
-        path = endpoint["path"]
-        verb = endpoint["verb"]
-
-        self.rest_send.path = path
-        self.rest_send.verb = verb
-        self.rest_send.payload = self.payload
-        self.rest_send.commit()
-
-        if self.rest_send.result_current["success"] is False:
-            self.results.diff_current = {}
-        else:
-            self.results.diff_current = self.payload
-
-        self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
-        self.results.result_current = self.rest_send.result_current
-        self.results.response_current = self.rest_send.response_current
-        self.results.register_task_result()
-
-    @property
-    def payload(self):
-        """
-        Return a fabric create payload.
-        """
-        return self.properties["payload"]
-
-    @payload.setter
-    def payload(self, value):
-        self.properties["payload"] = value

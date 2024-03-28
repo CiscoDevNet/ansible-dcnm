@@ -62,6 +62,34 @@ class FabricCommon:
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
 
+        self._build_key_translations()
+
+    def _build_key_translations(self):
+        """
+        Build a dictionary of fabric configuration key translations.
+
+        The controller expects certain keys to be misspelled or otherwise
+        different from the keys used in the payload this module sends.
+
+        The dictionary is keyed on the payload key, and the value is either:
+        -   The key the controller expects.
+        -   None, if the key is not expected to be found in the controller
+            fabric configuration.  This is useful for keys that are only
+            used in the payload to the controller and later stripped before
+            sending to the controller.
+        """
+        self._key_translations = {}
+        self._key_translations["DEFAULT_QUEUING_POLICY_CLOUDSCALE"] = (
+            "DEAFULT_QUEUING_POLICY_CLOUDSCALE"
+        )
+        self._key_translations["DEFAULT_QUEUING_POLICY_OTHER"] = (
+            "DEAFULT_QUEUING_POLICY_OTHER"
+        )
+        self._key_translations["DEFAULT_QUEUING_POLICY_R_SERIES"] = (
+            "DEAFULT_QUEUING_POLICY_R_SERIES"
+        )
+        self._key_translations["DEPLOY"] = None
+
     def _fixup_payloads_to_commit(self) -> None:
         """
         Make any modifications to the payloads prior to sending them
