@@ -1851,7 +1851,7 @@ class DcnmIntf:
             )
         self.log_msg(f"HAVE ALL = {lhave_all}")
 
-    def dcnm_intf_xlate_speed (self, speed):
+    def dcnm_intf_xlate_speed(self, speed):
 
         # Controllers accept speed value in a particular format i.e. 1Gb, 100Gb etc. To make the playbook input
         # case insensitive for speed, this routine translates  the incoming speed to appropriate format.
@@ -1864,7 +1864,7 @@ class DcnmIntf:
         else:
             comp = re.compile("([0-9]+)([a-zA-Z]+)")
             match = comp.match(speed)
-            return (str(match.group(1)) + match.group(2).capitalize())
+            return str(match.group(1)) + match.group(2).capitalize()
 
     # New Interfaces
     def dcnm_intf_get_if_name(self, name, if_type):
@@ -2593,9 +2593,11 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
                 delem[profile]["admin_state"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed (
-                                                            str(delem[profile].get("speed", ""))
-                                                        )
+            intf["interfaces"][0]["nvPairs"][
+                "SPEED"
+            ] = self.dcnm_intf_xlate_speed(
+                str(delem[profile].get("speed", ""))
+            )
 
     def dcnm_intf_get_vpc_payload(self, delem, intf, profile):
 
@@ -2734,9 +2736,9 @@ class DcnmIntf:
             delem[profile]["admin_state"]
         ).lower()
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
-        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed (
-                                                        str(delem[profile].get("speed", ""))
-                                                    )
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_sub_intf_payload(self, delem, intf, profile):
 
@@ -2781,9 +2783,9 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
-        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed (
-                                                        str(delem[profile].get("speed", ""))
-                                                    )
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_loopback_payload(self, delem, intf, profile):
 
@@ -2810,9 +2812,9 @@ class DcnmIntf:
             delem[profile]["admin_state"]
         ).lower()
 
-        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed (
-                                                        str(delem[profile].get("speed", ""))
-                                                    )
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
         # Properties for mode 'lo' Loopback Interfaces
         if delem[profile]["mode"] == "lo":
@@ -2847,8 +2849,12 @@ class DcnmIntf:
             # properties that can be modified.  They will be updated from the
             # self.have dictionary to reflect the actual values later in the
             # code workflow that walks the want values and compares to have values.
-            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_PROTO"] = "PLACE_HOLDER"
-            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_TAG"] = "PLACE_HOLDER"
+            intf["interfaces"][0]["nvPairs"][
+                "DCI_ROUTING_PROTO"
+            ] = "PLACE_HOLDER"
+            intf["interfaces"][0]["nvPairs"][
+                "DCI_ROUTING_TAG"
+            ] = "PLACE_HOLDER"
 
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
 
@@ -2943,9 +2949,11 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
                 delem[profile]["admin_state"]
             ).lower()
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed (
-                                                            str(delem[profile].get("speed", ""))
-                                                        )
+            intf["interfaces"][0]["nvPairs"][
+                "SPEED"
+            ] = self.dcnm_intf_xlate_speed(
+                str(delem[profile].get("speed", ""))
+            )
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -3457,7 +3465,7 @@ class DcnmIntf:
             if (state == "replaced") or (state == "overridden"):
                 # Special handling is required for mode 'mpls' loopback interfaces.
                 # They will contain either of the following two read_only properties.
-                if k in ['DCI_ROUTING_PROTO', 'DCI_ROUTING_TAG']:
+                if k in ["DCI_ROUTING_PROTO", "DCI_ROUTING_TAG"]:
                     return "copy_and_add"
 
                 return "add"
@@ -3586,7 +3594,10 @@ class DcnmIntf:
                                     nv_keys = list(want[k][0][ik].keys())
                                     if "SPEED" in nv_keys:
                                         # Remove 'SPEED' only if it is not included in 'have'.
-                                        if d[k][index][ik].get("SPEED", None) is None:
+                                        if (
+                                            d[k][index][ik].get("SPEED", None)
+                                            is None
+                                        ):
                                             nv_keys.remove("SPEED")
                                     for nk in nv_keys:
                                         # HAVE may have an entry with a list # of interfaces. Check all the
@@ -4088,12 +4099,8 @@ class DcnmIntf:
                             del_list.append(have)
 
                         if str(deploy).lower() == "true":
-                            if (
-                                have["complianceStatus"]
-                                == "In-Sync"
-                            ) or (
-                                have["complianceStatus"]
-                                == "Pending"
+                            if (have["complianceStatus"] == "In-Sync") or (
+                                have["complianceStatus"] == "Pending"
                             ):
                                 self.diff_delete_deploy[
                                     self.int_index[have["ifType"]]
@@ -4259,7 +4266,9 @@ class DcnmIntf:
                                             "replaced"
                                         ].append(copy.deepcopy(uelem))
                                         if (
-                                            str(cfg.get("deploy", "true")).lower()
+                                            str(
+                                                cfg.get("deploy", "true")
+                                            ).lower()
                                             == "true"
                                         ):
                                             delem["serialNumber"] = intf[
