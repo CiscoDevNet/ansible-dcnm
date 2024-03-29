@@ -175,6 +175,7 @@
       "peerOneId": "{{ ansible_cxt_fabric_sno1 }}",
       "peerTwoId": "{{ ansible_cxt_fabric_sno2 }}",
       "useVirtualPeerlink": false,
+      "templateName": "vpc_pair",
       "nvPairs": {
         "DOMAIN_ID": "{{ ansible_cxt_vpc_domain_id }}",
         "PEER1_KEEP_ALIVE_LOCAL_IP": "{{ ansible_cxt_fabric_sw1 }}",
