@@ -2,18 +2,26 @@ import logging
 
 
 class FabricDefaults:
+    """
+    Return default values for fabric parameters.
+
+    Usage:
+    instance.FabricDefaults()
+    instance.template = "Easy_Fabric"
+    instance.refresh()
+    defaults = instance.defaults
+    """
     def __init__(self):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._default_nv_pairs = {}
+        self._defaults = {}
         self._build_properties()
 
     def _build_properties(self):
         self.properties = {}
         self.properties["template"] = None
-        self.properties["defaults"] = {}
 
     @property
     def template(self):
@@ -37,13 +45,13 @@ class FabricDefaults:
             msg = "template[parameters] is not a list."
             raise ValueError(msg)
 
-        self._build_default_nv_pairs()
+        self._build_defaults()
 
     def parameter(self, value):
         try:
-            return self._default_nv_pairs[value]
+            return self._defaults[value]
         except KeyError:
-            raise KeyError(f"Parameter {value} not found in default NvPairs")
+            raise KeyError(f"parameter {value} has no default value.")
 
     @staticmethod
     def make_boolean(value):
@@ -53,14 +61,14 @@ class FabricDefaults:
             return False
         return value
 
-    def _build_default_nv_pairs(self):
+    def _build_defaults(self):
         """
         Caller: refresh()
 
-        Build a dict of default fabric nvPairs.
+        Build a dict of default fabric parameter values.
         """
-        self._default_nv_pairs = {}
+        self._defaults = {}
         for parameter in self.template.get("parameters", []):
             key = parameter["name"]
             value = parameter.get("metaProperties", {}).get("defaultValue", None)
-            self._default_nv_pairs[key] = self.make_boolean(value)
+            self._defaults[key] = self.make_boolean(value)

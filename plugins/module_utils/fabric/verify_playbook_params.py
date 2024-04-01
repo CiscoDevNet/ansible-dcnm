@@ -166,9 +166,14 @@ class VerifyPlaybookParams:
         raise ValueError if "op" or "value" keys are not found in rule
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        msg = f"parameter: {parameter}, "
+        msg += f"rule: {rule}"
+        self.log.debug(msg)
         # If the playbook config contains the parameter, set its result to
         # False so that the decision rests with config_param_value_is_valid().
         if parameter in self.config:
+            msg = f"Early return: parameter: {parameter} in config."
+            self.log.debug(msg)
             return False
         default_value = None
         # If a default value does not exist for parameter, return False
@@ -180,6 +185,8 @@ class VerifyPlaybookParams:
             msg += f"default {default_value}"
             self.log.debug(msg)
         except KeyError:
+            msg = f"Early return: parameter: {parameter} has no default value."
+            self.log.debug(msg)
             return False
 
         operator = rule.get("op", None)
@@ -203,9 +210,7 @@ class VerifyPlaybookParams:
         Verify a parameter against the template
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        msg = f"CCC: self.config {self.config}"
-        self.log.debug(msg)
-        msg = f"CCC: self.parameter: {self.parameter}, "
+        msg = f"self.parameter: {self.parameter}, "
         msg += f"config_value {self.config[self.parameter]}"
         self.log.debug(msg)
 
@@ -215,7 +220,7 @@ class VerifyPlaybookParams:
             return
 
         rule = self._ruleset.ruleset[self.parameter]
-        msg = f"ZZZ: parameter: {self.parameter}, "
+        msg = f"parameter: {self.parameter}, "
         msg += f"rule: {json.dumps(rule, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -233,7 +238,7 @@ class VerifyPlaybookParams:
             else:
                 self.params_are_valid.add(True)
 
-            msg = f"ZZZ: parameter {self.parameter}, "
+            msg = f"parameter {self.parameter}, "
             msg += f"key: {key}, "
             msg += f"rule: {rule}, "
             msg += f"config_is_valid: {config_is_valid}, "
@@ -243,7 +248,7 @@ class VerifyPlaybookParams:
 
         msg = f"self.params_are_valid: {self.params_are_valid}"
         self.log.debug(msg)
-        msg = f"self.bad_params: {self.bad_params}"
+        msg = f"self.bad_params: {json.dumps(self.bad_params, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def commit(self):
