@@ -3170,7 +3170,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         ]
 
         rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
-        ovr_if_names = ["Ethernet1/25.1"]
+        ovr_if_names = ["ethernet1/25.1"]
 
         for intf in result["diff"][0]["deleted"]:
             self.assertEqual((intf["ifName"].lower() in del_if_names), True)
@@ -3758,7 +3758,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ethernet1/2",
             "ethernet3/2",
         ]
-        ovr_if_names = ["vPC750"]
+        ovr_if_names = ["vpc750"]
 
         for intf in result["diff"][0]["deleted"]:
             self.assertEqual((intf["ifName"].lower() in del_if_names), True)
