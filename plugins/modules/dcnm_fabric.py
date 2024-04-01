@@ -236,6 +236,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
     VerifyPlaybookParams
 
+
 def json_pretty(msg):
     """
     Return a pretty-printed JSON string for logging messages
