@@ -106,6 +106,7 @@ class TemplateGetAll:
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
+        self.rest_send.check_mode = False
         self.rest_send.commit()
 
         self.response_current = copy.deepcopy(self.rest_send.response_current)

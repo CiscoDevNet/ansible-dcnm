@@ -126,6 +126,7 @@ class TemplateGet:
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
+        self.rest_send.check_mode = False
         self.rest_send.commit()
 
         self.response_current = copy.deepcopy(self.rest_send.response_current)
@@ -149,9 +150,9 @@ class TemplateGet:
         """
         An instance of the Results class.
         """
-        return self.properties["results"]
+        return self._properties["results"]
 
     @results.setter
     def results(self, value):
         method_name = inspect.stack()[0][3]
-        self.properties["results"] = value
+        self._properties["results"] = value
