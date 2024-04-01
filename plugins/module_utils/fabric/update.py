@@ -53,7 +53,6 @@ class FabricUpdateCommon(FabricCommon):
         self._fabric_summary = FabricSummary(self.ansible_module)
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
-        # self._verify_params = VerifyPlaybookParams(self.ansible_module)
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in

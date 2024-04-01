@@ -233,15 +233,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_fabric_params import \
-    VerifyFabricParams
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
-#     ParamsMergeDefaults
-# from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.params_spec import \
-#     ParamsSpec
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
-#     ParamsValidate
-
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
+    VerifyPlaybookParams
 
 def json_pretty(msg):
     """
@@ -274,7 +267,7 @@ class Common(FabricCommon):
         self._implemented_states = set()
 
         self.params = ansible_module.params
-        self._verify_fabric_params = VerifyFabricParams()
+        self._verify_playbook_params = VerifyPlaybookParams(self.ansible_module)
         self.rest_send = RestSend(self.ansible_module)
         # populated in self.validate_input()
         self.payloads = {}
@@ -400,6 +393,7 @@ class Merged(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.payloads = {}
+        self._verify_playbook_params.refresh_template()
         for want in self.want:
             if want.get("FABRIC_NAME") is None:
                 msg = f"{self.class_name}.{method_name}: "
@@ -407,6 +401,9 @@ class Merged(Common):
                 msg += f"{json_pretty(want)}"
                 self.log.debug(msg)
                 continue
+
+            self._verify_playbook_params.config = want
+            self._verify_playbook_params.commit()
             if want["FABRIC_NAME"] not in self.have.all_data:
                 self.need_create.append(want)
             else:

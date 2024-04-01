@@ -32,9 +32,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 
-# from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.vxlan.verify_playbook_params import \
-#     VerifyPlaybookParams
-
 
 class FabricCreateCommon(FabricCommon):
     """
@@ -53,7 +50,6 @@ class FabricCreateCommon(FabricCommon):
         self.fabric_details = FabricDetailsByName(self.ansible_module)
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
-        # self._verify_params = VerifyPlaybookParams(self.ansible_module)
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in

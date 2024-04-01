@@ -35,7 +35,7 @@ class TemplateGet:
 
     Usage:
 
-    instance = TemplateGet()
+    instance = TemplateGet(ansible_module)
     instance.template_name = "Easy_Fabric"
     instance.refresh()
     template = instance.template
