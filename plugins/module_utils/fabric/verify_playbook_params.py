@@ -122,7 +122,7 @@ class VerifyPlaybookParams:
 
             eval(config[param] rule[operator] rule[value])
 
-        Return False, otherwise.
+        Return True, otherwise.
 
         raise ValueError if "op" or "value" keys are not found in rule
         """
