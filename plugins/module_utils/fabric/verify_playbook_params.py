@@ -166,7 +166,7 @@ class VerifyPlaybookParams:
         raise ValueError if "op" or "value" keys are not found in rule
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        # If the playbook config contains the parameter, set its its result to
+        # If the playbook config contains the parameter, set its result to
         # False so that the decision rests with config_param_value_is_valid().
         if parameter in self.config:
             return False
