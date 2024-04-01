@@ -165,8 +165,14 @@ class VerifyPlaybookParams:
 
         raise ValueError if "op" or "value" keys are not found in rule
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        # If the playbook config contains the parameter, set its its result to
+        # False so that the decision rests with config_param_value_is_valid().
+        if parameter in self.config:
+            return False
         default_value = None
+        # If a default value does not exist for parameter, return False
+        # so that the decision rests with config_param_value_is_valid().
         try:
             default_value = self._fabric_defaults.parameter(parameter)
             msg = f"parameter: {parameter}, "
@@ -196,8 +202,10 @@ class VerifyPlaybookParams:
         """
         Verify a parameter against the template
         """
-        method_name = inspect.stack()[0][3]
-        msg = f"self.parameter: {self.parameter}, "
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        msg = f"CCC: self.config {self.config}"
+        self.log.debug(msg)
+        msg = f"CCC: self.parameter: {self.parameter}, "
         msg += f"config_value {self.config[self.parameter]}"
         self.log.debug(msg)
 
