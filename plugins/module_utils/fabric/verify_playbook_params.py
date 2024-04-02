@@ -141,6 +141,30 @@ class VerifyPlaybookParams:
             self.ansible_module.fail_json(msg, **self.results.failed_result)
         self.properties["template"] = value
 
+    def make_boolean(self, value):
+        """
+        Return value converted to boolean, if possible.
+        Return value, if value cannot be converted.
+        """
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() in ["true", "yes"]:
+                return True
+            if value.lower() in ["false", "no"]:
+                return False
+        return value
+
+    def make_none(self, value):
+        """
+        Return None if value is an empty string, or a string
+        representation of a None type
+        Return value otherwise
+        """
+        if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
+            return None
+        return value
+
     def refresh_template(self) -> None:
         """
         Retrieve the template used to verify config
@@ -199,14 +223,15 @@ class VerifyPlaybookParams:
         if value is None:
             msg = f"value not found in parameter {parameter} rule: {rule}"
             raise ValueError(msg)
-        eval_string = f"self.config_controller[parameter] {operator} rule['value']"
+        config_controller = self.make_boolean(self.config_controller[parameter])
+        eval_string = f"config_controller {operator} rule['value']"
         result = eval(eval_string)  # pylint: disable=eval-used
         # result = eval(
         #     "self.config_controller[parameter] " + operator + " rule['value']"
         # )  # pylint: disable=eval-used
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
-        msg += f"{self.config_controller[parameter]} "
+        msg += f"{config_controller} "
         msg += f"{operator} "
         msg += f"{rule.get('value')} "
         msg += f"result: {result}"
