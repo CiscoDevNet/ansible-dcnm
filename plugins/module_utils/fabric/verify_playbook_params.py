@@ -223,15 +223,14 @@ class VerifyPlaybookParams:
         if value is None:
             msg = f"value not found in parameter {parameter} rule: {rule}"
             raise ValueError(msg)
-        config_controller = self.make_boolean(self.config_controller[parameter])
-        eval_string = f"config_controller {operator} rule['value']"
+
+        param_controller = self.make_boolean(self.config_controller[parameter])
+        eval_string = f"param_controller {operator} rule['value']"
         result = eval(eval_string)  # pylint: disable=eval-used
-        # result = eval(
-        #     "self.config_controller[parameter] " + operator + " rule['value']"
-        # )  # pylint: disable=eval-used
+
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
-        msg += f"{config_controller} "
+        msg += f"{param_controller} "
         msg += f"{operator} "
         msg += f"{rule.get('value')} "
         msg += f"result: {result}"
@@ -274,13 +273,14 @@ class VerifyPlaybookParams:
         if value is None:
             msg = f"value not found in parameter {parameter} rule: {rule}"
             raise ValueError(msg)
-        eval_string = f"self.config_playbook[parameter] {operator} rule['value']"
-        # result = eval("self.config_playbook[parameter] " + operator + " rule['value']")
+
+        param_playbook = self.make_boolean(self.config_playbook[parameter])
+        eval_string = f"param_playbook {operator} rule['value']"
         result = eval(eval_string)  # pylint: disable=eval-used
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
-        msg += f"{self.config_playbook[parameter]} "
+        msg += f"{param_playbook} "
         msg += f"{operator} "
         msg += f"{rule.get('value')} "
         msg += f"result: {result}"
@@ -343,9 +343,9 @@ class VerifyPlaybookParams:
             msg = f"value not found in parameter {parameter} rule: {rule}"
             raise ValueError(msg)
 
+        default_value = self.make_boolean(default_value)
         eval_string = f"default_value {operator} rule['value']"
         result = eval(eval_string)  # pylint: disable=eval-used
-        # result = eval("default_value " + operator + " rule['value']")
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
