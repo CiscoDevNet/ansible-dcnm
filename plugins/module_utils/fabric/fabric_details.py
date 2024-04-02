@@ -207,9 +207,9 @@ class FabricDetailsByName(FabricDetails):
     Retrieve fabric details from the controller and provide
     property accessors for the fabric attributes.
 
-    Usage (where module is an instance of AnsibleModule):
+    Usage (where ansible_module is an instance of AnsibleModule):
 
-    instance = FabricDetailsByName(module)
+    instance = FabricDetailsByName(ansible_module)
     instance.refresh()
     instance.filter = "MyFabric"
     # BGP AS for fabric "MyFabric"
@@ -217,6 +217,8 @@ class FabricDetailsByName(FabricDetails):
 
     # all fabric details for "MyFabric"
     fabric_dict = instance.filtered_data
+    if fabric_dict is None:
+        # fabric does not exist on the controller
     etc...
 
     Or:

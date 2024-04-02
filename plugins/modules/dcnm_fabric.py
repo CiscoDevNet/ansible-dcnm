@@ -394,6 +394,10 @@ class Merged(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.payloads = {}
+        # TODO: refresh_template() needs to go in the for loop below since
+        # refresh_template() will be rewritten to derive the template from
+        # FABRIC_TYPE in the playbook config e.g. FABRIC_TYPE: "VXLAN_EVPN"
+        # will translate to "Easy_Fabric" template.
         self._verify_playbook_params.refresh_template()
         for want in self.want:
             if want.get("FABRIC_NAME") is None:
@@ -403,11 +407,15 @@ class Merged(Common):
                 self.log.debug(msg)
                 continue
 
-            self._verify_playbook_params.config = want
-            self._verify_playbook_params.commit()
+            self._verify_playbook_params.config_playbook = want
+
             if want["FABRIC_NAME"] not in self.have.all_data:
+                self._verify_playbook_params.config_controller = None
+                self._verify_playbook_params.commit()
                 self.need_create.append(want)
             else:
+                self._verify_playbook_params.config_controller = self.have.all_data[want["FABRIC_NAME"]]["nvPairs"]
+                self._verify_playbook_params.commit()
                 self.need_update.append(want)
 
     def commit(self):
