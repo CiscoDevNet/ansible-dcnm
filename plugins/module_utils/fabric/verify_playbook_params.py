@@ -24,6 +24,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_defaults import \
     FabricDefaults
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
+    ParamInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
     RuleSet
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
@@ -60,10 +62,12 @@ class VerifyPlaybookParams:
         self._template_get = TemplateGet(self.ansible_module)
         self._ruleset = RuleSet()
         self._fabric_defaults = FabricDefaults()
+        self._param_info = ParamInfo()
         self.results = Results()
         self.params_are_valid = set()
         self.bad_params = {}
         self.parameter = None
+        self.fabric_name = None
 
         self.state = self.ansible_module.params["state"]
         msg = "ENTERED VerifyPlaybookParams(): "
@@ -168,6 +172,17 @@ class VerifyPlaybookParams:
         if str(value).lower in ["", "none", "null"]:
             return None
         return value
+
+    @staticmethod
+    def make_int(value):
+        """
+        Return value converted to int, if possible.
+        Otherwise, return value.
+        """
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return value
 
     def refresh_template(self) -> None:
         """
@@ -360,23 +375,62 @@ class VerifyPlaybookParams:
 
         return decision_set
 
+    def verify_parameter_value(self) -> None:
+        """
+        Verify a parameter's value against valid choices (if any)
+        culled from the template.
+
+        Return if the parameter has no valid choices.
+
+        Call fail_json() if the parameter does not match any of the
+        valid choices.
+        """
+        try:
+            param_info = self._param_info.parameter(self.parameter)
+        except KeyError as error:
+            msg = f"parameter: {self.parameter} not found in template. "
+            msg += f"Error detail: {error}"
+            self.log.debug(msg)
+            return
+
+        msg = "param_info: "
+        msg += f"parameter: {self.parameter}, "
+        msg += f"{json.dumps(param_info, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if param_info["choices"] is None:
+            return
+        playbook_value = self.config_playbook.get(self.parameter)
+        playbook_value = self.make_int(playbook_value)
+        if playbook_value in param_info["choices"]:
+            return
+
+        msg = f"Parameter: {self.parameter}, "
+        msg += f"Invalid value: ({playbook_value}). "
+        msg += f"Valid choices: {param_info['choices']}"
+        self.ansible_module.fail_json(msg, **self.results.failed_result)
+
     def verify_parameter(self):
         """
         Verify a parameter against the template
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        # self.fabric_name is used:
+        #   - In bad_params to help the user identify which
+        #     fabric contains the bad parameter(s)
+        #   - In verify_parameter_value() fail_json message
+        self.fabric_name = self.config_playbook.get("FABRIC_NAME", None)
+        if self.fabric_name is None:
+            msg = "FABRIC_NAME not found in playbook config."
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
+
+        self.verify_parameter_value()
+
         if self.parameter not in self._ruleset.ruleset:
             msg = f"SKIP {self.parameter}: Not in ruleset."
             self.log.debug(msg)
             return
-
-        # Used in bad_params to help the user identify which fabric
-        # contains the bad parameters.
-        fabric_name = self.config_playbook.get("FABRIC_NAME")
-        if fabric_name is None:
-            msg = "FABRIC_NAME not found in playbook config."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         msg = "self.parameter: "
         msg += f"{self.parameter}, "
@@ -395,18 +449,18 @@ class VerifyPlaybookParams:
             if True not in decision_set:
                 self.params_are_valid.add(False)
 
-                if fabric_name not in self.bad_params:
-                    self.bad_params[fabric_name] = {}
-                if self.parameter not in self.bad_params[fabric_name]:
-                    self.bad_params[fabric_name][self.parameter] = []
+                if self.fabric_name not in self.bad_params:
+                    self.bad_params[self.fabric_name] = {}
+                if self.parameter not in self.bad_params[self.fabric_name]:
+                    self.bad_params[self.fabric_name][self.parameter] = []
                 bad_param = {}
-                bad_param["fabric_name"] = fabric_name
+                bad_param["fabric_name"] = self.fabric_name
                 bad_param["config_param"] = self.parameter
                 bad_param["config_value"] = self.config_playbook[self.parameter]
                 bad_param["dependent_param"] = dependent_param
                 bad_param["dependent_operator"] = rule.get("op")
                 bad_param["dependent_value"] = rule.get("value")
-                self.bad_params[fabric_name][self.parameter].append(bad_param)
+                self.bad_params[self.fabric_name][self.parameter].append(bad_param)
             else:
                 self.params_are_valid.add(True)
 
@@ -454,6 +508,17 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
+    def update_param_info(self):
+        """
+        Update the fabric parameter info based on the fabric template
+        """
+        self._param_info.template = self.template
+        self._param_info.refresh()
+
+        msg = "ZZZ: self._param_info.info: "
+        msg += f"{json.dumps(self._param_info.info, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
     def update_ruleset(self):
         """
         Update the fabric parameter ruleset based on the fabric template
@@ -474,6 +539,7 @@ class VerifyPlaybookParams:
         self.validate_commit_parameters()
         self.update_ruleset()
         self.update_fabric_defaults()
+        self.update_param_info()
 
         msg = "self.config_playbook: "
         msg += f"{json.dumps(self.config_playbook, indent=4, sort_keys=True)}"
@@ -499,6 +565,7 @@ class VerifyPlaybookParams:
                     dependent_value = bad_param.get("dependent_value")
                     msg += f"{config_param}({config_value}) requires "
                     msg += f"{dependent_param} {dependent_operator} {dependent_value}, "
+                    msg += f"{dependent_param} choices{self._param_info.info[dependent_param]['choices']}. "
             msg.rstrip(", ")
         self.log.debug(msg)
         self.ansible_module.fail_json(msg, **self.results.failed_result)

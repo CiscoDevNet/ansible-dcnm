@@ -54,7 +54,7 @@ class RuleSetCommon:
         Return value converted to boolean, if possible.
         Otherwise, return value.
 
-        TODO: These method is are duplicated in several other classes.
+        TODO: This method is duplicated in several other classes.
         TODO: Would be good to move this to a Utility() class.
         """
         if str(value).lower() in ["true", "yes"]:
