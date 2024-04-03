@@ -179,14 +179,44 @@ class VerifyPlaybookParams:
         self._template_get.refresh()
         self.template = self._template_get.template
 
-    def controller_param_value_is_valid(self, parameter, rule) -> bool:
+    def eval_parameter_rule(self, parameter, param_value, rule) -> bool:
+        method_name = inspect.stack()[0][3]
+
+        rule_operator = rule.get("op", None)
+        if rule_operator is None:
+            msg = f"op not found in parameter {parameter} rule: {rule}"
+            raise ValueError(msg)
+
+        rule_value = rule.get("value", None)
+        if rule_value is None:
+            msg = f"value not found in parameter {parameter} rule: {rule}"
+            raise ValueError(msg)
+
+        # While eval() can be dangerous with unknown input, the input
+        # we're feeding it is from a known source, and has been pretty
+        # heavily massaged before it gets here.
+        eval_string = f"param_value {rule_operator} rule_value"
+        result = eval(eval_string)  # pylint: disable=eval-used
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "EVAL: "
+        msg += f"{param_value} "
+        msg += f"{rule_operator} "
+        msg += f"{rule_value} "
+        msg += f"result: {result}"
+        self.log.debug(msg)
+
+        return result
+
+    def controller_param_is_valid(self, parameter, rule) -> bool:
         """
-        If parameter is in the controller fabric config, return boolean
-        returned by:
+        If the controller fabric config contains the dependent parameter,
+        return evaluated result derived from:
 
-            eval(config[param] rule[operator] rule[value])
+            eval(controller_param_value rule_operator rule_value)
 
-        Return True, otherwise.
+        Return None otherwise to remove controller parameter result
+        from consideration.
 
         raise ValueError if "op" or "value" keys are not found in rule
         """
@@ -196,68 +226,40 @@ class VerifyPlaybookParams:
         self.log.debug(msg)
 
         # Caller indicated that the fabric does not exist.
-        # Set result to None to remove it from consideration.
-        # This if statement is not strictly needed, since the next
-        # if statement covers it as well. It's here for clarity
-        # and for the specific debug message.
+        # Return None to remove controller parameter result from consideration.
         if self.config_controller == {}:
             msg = f"Early return: {parameter} fabric does not exist. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        # If the controller config does not contain the parameter,
-        # set its result to None to remove it from consideration.
+        # The controller config does not contain the parameter.
+        # Return None to remove controller parameter result from consideration.
         if parameter not in self.config_controller:
             msg = f"Early return: {parameter} not in config_controller. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        msg = f"parameter: {parameter}, "
-        msg += f"rule: {rule}, "
-        msg += f"config_controller_value: {self.config_controller[parameter]}"
-        self.log.debug(msg)
+        parameter_value = self.make_boolean(self.config_controller[parameter])
+        return self.eval_parameter_rule(parameter, parameter_value, rule)
 
-        operator = rule.get("op", None)
-        value = rule.get("value", None)
-        if operator is None:
-            msg = f"op not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
-        if value is None:
-            msg = f"value not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
-
-        param_controller = self.make_boolean(self.config_controller[parameter])
-        eval_string = f"param_controller {operator} rule['value']"
-        result = eval(eval_string)  # pylint: disable=eval-used
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "EVAL: "
-        msg += f"{param_controller} "
-        msg += f"{operator} "
-        msg += f"{rule.get('value')} "
-        msg += f"result: {result}"
-        self.log.debug(msg)
-        return result
-
-    def playbook_param_value_is_valid(self, parameter, rule) -> bool:
+    def playbook_param_is_valid(self, parameter, rule) -> bool:
         """
-        If parameter is in the playbook config, return boolean returned by:
+        If the playbook config contains the dependent parameter,
+        return evaluated result derived from:
 
-            eval(config_playbook[param] rule[operator] rule[value])
+            eval(playbook_param rule_operator rule_value)
 
-        Return True, otherwise.
+        Return None otherwise to remove playbook parameter result
+        from consideration.
 
         raise ValueError if "op" or "value" keys are not found in rule
         """
-        method_name = inspect.stack()[0][3]
-        msg = f"parameter: {parameter}, "
-        msg += f"rule: {rule}, "
-        self.log.debug(msg)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        # If the playbook config does not contain the parameter,
-        # set its result to None to remove it from consideration.
+        # The playbook config does not contain the parameter.
+        # Return None to remove playbook parameter result from consideration.
         if parameter not in self.config_playbook:
             msg = f"Early return: {parameter} not in config_playbook. "
             msg += "Returning None."
@@ -266,56 +268,37 @@ class VerifyPlaybookParams:
 
         msg = f"parameter: {parameter}, "
         msg += f"rule: {rule}, "
-        msg += f"config_playbook_value: {self.config_playbook[parameter]}"
+        msg += f"parameter_value: {self.config_playbook[parameter]}"
         self.log.debug(msg)
 
-        operator = rule.get("op", None)
-        value = rule.get("value", None)
-        if operator is None:
-            msg = f"op not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
-        if value is None:
-            msg = f"value not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
+        parameter_value = self.make_boolean(self.config_playbook[parameter])
+        return self.eval_parameter_rule(parameter, parameter_value, rule)
 
-        param_playbook = self.make_boolean(self.config_playbook[parameter])
-        eval_string = f"param_playbook {operator} rule['value']"
-        result = eval(eval_string)  # pylint: disable=eval-used
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "EVAL: "
-        msg += f"{param_playbook} "
-        msg += f"{operator} "
-        msg += f"{rule.get('value')} "
-        msg += f"result: {result}"
-        self.log.debug(msg)
-        return result
-
-    def default_param_value_is_valid(self, parameter, rule) -> bool:
+    def default_param_is_valid(self, parameter, rule) -> bool:
         """
-        If parameter has a default value, return boolean returned by:
+        If fabric defaults (from the fabric template) contain the
+        dependent parameter parameter return evaluated result
+        derived from:
 
-            eval(parameter_default_value rule[operator] rule[value])
+            eval(dependent_param_default_value rule_operator rule_value)
 
-        Return False, otherwise.
+        Return None otherwise to remove default parameter result
+        from consideration.
 
         raise ValueError if "op" or "value" keys are not found in rule
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        msg = f"parameter: {parameter}, "
-        msg += f"rule: {rule}"
-        self.log.debug(msg)
 
-        # If the playbook config contains the parameter, set default_param
-        # result to None to remove it from consideration.
+        # The playbook config contains the parameter.
+        # Return None to remove default_param result from consideration.
         if parameter in self.config_playbook:
             msg = f"Early return: parameter: {parameter} in config_playbook. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        # If the controller config contains the parameter, set default_param
-        # result to None to remove it from consideration.
+        # The controller config contains the parameter.
+        # Return None to remove default_param result from consideration.
         if parameter in self.config_controller:
             msg = f"Early return: parameter: {parameter} in config_controller. "
             msg += "Returning None."
@@ -323,64 +306,39 @@ class VerifyPlaybookParams:
             return None
 
         default_value = None
-        # If a default value does not exist for parameter, return None
-        # so that the decision rests with controller_param_value_is_valid()
-        # and playbook_param_value_is_valid().
         try:
             default_value = self._fabric_defaults.parameter(parameter)
-            msg = f"parameter: {parameter}, "
-            msg += f"rule: {rule}, "
-            msg += f"default {default_value}"
-            self.log.debug(msg)
         except KeyError:
+            # A default value does not exist for parameter.
+            # Return None to remove default_param result from consideration.
             msg = f"Early return: parameter: {parameter} has no default value. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        operator = rule.get("op", None)
-        value = rule.get("value", None)
-        if operator is None:
-            msg = f"op not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
-        if value is None:
-            msg = f"value not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
-
-        default_value = self.make_boolean(default_value)
-        eval_string = f"default_value {operator} rule['value']"
-        result = eval(eval_string)  # pylint: disable=eval-used
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "EVAL: "
-        msg += f"{default_value} "
-        msg += f"{operator} "
-        msg += f"{rule.get('value')} "
-        msg += f"result: {result}"
-        self.log.debug(msg)
-
-        return result
+        return self.eval_parameter_rule(parameter, default_value, rule)
 
     def update_decision_set(self, dependent_param, rule):
         decision_set = set()
-        config_controller_is_valid = self.controller_param_value_is_valid(dependent_param, rule)
-        config_playbook_is_valid = self.playbook_param_value_is_valid(dependent_param, rule)
-        default_is_valid = self.default_param_value_is_valid(dependent_param, rule)
-        if config_controller_is_valid is not None:
-            decision_set.add(config_controller_is_valid)
+        controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
+        playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
+        default_is_valid = self.default_param_is_valid(dependent_param, rule)
+
+        if controller_is_valid is not None:
+            decision_set.add(controller_is_valid)
         if default_is_valid is not None:
             decision_set.add(default_is_valid)
-        if config_playbook_is_valid is not None:
-            decision_set.add(config_playbook_is_valid)
-        # If playbook is not valid, ignore all other results
-        if config_playbook_is_valid is False:
+        if playbook_is_valid is not None:
+            decision_set.add(playbook_is_valid)
+        # If playbook config is not valid, ignore all other results
+        if not playbook_is_valid:
             decision_set = {False}
 
         msg = f"parameter {self.parameter}, "
         msg += f"dependent_param: {dependent_param}, "
         msg += f"rule: {rule}, "
-        msg += f"config_controller_is_valid: {config_controller_is_valid}, "
-        msg += f"config_playbook_is_valid: {config_playbook_is_valid}, "
+        msg += f"controller_is_valid: {controller_is_valid}, "
+        msg += f"playbook_is_valid: {playbook_is_valid}, "
         msg += f"default_is_valid: {default_is_valid}, "
         msg += f"params_are_valid: {self.params_are_valid}, "
         msg += f"decision_set: {decision_set}"
