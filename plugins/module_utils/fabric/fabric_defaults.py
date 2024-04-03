@@ -4,12 +4,30 @@ import logging
 class FabricDefaults:
     """
     Return default values for fabric parameters.
+    Raise ValueError during refresh() if:
+    - template is not set
+    - template has no parameters
+    - template[parameters] is not a list
+
+    Raise KeyError during parameter() call if:
+    - parameter has no default value
 
     Usage:
-    instance.FabricDefaults()
+
+    instance = FabricDefaults()
     instance.template = "Easy_Fabric"
-    instance.refresh()
-    defaults = instance.defaults
+
+    try:
+        instance.refresh()
+    except ValueError as error:
+        print(error)
+        exit(1)
+
+    try:
+        my_parameter_default_value = instance.parameter("my_parameter")
+    except KeyError as error:
+        print(error)
+        exit(1)
     """
     def __init__(self):
         self.class_name = self.__class__.__name__
@@ -59,7 +77,7 @@ class FabricDefaults:
         Return value converted to boolean, if possible.
         Otherwise, return value.
 
-        TODO: These method is are duplicated in several other classes.
+        TODO: This method is duplicated in several other classes.
         TODO: Would be good to move this to a Utility() class.
         """
         if str(value).lower() in ["true", "yes"]:
