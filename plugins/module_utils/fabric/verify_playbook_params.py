@@ -179,6 +179,9 @@ class VerifyPlaybookParams:
         Return value converted to int, if possible.
         Otherwise, return value.
         """
+        # Don't convert boolean values to integers
+        if isinstance(value, bool):
+            return value
         try:
             return int(value)
         except (ValueError, TypeError):
@@ -400,9 +403,32 @@ class VerifyPlaybookParams:
 
         if param_info["choices"] is None:
             return
+
         playbook_value = self.config_playbook.get(self.parameter)
+        # Convert string representations of integers to integers
         playbook_value = self.make_int(playbook_value)
+
+        # If the user specifies 0/1 for False/True, NDFC fails with a 500 error
+        # (at least for ADVERTISE_PIP_BGP).  Let's mandate that the user cannot
+        # use 0/1 as a substitute for boolean values and fail here instead.
+        # NOTE: make_int(), above, does not convert boolean values to integers
+        if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
+            msg = f"Parameter: {self.parameter}, "
+            msg += f"Invalid value: ({playbook_value}). "
+            msg += f"Valid values: {param_info['choices']}"
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
+
+        msg = f"ZZZ: Parameter: {self.parameter}, "
+        msg += f"playbook_value: {playbook_value}, "
+        msg += f"choices: {param_info['choices']}"
+        self.log.debug(msg)
+
         if playbook_value in param_info["choices"]:
+            msg = f"ZZZ: Parameter: {self.parameter}, "
+            msg += f"playbook_value ({playbook_value}). "
+            msg += f"in choices: {param_info['choices']}"
+            msg += "Returning."
+            self.log.debug(msg)
             return
 
         msg = f"Parameter: {self.parameter}, "
