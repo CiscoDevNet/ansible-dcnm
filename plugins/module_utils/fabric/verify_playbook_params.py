@@ -16,7 +16,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 import json
 import logging
@@ -36,17 +35,18 @@ class VerifyPlaybookParams:
     Verify playbook parameters for a controller fabric
 
     Usage:
+    instance = VerifyPlaybookParams(ansible_module)
 
     fabric_details = FabricDetailsByName(ansible_module)
     fabric_details.refresh()
     fabric_details.filter = "MyFabric"
+
     if fabric_details.filtered_data is None:
         # fabric does not exist
         instance.config_controller = None
     else:
         instance.config_controller = fabric_details.filtered_data["nvPairs"]
 
-    instance = VerifyPlaybookParams(ansible_module)
     instance.config_playbook = playbook_config
     instance.refresh_template()
     instance.commit()
@@ -180,6 +180,14 @@ class VerifyPlaybookParams:
         self.template = self._template_get.template
 
     def eval_parameter_rule(self, parameter, param_value, rule) -> bool:
+        """
+        Evaluate a dependent parameter value against a rule
+        from the fabric template.
+
+        Return the result of the evaluation.
+
+        Raise ValueError if the rule does not contain expected keys.
+        """
         method_name = inspect.stack()[0][3]
 
         rule_operator = rule.get("op", None)
@@ -193,7 +201,7 @@ class VerifyPlaybookParams:
             raise ValueError(msg)
 
         # While eval() can be dangerous with unknown input, the input
-        # we're feeding it is from a known source, and has been pretty
+        # we're feeding it is from a known source and has been pretty
         # heavily massaged before it gets here.
         eval_string = f"param_value {rule_operator} rule_value"
         result = eval(eval_string)  # pylint: disable=eval-used
@@ -220,7 +228,7 @@ class VerifyPlaybookParams:
 
         raise ValueError if "op" or "value" keys are not found in rule
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"parameter: {parameter}, "
         msg += f"rule: {rule}, "
         self.log.debug(msg)
@@ -319,6 +327,12 @@ class VerifyPlaybookParams:
         return self.eval_parameter_rule(parameter, default_value, rule)
 
     def update_decision_set(self, dependent_param, rule):
+        """
+        Update the decision set with the aggregate of results from the
+        - controller fabric configuration
+        - playbook configuration
+        - fabric defaults (from the fabric template)
+        """
         decision_set = set()
         controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
         playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
@@ -474,9 +488,9 @@ class VerifyPlaybookParams:
         msg = "The following parameter(value) combination(s) are invalid "
         msg += "and need to be reviewed: "
         # bad_params[fabric][param] = <list of bad param dict>
-        for fabric_name in self.bad_params:
+        for fabric_name, fabric_dict in self.bad_params.items():
             msg += f"Fabric: {fabric_name}, "
-            for _, bad_param_list in self.bad_params[fabric_name].items():
+            for _, bad_param_list in fabric_dict.items():
                 for bad_param in bad_param_list:
                     config_param = bad_param.get("config_param")
                     config_value = bad_param.get("config_value")
