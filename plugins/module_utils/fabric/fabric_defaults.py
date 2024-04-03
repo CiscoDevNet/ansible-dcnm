@@ -55,9 +55,16 @@ class FabricDefaults:
 
     @staticmethod
     def make_boolean(value):
-        if value in ("true", "True", True):
+        """
+        Return value converted to boolean, if possible.
+        Otherwise, return value.
+
+        TODO: These method is are duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
+        """
+        if str(value).lower() in ["true", "yes"]:
             return True
-        if value in ("false", "False", False):
+        if str(value).lower() in ["false", "no"]:
             return False
         return value
 

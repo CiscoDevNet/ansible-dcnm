@@ -227,27 +227,31 @@ class FabricCommon:
             self.ansible_module.fail_json(msg, **self.results.failed_result)
         return self.fabric_type_to_template_name_map[value]
 
-    def make_boolean(self, value):
+    @staticmethod
+    def make_boolean(value):
         """
         Return value converted to boolean, if possible.
-        Return value, if value cannot be converted.
+        Otherwise, return value.
+
+        TODO: This method is duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
         """
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            if value.lower() in ["true", "yes"]:
-                return True
-            if value.lower() in ["false", "no"]:
-                return False
+        if str(value).lower() in ["true", "yes"]:
+            return True
+        if str(value).lower() in ["false", "no"]:
+            return False
         return value
 
-    def make_none(self, value):
+    @staticmethod
+    def make_none(value):
         """
-        Return None if value is an empty string, or a string
-        representation of a None type
-        Return value otherwise
+        Return None if value is a string representation of a None type
+        Otherwise, return value
+
+        TODO: This method is duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
         """
-        if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
+        if str(value).lower in ["", "none", "null"]:
             return None
         return value
 

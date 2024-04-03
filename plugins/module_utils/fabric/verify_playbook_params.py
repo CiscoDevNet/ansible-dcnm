@@ -141,27 +141,31 @@ class VerifyPlaybookParams:
             self.ansible_module.fail_json(msg, **self.results.failed_result)
         self.properties["template"] = value
 
-    def make_boolean(self, value):
+    @staticmethod
+    def make_boolean(value):
         """
         Return value converted to boolean, if possible.
-        Return value, if value cannot be converted.
+        Otherwise, return value.
+
+        TODO: This method is duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
         """
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            if value.lower() in ["true", "yes"]:
-                return True
-            if value.lower() in ["false", "no"]:
-                return False
+        if str(value).lower() in ["true", "yes"]:
+            return True
+        if str(value).lower() in ["false", "no"]:
+            return False
         return value
 
-    def make_none(self, value):
+    @staticmethod
+    def make_none(value):
         """
-        Return None if value is an empty string, or a string
-        representation of a None type
-        Return value otherwise
+        Return None if value is a string representation of a None type
+        Otherwise, return value
+
+        TODO: This method is duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
         """
-        if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
+        if str(value).lower in ["", "none", "null"]:
             return None
         return value
 
@@ -357,6 +361,33 @@ class VerifyPlaybookParams:
 
         return result
 
+    def update_decision_set(self, dependent_param, rule):
+        decision_set = set()
+        config_controller_is_valid = self.controller_param_value_is_valid(dependent_param, rule)
+        config_playbook_is_valid = self.playbook_param_value_is_valid(dependent_param, rule)
+        default_is_valid = self.default_param_value_is_valid(dependent_param, rule)
+        if config_controller_is_valid is not None:
+            decision_set.add(config_controller_is_valid)
+        if default_is_valid is not None:
+            decision_set.add(default_is_valid)
+        if config_playbook_is_valid is not None:
+            decision_set.add(config_playbook_is_valid)
+        # If playbook is not valid, ignore all other results
+        if config_playbook_is_valid is False:
+            decision_set = {False}
+
+        msg = f"parameter {self.parameter}, "
+        msg += f"dependent_param: {dependent_param}, "
+        msg += f"rule: {rule}, "
+        msg += f"config_controller_is_valid: {config_controller_is_valid}, "
+        msg += f"config_playbook_is_valid: {config_playbook_is_valid}, "
+        msg += f"default_is_valid: {default_is_valid}, "
+        msg += f"params_are_valid: {self.params_are_valid}, "
+        msg += f"decision_set: {decision_set}"
+        self.log.debug(msg)
+
+        return decision_set
+
     def verify_parameter(self):
         """
         Verify a parameter against the template
@@ -368,69 +399,53 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return
 
-        msg = f"self.parameter: {self.parameter}, "
-        msg += f"config_playbook_value: {self.config_playbook.get(self.parameter)}, "
-        msg += f"config_controller_value: {self.config_controller.get(self.parameter)}"
+        # Used in bad_params to help the user identify which fabric
+        # contains the bad parameters.
+        fabric_name = self.config_playbook.get("FABRIC_NAME")
+        if fabric_name is None:
+            msg = "FABRIC_NAME not found in playbook config."
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
+
+        msg = "self.parameter: "
+        msg += f"{self.parameter}, "
+        msg += "config_playbook_value: "
+        msg += f"{self.config_playbook.get(self.parameter)}, "
+        msg += "config_controller_value: "
+        msg += f"{self.config_controller.get(self.parameter)}"
         self.log.debug(msg)
 
-        rule = self._ruleset.ruleset[self.parameter]
-        msg = f"parameter: {self.parameter}, "
-        msg += f"rule: {json.dumps(rule, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        param_rule = self._ruleset.ruleset[self.parameter]
 
-        for key, rule in rule.get("mandatory", {}).items():
-            decision_set = set()
-            config_controller_is_valid = self.controller_param_value_is_valid(key, rule)
-            config_playbook_is_valid = self.playbook_param_value_is_valid(key, rule)
-            default_is_valid = self.default_param_value_is_valid(key, rule)
-            if config_controller_is_valid is not None:
-                decision_set.add(config_controller_is_valid)
-            if default_is_valid is not None:
-                decision_set.add(default_is_valid)
-            if config_playbook_is_valid is not None:
-                decision_set.add(config_playbook_is_valid)
-            # If playbook is not valid, ignore all other results
-            if config_playbook_is_valid is False:
-                decision_set = {False}
-            msg = "FINAL_RESULT: "
-            msg += f"parameter: {self.parameter}, "
-            msg += f"decision_set: {decision_set}"
-            self.log.debug(msg)
+        for dependent_param, rule in param_rule.get("mandatory", {}).items():
+            decision_set = self.update_decision_set(dependent_param, rule)
+
+            # bad_params[fabric][param] = <list of bad_param dict>
             if True not in decision_set:
                 self.params_are_valid.add(False)
-                self.bad_params[self.parameter] = {}
-                self.bad_params[self.parameter]["config_param"] = self.parameter
-                self.bad_params[self.parameter]["config_value"] = self.config_playbook[
-                    self.parameter
-                ]
-                self.bad_params[self.parameter]["dependent_param"] = key
-                self.bad_params[self.parameter]["dependent_operator"] = rule.get("op")
-                self.bad_params[self.parameter]["dependent_value"] = rule.get("value")
+
+                if fabric_name not in self.bad_params:
+                    self.bad_params[fabric_name] = {}
+                if self.parameter not in self.bad_params[fabric_name]:
+                    self.bad_params[fabric_name][self.parameter] = []
+                bad_param = {}
+                bad_param["fabric_name"] = fabric_name
+                bad_param["config_param"] = self.parameter
+                bad_param["config_value"] = self.config_playbook[self.parameter]
+                bad_param["dependent_param"] = dependent_param
+                bad_param["dependent_operator"] = rule.get("op")
+                bad_param["dependent_value"] = rule.get("value")
+                self.bad_params[fabric_name][self.parameter].append(bad_param)
             else:
                 self.params_are_valid.add(True)
 
-            msg = f"parameter {self.parameter}, "
-            msg += f"key: {key}, "
-            msg += f"rule: {rule}, "
-            msg += f"config_controller_is_valid: {config_controller_is_valid}, "
-            msg += f"config_playbook_is_valid: {config_playbook_is_valid}, "
-            msg += f"default_is_valid: {default_is_valid}, "
-            msg += f"params_are_valid: {self.params_are_valid}"
-            self.log.debug(msg)
-
         msg = f"self.params_are_valid: {self.params_are_valid}"
         self.log.debug(msg)
-        msg = (
-            f"self.bad_params: {json.dumps(self.bad_params, indent=4, sort_keys=True)}"
-        )
-        self.log.debug(msg)
 
-    def commit(self):
+    def validate_commit_parameters(self):
         """
-        verify the config against the retrieved template
+        fail_json if required parameters are not set
         """
-        method_name = inspect.stack()[0][3]
-
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if self.config_controller is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.config_controller "
@@ -449,9 +464,11 @@ class VerifyPlaybookParams:
             msg += "must be called prior to calling commit."
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        self._ruleset.template = self.template
-        self._ruleset.refresh()
-
+    def update_fabric_defaults(self):
+        """
+        Update fabric parameter default values based on
+        the fabric template
+        """
         try:
             self._fabric_defaults.template = self.template
         except ValueError as error:
@@ -465,27 +482,51 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        msg = f"self.config_playbook: {json.dumps(self.config_playbook, indent=4, sort_keys=True)}"
+    def update_ruleset(self):
+        """
+        Update the fabric parameter ruleset based on the fabric template
+        """
+        self._ruleset.template = self.template
+        self._ruleset.refresh()
+
+        msg = "self._ruleset.ruleset: "
+        msg += f"{json.dumps(self._ruleset.ruleset, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"self._ruleset.ruleset: {json.dumps(self._ruleset.ruleset, indent=4, sort_keys=True)}"
+    def commit(self):
+        """
+        verify the config against the retrieved template
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.validate_commit_parameters()
+        self.update_ruleset()
+        self.update_fabric_defaults()
+
+        msg = "self.config_playbook: "
+        msg += f"{json.dumps(self.config_playbook, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         self.params_are_valid = set()
         for self.parameter in self.config_playbook:
             self.verify_parameter()
+        if False not in self.params_are_valid:
+            return
 
-        if False in self.params_are_valid:
-            msg = "The following parameter(value) combination(s) are invalid "
-            msg += "and need to be reviewed: "
-            for _, result in sorted(self.bad_params.items()):
-                config_param = result.get("config_param")
-                config_value = result.get("config_value")
-                dependent_param = result.get("dependent_param")
-                dependent_operator = result.get("dependent_operator")
-                dependent_value = result.get("dependent_value")
-                msg += f"{config_param}({config_value}) requires "
-                msg += f"{dependent_param} {dependent_operator} {dependent_value}, "
+        msg = "The following parameter(value) combination(s) are invalid "
+        msg += "and need to be reviewed: "
+        # bad_params[fabric][param] = <list of bad param dict>
+        for fabric_name in self.bad_params:
+            msg += f"Fabric: {fabric_name}, "
+            for _, bad_param_list in self.bad_params[fabric_name].items():
+                for bad_param in bad_param_list:
+                    config_param = bad_param.get("config_param")
+                    config_value = bad_param.get("config_value")
+                    dependent_param = bad_param.get("dependent_param")
+                    dependent_operator = bad_param.get("dependent_operator")
+                    dependent_value = bad_param.get("dependent_value")
+                    msg += f"{config_param}({config_value}) requires "
+                    msg += f"{dependent_param} {dependent_operator} {dependent_value}, "
             msg.rstrip(", ")
-            self.log.debug(msg)
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+        self.log.debug(msg)
+        self.ansible_module.fail_json(msg, **self.results.failed_result)
