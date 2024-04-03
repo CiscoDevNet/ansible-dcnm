@@ -2999,6 +2999,10 @@ class DcnmIntf:
                 delem[profile]["netflow_monitor"]
             )
 
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
+
     def dcnm_intf_get_aa_fex_payload(self, delem, intf, profile):
 
         # Extract port id from the given name, which is of the form 'vPC300'
@@ -3064,6 +3068,10 @@ class DcnmIntf:
             )
 
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_svi_payload(self, delem, intf, profile):
 
@@ -3168,8 +3176,11 @@ class DcnmIntf:
 
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
-            # we don't need SPEED for SVI interfaces
-            intf["interfaces"][0]["nvPairs"].pop("SPEED")
+            intf["interfaces"][0]["nvPairs"][
+                "SPEED"
+            ] = self.dcnm_intf_xlate_speed(
+                str(delem[profile].get("speed", ""))
+            )
 
     # New Interfaces
     def dcnm_get_intf_payload(self, delem, sw):
