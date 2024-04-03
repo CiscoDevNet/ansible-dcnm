@@ -407,7 +407,7 @@ class VerifyPlaybookParams:
 
         msg = f"Parameter: {self.parameter}, "
         msg += f"Invalid value: ({playbook_value}). "
-        msg += f"Valid choices: {param_info['choices']}"
+        msg += f"Valid values: {param_info['choices']}"
         self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     def verify_parameter(self):
@@ -565,7 +565,7 @@ class VerifyPlaybookParams:
                     dependent_value = bad_param.get("dependent_value")
                     msg += f"{config_param}({config_value}) requires "
                     msg += f"{dependent_param} {dependent_operator} {dependent_value}, "
-                    msg += f"{dependent_param} choices{self._param_info.info[dependent_param]['choices']}. "
+                    msg += f"{dependent_param} valid values: {self._param_info.info[dependent_param]['choices']}. "
             msg.rstrip(", ")
         self.log.debug(msg)
         self.ansible_module.fail_json(msg, **self.results.failed_result)
