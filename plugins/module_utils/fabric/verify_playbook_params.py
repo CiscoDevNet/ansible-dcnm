@@ -28,30 +28,65 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info impor
     ParamInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
     RuleSet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
-    TemplateGet
 
 
 class VerifyPlaybookParams:
     """
-    Verify playbook parameters for a controller fabric
+    Verify playbook parameters for a controller fabric.
+
+    VerifyPlaybookParams() uses three sources of information in its
+    verification of the user's playbook parameters:
+
+    1. The controller fabric configuration (retrieved from the controller)
+    2. The fabric template (retrieved from the controller)
+    3. The playbook configuration
+
+    The basic workflow is to retrieve each of these, pass them into
+    an instance of VerifyPlaybookParams(), and then call
+    VerifyPlaybookParams.commit(), which does the verification.
 
     Usage:
-    instance = VerifyPlaybookParams(ansible_module)
 
-    fabric_details = FabricDetailsByName(ansible_module)
-    fabric_details.refresh()
-    fabric_details.filter = "MyFabric"
+    # Instantiate the VerifyPlaybookParams class
+    verify = VerifyPlaybookParams(ansible_module)
 
-    if fabric_details.filtered_data is None:
+    #---------------------------------------------------------------
+    # 1. Retrieve the fabric configuration from controller (here we
+    #    use the FabricDetailsByName() class to retrieve the fabric
+    #    configuration).  VerifyPlaybookParams() wants only the
+    #    nvPairs content of the fabric configuration.
+    #---------------------------------------------------------------
+    fabric = FabricDetailsByName(ansible_module)
+    fabric.refresh()
+    fabric.filter = "MyFabric"
+
+    # Add the fabric configuration (if any) to VerifyPlaybookParams()
+    if fabric.filtered_data is None:
         # fabric does not exist
-        instance.config_controller = None
+        verify.config_controller = None
     else:
-        instance.config_controller = fabric_details.filtered_data["nvPairs"]
+        verify.config_controller = fabric.filtered_data["nvPairs"]
 
-    instance.config_playbook = playbook_config
-    instance.refresh_template()
-    instance.commit()
+    #---------------------------------------------------------------
+    # 2. Retrieve the appropriate fabric template (here we use the
+    #    TemplateGet() class to retrieve the Easy_Fabric template)
+    #---------------------------------------------------------------
+    template = TemplateGet(ansible_module)
+    template.template_name = "Easy_Fabric"
+    template.refresh()
+
+    # Add the template to the VerifyPlaybookParams instance
+    verify.template = template.template
+
+    #---------------------------------------------------------------
+    # 3. Add the playbook config to the VerifyPlaybookParams instance
+    #    typically this is retrieved with get_want() within the
+    #    main task module.
+    #---------------------------------------------------------------
+    verify.config_playbook = playbook_config
+
+    # Perform the verification
+    verify.commit()
     """
 
     def __init__(self, ansible_module):
@@ -59,7 +94,6 @@ class VerifyPlaybookParams:
         self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._template_get = TemplateGet(self.ansible_module)
         self._ruleset = RuleSet()
         self._fabric_defaults = FabricDefaults()
         self._param_info = ParamInfo()
@@ -187,16 +221,6 @@ class VerifyPlaybookParams:
         except (ValueError, TypeError):
             return value
 
-    def refresh_template(self) -> None:
-        """
-        Retrieve the template used to verify config
-        """
-        msg = "TODO: derive template name from FABRIC_TYPE in playbook config"
-        self.log.debug(msg)
-        self._template_get.template_name = "Easy_Fabric"
-        self._template_get.refresh()
-        self.template = self._template_get.template
-
     def eval_parameter_rule(self, parameter, param_value, rule) -> bool:
         """
         Evaluate a dependent parameter value against a rule
@@ -239,7 +263,7 @@ class VerifyPlaybookParams:
         If the controller fabric config contains the dependent parameter,
         return evaluated result derived from:
 
-            eval(controller_param_value rule_operator rule_value)
+        eval(controller_param_value rule_operator rule_value)
 
         Return None otherwise to remove controller parameter result
         from consideration.
@@ -275,7 +299,7 @@ class VerifyPlaybookParams:
         If the playbook config contains the dependent parameter,
         return evaluated result derived from:
 
-            eval(playbook_param rule_operator rule_value)
+        eval(playbook_param rule_operator rule_value)
 
         Return None otherwise to remove playbook parameter result
         from consideration.
@@ -302,11 +326,10 @@ class VerifyPlaybookParams:
 
     def default_param_is_valid(self, parameter, rule) -> bool:
         """
-        If fabric defaults (from the fabric template) contain the
-        dependent parameter parameter return evaluated result
-        derived from:
+        If fabric defaults (from the fabric template) contains the
+        dependent parameter, return evaluated result derived from:
 
-            eval(dependent_param_default_value rule_operator rule_value)
+        eval(dependent_param_default_value rule_operator rule_value)
 
         Return None otherwise to remove default parameter result
         from consideration.
@@ -411,22 +434,23 @@ class VerifyPlaybookParams:
         # If the user specifies 0/1 for False/True, NDFC fails with a 500 error
         # (at least for ADVERTISE_PIP_BGP).  Let's mandate that the user cannot
         # use 0/1 as a substitute for boolean values and fail here instead.
-        # NOTE: make_int(), above, does not convert boolean values to integers
+        # NOTE: make_int(), above, should not (and does not) convert boolean
+        # values to integers.
         if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
             msg = f"Parameter: {self.parameter}, "
             msg += f"Invalid value: ({playbook_value}). "
             msg += f"Valid values: {param_info['choices']}"
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        msg = f"ZZZ: Parameter: {self.parameter}, "
+        msg = f"Parameter: {self.parameter}, "
         msg += f"playbook_value: {playbook_value}, "
-        msg += f"choices: {param_info['choices']}"
+        msg += f"valid values: {param_info['choices']}"
         self.log.debug(msg)
 
         if playbook_value in param_info["choices"]:
-            msg = f"ZZZ: Parameter: {self.parameter}, "
+            msg = f"Parameter: {self.parameter}, "
             msg += f"playbook_value ({playbook_value}). "
-            msg += f"in choices: {param_info['choices']}"
+            msg += f"in valid values: {param_info['choices']}. "
             msg += "Returning."
             self.log.debug(msg)
             return
@@ -442,10 +466,10 @@ class VerifyPlaybookParams:
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        # self.fabric_name is used:
-        #   - In bad_params to help the user identify which
+        # self.fabric_name is used in:
+        #   - bad_params to help the user identify which
         #     fabric contains the bad parameter(s)
-        #   - In verify_parameter_value() fail_json message
+        #   - verify_parameter_value() fail_json message
         self.fabric_name = self.config_playbook.get("FABRIC_NAME", None)
         if self.fabric_name is None:
             msg = "FABRIC_NAME not found in playbook config."
@@ -512,8 +536,8 @@ class VerifyPlaybookParams:
 
         if self.template is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.refresh_template() "
-            msg += "must be called prior to calling commit."
+            msg += "instance.template "
+            msg += "must be set prior to calling commit."
             self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     def update_fabric_defaults(self):

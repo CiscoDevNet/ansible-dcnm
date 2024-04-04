@@ -235,6 +235,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
     VerifyPlaybookParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
+    TemplateGet
 
 
 def json_pretty(msg):
@@ -270,6 +272,7 @@ class Common(FabricCommon):
         self.params = ansible_module.params
         self._verify_playbook_params = VerifyPlaybookParams(self.ansible_module)
         self.rest_send = RestSend(self.ansible_module)
+        self.template = TemplateGet(self.ansible_module)
         # populated in self.validate_input()
         self.payloads = {}
 
@@ -386,6 +389,9 @@ class Merged(Common):
 
         self._implemented_states.add("merged")
 
+        self._fabric_type_to_template_name = {}
+        self._fabric_type_to_template_name["VXLAN_EVPN"] = "Easy_Fabric"
+
     def get_need(self):
         """
         Caller: commit()
@@ -394,20 +400,33 @@ class Merged(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.payloads = {}
-        # TODO: refresh_template() needs to go in the for loop below since
-        # refresh_template() will be rewritten to derive the template from
-        # FABRIC_TYPE in the playbook config e.g. FABRIC_TYPE: "VXLAN_EVPN"
-        # will translate to "Easy_Fabric" template.
-        self._verify_playbook_params.refresh_template()
         for want in self.want:
-            if want.get("FABRIC_NAME") is None:
+            fabric_name = want.get("FABRIC_NAME", None)
+            if fabric_name is None:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += "Skipping config with missing FABRIC_NAME: "
+                msg += "Fabric config with missing FABRIC_NAME "
+                msg += "parameter: "
                 msg += f"{json_pretty(want)}"
                 self.log.debug(msg)
-                continue
+                self.ansible_module.fail_json(msg, self.results.failed_result)
+
+            fabric_type = want.get("FABRIC_TYPE", None)
+            if fabric_type is None:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric {fabric_name} is missing FABRIC_TYPE "
+                msg += "parameter: "
+                msg += f"{json_pretty(want)}"
+                self.log.debug(msg)
+                self.ansible_module.fail_json(msg, self.results.failed_result)
 
             self._verify_playbook_params.config_playbook = want
+
+            fabric_type = want.get("FABRIC_TYPE", None)
+            template_name = self._fabric_type_to_template_name.get(fabric_type)
+
+            self.template.template_name = template_name
+            self.template.refresh()
+            self._verify_playbook_params.template = self.template.template
 
             if want["FABRIC_NAME"] not in self.have.all_data:
                 self._verify_playbook_params.config_controller = None

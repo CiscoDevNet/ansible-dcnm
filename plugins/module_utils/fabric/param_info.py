@@ -100,6 +100,9 @@ class ParamInfo:
         Return value converted to int, if possible.
         Otherwise, return value.
         """
+        # Don't convert boolean values to integers
+        if isinstance(value, bool):
+            return value
         try:
             return int(value)
         except (ValueError, TypeError):
@@ -118,14 +121,14 @@ class ParamInfo:
         """
         parameter_type = self._get_type(parameter)
         if parameter_type == "boolean":
-            return [True, False]
+            return [False, True]
         choices = parameter.get("annotations", {}).get("Enum", None)
         if choices is None:
             return None
         choices = re.sub(r"\"", "", choices)
         choices = choices.split(",")
         choices = [self.make_int(choice) for choice in choices]
-        return choices
+        return sorted(choices)
 
     def _get_default(self, parameter):
         """
