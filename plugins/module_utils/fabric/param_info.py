@@ -1,10 +1,11 @@
+import inspect
 import logging
 import re
 
 class ParamInfo:
     """
     Given a parameter, return a python dict containing parameter info.
-    Parameter info culled from the provided template.
+    Parameter info is culled from the provided template.
 
     Raise ValueError during refresh() if:
     - template is not set
@@ -16,6 +17,7 @@ class ParamInfo:
 
     Usage:
 
+    ```python
     instance = ParamChoices()
     instance.template = "Easy_Fabric"
 
@@ -36,6 +38,7 @@ class ParamInfo:
     parameter_min = my_parameter_info["min"] # int, or None
     parameter_max = my_parameter_info["max"] # int, or None
     parameter_default = my_parameter_info["default"] # Any, or None
+    ```
     """
     def __init__(self):
         self.class_name = self.__class__.__name__
@@ -46,20 +49,39 @@ class ParamInfo:
         self._build_properties()
 
     def _build_properties(self):
+        """
+        Initialize the properties dict containing properties used by the class.
+        """
         self.properties = {}
         self.properties["template"] = None
 
     @property
     def template(self):
+        """
+        - getter : return the template used to cull parameter info.
+        - setter : set the template used to cull parameter info.
+        - setter : raise TypeError if template is not a dict
+        """
         return self.properties["template"]
 
     @template.setter
     def template(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "template must be a dict. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            raise TypeError(msg)
         self.properties["template"] = value
 
     def refresh(self):
         """
-        Refresh the defaults based on the template
+        # Refresh the parameter information based on the template
+
+        - raise ValueError if template is not set
+        - raise ValueError if template has no parameters
+        - raise ValueError if template[parameters] is not a list
         """
         if self.template is None:
             msg = "Call instance.template before calling instance.refresh()."
@@ -74,6 +96,36 @@ class ParamInfo:
         self._build_info()
 
     def parameter(self, value):
+        """
+        # Return parameter information based on the template.
+
+        Usage:
+
+        ```python
+        parameter_info = instance.parameter("my_parameter")
+        ```
+
+        - raise ``KeyError`` if parameter is not found
+
+        Parameter information is returned as a python dict:
+
+        ```json
+        {
+            "type": str,
+            "choices": ["Ingress", "Multicast"],
+            "min": None,
+            "max": None,
+            "default": "Multicast"
+        }
+        ```
+
+        - type: (``bool, str, int, dict, set, list, None``),
+        - choices: (``list``, or ``None``)
+        - min: (``int``, or ``None``)
+        - max: (``int``, or ``None``)
+        - default: (``str``, ``int``, etc, or ``None``)
+        
+        """
         try:
             return self.info[value]
         except KeyError:
@@ -82,8 +134,8 @@ class ParamInfo:
     @staticmethod
     def make_boolean(value):
         """
-        Return value converted to boolean, if possible.
-        Otherwise, return value.
+        - Return value converted to boolean, if possible.
+        - Returm value, otherwise.
 
         TODO: This method is duplicated in several other classes.
         TODO: Would be good to move this to a Utility() class.
@@ -98,7 +150,7 @@ class ParamInfo:
     def make_int(value):
         """
         Return value converted to int, if possible.
-        Otherwise, return value.
+        Return value, otherwise.
         """
         # Don't convert boolean values to integers
         if isinstance(value, bool):
@@ -110,14 +162,18 @@ class ParamInfo:
 
     def _get_choices(self, parameter):
         """
-        Caller: self._build_info()
+        -   Return a python list of valid parameter choices, if specified
+            in the template.
+        -   Return None otherwise.
 
-        "\"Multicast,Ingress\"" -> ["Multicast", "Ingress"]
-        "\"true,false\"" -> [True, False]
+        Example conversions:
 
-        Return a python list of valid parameter choices, if specified
-        in the template.
-        Return None otherwise.
+        ```
+        "\\"Multicast,Ingress\\"" -> ["Multicast", "Ingress"]
+        "\\"1,2\\"" -> [1,2]
+        "\\"true,false\\"" -> [False, True]
+        ```
+
         """
         parameter_type = self._get_type(parameter)
         if parameter_type == "boolean":
@@ -132,10 +188,8 @@ class ParamInfo:
 
     def _get_default(self, parameter):
         """
-        Caller: self._build_info()
-
-        Return the parameter's default value, if specified in the template.
-        Return None otherwise.
+        - Return the parameter's default value, if specified in the template.
+        - Return None otherwise.
         """
         # default value can be in two places
         value = parameter.get("metaProperties", {}).get("defaultValue", None)
@@ -152,10 +206,8 @@ class ParamInfo:
 
     def _get_min(self, parameter):
         """
-        Caller: self._build_info()
-
-        Return the parameter's minimum value, if specified in the template.
-        Return None otherwise.
+        - Return the parameter's minimum value, if specified in the template.
+        - Return None otherwise.
         """
         value = parameter.get("metaProperties", {}).get("min", None)
         if value is None:
@@ -164,10 +216,8 @@ class ParamInfo:
 
     def _get_max(self, parameter):
         """
-        Caller: self._build_info()
-
-        Return the parameter's maximum value, if specified in the template.
-        Return None otherwise.
+        - Return the parameter's maximum value, if specified in the template.
+        - Return None otherwise.
         """
         value = parameter.get("metaProperties", {}).get("max", None)
         if value is None:
@@ -176,26 +226,35 @@ class ParamInfo:
 
     def _get_type(self, parameter):
         """
-        Caller: self._build_info()
-
-        Return the parameter's type, if specified in the template.
-        Return None otherwise.
+        - Return the parameter's type, if specified in the template.
+        - Return None otherwise.
         """
         return parameter.get("parameterType", None)
 
-    def _build_info(self):
+    def _build_info(self) -> None:
         """
-        Caller: refresh()
+        # Build a ``dict`` of parameter information, keyed on parameter name.
 
-        Build a dict of parameter information.
-        key: parameter_name
-        value: dict of parameter information
+        ## Parameter information is culled from the template.
 
-        self.info[parameter_name] = {
-            "type": (python type: bool, str, int, dict, set, list, None)
-            "choices": (python list, or None)
-            "min": (int, or None)
-            "max": (int, or None)
+        - type: (``bool, str, int, dict, set, list, None``),
+        - choices: (``list``, or ``None``)
+        - min: (``int``, or ``None``)
+        - max: (``int``, or ``None``)
+        - default: (``str``, ``int``, etc, or ``None``)
+
+        Example:
+
+        ```python
+        self.info[parameter] = {
+            "type": str,
+            "choices": ["Ingress", "Multicast"],
+            "min": None,
+            "max": None,
+            "default": "Multicast"
+        }
+        ```
+
         """
         self.info = {}
         for parameter in self.template.get("parameters", []):

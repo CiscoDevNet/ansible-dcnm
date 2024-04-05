@@ -463,7 +463,7 @@ class Merged(Common):
                     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
                 try:
                     self._verify_playbook_params.commit()
-                except ValueError as error:
+                except (ValueError, KeyError) as error:
                     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
                 self.need_update.append(want)

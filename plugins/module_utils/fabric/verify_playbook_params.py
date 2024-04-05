@@ -247,7 +247,7 @@ class VerifyPlaybookParams:
         """
         method_name = inspect.stack()[0][3]
 
-        rule_operator = rule.get("op", None)
+        rule_operator = rule.get("operator", None)
         if rule_operator is None:
             msg = f"'op' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
@@ -398,19 +398,33 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError from error
 
-    def update_decision_set(self, dependent_param, rule):
+    def update_decision_set(self, dependent_param, rule) -> set:
         """
         Update the decision set with the aggregate of results from the
         - controller fabric configuration
         - playbook configuration
         - fabric defaults (from the fabric template)
+
+        - Return the decision set if no errors occur
+        - Raise KeyError if controller_param_is_valid() fails
+        - Raise KeyError if playbook_param_is_valid() fails
+        - Raise KeyError if default_param_is_valid() fails
         """
         decision_set = set()
-        controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
+        try:
+            controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
+        except KeyError as error:
+            raise KeyError from error
 
-        playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
+        try:
+            playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
+        except KeyError as error:
+            raise KeyError from error
 
-        default_is_valid = self.default_param_is_valid(dependent_param, rule)
+        try:
+            default_is_valid = self.default_param_is_valid(dependent_param, rule)
+        except KeyError as error:
+            raise KeyError from error
 
         if controller_is_valid is not None:
             decision_set.add(controller_is_valid)
@@ -533,7 +547,10 @@ class VerifyPlaybookParams:
         param_rule = self._ruleset.ruleset[self.parameter]
 
         for dependent_param, rule in param_rule.get("mandatory", {}).items():
-            decision_set = self.update_decision_set(dependent_param, rule)
+            try:
+                decision_set = self.update_decision_set(dependent_param, rule)
+            except KeyError as error:
+                raise KeyError from error
 
             # bad_params[fabric][param] = <list of bad_param dict>
             if True not in decision_set:
@@ -548,7 +565,7 @@ class VerifyPlaybookParams:
                 bad_param["config_param"] = self.parameter
                 bad_param["config_value"] = self.config_playbook[self.parameter]
                 bad_param["dependent_param"] = dependent_param
-                bad_param["dependent_operator"] = rule.get("op")
+                bad_param["dependent_operator"] = rule.get("operator")
                 bad_param["dependent_value"] = rule.get("value")
                 self.bad_params[self.fabric_name][self.parameter].append(bad_param)
             else:

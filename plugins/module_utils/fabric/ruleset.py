@@ -4,16 +4,25 @@ import logging
 import re
 
 class RuleSetCommon:
+    """
+    Common methods for the RuleSet class.
+
+    This may be merged back into RuleSet at some point.
+    """
     def __init__(self) -> None:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.rule = None
         self.properties = {}
         self.properties["template"] = None
         self.properties["ruleset"] = {}
 
     def clean_rule(self):
+        """
+        Clean the rule string.
+        """
         method_name = "clean_rule"
         msg = f"{self.class_name}.{method_name}: "
         msg += f"PRE1 : RULE: {self.rule}"
@@ -36,6 +45,10 @@ class RuleSetCommon:
 
     @property
     def ruleset(self):
+        """
+        - getter : return the ruleset.
+        - setter : set the ruleset.
+        """
         return self.properties["ruleset"]
     @ruleset.setter
     def ruleset(self, value):
@@ -193,7 +206,7 @@ class RuleSet(RuleSetCommon):
                     self.ruleset[self.param_name] = {}
                     self.ruleset[self.param_name]["mandatory"] = {}
                 self.ruleset[self.param_name]["mandatory"][lhs] = {}
-                self.ruleset[self.param_name]["mandatory"][lhs]["op"] = op
+                self.ruleset[self.param_name]["mandatory"][lhs]["operator"] = op
                 self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
             return
         lhs, op, rhs = self.rule.split(" ")
@@ -202,14 +215,14 @@ class RuleSet(RuleSetCommon):
             self.ruleset[self.param_name] = {}
             self.ruleset[self.param_name]["mandatory"] = {}
         self.ruleset[self.param_name]["mandatory"][lhs] = {}
-        self.ruleset[self.param_name]["mandatory"][lhs]["op"] = op
+        self.ruleset[self.param_name]["mandatory"][lhs]["operator"] = op
         self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
 
     def _update_ruleset_rule_and(self):
         """
         # Process rules that contain only boolean "and" terms
 
-        NOTE: "&&" is replaced with " and " in clean_rule()
+        NOTE: ``&&`` is replaced with `` and `` in ``clean_rule()``
 
         ```python
         "IsShow": "\"LINK_STATE_ROUTING==ospf && UNDERLAY_IS_V6==false\""
@@ -231,7 +244,7 @@ class RuleSet(RuleSetCommon):
                 self.ruleset[self.param_name] = {}
                 self.ruleset[self.param_name]["mandatory"] = {}
             self.ruleset[self.param_name]["mandatory"][lhs] = {}
-            self.ruleset[self.param_name]["mandatory"][lhs]["op"] = op
+            self.ruleset[self.param_name]["mandatory"][lhs]["operator"] = op
             self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
 
     def _update_ruleset(self) -> None:
@@ -267,7 +280,7 @@ class RuleSet(RuleSetCommon):
         """
         if self.template is None:
             msg = "template is not set.  "
-            msg += "Call instance.template = <template> " 
+            msg += "Call instance.template = <template> "
             msg += "before calling instance.refresh()."
             raise ValueError(msg)
         if self.template.get("parameters") is None:
@@ -290,4 +303,3 @@ class RuleSet(RuleSetCommon):
                 continue
             self.rule = self.is_show(parameter)
             self._update_ruleset()
-
