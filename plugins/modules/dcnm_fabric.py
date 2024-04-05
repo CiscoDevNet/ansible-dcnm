@@ -270,9 +270,12 @@ class Common(FabricCommon):
         self._implemented_states = set()
 
         self.params = ansible_module.params
-        self._verify_playbook_params = VerifyPlaybookParams(self.ansible_module)
+        self._verify_playbook_params = VerifyPlaybookParams()
         self.rest_send = RestSend(self.ansible_module)
-        self.template = TemplateGet(self.ansible_module)
+
+        self.template = TemplateGet()
+        self.template.rest_send = RestSend(self.ansible_module)
+
         # populated in self.validate_input()
         self.payloads = {}
 
@@ -280,7 +283,7 @@ class Common(FabricCommon):
         if not isinstance(self.config, list):
             msg = "expected list type for self.config. "
             msg += f"got {type(self.config).__name__}"
-            self.ansible_module.fail_json(msg, **self.rest_send.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self.validated = []
         self.have = {}
@@ -406,35 +409,63 @@ class Merged(Common):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Fabric config with missing FABRIC_NAME "
                 msg += "parameter: "
-                msg += f"{json_pretty(want)}"
+                msg += f"{want}"
                 self.log.debug(msg)
-                self.ansible_module.fail_json(msg, self.results.failed_result)
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
 
             fabric_type = want.get("FABRIC_TYPE", None)
             if fabric_type is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Fabric {fabric_name} is missing FABRIC_TYPE "
                 msg += "parameter: "
-                msg += f"{json_pretty(want)}"
+                msg += f"{want}"
                 self.log.debug(msg)
-                self.ansible_module.fail_json(msg, self.results.failed_result)
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-            self._verify_playbook_params.config_playbook = want
+            try:
+                self._verify_playbook_params.config_playbook = want
+            except TypeError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
             fabric_type = want.get("FABRIC_TYPE", None)
             template_name = self._fabric_type_to_template_name.get(fabric_type)
 
             self.template.template_name = template_name
-            self.template.refresh()
-            self._verify_playbook_params.template = self.template.template
+            try:
+                self.template.refresh()
+            except ValueError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+            try:
+                self._verify_playbook_params.template = self.template.template
+            except TypeError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
             if want["FABRIC_NAME"] not in self.have.all_data:
-                self._verify_playbook_params.config_controller = None
-                self._verify_playbook_params.commit()
+                try:
+                    self._verify_playbook_params.config_controller = None
+                except TypeError as error:
+                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+                try:
+                    self._verify_playbook_params.commit()
+                except ValueError as error:
+                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
                 self.need_create.append(want)
+
             else:
-                self._verify_playbook_params.config_controller = self.have.all_data[want["FABRIC_NAME"]]["nvPairs"]
-                self._verify_playbook_params.commit()
+
+                nv_pairs = self.have.all_data[want["FABRIC_NAME"]]["nvPairs"]
+                try:
+                    self._verify_playbook_params.config_controller = nv_pairs
+                except TypeError as error:
+                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                try:
+                    self._verify_playbook_params.commit()
+                except ValueError as error:
+                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
                 self.need_update.append(want)
 
     def commit(self):

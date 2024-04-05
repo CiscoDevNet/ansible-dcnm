@@ -32,7 +32,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
 
 class VerifyPlaybookParams:
     """
-    Verify playbook parameters for a controller fabric.
+    # Verify playbook parameters for a controller fabric.
 
     VerifyPlaybookParams() uses three sources of information in its
     verification of the user's playbook parameters:
@@ -45,13 +45,14 @@ class VerifyPlaybookParams:
     an instance of VerifyPlaybookParams(), and then call
     VerifyPlaybookParams.commit(), which does the verification.
 
-    Usage:
+    ## Usage:
 
-    # Instantiate the VerifyPlaybookParams class
-    verify = VerifyPlaybookParams(ansible_module)
+    ```python
+    # 1. Instantiate the VerifyPlaybookParams class
+    verify = VerifyPlaybookParams()
 
     #---------------------------------------------------------------
-    # 1. Retrieve the fabric configuration from controller (here we
+    # 2. Retrieve the fabric configuration from controller (here we
     #    use the FabricDetailsByName() class to retrieve the fabric
     #    configuration).  VerifyPlaybookParams() wants only the
     #    nvPairs content of the fabric configuration.
@@ -65,33 +66,46 @@ class VerifyPlaybookParams:
         # fabric does not exist
         verify.config_controller = None
     else:
-        verify.config_controller = fabric.filtered_data["nvPairs"]
+        try:
+            verify.config_controller = fabric.filtered_data["nvPairs"]
+        except ValueError as error:
+            ansible_module.fail_json(error, **self.results.failed_result)
 
     #---------------------------------------------------------------
     # 2. Retrieve the appropriate fabric template (here we use the
     #    TemplateGet() class to retrieve the Easy_Fabric template)
     #---------------------------------------------------------------
-    template = TemplateGet(ansible_module)
+    template = TemplateGet()
+    template.rest_send = RestSend(ansible_module)
     template.template_name = "Easy_Fabric"
     template.refresh()
 
     # Add the template to the VerifyPlaybookParams instance
-    verify.template = template.template
+    try:
+        verify.template = template.template
+    except TypeError as error:
+        ansible_module.fail_json(error, **self.results.failed_result)
 
     #---------------------------------------------------------------
     # 3. Add the playbook config to the VerifyPlaybookParams instance
     #    typically this is retrieved with get_want() within the
     #    main task module.
     #---------------------------------------------------------------
-    verify.config_playbook = playbook_config
+    try:
+        verify.config_playbook = playbook_config
+    except TypeError as error:
+        ansible_module.fail_json(error, **self.results.failed_result)
 
     # Perform the verification
-    verify.commit()
+    try:
+        verify.commit()
+    except(ValueError, KeyError) as error:
+        ansible_module.fail_json(error, **self.results.failed_result)
+    ```
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self._ruleset = RuleSet()
@@ -103,9 +117,7 @@ class VerifyPlaybookParams:
         self.parameter = None
         self.fabric_name = None
 
-        self.state = self.ansible_module.params["state"]
         msg = "ENTERED VerifyPlaybookParams(): "
-        msg += f"state: {self.state}"
         self.log.debug(msg)
 
         self._build_properties()
@@ -122,8 +134,9 @@ class VerifyPlaybookParams:
     @property
     def config_controller(self):
         """
-        getter: return the controller fabric config to be verified
-        setter: set the controller fabric config to be verified
+        -   getter: return the controller fabric config to be verified
+        -   setter: set the controller fabric config to be verified
+        -   setter: raise TypeError if the controller conffig is not a dict
         """
         return self.properties["config_controller"]
 
@@ -138,14 +151,15 @@ class VerifyPlaybookParams:
             msg += "config_controller must be a dict, or None. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["config_controller"] = value
 
     @property
     def config_playbook(self):
         """
-        getter: return the playbook config to be verified
-        setter: set the playbook config to be verified
+        -   getter: return the playbook config to be verified
+        -   setter: set the playbook config to be verified
+        -   setter: raise TypeError if playbook config is not a dict
         """
         return self.properties["config_playbook"]
 
@@ -157,14 +171,15 @@ class VerifyPlaybookParams:
             msg += "config_playbook must be a dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["config_playbook"] = value
 
     @property
     def template(self):
         """
-        getter: return the template used to verify the playbook config
-        setter: set the template used to verify the playbook config
+        -   getter: return the template used to verify the playbook config
+        -   setter: set the template used to verify the playbook config
+        -   setter: raise TypeError if template is not a dict
         """
         return self.properties["template"]
 
@@ -176,7 +191,7 @@ class VerifyPlaybookParams:
             msg += "template must be a dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise TypeError(msg)
         self.properties["template"] = value
 
     @staticmethod
@@ -185,8 +200,8 @@ class VerifyPlaybookParams:
         Return value converted to boolean, if possible.
         Otherwise, return value.
 
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
+        - TODO: This method is duplicated in several other classes.
+        - TODO: Would be good to move this to a Utility() class.
         """
         if str(value).lower() in ["true", "yes"]:
             return True
@@ -200,8 +215,8 @@ class VerifyPlaybookParams:
         Return None if value is a string representation of a None type
         Otherwise, return value
 
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
+        - TODO: This method is duplicated in several other classes.
+        - TODO: Would be good to move this to a Utility() class.
         """
         if str(value).lower in ["", "none", "null"]:
             return None
@@ -210,8 +225,8 @@ class VerifyPlaybookParams:
     @staticmethod
     def make_int(value):
         """
-        Return value converted to int, if possible.
-        Otherwise, return value.
+        - Return value converted to int, if possible.
+        - Otherwise, return value.
         """
         # Don't convert boolean values to integers
         if isinstance(value, bool):
@@ -226,21 +241,21 @@ class VerifyPlaybookParams:
         Evaluate a dependent parameter value against a rule
         from the fabric template.
 
-        Return the result of the evaluation.
+        - Return the result of the evaluation.
+        - raise KeyError if the rule does not contain expected keys.
 
-        Raise ValueError if the rule does not contain expected keys.
         """
         method_name = inspect.stack()[0][3]
 
         rule_operator = rule.get("op", None)
         if rule_operator is None:
-            msg = f"op not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
+            msg = f"'op' not found in parameter {parameter} rule: {rule}"
+            raise KeyError(msg)
 
         rule_value = rule.get("value", None)
         if rule_value is None:
-            msg = f"value not found in parameter {parameter} rule: {rule}"
-            raise ValueError(msg)
+            msg = f"'value' not found in parameter {parameter} rule: {rule}"
+            raise KeyError(msg)
 
         # While eval() can be dangerous with unknown input, the input
         # we're feeding it is from a known source and has been pretty
@@ -260,15 +275,17 @@ class VerifyPlaybookParams:
 
     def controller_param_is_valid(self, parameter, rule) -> bool:
         """
-        If the controller fabric config contains the dependent parameter,
-        return evaluated result derived from:
+        -   Return None if the controller fabric config does not contain
+            the dependent parameter.  This removes the controller result
+            from consideration when determining parameter validity.
+
+        -   Return the evaluated result (True or False) if the controller
+            fabric config does contain the dependent parameter.  The
+            evaluated result is calculated from:
 
         eval(controller_param_value rule_operator rule_value)
 
-        Return None otherwise to remove controller parameter result
-        from consideration.
-
-        raise ValueError if "op" or "value" keys are not found in rule
+        -   raise KeyError if self.eval_parameter_rule() fails
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"parameter: {parameter}, "
@@ -292,19 +309,24 @@ class VerifyPlaybookParams:
             return None
 
         parameter_value = self.make_boolean(self.config_controller[parameter])
-        return self.eval_parameter_rule(parameter, parameter_value, rule)
+        try:
+            return self.eval_parameter_rule(parameter, parameter_value, rule)
+        except KeyError as error:
+            raise KeyError from error
+
 
     def playbook_param_is_valid(self, parameter, rule) -> bool:
         """
-        If the playbook config contains the dependent parameter,
-        return evaluated result derived from:
+        -   Return None if the playbook config does not contain the
+            dependent parameter. This removes the playbook parameter from
+            consideration when determining parameter validity
+        -   Return evaluated result if the playbook config does contain
+            the dependent parameter.  The evaluated result is calculated
+            from:
 
         eval(playbook_param rule_operator rule_value)
 
-        Return None otherwise to remove playbook parameter result
-        from consideration.
-
-        raise ValueError if "op" or "value" keys are not found in rule
+        -   raise KeyError if self.eval_parameter_rule() fails
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -322,19 +344,25 @@ class VerifyPlaybookParams:
         self.log.debug(msg)
 
         parameter_value = self.make_boolean(self.config_playbook[parameter])
-        return self.eval_parameter_rule(parameter, parameter_value, rule)
+
+        try:
+            return self.eval_parameter_rule(parameter, parameter_value, rule)
+        except KeyError as error:
+            raise KeyError from error
 
     def default_param_is_valid(self, parameter, rule) -> bool:
         """
-        If fabric defaults (from the fabric template) contains the
-        dependent parameter, return evaluated result derived from:
+        -   Return None if the fabric defaults (in the fabric template)
+            do not contain the dependent parameter. This removes the
+            default value from consideration when determining
+            parameter validity.
+        -   Return evaluated result if the fabric defaults(in the fabric
+            template) do contain the dependent parameter.  The evaluated
+            result is calculated from:
 
         eval(dependent_param_default_value rule_operator rule_value)
 
-        Return None otherwise to remove default parameter result
-        from consideration.
-
-        raise ValueError if "op" or "value" keys are not found in rule
+        -   raise KeyError if self.eval_parameter_rule() fails
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -365,7 +393,10 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        return self.eval_parameter_rule(parameter, default_value, rule)
+        try:
+            return self.eval_parameter_rule(parameter, default_value, rule)
+        except KeyError as error:
+            raise KeyError from error
 
     def update_decision_set(self, dependent_param, rule):
         """
@@ -376,7 +407,9 @@ class VerifyPlaybookParams:
         """
         decision_set = set()
         controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
+
         playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
+
         default_is_valid = self.default_param_is_valid(dependent_param, rule)
 
         if controller_is_valid is not None:
@@ -408,7 +441,7 @@ class VerifyPlaybookParams:
 
         Return if the parameter has no valid choices.
 
-        Call fail_json() if the parameter does not match any of the
+        raise ValueError if the parameter does not match any of the
         valid choices.
         """
         try:
@@ -440,7 +473,7 @@ class VerifyPlaybookParams:
             msg = f"Parameter: {self.parameter}, "
             msg += f"Invalid value: ({playbook_value}). "
             msg += f"Valid values: {param_info['choices']}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         msg = f"Parameter: {self.parameter}, "
         msg += f"playbook_value: {playbook_value}, "
@@ -458,24 +491,31 @@ class VerifyPlaybookParams:
         msg = f"Parameter: {self.parameter}, "
         msg += f"Invalid value: ({playbook_value}). "
         msg += f"Valid values: {param_info['choices']}"
-        self.ansible_module.fail_json(msg, **self.results.failed_result)
+        raise ValueError(msg)
 
     def verify_parameter(self):
         """
-        Verify a parameter against the template
+        Verify a parameter against the template.
+
+        -   raise ValueError if FABRIC_NAME is not present in the playbook
+        -   raise ValueError if the parameter does not match any of the valid
+            values specified in the template for the parameter 
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         # self.fabric_name is used in:
         #   - bad_params to help the user identify which
         #     fabric contains the bad parameter(s)
-        #   - verify_parameter_value() fail_json message
+        #   - verify_parameter_value() raise message
         self.fabric_name = self.config_playbook.get("FABRIC_NAME", None)
         if self.fabric_name is None:
             msg = "FABRIC_NAME not found in playbook config."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
-        self.verify_parameter_value()
+        try:
+            self.verify_parameter_value()
+        except ValueError as error:
+            raise ValueError from error
 
         if self.parameter not in self._ruleset.ruleset:
             msg = f"SKIP {self.parameter}: Not in ruleset."
@@ -519,51 +559,65 @@ class VerifyPlaybookParams:
 
     def validate_commit_parameters(self):
         """
-        fail_json if required parameters are not set
+        raise ValueError if required parameters are not set
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if self.config_controller is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.config_controller "
             msg += "must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         if self.config_playbook is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.config_playbook "
             msg += "must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         if self.template is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.template "
             msg += "must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
     def update_fabric_defaults(self):
         """
         Update fabric parameter default values based on
-        the fabric template
+        the fabric template.
+
+        -   raise ValueError if FabricDefaults does not like the template
+        -   raise ValueError if FabricDefaults.refresh() fails
         """
         try:
             self._fabric_defaults.template = self.template
         except ValueError as error:
             msg = f"{error}"
             self.log.debug(msg)
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg) from error
+
         try:
             self._fabric_defaults.refresh()
         except ValueError as error:
             msg = f"{error}"
             self.log.debug(msg)
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg) from error
 
     def update_param_info(self):
         """
         Update the fabric parameter info based on the fabric template
+
+        -   raise TypeError if the template is not a dict
+        -   raise ValueError if ParamInfo.refresh() fails
         """
-        self._param_info.template = self.template
-        self._param_info.refresh()
+        try:
+            self._param_info.template = self.template
+        except TypeError as error:
+            raise TypeError from error
+
+        try:
+            self._param_info.refresh()
+        except ValueError as error:
+            raise ValueError from error
 
         msg = "ZZZ: self._param_info.info: "
         msg += f"{json.dumps(self._param_info.info, indent=4, sort_keys=True)}"
@@ -583,13 +637,31 @@ class VerifyPlaybookParams:
     def commit(self):
         """
         verify the config against the retrieved template
+
+        raise ValueError in the following cases:
+        - required parameters are not set prior to calling commit()
+        - FabricDefaults() returns error(s)
+        - ParamInfo() returns errors(s)
+        - A parameter fails verification
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        self.validate_commit_parameters()
+        try:
+            self.validate_commit_parameters()
+        except ValueError as error:
+            raise ValueError(error) from error
+
         self.update_ruleset()
-        self.update_fabric_defaults()
-        self.update_param_info()
+
+        try:
+            self.update_fabric_defaults()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.update_param_info()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
 
         msg = "self.config_playbook: "
         msg += f"{json.dumps(self.config_playbook, indent=4, sort_keys=True)}"
@@ -597,7 +669,10 @@ class VerifyPlaybookParams:
 
         self.params_are_valid = set()
         for self.parameter in self.config_playbook:
-            self.verify_parameter()
+            try:
+                self.verify_parameter()
+            except ValueError as error:
+                raise ValueError(error) from error
         if False not in self.params_are_valid:
             return
 
@@ -618,4 +693,4 @@ class VerifyPlaybookParams:
                     msg += f"{dependent_param} valid values: {self._param_info.info[dependent_param]['choices']}. "
             msg.rstrip(", ")
         self.log.debug(msg)
-        self.ansible_module.fail_json(msg, **self.results.failed_result)
+        raise ValueError(msg)

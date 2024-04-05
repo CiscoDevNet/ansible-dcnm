@@ -23,40 +23,34 @@ import inspect
 import logging
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
 
 
 class TemplateGet:
     """
-    Retrieve a template from the controller.
+    # Retrieve a template from the controller.
 
-    Usage:
+    ## Usage
 
-    instance = TemplateGet(ansible_module)
+    ```python
+    instance = TemplateGet()
+    instance.rest_send = rest_send_instance
     instance.template_name = "Easy_Fabric"
     instance.refresh()
     template = instance.template
-
+    ```
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
-        self.state = self.ansible_module.params.get("state")
-        self.check_mode = self.ansible_module.check_mode
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED TemplateGet(): "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
         self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
         self.path = None
         self.verb = None
 
@@ -72,6 +66,81 @@ class TemplateGet:
         self._properties["template_name"] = None
         self._properties["template"] = None
         self._properties["results"] = None
+
+    def _set_template_endpoint(self) -> None:
+        """
+        Set the endpoint for the template to be retrieved from the controller.
+        """
+        method_name = inspect.stack()[0][3]
+        if self.template_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Set instance.template_name property before "
+            msg += "calling instance.refresh()"
+            self.log.error(msg)
+            raise ValueError(msg)
+
+        self.endpoints.template_name = self.template_name
+        try:
+            endpoint = self.endpoints.template
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        self.path = endpoint.get("path")
+        self.verb = endpoint.get("verb")
+
+    def refresh(self):
+        """
+        Retrieve the template from the controller.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self._set_template_endpoint()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
+        self.rest_send.check_mode = False
+        self.rest_send.timeout = 2
+        self.rest_send.commit()
+
+        self.response_current = copy.deepcopy(self.rest_send.response_current)
+        self.response.append(copy.deepcopy(self.rest_send.response_current))
+        self.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.result.append(copy.deepcopy(self.rest_send.result_current))
+
+        if self.response_current.get("RETURN_CODE", None) != 200:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Failed to retrieve template {self.template_name}."
+            self.log.error(msg)
+            raise ValueError(msg)
+
+        self.template = {}
+        self.template["parameters"] = self.response_current.get("DATA", {}).get(
+            "parameters", []
+        )
+
+    @property
+    def rest_send(self):
+        """
+        An instance of the RestSend class.
+        """
+        return self._properties["rest_send"]
+
+    @rest_send.setter
+    def rest_send(self, value):
+        self._properties["rest_send"] = value
+
+    @property
+    def results(self):
+        """
+        An instance of the Results class.
+        """
+        return self._properties["results"]
+
+    @results.setter
+    def results(self, value):
+        self._properties["results"] = value
 
     @property
     def template(self):
@@ -95,64 +164,3 @@ class TemplateGet:
     @template_name.setter
     def template_name(self, value) -> None:
         self._properties["template_name"] = value
-
-    def _set_template_endpoint(self) -> None:
-        """
-        Set the endpoint for the template to be retrieved from the controller.
-        """
-        method_name = inspect.stack()[0][3]
-        if self.template_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Set instance.template_name property before "
-            msg += "calling instance.refresh()"
-            self.log.error(msg)
-            self.ansible_module.fail_json(msg, **self._results.failed_result)
-
-        self.endpoints.template_name = self.template_name
-        try:
-            endpoint = self.endpoints.template
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        self.path = endpoint.get("path")
-        self.verb = endpoint.get("verb")
-
-    def refresh(self):
-        """
-        Retrieve the template from the controller.
-        """
-        method_name = inspect.stack()[0][3]
-        self._set_template_endpoint()
-
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.check_mode = False
-        self.rest_send.commit()
-
-        self.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.response.append(copy.deepcopy(self.rest_send.response_current))
-        self.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.result.append(copy.deepcopy(self.rest_send.result_current))
-
-        if self.response_current.get("RETURN_CODE", None) != 200:
-            msg = f"{self.class_name}.{method_name}: "
-            msg = "Exiting. Failed to retrieve template."
-            self.log.error(msg)
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
-
-        self.template = {}
-        self.template["parameters"] = self.response_current.get("DATA", {}).get(
-            "parameters", []
-        )
-
-    @property
-    def results(self):
-        """
-        An instance of the Results class.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        self._properties["results"] = value
