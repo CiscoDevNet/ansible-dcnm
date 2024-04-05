@@ -18,7 +18,7 @@ class ParamInfo:
     Usage:
 
     ```python
-    instance = ParamChoices()
+    instance = ParamInfo()
     instance.template = "Easy_Fabric"
 
     try:
@@ -45,7 +45,7 @@ class ParamInfo:
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._choices = {}
+        self.info = {}
         self._build_properties()
 
     def _build_properties(self):
@@ -126,10 +126,13 @@ class ParamInfo:
         - default: (``str``, ``int``, etc, or ``None``)
         
         """
+        method_name = inspect.stack()[0][3]
         try:
             return self.info[value]
-        except KeyError:
-            raise KeyError(f"Parameter {value} not found in self.info")
+        except KeyError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Parameter {value} not found in self.info. "
+            raise KeyError(msg) from error
 
     @staticmethod
     def make_boolean(value):
