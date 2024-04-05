@@ -52,6 +52,7 @@ class RuleSetCommon:
     def make_boolean(value):
         """
         Return value converted to boolean, if possible.
+
         Otherwise, return value.
 
         TODO: This method is duplicated in several other classes.
@@ -64,7 +65,12 @@ class RuleSetCommon:
         return value
 
     @staticmethod
-    def get_annotations(parameter):
+    def annotations(parameter):
+        """
+        Return the annotations for the parameter, if any.
+
+        Otherwise, return None.
+        """
         if parameter.get("annotations") is None:
             return None
         if isinstance(parameter["annotations"], dict) is False:
@@ -72,7 +78,15 @@ class RuleSetCommon:
         return parameter["annotations"]
 
     def is_mandatory(self, parameter):
-        annotations = self.get_annotations(parameter)
+        """
+        - Return False if annotations is not present
+        - Return True if annotations["IsMandatory"] is True
+        - Return False if annotations["IsMandatory"] is not present
+        - Return False if annotations["IsMandatory"] is False
+        - Return False if annotations["IsMandatory"] is not set
+        - Return annotations["IsMandatory"] if all else fails
+        """
+        annotations = self.annotations(parameter)
         if annotations is None:
             return False
         if annotations.get("IsMandatory") is None:
@@ -84,7 +98,14 @@ class RuleSetCommon:
         return annotations["IsMandatory"]
 
     def is_show(self, parameter):
-        annotations = self.get_annotations(parameter)
+        """
+        - Return False if annotations is not present
+        - Return False if annotations["IsShow"] is not present
+        - Return True if annotations["IsShow"] is True
+        - Return False if annotations["IsShow"] is False
+        - Return annotations["IsShow"] if all else fails
+        """
+        annotations = self.annotations(parameter)
         if annotations is None:
             return False
         if annotations.get("IsShow") is None:
@@ -96,7 +117,14 @@ class RuleSetCommon:
         return annotations["IsShow"]
 
     def is_internal(self, parameter):
-        annotations = self.get_annotations(parameter)
+        """
+        - Return False if annotations is not present
+        - Return False if annotations["IsInternal"] is not present
+        - Return True if annotations["IsInternal"] is True
+        - Return False if annotations["IsInternal"] is False
+        - Return False if all else fails
+        """
+        annotations = self.annotations(parameter)
         if annotations is None:
             return False
         if annotations.get("IsInternal") is None:
@@ -108,7 +136,12 @@ class RuleSetCommon:
         return False
 
     def section(self, parameter):
-        annotations = self.get_annotations(parameter)
+        """
+        - Return "" if annotations is not present
+        - Return "" if annotations["Section"] is not present
+        - Return annotations["Section"] if present
+        """
+        annotations = self.annotations(parameter)
         if annotations is None:
             return ""
         if annotations.get("Section") is None:
@@ -117,27 +150,37 @@ class RuleSetCommon:
 
     @staticmethod
     def name(parameter):
+        """
+        - Return the parameter's name, if present.
+        - Return None otherwise.
+        """
         if parameter.get("name") is None:
             return None
         return parameter["name"]
 
 class RuleSet(RuleSetCommon):
     """
-    Usage:
+    # Generate a ruleset from a template
 
+    ## Usage
+
+    ```python
     ruleset = RuleSet()
     ruleset.template = <template>
     ruleset.commit()
     rules = ruleset.ruleset
+    ```
     """
     def __init__(self) -> None:
         super().__init__()
 
     def _update_ruleset_no_boolean(self):
         """
-        Process rules that contain no boolean terms
+        # Process rules that contain no boolean terms
 
+        ```python
         "VRF_LITE_AUTOCONFIG != Manual"
+        ```
         """
         msg = f"key {self.param_name}: {self.rule}"
         self.log.debug(msg)
@@ -164,11 +207,13 @@ class RuleSet(RuleSetCommon):
 
     def _update_ruleset_rule_and(self):
         """
-        Process rules that contain only boolean "and" terms
+        # Process rules that contain only boolean "and" terms
 
         NOTE: "&&" is replaced with " and " in clean_rule()
 
+        ```python
         "IsShow": "\"LINK_STATE_ROUTING==ospf && UNDERLAY_IS_V6==false\""
+        ```
         """
         self.rule = self.rule.split("and")
         self.rule = [x.strip() for x in self.rule]
@@ -213,6 +258,13 @@ class RuleSet(RuleSetCommon):
             self._update_ruleset_no_boolean()
 
     def refresh(self) -> None:
+        """
+        Refresh the ruleset from the template.
+
+        - raise ValueError if template is not set.
+        - raise ValueError if template has no parameters.
+        - raise ValueError if template[parameters] is not a list.
+        """
         if self.template is None:
             msg = "template is not set.  "
             msg += "Call instance.template = <template> " 
