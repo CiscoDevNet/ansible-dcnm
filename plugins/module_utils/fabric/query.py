@@ -18,6 +18,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
@@ -31,13 +32,31 @@ class FabricQuery(FabricCommon):
     Query fabrics
 
     Usage:
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
 
+    results = Results()
     instance = FabricQuery(ansible_module)
     instance.fabric_names = ["FABRIC_1", "FABRIC_2"]
+    instance.results = results
     instance.commit()
-    diff = instance.diff # contains the fabric information
-    result = instance.result # contains the result(s) of the query
-    response = instance.response # contains the response(s) from the controller
+    results.build_final_result()
+
+    # diff contains a dictionary of fabric details for each fabric
+    # in instance.fabric_names
+    diff = results.diff
+    # result contains the result(s) of the query request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Query failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
     """
 
     def __init__(self, ansible_module):
@@ -94,18 +113,6 @@ class FabricQuery(FabricCommon):
                 self.ansible_module.fail_json(msg)
         self.properties["fabric_names"] = value
 
-    def _get_fabrics_to_query(self) -> None:
-        """
-        Retrieve fabric info from the controller and set the list of
-        controller fabrics that are in our fabric_names list.
-        """
-        self._fabric_details.refresh()
-
-        self._fabrics_to_query = []
-        for fabric_name in self.fabric_names:
-            if fabric_name in self._fabric_details.all_data:
-                self._fabrics_to_query.append(fabric_name)
-
     def commit(self):
         """
         query each of the fabrics in self.fabric_names
@@ -114,37 +121,28 @@ class FabricQuery(FabricCommon):
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
-        self._get_fabrics_to_query()
+        self._fabric_details.refresh()
 
-        msg = f"self._fabrics_to_query: {self._fabrics_to_query}"
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+
+        msg = f"self.fabric_names: {self.fabric_names}"
         self.log.debug(msg)
-        if len(self._fabrics_to_query) == 0:
-            self.changed = False
-            self.failed = False
-            return
-
-        msg = f"Populating diff {self._fabrics_to_query}"
-        self.log.debug(msg)
-
-        for fabric_name in self._fabrics_to_query:
+        add_to_diff = {}
+        for fabric_name in self.fabric_names:
             if fabric_name in self._fabric_details.all_data:
-                fabric = copy.deepcopy(self._fabric_details.all_data[fabric_name])
-                fabric["action"] = self.action
-                self.diff = fabric
-        self.response = copy.deepcopy(self._fabric_details.response_current)
-        self.response_current = copy.deepcopy(self._fabric_details.response_current)
-        self.result = copy.deepcopy(self._fabric_details.result_current)
-        self.result_current = copy.deepcopy(self._fabric_details.result_current)
+                add_to_diff[fabric_name] = copy.deepcopy(
+                    self._fabric_details.all_data[fabric_name]
+                )
 
-        msg = f"self.diff: {self.diff}"
-        self.log.debug(msg)
-        msg = f"self.response: {self.response}"
-        self.log.debug(msg)
-        msg = f"self.result: {self.result}"
-        self.log.debug(msg)
-        msg = f"self.response_current: {self.response_current}"
-        self.log.debug(msg)
-        msg = f"self.result_current: {self.result_current}"
-        self.log.debug(msg)
+        self.results.diff_current = add_to_diff
+        self.results.response_current = copy.deepcopy(
+            self._fabric_details.results.response_current
+        )
+        self.results.result_current = copy.deepcopy(
+            self._fabric_details.results.result_current
+        )
+        self.results.register_task_result()

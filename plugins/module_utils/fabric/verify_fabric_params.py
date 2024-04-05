@@ -16,13 +16,12 @@
 """
 Classes and methods to verify NDFC Data Center VXLAN EVPN Fabric parameters.
 This should go in:
-ansible_collections/cisco/dcnm/plugins/module_utils/fabric/fabric_vxlan/verify_fabric_params.py
+ansible_collections/cisco/dcnm/plugins/module_utils/fabric/vxlan/verify_fabric_params.py
 
 Example Usage:
 import sys
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric import (
-    VerifyFabricParams,
-)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_fabric_params import \
+    VerifyFabricParams
 
 config = {}
 config["fabric_name"] = "foo"
@@ -43,7 +42,9 @@ if verify.result == False:
     sys.exit(1)
 print(f"result {verify.result}, {verify.msg}, payload {verify.payload}")
 """
+import copy
 import inspect
+import logging
 import re
 
 
@@ -82,6 +83,10 @@ class VerifyFabricParams:
     """
 
     def __init__(self):
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self._initialize_properties()
 
         self.msg = None
@@ -109,7 +114,7 @@ class VerifyFabricParams:
         #  self._build_translatable_nv_pairs()
         self._translated_nv_pairs = {}
         self._valid_states = {"merged"}
-        self._mandatory_keys = {"fabric_name", "bgp_as"}
+        self._mandatory_keys = {"FABRIC_NAME", "BGP_AS"}
         self._build_default_fabric_params()
         self._build_default_nv_pairs()
 
@@ -140,8 +145,8 @@ class VerifyFabricParams:
             set self.msg to an approprate error message
             return False
         """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not isinstance(config, dict):
-            method_name = inspect.stack()[0][3]
             msg = f"{self.class_name}.{method_name}: "
             msg += "expected a dict for config. "
             msg += f"Got {type(config)}."
@@ -162,6 +167,11 @@ class VerifyFabricParams:
         Caller: public method, called by the user
         Validate the items in self.config are appropriate for self.state
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.state: {self.state}"
+        self.log.debug(msg)
+
         if self.state is None:
             msg = "call instance.state before calling instance.validate_config"
             self._append_msg(msg)
@@ -191,45 +201,58 @@ class VerifyFabricParams:
         Set self.result to False and update self.msg if anything is not valid
         that we couldn't fix
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "ENTERED"
         if not self.config:
             msg = "config: element is mandatory for state merged"
             self._append_msg(msg)
             self.result = False
             return
-        if "fabric_name" not in self.config:
-            msg = "fabric_name is mandatory"
+        if "FABRIC_NAME" not in self.config:
+            msg = "FABRIC_NAME is mandatory"
             self._append_msg(msg)
             self.result = False
             return
-        if "bgp_as" not in self.config:
-            msg = "bgp_as is mandatory"
+        if "BGP_AS" not in self.config:
+            msg = "BGP_AS is mandatory"
             self._append_msg(msg)
             self.result = False
             return
-        if "anycast_gw_mac" in self.config:
-            result = translate_mac_address(self.config["anycast_gw_mac"])
+        if "ANYCAST_GW_MAC" in self.config:
+            result = translate_mac_address(self.config["ANYCAST_GW_MAC"])
             if result is False:
-                msg = f"invalid anycast_gw_mac {self.config['anycast_gw_mac']}"
+                msg = f"invalid ANYCAST_GW_MAC {self.config['ANYCAST_GW_MAC']}"
                 self._append_msg(msg)
                 self.result = False
                 return
-            self.config["anycast_gw_mac"] = result
+            self.config["ANYCAST_GW_MAC"] = result
 
-        if "vrf_lite_autoconfig" in self.config:
-            result = translate_vrf_lite_autoconfig(self.config["vrf_lite_autoconfig"])
+        if "VRF_LITE_AUTOCONFIG" in self.config:
+            result = translate_vrf_lite_autoconfig(self.config["VRF_LITE_AUTOCONFIG"])
             if result is False:
-                msg = "invalid vrf_lite_autoconfig "
-                msg += f"{self.config['vrf_lite_autoconfig']}. Expected one of 0,1"
+                msg = "invalid VRF_LITE_AUTOCONFIG "
+                msg += f"{self.config['VRF_LITE_AUTOCONFIG']}. Expected one of 0,1"
                 self._append_msg(msg)
                 self.result = False
                 return
-            self.config["vrf_lite_autoconfig"] = result
+            self.config["VRF_LITE_AUTOCONFIG"] = result
 
-        # TODO: Discuss with Shangxin/Mike whether we should even do this
-        # validate self.config for cross-parameter dependencies
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling self._validate_dependencies()"
+        self.log.debug(msg)
         self._validate_dependencies()
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.result: {self.result}"
+        self.log.debug(msg)
+
         if self.result is False:
             return
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling self._build_payload()"
+        self.log.debug(msg)
         self._build_payload()
 
     def _build_default_nv_pairs(self):
@@ -276,9 +299,9 @@ class VerifyFabricParams:
         self._default_nv_pairs["BOOTSTRAP_MULTISUBNET"] = ""
         self._default_nv_pairs["BOOTSTRAP_MULTISUBNET_INTERNAL"] = ""
         self._default_nv_pairs["BRFIELD_DEBUG_FLAG"] = "Disable"
-        self._default_nv_pairs[
-            "BROWNFIELD_NETWORK_NAME_FORMAT"
-        ] = "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$"
+        self._default_nv_pairs["BROWNFIELD_NETWORK_NAME_FORMAT"] = (
+            "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$"
+        )
         key = "BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS"
         self._default_nv_pairs[key] = False
         self._default_nv_pairs["CDP_ENABLE"] = False
@@ -460,9 +483,9 @@ class VerifyFabricParams:
         self._default_nv_pairs["abstract_bgp_neighbor"] = value
         self._default_nv_pairs["abstract_bgp_rr"] = "evpn_bgp_rr"
         self._default_nv_pairs["abstract_dhcp"] = "base_dhcp"
-        self._default_nv_pairs[
-            "abstract_extra_config_bootstrap"
-        ] = "extra_config_bootstrap_11_1"
+        self._default_nv_pairs["abstract_extra_config_bootstrap"] = (
+            "extra_config_bootstrap_11_1"
+        )
         value = "extra_config_leaf"
         self._default_nv_pairs["abstract_extra_config_leaf"] = value
         value = "extra_config_spine"
@@ -475,9 +498,9 @@ class VerifyFabricParams:
         self._default_nv_pairs["abstract_feature_spine"] = value
         self._default_nv_pairs["abstract_isis"] = "base_isis_level2"
         self._default_nv_pairs["abstract_isis_interface"] = "isis_interface"
-        self._default_nv_pairs[
-            "abstract_loopback_interface"
-        ] = "int_fabric_loopback_11_1"
+        self._default_nv_pairs["abstract_loopback_interface"] = (
+            "int_fabric_loopback_11_1"
+        )
         self._default_nv_pairs["abstract_multicast"] = "base_multicast_11_1"
         self._default_nv_pairs["abstract_ospf"] = "base_ospf"
         value = "ospf_interface_11_1"
@@ -495,16 +518,16 @@ class VerifyFabricParams:
         self._default_nv_pairs["default_vrf"] = "Default_VRF_Universal"
         self._default_nv_pairs["enableRealTimeBackup"] = ""
         self._default_nv_pairs["enableScheduledBackup"] = ""
-        self._default_nv_pairs[
-            "network_extension_template"
-        ] = "Default_Network_Extension_Universal"
+        self._default_nv_pairs["network_extension_template"] = (
+            "Default_Network_Extension_Universal"
+        )
         self._default_nv_pairs["scheduledTime"] = ""
         self._default_nv_pairs["temp_anycast_gateway"] = "anycast_gateway"
         self._default_nv_pairs["temp_vpc_domain_mgmt"] = "vpc_domain_mgmt"
         self._default_nv_pairs["temp_vpc_peer_link"] = "int_vpc_peer_link_po"
-        self._default_nv_pairs[
-            "vrf_extension_template"
-        ] = "Default_VRF_Extension_Universal"
+        self._default_nv_pairs["vrf_extension_template"] = (
+            "Default_VRF_Extension_Universal"
+        )
 
     def _build_default_fabric_params(self):
         """
@@ -521,18 +544,18 @@ class VerifyFabricParams:
         self._default_fabric_params["fabricTechnologyFriendly"] = "VXLAN Fabric"
         self._default_fabric_params["fabricType"] = "Switch_Fabric"
         self._default_fabric_params["fabricTypeFriendly"] = "Switch Fabric"
-        self._default_fabric_params[
-            "networkExtensionTemplate"
-        ] = "Default_Network_Extension_Universal"
+        self._default_fabric_params["networkExtensionTemplate"] = (
+            "Default_Network_Extension_Universal"
+        )
         value = "Default_Network_Universal"
         self._default_fabric_params["networkTemplate"] = value
         self._default_fabric_params["provisionMode"] = "DCNMTopDown"
         self._default_fabric_params["replicationMode"] = "Multicast"
         self._default_fabric_params["siteId"] = ""
         self._default_fabric_params["templateName"] = "Easy_Fabric"
-        self._default_fabric_params[
-            "vrfExtensionTemplate"
-        ] = "Default_VRF_Extension_Universal"
+        self._default_fabric_params["vrfExtensionTemplate"] = (
+            "Default_VRF_Extension_Universal"
+        )
         self._default_fabric_params["vrfTemplate"] = "Default_VRF_Universal"
 
     def _build_translatable_nv_pairs(self):
@@ -565,47 +588,50 @@ class VerifyFabricParams:
                 self._translatable_nv_pairs.add(param.lower())
 
     def _translate_to_ndfc_nv_pairs(self, params):
-        """
-        Caller: self._build_payload()
+        self._translated_nv_pairs = copy.deepcopy(params)
 
-        translate keys in params dict into what NDFC
-        expects in nvPairs and populate dict
-        self._translated_nv_pairs
+    # def _translate_to_ndfc_nv_pairs_orig(self, params):
+    #     """
+    #     Caller: self._build_payload()
 
-        """
-        self._build_translatable_nv_pairs()
-        # TODO:4 We currently don't handle non-dunder uppercase and lowercase,
-        #   e.g. THIS or that.  But (knock on wood), so far there are no
-        #   cases like this (or THAT).
-        self._translated_nv_pairs = {}
-        # upper-case dunder keys
-        for param in self._translatable_nv_pairs:
-            if param not in params:
-                continue
-            self._translated_nv_pairs[param.upper()] = params[param]
-        # special cases
-        # dunder keys, these need no modification
-        dunder_keys = {
-            "default_network",
-            "default_vrf",
-            "network_extension_template",
-            "vrf_extension_template",
-        }
-        for key in dunder_keys:
-            if key not in params:
-                continue
-            self._translated_nv_pairs[key] = params[key]
-        # camelCase keys
-        # These are currently manually mapped with a dictionary.
-        camel_keys = {
-            "enableRealTimeBackup": "enable_real_time_backup",
-            "enableScheduledBackup": "enable_scheduled_backup",
-            "scheduledTime": "scheduled_time",
-        }
-        for ndfc_key, user_key in camel_keys.items():
-            if user_key not in params:
-                continue
-            self._translated_nv_pairs[ndfc_key] = params[user_key]
+    #     translate keys in params dict into what NDFC
+    #     expects in nvPairs and populate dict
+    #     self._translated_nv_pairs
+
+    #     """
+    #     self._build_translatable_nv_pairs()
+    #     # TODO:4 We currently don't handle non-dunder uppercase and lowercase,
+    #     #   e.g. THIS or that.  But (knock on wood), so far there are no
+    #     #   cases like this (or THAT).
+    #     self._translated_nv_pairs = {}
+    #     # upper-case dunder keys
+    #     for param in self._translatable_nv_pairs:
+    #         if param not in params:
+    #             continue
+    #         self._translated_nv_pairs[param.upper()] = params[param]
+    #     # special cases
+    #     # dunder keys, these need no modification
+    #     dunder_keys = {
+    #         "default_network",
+    #         "default_vrf",
+    #         "network_extension_template",
+    #         "vrf_extension_template",
+    #     }
+    #     for key in dunder_keys:
+    #         if key not in params:
+    #             continue
+    #         self._translated_nv_pairs[key] = params[key]
+    #     # camelCase keys
+    #     # These are currently manually mapped with a dictionary.
+    #     camel_keys = {
+    #         "enableRealTimeBackup": "enable_real_time_backup",
+    #         "enableScheduledBackup": "enable_scheduled_backup",
+    #         "scheduledTime": "scheduled_time",
+    #     }
+    #     for ndfc_key, user_key in camel_keys.items():
+    #         if user_key not in params:
+    #             continue
+    #         self._translated_nv_pairs[ndfc_key] = params[user_key]
 
     def _build_mandatory_params(self):
         """
@@ -615,20 +641,20 @@ class VerifyFabricParams:
 
         Certain parameters become mandatory only if another parameter is
         set, or only if it's set to a specific value.  For example, if
-        underlay_is_v6 is set to True, the following parameters become
+        UNDERLAY_IS_V6 is set to True, the following parameters become
         mandatory:
-        -   anycast_lb_id
-        -   loopback0_ipv6_range
-        -   loopback1_ipv6_range
-        -   router_id_range
-        -   v6_subnet_range
-        -   v6_subnet_target_mask
+        -   ANYCAST_LB_ID
+        -   LOOPBACK0_IPV6_RANGE
+        -   LOOPBACK1_IPV6_RANGE
+        -   ROUTER_ID_RANGE
+        -   V6_SUBNET_RANGE
+        -   V6_SUBNET_TARGET_MASK
 
         self._mandatory_params is a dictionary, keyed on parameter.
         The value is a dictionary with the following keys:
 
         value:  The parameter value that makes the dependent parameters
-                mandatory.  Using underlay_is_v6 as an example, it must
+                mandatory.  Using UNDERLAY_IS_V6 as an example, it must
                 have a value of True, for the six dependent parameters to
                 be considered mandatory.
         mandatory:  a python dict() containing mandatory parameters and what
@@ -644,34 +670,34 @@ class VerifyFabricParams:
         they are set.
 
         self._mandatory_params = {
-            "underlay_is_v6": {
+            "UNDERLAY_IS_V6": {
                 "value": True,
                 "mandatory": {
-                    "anycast_lb_id": None
-                    "loopback0_ipv6_range": None
-                    "loopback1_ipv6_range": None
-                    "router_id_range": None
-                    "v6_subnet_range": None
-                    "v6_subnet_target_mask": None
+                    "ANYCAST_LB_ID": None
+                    "LOOPBACK0_IPV6_RANGE": None
+                    "LOOPBACK1_IPV6_RANGE": None
+                    "ROUTER_ID_RANGE": None
+                    "V6_SUBNET_RANGE": None
+                    "V6_SUBNET_TARGET_MASK": None
                 }
             }
         }
 
         Above, we validate that all mandatory parameters are set, only
-        if the value of underlay_is_v6 is True.
+        if the value of UNDERLAY_IS_V6 is True.
 
         Set "value:" above to "__any__" if the dependent parameters are
         mandatory regardless of the parameter's value.  For example, if
-        we wanted to verify that underlay_is_v6 is set to True in the case
-        that anycast_lb_id is set (which can be a value between 1-1023) we
-        don't care what the value of anycast_lb_id is.  We only care that
-        underlay_is_v6 is set to True.  In this case, we could add the following:
+        we wanted to verify that UNDERLAY_IS_V6 is set to True in the case
+        that ANYCAST_LB_ID is set (which can be a value between 1-1023) we
+        don't care what the value of ANYCAST_LB_ID is.  We only care that
+        UNDERLAY_IS_V6 is set to True.  In this case, we could add the following:
 
         self._mandatory_params.update = {
-            "anycast_lb_id": {
+            "ANYCAST_LB_ID": {
                 "value": "__any__",
                 "mandatory": {
-                    "underlay_is_v6": True
+                    "UNDERLAY_IS_V6": True
                 }
             }
         }
@@ -680,53 +706,305 @@ class VerifyFabricParams:
         self._mandatory_params = {}
         self._mandatory_params.update(
             {
-                "anycast_lb_id": {
+                "ANYCAST_LB_ID": {
                     "value": "__any__",
-                    "mandatory": {"underlay_is_v6": True},
+                    "mandatory": {"UNDERLAY_IS_V6": True},
                 }
             }
         )
         self._mandatory_params.update(
             {
-                "underlay_is_v6": {
+                "AUTO_SYMMETRIC_DEFAULT_VRF": {
                     "value": True,
                     "mandatory": {
-                        "anycast_lb_id": None,
-                        "loopback0_ipv6_range": None,
-                        "loopback1_ipv6_range": None,
-                        "router_id_range": None,
-                        "v6_subnet_range": None,
-                        "v6_subnet_target_mask": None,
+                        "VRF_LITE_AUTOCONFIG": "Back2Back&ToExternal",
+                        "AUTO_VRFLITE_IFC_DEFAULT_VRF": True,
                     },
                 }
             }
         )
         self._mandatory_params.update(
             {
-                "auto_symmetric_default_vrf": {
+                "AUTO_SYMMETRIC_VRF_LITE": {
+                    "value": True,
+                    "mandatory": {"VRF_LITE_AUTOCONFIG": "Back2Back&ToExternal"},
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "AUTO_VRFLITE_IFC_DEFAULT_VRF": {
                     "value": True,
                     "mandatory": {
-                        "vrf_lite_autoconfig": "Back2Back&ToExternal",
-                        "auto_vrflite_ifc_default_vrf": True,
+                        "VRF_LITE_AUTOCONFIG": "Back2Back&ToExternal",
+                        "DEFAULT_VRF_REDIS_BGP_RMAP": None,
                     },
                 }
             }
         )
         self._mandatory_params.update(
             {
-                "auto_symmetric_vrf_lite": {
+                "BFD_AUTH_ENABLE": {
                     "value": True,
-                    "mandatory": {"vrf_lite_autoconfig": "Back2Back&ToExternal"},
+                    "mandatory": {
+                        "BFD_ENABLE": True,
+                    },
                 }
             }
         )
         self._mandatory_params.update(
             {
-                "auto_vrflite_ifc_default_vrf": {
+                "BFD_AUTH_KEY": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "BFD_ENABLE": True,
+                        "BFD_AUTH_ENABLE": True,
+                        "BFD_AUTH_KEY_ID": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BFD_AUTH_KEY_ID": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "BFD_ENABLE": True,
+                        "BFD_AUTH_ENABLE": True,
+                        "BFD_AUTH_KEY": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BFD_IBGP_ENABLE": {
                     "value": True,
                     "mandatory": {
-                        "vrf_lite_autoconfig": "Back2Back&ToExternal",
-                        "default_vrf_redis_bgp_rmap": None,
+                        "BFD_ENABLE": True,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BFD_ISIS_ENABLE": {
+                    "value": True,
+                    "mandatory": {
+                        "BFD_ENABLE": True,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BFD_OSPF_ENABLE": {
+                    "value": True,
+                    "mandatory": {
+                        "BFD_ENABLE": True,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BFD_PIM_ENABLE": {
+                    "value": True,
+                    "mandatory": {
+                        "BFD_ENABLE": True,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BGP_AUTH_ENABLE": {
+                    "value": True,
+                    "mandatory": {
+                        "BGP_AUTH_KEY": None,
+                        "BGP_AUTH_KEY_TYPE": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "BOOTSTRAP_MULTISUBNET": {
+                    "value": True,
+                    "mandatory": {
+                        "BOOTSTRAP_ENABLE": True,
+                        "DHCP_ENABLE": True,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "DHCP_ENABLE": {
+                    "value": True,
+                    "mandatory": {
+                        "BOOTSTRAP_ENABLE": True,
+                        "DHCP_END": None,
+                        # dhcp_ipv6_enable _is_ mandatory, when
+                        # dhcp_enable is set to True.  However,
+                        # NDFC currently only has one value for this
+                        # (DHCPv4), and does set this value for the
+                        # user when dhcp_enable is True. BUT, this may
+                        # change in the future.
+                        # "dhcp_ipv6_enable": "DHCPv4",
+                        "DHCP_START": None,
+                        "MGMT_GW": None,
+                        "MGMT_PREFIX": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "DNS_SERVER_IP_LIST": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "DNS_SERVER_VRF": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "DNS_SERVER_VRF": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "DNS_SERVER_IP_LIST": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "ENABLE_DEFAULT_QUEUING_POLICY": {
+                    "value": True,
+                    "mandatory": {
+                        "DEFAULT_QUEUING_POLICY_CLOUDSCALE": None,
+                        "DEFAULT_QUEUING_POLICY_OTHER": None,
+                        "DEFAULT_QUEUING_POLICY_R_SERIES": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "ENABLE_FABRIC_VPC_DOMAIN_ID": {
+                    "value": True,
+                    "mandatory": {
+                        "FABRIC_VPC_DOMAIN_ID": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "ENABLE_MACSEC": {
+                    "value": True,
+                    "mandatory": {
+                        "MACSEC_ALGORITHM": None,
+                        "MACSEC_CIPHER_SUITE": None,
+                        "MACSEC_FALLBACK_ALGORITHM": None,
+                        "MACSEC_FALLBACK_KEY_STRING": None,
+                        "MACSEC_KEY_STRING": None,
+                        "MACSEC_REPORT_TIMER": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "ENABLE_NETFLOW": {
+                    "value": True,
+                    "mandatory": {
+                        "NETFLOW_EXPORTER_LIST": None,
+                        "NETFLOW_RECORD_LIST": None,
+                        "NETFLOW_MONITOR_LIST": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "ENABLE_NXAPI_HTTP": {
+                    "value": True,
+                    "mandatory": {
+                        "ENABLE_NXAPI": True,
+                        "NXAPI_HTTPS_PORT": None,
+                        "NXAPI_HTTP_PORT": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "FEATURE_PTP": {
+                    "value": True,
+                    "mandatory": {
+                        "PTP_DOMAIN_ID": None,
+                        "PTP_LB_ID": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "MPLS_HANDOFF": {
+                    "value": True,
+                    "mandatory": {
+                        "MPLS_LB_ID": None,
+                        "MPLS_LOOPBACK_IP_RANGE": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "NXAPI_HTTPS_PORT": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "ENABLE_NXAPI": True,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "NXAPI_HTTP_PORT": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "ENABLE_NXAPI": True,
+                        "ENABLE_NXAPI_HTTP": True,
+                        "NXAPI_HTTPS_PORT": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "SYSLOG_SERVER_IP_LIST": {
+                    "value": "__any__",
+                    "mandatory": {
+                        "SYSLOG_SEV": None,
+                    },
+                }
+            }
+        )
+        self._mandatory_params.update(
+            {
+                "UNDERLAY_IS_V6": {
+                    "value": True,
+                    "mandatory": {
+                        "ANYCAST_LB_ID": None,
+                        "LOOPBACK0_IPV6_RANGE": None,
+                        "LOOPBACK1_IPV6_RANGE": None,
+                        "ROUTER_ID_RANGE": None,
+                        "V6_SUBNET_RANGE": None,
+                        "V6_SUBNET_TARGET_MASK": None,
                     },
                 }
             }
@@ -736,7 +1014,7 @@ class VerifyFabricParams:
         """
         Caller self._validate_dependencies()
 
-        For some parameters, like vrf_lite_autoconfig, we don't
+        For some parameters, like VRF_LITE_AUTOCONFIG, we don't
         want the user to have to remember the spelling for
         their values e.g. Back2Back&ToExternal.  So, we alias
         the value NDFC expects (Back2Back&ToExternal) to something
@@ -745,7 +1023,7 @@ class VerifyFabricParams:
         See also: _get_parameter_alias()
         """
         self._parameter_aliases = {}
-        self._parameter_aliases["vrf_lite_autoconfig"] = {
+        self._parameter_aliases["VRF_LITE_AUTOCONFIG"] = {
             "Back2Back&ToExternal": 1,
             "Manual": 0,
         }
@@ -779,26 +1057,39 @@ class VerifyFabricParams:
         other parameters to become mandatory, build a dictionary of these
         dependencies and what value is expected for each.
 
-        Example self._failed_dependencies.  In this case, the user set
-        auto_symmetric_vrf_lite to True, which makes vrf_lite_autoconfig
-        mandatory. Too, vrf_lite_autoconfig MUST have a value of
-        Back2Back&ToExternal. Though, in the playbook, the sets
-        vrf_lite_autoconfig to 1, since 1 is an alias for
+        Example self._failed_dependencies.
+
+        In this example, the user set AUTO_SYMMETRIC_VRF_LITE to True,
+        which makes VRF_LITE_AUTOCONFIG mandatory. Too, VRF_LITE_AUTOCONFIG
+        MUST have a value of Back2Back&ToExternal. Though, in the playbook,
+        the user sets VRF_LITE_AUTOCONFIG to 1, since 1 is an alias for
         Back2Back&ToExternal.  See self._handle_failed_dependencies()
         for how we handle aliased parameters.
 
         {
-            'vrf_lite_autoconfig': 'Back2Back&ToExternal'
+            'VRF_LITE_AUTOCONFIG': 'Back2Back&ToExternal'
         }
         """
+        method_name = inspect.stack()[0][3]
         if not self._requires_validation:
             return
         self._failed_dependencies = {}
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.config: {self.config}"
+        self.log.debug(msg)
+
         for user_param in self._requires_validation:
             # mandatory_params associated with user_param
             mandatory_params = self._mandatory_params[user_param]["mandatory"]
             for check_param in mandatory_params:
                 check_value = mandatory_params[check_param]
+
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"check_param {check_param}, "
+                msg += f"check_value {check_value} "
+                self.log.debug(msg)
+
                 if check_param not in self.config and check_value is not None:
                     # The playbook doesn't contain this mandatory parameter.
                     # We care what the value is (since it's not None).
@@ -809,13 +1100,29 @@ class VerifyFabricParams:
                         if self._default_nv_pairs[param_up] != check_value:
                             self._failed_dependencies[check_param] = check_value
                             continue
+                else:
+                    # The playbook does not contain this mandatory parameter.
+                    # We don't care what the value is (since it's None).
+                    # Add it to the failed dependencies.
+                    if check_value is None:
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"check_param {check_param}, check_value None "
+                        msg += "adding to failed dependencies."
+                        self._failed_dependencies[check_param] = check_value
+                        continue
+
                 if self.config[check_param] != check_value and check_value is not None:
                     # The playbook does contain this mandatory parameter, but
                     # the value in the playbook does not match the required value
                     # and we care about what the required value is.
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"check_param {check_param}, check_value: {check_value} "
+                    msg += "adding to failed dependencies."
                     self._failed_dependencies[check_param] = check_value
                     continue
-        print(f"self._failed_dependencies {self._failed_dependencies}")
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self._failed_dependencies {self._failed_dependencies}"
+        self.log.debug(msg)
 
     def _validate_dependencies(self):
         """
@@ -829,20 +1136,38 @@ class VerifyFabricParams:
 
         See also: docstring for self._build_mandatory_params()
         """
+        method_name = inspect.stack()[0][3]
         self._build_mandatory_params()
         self._build_parameter_aliases()
         self._requires_validation = set()
         for user_param in self.config:
+            msg = f"{self.class_name}.{method_name}: "
+            msg = f"{user_param}, "
+            msg += f"value {self.config[user_param]}"
+            self.log.debug(msg)
             # param doesn't have any dependent parameters
             if user_param not in self._mandatory_params:
+                msg = f"{self.class_name}.{method_name}: "
+                msg = f"{user_param} has no dependent parameters."
+                self.log.debug(msg)
                 continue
             # need to run validation for user_param with value "__any__"
             if self._mandatory_params[user_param]["value"] == "__any__":
+                msg = f"{self.class_name}.{method_name}: "
+                msg = f"{user_param} has value __any__."
+                self.log.debug(msg)
                 self._requires_validation.add(user_param)
             # need to run validation because user_param is a specific value
             if self.config[user_param] == self._mandatory_params[user_param]["value"]:
+                msg = f"{self.class_name}.{method_name}: "
+                msg = f"{user_param} has specific value "
+                msg += f"{self.config[user_param]}."
+                self.log.debug(msg)
                 self._requires_validation.add(user_param)
         if not self._requires_validation:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "No parameters require validation."
+            self.log.debug(msg)
             return
         self._build_failed_dependencies()
         self._handle_failed_dependencies()
@@ -867,7 +1192,7 @@ class VerifyFabricParams:
             for key, value in self._failed_dependencies.items():
                 msg += f"parameter {key} "
                 if value is None:
-                    msg += "value <any value>"
+                    msg += "value <any value>, "
                 else:
                     # If the value expected in the playbook is different
                     # from the value sent to NDFC, use the value expected in
@@ -877,11 +1202,18 @@ class VerifyFabricParams:
                         msg_value = value
                     else:
                         msg_value = alias
-                    msg += f"value {msg_value}"
+                    msg += f"value {msg_value}, "
             self._append_msg(msg)
             self.result = False
 
     def _build_payload(self):
+        """
+        Build the payload to create the fabric specified self.config
+        Caller: _validate_dependencies
+        """
+        self.payload = copy.deepcopy(self.config)
+
+    def _build_payload_orig(self):
         """
         Build the payload to create the fabric specified self.config
         Caller: _validate_dependencies

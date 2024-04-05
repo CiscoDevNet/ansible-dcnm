@@ -23,12 +23,12 @@ import inspect
 import logging
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.results import \
-    Results
 
 
 class TemplateGetAll:
@@ -106,6 +106,7 @@ class TemplateGetAll:
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
+        self.rest_send.check_mode = False
         self.rest_send.commit()
 
         self.response_current = copy.deepcopy(self.rest_send.response_current)

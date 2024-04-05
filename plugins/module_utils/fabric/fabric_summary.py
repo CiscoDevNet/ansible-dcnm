@@ -23,8 +23,10 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -93,6 +95,7 @@ class FabricSummary(FabricCommon):
         self.data = None
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
+        self.results = Results()
 
         self._init_properties()
 
@@ -115,7 +118,7 @@ class FabricSummary(FabricCommon):
         if self.data is None:
             msg = f"{self.class_name}.{method_name}: "
             msg = f"refresh() must be called before accessing {method_name}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         msg = f"{self.class_name}.{method_name}: "
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
@@ -143,7 +146,7 @@ class FabricSummary(FabricCommon):
         if self.fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name is required."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         try:
             self.endpoints.fabric_name = self.fabric_name
@@ -153,7 +156,7 @@ class FabricSummary(FabricCommon):
             msg = "Error retrieving fabric_summary endpoint. "
             msg += f"Detail: {error}"
             self.log.debug(msg)
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self.rest_send.commit()
         self.data = copy.deepcopy(self.rest_send.response_current.get("DATA", {}))
@@ -161,10 +164,10 @@ class FabricSummary(FabricCommon):
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self.response_current = self.rest_send.response_current
-        self.response = self.rest_send.response_current
-        self.result_current = self.rest_send.result_current
-        self.result = self.rest_send.result_current
+        self.results.response_current = self.rest_send.response_current
+        self.results.response = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.result = self.rest_send.result_current
 
         self._update_device_counts()
 
@@ -174,7 +177,7 @@ class FabricSummary(FabricCommon):
         """
         if self.data is None:
             msg = f"refresh() must be called before accessing {method_name}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     @property
     def all_data(self) -> dict:

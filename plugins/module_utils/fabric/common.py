@@ -22,20 +22,11 @@ import logging
 import re
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_task_result import \
-    FabricTaskResult
-
-# Using only for its failed_result property
-# pylint: disable=line-too-long
-
-
-# pylint: enable=line-too-long
-
 
 class FabricCommon:
     """
     Common methods used by the other classes supporting
-    dcnm_fabric_* modules
+    the dcnm_fabric module
 
     Usage (where ansible_module is an instance of
     AnsibleModule or MockAnsibleModule):
@@ -55,28 +46,81 @@ class FabricCommon:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED FabricCommon(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"state: {self.state}"
         self.log.debug(msg)
 
         self.params = ansible_module.params
 
         self.properties: Dict[str, Any] = {}
-        self.properties["changed"] = False
-        self.properties["diff"] = []
         # Default to VXLAN_EVPN
         self.properties["fabric_type"] = "VXLAN_EVPN"
-        self.properties["failed"] = False
-        self.properties["response"] = []
-        self.properties["response_current"] = {}
-        self.properties["response_data"] = []
-        self.properties["result"] = []
-        self.properties["result_current"] = {}
+        self.properties["results"] = None
 
         self._valid_fabric_types = {"VXLAN_EVPN"}
 
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
+
+        self._build_key_translations()
+
+    def _build_key_translations(self):
+        """
+        Build a dictionary of fabric configuration key translations.
+
+        The controller expects certain keys to be misspelled or otherwise
+        different from the keys used in the payload this module sends.
+
+        The dictionary is keyed on the payload key, and the value is either:
+        -   The key the controller expects.
+        -   None, if the key is not expected to be found in the controller
+            fabric configuration.  This is useful for keys that are only
+            used in the payload to the controller and later stripped before
+            sending to the controller.
+        """
+        self._key_translations = {}
+        self._key_translations["DEFAULT_QUEUING_POLICY_CLOUDSCALE"] = (
+            "DEAFULT_QUEUING_POLICY_CLOUDSCALE"
+        )
+        self._key_translations["DEFAULT_QUEUING_POLICY_OTHER"] = (
+            "DEAFULT_QUEUING_POLICY_OTHER"
+        )
+        self._key_translations["DEFAULT_QUEUING_POLICY_R_SERIES"] = (
+            "DEAFULT_QUEUING_POLICY_R_SERIES"
+        )
+        self._key_translations["DEPLOY"] = None
+
+    def _fixup_payloads_to_commit(self) -> None:
+        """
+        Make any modifications to the payloads prior to sending them
+        to the controller.
+
+        Add any modifications to the list below.
+
+        - Translate ANYCAST_GW_MAC to a format the controller understands
+        """
+        method_name = inspect.stack()[0][3]
+        for payload in self._payloads_to_commit:
+            if not "ANYCAST_GW_MAC" in payload:
+                continue
+            try:
+                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
+                    payload["ANYCAST_GW_MAC"]
+                )
+            except ValueError as error:
+                fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
+                anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
+
+                self.results.failed = True
+                self.results.changed = False
+                self.results.register_task_result()
+
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error translating ANYCAST_GW_MAC: "
+                msg += f"for fabric {fabric_name}, "
+                msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
+                msg += f"Error detail: {error}"
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
 
     @staticmethod
     def translate_mac_address(mac_addr):
@@ -85,14 +129,14 @@ class FabricCommon:
         into the dotted-quad format that the controller expects.
 
         Return mac address formatted for the controller on success
-        Return False on failure.
+        Raise ValueError on failure.
         """
         mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
-            return False
+            raise ValueError(f"Invalid MAC address: {mac_addr}")
         return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
 
-    def _handle_response(self, response, verb):
+    def _handle_response(self, response, verb) -> Dict[str, Any]:
         """
         Call the appropriate handler for response based on verb
         """
@@ -109,7 +153,7 @@ class FabricCommon:
         msg += f"Unknown request verb ({verb}) for response {response}."
         self.ansible_module.fail_json(msg)
 
-    def _handle_get_response(self, response):
+    def _handle_get_response(self, response) -> Dict[str, Any]:
         """
         Caller:
             - self._handle_response()
@@ -142,7 +186,7 @@ class FabricCommon:
         result["success"] = True
         return result
 
-    def _handle_post_put_delete_response(self, response):
+    def _handle_post_put_delete_response(self, response) -> Dict[str, Any]:
         """
         Caller:
             - self.self._handle_response()
@@ -180,64 +224,36 @@ class FabricCommon:
         if value not in self.fabric_type_to_template_name_map:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Unknown fabric type: {value}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
         return self.fabric_type_to_template_name_map[value]
 
-    def make_boolean(self, value):
+    @staticmethod
+    def make_boolean(value):
         """
         Return value converted to boolean, if possible.
-        Return value, if value cannot be converted.
+        Otherwise, return value.
+
+        TODO: This method is duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
         """
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            if value.lower() in ["true", "yes"]:
-                return True
-            if value.lower() in ["false", "no"]:
-                return False
+        if str(value).lower() in ["true", "yes"]:
+            return True
+        if str(value).lower() in ["false", "no"]:
+            return False
         return value
 
-    def make_none(self, value):
+    @staticmethod
+    def make_none(value):
         """
-        Return None if value is an empty string, or a string
-        representation of a None type
-        Return value otherwise
+        Return None if value is a string representation of a None type
+        Otherwise, return value
+
+        TODO: This method is duplicated in several other classes.
+        TODO: Would be good to move this to a Utility() class.
         """
-        if value in ["", "none", "None", "NONE", "null", "Null", "NULL"]:
+        if str(value).lower in ["", "none", "null"]:
             return None
         return value
-
-    @property
-    def changed(self):
-        """
-        bool = whether we changed anything
-        """
-        return self.properties["changed"]
-
-    @changed.setter
-    def changed(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.changed must be a bool. Got {value}"
-            self.ansible_module.fail_json(msg)
-        self.properties["changed"] = value
-
-    @property
-    def diff(self):
-        """
-        List of dicts representing the changes made
-        """
-        return self.properties["diff"]
-
-    @diff.setter
-    def diff(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.diff must be a dict. Got {value}"
-            self.ansible_module.fail_json(msg)
-        self.properties["diff"].append(value)
 
     @property
     def fabric_type(self):
@@ -253,124 +269,19 @@ class FabricCommon:
         method_name = inspect.stack()[0][3]
         if value not in self._valid_fabric_types:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"FABRIC_TYPE must be one of "
+            msg += "FABRIC_TYPE must be one of "
             msg += f"{sorted(self._valid_fabric_types)}. "
             msg += f"Got {value}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
         self.properties["fabric_type"] = value
 
     @property
-    def failed(self):
+    def results(self):
         """
-        bool = whether we failed or not
-        If True, this means we failed to make a change
-        If False, this means we succeeded in making a change
+        An instance of the Results class.
         """
-        return self.properties["failed"]
+        return self.properties["results"]
 
-    @failed.setter
-    def failed(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"instance.failed must be a bool. Got {value}"
-            self.ansible_module.fail_json(msg)
-        self.properties["failed"] = value
-
-    @property
-    def failed_result(self):
-        """
-        return a result for a failed task with no changes
-        """
-        return FabricTaskResult(self.ansible_module).failed_result
-
-    @property
-    def response_current(self):
-        """
-        Return the current POST response from the controller
-        instance.commit() must be called first.
-
-        This is a dict of the current response from the controller.
-        """
-        return self.properties.get("response_current")
-
-    @response_current.setter
-    def response_current(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response_current must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["response_current"] = value
-
-    @property
-    def response(self):
-        """
-        Return the aggregated POST response from the controller
-        instance.commit() must be called first.
-
-        This is a list of responses from the controller.
-        """
-        return self.properties.get("response")
-
-    @response.setter
-    def response(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["response"].append(value)
-
-    @property
-    def response_data(self):
-        """
-        Return the contents of the DATA key within current_response.
-        """
-        return self.properties.get("response_data")
-
-    @response_data.setter
-    def response_data(self, value):
-        self.properties["response_data"].append(value)
-
-    @property
-    def result(self):
-        """
-        Return the aggregated result from the controller
-        instance.commit() must be called first.
-
-        This is a list of results from the controller.
-        """
-        return self.properties.get("result")
-
-    @result.setter
-    def result(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["result"].append(value)
-
-    @property
-    def result_current(self):
-        """
-        Return the current result from the controller
-        instance.commit() must be called first.
-
-        This is a dict containing the current result.
-        """
-        return self.properties.get("result_current")
-
-    @result_current.setter
-    def result_current(self, value):
-        method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result_current must be a dict. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["result_current"] = value
+    @results.setter
+    def results(self, value):
+        self.properties["results"] = value

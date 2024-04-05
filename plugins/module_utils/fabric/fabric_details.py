@@ -20,10 +20,13 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_fabric import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -49,6 +52,11 @@ class FabricDetails(FabricCommon):
         self.data = {}
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
+        self.results = Results()
+        # We always want to get the controller's current fabric state
+        # so we set check_mode to False here so the request will be
+        # sent to the controller
+        self.rest_send.check_mode = False
 
         self._init_properties()
 
@@ -70,12 +78,24 @@ class FabricDetails(FabricCommon):
         self.rest_send.verb = endpoint.get("verb")
         self.rest_send.commit()
         self.data = {}
-        for item in self.rest_send.response_current["DATA"]:
+        if self.rest_send.response_current.get("DATA") is None:
+            return
+        for item in self.rest_send.response_current.get("DATA"):
             self.data[item["fabricName"]] = item
-        self.response_current = self.rest_send.response_current
-        self.response = self.rest_send.response_current
-        self.result_current = self.rest_send.result_current
-        self.result = self.rest_send.result_current
+
+        msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = "self.rest_send.response_current: "
+        msg += (
+            f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
+        )
+        self.log.debug(msg)
+
+        self.results.response_current = self.rest_send.response_current
+        self.results.response = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.result = self.rest_send.result_current
 
     def _get(self, item):
         """
@@ -90,7 +110,7 @@ class FabricDetails(FabricCommon):
     @property
     def all_data(self):
         """
-        Return all fabric details from the controller.
+        Return all fabric details from the controller (i.e. self.data)
         """
         return self.data
 
@@ -187,9 +207,9 @@ class FabricDetailsByName(FabricDetails):
     Retrieve fabric details from the controller and provide
     property accessors for the fabric attributes.
 
-    Usage (where module is an instance of AnsibleModule):
+    Usage (where ansible_module is an instance of AnsibleModule):
 
-    instance = FabricDetailsByName(module)
+    instance = FabricDetailsByName(ansible_module)
     instance.refresh()
     instance.filter = "MyFabric"
     # BGP AS for fabric "MyFabric"
@@ -197,6 +217,8 @@ class FabricDetailsByName(FabricDetails):
 
     # all fabric details for "MyFabric"
     fabric_dict = instance.filtered_data
+    if fabric_dict is None:
+        # fabric does not exist on the controller
     etc...
 
     Or:
@@ -235,21 +257,25 @@ class FabricDetailsByName(FabricDetails):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"instance.filter {self.filter} "
+        self.log.debug(msg)
+
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a fabric name "
             msg += f"before accessing property {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist on the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.filter].get(item))
@@ -263,23 +289,27 @@ class FabricDetailsByName(FabricDetails):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"instance.filter {self.filter} "
+        self.log.debug(msg)
+
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a fabric name "
             msg += f"before accessing property {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"fabric_name {self.filter} "
             msg += "does not exist on the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         if self.data_subclass[self.filter].get("nvPairs", {}).get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"fabric_name {self.filter} "
             msg += f"unknown property name: {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         return self.make_none(
             self.make_boolean(self.data_subclass[self.filter].get("nvPairs").get(item))
@@ -341,18 +371,15 @@ class FabricDetailsByNvPair(FabricDetails):
         if self.filter_key is None:
             msg = "set instance.filter_key to a nvPair key "
             msg += "before calling refresh()."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
         if self.filter_value is None:
             msg = "set instance.filter_value to a nvPair value "
             msg += "before calling refresh()."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            self.ansible_module.fail_json(msg, **self.results.failed_result)
 
         self.refresh_super()
         for item, value in self.data.items():
-            if (
-                value.get("nvPairs", {}).get(self.filter_key)
-                == self.filter_value
-            ):
+            if value.get("nvPairs", {}).get(self.filter_key) == self.filter_value:
                 self.data_subclass[item] = value
 
     @property

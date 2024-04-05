@@ -1,0 +1,44 @@
+{
+    "test_notes": [
+        "Mocked responses for FabricSummary() class"
+    ],
+    "test_fabric_update_bulk_00031a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00032a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00033a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    }
+}
