@@ -53,6 +53,8 @@ class FabricUpdateCommon(FabricCommon):
         self.fabric_details.rest_send = RestSend(self.ansible_module)
 
         self._fabric_summary = FabricSummary(self.ansible_module)
+        self._fabric_summary.rest_send = RestSend(self.ansible_module)
+
         self.endpoints = ApiEndpoints()
         self.rest_send = RestSend(self.ansible_module)
 
@@ -107,11 +109,10 @@ class FabricUpdateCommon(FabricCommon):
         msg = f"{self.class_name}.{method_name}: "
         msg += "ENTERED"
         self.log.debug(msg)
+
         self._fabric_summary.fabric_name = fabric_name
         self._fabric_summary.refresh()
-        msg = "self._fabric_summary.fabric_is_empty: "
-        msg += f"{self._fabric_summary.fabric_is_empty}"
-        self.log.debug(msg)
+
         if self._fabric_summary.fabric_is_empty is True:
             self.cannot_deploy_fabric_reason = "Fabric is empty"
             return False

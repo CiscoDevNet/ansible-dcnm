@@ -23,8 +23,6 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
@@ -35,19 +33,20 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
 
 class FabricSummary(FabricCommon):
     """
-    Return populate self.data with fabric summary information,
-    formatted as a dictionary.
+    Populate ``dict`` ``self.data`` with fabric summary information.
 
     Convenience properties are provided to access the data, including:
-    @device_count
-    @leaf_count
-    @spine_count
-    @border_gateway_count
-    @in_sync_count
-    @out_of_sync_count
+
+    - @device_count
+    - @leaf_count
+    - @spine_count
+    - @border_gateway_count
+    - @in_sync_count
+    - @out_of_sync_count
 
     self.data will contain the following structure.
 
+    ```python
     {
         "switchSWVersions": {
             "10.2(5)": 7,
@@ -71,14 +70,17 @@ class FabricSummary(FabricCommon):
             "border gateway": 2
         }
     }
-
+    ```
     Usage:
 
+    ```python
     instance = FabricSummary(ansible_module)
+    instance.rest_send = RestSend(ansible_module)
     instance.fabric_name = "MyFabric"
     instance.refresh()
     fabric_summary = instance.data
     device_count = instance.device_count
+    ```
     etc...
     """
 
@@ -87,17 +89,23 @@ class FabricSummary(FabricCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED FabricSummary(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
 
         self.data = None
         self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
+
+        # set to True in refresh() after a successful request to the controller
+        # Used by getter properties to ensure refresh() has been called prior
+        # to returning data.
+        self.refreshed = False
+
         self.results = Results()
 
         self._init_properties()
+
+        msg = "ENTERED FabricSummary(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode} "
+        self.log.debug(msg)
 
     def _init_properties(self):
         """
@@ -108,6 +116,7 @@ class FabricSummary(FabricCommon):
         self.properties["device_count"] = 0
         self.properties["fabric_name"] = None
         self.properties["leaf_count"] = 0
+        self.properties["rest_send"] = None
         self.properties["spine_count"] = 0
 
     def _update_device_counts(self):
@@ -118,7 +127,7 @@ class FabricSummary(FabricCommon):
         if self.data is None:
             msg = f"{self.class_name}.{method_name}: "
             msg = f"refresh() must be called before accessing {method_name}."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
@@ -137,16 +146,19 @@ class FabricSummary(FabricCommon):
 
     def refresh(self):
         """
-        Refresh the fabric summary info from the controller and
-        populate self.data with the result.
+        -   Refresh fabric summary info from the controller and
+            populate ``self.data`` with the result.
+        -   ``self.data`` is a ``dict`` of fabric summary info for one fabric.
+        -   raise ``ValueError`` if ``fabric_name`` is not set.
+        -   raise ``ValueError`` if unable to retrieve the fabric_summary endpoint.
+        -   raise ``ValueError`` if ``_update_device_counts()`` fails.
 
-        self.data is a dictionary of fabric summary info for one fabric.
         """
         method_name = inspect.stack()[0][3]
         if self.fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name is required."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         try:
             self.endpoints.fabric_name = self.fabric_name
@@ -156,7 +168,7 @@ class FabricSummary(FabricCommon):
             msg = "Error retrieving fabric_summary endpoint. "
             msg += f"Detail: {error}"
             self.log.debug(msg)
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg) from error
 
         self.rest_send.commit()
         self.data = copy.deepcopy(self.rest_send.response_current.get("DATA", {}))
@@ -169,48 +181,73 @@ class FabricSummary(FabricCommon):
         self.results.result_current = self.rest_send.result_current
         self.results.result = self.rest_send.result_current
 
-        self._update_device_counts()
+        # self.refreshed must be True before calling
+        # self._update_device_counts() below
+        self.refreshed = True
+
+        try:
+            self._update_device_counts()
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
 
     def verify_refresh_has_been_called(self, method_name):
         """
-        Fail if refresh() has not been called.
+        - raise ``ValueError`` if ``refresh()`` has not been called.
         """
-        if self.data is None:
+        if self.refreshed is False:
             msg = f"refresh() must be called before accessing {method_name}."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
     @property
     def all_data(self) -> dict:
         """
-        Return all fabric details from the controller.
+        - Return all fabric details from the controller.
+        - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.verify_refresh_has_been_called(method_name)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         return self.data
 
     @property
     def border_gateway_count(self) -> int:
         """
-        Return the number of border gateway devices in fabric fabric_name.
+        - Return the number of border gateway devices in fabric fabric_name.
+        - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh_has_been_called(method_name)
+        try:
+            self.verify_refresh_has_been_called(method_name)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         return self.properties["border_gateway_count"]
 
     @property
     def device_count(self) -> int:
         """
-        Return the total number of devices in fabric fabric_name.
+        - Return the total number of devices in fabric fabric_name.
+        - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh_has_been_called(method_name)
+        try:
+            self.verify_refresh_has_been_called(method_name)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         return self.properties["device_count"]
 
     @property
     def fabric_is_empty(self) -> bool:
         """
-        Return True if the fabric is empty.
+        - Return True if the fabric is empty.
+        - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh_has_been_called(method_name)
+        try:
+            self.verify_refresh_has_been_called(method_name)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         if self.device_count == 0:
             return True
         return False
@@ -229,17 +266,36 @@ class FabricSummary(FabricCommon):
     @property
     def leaf_count(self) -> int:
         """
-        Return the number of leaf devices in fabric fabric_name.
+        - Return the number of leaf devices in fabric fabric_name.
+        - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh_has_been_called(method_name)
+        try:
+            self.verify_refresh_has_been_called(method_name)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         return self.properties["leaf_count"]
+
+    @property
+    def rest_send(self):
+        """
+        An instance of the RestSend class.
+        """
+        return self.properties["rest_send"]
+
+    @rest_send.setter
+    def rest_send(self, value):
+        self.properties["rest_send"] = value
 
     @property
     def spine_count(self) -> int:
         """
-        Return the number of spine devices in fabric fabric_name.
+        - Return the number of spine devices in fabric fabric_name.
+        - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
         method_name = inspect.stack()[0][3]
-        self.verify_refresh_has_been_called(method_name)
+        try:
+            self.verify_refresh_has_been_called(method_name)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         return self.properties["spine_count"]

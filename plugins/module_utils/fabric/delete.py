@@ -82,6 +82,7 @@ class FabricDelete(FabricCommon):
         self._fabric_details.rest_send = RestSend(self.ansible_module)
 
         self._fabric_summary = FabricSummary(self.ansible_module)
+        self._fabric_summary.rest_send = RestSend(self.ansible_module)
 
         self._cannot_delete_fabric_reason = None
 
