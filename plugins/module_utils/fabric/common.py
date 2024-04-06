@@ -92,11 +92,14 @@ class FabricCommon:
 
     def _fixup_payloads_to_commit(self) -> None:
         """
-        Make any modifications to the payloads prior to sending them
-        to the controller.
+        -   Make any modifications to the payloads prior to sending them
+            to the controller.
+        -   raise ``ValueError`` if any modifications fail.
 
-        Add any modifications to the list below.
+        NOTES:
+        1. Add any modifications to the Modifications list below.
 
+        Modifications:
         - Translate ANYCAST_GW_MAC to a format the controller understands
         """
         method_name = inspect.stack()[0][3]
@@ -120,7 +123,7 @@ class FabricCommon:
                 msg += f"for fabric {fabric_name}, "
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg) from error
 
     @staticmethod
     def translate_mac_address(mac_addr):
@@ -138,20 +141,27 @@ class FabricCommon:
 
     def _handle_response(self, response, verb) -> Dict[str, Any]:
         """
-        Call the appropriate handler for response based on verb
+        - Call the appropriate handler for response based on verb
+        - Raise ``ValueError`` if verb is unknown
         """
         if verb == "GET":
             return self._handle_get_response(response)
         if verb in {"POST", "PUT", "DELETE"}:
             return self._handle_post_put_delete_response(response)
-        return self._handle_unknown_request_verbs(response, verb)
+        try:
+            return self._handle_unknown_request_verbs(response, verb)
+        except ValueError as error:
+            raise ValueError(error) from error
 
     def _handle_unknown_request_verbs(self, response, verb):
+        """
+        Raise ``ValueError`` if verb is unknown
+        """
         method_name = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unknown request verb ({verb}) for response {response}."
-        self.ansible_module.fail_json(msg)
+        raise ValueError(msg)
 
     def _handle_get_response(self, response) -> Dict[str, Any]:
         """
@@ -218,13 +228,14 @@ class FabricCommon:
 
     def fabric_type_to_template_name(self, value):
         """
-        Return the template name for a given fabric type
+        - Return the template name for a given fabric type
+        - raise ``ValueError`` if value is not a valid fabric type
         """
         method_name = inspect.stack()[0][3]
         if value not in self.fabric_type_to_template_name_map:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Unknown fabric type: {value}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
         return self.fabric_type_to_template_name_map[value]
 
     @staticmethod
@@ -258,9 +269,11 @@ class FabricCommon:
     @property
     def fabric_type(self):
         """
-        The type of fabric to create/update.
+        - getter: Return the type of fabric to create/update.
+        - setter: Set the type of fabric to create/update.
+        - setter: raise ``ValueError`` if ``value`` is not a valid fabric type
 
-        See self._valid_fabric_types for valid values
+        See ``self._valid_fabric_types`` for valid values
         """
         return self.properties["fabric_type"]
 
@@ -272,7 +285,7 @@ class FabricCommon:
             msg += "FABRIC_TYPE must be one of "
             msg += f"{sorted(self._valid_fabric_types)}. "
             msg += f"Got {value}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
         self.properties["fabric_type"] = value
 
     @property

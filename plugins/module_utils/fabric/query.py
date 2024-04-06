@@ -21,6 +21,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
@@ -32,6 +34,8 @@ class FabricQuery(FabricCommon):
     Query fabrics
 
     Usage:
+
+    ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
 
@@ -57,6 +61,7 @@ class FabricQuery(FabricCommon):
         msg = "Query failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+    ```
     """
 
     def __init__(self, ansible_module):
@@ -71,6 +76,7 @@ class FabricQuery(FabricCommon):
         self._fabrics_to_query = []
         self._build_properties()
         self._fabric_details = FabricDetailsByName(self.ansible_module)
+        self._fabric_details.rest_send = RestSend(self.ansible_module)
 
         self.action = "query"
         self.changed = False
@@ -86,7 +92,12 @@ class FabricQuery(FabricCommon):
     @property
     def fabric_names(self):
         """
-        return the fabric names
+        - setter: return the fabric names
+        - getter: set the fable_names
+        - getter: raise ``ValueError`` if ``value`` is not a ``list``
+        - getter: raise ``ValueError`` if ``value`` is an empty list
+        - getter: raise ``ValueError`` if ``value`` is not a list of strings
+
         """
         return self.properties["fabric_names"]
 
@@ -98,30 +109,32 @@ class FabricQuery(FabricCommon):
             msg += "fabric_names must be a list. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be a list of at least one string. "
             msg += f"got {value}."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         for item in value:
             if not isinstance(item, str):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "fabric_names must be a list of strings. "
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
-                self.ansible_module.fail_json(msg)
+                raise ValueError(msg)
         self.properties["fabric_names"] = value
 
     def commit(self):
         """
-        query each of the fabrics in self.fabric_names
+        - query each of the fabrics in self.fabric_names
+        - raise ValueError if fabric_names is not set
+
         """
         method_name = inspect.stack()[0][3]
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         self._fabric_details.refresh()
 

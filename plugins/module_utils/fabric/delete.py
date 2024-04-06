@@ -77,9 +77,11 @@ class FabricDelete(FabricCommon):
         self._fabrics_to_delete = []
         self._build_properties()
         self._endpoints = ApiEndpoints()
+
         self._fabric_details = FabricDetailsByName(self.ansible_module)
+        self._fabric_details.rest_send = RestSend(self.ansible_module)
+
         self._fabric_summary = FabricSummary(self.ansible_module)
-        self.rest_send = RestSend(self.ansible_module)
 
         self._cannot_delete_fabric_reason = None
 
@@ -101,6 +103,7 @@ class FabricDelete(FabricCommon):
         """
         # self.properties is already set in the parent class
         self.properties["fabric_names"] = None
+        self.properties["rest_send"] = None
 
     def _get_fabrics_to_delete(self) -> None:
         """
@@ -127,34 +130,47 @@ class FabricDelete(FabricCommon):
             return False
         return True
 
-    def _set_fabric_delete_endpoint(self, fabric_name):
+    def _set_fabric_delete_endpoint(self, fabric_name) -> None:
         """
-        Set the fabric delete endpoint for fabric_name
+        - Set the fabric delete endpoint for fabric_name
+        - Raise ``ValueError`` if the endpoint assignment fails
         """
         self._endpoints.fabric_name = fabric_name
         try:
             endpoint = self._endpoints.fabric_delete
         except ValueError as error:
-            self.ansible_module.fail_json(error, **self.results.failed_result)
+            raise ValueError(error) from error
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
 
     def _validate_commit_parameters(self):
         """
-        validate the parameters for commit
+        - validate the parameters for commit
+        - raise ``ValueError`` if ``fabric_names`` is not set
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
     def commit(self):
         """
-        delete each of the fabrics in self.fabric_names
+        - delete each of the fabrics in self.fabric_names
+        - raise ``ValueError`` if any commit parameters are invalid
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self._validate_commit_parameters()
+
+        try:
+            self._validate_commit_parameters()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         self._get_fabrics_to_delete()
 
@@ -196,7 +212,11 @@ class FabricDelete(FabricCommon):
         Send a delete request to the controller and register the result.
         """
         method_name = inspect.stack()[0][3]
-        self._set_fabric_delete_endpoint(fabric_name)
+
+        try:
+            self._set_fabric_delete_endpoint(fabric_name)
+        except ValueError as error:
+            raise ValueError(error) from error
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"verb: {self.verb}, path: {self.path}"
@@ -236,7 +256,9 @@ class FabricDelete(FabricCommon):
     @property
     def fabric_names(self):
         """
-        return the fabric names
+        - getter: return list of fabric_names
+        - setter: set list of fabric_names
+        - setter: raise ``ValueError`` if ``value`` is not a ``list`` of ``str``
         """
         return self.properties["fabric_names"]
 
@@ -248,17 +270,28 @@ class FabricDelete(FabricCommon):
             msg += "fabric_names must be a list. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be a list of at least one string. "
             msg += f"got {value}."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         for item in value:
             if not isinstance(item, str):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "fabric_names must be a list of strings. "
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
-                self.ansible_module.fail_json(msg)
+                raise ValueError(msg)
         self.properties["fabric_names"] = value
+
+    @property
+    def rest_send(self):
+        """
+        An instance of the RestSend class.
+        """
+        return self.properties["rest_send"]
+
+    @rest_send.setter
+    def rest_send(self, value):
+        self.properties["rest_send"] = value

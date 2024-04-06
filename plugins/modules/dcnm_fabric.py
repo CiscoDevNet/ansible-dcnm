@@ -231,12 +231,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
+    TemplateGet
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
     VerifyPlaybookParams
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
-    TemplateGet
 
 
 def json_pretty(msg):
@@ -311,6 +311,7 @@ class Common(FabricCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.have = FabricDetailsByName(self.ansible_module)
+        self.have.rest_send = RestSend(self.ansible_module)
         self.have.refresh()
 
     def get_want(self) -> None:
@@ -343,6 +344,8 @@ class Deleted(Common):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.fabric_delete = FabricDelete(self.ansible_module)
+        self.fabric_delete.results = self.results
+        self.fabric_delete.rest_send = RestSend(self.ansible_module)
 
         msg = "ENTERED Deleted(): "
         msg += f"state: {self.state}, "
@@ -365,9 +368,20 @@ class Deleted(Common):
         fabric_names_to_delete = []
         for want in self.want:
             fabric_names_to_delete.append(want["fabric_name"])
-        self.fabric_delete.fabric_names = fabric_names_to_delete
-        self.fabric_delete.results = self.results
-        self.fabric_delete.commit()
+
+        try:
+            self.fabric_delete.fabric_names = fabric_names_to_delete
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_delete.results.failed_result
+            )
+
+        try:
+            self.fabric_delete.commit()
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_delete.results.failed_result
+            )
 
 
 class Merged(Common):
@@ -445,12 +459,16 @@ class Merged(Common):
                 try:
                     self._verify_playbook_params.config_controller = None
                 except TypeError as error:
-                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                    self.ansible_module.fail_json(
+                        f"{error}", **self.results.failed_result
+                    )
 
                 try:
                     self._verify_playbook_params.commit()
                 except ValueError as error:
-                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                    self.ansible_module.fail_json(
+                        f"{error}", **self.results.failed_result
+                    )
 
                 self.need_create.append(want)
 
@@ -460,11 +478,15 @@ class Merged(Common):
                 try:
                     self._verify_playbook_params.config_controller = nv_pairs
                 except TypeError as error:
-                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                    self.ansible_module.fail_json(
+                        f"{error}", **self.results.failed_result
+                    )
                 try:
                     self._verify_playbook_params.commit()
                 except (ValueError, KeyError) as error:
-                    self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                    self.ansible_module.fail_json(
+                        f"{error}", **self.results.failed_result
+                    )
 
                 self.need_update.append(want)
 
@@ -502,9 +524,22 @@ class Merged(Common):
             return
 
         self.fabric_create = FabricCreateBulk(self.ansible_module)
+        self.fabric_create.rest_send = RestSend(self.ansible_module)
         self.fabric_create.results = self.results
-        self.fabric_create.payloads = self.need_create
-        self.fabric_create.commit()
+
+        try:
+            self.fabric_create.payloads = self.need_create
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_create.results.failed_result
+            )
+
+        try:
+            self.fabric_create.commit()
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_create.results.failed_result
+            )
 
     def send_need_update(self) -> None:
         """
@@ -514,7 +549,8 @@ class Merged(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
-        msg += f"self.need_update: {json_pretty(self.need_update)}"
+        msg += "self.need_update: "
+        msg += f"{json_pretty(self.need_update)}"
         self.log.debug(msg)
 
         if len(self.need_update) == 0:
@@ -524,9 +560,22 @@ class Merged(Common):
             return
 
         self.fabric_update = FabricUpdateBulk(self.ansible_module)
+        self.fabric_update.rest_send = RestSend(self.ansible_module)
         self.fabric_update.results = self.results
-        self.fabric_update.payloads = self.need_update
-        self.fabric_update.commit()
+
+        try:
+            self.fabric_update.payloads = self.need_update
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_update.results.failed_result
+            )
+
+        try:
+            self.fabric_update.commit()
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_update.results.failed_result
+            )
 
 
 class Query(Common):
@@ -561,8 +610,19 @@ class Query(Common):
         fabric_names_to_query = []
         for want in self.want:
             fabric_names_to_query.append(want["fabric_name"])
-        fabric_query.fabric_names = copy.copy(fabric_names_to_query)
-        fabric_query.commit()
+        try:
+            fabric_query.fabric_names = copy.copy(fabric_names_to_query)
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **fabric_query.results.failed_result
+            )
+
+        try:
+            fabric_query.commit()
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **fabric_query.results.failed_result
+            )
 
 
 def main():
