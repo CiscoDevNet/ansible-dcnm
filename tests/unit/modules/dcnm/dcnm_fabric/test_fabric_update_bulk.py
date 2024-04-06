@@ -93,7 +93,7 @@ def test_fabric_update_bulk_00021(fabric_update_bulk) -> None:
         - __init__()
 
     Test
-    - fail_json is called because payloads is not a list
+    - ValueError is raised because payloads is not a list
     - instance.payloads is not modified, hence it retains its initial value of None
     """
     match = r"FabricUpdateBulk\.payloads: "
@@ -102,7 +102,7 @@ def test_fabric_update_bulk_00021(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
     assert instance.payloads is None
 
@@ -117,7 +117,7 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
         - __init__()
 
     Test
-    - fail_json is called because payloads is a list with a non-dict element
+    - ValueError is raised because payloads is a list with a non-dict element
     - instance.payloads is not modified, hence it retains its initial value of None
     """
     match = r"FabricUpdateBulk._verify_payload: "
@@ -126,7 +126,7 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
     assert instance.payloads is None
 
@@ -144,7 +144,7 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
     Verify behavior when payloads is not set prior to calling commit
 
     Test
-    - fail_json is called because payloads is not set prior to calling commit
+    - ValueError is raised because payloads is not set prior to calling commit
     - instance.payloads is not modified, hence it retains its initial value of None
     """
     match = r"FabricUpdateBulk\.commit: "
@@ -153,7 +153,7 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.payloads is None
 
@@ -440,7 +440,7 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         -   Results().failed adding True
         -   Results().failed_result to add a message indicating the reason for the failure
         And calls Results().register_task_result()
-        It then calls fail_json() because the payload contains an invalid key.
+        It raises ValueError because the payload contains an invalid key.
     """
     key = "test_fabric_update_bulk_00032a"
 
@@ -469,7 +469,7 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
 
     match = r"FabricUpdateBulk\._fabric_needs_update: Invalid key:.*found in payload for fabric.*"
 
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -538,7 +538,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         key is present in the payload.
     -   FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison():
         -   Updates Results()
-        -   Calls fail_json() because the mac address is not convertable.
+        -   raises ValueError because the mac address is not convertable.
     """
     key = "test_fabric_update_bulk_00033a"
 
@@ -564,7 +564,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     match = r"FabricUpdateBulk\._prepare_anycast_gw_mac_for_comparison: "
     match += r"Error translating ANYCAST_GW_MAC"
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
     assert isinstance(instance.results.diff, list)

@@ -93,7 +93,7 @@ def test_fabric_create_bulk_00021(fabric_create_bulk) -> None:
         - __init__()
 
     Test
-    - fail_json is called because payloads is not a list
+    - ValueError is raiseed because payloads is not a list
     - instance.payloads is not modified, hence it retains its initial value of None
     """
     match = r"FabricCreateBulk\.payloads: "
@@ -102,7 +102,7 @@ def test_fabric_create_bulk_00021(fabric_create_bulk) -> None:
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
     assert instance.payloads is None
 
@@ -126,7 +126,7 @@ def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
     assert instance.payloads is None
 
@@ -144,7 +144,7 @@ def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
     Verify behavior when payloads is not set prior to calling commit
 
     Test
-    - fail_json is called because payloads is not set prior to calling commit
+    - ValueError is raised because payloads is not set prior to calling commit
     - instance.payloads is not modified, hence it retains its initial value of None
     """
     match = r"FabricCreateBulk\.commit: "
@@ -153,7 +153,7 @@ def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.payloads is None
 
@@ -207,7 +207,7 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
         set to "INVALID_FABRIC_TYPE"
 
     Test
-    -   fail_json is called because the value of FABRIC_TYPE is invalid
+    -   ValueError is raised because the value of FABRIC_TYPE is invalid
     """
     key = "test_fabric_create_bulk_00025a"
 
@@ -231,7 +231,7 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     match = r"FabricCreateBulk\.fabric_type: FABRIC_TYPE must be one of"
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
 

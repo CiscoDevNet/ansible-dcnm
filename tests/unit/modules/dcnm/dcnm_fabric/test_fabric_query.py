@@ -91,7 +91,7 @@ def test_fabric_query_00021(fabric_query) -> None:
         - fabric_names setter
 
     Test
-    - fail_json is called because fabric_names is not a list
+    - ValueError is raised because fabric_names is not a list
     - instance.fabric_names is not modified, hence it retains its initial value of None
     """
     match = "FabricQuery.fabric_names: "
@@ -99,7 +99,7 @@ def test_fabric_query_00021(fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.fabric_names = "NOT_A_LIST"
     assert instance.fabric_names is None
 
@@ -114,7 +114,7 @@ def test_fabric_query_00022(fabric_query) -> None:
         - fabric_names setter
 
     Test
-    - fail_json is called because fabric_names is a list with a non-string element
+    - ValueError is raised because fabric_names is a list with a non-string element
     - instance.fabric_names is not modified, hence it retains its initial value of None
     """
     match = "FabricQuery.fabric_names: "
@@ -122,7 +122,7 @@ def test_fabric_query_00022(fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.fabric_names = [1, 2, 3]
     assert instance.fabric_names is None
 
@@ -140,7 +140,7 @@ def test_fabric_query_00023(fabric_query) -> None:
     Verify behavior when fabric_names is not set prior to calling commit
 
     Test
-    - fail_json is called because fabric_names is not set prior to calling commit
+    - ValueError is raised because fabric_names is not set prior to calling commit
     - instance.fabric_names is not modified, hence it retains its initial value of None
     """
     match = r"FabricQuery\.commit: "
@@ -149,7 +149,7 @@ def test_fabric_query_00023(fabric_query) -> None:
     with does_not_raise():
         instance = fabric_query
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.fabric_names is None
 
@@ -167,11 +167,11 @@ def test_fabric_query_00024(fabric_query) -> None:
     -   FabricQuery().fabric_names is set to an empty list
 
     Test
-    -   fail_json is called from fabric_names setter
+    -   ValueError is raised from fabric_names setter
     """
     match = r"FabricQuery\.fabric_names: fabric_names must be a list of "
     match += r"at least one string\."
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance = fabric_query
         instance.fabric_names = []
 

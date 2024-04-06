@@ -312,7 +312,7 @@ class VerifyPlaybookParams:
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
 
     def playbook_param_is_valid(self, parameter, rule) -> bool:
@@ -348,7 +348,7 @@ class VerifyPlaybookParams:
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
     def default_param_is_valid(self, parameter, rule) -> bool:
         """
@@ -396,7 +396,7 @@ class VerifyPlaybookParams:
         try:
             return self.eval_parameter_rule(parameter, default_value, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
     def update_decision_set(self, dependent_param, rule) -> set:
         """
@@ -414,17 +414,17 @@ class VerifyPlaybookParams:
         try:
             controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
         try:
             playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
         try:
             default_is_valid = self.default_param_is_valid(dependent_param, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
         if controller_is_valid is not None:
             decision_set.add(controller_is_valid)
@@ -529,7 +529,7 @@ class VerifyPlaybookParams:
         try:
             self.verify_parameter_value()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         if self.parameter not in self._ruleset.ruleset:
             msg = f"SKIP {self.parameter}: Not in ruleset."
@@ -550,7 +550,7 @@ class VerifyPlaybookParams:
             try:
                 decision_set = self.update_decision_set(dependent_param, rule)
             except KeyError as error:
-                raise KeyError from error
+                raise KeyError(f"{error}") from error
 
             # bad_params[fabric][param] = <list of bad_param dict>
             if True not in decision_set:
@@ -629,14 +629,14 @@ class VerifyPlaybookParams:
         try:
             self._param_info.template = self.template
         except TypeError as error:
-            raise TypeError from error
+            raise TypeError(f"{error}") from error
 
         try:
             self._param_info.refresh()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
-        msg = "ZZZ: self._param_info.info: "
+        msg = "self._param_info.info: "
         msg += f"{json.dumps(self._param_info.info, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 

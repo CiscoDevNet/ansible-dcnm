@@ -134,18 +134,18 @@ class FabricCreateCommon(FabricCommon):
         try:
             self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         try:
             template_name = self.fabric_type_to_template_name(self.fabric_type)
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
         self.endpoints.template_name = template_name
 
         try:
             endpoint = self.endpoints.fabric_create
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         payload.pop("FABRIC_TYPE", None)
         self.path = endpoint["path"]
@@ -166,7 +166,7 @@ class FabricCreateCommon(FabricCommon):
             try:
                 self._set_fabric_create_endpoint(payload)
             except ValueError as error:
-                raise ValueError from error
+                raise ValueError(f"{error}") from error
 
             # For FabricUpdate, the DEPLOY key is mandatory.
             # For FabricCreate, it is not.
@@ -230,7 +230,7 @@ class FabricCreateCommon(FabricCommon):
             try:
                 self._verify_payload(item)
             except ValueError as error:
-                raise ValueError from error
+                raise ValueError(f"{error}") from error
         self.properties["payloads"] = value
 
     @property
@@ -328,12 +328,12 @@ class FabricCreateBulk(FabricCreateCommon):
         try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         try:
             self._send_payloads()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
 
 class FabricCreate(FabricCreateCommon):
@@ -392,7 +392,7 @@ class FabricCreate(FabricCreateCommon):
         try:
             self._set_fabric_create_endpoint(self.payload)
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         self.rest_send.check_mode = self.check_mode
         self.rest_send.timeout = 1

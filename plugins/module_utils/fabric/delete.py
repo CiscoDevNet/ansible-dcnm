@@ -139,7 +139,7 @@ class FabricDelete(FabricCommon):
         try:
             endpoint = self._endpoints.fabric_delete
         except ValueError as error:
-            raise ValueError(error) from error
+            raise ValueError(f"{error}") from error
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
 

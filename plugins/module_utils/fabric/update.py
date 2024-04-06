@@ -269,7 +269,7 @@ class FabricUpdateCommon(FabricCommon):
                         fabric_name, value
                     )
                 except ValueError as error:
-                    raise ValueError from error
+                    raise ValueError(f"{error}") from error
 
             if value != nv_pairs.get(key):
                 msg = f"{self.class_name}.{method_name}: "
@@ -303,7 +303,7 @@ class FabricUpdateCommon(FabricCommon):
                 try:
                     needs_update = self._fabric_needs_update(payload)
                 except ValueError as error:
-                    raise ValueError from error
+                    raise ValueError(f"{error}") from error
 
                 if needs_update is False:
                     continue
@@ -326,13 +326,13 @@ class FabricUpdateCommon(FabricCommon):
         try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         for payload in self._payloads_to_commit:
             try:
                 self._send_payload(payload)
             except ValueError as error:
-                raise ValueError from error
+                raise ValueError(f"{error}") from error
 
         # Skip config-save if any errors were encountered with fabric updates.
         # TODO: Review this. Since we ValueError above, it may not be necessary.
@@ -342,7 +342,7 @@ class FabricUpdateCommon(FabricCommon):
         try:
             self._config_save()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         # Skip config-deploy if any errors were encountered with config-save.
         # TODO: Review this. Since we ValueError above, it may not be necessary.
@@ -352,7 +352,7 @@ class FabricUpdateCommon(FabricCommon):
         try:
             self._config_deploy()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
     def _build_fabrics_to_config_deploy(self):
         """
@@ -404,7 +404,7 @@ class FabricUpdateCommon(FabricCommon):
         try:
             endpoint = self.endpoints.fabric_update
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         payload.pop("FABRIC_TYPE", None)
         self.path = endpoint["path"]
@@ -420,7 +420,7 @@ class FabricUpdateCommon(FabricCommon):
         try:
             self._set_fabric_update_endpoint(payload)
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"verb: {self.verb}, path: {self.path}, "
@@ -478,7 +478,7 @@ class FabricUpdateCommon(FabricCommon):
                 self.path = self.endpoints.fabric_config_save.get("path")
                 self.verb = self.endpoints.fabric_config_save.get("verb")
             except ValueError as error:
-                raise ValueError from error
+                raise ValueError(f"{error}") from error
 
             self.rest_send.path = self.path
             self.rest_send.verb = self.verb
@@ -526,7 +526,7 @@ class FabricUpdateCommon(FabricCommon):
                 self.path = self.endpoints.fabric_config_deploy.get("path")
                 self.verb = self.endpoints.fabric_config_deploy.get("verb")
             except ValueError as error:
-                raise ValueError from error
+                raise ValueError(f"{error}") from error
 
             self.rest_send.path = self.path
             self.rest_send.verb = self.verb
@@ -578,7 +578,7 @@ class FabricUpdateCommon(FabricCommon):
             try:
                 self._verify_payload(item)
             except ValueError as error:
-                raise ValueError from error
+                raise ValueError(f"{error}") from error
         self.properties["payloads"] = value
 
 
@@ -656,7 +656,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
         try:
             self._build_payloads_to_commit()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         if len(self._payloads_to_commit) == 0:
             self.results.diff_current = {}
@@ -668,4 +668,4 @@ class FabricUpdateBulk(FabricUpdateCommon):
         try:
             self._send_payloads()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
