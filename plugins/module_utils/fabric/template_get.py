@@ -23,6 +23,8 @@ import inspect
 import logging
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
 
@@ -90,7 +92,10 @@ class TemplateGet:
 
     def refresh(self):
         """
-        Retrieve the template from the controller.
+        -   Retrieve the template from the controller.
+        -   raise ``ValueError`` if the template endpoint assignment fails
+        -   raise ``ControllerResponseError`` if the controller 
+            ``RETURN_CODE`` != 200
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -109,11 +114,12 @@ class TemplateGet:
         self.result_current = copy.deepcopy(self.rest_send.result_current)
         self.result.append(copy.deepcopy(self.rest_send.result_current))
 
-        if self.response_current.get("RETURN_CODE", None) != 200:
+        return_code = self.response_current.get("RETURN_CODE", None)
+        if return_code != 200:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Failed to retrieve template {self.template_name}."
             self.log.error(msg)
-            raise ValueError(msg)
+            raise ControllerResponseError(msg, return_code)
 
         self.template = {}
         self.template["parameters"] = self.response_current.get("DATA", {}).get(

@@ -215,6 +215,8 @@ from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
@@ -449,6 +451,12 @@ class Merged(Common):
                 self.template.refresh()
             except ValueError as error:
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+            except ControllerResponseError as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Controller returned {error.return_code} when "
+                msg += f"attempting to retrieve template: {template_name}. "
+                msg += f"Error detail: {error}"
+                self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
 
             try:
                 self._verify_playbook_params.template = self.template.template

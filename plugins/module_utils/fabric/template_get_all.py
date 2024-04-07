@@ -23,8 +23,8 @@ import inspect
 import logging
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -38,6 +38,7 @@ class TemplateGetAll:
     Usage:
 
     instance = TemplateGetAll()
+    instance.rest_send = RestSend(ansible_module)
     instance.refresh()
     templates = instance.templates
     """
@@ -56,7 +57,6 @@ class TemplateGetAll:
         self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
         self._results = Results(self.ansible_module)
         self.path = None
         self.verb = None
@@ -70,39 +70,41 @@ class TemplateGetAll:
 
     def _init_properties(self) -> None:
         self._properties = {}
+        self._properties["rest_send"] = None
         self._properties["templates"] = None
-
-    @property
-    def templates(self):
-        """
-        Return the templates retrieved from the controller.
-        """
-        return self._properties["templates"]
-
-    @templates.setter
-    def templates(self, value: Dict[str, Any]) -> None:
-        self._properties["templates"] = value
 
     def _set_templates_endpoint(self) -> None:
         """
-        Set the endpoint for the template to be retrieved from the controller.
+        - Set the endpoint for the template to be retrieved from the controller.
+        - raise ``ValueError`` if the endpoint assignment fails.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         try:
             endpoint = self.endpoints.templates
         except ValueError as error:
-            raise ValueError(error) from error
+            raise ValueError(f"{error}") from error
 
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
 
     def refresh(self):
         """
-        Retrieve the templates from the controller.
+        - Retrieve the templates from the controller.
+        - raise ``ValueError`` if the endpoint assignment fails
+        - raise ``ValueError`` if self.rest_send is not set.
+        - raise ``ControllerResponseError`` if RETURN_CODE != 200.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self._set_templates_endpoint()
+        try:
+            self._set_templates_endpoint()
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.rest_send must be set prior to calling refresh()."
+            raise ValueError(msg)
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -114,10 +116,33 @@ class TemplateGetAll:
         self.result_current = copy.deepcopy(self.rest_send.result_current)
         self.result.append(copy.deepcopy(self.rest_send.result_current))
 
-        if self.response_current.get("RETURN_CODE", None) != 200:
+        controller_response = self.response_current.get("RETURN_CODE", None)
+        if controller_response != 200:
             msg = f"{self.class_name}.{method_name}: "
-            msg = "Exiting. Failed to retrieve templates."
+            msg = "Failed to retrieve templates."
             self.log.error(msg)
-            self.ansible_module.fail_json(msg, **self._results.failed_result)
+            raise ControllerResponseError(msg, controller_response)
 
         self.templates = self.result_current
+
+    @property
+    def rest_send(self):
+        """
+        An instance of the RestSend class.
+        """
+        return self.properties["rest_send"]
+
+    @rest_send.setter
+    def rest_send(self, value) -> None:
+        self.properties["rest_send"] = value
+
+    @property
+    def templates(self):
+        """
+        Return the templates retrieved from the controller.
+        """
+        return self._properties["templates"]
+
+    @templates.setter
+    def templates(self, value: Dict[str, Any]) -> None:
+        self._properties["templates"] = value
