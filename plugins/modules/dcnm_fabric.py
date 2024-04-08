@@ -701,7 +701,7 @@ def main():
     # logging.config.dictConfig and must not log to the console.
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
-    enable_logging = True
+    enable_logging = False
     log = Log(ansible_module)
     if enable_logging is True:
         collection_path = (
