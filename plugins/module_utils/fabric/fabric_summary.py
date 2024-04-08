@@ -204,13 +204,16 @@ class FabricSummary(FabricCommon):
         except ValueError as error:
             raise ValueError(f"{error}") from error
 
-    def verify_refresh_has_been_called(self, method_name):
+    def verify_refresh_has_been_called(self, attempted_method_name):
         """
         - raise ``ValueError`` if ``refresh()`` has not been called.
         """
-        if self.refreshed is False:
-            msg = f"refresh() must be called before accessing {method_name}."
-            raise ValueError(msg)
+        method_name = inspect.stack()[0][3]
+        if self.refreshed is True:
+            return
+        msg = f"{self.class_name}.refresh() must be called before accessing "
+        msg += f"{self.class_name}.{attempted_method_name}."
+        raise ValueError(msg)
 
     @property
     def all_data(self) -> dict:
