@@ -230,7 +230,7 @@ class RuleSet(RuleSetCommon):
         """
         self.rule = self.rule.split("and")
         self.rule = [x.strip() for x in self.rule]
-        self.rule = [re.sub(r"\s{2}", " ", x) for x in self.rule]
+        self.rule = [re.sub(r"\s+", " ", x) for x in self.rule]
         self.rule = [re.sub(r"\"", "", x) for x in self.rule]
         self.rule = [re.sub(r"\'", "", x) for x in self.rule]
         new_rule = []
