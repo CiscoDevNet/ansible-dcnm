@@ -114,7 +114,7 @@ class FabricCreateCommon(FabricCommon):
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
-        self.fabric_details.rest_send = self.rest_send
+        # self.fabric_details.rest_send = self.rest_send
         self.fabric_details.refresh()
 
         self._payloads_to_commit = []
