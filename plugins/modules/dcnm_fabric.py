@@ -687,10 +687,6 @@ def main():
         "default": "merged",
         "choices": ["deleted", "merged", "query"],
     }
-    # element_spec = dict(
-    #     config=dict(required=False, type="list", elements="dict"),
-    #     state=dict(default="merged", choices=["deleted", "merged", "query"]),
-    # )
 
     ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
