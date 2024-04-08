@@ -28,43 +28,53 @@ class FabricCommon:
     Common methods used by the other classes supporting
     the dcnm_fabric module
 
-    Usage (where ansible_module is an instance of
-    AnsibleModule or MockAnsibleModule):
+    Usage (where params is AnsibleModule.params)
 
     class MyClass(FabricCommon):
-        def __init__(self, module):
-            super().__init__(module)
+        def __init__(self, params):
+            super().__init__(params)
         ...
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
-        self.check_mode = self.ansible_module.check_mode
-        self.state = ansible_module.params["state"]
-
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self.params = params
+
+        self.check_mode = self.params.get("check_mode", None)
+        if self.check_mode is None:
+            raise ValueError("check_mode is required")
+
+        self.state = self.params.get("state", None)
+        if self.state is None:
+            raise ValueError("state is required")
 
         msg = "ENTERED FabricCommon(): "
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
 
-        self.params = ansible_module.params
-
-        self.properties: Dict[str, Any] = {}
-        # Default to VXLAN_EVPN
-        self.properties["fabric_type"] = "VXLAN_EVPN"
-        self.properties["results"] = None
-
         self._valid_fabric_types = {"VXLAN_EVPN"}
 
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
 
-        self._build_key_translations()
+        self._init_properties()
+        self._init_key_translations()
 
-    def _build_key_translations(self):
+    def _init_properties(self) -> None:
+        """
+        Initialize the properties dictionary.
+        """
+        self._properties: Dict[str, Any] = {}
+        self._properties["fabric_details"] = None
+        self._properties["fabric_summary"] = None
+        self._properties["fabric_type"] = "VXLAN_EVPN"
+        self._properties["rest_send"] = None
+        self._properties["results"] = None
+
+    def _init_key_translations(self):
         """
         Build a dictionary of fabric configuration key translations.
 
@@ -267,6 +277,28 @@ class FabricCommon:
         return value
 
     @property
+    def fabric_details(self):
+        """
+        An instance of the FabricDetails class.
+        """
+        return self._properties["fabric_details"]
+
+    @fabric_details.setter
+    def fabric_details(self, value):
+        self._properties["fabric_details"] = value
+
+    @property
+    def fabric_summary(self):
+        """
+        An instance of the FabricSummary class.
+        """
+        return self._properties["fabric_summary"]
+
+    @fabric_summary.setter
+    def fabric_summary(self, value):
+        self._properties["fabric_summary"] = value
+
+    @property
     def fabric_type(self):
         """
         - getter: Return the type of fabric to create/update.
@@ -275,7 +307,7 @@ class FabricCommon:
 
         See ``self._valid_fabric_types`` for valid values
         """
-        return self.properties["fabric_type"]
+        return self._properties["fabric_type"]
 
     @fabric_type.setter
     def fabric_type(self, value):
@@ -286,15 +318,26 @@ class FabricCommon:
             msg += f"{sorted(self._valid_fabric_types)}. "
             msg += f"Got {value}"
             raise ValueError(msg)
-        self.properties["fabric_type"] = value
+        self._properties["fabric_type"] = value
+
+    @property
+    def rest_send(self):
+        """
+        An instance of the RestSend class.
+        """
+        return self._properties["rest_send"]
+
+    @rest_send.setter
+    def rest_send(self, value):
+        self._properties["rest_send"] = value
 
     @property
     def results(self):
         """
         An instance of the Results class.
         """
-        return self.properties["results"]
+        return self._properties["results"]
 
     @results.setter
     def results(self, value):
-        self.properties["results"] = value
+        self._properties["results"] = value

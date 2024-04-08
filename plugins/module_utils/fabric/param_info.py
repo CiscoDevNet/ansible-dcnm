@@ -2,6 +2,7 @@ import inspect
 import logging
 import re
 
+
 class ParamInfo:
     """
     Given a parameter, return a python dict containing parameter info.
@@ -32,7 +33,7 @@ class ParamInfo:
     except KeyError as error:
         print(error)
         exit(1)
-    
+
     parameter_type = my_parameter_info["type"] # python type: bool, str, int, dict, set, list, None
     parameter_choices = my_parameter_info["choices"] # python list, or None
     parameter_min = my_parameter_info["min"] # int, or None
@@ -40,6 +41,7 @@ class ParamInfo:
     parameter_default = my_parameter_info["default"] # Any, or None
     ```
     """
+
     def __init__(self):
         self.class_name = self.__class__.__name__
 
@@ -124,7 +126,7 @@ class ParamInfo:
         - min: (``int``, or ``None``)
         - max: (``int``, or ``None``)
         - default: (``str``, ``int``, etc, or ``None``)
-        
+
         """
         method_name = inspect.stack()[0][3]
         try:

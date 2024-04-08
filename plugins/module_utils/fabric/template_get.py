@@ -67,6 +67,7 @@ class TemplateGet:
         self._properties = {}
         self._properties["template_name"] = None
         self._properties["template"] = None
+        self._properties["rest_send"] = None
         self._properties["results"] = None
 
     def _set_template_endpoint(self) -> None:
@@ -94,7 +95,7 @@ class TemplateGet:
         """
         -   Retrieve the template from the controller.
         -   raise ``ValueError`` if the template endpoint assignment fails
-        -   raise ``ControllerResponseError`` if the controller 
+        -   raise ``ControllerResponseError`` if the controller
             ``RETURN_CODE`` != 200
         """
         method_name = inspect.stack()[0][3]
@@ -102,6 +103,11 @@ class TemplateGet:
             self._set_template_endpoint()
         except ValueError as error:
             raise ValueError(error) from error
+
+        if self.rest_send is None:
+            msg = "f{self.class_name}.rest_send must be set prior to calling refresh()"
+            self.log.debug(msg)
+            raise ValueError(msg)
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb

@@ -314,7 +314,6 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-
     def playbook_param_is_valid(self, parameter, rule) -> bool:
         """
         -   Return None if the playbook config does not contain the
@@ -513,7 +512,7 @@ class VerifyPlaybookParams:
 
         -   raise ValueError if FABRIC_NAME is not present in the playbook
         -   raise ValueError if the parameter does not match any of the valid
-            values specified in the template for the parameter 
+            values specified in the template for the parameter
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 

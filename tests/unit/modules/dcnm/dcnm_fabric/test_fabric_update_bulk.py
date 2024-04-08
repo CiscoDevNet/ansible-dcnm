@@ -30,14 +30,19 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
+    FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_update_bulk_fixture,
-    payloads_fabric_update_bulk, responses_fabric_details,
-    responses_fabric_summary, responses_fabric_update_bulk)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    fabric_update_bulk_fixture, params, payloads_fabric_update_bulk,
+    responses_fabric_details, responses_fabric_summary,
+    responses_fabric_update_bulk)
 
 
 def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
@@ -54,6 +59,7 @@ def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
     """
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
     assert instance.class_name == "FabricUpdateBulk"
     assert instance.action == "update"
     assert instance.state == "merged"
@@ -76,6 +82,7 @@ def test_fabric_update_bulk_00020(fabric_update_bulk) -> None:
     key = "test_fabric_update_bulk_00020a"
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
     assert instance.payloads == payloads_fabric_update_bulk(key)
@@ -99,6 +106,7 @@ def test_fabric_update_bulk_00021(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
@@ -123,6 +131,7 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
@@ -150,6 +159,8 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_summary = FabricSummary(params)
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -176,9 +187,9 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
     -   payloads is set to an empty list
 
     NOTES:
-    -   element_spec is configured such that AnsibleModule will raise an exception when
-        config is not a list of dict.  Hence, we do not test instance.commit() here since
-        it would never be reached.
+    -   element_spec in dcnm_fabric.py.main() is configured such that AnsibleModule will
+        raise an exception when config is not a list of dict.  Hence, we do not test
+        instance.commit() here since it would never be reached.
     """
     with does_not_raise():
         instance = fabric_update_bulk
@@ -240,9 +251,18 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
-        instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     with does_not_raise():
@@ -357,9 +377,18 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
-        instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     with does_not_raise():
@@ -458,6 +487,17 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
@@ -555,6 +595,17 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
         instance.fabric_details.rest_send.unit_test = True

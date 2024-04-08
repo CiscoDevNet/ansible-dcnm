@@ -23,14 +23,10 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
 
 
 class FabricCreateCommon(FabricCommon):
@@ -40,18 +36,14 @@ class FabricCreateCommon(FabricCommon):
     - FabricCreateBulk
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
         self.action: str = "create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.fabric_details = FabricDetailsByName(self.ansible_module)
-        self.fabric_details.rest_send = RestSend(self.ansible_module)
-
         self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in
@@ -65,11 +57,20 @@ class FabricCreateCommon(FabricCommon):
         self._mandatory_payload_keys.add("FABRIC_NAME")
         self._mandatory_payload_keys.add("BGP_AS")
 
+        self._build_properties()
+
         msg = "ENTERED FabricCreateCommon(): "
         msg += f"action: {self.action}, "
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
+
+    def _build_properties(self):
+        """
+        - Add properties specific to this class
+        - self._properties is initialized in FabricCommon
+        """
+        pass
 
     def _verify_payload(self, payload) -> None:
         """
@@ -113,6 +114,7 @@ class FabricCreateCommon(FabricCommon):
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
+        self.fabric_details.rest_send = self.rest_send
         self.fabric_details.refresh()
 
         self._payloads_to_commit = []
@@ -210,7 +212,7 @@ class FabricCreateCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self.properties["payloads"]
+        return self._properties["payloads"]
 
     @payloads.setter
     def payloads(self, value):
@@ -231,18 +233,7 @@ class FabricCreateCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(f"{error}") from error
-        self.properties["payloads"] = value
-
-    @property
-    def rest_send(self):
-        """
-        An instance of the RestSend class.
-        """
-        return self.properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        self.properties["rest_send"] = value
+        self._properties["payloads"] = value
 
 
 class FabricCreateBulk(FabricCreateCommon):
@@ -286,8 +277,8 @@ class FabricCreateBulk(FabricCreateCommon):
     ```
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -300,7 +291,7 @@ class FabricCreateBulk(FabricCreateCommon):
         Add properties specific to this class
         """
         # properties dict is already initialized in the parent class
-        self.properties["payloads"] = None
+        self._properties["payloads"] = None
 
     def commit(self):
         """
@@ -346,8 +337,8 @@ class FabricCreate(FabricCreateCommon):
         and could be deleted if not needed.
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -361,8 +352,8 @@ class FabricCreate(FabricCreateCommon):
         """
         Add properties specific to this class
         """
-        # self.properties is already initialized in the parent class
-        self.properties["payload"] = None
+        # self._properties is already initialized in the parent class
+        self._properties["payload"] = None
 
     def commit(self):
         """
@@ -424,8 +415,8 @@ class FabricCreate(FabricCreateCommon):
         """
         Return a fabric create payload.
         """
-        return self.properties["payload"]
+        return self._properties["payload"]
 
     @payload.setter
     def payload(self, value):
-        self.properties["payload"] = value
+        self._properties["payload"] = value

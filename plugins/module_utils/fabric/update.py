@@ -23,16 +23,10 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
 
 
 class FabricUpdateCommon(FabricCommon):
@@ -42,21 +36,14 @@ class FabricUpdateCommon(FabricCommon):
     - FabricUpdateBulk
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
         self.action = "update"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.fabric_details = FabricDetailsByName(self.ansible_module)
-        self.fabric_details.rest_send = RestSend(self.ansible_module)
-
-        self._fabric_summary = FabricSummary(self.ansible_module)
-        self._fabric_summary.rest_send = RestSend(self.ansible_module)
-
         self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in
@@ -110,10 +97,10 @@ class FabricUpdateCommon(FabricCommon):
         msg += "ENTERED"
         self.log.debug(msg)
 
-        self._fabric_summary.fabric_name = fabric_name
-        self._fabric_summary.refresh()
+        self.fabric_summary.fabric_name = fabric_name
+        self.fabric_summary.refresh()
 
-        if self._fabric_summary.fabric_is_empty is True:
+        if self.fabric_summary.fabric_is_empty is True:
             self.cannot_deploy_fabric_reason = "Fabric is empty"
             return False
         return True
@@ -564,7 +551,7 @@ class FabricUpdateCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self.properties["payloads"]
+        return self._properties["payloads"]
 
     @payloads.setter
     def payloads(self, value):
@@ -580,7 +567,7 @@ class FabricUpdateCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(f"{error}") from error
-        self.properties["payloads"] = value
+        self._properties["payloads"] = value
 
 
 class FabricUpdateBulk(FabricUpdateCommon):
@@ -620,8 +607,8 @@ class FabricUpdateBulk(FabricUpdateCommon):
     ansible_module.exit_json(**task.results.final_result)
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -633,21 +620,40 @@ class FabricUpdateBulk(FabricUpdateCommon):
         """
         Add properties specific to this class
         """
-        # properties dict is already initialized in the parent class
-        self.properties["payloads"] = None
+        # properties dict is already initialized in FabricCommon
+        self._properties["payloads"] = None
+        self.log.debug(f"FFF: FabricUpdateBulk: self._properties {self._properties}")
 
     def commit(self):
         """
         - Update fabrics and register results.
         - Return if there are no fabrics to update.
+        - raise ``ValueError`` if ``fabric_details`` is not set
+        - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
+        - raise ``ValueError`` if ``rest_send`` is not set
         - raise ``ValueError`` if ``_build_payloads_to_commit`` fails
         - raise ``ValueError`` if ``_send_payloads`` fails
         """
         method_name = inspect.stack()[0][3]
+        if self.fabric_details is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_details must be set prior to calling commit."
+            raise ValueError(msg)
+
+        if self.fabric_summary is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_summary must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.payloads is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
+            raise ValueError(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
         self.results.action = self.action

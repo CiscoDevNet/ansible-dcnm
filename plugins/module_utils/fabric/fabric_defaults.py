@@ -29,6 +29,7 @@ class FabricDefaults:
         print(error)
         exit(1)
     """
+
     def __init__(self):
         self.class_name = self.__class__.__name__
 

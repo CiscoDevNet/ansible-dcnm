@@ -3,12 +3,14 @@ import json
 import logging
 import re
 
+
 class RuleSetCommon:
     """
     Common methods for the RuleSet class.
 
     This may be merged back into RuleSet at some point.
     """
+
     def __init__(self) -> None:
         self.class_name = self.__class__.__name__
 
@@ -50,6 +52,7 @@ class RuleSetCommon:
         - setter : set the ruleset.
         """
         return self.properties["ruleset"]
+
     @ruleset.setter
     def ruleset(self, value):
         self.properties["ruleset"] = value
@@ -57,6 +60,7 @@ class RuleSetCommon:
     @property
     def template(self):
         return self.properties["template"]
+
     @template.setter
     def template(self, value):
         self.properties["template"] = value
@@ -171,6 +175,7 @@ class RuleSetCommon:
             return None
         return parameter["name"]
 
+
 class RuleSet(RuleSetCommon):
     """
     # Generate a ruleset from a template
@@ -184,6 +189,7 @@ class RuleSet(RuleSetCommon):
     rules = ruleset.ruleset
     ```
     """
+
     def __init__(self) -> None:
         super().__init__()
 

@@ -20,16 +20,10 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
 
 
 class FabricDelete(FabricCommon):
@@ -67,8 +61,8 @@ class FabricDelete(FabricCommon):
     ansible_module.exit_json(**task.results.final_result)
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
         self.action = "delete"
 
@@ -77,12 +71,6 @@ class FabricDelete(FabricCommon):
         self._fabrics_to_delete = []
         self._build_properties()
         self._endpoints = ApiEndpoints()
-
-        self._fabric_details = FabricDetailsByName(self.ansible_module)
-        self._fabric_details.rest_send = RestSend(self.ansible_module)
-
-        self._fabric_summary = FabricSummary(self.ansible_module)
-        self._fabric_summary.rest_send = RestSend(self.ansible_module)
 
         self._cannot_delete_fabric_reason = None
 
@@ -100,22 +88,21 @@ class FabricDelete(FabricCommon):
 
     def _build_properties(self):
         """
-        self.properties holds property values for the class
+        self._properties holds property values for the class
         """
-        # self.properties is already set in the parent class
-        self.properties["fabric_names"] = None
-        self.properties["rest_send"] = None
+        # self._properties is already set in the parent class
+        self._properties["fabric_names"] = None
 
     def _get_fabrics_to_delete(self) -> None:
         """
         Retrieve fabric info from the controller and set the list of
         controller fabrics that are in our fabric_names list.
         """
-        self._fabric_details.refresh()
+        self.fabric_details.refresh()
 
         self._fabrics_to_delete = []
         for fabric_name in self.fabric_names:
-            if fabric_name in self._fabric_details.all_data:
+            if fabric_name in self.fabric_details.all_data:
                 self._fabrics_to_delete.append(fabric_name)
 
     def _can_fabric_be_deleted(self, fabric_name):
@@ -124,9 +111,9 @@ class FabricDelete(FabricCommon):
         return False otherwise
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self._fabric_summary.fabric_name = fabric_name
-        self._fabric_summary.refresh()
-        if self._fabric_summary.fabric_is_empty is False:
+        self.fabric_summary.fabric_name = fabric_name
+        self.fabric_summary.refresh()
+        if self.fabric_summary.fabric_is_empty is False:
             self._cannot_delete_fabric_reason = "Fabric is not empty"
             return False
         return True
@@ -179,15 +166,16 @@ class FabricDelete(FabricCommon):
         self.log.debug(msg)
         if len(self._fabrics_to_delete) != 0:
             self._send_requests()
-        else:
-            self.results.action = self.action
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
-            self.results.diff_current = {}
-            self.results.result_current = {"success": True, "changed": False}
-            msg = "No fabrics to delete"
-            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
-            self.log.debug(msg)
+            return
+
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+        self.results.diff_current = {}
+        self.results.result_current = {"success": True, "changed": False}
+        msg = "No fabrics to delete"
+        self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+        self.log.debug(msg)
 
     def _send_requests(self):
         """
@@ -261,7 +249,7 @@ class FabricDelete(FabricCommon):
         - setter: set list of fabric_names
         - setter: raise ``ValueError`` if ``value`` is not a ``list`` of ``str``
         """
-        return self.properties["fabric_names"]
+        return self._properties["fabric_names"]
 
     @fabric_names.setter
     def fabric_names(self, value):
@@ -284,15 +272,4 @@ class FabricDelete(FabricCommon):
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
                 raise ValueError(msg)
-        self.properties["fabric_names"] = value
-
-    @property
-    def rest_send(self):
-        """
-        An instance of the RestSend class.
-        """
-        return self.properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        self.properties["rest_send"] = value
+        self._properties["fabric_names"] = value

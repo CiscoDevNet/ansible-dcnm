@@ -206,17 +206,16 @@ EXAMPLES = """
         bgp_as: 100
 
 """
-
+# pylint: disable=wrong-import-position
 import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
@@ -231,6 +230,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
+    FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
@@ -249,15 +250,15 @@ def json_pretty(msg):
 
 
 class Common(FabricCommon):
-    def __init__(self, ansible_module):
+    """
+    Common methods, properties, and resources for all states.
+    """
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        super().__init__(ansible_module)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.state = self.ansible_module.params.get("state")
-        if self.ansible_module.params.get("check_mode") is True:
-            self.check_mode = True
-
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        super().__init__(params)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
@@ -271,26 +272,26 @@ class Common(FabricCommon):
 
         self._implemented_states = set()
 
-        self.params = ansible_module.params
         self._verify_playbook_params = VerifyPlaybookParams()
-        self.rest_send = RestSend(self.ansible_module)
-
-        self.template = TemplateGet()
-        self.template.rest_send = RestSend(self.ansible_module)
 
         # populated in self.validate_input()
         self.payloads = {}
 
-        self.config = ansible_module.params.get("config")
+        self.config = params.get("config")
         if not isinstance(self.config, list):
             msg = "expected list type for self.config. "
             msg += f"got {type(self.config).__name__}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         self.validated = []
         self.have = {}
         self.want = []
         self.query = []
+
+        self._build_properties()
+
+    def _build_properties(self):
+        self._properties["ansible_module"] = None
 
     def get_have(self):
         """
@@ -312,7 +313,7 @@ class Common(FabricCommon):
         }
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.have = FabricDetailsByName(self.ansible_module)
+        self.have = FabricDetailsByName(self.params)
         self.have.rest_send = RestSend(self.ansible_module)
         self.have.refresh()
 
@@ -332,22 +333,38 @@ class Common(FabricCommon):
         for config in merged_configs:
             self.want.append(copy.deepcopy(config))
 
+    @property
+    def ansible_module(self):
+        """
+        getter: return an instance of AnsibleModule
+        setter: set an instance of AnsibleModule
+        """
+        return self._properties["ansible_module"]
+
+    @ansible_module.setter
+    def ansible_module(self, value):
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if not isinstance(value, AnsibleModule):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "expected AnsibleModule instance. "
+            msg += f"got {type(value).__name__}."
+            raise ValueError(msg)
+        self._properties["ansible_module"] = value
+
 
 class Deleted(Common):
     """
     Handle deleted state
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        super().__init__(ansible_module)
+        super().__init__(params)
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.fabric_delete = FabricDelete(self.ansible_module)
-        self.fabric_delete.results = self.results
-        self.fabric_delete.rest_send = RestSend(self.ansible_module)
+        self.fabric_delete = FabricDelete(self.params)
 
         msg = "ENTERED Deleted(): "
         msg += f"state: {self.state}, "
@@ -366,6 +383,19 @@ class Deleted(Common):
         msg = f"{self.class_name}.{method_name}: "
         msg += "entered"
         self.log.debug(msg)
+
+        self.rest_send = RestSend(self.ansible_module)
+
+        self.fabric_details = FabricDetailsByName(self.params)
+        self.fabric_details.rest_send = self.rest_send
+
+        self.fabric_summary = FabricSummary(self.params)
+        self.fabric_summary.rest_send = self.rest_send
+
+        self.fabric_delete.rest_send = self.rest_send
+        self.fabric_delete.fabric_details = self.fabric_details
+        self.fabric_delete.fabric_summary = self.fabric_summary
+        self.fabric_delete.results = self.results
 
         fabric_names_to_delete = []
         for want in self.want:
@@ -391,14 +421,20 @@ class Merged(Common):
     Handle merged state
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        super().__init__(ansible_module)
+        super().__init__(params)
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = f"ENTERED {self.class_name}.{method_name}: "
+        self.fabric_details = FabricDetailsByName(self.params)
+        self.fabric_summary = FabricSummary(self.params)
+        self.fabric_create = FabricCreateBulk(self.params)
+        self.fabric_update = FabricUpdateBulk(self.params)
+        self.template = TemplateGet()
+
+        msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
@@ -446,6 +482,7 @@ class Merged(Common):
             fabric_type = want.get("FABRIC_TYPE", None)
             template_name = self._fabric_type_to_template_name.get(fabric_type)
 
+            self.template.rest_send = self.rest_send
             self.template.template_name = template_name
             try:
                 self.template.refresh()
@@ -500,13 +537,15 @@ class Merged(Common):
 
     def commit(self):
         """
-        Caller: main()
-
         Commit the merged state request
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
+
+        self.rest_send = RestSend(self.ansible_module)
+        self.fabric_details.rest_send = self.rest_send
+        self.fabric_summary.rest_send = self.rest_send
 
         self.get_want()
         self.get_have()
@@ -531,8 +570,8 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
-        self.fabric_create = FabricCreateBulk(self.ansible_module)
-        self.fabric_create.rest_send = RestSend(self.ansible_module)
+        self.fabric_create.fabric_details = self.fabric_details
+        self.fabric_create.rest_send = self.rest_send
         self.fabric_create.results = self.results
 
         try:
@@ -567,7 +606,8 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
-        self.fabric_update = FabricUpdateBulk(self.ansible_module)
+        self.fabric_update.fabric_details = self.fabric_details
+        self.fabric_update.fabric_summary = self.fabric_summary
         self.fabric_update.rest_send = RestSend(self.ansible_module)
         self.fabric_update.results = self.results
 
@@ -611,9 +651,14 @@ class Query(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        self.fabric_details = FabricDetailsByName(self.params)
+        self.fabric_details.rest_send = RestSend(self.ansible_module)
+
         self.get_want()
 
-        fabric_query = FabricQuery(self.ansible_module)
+        fabric_query = FabricQuery(self.params)
+        fabric_query.fabric_details = self.fabric_details
+
         fabric_query.results = self.results
         fabric_names_to_query = []
         for want in self.want:
@@ -636,12 +681,18 @@ class Query(Common):
 def main():
     """main entry point for module execution"""
 
-    element_spec = dict(
-        config=dict(required=False, type="list", elements="dict"),
-        state=dict(default="merged", choices=["deleted", "merged", "query"]),
-    )
+    argument_spec = {}
+    argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
+    argument_spec["state"] = {
+        "default": "merged",
+        "choices": ["deleted", "merged", "query"],
+    }
+    # element_spec = dict(
+    #     config=dict(required=False, type="list", elements="dict"),
+    #     state=dict(default="merged", choices=["deleted", "merged", "query"]),
+    # )
 
-    ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     # Create the base/parent logger for the dcnm collection.
     # To enable logging, set enable_logging to True.
@@ -650,7 +701,7 @@ def main():
     # logging.config.dictConfig and must not log to the console.
     # For an example configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
-    enable_logging = False
+    enable_logging = True
     log = Log(ansible_module)
     if enable_logging is True:
         collection_path = (
@@ -662,14 +713,18 @@ def main():
         log.config = config_file
     log.commit()
 
+    ansible_module.params["check_mode"] = ansible_module.check_mode
     if ansible_module.params["state"] == "merged":
-        task = Merged(ansible_module)
+        task = Merged(ansible_module.params)
+        task.ansible_module = ansible_module
         task.commit()
     elif ansible_module.params["state"] == "deleted":
-        task = Deleted(ansible_module)
+        task = Deleted(ansible_module.params)
+        task.ansible_module = ansible_module
         task.commit()
     elif ansible_module.params["state"] == "query":
-        task = Query(ansible_module)
+        task = Query(ansible_module.params)
+        task.ansible_module = ansible_module
         task.commit()
     else:
         # We should never get here since the state parameter has
@@ -679,7 +734,10 @@ def main():
 
     task.results.build_final_result()
 
-    if True in task.results.failed:
+    # Results().failed is a property that returns a set()
+    # of boolean values.  pylint doesn't seem to understand this so we've
+    # disabled the unsupported-membership-test warning.
+    if True in task.results.failed:  # pylint: disable=unsupported-membership-test
         msg = "Module failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)

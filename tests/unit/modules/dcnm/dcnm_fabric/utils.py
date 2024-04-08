@@ -74,6 +74,13 @@ class ResponseGenerator:
         """
 
 
+params = {
+    "state": "merged",
+    "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+    "check_mode": False,
+}
+
+
 class MockAnsibleModule:
     """
     Mock the AnsibleModule class
@@ -152,7 +159,7 @@ def fabric_create_bulk_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
-    return FabricCreateBulk(instance)
+    return FabricCreateBulk(instance.params)
 
 
 @pytest.fixture(name="fabric_delete")
@@ -172,7 +179,7 @@ def fabric_query_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "query"
-    return FabricQuery(instance)
+    return FabricQuery(instance.params)
 
 
 @pytest.fixture(name="fabric_update_bulk")
@@ -182,7 +189,7 @@ def fabric_update_bulk_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
-    return FabricUpdateBulk(instance)
+    return FabricUpdateBulk(instance.params)
 
 
 @contextmanager

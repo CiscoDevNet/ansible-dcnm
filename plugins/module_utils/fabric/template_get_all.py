@@ -130,11 +130,11 @@ class TemplateGetAll:
         """
         An instance of the RestSend class.
         """
-        return self.properties["rest_send"]
+        return self._properties["rest_send"]
 
     @rest_send.setter
     def rest_send(self, value) -> None:
-        self.properties["rest_send"] = value
+        self._properties["rest_send"] = value
 
     @property
     def templates(self):

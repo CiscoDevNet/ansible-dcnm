@@ -36,10 +36,12 @@ class FabricDetails(FabricCommon):
     # Parent class for *FabricDetails() subclasses.
 
     See subclass docstrings for details.
+
+    params is AnsibleModule.params
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -51,15 +53,6 @@ class FabricDetails(FabricCommon):
         self.data = {}
         self.endpoints = ApiEndpoints()
         self.results = Results()
-        # We always want to get the controller's current fabric state
-        # so we set check_mode to False here so the request will be
-        # sent to the controller
-
-        self._init_properties()
-
-    def _init_properties(self):
-        # self.properties is already initialized in the parent class
-        self.properties["rest_send"] = None
 
     def refresh_super(self):
         """
@@ -75,8 +68,16 @@ class FabricDetails(FabricCommon):
 
         self.rest_send.path = endpoint.get("path")
         self.rest_send.verb = endpoint.get("verb")
+
+        # We always want to get the controller's current fabric state,
+        # regardless of the current value of check_mode.
+        # We save the current check_mode value, set rest_send.check_mode
+        # to False so the request will be sent to the controller, and then
+        # restore the original check_mode value.
+        save_check_mode = self.rest_send.check_mode
         self.rest_send.check_mode = False
         self.rest_send.commit()
+        self.rest_send.check_mode = save_check_mode
 
         self.data = {}
         if self.rest_send.response_current.get("DATA") is None:
@@ -213,17 +214,6 @@ class FabricDetails(FabricCommon):
             return None
 
     @property
-    def rest_send(self):
-        """
-        An instance of the RestSend class.
-        """
-        return self.properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        self.properties["rest_send"] = value
-
-    @property
     def template_name(self):
         """
         Return the templateName of the fabric specified with filter,
@@ -249,10 +239,10 @@ class FabricDetailsByName(FabricDetails):
     Retrieve fabric details from the controller and provide
     property accessors for the fabric attributes.
 
-    Usage (where ansible_module is an instance of AnsibleModule):
+    Usage (where params is AnsibleModule.params):
 
     ```python
-    instance = FabricDetailsByName()
+    instance = FabricDetailsByName(params)
     instance.rest_send = RestSend(ansible_module)
     instance.refresh()
     instance.filter = "MyFabric"
@@ -279,15 +269,15 @@ class FabricDetailsByName(FabricDetails):
     on the controller, keyed on fabric name.
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED FabricDetailsByName()")
 
         self.data_subclass = {}
-        self.properties["filter"] = None
+        self._properties["filter"] = None
 
     def refresh(self):
         """
@@ -387,11 +377,11 @@ class FabricDetailsByName(FabricDetails):
 
         This needs to be set before accessing this class's properties.
         """
-        return self.properties.get("filter")
+        return self._properties.get("filter")
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._properties["filter"] = value
 
 
 class FabricDetailsByNvPair(FabricDetails):
@@ -401,25 +391,25 @@ class FabricDetailsByNvPair(FabricDetails):
     property to a dictionary of all fabrics on the controller
     that match filter_key and filter_value.
 
-    Usage (where ansible_module is an instance of AnsibleModule):
+    Usage (where params is AnsibleModule.params):
 
-    instance = FabricDetailsNvPair(ansible_module)
+    instance = FabricDetailsNvPair(params)
     instance.refresh()
     instance.filter_key = "DCI_SUBNET_RANGE"
     instance.filter_value = "10.33.0.0/16"
     fabrics = instance.filtered_data
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED FabricDetailsByNvPair()")
 
         self.data_subclass = {}
-        self.properties["filter_key"] = None
-        self.properties["filter_value"] = None
+        self._properties["filter_key"] = None
+        self._properties["filter_value"] = None
 
     def refresh(self):
         """
@@ -460,11 +450,11 @@ class FabricDetailsByNvPair(FabricDetails):
         This should be an exact match for the key in the nvPairs
         dictionary for the fabric.
         """
-        return self.properties.get("filter_key")
+        return self._properties.get("filter_key")
 
     @filter_key.setter
     def filter_key(self, value):
-        self.properties["filter_key"] = value
+        self._properties["filter_key"] = value
 
     @property
     def filter_value(self):
@@ -475,8 +465,8 @@ class FabricDetailsByNvPair(FabricDetails):
         This should be an exact match for the value in the nvPairs
         dictionary for the fabric.
         """
-        return self.properties.get("filter_value")
+        return self._properties.get("filter_value")
 
     @filter_value.setter
     def filter_value(self, value):
-        self.properties["filter_value"] = value
+        self._properties["filter_value"] = value

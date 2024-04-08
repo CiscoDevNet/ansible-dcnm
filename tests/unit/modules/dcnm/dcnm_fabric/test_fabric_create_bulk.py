@@ -30,14 +30,17 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_create_bulk_fixture,
-    payloads_fabric_create_bulk, responses_fabric_create_bulk,
-    responses_fabric_details, rest_send_response_current)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    fabric_create_bulk_fixture, params, payloads_fabric_create_bulk,
+    responses_fabric_create_bulk, responses_fabric_details,
+    rest_send_response_current)
 
 
 def test_fabric_create_bulk_00010(fabric_create_bulk) -> None:
@@ -54,6 +57,7 @@ def test_fabric_create_bulk_00010(fabric_create_bulk) -> None:
     """
     with does_not_raise():
         instance = fabric_create_bulk
+        instance.fabric_details = FabricDetailsByName(params)
     assert instance.class_name == "FabricCreateBulk"
     assert instance.action == "create"
     assert instance.state == "merged"
@@ -223,6 +227,14 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_create_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send.unit_test = True
+
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
 
@@ -283,6 +295,13 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_create_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send.unit_test = True
+
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
@@ -381,6 +400,13 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_create_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send.unit_test = True
+
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
@@ -450,10 +476,16 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_create_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send.unit_test = True
+
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
-        instance.fabric_details.rest_send.unit_test = True
-        instance.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     with does_not_raise():
