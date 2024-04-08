@@ -74,6 +74,7 @@ class FabricUpdateCommon(FabricCommon):
         self._mandatory_payload_keys.add("BGP_AS")
         self._mandatory_payload_keys.add("DEPLOY")
         self._mandatory_payload_keys.add("FABRIC_NAME")
+        self._mandatory_payload_keys.add("FABRIC_TYPE")
 
         # key: fabric_name, value: boolean
         # If True, the operation was successful
@@ -201,6 +202,8 @@ class FabricUpdateCommon(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        # We should never hit this since the payload is verified to contain
+        # FABRIC_NAME _verify_payload()
         fabric_name = payload.get("FABRIC_NAME", None)
         if fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "

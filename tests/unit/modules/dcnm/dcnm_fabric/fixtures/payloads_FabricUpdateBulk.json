@@ -13,6 +13,7 @@
     ],
     "test_fabric_update_bulk_00025a": [
         {
+            "BGP_AS": 65001,
             "DEPLOY": true,
             "FABRIC_NAME": "f1",
             "FABRIC_TYPE": "VXLAN_EVPN"
