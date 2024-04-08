@@ -75,9 +75,12 @@ def test_fabric_update_bulk_00020(fabric_update_bulk) -> None:
     - FabricUpdateBulk
         - __init__()
 
+    Summary
+    A valid payloads list is presented to the payloads setter
+
     Test
     - payloads is set to expected value
-    - fail_json is not called
+    - ``ValueError`` is not raised
     """
     key = "test_fabric_update_bulk_00020a"
     with does_not_raise():
@@ -97,9 +100,12 @@ def test_fabric_update_bulk_00021(fabric_update_bulk) -> None:
     - FabricUpdateBulk
         - __init__()
 
+    Summary
+    ``payloads`` setter is presented with input that is not a list.
+
     Test
-    - ValueError is raised because payloads is not a list
-    - instance.payloads is not modified, hence it retains its initial value of None
+    - ``ValueError`` is raised because payloads is not a list
+    - instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk\.payloads: "
     match += r"payloads must be a list of dict\."
@@ -122,9 +128,12 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
     - FabricUpdateBulk
         - __init__()
 
+    Summary
+    ``payloads`` setter is presented with a list that contains a non-dict element.
+
     Test
-    - ValueError is raised because payloads is a list with a non-dict element
-    - instance.payloads is not modified, hence it retains its initial value of None
+    - ``ValueError`` is raised because payloads is a list with non-dict elements
+    - instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk._verify_payload: "
     match += r"payload must be a dict\."
@@ -148,11 +157,11 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
         - __init__()
 
     Summary
-    Verify behavior when payloads is not set prior to calling commit
+    payloads is not set prior to calling commit
 
     Test
     - ValueError is raised because payloads is not set prior to calling commit
-    - instance.payloads is not modified, hence it retains its initial value of None
+    - instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk\.commit: "
     match += r"payloads must be set prior to calling commit\."
@@ -177,13 +186,13 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
         - __init__()
 
     Summary
-    Verify behavior when payloads is set to an empty list
+    payloads is set to an empty list
 
     Setup
     -   FabricUpdatebulk().payloads is set to an empty list
 
     Test
-    -   fail_json not called
+    -   ``ValueError`` is not raised
     -   payloads is set to an empty list
 
     NOTES:
@@ -196,6 +205,36 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
         instance.results = Results()
         instance.payloads = []
     assert instance.payloads == []
+
+
+def test_fabric_update_bulk_00025(fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - payloads setter
+    - FabricUpdateBulk
+        - __init__()
+
+    Summary
+    payloads is set to a list of one dict with missing mandatory key BGP_AS
+
+    Test
+    -   ``ValueError`` is raised
+    -   instance.payloads retains its initial value of None
+
+    """
+    key = "test_fabric_update_bulk_00025a"
+    with does_not_raise():
+        instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.results = Results()
+
+    match = r"FabricUpdateBulk\._verify_payload: "
+    match += r"payload is missing mandatory keys:"
+    with pytest.raises(ValueError, match=match):
+        instance.payloads = payloads_fabric_update_bulk(key)
+    assert instance.payloads is None
 
 
 def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
@@ -316,11 +355,14 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         - commit()
 
     Summary
-    Verify behavior when user attempts to update a fabric and the
-    fabric exists on the controller and the RestSend() RETURN_CODE is 200.
-    The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
-    with the controller's requirements, but able to be fixed by
-    FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   Verify behavior when user attempts to update a fabric and the
+        fabric exists on the controller and the RestSend() RETURN_CODE is 200.
+    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
+        with the controller's requirements, but able to be fixed by
+        FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   The fabric payload also contains keys that include ``bool`
+        and ``int`` values.
+
 
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)

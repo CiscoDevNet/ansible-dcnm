@@ -58,6 +58,10 @@ class FabricUpdateCommon(FabricCommon):
         # Updated in _build_fabrics_to_config_save()
         self._fabrics_to_config_save = []
 
+        # Reset in self._build_payloads_to_commit()
+        # Updated in self._fabric_needs_update()
+        self._fabric_update_required = set()
+
         self._payloads_to_commit = []
 
         # Number of successful fabric update payloads
@@ -67,8 +71,9 @@ class FabricUpdateCommon(FabricCommon):
         self.cannot_deploy_fabric_reason = ""
 
         self._mandatory_payload_keys = set()
-        self._mandatory_payload_keys.add("FABRIC_NAME")
+        self._mandatory_payload_keys.add("BGP_AS")
         self._mandatory_payload_keys.add("DEPLOY")
+        self._mandatory_payload_keys.add("FABRIC_NAME")
 
         # key: fabric_name, value: boolean
         # If True, the operation was successful
@@ -184,8 +189,8 @@ class FabricUpdateCommon(FabricCommon):
 
     def _fabric_needs_update(self, payload):
         """
-        -   Return True if the fabric needs to be updated.
-        -   Return False otherwise.
+        -   Add True to self._fabric_update_required set() if the fabric needs
+            to be updated.
         -   raise ``ValueError`` if the payload is missing the FABRIC_NAME key
         -   raise ``ValueError`` if any payload parameter would raise an
             error on the controller.
@@ -195,6 +200,7 @@ class FabricUpdateCommon(FabricCommon):
             corresponding parameter in fabric configuration on the controller.
         """
         method_name = inspect.stack()[0][3]
+
         fabric_name = payload.get("FABRIC_NAME", None)
         if fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -249,6 +255,10 @@ class FabricUpdateCommon(FabricCommon):
                 self.log.debug(msg)
                 raise ValueError(msg)
 
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"key: {key}, payload_value: {payload_value}, "
+            msg += f"fabric_value: {nv_pairs.get(key)}"
+            self.log.debug(msg)
             value = self._prepare_payload_value_for_comparison(payload_value)
 
             if key == "ANYCAST_GW_MAC":
@@ -266,8 +276,7 @@ class FabricUpdateCommon(FabricCommon):
                 msg += f"fabric_value: [{nv_pairs.get(key)}]: "
                 msg += "Fabric needs update."
                 self.log.debug(msg)
-                return True
-        return False
+                self._fabric_update_required.add(True)
 
     def _build_payloads_to_commit(self):
         """
@@ -287,13 +296,13 @@ class FabricUpdateCommon(FabricCommon):
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
 
-                needs_update = True
+                self._fabric_update_required = set()
                 try:
-                    needs_update = self._fabric_needs_update(payload)
+                    self._fabric_needs_update(payload)
                 except ValueError as error:
                     raise ValueError(f"{error}") from error
 
-                if needs_update is False:
+                if True not in self._fabric_update_required:
                     continue
                 self._payloads_to_commit.append(copy.deepcopy(payload))
 
@@ -622,7 +631,6 @@ class FabricUpdateBulk(FabricUpdateCommon):
         """
         # properties dict is already initialized in FabricCommon
         self._properties["payloads"] = None
-        self.log.debug(f"FFF: FabricUpdateBulk: self._properties {self._properties}")
 
     def commit(self):
         """

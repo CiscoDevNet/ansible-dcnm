@@ -54,8 +54,8 @@ class FabricCreateCommon(FabricCommon):
         self._payloads_to_commit: list = []
 
         self._mandatory_payload_keys = set()
-        self._mandatory_payload_keys.add("FABRIC_NAME")
         self._mandatory_payload_keys.add("BGP_AS")
+        self._mandatory_payload_keys.add("FABRIC_NAME")
 
         self._build_properties()
 
