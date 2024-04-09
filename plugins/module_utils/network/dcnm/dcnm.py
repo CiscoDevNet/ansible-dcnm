@@ -23,17 +23,6 @@ import sys
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
-import datetime
-import inspect
-
-def log(msg):
-    with open('/tmp/netv2.log', 'a') as of:
-        callerframerecord = inspect.stack()[1]
-        frame = callerframerecord[0]
-        info = inspect.getframeinfo(frame)
-        d = datetime.datetime.now().replace(microsecond=0).isoformat()
-        of.write("---- %s ---- %s@%s ---- %s \n" % (d, info.lineno, info.function, msg))
-
 
 def validate_ip_address_format(type, item, invalid_params):
 
@@ -129,9 +118,11 @@ def validate_list_of_dicts(param_list, spec, module=None):
                             )
                 elif type == "bool" or type == "boolean":
                     item = v.check_type_bool(item)
-                elif type == "list" or type == "structureArray":
+                    if type == "boolean":
+                        item = str(item).lower()
+                elif type == "list":
                     item = v.check_type_list(item)
-                elif type == "dict":
+                elif type == "dict" or type == "structureArray":
                     item = v.check_type_dict(item)
                 elif (
                     (type == "ipv4_subnet")
@@ -597,8 +588,6 @@ def build_arg_spec(module, path):
                 if reqcode:
                     required = False
                 vars()[name] = dict(type=type, required=required)
-                if type == "stuctureArray":
-                    vars()[name].update({"element": "dict"})
                 if default:
                     vars()[name].update({"default": default})
                 else:
@@ -655,6 +644,8 @@ def get_diff (have, want):
                     for wkey in wa_keys:
                         if wkey == "d_key":
                             continue
+                        if not ha.get(wkey) and not wa.get(wkey):
+                            continue
                         if str(ha[wkey]) != str(wa[wkey]):
                             if isinstance(ha[wkey], dict):
                                 nest_create, nest_create_update, nest_diff_not_w_in_h = get_diff(ha[wkey], wa[wkey])
@@ -695,6 +686,8 @@ def get_diff (have, want):
             needs_update = False
             for wkey in wa_keys:
                 if wkey == "d_key":
+                    continue
+                if not have.get(wkey) and not want.get(wkey):
                     continue
                 if str(have[wkey]) != str(want[wkey]):
                     if isinstance(have[wkey], dict):
