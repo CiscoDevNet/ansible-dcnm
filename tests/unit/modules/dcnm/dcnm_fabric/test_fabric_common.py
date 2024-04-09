@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -349,3 +350,42 @@ def test_fabric_common_00052(fabric_common) -> None:
         result = instance._handle_response(response, response.get("METHOD", None))
     assert result.get("changed") is True
     assert result.get("success") is True
+
+
+MATCH_00060a = r"FabricCommon\.fabric_type_to_template_name: "
+MATCH_00060a += "Unknown fabric type:"
+
+
+@pytest.mark.parametrize(
+    "fabric_type, expected_template_name, result",
+    [
+        ("VXLAN_EVPN", "Easy_Fabric", does_not_raise()),
+        ("UNKNOWN", None, pytest.raises(ValueError, match=MATCH_00060a)),
+    ],
+)
+def test_fabric_common_00060(
+    fabric_common, fabric_type, expected_template_name, result
+) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - fabric_type_to_template_name()
+
+    Summary
+    -   Verify fabric_type_to_template_name() behavior for:
+        -   Valid fabric_type
+        -   Invalid fabric_type
+
+    Test
+    - Verify ``ValueError`` is not raised given valid fabric_type
+    - Verify expected template name is returned given valid fabric_type
+    - Verify ``ValueError`` is raised given invalid fabric_type
+    """
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+    template_name = None
+    with result:
+        template_name = instance.fabric_type_to_template_name(fabric_type)
+    assert template_name == expected_template_name
