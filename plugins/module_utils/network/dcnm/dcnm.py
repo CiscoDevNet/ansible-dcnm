@@ -523,6 +523,17 @@ def dcnm_get_url(module, fabric, path, items, module_name):
 
 
 def build_arg_spec(module, path):
+    """
+    Builds the argument specification for the module based on the response received from the DCNM template API.
+
+    Args:
+        module: The Ansible module object.
+        path: The API path for template.
+
+    Returns:
+        arg_spec: The argument specification dictionary for the module.
+
+    """
 
     resp = dcnm_send(module, "GET", path)
     arg_spec = {}
@@ -605,13 +616,24 @@ def build_arg_spec(module, path):
                 #                  length_min=length_min, length_max=length_max)
                 arg = {name:vars()[name]}
                 arg_spec.update(arg)
-
         return arg_spec
     else:
         return []
 
-def get_diff (have, want):
+def get_diff(have, want):
+    """
+    Compare two dictionaries or lists and return the differences.
 
+    Args:
+        have (dict or list): The existing dictionary or list.
+        want (dict or list): The desired dictionary or list.
+
+    Returns:
+        tuple: A tuple containing three elements:
+            - diff_create (list or dict): The elements in `want` but not in `have`.
+            - diff_create_update (list or dict): The elements in `want` that need to be updated in `have`.
+            - diff_not_w_in_h (list or dict): The elements in `have` but not in `want`.
+    """
     key_list = []
 
     if  isinstance(have, list):

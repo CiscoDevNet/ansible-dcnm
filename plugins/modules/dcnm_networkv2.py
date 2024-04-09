@@ -21,10 +21,10 @@ __author__ = "Praveen Ramoorthy"
 DOCUMENTATION = """
 ---
 module: dcnm_network
-short_description: Add and remove custom Networks from a DCNM managed VXLAN fabric.
+short_description: Add and remove custom Networks from a NDFC managed VXLAN fabric.
 version_added: "4.0.0"
 description:
-    - "Add and remove custom Networks from a DCNM managed VXLAN fabric."
+    - "Add and remove custom Networks from a NDFC managed VXLAN fabric."
     - "In Multisite fabrics, Networks can be created only on Multisite fabric"
 author: Praveen Ramoorthy(@praveenramoorthy)
 options:
@@ -35,7 +35,7 @@ options:
     required: yes
   state:
     description:
-    - The state of DCNM after module completion.
+    - The state of NDFC after module completion.
     type: str
     choices:
       - merged
@@ -65,7 +65,7 @@ options:
       net_id:
         description:
         - ID of the network being managed
-        - If not specified in the playbook, DCNM will auto-select an available net_id
+        - If not specified in the playbook, NDFC will auto-select an available net_id
         type: int
         required: false
       net_template:
@@ -229,7 +229,7 @@ class DcnmNetworkv2:
         self.diff_create_update = []
         self.diff_not_w_in_h = []
         # This variable is created specifically to hold all the create payloads which are missing a
-        # networkId. These payloads are sent to DCNM out of band (basically in the get_diff_merge())
+        # networkId. These payloads are sent to NDFC out of band (basically in the get_diff_merge())
         # We lose diffs for these without this variable. The content stored here will be helpful for
         # cases like "check_mode" and to print diffs[] in the output of each task.
         self.have_attach = []
@@ -273,12 +273,19 @@ class DcnmNetworkv2:
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
     def get_diff_delete(self):
+        """
+        Retrieves the network configurations that need to be deleted.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
 
         diff_detach = []
         diff_undeploy = {}
         diff_delete = {}
-
-        all_nets = ""
 
         if self.config:
             for want_c in self.want_create:
@@ -347,6 +354,18 @@ class DcnmNetworkv2:
         self.diff_delete = diff_delete
 
     def get_diff_override(self):
+        """
+        Retrieves the differences and overrides for network attachments.
+
+        This method compares the network and attachments present in the playbook with the ones
+        currently configured on NDFC. It identifies the networkd and attachments that need to be created,
+        attached, detached, deployed, undeployed, or deleted. It also updates the attachments
+        accordingly and generates warning messages if necessary.
+
+        Returns:
+            str: Warning message generated during the process.
+
+        """
 
         diff_delete = {}
 
@@ -359,7 +378,7 @@ class DcnmNetworkv2:
         diff_undeploy = self.diff_undeploy
 
         for have_a in self.have_attach:
-            # This block will take care of deleting all the networks that are only present on DCNM but not on playbook
+            # This block will take care of deleting all the networks that are only present on NDFC but not on playbook
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
             found = next(
@@ -403,6 +422,16 @@ class DcnmNetworkv2:
         return warn_msg
     
     def get_diff_replace(self):
+        """
+        Retrieves the differences for replacing network and attachments.
+
+        This method compares the existing network and attachments with the desired network and attachments
+        and identifies the differences that need to be made in order to replace the attachments.
+
+        Returns:
+            str: A warning message indicating any potential issues or conflicts.
+
+        """
 
         warn_msg = self.get_diff_merge(replace=True)
         diff_create = self.diff_create
@@ -413,9 +442,9 @@ class DcnmNetworkv2:
             r_net_list = []
             h_in_w = False
             for want_a in self.want_attach:
-                # This block will take care of deleting any attachments that are present only on DCNM
+                # This block will take care of deleting any attachments that are present only on NDFC
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
-                # but, the attaches may be different to what the DCNM has for the same network.
+                # but, the attaches may be different to what the NDFC has for the same network.
                 if have_a["networkName"] == want_a["networkName"]:
                     h_in_w = True
                     atch_h = have_a["lanAttachList"]
@@ -445,7 +474,7 @@ class DcnmNetworkv2:
                     break
 
             if not h_in_w:
-                # This block will take care of deleting all the attachments which are in DCNM but
+                # This block will take care of deleting all the attachments which are in NDFC but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
                 found = next(
@@ -492,7 +521,16 @@ class DcnmNetworkv2:
         return warn_msg
     
     def get_deploy_diff(self, diff_deploy):
-            
+        """
+        Get the difference between the desired deployment and the current deployment.
+
+        Args:
+            diff_deploy (dict): A dictionary representing the diff for deployment.
+
+        Returns:
+            dict: A dictionary representing the difference between the desired deployment and the current deployment.
+        """
+
         for w_deploy in self.want_deploy:
             if diff_deploy.get(w_deploy):
                 for net in self.want_deploy[w_deploy]:
@@ -525,6 +563,18 @@ class DcnmNetworkv2:
                     diff_deploy[w_attach["serialNumber"]] = [w_attach["networkName"]]
 
     def get_attach_ports(self, w_attach, h_attach, replace=False):
+        """
+        Get the attached ports for a given switch attachment.
+
+        Args:
+            w_attach (dict): The switch attachment details from the desired configuration.
+            h_attach (dict): The switch attachment details from the existing configuration.
+            replace (bool, optional): Whether to replace the switch ports or not. Defaults to False.
+
+        Returns:
+            None
+
+        """
 
         h_sw_ports = h_attach["switchPorts"]
         w_sw_ports = w_attach["switchPorts"]
@@ -562,6 +612,18 @@ class DcnmNetworkv2:
             )
 
     def get_attach_torports(self, w_attach, h_attach, replace=False):
+        """
+        Get the attached TOR ports based on the given parameters.
+
+        Args:
+            w_attach (dict): The dictionary containing the attachment information for the desired attachment.
+            h_attach (dict): The dictionary containing the attachment information for the existing attachment.
+            replace (bool, optional): Flag indicating whether to replace the TOR ports or not. Defaults to False.
+
+        Returns:
+            None
+
+        """
 
         if w_attach.get("torPorts") != "":
             for tor_w in w_attach["torPorts"]:
@@ -596,6 +658,20 @@ class DcnmNetworkv2:
                     w_attach.update({"torPorts": torconfig})
         
     def get_diff_merge(self, replace=False):
+        """
+        This method calculates the differences between the `have_create`, `want_create`,
+        `have_attach`, and `want_attach` attributes of the object. It then updates the
+        `diff_create`, `diff_create_update`, `diff_attach`, and `diff_deploy` attributes
+        accordingly. Finally, it returns a warning message if any.
+
+        Parameters:
+            replace (bool): A flag indicating whether to replace existing networks.
+                Defaults to False.
+
+        Returns:
+            warn_msg (str): A warning message, if any.
+
+        """
 
         diff_create = []
         diff_create_update = []
@@ -675,6 +751,19 @@ class DcnmNetworkv2:
         return warn_msg
     
     def get_diff_query(self):
+        """
+        Retrieves the difference query for the network.
+
+        It queries the network and its attachments, and constructs a query object containing the network details
+        and the attached networks.
+
+        Returns:
+            list: A list of query objects, each containing the network details and the attached networks.
+
+        Raises:
+            None
+
+        """
 
         method = "GET"
 
@@ -753,6 +842,16 @@ class DcnmNetworkv2:
         self.query = query
 
     def get_have(self):
+        """
+        Retrieves information about the networks and their attachments in the current fabric.
+
+        Returns:
+            None
+
+        Raises:
+            AnsibleFailJson: If the fabric is not present on NDFC.
+
+        """
 
         have_create = []
         have_attach = []
@@ -769,16 +868,14 @@ class DcnmNetworkv2:
         missing_fabric, not_ok = self.handle_response(net_objects, "query_dcnm")
 
         if missing_fabric or not_ok:
-            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
+            msg1 = "Fabric {0} not present on NDFC".format(self.fabric)
             msg2 = "Unable to find Networks under fabric: {0}".format(self.fabric)
 
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
 
         for net in net_objects["DATA"]:
-
             json_to_dict = net["networkTemplateConfig"]
-
             net.update({"networkTemplateConfig": json_to_dict})
             del net["displayName"]
             del net["serviceNetworkTemplate"]
@@ -794,10 +891,10 @@ class DcnmNetworkv2:
 
             curr_networks.append(net["networkName"])
             have_create.append(net)
-        
+
         if not curr_networks:
             return
-        
+
         net_attach_objects = dcnm_get_url(
             self.module,
             self.fabric,
@@ -815,8 +912,9 @@ class DcnmNetworkv2:
             attach_list = net_attach["lanAttachList"]
             for attach in attach_list:
                 deployment = attach["isLanAttached"]
-                if ( not bool(deployment) or
-                    attach["lanAttachState"] == "OUT-OF-SYNC"
+                if (
+                    not bool(deployment)
+                    or attach["lanAttachState"] == "OUT-OF-SYNC"
                     or attach["lanAttachState"] == "PENDING"
                     or attach["lanAttachState"] == "FAILED"
                 ):
@@ -831,7 +929,7 @@ class DcnmNetworkv2:
                         have_deploy[attach["switchSerialNo"]] = [attach["networkName"]]
 
                 sn = attach["switchSerialNo"]
-                vlan = attach["vlanId"]             
+                vlan = attach["vlanId"]
                 hports = attach["portNames"]
                 attach.update({"torPorts": ""})
                 if attach["portNames"] and re.match(r"(\S+\(([Ee]thernet\d+\/\d+,?\s?)+\),?\s?)+", attach["portNames"]):
@@ -853,20 +951,26 @@ class DcnmNetworkv2:
                                 torports.update({"switch": eth_list[0]})
                                 torports.update({"ports": sorted(re.split(", |,", eth_list[1]))})
                                 torlist.append(torports)
-                    torlist = sorted(torlist, key=lambda torlist: torlist['switch'])
+                    torlist = sorted(torlist, key=lambda torlist: torlist["switch"])
                     attach.update({"torPorts": torlist})
                 elif attach["portNames"]:
                     ports = sorted(re.split(", |,", hports))
                 else:
                     ports = []
-                    
+
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
                 # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
                 # on the attach section of outgoing payload.
 
-                if (state == "deleted" and
-                    (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING" or attach["lanAttachState"] == "FAILED")):
+                if (
+                    state == "deleted"
+                    and (
+                        attach["lanAttachState"] == "OUT-OF-SYNC"
+                        or attach["lanAttachState"] == "PENDING"
+                        or attach["lanAttachState"] == "FAILED"
+                    )
+                ):
                     deployment = True
 
                 del attach["vlanId"]
@@ -907,6 +1011,16 @@ class DcnmNetworkv2:
         self.have_deploy = have_deploy
 
     def update_create_params(self, net):
+        """
+        Update the create parameters for a network.
+
+        Args:
+            net (dict): The network details.
+
+        Returns:
+            dict: The updated create parameters for the network.
+
+        """
 
         if not net:
             return net
@@ -943,6 +1057,19 @@ class DcnmNetworkv2:
         return net_upd
 
     def update_attach_params(self, attach, net_name):
+        """
+        Update the attachment parameters based on the provided attachment and network name.
+
+        Args:
+            attach (dict): The attachment parameters to be updated.
+            net_name (str): The name of the network.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
 
         hports = []
         htorlist = []
@@ -953,10 +1080,10 @@ class DcnmNetworkv2:
             return
 
         for atch_h in self.have_attach:
-            if ( net_name == atch_h["networkName"]):
+            if net_name == atch_h["networkName"]:
                 hv_attach = atch_h["lanAttachList"]
                 for h_attach in hv_attach:
-                    if(attach["serialNumber"] == h_attach["serialNumber"]):
+                    if attach["serialNumber"] == h_attach["serialNumber"]:
                         if attach["vlan"] == "-1":
                             attach.update({"vlan": h_attach["vlan"]})
                         if state == "merged" and h_attach["switchPorts"]:
@@ -1014,6 +1141,18 @@ class DcnmNetworkv2:
         attach.update({"d_key": "serialNumber"})
 
     def get_want(self):
+        """
+        Retrieves the desired configuration for creating, attaching, and deploying networks.
+
+        Returns:
+            tuple: A tuple containing three lists:
+                - want_create: A list of dictionaries representing the parameters for creating networks.
+                - want_attach: A list of dictionaries representing the parameters for attaching networks.
+                - want_deploy: A dictionary mapping serial numbers to a list of network names to be deployed.
+
+        Raises:
+            None
+        """
 
         want_create = []
         want_attach = []
@@ -1095,6 +1234,19 @@ class DcnmNetworkv2:
                 node["fabric"] = self.sn_fab[node["serialNumber"]]
     
     def push_to_remote_update(self, path, is_rollback=False):
+        """
+        Pushes the Network updates to the NDFC.
+
+        Args:
+            path (str): RestAPI URL.
+            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
 
         method = "PUT"
 
@@ -1110,7 +1262,14 @@ class DcnmNetworkv2:
                 self.failure(resp)
 
     def push_to_remote_detach(self, path, is_rollback=False):
-        
+        """
+        Pushes the detach configuration to NDFC.
+
+        Args:
+            path (str): RestAPI URL.
+            is_rollback (bool, optional): Indicates whether the detach operation is a rollback. Defaults to False.
+        """
+
         method = "POST"
 
         detach_path = path + "/attachments"
@@ -1137,6 +1296,19 @@ class DcnmNetworkv2:
         time.sleep(10)
 
     def push_to_remote_undeploy(self, is_rollback=False):
+        """
+        Pushes the undeploy NDFC network.
+
+        Args:
+            is_rollback (bool, optional): Indicates whether the undeploy action is part of a rollback process. 
+                                          Defaults to False.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
 
         method = "POST"
 
@@ -1166,6 +1338,20 @@ class DcnmNetworkv2:
             self.failure(resp)
 
     def push_to_remote_delete(self, path, is_rollback=False):
+        """
+        Deletes networks in NDFC.
+
+        Args:
+            path (str): RestAPI URL.
+            is_rollback (bool, optional): Indicates whether the deletion is part of a rollback operation. Defaults to False.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If the deletion of networks fails.
+
+        """
 
         method = "DELETE"
         del_failure = ""
@@ -1185,7 +1371,7 @@ class DcnmNetworkv2:
                         self.failed_to_rollback = True
                         return
                     self.failure(resp)
-            
+
         if del_failure:
             fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
             self.result["response"].append(resp)
@@ -1195,6 +1381,19 @@ class DcnmNetworkv2:
             self.failure(fail_msg)
 
     def push_to_remote_create(self, path, is_rollback=False):
+        """
+        Pushes the created network templates to the NDFC.
+
+        Args:
+            path (str): RestAPI URL.
+            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
 
         for net in self.diff_create:
             json_to_dict = net["networkTemplateConfig"]
@@ -1212,6 +1411,19 @@ class DcnmNetworkv2:
             self.failure(resp)
 
     def push_to_remote_attach(self, path, is_rollback=False):
+        """
+        Pushes the attachments to the NDFC.
+
+        Args:
+            path (str): RestAPI URL.
+            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If the attachments fail to be pushed.
+        """
 
         method = "POST"
         attach_path = path + "/attachments"
@@ -1253,6 +1465,18 @@ class DcnmNetworkv2:
         time.sleep(10)
 
     def push_to_remote_deploy(self, is_rollback=False):
+        """
+        Pushes the changes to the remote deployment.
+
+        Args:
+            is_rollback (bool, optional): Indicates whether the deployment is a rollback. Defaults to False.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
 
         method = "POST"
 
@@ -1271,17 +1495,21 @@ class DcnmNetworkv2:
             self.failure(resp)
 
     def push_to_remote(self, is_rollback=False):
+        """
+        Pushes the changes to the remote device.
+
+        Args:
+            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
+        """
 
         path = self.paths["GET_NET"].format(self.fabric)
 
         if self.diff_create_update:
             self.push_to_remote_update(path, is_rollback)
             
-        #
-        # The detach and un-deploy operations are executed before the create,attach and deploy to particularly
+        # The detach and un-deploy operations are executed before the create, attach, and deploy to particularly
         # address cases where a VLAN of a network being deleted is re-used on a new network being created. This is
-        # needed specially for state: overridden
-        #
+        # needed especially for state: overridden.
 
         if self.diff_detach:
             self.push_to_remote_detach(path, is_rollback)
@@ -1302,6 +1530,16 @@ class DcnmNetworkv2:
             self.push_to_remote_deploy(is_rollback)
 
     def get_arg_spec(self, net):
+        """
+        Retrieves the argument specification for a given network.
+
+        Args:
+            net (dict): The network details.
+
+        Returns:
+            dict: The argument specification for the network.
+
+        """
 
         template_name = net.get("net_extension_template", False)
         ext_template_name = net.get("net_template", False)
@@ -1326,7 +1564,20 @@ class DcnmNetworkv2:
         return net_dyn_spec
 
     def validate_input(self):
-        """Parse the playbook values, validate to param specs."""
+        """
+        Parse the playbook values and validate them against parameter specifications.
+
+        This method validates the input parameters provided in the playbook against the parameter specifications.
+        It performs validation for different network configurations and attachment configurations.
+        If any invalid parameters are found, it raises an exception with the details of the invalid parameters.
+
+        Returns:
+            None
+
+        Raises:
+            AnsibleFailJson: If any invalid parameters are found in the playbook.
+
+        """
 
         state = self.params["state"]
 
@@ -1423,6 +1674,12 @@ class DcnmNetworkv2:
                 self.module.fail_json(msg=msg)
 
     def format_diff(self):
+        """
+        Formats the difference between network configurations.
+
+        Returns:
+            list: A list of dictionaries representing the formatted differences.
+        """
 
         diff = []
 
@@ -1474,6 +1731,19 @@ class DcnmNetworkv2:
         self.diff_input_format = diff
 
     def handle_response(self, resp, op):
+        """
+        Handles the response received from the NDFC API.
+
+        Args:
+            resp (dict): The response received from the NDFC API.
+            op (str): The operation being performed.
+
+        Returns:
+            tuple: A tuple containing two boolean values - `fail` and `changed`.
+                - `fail` (bool): Indicates whether the operation failed or not.
+                - `changed` (bool): Indicates whether the state of the system was changed.
+
+        """
 
         fail = False
         changed = True
@@ -1481,7 +1751,7 @@ class DcnmNetworkv2:
         res = resp.copy()
 
         if op == "query_dcnm":
-            # This if blocks handles responses to the query APIs against DCNM.
+            # This if block handles responses to the query APIs against NDFC.
             # Basically all GET operations.
             #
             if res.get("ERROR") == "Not Found" and res["RETURN_CODE"] == 404:
@@ -1517,7 +1787,7 @@ class DcnmNetworkv2:
         #     self.module.fail_json(msg=resp)
         #     return
 
-        # # Implementing a per task rollback logic here so that we rollback DCNM to the have state
+        # # Implementing a per task rollback logic here so that we rollback NDFC to the have state
         # # whenever there is a failure in any of the APIs.
         # # The idea would be to run overridden state with want=have and have=dcnm_state
         # self.want_create = self.have_create
@@ -1556,6 +1826,65 @@ class DcnmNetworkv2:
 
         self.module.fail_json(msg=resp)
 
+    def dcnm_update_network_information(self, want, have, cfg):
+        """
+        Update the network information based on the provided 'want' and 'have' dictionaries.
+
+        Args:
+            want (dict): The dictionary containing the desired network template configuration.
+            have (dict): The dictionary containing the current network template configuration.
+            cfg (dict): The dictionary containing additional configuration options.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+
+        dict_want = want["networkTemplateConfig"]
+        dict_have = have["networkTemplateConfig"]
+
+        for key in dict_want.keys():
+            if cfg.get(key, None) is None:
+                dict_want[key] = dict_have[key]
+
+        want.update({"networkTemplateConfig": dict_want})
+
+    def update_want(self):
+        """
+        Updates the 'want_create' list based on certain conditions.
+
+        If the 'want_create' list is empty, the method returns immediately.
+        For each network in the 'want_create' list, the method checks if there is a matching network in the 'have_create' list.
+        If a match is found, the method also checks if the network is included in the 'config' list.
+        If both conditions are met, the method calls 'dcnm_update_network_information' to update the network information.
+
+        Returns:
+            None
+        """
+
+        if self.want_create == []:
+            return
+
+        for net in self.want_create:
+            # Get the matching have to copy values if required
+            match_have = [
+                have
+                for have in self.have_create
+                if ((net["networkName"] == have["networkName"]))
+            ]
+            if match_have == []:
+                continue
+
+            # Get the network from self.config to check if a particular object is included or not
+            match_cfg = [
+                cfg for cfg in self.config if ((net["networkName"] == cfg["net_name"]))
+            ]
+            if match_cfg == []:
+                continue
+
+            self.dcnm_update_network_information(net, match_have[0], match_cfg[0])
 
 def main():
     """main entry point for module execution"""
@@ -1587,6 +1916,7 @@ def main():
     warn_msg = None
 
     if module.params["state"] == "merged":
+        dcnm_netv2.update_want()
         warn_msg = dcnm_netv2.get_diff_merge()
 
     if module.params["state"] == "replaced":
