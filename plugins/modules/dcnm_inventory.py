@@ -915,6 +915,9 @@ class DcnmInventory:
         for want_c in self.want_create:
             found = False
             match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
+            if match is None:
+                msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
+                self.module.fail_json(msg=msg)
             serial_num = match.groups()[0]
             for have_c in self.have_create:
                 if (
