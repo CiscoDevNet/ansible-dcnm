@@ -162,9 +162,9 @@ def test_fabric_common_00040(fabric_common) -> None:
 
     Summary
     -   Verify _handle_get_response() for:
+        -   MESSAGE: "Not Found"
         -   METHOD: GET
         -   RETURN_CODE: 404
-        -   MESSAGE: "Not Found"
 
     Test
     - Verify ``ValueError`` is not raised
@@ -190,9 +190,9 @@ def test_fabric_common_00041(fabric_common) -> None:
 
     Summary
     -   Verify _handle_get_response() for:
+        -   MESSAGE: don't care
         -   METHOD: GET
         -   RETURN_CODE: 500 (not in {200, 404})
-        -   MESSAGE: don't care
 
     Test
     - Verify ``ValueError`` is not raised
@@ -218,9 +218,9 @@ def test_fabric_common_00042(fabric_common) -> None:
 
     Summary
     -   Verify _handle_get_response() for:
+        -   MESSAGE: "ERROR" (!= "OK")
         -   METHOD: GET
         -   RETURN_CODE: 200 (don't care)
-        -   MESSAGE: "ERROR" (!= "OK")
 
     Test
     - Verify ``ValueError`` is not raised
@@ -246,9 +246,9 @@ def test_fabric_common_00043(fabric_common) -> None:
 
     Summary
     -   Verify _handle_get_response() for:
+        -   MESSAGE: "OK"
         -   METHOD: GET
         -   RETURN_CODE: 200
-        -   MESSAGE: "OK"
 
     Test
     - Verify ``ValueError`` is not raised
@@ -261,4 +261,91 @@ def test_fabric_common_00043(fabric_common) -> None:
         instance.results = Results()
         result = instance._handle_response(response, response.get("METHOD", None))
     assert result.get("found") is True
+    assert result.get("success") is True
+
+
+def test_fabric_common_00050(fabric_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _handle_response()
+        - _handle_post_put_delete_response()
+
+    Summary
+    -   Verify _handle_post_put_delete_response() for:
+        -   ERROR: key is present
+        -   MESSAGE: "OK" (don't care)
+        -   METHOD: POST
+        -   RETURN_CODE: 200 (don't care)
+
+    Test
+    - Verify ``ValueError`` is not raised
+    - Verify ``result`` values are as expected
+    """
+    key = "test_fabric_common_00050a"
+    response = responses_fabric_common(key)
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+        result = instance._handle_response(response, response.get("METHOD", None))
+    assert result.get("changed") is False
+    assert result.get("success") is False
+
+
+def test_fabric_common_00051(fabric_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _handle_response()
+        - _handle_post_put_delete_response()
+
+    Summary
+    -   Verify _handle_post_put_delete_response() for:
+        -   ERROR: not present (don't care)
+        -   MESSAGE: "NOK" (!= OK)
+        -   METHOD: POST
+        -   RETURN_CODE: 200 (don't care)
+
+    Test
+    - Verify ``ValueError`` is not raised
+    - Verify ``result`` values are as expected
+    """
+    key = "test_fabric_common_00051a"
+    response = responses_fabric_common(key)
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+        result = instance._handle_response(response, response.get("METHOD", None))
+    assert result.get("changed") is False
+    assert result.get("success") is False
+
+
+def test_fabric_common_00052(fabric_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _handle_response()
+        - _handle_post_put_delete_response()
+
+    Summary
+    -   Verify _handle_post_put_delete_response() for:
+        -   ERROR: not present
+        -   MESSAGE: "OK"
+        -   METHOD: POST
+        -   RETURN_CODE: don't care
+
+    Test
+    - Verify ``ValueError`` is not raised
+    - Verify ``result`` values are as expected
+    """
+    key = "test_fabric_common_00052a"
+    response = responses_fabric_common(key)
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+        result = instance._handle_response(response, response.get("METHOD", None))
+    assert result.get("changed") is True
     assert result.get("success") is True
