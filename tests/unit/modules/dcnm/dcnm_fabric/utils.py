@@ -26,7 +26,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
-    FabricCreate, FabricCreateBulk)
+    FabricCreate, FabricCreateBulk, FabricCreateCommon)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
@@ -162,6 +162,16 @@ def fabric_create_bulk_fixture():
     return FabricCreateBulk(instance.params)
 
 
+@pytest.fixture(name="fabric_create_common")
+def fabric_create_common_fixture():
+    """
+    mock FabricCreateCommon
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricCreateCommon(instance.params)
+
+
 @pytest.fixture(name="fabric_delete")
 def fabric_delete_fixture():
     """
@@ -225,6 +235,16 @@ def payloads_fabric_create_bulk(key: str) -> Dict[str, str]:
     Return payloads for FabricCreateBulk
     """
     data_file = "payloads_FabricCreateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_fabric_create_common(key: str) -> Dict[str, str]:
+    """
+    Return payloads for FabricCreateCommon
+    """
+    data_file = "payloads_FabricCreateCommon"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
