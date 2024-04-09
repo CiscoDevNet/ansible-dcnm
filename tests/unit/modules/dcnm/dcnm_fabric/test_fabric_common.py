@@ -389,3 +389,38 @@ def test_fabric_common_00060(
     with result:
         template_name = instance.fabric_type_to_template_name(fabric_type)
     assert template_name == expected_template_name
+
+
+@pytest.mark.parametrize(
+    "value, expected_return_value",
+    [
+        ("", None),
+        ("null", None),
+        ("Null", None),
+        ("NULL", None),
+        ("none", None),
+        ("None", None),
+        ("NONE", None),
+        (None, None),
+        (10, 10),
+        ({"foo": "bar"}, {"foo": "bar"}),
+        (["foo", "bar"], ["foo", "bar"]),
+        (101.4, 101.4),
+    ],
+)
+def test_fabric_common_00070(
+    fabric_common, value, expected_return_value) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - make_none()
+
+    Summary
+    -   Verify expected values are returned:
+    """
+    with does_not_raise():
+        instance = fabric_common
+        return_value = instance.make_none(value)
+    assert return_value == expected_return_value
+
