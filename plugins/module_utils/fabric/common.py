@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import logging
 import re
@@ -276,7 +277,7 @@ class FabricCommon:
         TODO: This method is duplicated in several other classes.
         TODO: Would be good to move this to a Utility() class.
         """
-        if str(value).lower in ["", "none", "null"]:
+        if str(value).lower() in {"", "none", "null"}:
             return None
         return value
 
