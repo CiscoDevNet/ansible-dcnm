@@ -1,0 +1,937 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MERGED - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: MERGED - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                MERGED                    ##
+##############################################
+
+- name: MERGED - Create New Network without Deploy
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 1432
+          vlanId: 1500
+  register: result
+
+- name: Query fabric for creation of Network Object
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].Network.displayName is search('ansible-net13')"
+    - "query_result.response[0].Network.networkId is search('7005')"
+    - "query_result.response[0].Network.vrf is search('Tenant-1')"
+  retries: 5
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+
+- name: MERGED - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create New Network with Attach and deploy
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          vlanId: 1501
+          tag: 14345
+          mtu: 1500
+          vlanName: "test-vlan"
+          intfDescription: "test-interface"
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              extensionValues: ""
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              untagged: false
+              vlan: 1501
+              deploy: True
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+
+- name: MERGED - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create New Network with attach but no deploy
+  cisco.dcnm.dcnm_networkv2: &conf
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          vlanId: 1502
+          tag: 14345
+          mtu: 1500
+          vlanName: "test-vlan"
+          intfDescription: "test-interface"
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              freeformConfig: ""
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              vlan: 1502
+              deploy: false
+  register: result
+
+- name: Query fabric state until networkStatus transitions to PENDING state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('PENDING')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+
+- name: MERGED - conf - Idempotence
+  cisco.dcnm.dcnm_networkv2: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
+  cisco.dcnm.dcnm_networkv2: &conf1
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          vlanId: 1503
+          tag: 14345
+          mtu: 1500
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              vlan: 1503
+              deploy: true
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.40.1/24'
+          vlanId: 151
+          tag: 14346
+          mtu: 1500
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              untagged: false
+              vlan: 151
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - conf1 - Idempotence
+  cisco.dcnm.dcnm_networkv2: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create, Attach and Deploy Single Network with Multiple Switch Attach
+  cisco.dcnm.dcnm_networkv2: &conf2
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          vlanId: 1504
+          tag: 14345
+          mtu: 1500
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              vlan: 1504
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              untagged: false
+              vlan: 1504
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - conf2 - Idempotence
+  cisco.dcnm.dcnm_networkv2: *conf2
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create, Attach and Deploy Multiple Network with Multiple Switch Attach - One with and other without VlanId
+  cisco.dcnm.dcnm_networkv2: &conf3
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 1500
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.40.1/24'
+          vlanId: 1505
+          tag: 14345
+          mtu: 1500
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int3 }}", "{{ ansible_sw1_int4 }}"]
+              vlan: 1506
+              untagged: false
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
+              vlan: 1507
+              untagged: false
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[2].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[3].value == "SUCCESS"'
+
+- name: MERGED - conf3 - Idempotence
+  cisco.dcnm.dcnm_networkv2: *conf3
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create, Attach and Deploy Single Network with Multiple Switch Attach - without vrf
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      net_id: 7005
+      vrf_name: NA
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 1500
+          vlanId: 1508
+          isLayer2Only: True
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create L2 only networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_networkv2: &conf4
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      net_id: 7009
+      vrf_name: NA
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 1509
+          isLayer2Only: True
+          suppressArp: True
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - conf4 - Idempotence
+  cisco.dcnm.dcnm_networkv2: *conf4
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create L3 networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_networkv2: &conf5
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 1509
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - conf5 - Idempotence
+  cisco.dcnm.dcnm_networkv2: *conf5
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create L3 networks along with all dhcp, arp options without attach
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+  register: result
+
+- name: Query fabric state until networkName is present
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkName is search('ansible-net13')"
+  retries: 5
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+
+- name: MERGED -  attach networks to already created network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7009
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw1_serial }}"
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber: "{{ sw2_serial }}"
+              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: MERGED - Query the Network to check for configs
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].parent.networkName == "ansible-net13"'
+    - 'result.response[0].parent.networkId == 7009'
+    - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].parent.vrf == "Tenant-1"'
+    - 'result.response[0].parent.networkTemplateConfig.suppressArp == "false"'
+    - 'result.response[0].parent.networkTemplateConfig.isLayer2Only == "false"'
+    - 'result.response[0].parent.networkTemplateConfig.intfDescription == "test interface"'
+    - 'result.response[0].parent.networkTemplateConfig.vlanName == "testvlan"'
+    - 'result.response[0].parent.networkTemplateConfig.mtu == "2500"'
+    - 'result.response[0].parent.networkTemplateConfig.vlanId == "3504"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.response[0].attach[0].ipAddress'
+    - 'result.response[0].attach[1].isLanAttached== true'
+    - 'result.response[0].attach[1].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[1].networkName== "ansible-net13"'
+    - '"{{ ansible_switch1 }}" or "{{ ansible_switch2 }}" in result.response[0].attach[1].ipAddress'
+
+- name: MERGED - setup - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: MERGED - Create Network with invalid network name
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name:
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
+
+- name: MERGED - Create Network with invalid VRF name
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-10000
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid VRF" in result.msg.DATA.failureList[0].message'
+
+- name: MERGED - Create Network with invalid vlan id
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 15000
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid parameter(s) : [Invalid Vlan : 15000]" in result.msg.DATA.failureList[0].message'
+
+- name: MERGED - Create Network and deploy in invalid switch
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+          attach:
+            - deployment: true
+              dot1QVlan: 1
+              fabric: "{{ test_fabric }}"
+              instanceValues: ""
+              serialNumber:
+              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+              torPorts: []
+              untagged: false
+              deploy: true
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid parameters in playbook: serialNumber : Required parameter not found" in result.msg'
+
+- name: MERGED - Create Network with out of range routing tag
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1000
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+          tag: 4294967296
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"tag:4294967296 : The item exceeds the allowed range of max 4294967295" in result.msg'
+
+- name: MERGED - Create L3  Network without a vrf name
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        - gatewayIpAddress: '192.168.30.1/24'
+          tag: 14345
+          mtu: 2500
+          vlanId: 3504
+          suppressArp: false
+          intfDescription: "test interface"
+          vlanName: "testvlan"
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"Invalid parameters in playbook: vrf_name : Required parameter not found" in result.msg'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: MERGED - setup - remove any networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
