@@ -56,6 +56,7 @@ class FabricCreateCommon(FabricCommon):
         self._mandatory_payload_keys = set()
         self._mandatory_payload_keys.add("BGP_AS")
         self._mandatory_payload_keys.add("FABRIC_NAME")
+        self._mandatory_payload_keys.add("FABRIC_TYPE")
 
         self._build_properties()
 
@@ -70,7 +71,6 @@ class FabricCreateCommon(FabricCommon):
         - Add properties specific to this class
         - self._properties is initialized in FabricCommon
         """
-        pass
 
     def _verify_payload(self, payload) -> None:
         """
