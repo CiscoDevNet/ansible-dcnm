@@ -50,12 +50,10 @@ def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
     Classes and Methods
     - FabricCommon
         - __init__()
-    - FabricUpdateBulk
-        - __init__()
 
     Test
     - Class attributes are initialized to expected values
-    - fail_json is not called
+    - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_update_bulk

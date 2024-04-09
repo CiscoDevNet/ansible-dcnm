@@ -37,6 +37,13 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture 
     load_fixture
 
 
+params = {
+    "state": "merged",
+    "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+    "check_mode": False,
+}
+
+
 class ResponseGenerator:
     """
     Given a generator, return the items in the generator with
@@ -72,13 +79,6 @@ class ResponseGenerator:
         """
         Add one public method to appease pylint
         """
-
-
-params = {
-    "state": "merged",
-    "config": {"switches": [{"ip_address": "172.22.150.105"}]},
-    "check_mode": False,
-}
 
 
 class MockAnsibleModule:
@@ -136,10 +136,10 @@ class MockAnsibleModule:
 @pytest.fixture(name="fabric_common")
 def fabric_common_fixture():
     """
-    mock FabricCommon
+    return instance of FabricCommon()
     """
     instance = MockAnsibleModule()
-    return FabricCommon(instance)
+    return FabricCommon(instance.params)
 
 
 @pytest.fixture(name="fabric_create")
@@ -198,6 +198,16 @@ def does_not_raise():
     A context manager that does not raise an exception.
     """
     yield
+
+
+def payloads_fabric_common(key: str) -> Dict[str, str]:
+    """
+    Return payloads for FabricCommon
+    """
+    data_file = "payloads_FabricCommon"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
 
 
 def payloads_fabric_create(key: str) -> Dict[str, str]:

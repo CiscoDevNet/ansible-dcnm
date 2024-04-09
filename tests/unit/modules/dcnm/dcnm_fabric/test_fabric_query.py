@@ -51,7 +51,7 @@ def test_fabric_query_00010(fabric_query) -> None:
 
     Test
     - Class attributes are initialized to expected values
-    - fail_json is not called
+    - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_query
@@ -73,7 +73,7 @@ def test_fabric_query_00020(fabric_query) -> None:
 
     Test
     - fabric_names is set to expected value
-    - fail_json is not called
+    - Exception is not raised
     """
     fabric_names = ["FOO", "BAR"]
     with does_not_raise():
@@ -354,7 +354,7 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     -   instance.results.changed set() contains False
     -   instance.results.failed set() contains False
     -   commit() returns without doing anything else
-    -   fail_json is not called
+    -   Exception is not raised
     """
     key = "test_fabric_query_00031a"
 

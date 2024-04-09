@@ -53,7 +53,7 @@ def test_fabric_create_bulk_00010(fabric_create_bulk) -> None:
 
     Test
     - Class attributes are initialized to expected values
-    - fail_json is not called
+    - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_create_bulk
@@ -75,7 +75,7 @@ def test_fabric_create_bulk_00020(fabric_create_bulk) -> None:
 
     Test
     - payloads is set to expected value
-    - fail_json is not called
+    - Exception is not raised
     """
     key = "test_fabric_create_bulk_00020a"
     with does_not_raise():
@@ -119,7 +119,7 @@ def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
         - __init__()
 
     Test
-    - fail_json is called because payloads is a list with a non-dict element
+    - ``ValueError`` is raised because payloads is a list with a non-dict element
     - instance.payloads is not modified, hence it retains its initial value of None
     """
     match = r"FabricCreateBulk._verify_payload: "
@@ -176,7 +176,7 @@ def test_fabric_create_bulk_00024(fabric_create_bulk) -> None:
     -   FabricCreatebulk().payloads is set to an empty list
 
     Test
-    -   fail_json not called
+    -   Exception is not raised
     -   payloads is set to an empty list
 
     NOTES:

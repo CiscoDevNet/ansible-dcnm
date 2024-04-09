@@ -44,11 +44,15 @@ class FabricCommon:
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
-            raise ValueError("check_mode is required")
+            msg = f"{self.class_name}.__init__(): "
+            msg += "check_mode is required"
+            raise ValueError(msg)
 
         self.state = self.params.get("state", None)
         if self.state is None:
-            raise ValueError("state is required")
+            msg = f"{self.class_name}.__init__(): "
+            msg += "state is required"
+            raise ValueError(msg)
 
         msg = "ENTERED FabricCommon(): "
         msg += f"check_mode: {self.check_mode}, "
@@ -129,7 +133,7 @@ class FabricCommon:
                 self.results.register_task_result()
 
                 msg = f"{self.class_name}.{method_name}: "
-                msg += "Error translating ANYCAST_GW_MAC: "
+                msg += "Error translating ANYCAST_GW_MAC "
                 msg += f"for fabric {fabric_name}, "
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
