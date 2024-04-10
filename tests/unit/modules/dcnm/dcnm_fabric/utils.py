@@ -397,3 +397,12 @@ def rest_send_result_current(key: str) -> Dict[str, str]:
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
+
+
+def templates_param_info(key: str) -> Dict[str, str]:
+    """
+    Return fabric templates for ParamInfo
+    """
+    data_file = "templates_ParamInfo"
+    data = load_fixture(data_file).get(key)
+    return data
