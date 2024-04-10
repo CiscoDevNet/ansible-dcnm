@@ -302,6 +302,12 @@ class FabricCreateBulk(FabricCreateCommon):
         - raise ``ValueError`` if sending the payloads fails.
         """
         method_name = inspect.stack()[0][3]
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set prior to calling commit. "
+            raise ValueError(msg)
+
         if self.payloads is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
@@ -331,9 +337,8 @@ class FabricCreate(FabricCreateCommon):
     Create a VXLAN fabric on the controller and register the result.
 
     NOTES:
-    -   FabricCreateBulk is used currently.
-    -   FabricCreate may be useful in the future, but is not currently used
-        and could be deleted if not needed.
+    -   FabricCreate is NOT used currently, though may be useful in the future.
+    -   FabricCreateBulk is used instead.
     """
 
     def __init__(self, params):
@@ -343,11 +348,9 @@ class FabricCreate(FabricCreateCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED FabricCreate()")
 
-        self.endpoints = ApiEndpoints()
+        self._build_properties()
 
-        self._init_properties()
-
-    def _init_properties(self):
+    def _build_properties(self):
         """
         Add properties specific to this class
         """
@@ -357,12 +360,17 @@ class FabricCreate(FabricCreateCommon):
     def commit(self):
         """
         -   Send the fabric create request to the controller.
-        -   Register the result of the fabric create request.
         -   raise ``ValueError`` if ``rest_send`` is not set.
         -   raise ``ValueError`` if ``payload`` is not set.
         -   raise ``ValueError`` if ``fabric_create`` endpoint
             assignment fails.
-        -   return if ``payload`` is empty.
+        -   return if the fabric already exists on the controller.
+
+        NOTES:
+        -   FabricCreate().commit() is very similar to
+            FabricCreateBulk().commit() since we convert the payload
+            to a list and leverage the processing that already exists
+            in FabricCreateCommom()
         """
         method_name = inspect.stack()[0][3]
         if self.rest_send is None:
@@ -375,39 +383,19 @@ class FabricCreate(FabricCreateCommon):
             msg += "payload must be set prior to calling commit. "
             raise ValueError(msg)
 
-        # TODO: Review this.
-        if len(self.payload) == 0:
-            return
+        self._build_payloads_to_commit()
 
+        if len(self._payloads_to_commit) == 0:
+            return
         try:
-            self._set_fabric_create_endpoint(self.payload)
+            self._fixup_payloads_to_commit()
         except ValueError as error:
             raise ValueError(f"{error}") from error
 
-        self.rest_send.check_mode = self.check_mode
-        self.rest_send.timeout = 1
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.payload = self.payload
-        self.rest_send.commit()
-
-        self.register_result()
-
-    def register_result(self):
-        """
-        Register the result of the fabric create request
-        """
-        if self.rest_send.result_current["success"]:
-            self.results.diff_current = self.payload
-        else:
-            self.results.diff_current = {}
-
-        self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
-        self.results.result_current = self.rest_send.result_current
-        self.results.response_current = self.rest_send.response_current
-        self.results.register_task_result()
+        try:
+            self._send_payloads()
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
 
     @property
     def payload(self):
@@ -418,4 +406,25 @@ class FabricCreate(FabricCreateCommon):
 
     @payload.setter
     def payload(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payload must be a dict. "
+            msg += f"Got type {type(value).__name__}, "
+            msg += f"value {value}"
+            raise ValueError(msg)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payload is empty."
+            raise ValueError(msg)
+        try:
+            self._verify_payload(value)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
         self._properties["payload"] = value
+        # payloads is also set to a list containing one payload.
+        # commit() calls FabricCreateCommon()._build_payloads_to_commit(),
+        # which expects a list of payloads.
+        # FabricCreateCommon()._build_payloads_to_commit() verifies that
+        # the fabric does not already exist on the controller.
+        self._properties["payloads"] = [value]
