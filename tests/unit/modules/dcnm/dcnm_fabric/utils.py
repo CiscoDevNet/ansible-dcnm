@@ -36,7 +36,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
     load_fixture
 
-
 params = {
     "state": "merged",
     "config": {"switches": [{"ip_address": "172.22.150.105"}]},
@@ -149,7 +148,7 @@ def fabric_create_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
-    return FabricCreate(instance)
+    return FabricCreate(instance.params)
 
 
 @pytest.fixture(name="fabric_create_bulk")

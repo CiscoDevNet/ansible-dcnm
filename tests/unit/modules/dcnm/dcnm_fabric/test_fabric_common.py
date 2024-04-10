@@ -408,8 +408,7 @@ def test_fabric_common_00060(
         (101.4, 101.4),
     ],
 )
-def test_fabric_common_00070(
-    fabric_common, value, expected_return_value) -> None:
+def test_fabric_common_00070(fabric_common, value, expected_return_value) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -444,8 +443,7 @@ def test_fabric_common_00070(
         (101.4, 101.4),
     ],
 )
-def test_fabric_common_00080(
-    fabric_common, value, expected_return_value) -> None:
+def test_fabric_common_00080(fabric_common, value, expected_return_value) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -459,4 +457,3 @@ def test_fabric_common_00080(
         instance = fabric_common
         return_value = instance.make_boolean(value)
     assert return_value == expected_return_value
-

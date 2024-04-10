@@ -207,12 +207,7 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
 
 @pytest.mark.parametrize(
     "mandatory_key",
-    [
-        "BGP_AS",
-        "DEPLOY",
-        "FABRIC_NAME",
-        "FABRIC_TYPE"
-    ],
+    ["BGP_AS", "DEPLOY", "FABRIC_NAME", "FABRIC_TYPE"],
 )
 def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
     """
@@ -224,11 +219,8 @@ def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
         - __init__()
 
     Summary
-    payloads is set to a list of one dict with missing mandatory key BGP_AS
-
-    Test
-    -   ``ValueError`` is raised
-    -   instance.payloads retains its initial value of None
+    -   Verify ``ValueError`` is raised when payloads is missing mandatory keys.
+    -   Verify instance.payloads retains its initial value of None.
 
     """
     key = "test_fabric_update_bulk_00025a"

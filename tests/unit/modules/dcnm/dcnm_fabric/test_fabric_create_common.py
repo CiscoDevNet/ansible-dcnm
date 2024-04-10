@@ -203,6 +203,7 @@ def test_fabric_create_common_00032(monkeypatch, fabric_create_common) -> None:
         """
         Mock the ApiEndpoints.fabric_create() method to raise an exception.
         """
+
         @property
         def fabric_create(self):
             """
