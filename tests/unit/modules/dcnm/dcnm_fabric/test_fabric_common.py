@@ -420,7 +420,7 @@ def test_fabric_common_00070(fabric_common, value, expected_return_value) -> Non
     """
     with does_not_raise():
         instance = fabric_common
-        return_value = instance.make_none(value)
+        return_value = instance.conversion.make_none(value)
     assert return_value == expected_return_value
 
 
@@ -448,12 +448,12 @@ def test_fabric_common_00080(fabric_common, value, expected_return_value) -> Non
     Classes and Methods
     - FabricCommon
         - __init__()
-        - make_boolean()
+        - conversion.make_boolean()
 
     Summary
     -   Verify expected values are returned:
     """
     with does_not_raise():
         instance = fabric_common
-        return_value = instance.make_boolean(value)
+        return_value = instance.conversion.make_boolean(value)
     assert return_value == expected_return_value

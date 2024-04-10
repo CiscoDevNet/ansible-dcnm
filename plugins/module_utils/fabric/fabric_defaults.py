@@ -1,5 +1,6 @@
 import logging
-
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 
 class FabricDefaults:
     """
@@ -34,6 +35,7 @@ class FabricDefaults:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.conversion = ConversionUtils()
 
         self._defaults = {}
         self._build_properties()
@@ -72,21 +74,6 @@ class FabricDefaults:
         except KeyError:
             raise KeyError(f"parameter {value} has no default value.")
 
-    @staticmethod
-    def make_boolean(value):
-        """
-        Return value converted to boolean, if possible.
-        Otherwise, return value.
-
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["true", "yes"]:
-            return True
-        if str(value).lower() in ["false", "no"]:
-            return False
-        return value
-
     def _build_defaults(self):
         """
         Caller: refresh()
@@ -97,4 +84,4 @@ class FabricDefaults:
         for parameter in self.template.get("parameters", []):
             key = parameter["name"]
             value = parameter.get("metaProperties", {}).get("defaultValue", None)
-            self._defaults[key] = self.make_boolean(value)
+            self._defaults[key] = self.conversion.make_boolean(value)

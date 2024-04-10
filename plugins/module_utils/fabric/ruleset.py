@@ -2,7 +2,8 @@
 import json
 import logging
 import re
-
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 
 class RuleSetCommon:
     """
@@ -15,6 +16,7 @@ class RuleSetCommon:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.conversion = ConversionUtils()
 
         self.rule = None
         self.properties = {}
@@ -64,22 +66,6 @@ class RuleSetCommon:
     @template.setter
     def template(self, value):
         self.properties["template"] = value
-
-    @staticmethod
-    def make_boolean(value):
-        """
-        Return value converted to boolean, if possible.
-
-        Otherwise, return value.
-
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["true", "yes"]:
-            return True
-        if str(value).lower() in ["false", "no"]:
-            return False
-        return value
 
     @staticmethod
     def annotations(parameter):
@@ -207,7 +193,7 @@ class RuleSet(RuleSetCommon):
         if isinstance(self.rule, list):
             for item in self.rule:
                 lhs, op, rhs = item.split(" ")
-                rhs = self.make_boolean(rhs)
+                rhs = self.conversion.make_boolean(rhs)
                 if self.param_name not in self.ruleset:
                     self.ruleset[self.param_name] = {}
                     self.ruleset[self.param_name]["mandatory"] = {}
@@ -216,7 +202,7 @@ class RuleSet(RuleSetCommon):
                 self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
             return
         lhs, op, rhs = self.rule.split(" ")
-        rhs = self.make_boolean(rhs)
+        rhs = self.conversion.make_boolean(rhs)
         if self.param_name not in self.ruleset:
             self.ruleset[self.param_name] = {}
             self.ruleset[self.param_name]["mandatory"] = {}
@@ -244,7 +230,7 @@ class RuleSet(RuleSetCommon):
             lhs, op, rhs = item.split(" ")
             rhs = rhs.replace('"', "")
             rhs = rhs.replace("'", "")
-            rhs = self.make_boolean(rhs)
+            rhs = self.conversion.make_boolean(rhs)
             new_rule.append(f"{lhs} {op} {rhs}")
             if self.param_name not in self.ruleset:
                 self.ruleset[self.param_name] = {}

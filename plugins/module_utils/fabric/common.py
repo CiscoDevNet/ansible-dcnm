@@ -23,6 +23,8 @@ import logging
 import re
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 
 class FabricCommon:
     """
@@ -39,7 +41,9 @@ class FabricCommon:
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.conversion = ConversionUtils()
 
         self.params = params
 
@@ -252,34 +256,6 @@ class FabricCommon:
             msg += f"Unknown fabric type: {value}"
             raise ValueError(msg)
         return self.fabric_type_to_template_name_map[value]
-
-    @staticmethod
-    def make_boolean(value):
-        """
-        Return value converted to boolean, if possible.
-        Otherwise, return value.
-
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["true", "yes"]:
-            return True
-        if str(value).lower() in ["false", "no"]:
-            return False
-        return value
-
-    @staticmethod
-    def make_none(value):
-        """
-        Return None if value is a string representation of a None type
-        Otherwise, return value
-
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in {"", "none", "null"}:
-            return None
-        return value
 
     @property
     def fabric_details(self):

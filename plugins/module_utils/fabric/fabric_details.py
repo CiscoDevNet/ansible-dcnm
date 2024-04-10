@@ -23,6 +23,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
@@ -53,6 +55,7 @@ class FabricDetails(FabricCommon):
         self.data = {}
         self.endpoints = ApiEndpoints()
         self.results = Results()
+        self.conversion = ConversionUtils()
 
     def refresh_super(self):
         """
@@ -320,8 +323,8 @@ class FabricDetailsByName(FabricDetails):
             msg += f"{self.filter} unknown property name: {item}."
             raise ValueError(msg)
 
-        return self.make_none(
-            self.make_boolean(self.data_subclass[self.filter].get(item))
+        return self.conversion.make_none(
+            self.conversion.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     def _get_nv_pair(self, item):
@@ -358,8 +361,8 @@ class FabricDetailsByName(FabricDetails):
             msg += f"unknown property name: {item}."
             raise ValueError(msg)
 
-        return self.make_none(
-            self.make_boolean(self.data_subclass[self.filter].get("nvPairs").get(item))
+        return self.conversion.make_none(
+            self.conversion.make_boolean(self.data_subclass[self.filter].get("nvPairs").get(item))
         )
 
     @property

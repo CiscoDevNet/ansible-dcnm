@@ -20,6 +20,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_defaults import \
@@ -108,6 +110,8 @@ class VerifyPlaybookParams:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.conversion = ConversionUtils()
+
         self._ruleset = RuleSet()
         self._fabric_defaults = FabricDefaults()
         self._param_info = ParamInfo()
@@ -194,48 +198,6 @@ class VerifyPlaybookParams:
             raise TypeError(msg)
         self.properties["template"] = value
 
-    @staticmethod
-    def make_boolean(value):
-        """
-        Return value converted to boolean, if possible.
-        Otherwise, return value.
-
-        - TODO: This method is duplicated in several other classes.
-        - TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["true", "yes"]:
-            return True
-        if str(value).lower() in ["false", "no"]:
-            return False
-        return value
-
-    @staticmethod
-    def make_none(value):
-        """
-        Return None if value is a string representation of a None type
-        Otherwise, return value
-
-        - TODO: This method is duplicated in several other classes.
-        - TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["", "none", "null"]:
-            return None
-        return value
-
-    @staticmethod
-    def make_int(value):
-        """
-        - Return value converted to int, if possible.
-        - Otherwise, return value.
-        """
-        # Don't convert boolean values to integers
-        if isinstance(value, bool):
-            return value
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            return value
-
     def eval_parameter_rule(self, parameter, param_value, rule) -> bool:
         """
         Evaluate a dependent parameter value against a rule
@@ -308,7 +270,7 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        parameter_value = self.make_boolean(self.config_controller[parameter])
+        parameter_value = self.conversion.make_boolean(self.config_controller[parameter])
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
         except KeyError as error:
@@ -342,7 +304,7 @@ class VerifyPlaybookParams:
         msg += f"parameter_value: {self.config_playbook[parameter]}"
         self.log.debug(msg)
 
-        parameter_value = self.make_boolean(self.config_playbook[parameter])
+        parameter_value = self.conversion.make_boolean(self.config_playbook[parameter])
 
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
@@ -475,13 +437,13 @@ class VerifyPlaybookParams:
 
         playbook_value = self.config_playbook.get(self.parameter)
         # Convert string representations of integers to integers
-        playbook_value = self.make_int(playbook_value)
+        playbook_value = self.conversion.make_int(playbook_value)
 
         # If the user specifies 0/1 for False/True, NDFC fails with a 500 error
         # (at least for ADVERTISE_PIP_BGP).  Let's mandate that the user cannot
         # use 0/1 as a substitute for boolean values and fail here instead.
-        # NOTE: make_int(), above, should not (and does not) convert boolean
-        # values to integers.
+        # NOTE: self.conversion.make_int(), above, should not (and does not)
+        # convert boolean values to integers.
         if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
             msg = f"Parameter: {self.parameter}, "
             msg += f"Invalid value: ({playbook_value}). "
