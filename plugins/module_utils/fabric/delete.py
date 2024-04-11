@@ -123,11 +123,16 @@ class FabricDelete(FabricCommon):
         - Set the fabric delete endpoint for fabric_name
         - Raise ``ValueError`` if the endpoint assignment fails
         """
-        self._endpoints.fabric_name = fabric_name
+        try:
+            self._endpoints.fabric_name = fabric_name
+        except (ValueError, TypeError) as error:
+            raise ValueError(f"{error}") from error
+
         try:
             endpoint = self._endpoints.fabric_delete
         except ValueError as error:
             raise ValueError(f"{error}") from error
+
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
 
@@ -138,14 +143,19 @@ class FabricDelete(FabricCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        if self.fabric_names is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
-        if self.fabric_names is None:
+        if self.results is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_names must be set prior to calling commit."
+            msg += "results must be set prior to calling commit."
             raise ValueError(msg)
 
     def commit(self):
