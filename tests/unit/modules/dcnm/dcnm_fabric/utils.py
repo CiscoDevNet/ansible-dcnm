@@ -178,7 +178,7 @@ def fabric_delete_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "deleted"
-    return FabricDelete(instance)
+    return FabricDelete(instance.params)
 
 
 @pytest.fixture(name="fabric_query")
