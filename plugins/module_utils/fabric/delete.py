@@ -219,7 +219,7 @@ class FabricDelete(FabricCommon):
         self.results.result_current = {"success": True, "changed": False}
         msg = "No fabrics to delete"
         self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
-        self.log.debug(msg)
+        self.results.register_task_result()
 
     def _send_requests(self):
         """
