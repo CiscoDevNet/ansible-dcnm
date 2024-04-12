@@ -178,9 +178,10 @@ def test_param_info_00040() -> None:
         - template.setter
         - refresh()
         - _build_info()
+        - _get_param_name()
 
     Summary
-    -   Verify _build_info() raises ``KeyError`` when parameter is missing
+    -   Verify _get_param_name() raises ``KeyError`` when parameter is missing
         ``name`` key.
     """
     method_name = inspect.stack()[0][3]
@@ -190,7 +191,7 @@ def test_param_info_00040() -> None:
         instance = ParamInfo()
         instance.template = templates_param_info(key)
     
-    match = r"ParamInfo\._build_info: "
+    match = r"ParamInfo\._get_param_name: "
     match += r"Parameter is missing name key:"
     with pytest.raises(KeyError, match=match):
         instance.refresh()

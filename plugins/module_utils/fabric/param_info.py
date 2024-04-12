@@ -10,13 +10,13 @@ class ParamInfo:
     Given a parameter, return a python dict containing parameter info.
     Parameter info is culled from the provided template.
 
-    Raise ValueError during refresh() if:
+    Raise ``ValueError`` during refresh() if:
     - template is not set
     - template has no parameters
     - template[parameters] is not a list
 
-    Raise KeyError during parameter() call if:
-    - parameter has no default value
+    Raise ``KeyError`` during parameter() call if:
+    - parameter is not found
 
     Usage:
 
@@ -104,17 +104,20 @@ class ParamInfo:
 
     def parameter(self, value):
         """
-        # Return parameter information based on the template.
+        -   Return parameter information based on the template.
+        -   Raise ``KeyError`` if parameter is not found
 
         Usage:
 
         ```python
-        parameter_info = instance.parameter("my_parameter")
+        try:
+            parameter_info = instance.parameter("my_parameter")
+        except KeyError as error:
+            print(error)
+            exit(1)
         ```
 
-        - raise ``KeyError`` if parameter is not found
-
-        Parameter information is returned as a python dict:
+        ``parameter_info`` is returned as a python dict:
 
         ```json
         {
@@ -209,6 +212,21 @@ class ParamInfo:
             return None
         return self.conversion.make_int(value)
 
+    def _get_param_name(self,parameter):
+        """
+        -   Return the ``name`` key from the parameter dict.
+        -   Raise ``KeyError`` if ``name`` key is missing
+        """
+        method_name = inspect.stack()[0][3]
+
+        param_name = parameter.get("name", None)
+        if param_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Parameter is missing name key: "
+            msg += f"parameter={parameter}"
+            raise KeyError(msg)
+        return param_name
+
     def _get_type(self, parameter):
         """
         - Return the parameter's type, if specified in the template.
@@ -247,12 +265,7 @@ class ParamInfo:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"parameter: {json.dumps(parameter,  indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            param_name = parameter.get("name", None)
-            if param_name is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Parameter is missing name key: "
-                msg += f"parameter={parameter}"
-                raise KeyError(msg)
+            param_name = self._get_param_name(parameter)
             if param_name not in self.info:
                 self.info[param_name] = {}
             self.info[param_name]["choices"] = self._get_choices(parameter)
