@@ -145,6 +145,7 @@ def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
         - payloads setter
     - FabricCreateBulk
         - __init__()
+        - commit()
 
     Summary
     -   Verify behavior when payloads is not set prior to calling commit
@@ -207,6 +208,12 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
         - payloads setter
     - FabricCreateBulk
         - __init__()
+        - rest_send
+        - fabric_details
+        - fabric_details.rest_send
+        - results
+        - payloads
+        - commit()
 
     Summary
     -   Verify behavior when payloads contains a dict with an unexpected
