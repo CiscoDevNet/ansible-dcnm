@@ -24,8 +24,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_defaults import \
-    FabricDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
     ParamInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
@@ -113,7 +111,6 @@ class VerifyPlaybookParams:
         self.conversion = ConversionUtils()
 
         self._ruleset = RuleSet()
-        self._fabric_defaults = FabricDefaults()
         self._param_info = ParamInfo()
         self.results = Results()
         self.params_are_valid = set()
@@ -343,12 +340,8 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        default_value = None
-        try:
-            default_value = self._fabric_defaults.parameter(parameter)
-        except KeyError:
-            # A default value does not exist for parameter.
-            # Return None to remove default_param result from consideration.
+        default_value = self._param_info.parameter(parameter).get("default", None)
+        if default_value is None:
             msg = f"Early return: parameter: {parameter} has no default value. "
             msg += "Returning None."
             self.log.debug(msg)
@@ -558,28 +551,6 @@ class VerifyPlaybookParams:
             msg += "must be set prior to calling commit."
             raise ValueError(msg)
 
-    def update_fabric_defaults(self):
-        """
-        Update fabric parameter default values based on
-        the fabric template.
-
-        -   raise ValueError if FabricDefaults does not like the template
-        -   raise ValueError if FabricDefaults.refresh() fails
-        """
-        try:
-            self._fabric_defaults.template = self.template
-        except ValueError as error:
-            msg = f"{error}"
-            self.log.debug(msg)
-            raise ValueError(msg) from error
-
-        try:
-            self._fabric_defaults.refresh()
-        except ValueError as error:
-            msg = f"{error}"
-            self.log.debug(msg)
-            raise ValueError(msg) from error
-
     def update_param_info(self):
         """
         Update the fabric parameter info based on the fabric template
@@ -618,7 +589,6 @@ class VerifyPlaybookParams:
 
         raise ValueError in the following cases:
         - required parameters are not set prior to calling commit()
-        - FabricDefaults() returns error(s)
         - ParamInfo() returns errors(s)
         - A parameter fails verification
         """
@@ -630,11 +600,6 @@ class VerifyPlaybookParams:
             raise ValueError(error) from error
 
         self.update_ruleset()
-
-        try:
-            self.update_fabric_defaults()
-        except ValueError as error:
-            raise ValueError(error) from error
 
         try:
             self.update_param_info()
