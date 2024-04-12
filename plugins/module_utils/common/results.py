@@ -39,13 +39,13 @@ class Results:
         -   Typically done by transferring RestSend's responses to the
             Results instance
     3. Register the results of the task with Results, using:
-        -   Results.register_task_results()
+        -   Results.register_task_result()
         -   Typically done after the task is complete
 
     Results should be instantiated in the main Ansible Task class and passed
     to all other task classes.  The task classes should populate the Results
     instance with the results of the task and then register the results with
-    Results.register_task_results().  This may be done within a separate class
+    Results.register_task_result().  This may be done within a separate class
     (as in the example below, where FabricDelete() class is called from the
     TaskDelete() class.  The Results instance can then be used to build the
     final result, by calling Results.build_final_result().
@@ -95,7 +95,7 @@ class Results:
             ...
             self.fabric_delete.fabric_names = ["FABRIC_1", "FABRIC_2"]
             self.fabric_delete.results = self.results
-            # results.register_task_results() is called within the
+            # results.register_task_result() is called within the
             # commit() method of the FabricDelete class.
             self.fabric_delete.commit()
 
@@ -221,6 +221,7 @@ class Results:
         msg += f"self.result_current: {self.result_current}, "
         msg += f"self.diff: {self.diff}"
         self.log.debug(msg)
+
         if self.check_mode is True:
             return False
         if self.action == "query":
@@ -232,9 +233,13 @@ class Results:
             return True
         if self.result_current.get("changed", None) is False:
             return False
-        if len(self.diff) != 0:
-            return True
-        return False
+        for diff in self.diff:
+            something_changed = False
+            test_diff = copy.deepcopy(diff)
+            test_diff.pop("sequence_number", None)
+            if len(test_diff) != 0:
+                something_changed = True
+        return something_changed
 
     def register_task_result(self):
         """
