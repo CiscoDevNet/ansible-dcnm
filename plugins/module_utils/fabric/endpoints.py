@@ -49,7 +49,7 @@ class ApiEndpoints:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ApiEndpoints()")
 
-        self._re_valid_fabric_name = re.compile(r"[a-zA-Z]+[a-zA-Z0-9_-]")
+        self._re_valid_fabric_name = re.compile(r"[a-zA-Z]+[a-zA-Z0-9_-]*")
 
         self.endpoint_api_v1 = "/appcenter/cisco/ndfc/api/v1"
 
