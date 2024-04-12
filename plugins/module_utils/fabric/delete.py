@@ -20,6 +20,12 @@ import copy
 import inspect
 import logging
 
+# Import Results() only for the case where the user has not set Results()
+# prior to calling commit().  In this case, we instantiate Results()
+# in _validate_commit_parameters() so that we can register the failure
+# in commit().
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -95,28 +101,36 @@ class FabricDelete(FabricCommon):
 
     def _get_fabrics_to_delete(self) -> None:
         """
-        Retrieve fabric info from the controller and set the list of
-        controller fabrics that are in our fabric_names list.
+        -   Retrieve fabric info from the controller and set the list of
+            controller fabrics that are in our fabric_names list.
+        -   Raise ``ValueError`` if any fabric in ``fabric_names``
+            cannot be deleted.
         """
         self.fabric_details.refresh()
 
         self._fabrics_to_delete = []
         for fabric_name in self.fabric_names:
             if fabric_name in self.fabric_details.all_data:
+                try:
+                    self._verify_fabric_can_be_deleted(fabric_name)
+                except ValueError as error:
+                    raise ValueError(error) from error
                 self._fabrics_to_delete.append(fabric_name)
 
-    def _can_fabric_be_deleted(self, fabric_name):
+    def _verify_fabric_can_be_deleted(self, fabric_name):
         """
-        return True if the fabric can be deleted
-        return False otherwise
+        raise ``ValueError`` if the fabric cannot be deleted
+        return otherwise
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.fabric_summary.fabric_name = fabric_name
         self.fabric_summary.refresh()
-        if self.fabric_summary.fabric_is_empty is False:
-            self._cannot_delete_fabric_reason = "Fabric is not empty"
-            return False
-        return True
+        if self.fabric_summary.fabric_is_empty is True:
+            return
+        msg = f"{self.class_name}.{method_name}: " 
+        msg += f"Fabric {fabric_name} cannot be deleted since it is not "
+        msg += "empty. Remove all devices from the fabric and try again."
+        raise ValueError(msg)
 
     def _set_fabric_delete_endpoint(self, fabric_name) -> None:
         """
@@ -154,6 +168,8 @@ class FabricDelete(FabricCommon):
             raise ValueError(msg)
 
         if self.results is None:
+            # Instantiate Results() only to register the failure
+            self.results = Results()
             msg = f"{self.class_name}.{method_name}: "
             msg += "results must be set prior to calling commit."
             raise ValueError(msg)
@@ -168,20 +184,38 @@ class FabricDelete(FabricCommon):
         try:
             self._validate_commit_parameters()
         except ValueError as error:
+            self.results.changed = False
+            self.results.failed = True
+            self.register_result(None)
             raise ValueError(error) from error
-
-        self._get_fabrics_to_delete()
-
-        msg = f"self._fabrics_to_delete: {self._fabrics_to_delete}"
-        self.log.debug(msg)
-        if len(self._fabrics_to_delete) != 0:
-            self._send_requests()
-            return
 
         self.results.action = self.action
         self.results.check_mode = self.check_mode
         self.results.state = self.state
         self.results.diff_current = {}
+
+        try:
+            self._get_fabrics_to_delete()
+        except ValueError as error:
+            self.results.changed = False
+            self.results.failed = True
+            self.register_result(None)
+            raise ValueError(error) from error
+
+        msg = f"self._fabrics_to_delete: {self._fabrics_to_delete}"
+        self.log.debug(msg)
+        if len(self._fabrics_to_delete) != 0:
+            try:
+                self._send_requests()
+            except ValueError as error:
+                self.results.changed = False
+                self.results.failed = True
+                self.register_result(None)
+                raise ValueError(error) from error
+            return
+
+        self.results.changed = False
+        self.results.failed = False
         self.results.result_current = {"success": True, "changed": False}
         msg = "No fabrics to delete"
         self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
@@ -189,10 +223,11 @@ class FabricDelete(FabricCommon):
 
     def _send_requests(self):
         """
-        1.  Update RestSend() parameters:
-            - check_mode : Enables or disables sending the request
-            - timeout : Reduce to 1 second from default of 300 seconds
-        2.  Call _send_request() for each fabric to be deleted.
+        -   Update RestSend() parameters:
+                - check_mode : Enables or disables sending the request
+                - timeout : Reduce to 1 second from default of 300 seconds
+        -   Call _send_request() for each fabric to be deleted.
+        -   Raise ``ValueError`` if any fabric cannot be deleted.
 
         NOTES:
         -   We don't want RestSend to retry on errors since the likelihood of a
@@ -204,7 +239,13 @@ class FabricDelete(FabricCommon):
         self.rest_send.timeout = 1
 
         for fabric_name in self._fabrics_to_delete:
-            self._send_request(fabric_name)
+            try:
+                self._send_request(fabric_name)
+            except ValueError as error:
+                self.results.changed = False
+                self.results.failed = True
+                self.register_result(fabric_name)
+                raise ValueError(error) from error
 
     def _send_request(self, fabric_name):
         """
@@ -217,10 +258,6 @@ class FabricDelete(FabricCommon):
         except ValueError as error:
             raise ValueError(error) from error
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"verb: {self.verb}, path: {self.path}"
-        self.log.debug(msg)
-
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
         self.rest_send.commit()
@@ -228,9 +265,24 @@ class FabricDelete(FabricCommon):
 
     def register_result(self, fabric_name):
         """
-        Register the result of the fabric create request
+        -   Register the result of the fabric delete request
+        -   If ``fabric_name`` is ``None``, set the result to indicate
+            no changes occurred and the request was not successful.
+        -   If ``fabric_name`` is not ``None``, set the result to indicate
+            the success or failure of the request.
         """
-        if self.rest_send.result_current["success"]:
+        self.results.action = self.action
+        self.results.check_mode = self.check_mode
+        self.results.state = self.state
+
+        if fabric_name is None:
+            self.results.diff_current = {}
+            self.results.response_current = {}
+            self.results.result_current = {"success": False, "changed": False}
+            self.results.register_task_result()
+            return
+
+        if self.rest_send.result_current.get("success", None) is True:
             self.results.diff_current = {"fabric_name": fabric_name}
             # need this to match the else clause below since we
             # pass response_current (altered or not) to the results object
@@ -244,9 +296,6 @@ class FabricDelete(FabricCommon):
                     msg = f"Failed to delete fabric {fabric_name}."
                     response_current["DATA"] = msg
 
-        self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
         self.results.response_current = response_current
         self.results.result_current = self.rest_send.result_current
 
