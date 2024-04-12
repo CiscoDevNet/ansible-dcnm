@@ -1630,6 +1630,13 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
         "RETURN_CODE": 200
     },
+    "test_fabric_delete_00043a": {
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
     "test_fabric_update_bulk_00031a": {
         "DATA": [
             {
