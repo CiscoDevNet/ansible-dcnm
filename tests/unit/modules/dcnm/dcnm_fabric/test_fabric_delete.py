@@ -701,7 +701,7 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
     assert len(instance.results.result) == 1
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
-    assert instance.results.diff[0].get("fabric_name", None) == None
+    assert instance.results.diff[0].get("fabric_name", None) is None
 
     assert instance.results.metadata[0].get("action", None) == "delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
@@ -709,7 +709,7 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
     assert instance.results.metadata[0].get("state", None) == "deleted"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.response[0].get("MESSAGE", None)  == "No fabrics to delete"
+    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to delete"
 
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is True
@@ -834,3 +834,73 @@ def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
     assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
+
+
+def test_fabric_delete_00050(fabric_delete) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricDelete
+        - __init__()
+        - commit()
+        - _validate_commit_parameters()
+
+    Summary
+    -   Verify that ``ValueError`` is raised because fabric_names
+        is not a list.
+    """
+    with does_not_raise():
+        instance = fabric_delete
+
+    match = r"FabricDelete\.fabric_names: "
+    match += r"fabric_names must be a list\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_names = "NOT_A_LIST"
+
+
+def test_fabric_delete_00051(fabric_delete) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricDelete
+        - __init__()
+        - commit()
+        - _validate_commit_parameters()
+
+    Summary
+    -   Verify that ``ValueError`` is raised because fabric_names is an
+        empty list.
+    """
+    with does_not_raise():
+        instance = fabric_delete
+        # instance.rest_send = RestSend(MockAnsibleModule())
+
+    match = r"FabricDelete\.fabric_names: "
+    match += r"fabric_names must be a list of at least one string. got \[\]\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_names = []
+
+
+def test_fabric_delete_00052(fabric_delete) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricDelete
+        - __init__()
+        - commit()
+        - _validate_commit_parameters()
+
+    Summary
+    -   Verify that ``ValueError`` is raised because fabric_names is a
+        list containing non-string elements.
+    """
+    with does_not_raise():
+        instance = fabric_delete
+
+    match = r"FabricDelete\.fabric_names: "
+    match += r"fabric_names must be a list of strings\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_names = ["MyFabric", 123]
