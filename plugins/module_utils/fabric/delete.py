@@ -249,7 +249,8 @@ class FabricDelete(FabricCommon):
 
     def _send_request(self, fabric_name):
         """
-        Send a delete request to the controller and register the result.
+        -   Send a delete request to the controller and register the result.
+        -   Raise ``ValueError`` if the fabric delete endpoint cannot be set
         """
         method_name = inspect.stack()[0][3]
 
