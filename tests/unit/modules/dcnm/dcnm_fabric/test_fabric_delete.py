@@ -141,7 +141,7 @@ def test_fabric_delete_00022(fabric_delete, fabric_name) -> None:
         argument passed to _set_fabric_delete_endpoint() is not a string.
     """
     match = r"ApiEndpoints\._validate_fabric_name: "
-    match += "Invalid fabric name.  Expected string.  Got"
+    match += "Invalid fabric name. Expected string. Got"
 
     with does_not_raise():
         instance = fabric_delete
@@ -169,7 +169,7 @@ def test_fabric_delete_00023(fabric_delete, fabric_name) -> None:
     match = r"ApiEndpoints\._validate_fabric_name: "
     match += rf"Invalid fabric name: {fabric_name}\. "
     match += "Fabric name must start with a letter A-Z "
-    match += "or a-z and contains only the characters in: "
+    match += "or a-z and contain only the characters in: "
     match += r"\[A-Z,a-z,0-9,-,_\]\."
 
     with does_not_raise():
