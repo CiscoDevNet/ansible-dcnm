@@ -117,6 +117,7 @@ class VerifyPlaybookParams:
         self.bad_params = {}
         self.parameter = None
         self.fabric_name = None
+        self.local_params = {"DEPLOY"}
 
         msg = "ENTERED VerifyPlaybookParams(): "
         self.log.debug(msg)
@@ -267,7 +268,9 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        parameter_value = self.conversion.make_boolean(self.config_controller[parameter])
+        parameter_value = self.conversion.make_boolean(
+            self.config_controller[parameter]
+        )
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
         except KeyError as error:
@@ -404,14 +407,35 @@ class VerifyPlaybookParams:
 
     def verify_parameter_value(self) -> None:
         """
-        Verify a parameter's value against valid choices (if any)
-        culled from the template.
-
-        Return if the parameter has no valid choices.
-
-        raise ValueError if the parameter does not match any of the
-        valid choices.
+        -   Verify a parameter's value against valid choices (if any)
+            culled from the template.
+        -   Return if the parameter is found in the template, and the parameter
+            value matches a valid choice in the template.
+        -   Return if the parameter is found in the template, the template does
+            not contain choices for the parameter.
+        -   Skip "local" parameters -- i.e. parameters that are valid in a
+            playbook, but are not found in the template -- for example
+            ``DEPLOY``, after performing basic verification.
+        -   Raise ``KeyError`` if a (non-local) parameter is not found in
+            the template.
+        -   Raise ``ValueError`` for all parameters, if the parameter value
+            is a boolean string.
         """
+        playbook_value = self.config_playbook.get(self.parameter)
+
+        # Reject quoted boolean values e.g. "False", "true"
+        try:
+            self.conversion.reject_boolean_string(self.parameter, playbook_value)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
+
+        # Skip "local" parameters i.e. parameters that are valid in a
+        # playbook but not found in the template retrieved from the controller
+        # e.g. DEPLOY
+        if self.parameter in self.local_params:
+            return
+
+        # raise KeyError if the parameter is not found in the template
         try:
             param_info = self._param_info.parameter(self.parameter)
         except KeyError as error:
@@ -425,17 +449,18 @@ class VerifyPlaybookParams:
         msg += f"{json.dumps(param_info, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        # Return if the parameter is found in the template and the template
+        # does not mandate specific choices for the parameter
         if param_info["choices"] is None:
             return
 
-        playbook_value = self.config_playbook.get(self.parameter)
         # Convert string representations of integers to integers
         playbook_value = self.conversion.make_int(playbook_value)
 
         # If the user specifies 0/1 for False/True, NDFC fails with a 500 error
         # (at least for ADVERTISE_PIP_BGP).  Let's mandate that the user cannot
         # use 0/1 as a substitute for boolean values and fail here instead.
-        # NOTE: self.conversion.make_int(), above, should not (and does not)
+        # NOTE: self.conversion.make_int() should not (and does not)
         # convert boolean values to integers.
         if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
             msg = f"Parameter: {self.parameter}, "
@@ -448,6 +473,8 @@ class VerifyPlaybookParams:
         msg += f"valid values: {param_info['choices']}"
         self.log.debug(msg)
 
+        # Return if the parameter is found in the template and the parameter
+        # value matches a valid choice for the parameter
         if playbook_value in param_info["choices"]:
             msg = f"Parameter: {self.parameter}, "
             msg += f"playbook_value ({playbook_value}). "
@@ -456,6 +483,8 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return
 
+        # Raise ValueError if the parameter value does not match any of the
+        # choices specified in the template for the parameter
         msg = f"Parameter: {self.parameter}, "
         msg += f"Invalid value: ({playbook_value}). "
         msg += f"Valid values: {param_info['choices']}"

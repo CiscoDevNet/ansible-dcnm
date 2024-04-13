@@ -34,3 +34,22 @@ class ConversionUtils:
         if str(value).lower() in {"", "none", "null"}:
             return None
         return value
+
+    @staticmethod
+    def reject_boolean_string(parameter, value) -> None:
+        """
+        -   Reject quoted boolean values e.g. "False", "true"
+        -   raise ValueError with informative message if the value is
+            a string representation of a boolean.
+        """
+        if isinstance(value, int):
+            return
+        if isinstance(value, bool):
+            return
+        if str(value).lower() in ["true", "false"]:
+            msg = f"Parameter {parameter}, value '{value}', "
+            msg += "is a quoted string representation of a boolean. "
+            msg += "Please remove the quotes and try again "
+            msg += "(e.g. True/False or true/false, instead of "
+            msg += "'True'/'False' or 'true'/'false')."
+            raise ValueError(msg)
