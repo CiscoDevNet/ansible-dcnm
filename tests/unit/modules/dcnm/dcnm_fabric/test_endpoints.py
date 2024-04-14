@@ -21,6 +21,7 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=pointless-statement
 
 from __future__ import absolute_import, division, print_function
 
@@ -30,12 +31,13 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
-import pytest
 import re
+
+import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise)
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import \
+    does_not_raise
 
 
 def test_endpoints_00010() -> None:
@@ -59,17 +61,15 @@ def test_endpoints_00010() -> None:
     assert instance._re_valid_fabric_name == re.compile(r"[a-zA-Z]+[a-zA-Z0-9_-]*")
     assert instance.endpoint_api_v1 == "/appcenter/cisco/ndfc/api/v1"
     assert instance.endpoint_fabrics == (
-        f"{instance.endpoint_api_v1}" +
-        "/rest/control/fabrics"
+        f"{instance.endpoint_api_v1}" + "/rest/control/fabrics"
     )
     assert instance.endpoint_fabric_summary == (
-        f"{instance.endpoint_api_v1}" + 
-        "/lan-fabric/rest/control/switches" +
-        "/_REPLACE_WITH_FABRIC_NAME_/overview"
+        f"{instance.endpoint_api_v1}"
+        + "/lan-fabric/rest/control/switches"
+        + "/_REPLACE_WITH_FABRIC_NAME_/overview"
     )
     assert instance.endpoint_templates == (
-        f"{instance.endpoint_api_v1}" +
-        "/configtemplate/rest/config/templates"
+        f"{instance.endpoint_api_v1}" + "/configtemplate/rest/config/templates"
     )
     assert instance.properties["fabric_name"] is None
     assert instance.properties["template_name"] is None
@@ -83,6 +83,8 @@ MATCH_00020b = r"ApiEndpoints\._validate_fabric_name: "
 MATCH_00020b = r"Invalid fabric name:.*\. "
 MATCH_00020b += "Fabric name must start with a letter A-Z or a-z and "
 MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
+
+
 @pytest.mark.parametrize(
     "fabric_name, expected",
     [
@@ -92,14 +94,14 @@ MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
         ("M", does_not_raise()),
         (1, pytest.raises(TypeError, match=MATCH_00020a)),
         ({}, pytest.raises(TypeError, match=MATCH_00020a)),
-        ([1,2,3], pytest.raises(TypeError, match=MATCH_00020a)),
+        ([1, 2, 3], pytest.raises(TypeError, match=MATCH_00020a)),
         ("1", pytest.raises(ValueError, match=MATCH_00020b)),
         ("-MyFabric", pytest.raises(ValueError, match=MATCH_00020b)),
         ("_MyFabric", pytest.raises(ValueError, match=MATCH_00020b)),
         ("1MyFabric", pytest.raises(ValueError, match=MATCH_00020b)),
         ("My Fabric", pytest.raises(ValueError, match=MATCH_00020b)),
         ("My*Fabric", pytest.raises(ValueError, match=MATCH_00020b)),
-    ]
+    ],
 )
 def test_endpoints_00020(fabric_name, expected) -> None:
     """
@@ -157,8 +159,8 @@ def test_endpoints_00031() -> None:
         endpoint = instance.fabric_config_deploy
     assert endpoint.get("verb", None) == "POST"
     assert endpoint.get("path", None) == (
-        f"{instance.endpoint_fabrics}/{fabric_name}" +
-        "/config-deploy?forceShowRun=false&inclAllMSDSwitches"
+        f"{instance.endpoint_fabrics}/{fabric_name}"
+        + "/config-deploy?forceShowRun=false&inclAllMSDSwitches"
     )
 
 
@@ -199,8 +201,7 @@ def test_endpoints_00041() -> None:
         endpoint = instance.fabric_config_save
     assert endpoint.get("verb", None) == "POST"
     assert endpoint.get("path", None) == (
-        f"{instance.endpoint_fabrics}/{fabric_name}" +
-        "/config-save"
+        f"{instance.endpoint_fabrics}/{fabric_name}" + "/config-save"
     )
 
 
@@ -267,9 +268,7 @@ def test_endpoints_00052() -> None:
         endpoint = instance.fabric_create
     assert endpoint.get("verb", None) == "POST"
     assert endpoint.get("path", None) == (
-        f"{instance.endpoint_fabrics}/" +
-        f"{fabric_name}/" +
-        f"{template_name}"
+        f"{instance.endpoint_fabrics}/" + f"{fabric_name}/" + f"{template_name}"
     )
 
 
@@ -312,6 +311,48 @@ def test_endpoints_00061() -> None:
         endpoint = instance.fabric_delete
     assert endpoint.get("verb", None) == "DELETE"
     assert endpoint.get("path", None) == (
-        f"{instance.endpoint_fabrics}/" +
-        f"{fabric_name}"
+        f"{instance.endpoint_fabrics}/" + f"{fabric_name}"
+    )
+
+
+def test_endpoints_00070() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_summary getter
+
+    Summary
+    -   Verify fabric_summary getter raises ``ValueError``
+        if ``fabric_name`` is not set.
+    """
+    with does_not_raise():
+        instance = ApiEndpoints()
+    match = r"ApiEndpoints\.fabric_summary: "
+    match += r"fabric_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_summary
+
+
+def test_endpoints_00071() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_summary getter
+
+    Summary
+    -   Verify fabric_summary getter returns the expected
+        endpoint when ``fabric_name`` is set.
+    """
+    fabric_name = "MyFabric"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+        endpoint = instance.fabric_summary
+    assert endpoint.get("verb", None) == "GET"
+    assert endpoint.get("path", None) == (
+        f"{instance.endpoint_api_v1}/"
+        + "lan-fabric/rest/control/switches/"
+        + f"{fabric_name}/overview"
     )
