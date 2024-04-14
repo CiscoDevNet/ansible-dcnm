@@ -464,3 +464,21 @@ def test_endpoints_00091() -> None:
     assert endpoint.get("path", None) == (
         f"{instance.endpoint_fabrics}/" + f"{fabric_name}"
     )
+
+
+def test_endpoints_00100() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - template_name getter/setter
+
+    Summary
+    -   Verify template_name getter returns the value set
+        with template_name setter.
+    """
+    template_name = "MyTemplate"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.template_name = template_name
+    assert instance.template_name == template_name
