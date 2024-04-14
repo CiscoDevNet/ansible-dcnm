@@ -356,3 +356,71 @@ def test_endpoints_00071() -> None:
         + "lan-fabric/rest/control/switches/"
         + f"{fabric_name}/overview"
     )
+
+
+def test_endpoints_00080() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_update getter
+
+    Summary
+    -   Verify fabric_update getter raises ``ValueError``
+        if ``fabric_name`` is not set.
+    """
+    template_name = "MyTemplate"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.template_name = template_name
+    match = r"ApiEndpoints\.fabric_update: "
+    match += r"fabric_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_update
+
+
+def test_endpoints_00081() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_update getter
+
+    Summary
+    -   Verify fabric_update getter raises ``ValueError``
+        if ``template_name`` is not set.
+    """
+    fabric_name = "MyFabric"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+    match = r"ApiEndpoints\.fabric_update: "
+    match += r"template_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_update
+
+
+def test_endpoints_00082() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_update getter
+
+    Summary
+    -   Verify fabric_update getter returns the expected
+        endpoint when ``fabric_name`` and ``template_name``
+        are set.
+    """
+    fabric_name = "MyFabric"
+    template_name = "MyTemplate"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+        instance.template_name = template_name
+        endpoint = instance.fabric_update
+    assert endpoint.get("verb", None) == "PUT"
+    assert endpoint.get("path", None) == (
+        f"{instance.endpoint_fabrics}/" + f"{fabric_name}/" + f"{template_name}"
+    )
+
