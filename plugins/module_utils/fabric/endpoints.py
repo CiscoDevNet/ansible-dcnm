@@ -98,7 +98,7 @@ class ApiEndpoints:
         """
         - return fabric_config_deploy endpoint
           - verb: POST
-          - path: /rest/control/fabrics/<fabric_name>/config-deploy
+          - path: /rest/control/fabrics/{FABRIC_NAME}/config-deploy
         - Raise ``ValueError`` if fabric_name is not set.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
@@ -120,7 +120,7 @@ class ApiEndpoints:
         """
         - return fabric_config_save endpoint
           - verb: POST
-          - path: /rest/control/fabrics/<fabric_name>/config-save
+          - path: /rest/control/fabrics/{FABRIC_NAME}/config-save
         - Raise ``ValueError`` if fabric_name is not set.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
@@ -140,7 +140,7 @@ class ApiEndpoints:
         """
         return fabric_create endpoint
         verb: POST
-        path: /rest/control/fabrics
+        path: /rest/control/fabrics/{FABRIC_NAME}/{TEMPLATE_NAME}
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
@@ -163,7 +163,7 @@ class ApiEndpoints:
         """
         return fabric_delete endpoint
         verb: DELETE
-        path: /rest/control/fabrics
+        path: /rest/control/fabrics/{FABRIC_NAME}
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
@@ -182,7 +182,7 @@ class ApiEndpoints:
         """
         return fabric_summary endpoint
         verb: GET
-        path: /rest/control/fabrics/summary
+        path: /rest/control/fabrics/summary/{FABRIC_NAME}/overview
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
@@ -200,7 +200,7 @@ class ApiEndpoints:
         """
         return fabric_update endpoint
         verb: PUT
-        path: /rest/control/fabrics/{FABRIC_NAME}
+        path: /rest/control/fabrics/{FABRIC_NAME}/{TEMPLATE_NAME}
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.fabric_name:
