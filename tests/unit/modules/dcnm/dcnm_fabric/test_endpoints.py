@@ -523,3 +523,20 @@ def test_endpoints_00111() -> None:
     assert endpoint.get("path", None) == (
         f"{instance.endpoint_templates}/" + f"{template_name}"
     )
+
+
+def test_endpoints_00120() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - templates getter
+
+    Summary
+    -   Verify templates getter returns the expected endpoint.
+    """
+    with does_not_raise():
+        instance = ApiEndpoints()
+        endpoint = instance.templates
+    assert endpoint.get("verb", None) == "GET"
+    assert endpoint.get("path", None) == (f"{instance.endpoint_templates}")
