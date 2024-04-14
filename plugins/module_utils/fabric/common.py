@@ -17,54 +17,73 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import logging
 import re
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 
 class FabricCommon:
     """
     Common methods used by the other classes supporting
     the dcnm_fabric module
 
-    Usage (where ansible_module is an instance of
-    AnsibleModule or MockAnsibleModule):
+    Usage (where params is AnsibleModule.params)
 
     class MyClass(FabricCommon):
-        def __init__(self, module):
-            super().__init__(module)
+        def __init__(self, params):
+            super().__init__(params)
         ...
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
-        self.check_mode = self.ansible_module.check_mode
-        self.state = ansible_module.params["state"]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.conversion = ConversionUtils()
+
+        self.params = params
+
+        self.check_mode = self.params.get("check_mode", None)
+        if self.check_mode is None:
+            msg = f"{self.class_name}.__init__(): "
+            msg += "check_mode is required"
+            raise ValueError(msg)
+
+        self.state = self.params.get("state", None)
+        if self.state is None:
+            msg = f"{self.class_name}.__init__(): "
+            msg += "state is required"
+            raise ValueError(msg)
 
         msg = "ENTERED FabricCommon(): "
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
 
-        self.params = ansible_module.params
-
-        self.properties: Dict[str, Any] = {}
-        # Default to VXLAN_EVPN
-        self.properties["fabric_type"] = "VXLAN_EVPN"
-        self.properties["results"] = None
-
         self._valid_fabric_types = {"VXLAN_EVPN"}
 
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
 
-        self._build_key_translations()
+        self._init_properties()
+        self._init_key_translations()
 
-    def _build_key_translations(self):
+    def _init_properties(self) -> None:
+        """
+        Initialize the properties dictionary.
+        """
+        self._properties: Dict[str, Any] = {}
+        self._properties["fabric_details"] = None
+        self._properties["fabric_summary"] = None
+        self._properties["fabric_type"] = "VXLAN_EVPN"
+        self._properties["rest_send"] = None
+        self._properties["results"] = None
+
+    def _init_key_translations(self):
         """
         Build a dictionary of fabric configuration key translations.
 
@@ -92,11 +111,14 @@ class FabricCommon:
 
     def _fixup_payloads_to_commit(self) -> None:
         """
-        Make any modifications to the payloads prior to sending them
-        to the controller.
+        -   Make any modifications to the payloads prior to sending them
+            to the controller.
+        -   raise ``ValueError`` if any modifications fail.
 
-        Add any modifications to the list below.
+        NOTES:
+        1. Add any modifications to the Modifications list below.
 
+        Modifications:
         - Translate ANYCAST_GW_MAC to a format the controller understands
         """
         method_name = inspect.stack()[0][3]
@@ -116,11 +138,11 @@ class FabricCommon:
                 self.results.register_task_result()
 
                 msg = f"{self.class_name}.{method_name}: "
-                msg += "Error translating ANYCAST_GW_MAC: "
+                msg += "Error translating ANYCAST_GW_MAC "
                 msg += f"for fabric {fabric_name}, "
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg) from error
 
     @staticmethod
     def translate_mac_address(mac_addr):
@@ -138,20 +160,27 @@ class FabricCommon:
 
     def _handle_response(self, response, verb) -> Dict[str, Any]:
         """
-        Call the appropriate handler for response based on verb
+        - Call the appropriate handler for response based on verb
+        - Raise ``ValueError`` if verb is unknown
         """
         if verb == "GET":
             return self._handle_get_response(response)
         if verb in {"POST", "PUT", "DELETE"}:
             return self._handle_post_put_delete_response(response)
-        return self._handle_unknown_request_verbs(response, verb)
+        try:
+            return self._handle_unknown_request_verbs(response, verb)
+        except ValueError as error:
+            raise ValueError(error) from error
 
     def _handle_unknown_request_verbs(self, response, verb):
+        """
+        Raise ``ValueError`` if verb is unknown
+        """
         method_name = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unknown request verb ({verb}) for response {response}."
-        self.ansible_module.fail_json(msg)
+        raise ValueError(msg)
 
     def _handle_get_response(self, response) -> Dict[str, Any]:
         """
@@ -218,51 +247,48 @@ class FabricCommon:
 
     def fabric_type_to_template_name(self, value):
         """
-        Return the template name for a given fabric type
+        - Return the template name for a given fabric type
+        - raise ``ValueError`` if value is not a valid fabric type
         """
         method_name = inspect.stack()[0][3]
         if value not in self.fabric_type_to_template_name_map:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Unknown fabric type: {value}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
         return self.fabric_type_to_template_name_map[value]
 
-    @staticmethod
-    def make_boolean(value):
+    @property
+    def fabric_details(self):
         """
-        Return value converted to boolean, if possible.
-        Otherwise, return value.
+        An instance of the FabricDetails class.
+        """
+        return self._properties["fabric_details"]
 
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["true", "yes"]:
-            return True
-        if str(value).lower() in ["false", "no"]:
-            return False
-        return value
+    @fabric_details.setter
+    def fabric_details(self, value):
+        self._properties["fabric_details"] = value
 
-    @staticmethod
-    def make_none(value):
+    @property
+    def fabric_summary(self):
         """
-        Return None if value is a string representation of a None type
-        Otherwise, return value
+        An instance of the FabricSummary class.
+        """
+        return self._properties["fabric_summary"]
 
-        TODO: This method is duplicated in several other classes.
-        TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower in ["", "none", "null"]:
-            return None
-        return value
+    @fabric_summary.setter
+    def fabric_summary(self, value):
+        self._properties["fabric_summary"] = value
 
     @property
     def fabric_type(self):
         """
-        The type of fabric to create/update.
+        - getter: Return the type of fabric to create/update.
+        - setter: Set the type of fabric to create/update.
+        - setter: raise ``ValueError`` if ``value`` is not a valid fabric type
 
-        See self._valid_fabric_types for valid values
+        See ``self._valid_fabric_types`` for valid values
         """
-        return self.properties["fabric_type"]
+        return self._properties["fabric_type"]
 
     @fabric_type.setter
     def fabric_type(self, value):
@@ -272,16 +298,27 @@ class FabricCommon:
             msg += "FABRIC_TYPE must be one of "
             msg += f"{sorted(self._valid_fabric_types)}. "
             msg += f"Got {value}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
-        self.properties["fabric_type"] = value
+            raise ValueError(msg)
+        self._properties["fabric_type"] = value
+
+    @property
+    def rest_send(self):
+        """
+        An instance of the RestSend class.
+        """
+        return self._properties["rest_send"]
+
+    @rest_send.setter
+    def rest_send(self, value):
+        self._properties["rest_send"] = value
 
     @property
     def results(self):
         """
         An instance of the Results class.
         """
-        return self.properties["results"]
+        return self._properties["results"]
 
     @results.setter
     def results(self, value):
-        self.properties["results"] = value
+        self._properties["results"] = value

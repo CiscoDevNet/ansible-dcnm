@@ -32,11 +32,18 @@ class FabricQuery(FabricCommon):
     Query fabrics
 
     Usage:
+
+    ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
 
+    fabric_details = FabricDetailsByName(params)
+    fabric_details.rest_send = RestSend(ansible_module)
+
     results = Results()
-    instance = FabricQuery(ansible_module)
+    params = ansible_module.params
+    instance = FabricQuery(params)
+    instance.fabric_details = fabric_details
     instance.fabric_names = ["FABRIC_1", "FABRIC_2"]
     instance.results = results
     instance.commit()
@@ -57,10 +64,11 @@ class FabricQuery(FabricCommon):
         msg = "Query failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+    ```
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
+        super().__init__(params)
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -70,7 +78,6 @@ class FabricQuery(FabricCommon):
 
         self._fabrics_to_query = []
         self._build_properties()
-        self._fabric_details = FabricDetailsByName(self.ansible_module)
 
         self.action = "query"
         self.changed = False
@@ -78,17 +85,22 @@ class FabricQuery(FabricCommon):
 
     def _build_properties(self):
         """
-        self.properties holds property values for the class
+        self._properties holds property values for the class
         """
-        # self.properties is already set in the parent class
-        self.properties["fabric_names"] = None
+        # self._properties is already set in the parent class
+        self._properties["fabric_names"] = None
 
     @property
     def fabric_names(self):
         """
-        return the fabric names
+        - setter: return the fabric names
+        - getter: set the fable_names
+        - getter: raise ``ValueError`` if ``value`` is not a ``list``
+        - getter: raise ``ValueError`` if ``value`` is an empty list
+        - getter: raise ``ValueError`` if ``value`` is not a list of strings
+
         """
-        return self.properties["fabric_names"]
+        return self._properties["fabric_names"]
 
     @fabric_names.setter
     def fabric_names(self, value):
@@ -98,32 +110,40 @@ class FabricQuery(FabricCommon):
             msg += "fabric_names must be a list. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be a list of at least one string. "
             msg += f"got {value}."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         for item in value:
             if not isinstance(item, str):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "fabric_names must be a list of strings. "
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
-                self.ansible_module.fail_json(msg)
-        self.properties["fabric_names"] = value
+                raise ValueError(msg)
+        self._properties["fabric_names"] = value
 
     def commit(self):
         """
-        query each of the fabrics in self.fabric_names
+        - query each of the fabrics in self.fabric_names
+        - raise ``ValueError`` if ``fabric_names`` is not set
+        - raise ``ValueError`` if ``fabric_details`` is not set
+
         """
         method_name = inspect.stack()[0][3]
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
-        self._fabric_details.refresh()
+        if self.fabric_details is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_details must be set prior to calling commit."
+            raise ValueError(msg)
+
+        self.fabric_details.refresh()
 
         self.results.action = self.action
         self.results.check_mode = self.check_mode
@@ -133,16 +153,16 @@ class FabricQuery(FabricCommon):
         self.log.debug(msg)
         add_to_diff = {}
         for fabric_name in self.fabric_names:
-            if fabric_name in self._fabric_details.all_data:
+            if fabric_name in self.fabric_details.all_data:
                 add_to_diff[fabric_name] = copy.deepcopy(
-                    self._fabric_details.all_data[fabric_name]
+                    self.fabric_details.all_data[fabric_name]
                 )
 
         self.results.diff_current = add_to_diff
         self.results.response_current = copy.deepcopy(
-            self._fabric_details.results.response_current
+            self.fabric_details.results.response_current
         )
         self.results.result_current = copy.deepcopy(
-            self._fabric_details.results.result_current
+            self.fabric_details.results.result_current
         )
         self.results.register_task_result()

@@ -26,7 +26,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
-    FabricCreate, FabricCreateBulk)
+    FabricCreate, FabricCreateBulk, FabricCreateCommon)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
@@ -35,6 +35,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
     load_fixture
+
+params = {
+    "state": "merged",
+    "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+    "check_mode": False,
+}
 
 
 class ResponseGenerator:
@@ -129,10 +135,10 @@ class MockAnsibleModule:
 @pytest.fixture(name="fabric_common")
 def fabric_common_fixture():
     """
-    mock FabricCommon
+    return instance of FabricCommon()
     """
     instance = MockAnsibleModule()
-    return FabricCommon(instance)
+    return FabricCommon(instance.params)
 
 
 @pytest.fixture(name="fabric_create")
@@ -142,7 +148,7 @@ def fabric_create_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
-    return FabricCreate(instance)
+    return FabricCreate(instance.params)
 
 
 @pytest.fixture(name="fabric_create_bulk")
@@ -152,7 +158,17 @@ def fabric_create_bulk_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
-    return FabricCreateBulk(instance)
+    return FabricCreateBulk(instance.params)
+
+
+@pytest.fixture(name="fabric_create_common")
+def fabric_create_common_fixture():
+    """
+    mock FabricCreateCommon
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricCreateCommon(instance.params)
 
 
 @pytest.fixture(name="fabric_delete")
@@ -162,7 +178,7 @@ def fabric_delete_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "deleted"
-    return FabricDelete(instance)
+    return FabricDelete(instance.params)
 
 
 @pytest.fixture(name="fabric_query")
@@ -172,7 +188,7 @@ def fabric_query_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "query"
-    return FabricQuery(instance)
+    return FabricQuery(instance.params)
 
 
 @pytest.fixture(name="fabric_update_bulk")
@@ -182,7 +198,7 @@ def fabric_update_bulk_fixture():
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
-    return FabricUpdateBulk(instance)
+    return FabricUpdateBulk(instance.params)
 
 
 @contextmanager
@@ -191,6 +207,16 @@ def does_not_raise():
     A context manager that does not raise an exception.
     """
     yield
+
+
+def payloads_fabric_common(key: str) -> Dict[str, str]:
+    """
+    Return payloads for FabricCommon
+    """
+    data_file = "payloads_FabricCommon"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
 
 
 def payloads_fabric_create(key: str) -> Dict[str, str]:
@@ -208,6 +234,16 @@ def payloads_fabric_create_bulk(key: str) -> Dict[str, str]:
     Return payloads for FabricCreateBulk
     """
     data_file = "payloads_FabricCreateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_fabric_create_common(key: str) -> Dict[str, str]:
+    """
+    Return payloads for FabricCreateCommon
+    """
+    data_file = "payloads_FabricCreateCommon"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -360,4 +396,13 @@ def rest_send_result_current(key: str) -> Dict[str, str]:
     data_file = "result_current_RestSend"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def templates_param_info(key: str) -> Dict[str, str]:
+    """
+    Return fabric templates for ParamInfo
+    """
+    data_file = "templates_ParamInfo"
+    data = load_fixture(data_file).get(key)
     return data

@@ -23,6 +23,8 @@ import inspect
 import logging
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
 
@@ -65,6 +67,7 @@ class TemplateGet:
         self._properties = {}
         self._properties["template_name"] = None
         self._properties["template"] = None
+        self._properties["rest_send"] = None
         self._properties["results"] = None
 
     def _set_template_endpoint(self) -> None:
@@ -90,13 +93,21 @@ class TemplateGet:
 
     def refresh(self):
         """
-        Retrieve the template from the controller.
+        -   Retrieve the template from the controller.
+        -   raise ``ValueError`` if the template endpoint assignment fails
+        -   raise ``ControllerResponseError`` if the controller
+            ``RETURN_CODE`` != 200
         """
         method_name = inspect.stack()[0][3]
         try:
             self._set_template_endpoint()
         except ValueError as error:
             raise ValueError(error) from error
+
+        if self.rest_send is None:
+            msg = "f{self.class_name}.rest_send must be set prior to calling refresh()"
+            self.log.debug(msg)
+            raise ValueError(msg)
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -109,11 +120,12 @@ class TemplateGet:
         self.result_current = copy.deepcopy(self.rest_send.result_current)
         self.result.append(copy.deepcopy(self.rest_send.result_current))
 
-        if self.response_current.get("RETURN_CODE", None) != 200:
+        return_code = self.response_current.get("RETURN_CODE", None)
+        if return_code != 200:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Failed to retrieve template {self.template_name}."
             self.log.error(msg)
-            raise ValueError(msg)
+            raise ControllerResponseError(msg, return_code)
 
         self.template = {}
         self.template["parameters"] = self.response_current.get("DATA", {}).get(

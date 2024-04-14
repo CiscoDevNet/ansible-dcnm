@@ -20,10 +20,10 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_defaults import \
-    FabricDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
     ParamInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
@@ -108,14 +108,16 @@ class VerifyPlaybookParams:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.conversion = ConversionUtils()
+
         self._ruleset = RuleSet()
-        self._fabric_defaults = FabricDefaults()
         self._param_info = ParamInfo()
         self.results = Results()
         self.params_are_valid = set()
         self.bad_params = {}
         self.parameter = None
         self.fabric_name = None
+        self.local_params = {"DEPLOY"}
 
         msg = "ENTERED VerifyPlaybookParams(): "
         self.log.debug(msg)
@@ -194,48 +196,6 @@ class VerifyPlaybookParams:
             raise TypeError(msg)
         self.properties["template"] = value
 
-    @staticmethod
-    def make_boolean(value):
-        """
-        Return value converted to boolean, if possible.
-        Otherwise, return value.
-
-        - TODO: This method is duplicated in several other classes.
-        - TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower() in ["true", "yes"]:
-            return True
-        if str(value).lower() in ["false", "no"]:
-            return False
-        return value
-
-    @staticmethod
-    def make_none(value):
-        """
-        Return None if value is a string representation of a None type
-        Otherwise, return value
-
-        - TODO: This method is duplicated in several other classes.
-        - TODO: Would be good to move this to a Utility() class.
-        """
-        if str(value).lower in ["", "none", "null"]:
-            return None
-        return value
-
-    @staticmethod
-    def make_int(value):
-        """
-        - Return value converted to int, if possible.
-        - Otherwise, return value.
-        """
-        # Don't convert boolean values to integers
-        if isinstance(value, bool):
-            return value
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            return value
-
     def eval_parameter_rule(self, parameter, param_value, rule) -> bool:
         """
         Evaluate a dependent parameter value against a rule
@@ -308,12 +268,13 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        parameter_value = self.make_boolean(self.config_controller[parameter])
+        parameter_value = self.conversion.make_boolean(
+            self.config_controller[parameter]
+        )
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
         except KeyError as error:
-            raise KeyError from error
-
+            raise KeyError(f"{error}") from error
 
     def playbook_param_is_valid(self, parameter, rule) -> bool:
         """
@@ -343,12 +304,12 @@ class VerifyPlaybookParams:
         msg += f"parameter_value: {self.config_playbook[parameter]}"
         self.log.debug(msg)
 
-        parameter_value = self.make_boolean(self.config_playbook[parameter])
+        parameter_value = self.conversion.make_boolean(self.config_playbook[parameter])
 
         try:
             return self.eval_parameter_rule(parameter, parameter_value, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
     def default_param_is_valid(self, parameter, rule) -> bool:
         """
@@ -382,12 +343,8 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        default_value = None
-        try:
-            default_value = self._fabric_defaults.parameter(parameter)
-        except KeyError:
-            # A default value does not exist for parameter.
-            # Return None to remove default_param result from consideration.
+        default_value = self._param_info.parameter(parameter).get("default", None)
+        if default_value is None:
             msg = f"Early return: parameter: {parameter} has no default value. "
             msg += "Returning None."
             self.log.debug(msg)
@@ -396,7 +353,7 @@ class VerifyPlaybookParams:
         try:
             return self.eval_parameter_rule(parameter, default_value, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
     def update_decision_set(self, dependent_param, rule) -> set:
         """
@@ -414,17 +371,17 @@ class VerifyPlaybookParams:
         try:
             controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
         try:
             playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
         try:
             default_is_valid = self.default_param_is_valid(dependent_param, rule)
         except KeyError as error:
-            raise KeyError from error
+            raise KeyError(f"{error}") from error
 
         if controller_is_valid is not None:
             decision_set.add(controller_is_valid)
@@ -450,14 +407,35 @@ class VerifyPlaybookParams:
 
     def verify_parameter_value(self) -> None:
         """
-        Verify a parameter's value against valid choices (if any)
-        culled from the template.
-
-        Return if the parameter has no valid choices.
-
-        raise ValueError if the parameter does not match any of the
-        valid choices.
+        -   Verify a parameter's value against valid choices (if any)
+            culled from the template.
+        -   Return if the parameter is found in the template, and the parameter
+            value matches a valid choice in the template.
+        -   Return if the parameter is found in the template, the template does
+            not contain choices for the parameter.
+        -   Skip "local" parameters -- i.e. parameters that are valid in a
+            playbook, but are not found in the template -- for example
+            ``DEPLOY``, after performing basic verification.
+        -   Raise ``KeyError`` if a (non-local) parameter is not found in
+            the template.
+        -   Raise ``ValueError`` for all parameters, if the parameter value
+            is a boolean string.
         """
+        playbook_value = self.config_playbook.get(self.parameter)
+
+        # Reject quoted boolean values e.g. "False", "true"
+        try:
+            self.conversion.reject_boolean_string(self.parameter, playbook_value)
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
+
+        # Skip "local" parameters i.e. parameters that are valid in a
+        # playbook but not found in the template retrieved from the controller
+        # e.g. DEPLOY
+        if self.parameter in self.local_params:
+            return
+
+        # raise KeyError if the parameter is not found in the template
         try:
             param_info = self._param_info.parameter(self.parameter)
         except KeyError as error:
@@ -471,18 +449,19 @@ class VerifyPlaybookParams:
         msg += f"{json.dumps(param_info, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        # Return if the parameter is found in the template and the template
+        # does not mandate specific choices for the parameter
         if param_info["choices"] is None:
             return
 
-        playbook_value = self.config_playbook.get(self.parameter)
         # Convert string representations of integers to integers
-        playbook_value = self.make_int(playbook_value)
+        playbook_value = self.conversion.make_int(playbook_value)
 
         # If the user specifies 0/1 for False/True, NDFC fails with a 500 error
         # (at least for ADVERTISE_PIP_BGP).  Let's mandate that the user cannot
         # use 0/1 as a substitute for boolean values and fail here instead.
-        # NOTE: make_int(), above, should not (and does not) convert boolean
-        # values to integers.
+        # NOTE: self.conversion.make_int() should not (and does not)
+        # convert boolean values to integers.
         if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
             msg = f"Parameter: {self.parameter}, "
             msg += f"Invalid value: ({playbook_value}). "
@@ -494,6 +473,8 @@ class VerifyPlaybookParams:
         msg += f"valid values: {param_info['choices']}"
         self.log.debug(msg)
 
+        # Return if the parameter is found in the template and the parameter
+        # value matches a valid choice for the parameter
         if playbook_value in param_info["choices"]:
             msg = f"Parameter: {self.parameter}, "
             msg += f"playbook_value ({playbook_value}). "
@@ -502,6 +483,8 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return
 
+        # Raise ValueError if the parameter value does not match any of the
+        # choices specified in the template for the parameter
         msg = f"Parameter: {self.parameter}, "
         msg += f"Invalid value: ({playbook_value}). "
         msg += f"Valid values: {param_info['choices']}"
@@ -513,7 +496,7 @@ class VerifyPlaybookParams:
 
         -   raise ValueError if FABRIC_NAME is not present in the playbook
         -   raise ValueError if the parameter does not match any of the valid
-            values specified in the template for the parameter 
+            values specified in the template for the parameter
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -529,7 +512,7 @@ class VerifyPlaybookParams:
         try:
             self.verify_parameter_value()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
         if self.parameter not in self._ruleset.ruleset:
             msg = f"SKIP {self.parameter}: Not in ruleset."
@@ -550,7 +533,7 @@ class VerifyPlaybookParams:
             try:
                 decision_set = self.update_decision_set(dependent_param, rule)
             except KeyError as error:
-                raise KeyError from error
+                raise KeyError(f"{error}") from error
 
             # bad_params[fabric][param] = <list of bad_param dict>
             if True not in decision_set:
@@ -597,28 +580,6 @@ class VerifyPlaybookParams:
             msg += "must be set prior to calling commit."
             raise ValueError(msg)
 
-    def update_fabric_defaults(self):
-        """
-        Update fabric parameter default values based on
-        the fabric template.
-
-        -   raise ValueError if FabricDefaults does not like the template
-        -   raise ValueError if FabricDefaults.refresh() fails
-        """
-        try:
-            self._fabric_defaults.template = self.template
-        except ValueError as error:
-            msg = f"{error}"
-            self.log.debug(msg)
-            raise ValueError(msg) from error
-
-        try:
-            self._fabric_defaults.refresh()
-        except ValueError as error:
-            msg = f"{error}"
-            self.log.debug(msg)
-            raise ValueError(msg) from error
-
     def update_param_info(self):
         """
         Update the fabric parameter info based on the fabric template
@@ -629,14 +590,14 @@ class VerifyPlaybookParams:
         try:
             self._param_info.template = self.template
         except TypeError as error:
-            raise TypeError from error
+            raise TypeError(f"{error}") from error
 
         try:
             self._param_info.refresh()
         except ValueError as error:
-            raise ValueError from error
+            raise ValueError(f"{error}") from error
 
-        msg = "ZZZ: self._param_info.info: "
+        msg = "self._param_info.info: "
         msg += f"{json.dumps(self._param_info.info, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -657,7 +618,6 @@ class VerifyPlaybookParams:
 
         raise ValueError in the following cases:
         - required parameters are not set prior to calling commit()
-        - FabricDefaults() returns error(s)
         - ParamInfo() returns errors(s)
         - A parameter fails verification
         """
@@ -669,11 +629,6 @@ class VerifyPlaybookParams:
             raise ValueError(error) from error
 
         self.update_ruleset()
-
-        try:
-            self.update_fabric_defaults()
-        except ValueError as error:
-            raise ValueError(error) from error
 
         try:
             self.update_param_info()

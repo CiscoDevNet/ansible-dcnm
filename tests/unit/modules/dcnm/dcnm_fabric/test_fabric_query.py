@@ -30,15 +30,15 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_query_fixture,
-    responses_fabric_query)
+    MockAnsibleModule, ResponseGenerator, does_not_raise, fabric_query_fixture,
+    params, responses_fabric_query)
 
 
 def test_fabric_query_00010(fabric_query) -> None:
@@ -51,14 +51,15 @@ def test_fabric_query_00010(fabric_query) -> None:
 
     Test
     - Class attributes are initialized to expected values
-    - fail_json is not called
+    - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_query
+        instance.fabric_details = FabricDetailsByName(params)
     assert instance.class_name == "FabricQuery"
     assert instance.action == "query"
     assert instance.state == "query"
-    assert isinstance(instance._fabric_details, FabricDetailsByName)
+    assert isinstance(instance.fabric_details, FabricDetailsByName)
 
 
 def test_fabric_query_00020(fabric_query) -> None:
@@ -72,7 +73,7 @@ def test_fabric_query_00020(fabric_query) -> None:
 
     Test
     - fabric_names is set to expected value
-    - fail_json is not called
+    - Exception is not raised
     """
     fabric_names = ["FOO", "BAR"]
     with does_not_raise():
@@ -91,7 +92,7 @@ def test_fabric_query_00021(fabric_query) -> None:
         - fabric_names setter
 
     Test
-    - fail_json is called because fabric_names is not a list
+    - ValueError is raised because fabric_names is not a list
     - instance.fabric_names is not modified, hence it retains its initial value of None
     """
     match = "FabricQuery.fabric_names: "
@@ -99,7 +100,7 @@ def test_fabric_query_00021(fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.fabric_names = "NOT_A_LIST"
     assert instance.fabric_names is None
 
@@ -114,7 +115,7 @@ def test_fabric_query_00022(fabric_query) -> None:
         - fabric_names setter
 
     Test
-    - fail_json is called because fabric_names is a list with a non-string element
+    - ValueError is raised because fabric_names is a list with a non-string element
     - instance.fabric_names is not modified, hence it retains its initial value of None
     """
     match = "FabricQuery.fabric_names: "
@@ -122,7 +123,7 @@ def test_fabric_query_00022(fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.fabric_names = [1, 2, 3]
     assert instance.fabric_names is None
 
@@ -140,7 +141,7 @@ def test_fabric_query_00023(fabric_query) -> None:
     Verify behavior when fabric_names is not set prior to calling commit
 
     Test
-    - fail_json is called because fabric_names is not set prior to calling commit
+    - ValueError is raised because fabric_names is not set prior to calling commit
     - instance.fabric_names is not modified, hence it retains its initial value of None
     """
     match = r"FabricQuery\.commit: "
@@ -149,7 +150,7 @@ def test_fabric_query_00023(fabric_query) -> None:
     with does_not_raise():
         instance = fabric_query
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.fabric_names is None
 
@@ -167,13 +168,40 @@ def test_fabric_query_00024(fabric_query) -> None:
     -   FabricQuery().fabric_names is set to an empty list
 
     Test
-    -   fail_json is called from fabric_names setter
+    -   ValueError is raised from fabric_names setter
     """
     match = r"FabricQuery\.fabric_names: fabric_names must be a list of "
     match += r"at least one string\."
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance = fabric_query
         instance.fabric_names = []
+
+
+def test_fabric_query_00025(fabric_query) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricQuery
+        - __init__()
+        - fabric_details setter
+
+    Summary
+    Verify behavior when fabric_details is not set prior to calling commit
+
+    Test
+    - ValueError is raised because fabric_details is not set prior to calling commit
+    """
+    match = r"FabricQuery\.commit: "
+    match += r"fabric_details must be set prior to calling commit\."
+
+    with does_not_raise():
+        instance = fabric_query
+        instance.fabric_names = ["f1"]
+        instance.results = Results()
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+    assert instance.fabric_names == ["f1"]
 
 
 def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
@@ -235,10 +263,17 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
-        instance.results = Results()
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
         instance.fabric_names = ["f1"]
+        instance.results = Results()
+
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._fabric_details.results = Results()
+    instance.fabric_details.results = Results()
+
     with does_not_raise():
         instance.commit()
 
@@ -308,10 +343,10 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
         each of the results dicts
 
     Test
-    -   FabricQuery.commit() calls instance._fabric_details() which sets
-        instance._fabric_details.all_data to a list of dict containing
+    -   FabricQuery.commit() calls instance.fabric_details() which sets
+        instance.fabric_details.all_data to a list of dict containing
         all fabrics on the controller.
-    -   since instance._fabric_details.all_data is empty, none of the
+    -   since instance.fabric_details.all_data is empty, none of the
         following are set:
         - instance.results.diff_current
         - instance.results.response_current
@@ -319,7 +354,7 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     -   instance.results.changed set() contains False
     -   instance.results.failed set() contains False
     -   commit() returns without doing anything else
-    -   fail_json is not called
+    -   Exception is not raised
     """
     key = "test_fabric_query_00031a"
 
@@ -337,10 +372,16 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
         instance.results = Results()
         instance.fabric_names = ["f1"]
+
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._fabric_details.results = Results()
+
     with does_not_raise():
         instance.commit()
 
@@ -431,14 +472,18 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+        instance.fabric_details.rest_send.timeout = 1
+        instance.fabric_details.rest_send.send_interval = 1
+
         instance.results = Results()
-        instance._fabric_details.rest_send.unit_test = True
-        instance._fabric_details.rest_send.timeout = 1
-        instance._fabric_details.rest_send.send_interval = 1
         instance.fabric_names = ["f1"]
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._fabric_details.results = Results()
+    instance.fabric_details.results = Results()
     with does_not_raise():
         instance.commit()
 
@@ -523,10 +568,18 @@ def test_fabric_query_00033(monkeypatch, fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+        instance.fabric_details.rest_send.timeout = 1
+        instance.fabric_details.rest_send.send_interval = 1
+
         instance.results = Results()
         instance.fabric_names = ["f1"]
+
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._fabric_details.results = Results()
+
     with does_not_raise():
         instance.commit()
 

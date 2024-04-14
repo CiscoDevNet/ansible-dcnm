@@ -30,16 +30,19 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
+    FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_update_bulk_fixture,
-    payloads_fabric_update_bulk, responses_fabric_details,
-    responses_fabric_summary, responses_fabric_update_bulk)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    fabric_update_bulk_fixture, params, payloads_fabric_update_bulk,
+    responses_fabric_details, responses_fabric_summary,
+    responses_fabric_update_bulk)
 
 
 def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
@@ -47,15 +50,14 @@ def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
     Classes and Methods
     - FabricCommon
         - __init__()
-    - FabricUpdateBulk
-        - __init__()
 
     Test
     - Class attributes are initialized to expected values
-    - fail_json is not called
+    - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
     assert instance.class_name == "FabricUpdateBulk"
     assert instance.action == "update"
     assert instance.state == "merged"
@@ -71,13 +73,17 @@ def test_fabric_update_bulk_00020(fabric_update_bulk) -> None:
     - FabricUpdateBulk
         - __init__()
 
+    Summary
+    A valid payloads list is presented to the payloads setter
+
     Test
     - payloads is set to expected value
-    - fail_json is not called
+    - ``ValueError`` is not raised
     """
     key = "test_fabric_update_bulk_00020a"
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
     assert instance.payloads == payloads_fabric_update_bulk(key)
@@ -92,17 +98,21 @@ def test_fabric_update_bulk_00021(fabric_update_bulk) -> None:
     - FabricUpdateBulk
         - __init__()
 
+    Summary
+    ``payloads`` setter is presented with input that is not a list.
+
     Test
-    - fail_json is called because payloads is not a list
-    - instance.payloads is not modified, hence it retains its initial value of None
+    - ``ValueError`` is raised because payloads is not a list
+    - instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk\.payloads: "
     match += r"payloads must be a list of dict\."
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
     assert instance.payloads is None
 
@@ -116,17 +126,21 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
     - FabricUpdateBulk
         - __init__()
 
+    Summary
+    ``payloads`` setter is presented with a list that contains a non-dict element.
+
     Test
-    - fail_json is called because payloads is a list with a non-dict element
-    - instance.payloads is not modified, hence it retains its initial value of None
+    - ``ValueError`` is raised because payloads is a list with non-dict elements
+    - instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk._verify_payload: "
     match += r"payload must be a dict\."
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
     assert instance.payloads is None
 
@@ -141,19 +155,21 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
         - __init__()
 
     Summary
-    Verify behavior when payloads is not set prior to calling commit
+    payloads is not set prior to calling commit
 
     Test
-    - fail_json is called because payloads is not set prior to calling commit
-    - instance.payloads is not modified, hence it retains its initial value of None
+    - ValueError is raised because payloads is not set prior to calling commit
+    - instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk\.commit: "
     match += r"payloads must be set prior to calling commit\."
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_summary = FabricSummary(params)
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.payloads is None
 
@@ -168,25 +184,59 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
         - __init__()
 
     Summary
-    Verify behavior when payloads is set to an empty list
+    payloads is set to an empty list
 
     Setup
     -   FabricUpdatebulk().payloads is set to an empty list
 
     Test
-    -   fail_json not called
+    -   ``ValueError`` is not raised
     -   payloads is set to an empty list
 
     NOTES:
-    -   element_spec is configured such that AnsibleModule will raise an exception when
-        config is not a list of dict.  Hence, we do not test instance.commit() here since
-        it would never be reached.
+    -   element_spec in dcnm_fabric.py.main() is configured such that AnsibleModule will
+        raise an exception when config is not a list of dict.  Hence, we do not test
+        instance.commit() here since it would never be reached.
     """
     with does_not_raise():
         instance = fabric_update_bulk
         instance.results = Results()
         instance.payloads = []
     assert instance.payloads == []
+
+
+@pytest.mark.parametrize(
+    "mandatory_key",
+    ["BGP_AS", "DEPLOY", "FABRIC_NAME", "FABRIC_TYPE"],
+)
+def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - payloads setter
+    - FabricUpdateBulk
+        - __init__()
+
+    Summary
+    -   Verify ``ValueError`` is raised when payloads is missing mandatory keys.
+    -   Verify instance.payloads retains its initial value of None.
+
+    """
+    key = "test_fabric_update_bulk_00025a"
+    with does_not_raise():
+        instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.results = Results()
+
+    payloads = payloads_fabric_update_bulk(key)
+    payloads[0].pop(mandatory_key, None)
+
+    match = r"FabricUpdateBulk\._verify_payload: "
+    match += r"payload is missing mandatory keys:"
+    with pytest.raises(ValueError, match=match):
+        instance.payloads = payloads
+    assert instance.payloads is None
 
 
 def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
@@ -242,9 +292,18 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
-        instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     with does_not_raise():
@@ -298,11 +357,14 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         - commit()
 
     Summary
-    Verify behavior when user attempts to update a fabric and the
-    fabric exists on the controller and the RestSend() RETURN_CODE is 200.
-    The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
-    with the controller's requirements, but able to be fixed by
-    FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   Verify behavior when user attempts to update a fabric and the
+        fabric exists on the controller and the RestSend() RETURN_CODE is 200.
+    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
+        with the controller's requirements, but able to be fixed by
+        FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   The fabric payload also contains keys that include ``bool`
+        and ``int`` values.
+
 
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
@@ -359,9 +421,18 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
-        instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     with does_not_raise():
@@ -440,7 +511,7 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         -   Results().failed adding True
         -   Results().failed_result to add a message indicating the reason for the failure
         And calls Results().register_task_result()
-        It then calls fail_json() because the payload contains an invalid key.
+        It raises ValueError because the payload contains an invalid key.
     """
     key = "test_fabric_update_bulk_00032a"
 
@@ -460,6 +531,17 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
@@ -469,7 +551,7 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
 
     match = r"FabricUpdateBulk\._fabric_needs_update: Invalid key:.*found in payload for fabric.*"
 
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -538,7 +620,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         key is present in the payload.
     -   FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison():
         -   Updates Results()
-        -   Calls fail_json() because the mac address is not convertable.
+        -   raises ValueError because the mac address is not convertable.
     """
     key = "test_fabric_update_bulk_00033a"
 
@@ -557,6 +639,17 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
@@ -564,7 +657,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
     match = r"FabricUpdateBulk\._prepare_anycast_gw_mac_for_comparison: "
     match += r"Error translating ANYCAST_GW_MAC"
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
     assert isinstance(instance.results.diff, list)

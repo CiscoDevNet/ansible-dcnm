@@ -1,0 +1,15 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricCommon unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric/test_fabric_common.py"
+    ],
+    "test_fabric_create_bulk_00020a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "00.54"
+        }
+    ]
+}
