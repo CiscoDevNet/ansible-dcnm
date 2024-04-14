@@ -272,3 +272,46 @@ def test_endpoints_00052() -> None:
         f"{template_name}"
     )
 
+
+def test_endpoints_00060() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_delete getter
+
+    Summary
+    -   Verify fabric_delete getter raises ``ValueError``
+        if ``fabric_name`` is not set.
+    """
+    fabric_name = "MyFabric"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.template_name = fabric_name
+    match = r"ApiEndpoints\.fabric_delete: "
+    match += r"fabric_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_delete
+
+
+def test_endpoints_00061() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_delete getter
+
+    Summary
+    -   Verify fabric_delete getter returns the expected
+        endpoint when ``fabric_name`` is set.
+    """
+    fabric_name = "MyFabric"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+        endpoint = instance.fabric_delete
+    assert endpoint.get("verb", None) == "DELETE"
+    assert endpoint.get("path", None) == (
+        f"{instance.endpoint_fabrics}/" +
+        f"{fabric_name}"
+    )
