@@ -203,3 +203,72 @@ def test_endpoints_00041() -> None:
         "/config-save"
     )
 
+
+def test_endpoints_00050() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_create getter
+
+    Summary
+    -   Verify fabric_create getter raises ``ValueError``
+        if ``fabric_name`` is not set.
+    """
+    template_name = "MyTemplate"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.template_name = template_name
+    match = r"ApiEndpoints\.fabric_create: "
+    match += r"fabric_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_create
+
+
+def test_endpoints_00051() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_create getter
+
+    Summary
+    -   Verify fabric_create getter raises ``ValueError``
+        if ``template_name`` is not set.
+    """
+    fabric_name = "MyFabric"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+    match = r"ApiEndpoints\.fabric_create: "
+    match += r"template_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_create
+
+
+def test_endpoints_00052() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_create getter
+
+    Summary
+    -   Verify fabric_create getter returns the expected
+        endpoint when ``fabric_name`` and ``template_name``
+        are set.
+    """
+    fabric_name = "MyFabric"
+    template_name = "MyTemplate"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+        instance.template_name = template_name
+        endpoint = instance.fabric_create
+    assert endpoint.get("verb", None) == "POST"
+    assert endpoint.get("path", None) == (
+        f"{instance.endpoint_fabrics}/" +
+        f"{fabric_name}/" +
+        f"{template_name}"
+    )
+
