@@ -482,3 +482,44 @@ def test_endpoints_00100() -> None:
         instance = ApiEndpoints()
         instance.template_name = template_name
     assert instance.template_name == template_name
+
+
+def test_endpoints_00110() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - template getter
+
+    Summary
+    -   Verify template getter raises ``ValueError``
+        if `template_name`` is not set.
+    """
+    with does_not_raise():
+        instance = ApiEndpoints()
+    match = r"ApiEndpoints\.template: "
+    match += r"template_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.template
+
+
+def test_endpoints_00111() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - template getter
+
+    Summary
+    -   Verify template getter returns the expected
+        endpoint when ``template_name`` is set.
+    """
+    template_name = "MyTemplate"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.template_name = template_name
+        endpoint = instance.template
+    assert endpoint.get("verb", None) == "GET"
+    assert endpoint.get("path", None) == (
+        f"{instance.endpoint_templates}/" + f"{template_name}"
+    )
