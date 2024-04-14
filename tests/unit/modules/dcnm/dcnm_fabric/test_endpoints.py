@@ -424,3 +424,43 @@ def test_endpoints_00082() -> None:
         f"{instance.endpoint_fabrics}/" + f"{fabric_name}/" + f"{template_name}"
     )
 
+
+def test_endpoints_00090() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_info getter
+
+    Summary
+    -   Verify fabric_info getter raises ``ValueError``
+        if ``fabric_name`` is not set.
+    """
+    with does_not_raise():
+        instance = ApiEndpoints()
+    match = r"ApiEndpoints\.fabric_info: "
+    match += r"fabric_name is required\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_info
+
+
+def test_endpoints_00091() -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints
+        - __init__()
+        - fabric_info getter
+
+    Summary
+    -   Verify fabric_info getter returns the expected
+        endpoint when ``fabric_name`` is set.
+    """
+    fabric_name = "MyFabric"
+    with does_not_raise():
+        instance = ApiEndpoints()
+        instance.fabric_name = fabric_name
+        endpoint = instance.fabric_info
+    assert endpoint.get("verb", None) == "GET"
+    assert endpoint.get("path", None) == (
+        f"{instance.endpoint_fabrics}/" + f"{fabric_name}"
+    )
