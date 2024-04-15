@@ -549,3 +549,320 @@ def test_fabric_details_by_name_00060(fabric_details_by_name) -> None:
     match += r"FabricDetailsByName\.filtered_data"
     with pytest.raises(ValueError, match=match):
         instance.filtered_data
+
+
+def test_fabric_details_by_name_00061(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - _filtered_data getter
+
+    Summary
+    -   Verify FabricDetailsByName().filtered_data returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        instance.filter = "MyFabric"
+        value = instance.filtered_data
+    assert value == {"nvPairs": {"BGP_AS": "65001"}}
+
+
+def test_fabric_details_by_name_00070(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - asn getter
+
+    Summary
+    -   Verify FabricDetailsByName().asn returns None
+        if encountering an error retrieving the asn property
+    -   Verify exception is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.filter = "MyFabric"
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        value = instance.asn
+    assert value is None
+
+
+def test_fabric_details_by_name_00071(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - asn getter
+
+    Summary
+    -   Verify FabricDetailsByName().asn returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"asn": "65001"}}
+        instance.filter = "MyFabric"
+        value = instance.asn
+    assert value == "65001"
+
+
+def test_fabric_details_by_name_00080(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - enable_pbr getter
+
+    Summary
+    -   Verify FabricDetailsByName().enable_pbr returns None
+        if encountering an error retrieving the nvPairs.ENABLE_PBR
+        property.
+    -   Verify exception is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.filter = "MyFabric"
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        value = instance.enable_pbr
+    assert value is None
+
+
+def test_fabric_details_by_name_00081(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - enable_pbr getter
+
+    Summary
+    -   Verify FabricDetailsByName().enable_pbr returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"ENABLE_PBR": "true"}}}
+        instance.filter = "MyFabric"
+        value = instance.enable_pbr
+    assert value is True
+
+
+def test_fabric_details_by_name_00090(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - fabric_id getter
+
+    Summary
+    -   Verify FabricDetailsByName().fabric_id returns None
+        if encountering an error retrieving the fabric_id
+        property.
+    -   Verify exception is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.filter = "MyFabric"
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        value = instance.fabric_id
+    assert value is None
+
+
+def test_fabric_details_by_name_00091(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - fabric_id getter
+
+    Summary
+    -   Verify FabricDetailsByName().fabric_id returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"fabricId": "FABRIC-2"}}
+        instance.filter = "MyFabric"
+        value = instance.fabric_id
+    assert value == "FABRIC-2"
+
+
+def test_fabric_details_by_name_00100(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - template_name getter
+
+    Summary
+    -   Verify FabricDetailsByName().template_name returns None
+        if encountering an error retrieving the templateName
+        property.
+    -   Verify exception is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.filter = "MyFabric"
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        value = instance.template_name
+    assert value is None
+
+
+def test_fabric_details_by_name_00101(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - template_name getter
+
+    Summary
+    -   Verify FabricDetailsByName().replication_mode returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"templateName": "Easy_Fabric"}}
+        instance.filter = "MyFabric"
+        value = instance.template_name
+    assert value == "Easy_Fabric"
+
+
+def test_fabric_details_by_name_00300(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - fabric_type getter
+
+    Summary
+    -   Verify FabricDetailsByName().fabric_type returns None
+        if encountering an error retrieving the nvPairs.FABRIC_TYPE
+        property.
+    -   Verify exception is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.filter = "MyFabric"
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        value = instance.fabric_type
+    assert value is None
+
+
+def test_fabric_details_by_name_00301(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - fabric_type getter
+
+    Summary
+    -   Verify FabricDetailsByName().fabric_type returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"FABRIC_TYPE": "Switch_Fabric"}}}
+        instance.filter = "MyFabric"
+        value = instance.fabric_type
+    assert value == "Switch_Fabric"
+
+
+def test_fabric_details_by_name_00310(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - replication_mode getter
+
+    Summary
+    -   Verify FabricDetailsByName().replication_mode returns None
+        if encountering an error retrieving the nvPairs.REPLICATION_MODE
+        property.
+    -   Verify exception is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.filter = "MyFabric"
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"BGP_AS": "65001"}}}
+        value = instance.replication_mode
+    assert value is None
+
+
+def test_fabric_details_by_name_00311(fabric_details_by_name) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+    - FabricDetailsByName
+        - __init__()
+        - replication_mode getter
+
+    Summary
+    -   Verify FabricDetailsByName().replication_mode returns the expected
+        data when FabricDetailsByName().filter is set.
+    -   Verify ``ValueError`` is not raised.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name
+        instance.data_subclass = {"MyFabric": {"nvPairs": {"REPLICATION_MODE": "Ingress"}}}
+        instance.filter = "MyFabric"
+        value = instance.replication_mode
+    assert value == "Ingress"
