@@ -329,7 +329,7 @@ class FabricDetailsByName(FabricDetails):
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.filter} does not exist on the controller."
+            msg += f"fabric_name {self.filter} does not exist on the controller."
             raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
@@ -382,9 +382,16 @@ class FabricDetailsByName(FabricDetails):
     @property
     def filtered_data(self):
         """
-        Return a dictionary of the fabric matching self.filter.
-        Return None if the fabric does not exist on the controller.
+        - Return a dictionary of the fabric matching self.filter.
+        - Return None if the fabric does not exist on the controller.
+        - raise ``ValueError`` if self.filter has not been set.
         """
+        method_name = inspect.stack()[0][3]
+        if self.filter is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{self.class_name}.filter must be set before calling "
+            msg += f"{self.class_name}.filtered_data"
+            raise ValueError(msg)
         return self.data_subclass.get(self.filter, None)
 
     @property
