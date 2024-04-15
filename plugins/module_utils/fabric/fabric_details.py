@@ -57,6 +57,22 @@ class FabricDetails(FabricCommon):
         self.results = Results()
         self.conversion = ConversionUtils()
 
+    def _update_results(self):
+        """
+        Update the results object with the current state of the fabric
+        details.
+        """
+        self.results.response_current = self.rest_send.response_current
+        self.results.response = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.result = self.rest_send.result_current
+        if self.results.response_current.get("RETURN_CODE") == 200:
+            self.results.failed = False
+        else:
+            self.results.success = True
+        # FabricDetails never changes the controller state
+        self.results.changed = False
+
     def refresh_super(self):
         """
         Refresh the fabric details from the controller and
@@ -84,6 +100,8 @@ class FabricDetails(FabricCommon):
 
         self.data = {}
         if self.rest_send.response_current.get("DATA") is None:
+            # The DATA key should always be present. We should never hit this. 
+            self._update_results()
             return
         for item in self.rest_send.response_current.get("DATA"):
             self.data[item["fabricName"]] = item
@@ -97,17 +115,14 @@ class FabricDetails(FabricCommon):
         )
         self.log.debug(msg)
 
-        self.results.response_current = self.rest_send.response_current
-        self.results.response = self.rest_send.response_current
-        self.results.result_current = self.rest_send.result_current
-        self.results.result = self.rest_send.result_current
+        self._update_results()
 
-    def _get(self, item):
+    def _get(self, item=None):
         """
         overridden in subclasses
         """
 
-    def _get_nv_pair(self, item):
+    def _get_nv_pair(self, item=None):
         """
         overridden in subclasses
         """
@@ -122,8 +137,7 @@ class FabricDetails(FabricCommon):
     @property
     def asn(self):
         """
-        Return the BGP asn of the fabric specified with filter,
-        if it exists.
+        Return the BGP asn of the fabric specified with filter, if it exists.
         Return None otherwise
 
         Type: string
