@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import json
@@ -6,8 +8,6 @@ import time
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
-    get_fabric_inventory_details,
-    get_fabric_details,
     dcnm_get_ip_addr_info,
 )
 
@@ -110,6 +110,18 @@ def dcnm_vpc_pair_utils_translate_config(self, cfg):
             self.module, cfg["peerTwoId"], self.ip_sn, self.hn_sn
         )
 
+    # In the current implementation we are not supporting the following fields:
+    #  - clear_policy
+    #  - isVpcPlus
+    #  - isVTEPS
+    # But as per template these are mandatory paremeters. So we will default these values to False
+    # in the config.
+
+    if cfg.get("profile", None) is not None:
+        cfg["profile"]["clear_policy"] = False
+        cfg["profile"]["isVpcPlus"] = False
+        cfg["profile"]["isVTEPS"] = False
+
 
 def dcnm_vpc_pair_utils_update_other_information(self):
 
@@ -132,7 +144,6 @@ def dcnm_vpc_pair_utils_update_other_information(self):
         if sn is not None and swid is not None:
             sn_swid.update({sn: swid})
     self.sn_swid = sn_swid
-    self.log_msg(f"SN_SWID INFO = {self.sn_swid}\n")
 
 
 def dcnm_vpc_pair_utils_translate_vpc_pair_info(self, elem):
@@ -185,8 +196,6 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
 
     resp = dcnm_send(self.module, "GET", path)
 
-    self.log_msg(f"GET VPC INFO, PATH = {path}, RESP = {resp}\n")
-
     if (
         resp
         and (resp["RETURN_CODE"] == 200)
@@ -206,8 +215,6 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
     path = path.format(peerOneId)
 
     resp = dcnm_send(self.module, "GET", path)
-
-    self.log_msg(f"GET VPC POLICY INFO, PATH = {path}, RESP = {resp}\n")
 
     if (
         resp
@@ -258,7 +265,7 @@ def dcnm_vpc_pair_utils_get_vpc_pair_payload(self, vpc_pair_info):
             vpc_pair_payload["nvPairs"] = vpc_pair_info[key]
             vpc_pair_payload["nvPairs"]["FABRIC_NAME"] = self.fabric
 
-            # Though arg_spec metions member interfaces to be a list, the actual payload must carry a string. Do the
+            # Though arg_spec mentions member interfaces to be a list, the actual payload must carry a string. Do the
             # required translation
             vpc_pair_payload["nvPairs"]["PEER1_MEMBER_INTERFACES"] = ",".join(
                 vpc_pair_info[key]["PEER1_MEMBER_INTERFACES"]
@@ -320,7 +327,7 @@ def dcnm_vpc_pair_utils_get_matching_cfg(self, want):
     return match_cfg
 
 
-def dcnm_vpc_pair_utils_merge_want_and_have(want, have, key):
+def dcnm_vpc_pair_utils_merge_want_and_have(self, want, have, key):
 
     if want.get(key, "") == "":
         want[key] = have.get(key)
@@ -434,8 +441,6 @@ def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
                     }
                 )
 
-    self.log_msg(f"MISMATCH = {mismatch_reasons}\n")
-
     if mismatch_reasons != []:
         return "DCNM_VPC_PAIR_MERGE", mismatch_reasons, hobj
     else:
@@ -532,6 +537,7 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
 
     resp = None
     delete_flag = False
+    deploy_flag = False
 
     for elem in self.diff_delete:
 
@@ -540,8 +546,6 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
 
         resp = dcnm_send(self.module, "DELETE", path)
 
-        self.log_msg(f"DELETE PATH = {path}, RESP = {resp}\n")
-
         if resp != []:
             self.result["response"].append(resp)
 
@@ -549,13 +553,12 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
             resp["CHANGED"] = self.changed_dict[0]
             self.module.fail_json(msg=resp)
         else:
-            # Check is the pair is already in "unpaired state". In this case the response contains
+            # Check if the pair is already in "unpaired state". In this case the response contains
             # 'VPC Pair could not be deleted'. If that is the case check if the switches are already in
             # 'In-Sync' state. If they are then no need to deploy for this case.
 
             if isinstance(resp["DATA"], str):
                 if "VPC Pair could not be deleted" in resp["DATA"]:
-                    self.log_msg(f"RESP DATA = {resp['DATA']}\n")
                     sync_state = dcnm_vpc_pair_utils_get_sync_status(
                         self, elem
                     )
@@ -564,18 +567,17 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
                         dcnm_vpc_pair_utils_delete_from_deploy_list(
                             self, elem, self.diff_delete_deploy
                         )
-                        self.log_msg(
-                            f"Deploy List = {self.diff_delete_deploy}\n"
-                        )
+                else:
+                    delete_flag = True
             else:
                 delete_flag = True
 
     # VPC requires a deploy after delete. Check if the delete deploy paylaods are present and process them
-    delete_flag = dcnm_vpc_pair_utils_process_deploy_payloads(
+    deploy_flag = dcnm_vpc_pair_utils_process_deploy_payloads(
         self, self.diff_delete_deploy
     )
 
-    return delete_flag
+    return deploy_flag or delete_flag
 
 
 def dcnm_vpc_pair_utils_process_create_payloads(self):
@@ -600,8 +602,6 @@ def dcnm_vpc_pair_utils_process_create_payloads(self):
 
         json_payload = json.dumps(elem)
         resp = dcnm_send(self.module, "POST", path, json_payload)
-
-        self.log_msg(f"CREATE RESP = {resp}\n")
 
         if resp != []:
             self.result["response"].append(resp)
@@ -635,8 +635,6 @@ def dcnm_vpc_pair_utils_process_modify_payloads(self):
 
         json_payload = json.dumps(elem)
         resp = dcnm_send(self.module, "PUT", path, json_payload)
-
-        self.log_msg(f"MODIFY RESP = {resp}\n")
 
         if resp != []:
             self.result["response"].append(resp)
@@ -676,9 +674,6 @@ def dcnm_vpc_pair_utils_get_sync_status(self, elem):
 
     # Check if all switches reached the "In-Sync" state
     for elem in resp["DATA"]:
-        self.log_msg(
-            f"SWITCH = {elem['ipAddress']}, STATUS = {elem['ccStatus']}\n"
-        )
         if elem["ipAddress"] in switches:
             if elem["ccStatus"] == "In-Sync":
                 switches.remove(elem["ipAddress"])
@@ -707,8 +702,6 @@ def dcnm_vpc_pair_utils_save_config_changes(self):
     path = self.paths["VPC_PAIR_CFG_SAVE_PATH"].format(self.fabric)
 
     resp = dcnm_send(self.module, "POST", path)
-
-    self.log_msg(f"CONFIG-SAVE PATH = {path}, RESP = {resp}\n")
 
     if resp != []:
         self.result["response"].append(resp)
@@ -740,8 +733,6 @@ def dcnm_vpc_pair_utils_deploy_elem(self, elem):
         )
 
         resp = dcnm_send(self.module, "POST", path)
-
-        self.log_msg(f"DEPLOY PATH = {path}, RESP = {resp}\n")
 
         if resp != []:
             self.result["response"].append(resp)
@@ -791,7 +782,7 @@ def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
                     # Sometimes a deploy retry may be required. Retry deploy to see if things get normal
                     if retries and retries % 3 == 0:
                         rc, resp = dcnm_vpc_pair_utils_deploy_elem(self, elem)
-                    time.sleep(3)
+                    time.sleep(1)
                     retries += 1
                 else:
                     break
@@ -808,6 +799,7 @@ def dcnm_vpc_pair_utils_get_delete_list(self):
     del_list = []
     swid_list = self.sn_swid.values()
     for swid in swid_list:
+
         # Get the VPC inventory using the swid.
         vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
             self, swid
@@ -822,8 +814,6 @@ def dcnm_vpc_pair_utils_get_delete_list(self):
         if want == []:
             if vpc_pair_info not in del_list:
                 del_list.append(vpc_pair_info)
-
-    self.log_msg(f"DEL LIST = {del_list}\n")
 
     return del_list
 
@@ -848,11 +838,15 @@ def dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(self):
     else:
         for elem in self.vpc_pair_info:
 
-            if self.ip_sn.get(elem["peerOneId"], None) is not None:
+            if (elem.get("peerOneId", None) is not None) and (
+                self.ip_sn.get(elem["peerOneId"], None) is not None
+            ):
                 swid = self.sn_swid.get(
                     self.ip_sn.get(elem["peerOneId"], None), None
                 )
-            elif self.ip_sn.get(elem["peerTwoId"], None) is not None:
+            elif (elem.get("peerTwoId", None) is not None) and (
+                self.ip_sn.get(elem["peerTwoId"], None) is not None
+            ):
                 swid = self.sn_swid.get(
                     self.ip_sn.get(elem["peerTwoId"], None), None
                 )

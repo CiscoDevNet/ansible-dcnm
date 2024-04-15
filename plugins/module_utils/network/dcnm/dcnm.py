@@ -26,13 +26,26 @@ from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
 dcnm_paths = {
-        11: {
-            "TEMPLATE_WITH_NAME": "/rest/config/templates/{}",
-        },
-        12: {
-            "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}",
-        },
+    11: {"TEMPLATE_WITH_NAME": "/rest/config/templates/{}"},
+    12: {
+        "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}"
+    },
 }
+
+dcnm_template_type_xlations = {
+    "string": "str",
+    "string[]": "list",
+    "integer": "int",
+    "long": "int",
+    "ipV4Address": "ipv4",
+    "ipV6Address": "ipv6",
+    "interfaceRange": "list",
+    "boolean": "bool",
+    "enum": "str",
+    "ipV4AddressWithSubnet": "ipv4_subnet",
+    "ipV6AddressWithSubnet": "ipv6_subnet"
+}
+
 
 def validate_ip_address_format(type, item, invalid_params):
 
@@ -144,7 +157,9 @@ def validate_list_of_dicts(param_list, spec, module=None):
                 if choice:
                     if item not in choice:
                         invalid_params.append(
-                            "{0} : Invalid choice [ {0} ] provided for param [ {1} ]".format(item, param)
+                            "{0} : Invalid choice [ {0} ] provided for param [ {1} ]".format(
+                                item, param
+                            )
                         )
 
                 no_log = spec[param].get("no_log")
@@ -534,6 +549,7 @@ def dcnm_get_url(module, fabric, path, items, module_name):
 
     return attach_objects
 
+
 def dcnm_load_mapping_data():
 
     path = os.path.join("./", "{0}.json".format("type_mappings"))
@@ -548,9 +564,12 @@ def dcnm_load_mapping_data():
 
     return j_data
 
-def dcnm_get_template_details (module, version, name):
 
-    resp = dcnm_send(module, "GET", dcnm_paths[version]["TEMPLATE_WITH_NAME"].format(name))
+def dcnm_get_template_details(module, version, name):
+
+    resp = dcnm_send(
+        module, "GET", dcnm_paths[version]["TEMPLATE_WITH_NAME"].format(name)
+    )
 
     if (
         resp
@@ -563,103 +582,156 @@ def dcnm_get_template_details (module, version, name):
         else:
             return []
 
-def dcnm_update_arg_specs (mspec, arg_specs):
 
-    pat = re.compile(r'(\w+)\s*([<>=!]{1,2})\s*(\w+)')
+def dcnm_update_arg_specs(mspec, arg_specs):
+
+    pat = re.compile(r"(\w+)\s*([<>=!]{1,2})\s*(\w+)")
 
     for as_key in arg_specs:
 
-       item = arg_specs[as_key]
+        item = arg_specs[as_key]
 
-       if item["required"] not in [True, False]:
+        if item["required"] not in [True, False]:
 
-          # item is a dependent variable. item["required"] includes a string which specifies
-          # the variables it depends on. Parse the string and check the mspec to
-          # derive if required should be True or False.
-          dvars = re.split("&& | \|\|", item["required"])
+            # item is a dependent variable. item["required"] includes a string which specifies
+            # the variables it depends on. Parse the string and check the mspec to
+            # derive if required should be True or False.
+            dvars = re.split(r"&& | \|\|", item["required"])
 
-          for elem in dvars:
-              match = pat.search(elem)
-              key = match[1].replace('(', '').replace(')', '')
+            for elem in dvars:
+                match = pat.search(elem)
+                key = match[1].replace("(", "").replace(")", "")
 
-              if mspec and mspec.get(key, None) == bool(match.group(3)):
-                  # Given key is included in the mspec. So mark this a 'true' in the aspec. Final 'eval'
-                  # on the item["required"] will yield the desired bool value.
-                  item["required"] = item["required"].replace('true', 'True')
-                  item["required"] = item["required"].replace('false', 'False')
-                  item["required"] = eval(item["required"].replace(key, 'True'))
-              else:
-                  item["required"] = item["required"].replace('true', 'True')
-                  item["required"] = item["required"].replace('false', 'False')
-                  item["required"] = eval(item["required"].replace(key, 'False'))
+                if mspec and mspec.get(key, None) == bool(match.group(3)):
+                    # Given key is included in the mspec. So mark this a 'true' in the aspec. Final 'eval'
+                    # on the item["required"] will yield the desired bool value.
+                    item["required"] = item["required"].replace("true", "True")
+                    item["required"] = item["required"].replace(
+                        "false", "False"
+                    )
+                    item["required"] = eval(
+                        item["required"].replace(key, "True")
+                    )
+                else:
+                    item["required"] = item["required"].replace("true", "True")
+                    item["required"] = item["required"].replace(
+                        "false", "False"
+                    )
+                    item["required"] = eval(
+                        item["required"].replace(key, "False")
+                    )
+
 
 def dcnm_get_template_specs(module, name, version):
 
-        map_data = dcnm_load_mapping_data()
+    template_payload = dcnm_get_template_details(module, version, name)
 
-        template_payload = dcnm_get_template_details(
-            module, version, name
-        )
+    if template_payload:
 
-        if template_payload:
+        pb_template = {name: {}, name + "_spec": {}, name + "_playbook": {}}
 
-            pb_template = {
-                name: {},
-                name+"_spec" : {},
-                name+"_playbook" : {}
-            }
+        # 'policy': {'required': 'True', 'type': 'str', 'choices': ['int_vlan', 'int_vlan_admin_state'], 'range_min': 8, 'range_max': 256}
+        for p in template_payload["parameters"]:
 
-            # 'policy': {'required': 'True', 'type': 'str', 'choices': ['int_vlan', 'int_vlan_admin_state'], 'range_min': 8, 'range_max': 256}
-            for p in template_payload["parameters"]:
+            pb_template[name][p["name"]] = ""
+            pb_template[name + "_playbook"][p["name"]] = ""
+            pb_template[name + "_spec"][p["name"]] = {}
+            pname_len = len(p["name"])
 
-                pb_template[name][p["name"]]= ""
-                pb_template[name+"_playbook"][p["name"]]= ""
-                pb_template[name+"_spec"][p["name"]] = {}
-                pname_len = len(p["name"])
+            pb_template[name][p["name"]] += html.unescape(
+                " " * (40 - pname_len)
+                + "# Description: "
+                + p["annotations"].get("Description", "NA")
+            )
 
-                pb_template[name][p["name"]] += html.unescape(" "*(40 - pname_len) + "# Description: " + p["annotations"].get("Description", "NA"))
-
-                if "IsShow" in p["annotations"]:
-                    pb_template[name][p["name"]] += ", Mandatory: " + p["annotations"]["IsShow"].replace('"', '')
-                    pb_template[name+"_spec"][p["name"]]["required"] = p["annotations"]["IsShow"].replace('"', '')
-                else:
-                    pb_template[name][p["name"]] += ", Mandatory: " + str(not (p["optional"]))
-                    pb_template[name+"_spec"][p["name"]]["required"] = bool(not (p["optional"]))
-
-                if p["metaProperties"].get("min", None) is not None:
-                    pb_template[name][p["name"]] += ", Min: " + str(p["metaProperties"]["min"])
-                    pb_template[name+"_spec"][p["name"]]["range_min"] = int(p["metaProperties"]["min"])
-                if p["metaProperties"].get("max", None) is not None:
-                    pb_template[name][p["name"]] += ", Max: " + str(p["metaProperties"]["max"])
-                    pb_template[name+"_spec"][p["name"]]["range_max"] = int(p["metaProperties"]["max"])
-                if p["metaProperties"].get("minLength", None) is not None:
-                    pb_template[name][p["name"]] += ", MinLen: " + str(p["metaProperties"]["minLength"])
-                    pb_template[name+"_spec"][p["name"]]["range_min"] = int(p["metaProperties"]["minLength"])
-                if p["metaProperties"].get("maxLength", None) is not None:
-                    pb_template[name][p["name"]] += ", MaxLen: " + str(p["metaProperties"]["maxLength"])
-                    pb_template[name+"_spec"][p["name"]]["range_max"] = int(p["metaProperties"]["maxLength"])
-                if p["metaProperties"].get("validValues", None) is not None:
-                    pb_template[name][p["name"]] += ", ValidValues: " + str(str(p["metaProperties"]["validValues"]).split(','))
-                    pb_template[name+"_spec"][p["name"]]["choices"] = str(p["metaProperties"]["validValues"]).split(',')
-                if p.get("parameterType", None) is not None:
-                    pb_template[name][p["name"]] += ", Type: " + map_data[str(p["parameterType"])]
-                    pb_template[name+"_spec"][p["name"]]["type"] = map_data[p["parameterType"]]
-                    if p.get("parameterType") == "string[]":
-                        pb_template[name][p["name"]] += ", elements: " + 'str'
-                        pb_template[name+"_spec"][p["name"]]["type"] = map_data[p["parameterType"]]
-                        pb_template[name+"_spec"][p["name"]]["elements"] = 'str'
-
+            if "IsShow" in p["annotations"]:
+                pb_template[name][p["name"]] += ", Mandatory: " + p[
+                    "annotations"
+                ]["IsShow"].replace('"', "")
+                pb_template[name + "_spec"][p["name"]]["required"] = p[
+                    "annotations"
+                ]["IsShow"].replace('"', "")
+            else:
+                # If 'defaultValue' is included, then the object can be marked as optional.
                 if p["metaProperties"].get("defaultValue", None) is not None:
-                    pb_template[name][p["name"]] += ", Default: " + str(p["metaProperties"]["defaultValue"].replace('\"\"', ''))
-                    if pb_template[name+"_spec"][p["name"]]["type"] == 'int':
-                        if p["metaProperties"]["defaultValue"] == '':
-                            pb_template[name+"_spec"][p["name"]]["default"] = p["metaProperties"]["defaultValue"].replace('\"\"', '')
-                        else:
-                            pb_template[name+"_spec"][p["name"]]["default"] = int(p["metaProperties"]["defaultValue"])
-                    else:
-                        pb_template[name+"_spec"][p["name"]]["default"] = p["metaProperties"]["defaultValue"].replace('\"\"', '')
+                    pb_template[name][p["name"]] += ", Mandatory: False"
+                    pb_template[name + "_spec"][p["name"]]["required"] = False
                 else:
-                    pb_template[name][p["name"]] += ", Default: ''"
-                    pb_template[name+"_spec"][p["name"]]["default"] = ""
+                    pb_template[name][p["name"]] += ", Mandatory: " + str(
+                        not (p["optional"])
+                    )
+                    pb_template[name + "_spec"][p["name"]]["required"] = bool(
+                        not (p["optional"])
+                    )
 
-            return (pb_template)
+            if p["metaProperties"].get("min", None) is not None:
+                pb_template[name][p["name"]] += ", Min: " + str(
+                    p["metaProperties"]["min"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_min"] = int(
+                    p["metaProperties"]["min"]
+                )
+            if p["metaProperties"].get("max", None) is not None:
+                pb_template[name][p["name"]] += ", Max: " + str(
+                    p["metaProperties"]["max"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_max"] = int(
+                    p["metaProperties"]["max"]
+                )
+            if p["metaProperties"].get("minLength", None) is not None:
+                pb_template[name][p["name"]] += ", MinLen: " + str(
+                    p["metaProperties"]["minLength"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_min"] = int(
+                    p["metaProperties"]["minLength"]
+                )
+            if p["metaProperties"].get("maxLength", None) is not None:
+                pb_template[name][p["name"]] += ", MaxLen: " + str(
+                    p["metaProperties"]["maxLength"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_max"] = int(
+                    p["metaProperties"]["maxLength"]
+                )
+            if p["metaProperties"].get("validValues", None) is not None:
+                pb_template[name][p["name"]] += ", ValidValues: " + str(
+                    str(p["metaProperties"]["validValues"]).split(",")
+                )
+                pb_template[name + "_spec"][p["name"]]["choices"] = str(
+                    p["metaProperties"]["validValues"]
+                ).split(",")
+            if p.get("parameterType", None) is not None:
+                pb_template[name][p["name"]] += (
+                    ", Type: " + dcnm_template_type_xlations[str(p["parameterType"])]
+                )
+                pb_template[name + "_spec"][p["name"]]["type"] = dcnm_template_type_xlations[
+                    p["parameterType"]
+                ]
+                if p.get("parameterType") == "string[]":
+                    pb_template[name][p["name"]] += ", elements: " + "str"
+                    pb_template[name + "_spec"][p["name"]]["type"] = dcnm_template_type_xlations[
+                        p["parameterType"]
+                    ]
+                    pb_template[name + "_spec"][p["name"]]["elements"] = "str"
+
+            if p["metaProperties"].get("defaultValue", None) is not None:
+                pb_template[name][p["name"]] += ", Default: " + str(
+                    p["metaProperties"]["defaultValue"].replace('""', "")
+                )
+                if pb_template[name + "_spec"][p["name"]]["type"] == "int":
+                    if p["metaProperties"]["defaultValue"] == "":
+                        pb_template[name + "_spec"][p["name"]]["default"] = p[
+                            "metaProperties"
+                        ]["defaultValue"].replace('""', "")
+                    else:
+                        pb_template[name + "_spec"][p["name"]][
+                            "default"
+                        ] = int(p["metaProperties"]["defaultValue"])
+                else:
+                    pb_template[name + "_spec"][p["name"]]["default"] = p[
+                        "metaProperties"
+                    ]["defaultValue"].replace('""', "")
+            else:
+                pb_template[name][p["name"]] += ", Default: ''"
+                pb_template[name + "_spec"][p["name"]]["default"] = ""
+
+        return pb_template

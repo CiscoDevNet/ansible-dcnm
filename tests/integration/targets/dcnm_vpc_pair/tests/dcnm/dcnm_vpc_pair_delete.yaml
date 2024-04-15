@@ -52,9 +52,6 @@
               PEER2_MEMBER_INTERFACES: e1/20                        # A list of member interfaces for Peer-2 [e.g. e1/5,eth1/7-9], Mandatory: False, Type: list, Default: []"
               PEER2_PCID: 102                                       # Peer-2 Peerlink port-channel number (Min:1, Max:4096), Mandatory: False, Min: 1, Max: 4096, Type: int, Default: ''"
               PEER2_PO_DESC: "This is peer2 PC"                     # Add description to the port-channel (Max Size 254), Mandatory: False, MinLen: 1, MaxLen: 254, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
@@ -152,9 +149,6 @@
               PEER2_MEMBER_INTERFACES: e1/20                        # A list of member interfaces for Peer-2 [e.g. e1/5,eth1/7-9], Mandatory: False, Type: list, Default: []"
               PEER2_PCID: 102                                       # Peer-2 Peerlink port-channel number (Min:1, Max:4096), Mandatory: False, Min: 1, Max: 4096, Type: int, Default: ''"
               PEER2_PO_DESC: "This is peer2 PC"                     # Add description to the port-channel (Max Size 254), Mandatory: False, MinLen: 1, MaxLen: 254, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
