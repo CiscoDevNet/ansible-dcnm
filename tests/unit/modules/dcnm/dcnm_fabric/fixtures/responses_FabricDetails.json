@@ -1950,6 +1950,26 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
         "RETURN_CODE": 200
     },
+    "test_fabric_details_00030a": {
+        "TEST_NOTES": [
+            "DATA is an empty list"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_00031a": {
+        "TEST_NOTES": [
+            "DATA key is missing",
+            "Negative test case"
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
     "test_fabric_update_bulk_00031a": {
         "DATA": [
             {
