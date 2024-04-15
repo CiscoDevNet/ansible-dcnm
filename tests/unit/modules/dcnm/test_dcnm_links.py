@@ -2478,7 +2478,6 @@ class TestDcnmLinksModule(TestDcnmModule):
         )
 
         result = self.execute_module(changed=True, failed=False)
-        print(result)
         self.assertEqual(len(result["diff"][0]["merged"]), 1)
         self.assertEqual(len(result["diff"][0]["modified"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
@@ -5405,7 +5404,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("Invalid choice provided" in str(e)), True)
+            self.assertEqual(("Invalid choice [ dcnm_links_invalid_template ] provided" in str(e)), True)
 
     def test_dcnm_intra_links_missing_src_fabric(self):
 
@@ -5895,7 +5894,7 @@ class TestDcnmLinksModule(TestDcnmModule):
             result = self.execute_module(changed=False, failed=False)
         except Exception as e:
             self.assertEqual(result, None)
-            self.assertEqual(("Invalid choice provided" in str(e)), True)
+            self.assertEqual(("Invalid choice [ dcnm_links_invalid_template ] provided" in str(e)), True)
 
     def test_dcnm_inter_links_missing_src_fabric(self):
 

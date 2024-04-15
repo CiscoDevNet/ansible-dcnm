@@ -84,7 +84,7 @@ def test_dcnm_vpc_pair_log_msg(monkeypatch, dcnm_vpc_pair_fixture):
     try:
         os.remove("dcnm_vpc_pair.log")
     except Exception as e:
-        print (str(e))
+        print(str(e))
 
 
 @pytest.mark.parametrize(
