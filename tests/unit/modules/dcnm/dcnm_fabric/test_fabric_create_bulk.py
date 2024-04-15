@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -39,7 +40,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_create_bulk_fixture, params, payloads_fabric_create_bulk,
-    responses_fabric_create_bulk, responses_fabric_details,
+    responses_fabric_create_bulk, responses_fabric_details_by_name,
     rest_send_response_current)
 
 
@@ -77,7 +78,9 @@ def test_fabric_create_bulk_00020(fabric_create_bulk) -> None:
     - payloads is set to expected value
     - Exception is not raised
     """
-    key = "test_fabric_create_bulk_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
@@ -226,13 +229,14 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
     Test
     -   ``ValueError`` is raised because the value of FABRIC_TYPE is invalid
     """
-    key = "test_fabric_create_bulk_00025a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
 
     gen = ResponseGenerator(responses())
 
@@ -276,7 +280,9 @@ def test_fabric_create_bulk_00026(fabric_create_bulk) -> None:
     -   ``ValueError`` is raised because rest_send is not set prior
         to calling commit
     """
-    key = "test_fabric_create_bulk_00026a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     match = r"FabricCreateBulk\.commit: "
     match += r"rest_send must be set prior to calling commit\."
 
@@ -322,13 +328,14 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
         -   DATA == {f1 fabric data dict}
             RETURN_CODE == 200
     """
-    key = "test_fabric_create_bulk_00030a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_create_bulk(key)
 
     gen = ResponseGenerator(responses())
@@ -428,13 +435,14 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
     -   FabricCreateBulk.commit() returns without doing anything.
 
     """
-    key = "test_fabric_create_bulk_00031a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
 
     gen = ResponseGenerator(responses())
 
@@ -504,13 +512,14 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
             RETURN_CODE == 500,
             MESSAGE = "Internal Server Error"
     """
-    key = "test_fabric_create_bulk_00032a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_create_bulk(key)
 
     gen = ResponseGenerator(responses())
@@ -604,13 +613,14 @@ def test_fabric_create_bulk_00033(monkeypatch, fabric_create_bulk) -> None:
     -   FabricCreateBulk.commit() calls FabricCommon_fixup_payloads_to_commit() which
         raises ``ValueError`` because the mac address is malformed.
     """
-    key = "test_fabric_create_bulk_00033a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
 
     gen = ResponseGenerator(responses())
 

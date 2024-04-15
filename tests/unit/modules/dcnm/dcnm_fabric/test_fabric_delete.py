@@ -45,7 +45,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary i
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_delete_fixture, params, responses_fabric_delete,
-    responses_fabric_details, responses_fabric_summary,
+    responses_fabric_details_by_name, responses_fabric_summary,
     rest_send_response_current)
 
 
@@ -308,7 +308,7 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_delete(key)
 
@@ -418,7 +418,7 @@ def test_fabric_delete_00041(monkeypatch, fabric_delete) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
     gen = ResponseGenerator(responses())
@@ -553,7 +553,7 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
     gen = ResponseGenerator(responses())
@@ -661,7 +661,7 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
     gen = ResponseGenerator(responses())
@@ -774,7 +774,7 @@ def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_delete(key)
 

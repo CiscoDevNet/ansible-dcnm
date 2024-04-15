@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -247,7 +248,8 @@ def test_fabric_query_00030(monkeypatch, fabric_query) -> None:
     -   Results().register_task_result() adds sequence_number (with value 1) to
         each of the results dicts
     """
-    key = "test_fabric_query_00030a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
@@ -356,7 +358,8 @@ def test_fabric_query_00031(monkeypatch, fabric_query) -> None:
     -   commit() returns without doing anything else
     -   Exception is not raised
     """
-    key = "test_fabric_query_00031a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
@@ -456,7 +459,8 @@ def test_fabric_query_00032(monkeypatch, fabric_query) -> None:
     -   RestSend().unit_test is set to True
 
     """
-    key = "test_fabric_query_00032a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
@@ -552,7 +556,8 @@ def test_fabric_query_00033(monkeypatch, fabric_query) -> None:
     -   Results().register_task_result() adds sequence_number (with value 1) to
         each of the results dicts
     """
-    key = "test_fabric_query_00033a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"

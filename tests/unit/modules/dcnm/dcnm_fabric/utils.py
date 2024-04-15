@@ -30,7 +30,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetails
+    FabricDetails, FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
@@ -193,6 +193,16 @@ def fabric_details_fixture():
     return FabricDetails(instance.params)
 
 
+@pytest.fixture(name="fabric_details_by_name")
+def fabric_details_by_name_fixture():
+    """
+    mock FabricDetailsByName
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricDetailsByName(instance.params)
+
+
 @pytest.fixture(name="fabric_query")
 def fabric_query_fixture():
     """
@@ -316,6 +326,16 @@ def responses_fabric_details(key: str) -> Dict[str, str]:
     Return responses for FabricDetails
     """
     data_file = "responses_FabricDetails"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetailsByName
+    """
+    data_file = "responses_FabricDetailsByName"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

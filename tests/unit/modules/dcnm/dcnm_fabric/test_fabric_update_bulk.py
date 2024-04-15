@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -41,7 +42,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary i
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_update_bulk_fixture, params, payloads_fabric_update_bulk,
-    responses_fabric_details, responses_fabric_summary,
+    responses_fabric_details_by_name, responses_fabric_summary,
     responses_fabric_update_bulk)
 
 
@@ -80,7 +81,9 @@ def test_fabric_update_bulk_00020(fabric_update_bulk) -> None:
     - payloads is set to expected value
     - ``ValueError`` is not raised
     """
-    key = "test_fabric_update_bulk_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = fabric_update_bulk
         instance.fabric_details = FabricDetailsByName(params)
@@ -223,7 +226,9 @@ def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
     -   Verify instance.payloads retains its initial value of None.
 
     """
-    key = "test_fabric_update_bulk_00025a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = fabric_update_bulk
         instance.fabric_details = FabricDetailsByName(params)
@@ -275,13 +280,14 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
            {"success": True, "changed": False}
     -   FabricUpdateBulk.commit() calls Results().register_task_result()
     """
-    key = "test_fabric_update_bulk_00030a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_update_bulk(key)
 
     gen = ResponseGenerator(responses())
@@ -403,13 +409,14 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         FabricUpdateCommon()._payloads_to_commit
 
     """
-    key = "test_fabric_update_bulk_00031a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
@@ -513,13 +520,14 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         And calls Results().register_task_result()
         It raises ValueError because the payload contains an invalid key.
     """
-    key = "test_fabric_update_bulk_00032a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
@@ -622,13 +630,14 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         -   Updates Results()
         -   raises ValueError because the mac address is not convertable.
     """
-    key = "test_fabric_update_bulk_00033a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
     gen = ResponseGenerator(responses())

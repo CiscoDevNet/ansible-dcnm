@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
@@ -76,7 +77,9 @@ def test_fabric_create_common_00020(fabric_create_common) -> None:
     Summary
     -   Verify ``ValueError`` is raised when payload is not a `dict``.
     """
-    key = "test_fabric_create_common_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     payload = payloads_fabric_create_common(key)
 
     with does_not_raise():
@@ -109,7 +112,9 @@ def test_fabric_create_common_00021(fabric_create_common, mandatory_key) -> None
     Summary
     -   Verify ``ValueError`` is raised when payload is missing mandatory keys.
     """
-    key = "test_fabric_create_common_00021a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     payload = payloads_fabric_create_common(key)
 
     payload.pop(mandatory_key, None)
@@ -136,7 +141,9 @@ def test_fabric_create_common_00030(fabric_create_common) -> None:
     Summary
     - ``ValueError`` is raised when payload contains invalid ``FABRIC_TYPE``.
     """
-    key = "test_fabric_create_common_00030a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     payload = payloads_fabric_create_common(key)
 
     with does_not_raise():
@@ -166,7 +173,9 @@ def test_fabric_create_common_00031(fabric_create_common) -> None:
         the error condition by removing a valid key (``VXLAN_EVPN``) from
         ``fabric_type_to_template_name_map``.
     """
-    key = "test_fabric_create_common_00031a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     payload = payloads_fabric_create_common(key)
 
     with does_not_raise():
@@ -196,7 +205,9 @@ def test_fabric_create_common_00032(monkeypatch, fabric_create_common) -> None:
         _set_fabric_create_endpoint, ApiEndpoints().fabric_create() needs
         to be mocked to raise an exception.
     """
-    key = "test_fabric_create_common_00032a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     payload = payloads_fabric_create_common(key)
 
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods

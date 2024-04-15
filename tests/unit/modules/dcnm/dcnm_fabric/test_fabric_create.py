@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -39,7 +40,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_create_fixture, params, payloads_fabric_create,
-    responses_fabric_create, responses_fabric_details,
+    responses_fabric_create, responses_fabric_details_by_name,
     rest_send_response_current)
 
 
@@ -79,7 +80,9 @@ def test_fabric_create_00020(fabric_create) -> None:
         passed to FabricCreate().payload
     -   Verify that an Exception is not raised
     """
-    key = "test_fabric_create_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = fabric_create
         instance.results = Results()
@@ -153,7 +156,9 @@ def test_fabric_create_00023(fabric_create, mandatory_key) -> None:
         mandatory keys.
 
     """
-    key = "test_fabric_create_00023a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     payload = payloads_fabric_create(key)
     payload.pop(mandatory_key, None)
 
@@ -213,13 +218,14 @@ def test_fabric_create_00025(monkeypatch, fabric_create) -> None:
     Test
     -   ``ValueError`` is raised because the value of FABRIC_TYPE is invalid
     """
-    key = "test_fabric_create_00025a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
 
     gen = ResponseGenerator(responses())
 
@@ -263,7 +269,9 @@ def test_fabric_create_00026(fabric_create) -> None:
     -   ``ValueError`` is raised because rest_send is not set prior
         to calling commit
     """
-    key = "test_fabric_create_00026a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     match = r"FabricCreate\.commit: "
     match += r"rest_send must be set prior to calling commit\."
 
@@ -309,13 +317,14 @@ def test_fabric_create_00030(monkeypatch, fabric_create) -> None:
         -   DATA == {f1 fabric data dict}
             RETURN_CODE == 200
     """
-    key = "test_fabric_create_00030a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_create(key)
 
     gen = ResponseGenerator(responses())
@@ -416,13 +425,14 @@ def test_fabric_create_00031(monkeypatch, fabric_create) -> None:
     -   FabricCreate.commit() returns without doing anything.
 
     """
-    key = "test_fabric_create_00031a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
 
     gen = ResponseGenerator(responses())
 
@@ -492,13 +502,14 @@ def test_fabric_create_00032(monkeypatch, fabric_create) -> None:
             RETURN_CODE == 500,
             MESSAGE = "Internal Server Error"
     """
-    key = "test_fabric_create_00032a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_create(key)
 
     gen = ResponseGenerator(responses())
@@ -592,13 +603,14 @@ def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
     -   FabricCreate.commit() calls FabricCommon_fixup_payloads_to_commit() which
         raises ``ValueError`` because the mac address is malformed.
     """
-    key = "test_fabric_create_00033a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details(key)
+        yield responses_fabric_details_by_name(key)
 
     gen = ResponseGenerator(responses())
 
