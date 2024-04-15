@@ -194,7 +194,7 @@ class FabricDetails(FabricCommon):
     @property
     def fabric_type(self):
         """
-        Return the fabricType of the fabric specified with filter,
+        Return the nvPairs.FABRIC_TYPE of the fabric specified with filter,
         if it exists.
         Return None otherwise
 
@@ -204,7 +204,7 @@ class FabricDetails(FabricCommon):
             - None
         """
         try:
-            return self._get("fabricType")
+            return self._get_nv_pair("FABRIC_TYPE")
         except ValueError as error:
             msg = f"Failed to retrieve fabric_type: Error detail: {error}"
             self.log.debug(msg)
@@ -213,7 +213,7 @@ class FabricDetails(FabricCommon):
     @property
     def replication_mode(self):
         """
-        Return the replicationMode of the fabric specified with filter,
+        Return the nvPairs.REPLICATION_MODE of the fabric specified with filter,
         if it exists.
         Return None otherwise
 
@@ -224,7 +224,7 @@ class FabricDetails(FabricCommon):
             - None
         """
         try:
-            return self._get("replicationMode")
+            return self._get_nv_pair("REPLICATION_MODE")
         except ValueError as error:
             msg = f"Failed to retrieve replication_mode: Error detail: {error}"
             self.log.debug(msg)
