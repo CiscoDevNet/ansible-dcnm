@@ -1,4 +1,4 @@
-black==19.3b0 ; python_version > '3.5'
+black==24.3.0 ; python_version > '3.5'
 flake8
 pexpect
 yamllint

@@ -210,7 +210,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/32",
@@ -236,7 +236,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/22",
@@ -261,7 +261,7 @@
 				"admin_state": "False",
 				"ifname": "Ethernet1/13",
 				"route_tag": "",
-				"speed": "auto",
+				"speed": "Auto",
 				"cmds": [
 					"no shutdown"
 				],
@@ -289,7 +289,7 @@
 				"admin_state": "False",
 				"ifname": "Ethernet1/14",
 				"route_tag": "",
-				"speed": "auto",
+				"speed": "Auto",
 				"cmds": [
 					"no shutdown"
 				],

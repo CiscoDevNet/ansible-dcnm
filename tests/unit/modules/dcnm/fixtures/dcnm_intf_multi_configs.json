@@ -162,7 +162,7 @@
         "cmds": [
           "no shutdown"
         ],
-        "speed": "auto",
+        "speed": "Auto",
         "ifname": "Ethernet1/10",
         "fabric": "test_fabric"
       },
@@ -345,7 +345,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/32",
