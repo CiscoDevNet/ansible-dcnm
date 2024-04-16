@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
@@ -40,8 +41,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise, fabric_details_by_name_fixture,
-    responses_fabric_details_by_name)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    fabric_details_by_name_fixture, responses_fabric_details_by_name)
 
 
 def test_fabric_details_by_name_00010(fabric_details_by_name) -> None:
@@ -813,7 +814,9 @@ def test_fabric_details_by_name_00301(fabric_details_by_name) -> None:
     """
     with does_not_raise():
         instance = fabric_details_by_name
-        instance.data_subclass = {"MyFabric": {"nvPairs": {"FABRIC_TYPE": "Switch_Fabric"}}}
+        instance.data_subclass = {
+            "MyFabric": {"nvPairs": {"FABRIC_TYPE": "Switch_Fabric"}}
+        }
         instance.filter = "MyFabric"
         value = instance.fabric_type
     assert value == "Switch_Fabric"
@@ -862,7 +865,9 @@ def test_fabric_details_by_name_00311(fabric_details_by_name) -> None:
     """
     with does_not_raise():
         instance = fabric_details_by_name
-        instance.data_subclass = {"MyFabric": {"nvPairs": {"REPLICATION_MODE": "Ingress"}}}
+        instance.data_subclass = {
+            "MyFabric": {"nvPairs": {"REPLICATION_MODE": "Ingress"}}
+        }
         instance.filter = "MyFabric"
         value = instance.replication_mode
     assert value == "Ingress"

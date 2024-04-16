@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
@@ -40,8 +41,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise, fabric_details_fixture,
-    responses_fabric_details)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    fabric_details_fixture, responses_fabric_details)
 
 
 def test_fabric_details_00010(fabric_details) -> None:
