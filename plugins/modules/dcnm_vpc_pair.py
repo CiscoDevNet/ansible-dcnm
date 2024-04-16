@@ -16,6 +16,387 @@
 
 from __future__ import absolute_import, division, print_function
 
+__metaclass__ = type
+__author__ = "Mallik Mudigonda"
+
+DOCUMENTATION = """
+---
+module: dcnm_vpc_pair
+short_description: DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.
+version_added: "1.1.0"
+description:
+    - "DCNM Ansible Module for managing VPC switch pairs."
+author: Mallik Mudigonda(@mmudigon)
+options:
+  src_fabric:
+    description:
+      - Name of the target fabric for VPC switch pair operations
+    type: str
+    required: true
+  state:
+    description:
+      - The required state of the configuration after module completion.
+    type: str
+    choices: ['merged', 'replaced', 'overridden', 'deleted', 'query', 'fetch']
+    default: merged
+  deploy:
+    description:
+      - Flag indicating if the configuration must be pushed to the switch.
+    type: bool
+    default: true
+  config:
+    description:
+      - A list of dictionaries containing VPC switch pair information
+    type: list
+    elements: dict
+    suboptions:
+      peerOneId:
+        description:
+          - IP Address/Host Name of Peer1 of VPC switch pair.
+        type: str
+        required: true
+
+      peerTwoId:
+        description:
+          - IP Address/Host Name of Peer2 of VPC switch pair.
+        type: str
+        required: true
+
+      templateName:
+        description:
+          - Name of the template which inlcudes the required parameters for creating the VPC switch pair.
+          - This parameter is 'mandatory' if the fabric is of type 'LANClassic' or 'External'. It is optional
+            otherwise.
+        type: str
+        required: true
+
+      profile:
+        description:
+          - A dictionary of additional VPC switch pair related parameters that must be included while creating VPC switch pairs.
+        suboptions:
+          ADMIN_STATE:
+            description:
+              - Flag to enable/disbale administrative state of the interface.
+            type: bool
+            required: true
+
+          ALLOWED_VLANS:
+           description:
+             - Vlans that are allowed on the VPC peer link port-channel.
+           type: str
+           choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
+           default: all
+
+          DOMAIN_ID:
+           description:
+             - VPC domain ID.
+             - Minimum value is 1 and Maximum value is 1000.
+           type: int
+           required: true
+
+          FABRIC_NAME:
+            description:
+              - Name of the target fabric for VPC switch pair operations.
+            type: str
+            required: true
+
+          KEEP_ALIVE_HOLD_TIMEOUT:
+            description:
+              - Hold timeout to ignore stale peer keep alive messages.
+              - Minimum value is 3 and Maximum value is 10
+            type: int
+            default: 3
+
+          KEEP_ALIVE_VRF:
+            description:
+              - Name of the VRF used for keep-alive messages.
+            type: str
+            required: true
+
+          PC_MODE:
+            description:
+              - Port channel mode.
+            type: str
+            choices: ['on', 'active', 'passive']
+            default: active
+
+          PEER1_DOMAIN_CONF:
+            description:
+              Additional CLI for PEER1 vPC Domain.
+            type: str
+            default: ""
+
+          PEER1_KEEP_ALIVE_LOCAL_IP:
+            description:
+              - IP address of a L3 interface in non-default VRF on PEER1.
+            type: str
+            required: true
+
+          PEER1_MEMBER_INTERFACES:
+            description:
+              - A list of member interfaces for PEER1.
+            type: list
+            elements: str
+            default: []
+
+          PEER1_PCID:
+            description:
+              - PEER1 peerlink port-channel number.
+              - Minimum value is 1 and Maximum value is 4096.
+            type: int
+            default: 1
+
+          PEER1_PO_CONF:
+            description:
+              - Additional CLI for PEER1 vPC peerlink port-channel.
+            type: str
+            default: ""
+
+          PEER1_PO_DESC:
+            description:
+              - Description for the PEER1 port-channel.
+              - Minimum length is 1 and Maximum length is 254.
+            type: str
+            default: ""
+
+          PEER2_DOMAIN_CONF:
+            description:
+              Additional CLI for PEER2 vPC Domain.
+            type: str
+            default: ""
+
+          PEER2_KEEP_ALIVE_LOCAL_IP:
+            description:
+              - IP address of a L3 interface in non-default VRF on PEER2.
+            type: str
+            required: true
+
+          PEER2_MEMBER_INTERFACES:
+            description:
+              - A list of member interfaces for PEER2.
+            type: list
+            elements: str
+            default: []
+
+          PEER2_PCID:
+            description:
+              - PEER2 peerlink port-channel number.
+              - Minimum value is 1 and Maximum value is 4096.
+            type: int
+            default: 1
+
+          PEER2_PO_CONF:
+            description:
+              - Additional CLI for PEER2 vPC peerlink port-channel.
+            type: str
+            default: ""
+
+          PEER2_PO_DESC:
+            description:
+              - Description for the PEER2 port-channel.
+              - Minimum length is 1 and Maximum length is 254.
+            type: str
+            default: ""
+
+  templates:
+    description:
+      - List of templates to be fetched.
+      - This is required only if the 'state' is 'fetch'. In this case the list should contain the template names whose details.
+        are to be fetched.
+    type: list
+    elements: str
+    default: []
+"""
+
+EXAMPLES = """
+
+# States:
+# This module supports the following states:
+#
+# Merged:
+#   VPC switch pairs defined in the playbook will be merged into the target fabric.
+#
+#   The VPC switch pairs listed in the playbook will be created if not already present on the DCNM
+#   server. If the VPC switch pair is already present and the configuration information included
+#   in the playbook is either different or not present in DCNM, then the corresponding
+#   information is added to the DCNM. If a VPC switch pair  mentioned in playbook
+#   is already present on DCNM and there is no difference in configuration, no operation
+#   will be performed for such switch pairs.
+#
+# Replaced:
+#   VPC switch pairs defined in the playbook will be replaced in the target fabric.
+#
+#   The state of the VPC switch pairs listed in the playbook will serve as source of truth for the
+#   same VPC switch pairs present on the DCNM under the fabric mentioned. Additions and updations
+#   will be done to bring the DCNM VPC switch pairs to the state listed in the playbook.
+#   Note: Replace will only work on the VPC switch pairs mentioned in the playbook.
+#
+# Overridden:
+#   VPC switch pairs defined in the playbook will be overridden in the target fabric.
+#
+#   The state of the VPC switch pairs listed in the playbook will serve as source of truth for all
+#   the VPC switch pairs under the fabric mentioned. Additions and deletions will be done to bring
+#   the DCNM VPC switch pairs to the state listed in the playbook. All VPC switch pairs other than the
+#   ones mentioned in the playbook will be deleted.
+#   Note: Override will work on the all the VPC switch pairs present in the DCNM Fabric.
+#
+# Deleted:
+#   VPC switch pairs defined in the playbook will be deleted in the target fabric.
+#
+#   Deletes the list of VPC switch pairs specified in the playbook.  If the playbook does not include
+#   any VPC switch pair information, then all VPC switch pairs from the fabric will be deleted.
+#
+# Query:
+#   Returns the current DCNM state for the VPC switch pairs listed in the playbook.
+
+# CREATE VPC SWITCH PAIR (LANClassic or External fabrics)
+
+- name: Merge VPC switch pair paremeters
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    deploy: true
+    state: merged
+    config:
+      - peerOneId: 192.168.1.1
+        peerTwoId: 192.168.1.2
+        templateName: "vpc_pair"
+        profile:
+          ADMIN_STATE: True
+          ALLOWED_VLANS: "all"
+          DOMAIN_ID: 100
+          FABRIC_NAME: test-fabric
+          KEEP_ALIVE_HOLD_TIMEOUT: 3
+          KEEP_ALIVE_VRF: management
+          PC_MODE: active
+          PEER1_DOMAIN_CONF: "graceful consistency-check"
+          PEER1_KEEP_ALIVE_LOCAL_IP: 192.168.1.1
+          PEER1_MEMBER_INTERFACES: e1/21,e1/22-23
+          PEER1_PCID: 101
+          PEER1_PO_CONF: "buffer-boost"
+          PEER1_PO_DESC: "This is peer1 PC"
+          PEER2_DOMAIN_CONF: "graceful consistency-check"
+          PEER2_KEEP_ALIVE_LOCAL_IP: 192.168.1.2
+          PEER2_MEMBER_INTERFACES: e1/21,e1/22-23
+          PEER2_PCID: 102
+          PEER2_PO_CONF: "buffer-boost"
+          PEER2_PO_DESC: "This is peer2 PC"
+
+# CREATE VPC SWITCH PAIR (VXLAN fabrics)
+
+- name: Merge VPC switch pair paremeters
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    deploy: true
+    state: merged
+    config:
+      - peerOneId: 192.168.1.1
+        peerTwoId: 192.168.1.2
+
+# DELETE VPC SWITCH PAIR
+
+- name: Delete VPC switch pair
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    deploy: true
+    state: deleted
+    config:
+      - peerOneId: 192.168.1.1
+        peerTwoId: 192.168.1.2
+
+# REPLACE VPC SWITCH PAIR (LANClassic or External fabrics)
+
+- name: Replace VPC switch pair paremeters
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    deploy: true
+    state: merged
+    config:
+      - peerOneId: 192.168.1.1
+        peerTwoId: 192.168.1.2
+        templateName: "vpc_pair"
+        profile:
+          ADMIN_STATE: True
+          ALLOWED_VLANS: "all"
+          DOMAIN_ID: 100
+          FABRIC_NAME: test-fabric
+          KEEP_ALIVE_HOLD_TIMEOUT: 3
+          KEEP_ALIVE_VRF: management
+          PC_MODE: active
+          PEER1_DOMAIN_CONF: "graceful consistency-check"
+          PEER1_KEEP_ALIVE_LOCAL_IP: 192.168.1.1
+          PEER1_MEMBER_INTERFACES: e1/21,e1/22-23
+          PEER1_PCID: 101
+          PEER1_PO_CONF: "buffer-boost"
+          PEER1_PO_DESC: "This is peer1 PC"
+          PEER2_DOMAIN_CONF: "graceful consistency-check"
+          PEER2_KEEP_ALIVE_LOCAL_IP: 192.168.1.2
+          PEER2_MEMBER_INTERFACES: e1/21,e1/22-23
+          PEER2_PCID: 102
+          PEER2_PO_CONF: "buffer-boost"
+          PEER2_PO_DESC: "This is peer2 PC"
+
+# OVERRIDDE VPC SWITCH PAIRS
+
+- name: Override with a new VPC switch pair
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    deploy: true
+    state: overridden
+    config:
+      - peerOneId: 192.168.1.1
+        peerTwoId: 192.168.1.2
+        templateName: "vpc_pair"
+        profile:
+          ADMIN_STATE: True
+          ALLOWED_VLANS: "all"
+          DOMAIN_ID: 100
+          FABRIC_NAME: "test-fabric"
+          KEEP_ALIVE_HOLD_TIMEOUT: 3
+          KEEP_ALIVE_VRF: management
+          PC_MODE: active
+          PEER1_KEEP_ALIVE_LOCAL_IP: 192.168.1.1
+          PEER1_MEMBER_INTERFACES: e1/20
+          PEER1_PCID: 101
+          PEER1_PO_DESC: "This is peer1 PC"
+          PEER2_KEEP_ALIVE_LOCAL_IP: 192.168.1.2
+          PEER2_MEMBER_INTERFACES: e1/20
+          PEER2_PCID: 102
+          PEER2_PO_DESC: "This is peer2 PC"
+
+- name: Override without any new switch pairs
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    deploy: true
+    state: overridden
+
+# QUERY VPC SWITCH PAIRS
+
+- name: Query VPC switch pairs - with no filters
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    state: query
+
+- name: Query VPC switch pairs - with both peers specified
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    state: query
+    config:
+      - peerOneId: "{{ ansible_switch1 }}"
+        peerTwoId: "{{ ansible_switch2 }}"
+
+- name: Query VPC switch pairs - with one peer specified
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "test-fabric"
+    state: query
+    config:
+      - peerOneId: "{{ ansible_switch1 }}"
+"""
+
+# WARNING:
+#   This file is automatically generated. Take a backup of your
+#   manually running cg_run.py script to generate it again
+#
+
 import time
 import json
 import copy
@@ -59,21 +440,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_vpc_p
     dcnm_vpc_pair_utils_get_delete_list,
     dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs,
     dcnm_vpc_pair_utils_validate_devices,
+    dcnm_vpc_pair_utils_check_if_meta,
 )
 
 from datetime import datetime
-
-__metaclass__ = type
-__author__ = "Mallik Mudigonda"
-
-DOCUMENTATION = """
-"""
-
-#
-# WARNING:
-#   This file is automatically generated. Take a backup of your changes to this file before
-#   manually running cg_run.py script to generate it again
-#
 
 
 # Resource Class object which includes all the required methods and data to configure and maintain Vpc_pair
@@ -108,14 +478,6 @@ class DcnmVpcPair:
             }
         ]
 
-        self.dcnm_version = dcnm_version_supported(self.module)
-        self.inventory_data = get_fabric_inventory_details(
-            self.module, self.fabric
-        )
-
-        self.src_fabric_info = get_fabric_details(self.module, self.fabric)
-
-        self.paths = dcnm_vpc_pair_utils_get_paths(self.dcnm_version)
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):
@@ -142,6 +504,7 @@ class DcnmVpcPair:
         """
 
         for key in list(want.keys()):
+
             # Check if <key>_defaulted is present in 'want'. If present merge the original key if
             # <key>_defaulted is True.
 
@@ -158,7 +521,9 @@ class DcnmVpcPair:
                     # NOTE: key requires a merge between 'want' and 'have'. The following utility
                     #       function must do the appropriate checks and merge the key values from 'want'
                     #       and 'have'.
-                    dcnm_vpc_pair_utils_merge_want_and_have(want, have, key)
+                    dcnm_vpc_pair_utils_merge_want_and_have(
+                        self, want, have, key
+                    )
                 # Remove the <key>_defaulted from want
                 want.pop(key + "_defaulted")
 
@@ -238,7 +603,7 @@ class DcnmVpcPair:
         # deploy payloads
 
         for elem in del_list:
-            self.dcnm_vpc_pair_update_delete_payloads(elem)
+            rc = self.dcnm_vpc_pair_update_delete_payloads(elem)
 
         if cfg == []:
             return
@@ -246,7 +611,7 @@ class DcnmVpcPair:
         if self.want:
             # New configuration is included. Delete all existing VPC switch pairs and create new pairs as requested
             # through the configuration
-            self.dcnm_vpc_pair_get_diff_merge()
+            rc = self.dcnm_vpc_pair_get_diff_merge()
 
     def dcnm_vpc_pair_get_diff_deleted(self):
 
@@ -272,6 +637,14 @@ class DcnmVpcPair:
             # Perform any translations that may be required on the vpc_pair_info.
             xelem = dcnm_vpc_pair_utils_translate_vpc_pair_info(self, elem)
             have = dcnm_vpc_pair_utils_get_vpc_pair_info(self, xelem)
+
+            # Check the peering before deleting. Delete only the peering that is requested for.
+            if (
+                (have == [])
+                or (xelem["peerOneId"] != have["peerOneId"])
+                or (xelem["peerTwoId"] != have["peerTwoId"])
+            ):
+                continue
 
             if have != []:
                 self.dcnm_vpc_pair_update_delete_payloads(have)
@@ -349,8 +722,6 @@ class DcnmVpcPair:
 
                 sync_state = dcnm_vpc_pair_utils_get_sync_status(self, elem)
 
-                self.log_msg(f"RC = {rc}, SYNC = {sync_state}\n")
-
                 if (
                     (rc == "DCNM_VPC_PAIR_CREATE")
                     or (rc == "DCNM_VPC_PAIR_MERGE")
@@ -363,7 +734,7 @@ class DcnmVpcPair:
                         self.diff_deploy.append(payload)
 
         if self.diff_deploy != []:
-            self.changed_dict[0]["deploy"].append(
+            self.changed_dict[0]["deploy"].extend(
                 copy.deepcopy(self.diff_deploy)
             )
 
@@ -411,7 +782,7 @@ class DcnmVpcPair:
             None
         """
 
-        if [] is self.config:
+        if self.config == []:
             return
 
         if not self.vpc_pair_info:
@@ -423,6 +794,7 @@ class DcnmVpcPair:
             # code to loop over the switches. Also the get payload routine should be modified appropriately.
 
             payload = self.dcnm_vpc_pair_get_payload(elem)
+
             if payload not in self.want:
                 self.want.append(payload)
 
@@ -444,69 +816,20 @@ class DcnmVpcPair:
 
         for elem in self.want:
             have = dcnm_vpc_pair_utils_get_vpc_pair_info(self, elem)
+
+            # Check if the peers in 'want' and 'have' match. If not raise an error. This may be the case
+            # when a peering already exists between, say, peer1 and peer2. Now if the playbook requests a
+            # another peering, say, peer1 and peer3 or peer2 and peer4, then this should be flagged as an error.
+
+            if have != [] and (
+                (elem["peerOneId"] != have["peerOneId"])
+                or (elem["peerTwoId"] != have["peerTwoId"])
+            ):
+                mesg = f"Peering {have['peerOneId']}-{have['peerTwoId']} already exists. Cannot create peering for {elem['peerOneId']}-{elem['peerTwoId']}"
+                self.module.fail_json(msg=mesg)
+
             if (have != []) and (have not in self.have):
                 self.have.append(have)
-
-    def dcnm_vpc_pair_compare_ip_addresses(self, addr1, addr2):
-
-        """
-        Routine to compare the IP address values after converting to IP address objects.
-
-        Parameters:
-            addrr1 : First IP address value
-            addrr2 : Second IP address value
-
-        Returns:
-            True - if both addresses are same
-            False - otherwise
-        """
-
-        rv1 = ""
-        rv2 = ""
-
-        if "/" in addr1:
-            rv1 = addr1.split("/")
-        if "/" in addr2:
-            rv2 = addr2.split("/")
-
-        if rv1 and not rv2:
-            return False
-        if rv2 and not rv1:
-            return False
-        if rv1 and rv2:
-            return (
-                ipaddress.ip_address(rv1[0]) == ipaddress.ip_address(rv2[0])
-            ) and (rv1[1] == rv2[1])
-        else:
-            return ipaddress.ip_address(addr1) == ipaddress.ip_address(addr2)
-
-    def dcnm_vpc_pair_validate_replaced_state_input(self, cfg):
-
-        """
-        Playbook input will be different for differnt states. This routine validates the
-        replaced state input. This routine updates self.vpc_pair_info
-        with validated playbook information related to replaced state.
-
-        Parameters:
-            cfg (dict): The config from playbook
-
-        Returns:
-           None
-        """
-
-        arg_spec = dict(
-            # Include the arguments that need to be validated here
-        )
-
-        """
-        vpc_pair_info, invalid_params = validate_list_of_dicts(cfg, arg_spec)
-        if invalid_params:
-            mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
-            self.module.fail_json(msg=mesg)
-
-        if vpc_pair_info:
-            self.vpc_pair_info.extend(vpc_pair_info)
-        """
 
     def dcnm_vpc_pair_validate_deleted_state_input(self, cfg):
 
@@ -592,7 +915,9 @@ class DcnmVpcPair:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
             self.module.fail_json(msg=mesg)
 
-        if cfg[0].get("templateName", None) is not None:
+        if (cfg[0].get("templateName", None) is not None) and (
+            cfg[0].get("profile", None) is not None
+        ):
             # The following will return a combination of playbook template and the argument spec. Extract the
             # argument_spec from the combined_spec
 
@@ -605,12 +930,8 @@ class DcnmVpcPair:
                 arg_spec = combined_spec[cfg[0]["templateName"] + "_spec"]
                 dcnm_update_arg_specs(cfg[0]["profile"], arg_spec)
                 self.arg_specs[cfg[0]["templateName"]] = arg_spec
-                self.log_msg(f"Fetcching new arg_spec...\n")
             else:
                 arg_spec = self.arg_specs[cfg[0]["templateName"]]
-                self.log_msg(
-                    f"arg_spec existing, using the available one...\n"
-                )
 
         if arg_spec != {}:
             vpc_pair_profile_info = dcnm_vpc_pair_utils_validate_profile(
@@ -640,7 +961,7 @@ class DcnmVpcPair:
             None
         """
 
-        if [] is self.config:
+        if self.config == []:
             return
 
         cfg = []
@@ -693,23 +1014,8 @@ class DcnmVpcPair:
 
         processed_fabrics = []
 
-        if [] is self.config:
-            return
-
         # Soure fabric is already processed. Add it to processed list
         processed_fabrics.append(self.fabric)
-
-        for cfg in self.config:
-
-            # For every fabric included in the playbook, get the inventory details. This info is required
-            # to get ip_sn, hn_sn and sn_hn details
-            if cfg.get("dst_fabric", "") != "":
-                if cfg["dst_fabric"] not in processed_fabrics:
-                    processed_fabrics.append(cfg["dst_fabric"])
-                    inv_data = get_fabric_inventory_details(
-                        self.module, cfg["dst_fabric"]
-                    )
-                    self.inventory_data.update(inv_data)
 
         # Based on the updated inventory_data, update ip_sn, hn_sn and sn_hn objects
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
@@ -782,27 +1088,10 @@ class DcnmVpcPair:
             None
         """
 
-        if [] is config:
+        if config == []:
             return
 
         for cfg in config:
-
-            if cfg.get("src_device", "") != "":
-                if (
-                    dcnm_vpc_pair_utils_check_if_meta(self, cfg["src_device"])
-                    is False
-                ):
-                    cfg["src_device"] = dcnm_get_ip_addr_info(
-                        self.module, cfg["src_device"], ip_sn, hn_sn
-                    )
-            if cfg.get("dst_device", "") != "":
-                if (
-                    dcnm_vpc_pair_utils_check_if_meta(self, cfg["dst_device"])
-                    is False
-                ):
-                    cfg["dst_device"] = dcnm_get_ip_addr_info(
-                        self.module, cfg["dst_device"], ip_sn, hn_sn
-                    )
 
             # Add other translations as required
             dcnm_vpc_pair_utils_translate_config(self, cfg)
@@ -833,7 +1122,9 @@ class DcnmVpcPair:
             # While fetching template details we will not require arg_spec for the same. Remove that from
             # the result
             tinfo.pop(name + "_spec")
-            template_list.append(tinfo)
+
+            if tinfo not in template_list:
+                template_list.append(tinfo)
 
         return template_list
 
@@ -863,13 +1154,29 @@ class DcnmVpcPair:
             self, self.diff_deploy
         )
 
-        self.log_msg(
-            f"FLAGS: CR = {create_flag}, DL = {delete_flag}, MO = {modify_flag}, DP = {deploy_flag}\n"
-        )
-
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag or deploy_flag
         )
+
+    def dcnm_vpc_pair_update_module_info(self):
+
+        """
+        Routine to update version and fabric details
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        self.dcnm_version = dcnm_version_supported(self.module)
+        self.inventory_data = get_fabric_inventory_details(
+            self.module, self.fabric
+        )
+
+        self.src_fabric_info = get_fabric_details(self.module, self.fabric)
+        self.paths = dcnm_vpc_pair_utils_get_paths(self.dcnm_version)
 
 
 def main():
@@ -903,7 +1210,7 @@ def main():
 
     state = module.params["state"]
 
-    if [] is dcnm_vpc_pair.config:
+    if dcnm_vpc_pair.config == []:
         if state == "merged" or state == "replaced":
             module.fail_json(
                 msg="'config' element is mandatory for state '{0}', given = '{1}'".format(
@@ -911,9 +1218,8 @@ def main():
                 )
             )
 
-    dcnm_vpc_pair.log_msg(
-        f"######################### BEGIN STATE = {state} ##########################\n"
-    )
+    # Update the created module with version and fabric details
+    dcnm_vpc_pair.dcnm_vpc_pair_update_module_info()
 
     # If state is 'fetch' and 'templates' is is non-empty, then the list contains template names that
     # are relevant to this module.
@@ -936,23 +1242,14 @@ def main():
         dcnm_vpc_pair.config, dcnm_vpc_pair.ip_sn, dcnm_vpc_pair.hn_sn
     )
 
-    dcnm_vpc_pair.log_msg(f"Inventory DATA = {dcnm_vpc_pair.inventory_data}\n")
-    dcnm_vpc_pair.log_msg(f"Fabric DATA = {dcnm_vpc_pair.src_fabric_info}\n")
-
     dcnm_vpc_pair.dcnm_vpc_pair_validate_all_input()
-
-    dcnm_vpc_pair.log_msg(f"VPC Info = {dcnm_vpc_pair.vpc_pair_info}\n")
 
     if (
         module.params["state"] != "query"
         and module.params["state"] != "deleted"
     ):
         dcnm_vpc_pair.dcnm_vpc_pair_get_want()
-
-        dcnm_vpc_pair.log_msg(f"WANT = {dcnm_vpc_pair.want}\n")
         dcnm_vpc_pair.dcnm_vpc_pair_get_have()
-
-        dcnm_vpc_pair.log_msg(f"HAVE = {dcnm_vpc_pair.have}\n")
 
         # self.want would have defaulted all optional objects not included in playbook. But the way
         # these objects are handled is different between 'merged' and 'replaced' states. For 'merged'
@@ -960,7 +1257,6 @@ def main():
         # they must be purged or defaulted.
 
         dcnm_vpc_pair.dcnm_vpc_pair_update_want()
-        dcnm_vpc_pair.log_msg(f"Updated WANT = {dcnm_vpc_pair.want}\n")
 
     if (module.params["state"] == "merged") or (
         module.params["state"] == "replaced"
@@ -976,13 +1272,8 @@ def main():
     if module.params["state"] == "query":
         dcnm_vpc_pair.dcnm_vpc_pair_get_diff_query()
 
-    dcnm_vpc_pair.log_msg(f"CREATE = {dcnm_vpc_pair.diff_create}\n")
-    dcnm_vpc_pair.log_msg(f"REPLACE = {dcnm_vpc_pair.diff_modify}\n")
-    dcnm_vpc_pair.log_msg(f"DELETE = {dcnm_vpc_pair.diff_delete}\n")
-    dcnm_vpc_pair.log_msg(f"DEPLOY = {dcnm_vpc_pair.diff_deploy}\n")
-    dcnm_vpc_pair.log_msg(f"DEL_DEPLOY = {dcnm_vpc_pair.diff_delete_deploy}\n")
-
     dcnm_vpc_pair.result["diff"] = dcnm_vpc_pair.changed_dict
+
     dcnm_vpc_pair.changed_dict[0]["debugs"].append(
         {"Managable": dcnm_vpc_pair.managable}
     )
@@ -1002,10 +1293,6 @@ def main():
         module.exit_json(**dcnm_vpc_pair.result)
 
     dcnm_vpc_pair.dcnm_vpc_pair_send_message_to_dcnm()
-
-    dcnm_vpc_pair.log_msg(
-        f"######################### END STATE = {state} ##########################\n"
-    )
 
     module.exit_json(**dcnm_vpc_pair.result)
 

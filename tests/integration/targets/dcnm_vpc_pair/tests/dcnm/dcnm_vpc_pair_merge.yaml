@@ -56,9 +56,6 @@
               PEER2_PCID: 102                                       # Peer-2 Peerlink port-channel number (Min:1, Max:4096), Mandatory: False, Min: 1, Max: 4096, Type: int, Default: ''"
               PEER2_PO_CONF: "bandwidth inherit"                    # Additional CLI for Peer-1 vPC Peerlink port-channel, Mandatory: False, Type: str, Default: ''"
               PEER2_PO_DESC: "This is peer2 PC"                     # Add description to the port-channel (Max Size 254), Mandatory: False, MinLen: 1, MaxLen: 254, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
@@ -132,9 +129,6 @@
               PEER2_PCID: 102                                       # Peer-2 Peerlink port-channel number (Min:1, Max:4096), Mandatory: False, Min: 1, Max: 4096, Type: int, Default: ''"
               PEER2_PO_CONF: "buffer-boost"                         # Additional CLI for Peer-1 vPC Peerlink port-channel, Mandatory: False, Type: str, Default: ''"
               PEER2_PO_DESC: "This is peer2 PC - Modified"          # Add description to the port-channel (Max Size 254), Mandatory: False, MinLen: 1, MaxLen: 254, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
@@ -233,9 +227,6 @@
               KEEP_ALIVE_VRF: management                            # Name of VRF used for keep-alive, enter 'default' for default VRF, Mandatory: True, Type: str, Default: ''"
               PEER1_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer1_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 1, Mandatory: True, Type: str, Default: ''"
               PEER2_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer2_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 2, Mandatory: True, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
@@ -307,9 +298,6 @@
               KEEP_ALIVE_VRF: management                            # Name of VRF used for keep-alive, enter 'default' for default VRF, Mandatory: True, Type: str, Default: ''"
               PEER1_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer1_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 1, Mandatory: True, Type: str, Default: ''"
               PEER2_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer2_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 2, Mandatory: True, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
@@ -377,9 +365,6 @@
               KEEP_ALIVE_VRF: management                            # Name of VRF used for keep-alive, enter 'default' for default VRF, Mandatory: True, Type: str, Default: ''"
               PEER1_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer1_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 1, Mandatory: True, Type: str, Default: ''"
               PEER2_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer2_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 2, Mandatory: True, Type: str, Default: ''"
-              clear_policy: False                                   # NA, Mandatory: True, Type: str, Default: false"
-              isVTEPS: False                                        # Check this to configure NVE source loopback interface, Mandatory: isVpcPlus!=true, Type: bool, Default: false"
-              isVpcPlus: False                                      # Check this if it's a vPC topology, Mandatory: True, Type: bool, Default: false"
         templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
           - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
       register: result
