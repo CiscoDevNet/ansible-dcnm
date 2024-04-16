@@ -82,8 +82,7 @@ options:
         description:
         - To specifiy the network specific values for the network being managed using
           the config params and values specified in the network template/extension template.
-        type: list
-        elements: dict
+        type: dict
         suboptions:
           attach:
             description:
@@ -95,10 +94,9 @@ options:
                 description:
                 - Fabric name where the switch to attach is present
                 type: str
-                required: true
-              serialNumber:
+              ipAddress:
                 description:
-                - Serial number of the switch to be attached to network
+                - IP address of the switch to be attached to network
                 type: str
                 required: true
               deployment:
@@ -130,7 +128,7 @@ options:
                     description:
                     - List of TOR ports to be attached to network
                     type: list
-                    default: ""
+                    default: []
                 default: ""
               detachSwitchPorts:
                 description:
@@ -166,21 +164,21 @@ EXAMPLES = """
         # network_template_config block uses the config params and values specified in template specifed net_template
         # You should know the config params and values specified in the template.
         network_template_config:
-          - gatewayIpAddress: "2.1.1.1/24"
-            intfDescription: "test_interface"
-            mtu: 1500
-            secondaryGW1: "3.1.1.1"
-            loopbackId: 10
-            attach:
-              - fabric: vxlan-fabric
-                networkName: "net1"
-                serialNumber: "FDO1234QWER"
-                deployment: true
-                vlan: 100
-                switchPorts: "Ethernet1/1,Ethernett1/2"
-                torPorts: "Tor1(Ethernet1/13),Tor2(Ethernet1/14)"
-                instanceValues: ""
-                deploy: true
+          gatewayIpAddress: "2.1.1.1/24"
+          intfDescription: "test_interface"
+          mtu: 1500
+          secondaryGW1: "3.1.1.1"
+          loopbackId: 10
+          attach:
+            - fabric: vxlan-fabric
+              networkName: "net1"
+              ipAddress: "FDO1234QWER"
+              deployment: true
+              vlan: 100
+              switchPorts: "Ethernet1/1,Ethernett1/2"
+              torPorts: "Tor1(Ethernet1/13),Tor2(Ethernet1/14)"
+              instanceValues: ""
+              deploy: true
 
 """
 
@@ -977,7 +975,7 @@ class DcnmNetworkv2:
                 del attach["switchSerialNo"]
                 del attach["switchName"]
                 del attach["switchRole"]
-                del attach["ipAddress"]
+                #del attach["ipAddress"]
                 del attach["lanAttachState"]
                 del attach["isLanAttached"]
                 del attach["fabricName"]
@@ -1078,6 +1076,23 @@ class DcnmNetworkv2:
 
         if state == "deleted" or state == "query":
             return
+
+        serial = ""
+        attach["ipAddress"] = dcnm_get_ip_addr_info(
+            self.module, attach["ipAddress"], None, None
+        )
+        for ip, ser in self.ip_sn.items():
+            if ip == attach["ipAddress"]:
+                serial = ser
+
+        if not serial:
+            self.module.fail_json(
+                msg="Fabric: {0} does not have the switch: {1}".format(
+                    self.fabric, attach["ipAddress"]
+                )
+            )
+
+        attach.update({"serialNumber": serial})
 
         for atch_h in self.have_attach:
             if net_name == atch_h["networkName"]:
@@ -1435,6 +1450,8 @@ class DcnmNetworkv2:
             for v_a in d_a["lanAttachList"]:
                 if v_a.get("d_key") is not None:
                     del v_a["d_key"]
+                if v_a.get("ipAddress") is not None:
+                    del v_a["ipAddress"]
 
         for attempt in range(0, 50):
             resp = dcnm_send(
@@ -1579,6 +1596,7 @@ class DcnmNetworkv2:
 
         """
 
+        net_template = []
         state = self.params["state"]
 
         net_static_spec = dict(
@@ -1589,7 +1607,7 @@ class DcnmNetworkv2:
             net_extension_template=dict(
                 type="str", default="Default_Network_Extension_Universal"
             ),
-            network_template_config=dict(type="list")
+            network_template_config=dict(type="dict", default={})
         )
 
         net_attach_spec = dict(
@@ -1599,7 +1617,7 @@ class DcnmNetworkv2:
             extensionValues=dict(type="string", default=""),
             fabric=dict(type="str", default=""),
             freeformConfig=dict(type="string", default=""),
-            serialNumber=dict(required=True, type="string", default=""),
+            ipAddress=dict(required=True, type="string"),
             switchPorts=dict(type="list", default=[]),
             torPorts=dict(type="list", default=[], elements="dict"),
             untagged=dict(type="bool", default=False),
@@ -1630,23 +1648,25 @@ class DcnmNetworkv2:
                 return
 
             for net in valid_net:
+                net_template = []
                 att_present=False
                 net_dyn_spec = self.get_arg_spec(net)
                 if net.get("network_template_config"):
-                    if net["network_template_config"][0].get("attach"):
+                    if net["network_template_config"].get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(
-                            net["network_template_config"][0]["attach"], net_attach_spec
+                            net["network_template_config"]["attach"], net_attach_spec
                         )
                         invalid_params.extend(invalid_att)
                         att_present=True
 
+                    net_template.append(net["network_template_config"])
                     valid_dyn_net, invalid_net = validate_list_of_dicts(
-                        net["network_template_config"], net_dyn_spec
+                        net_template, net_dyn_spec
                     )
                     invalid_params.extend(invalid_net)
                     net["network_template_config"] = valid_dyn_net[0]
-                    if net["network_template_config"]["mcastGroup"] == "":
-                        net["network_template_config"]["mcastGroup"] = "239.1.1.1"
+                    # if net["network_template_config"]["mcastGroup"] == "":
+                    #     net["network_template_config"]["mcastGroup"] = "239.1.1.1"
                     
                     if att_present:
                         net["attach"] = valid_att

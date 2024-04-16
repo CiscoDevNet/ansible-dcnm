@@ -28,30 +28,30 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          vlanId: 1504
-          tag: 14345
-          mtu: 1500
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw1_serial }}"
-              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-              torPorts: []
-              untagged: false
-              vlan: 1504
-              deploy: true
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw2_serial }}"
-              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
-              untagged: false
-              vlan: 1504
-              deploy: true
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1504
+        tag: 14345
+        mtu: 1500
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw1_ipaddr }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            torPorts: []
+            untagged: false
+            vlan: 1504
+            deploy: true
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw2_ipaddr }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            untagged: false
+            vlan: 1504
+            deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -88,10 +88,10 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          vlanId: 1504
-          tag: 14345
-          mtu: 1500
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1504
+        tag: 14345
+        mtu: 1500
   register: result
 
 - assert:
@@ -128,41 +128,41 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          vlanId: 1503
-          tag: 14345
-          mtu: 1500
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw1_serial }}"
-              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-              torPorts: []
-              untagged: false
-              vlan: 1503
-              deploy: true
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1503
+        tag: 14345
+        mtu: 1500
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw1_ipaddr }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            torPorts: []
+            untagged: false
+            vlan: 1503
+            deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.40.1/24'
-          vlanId: 151
-          tag: 14346
-          mtu: 1500
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw2_serial }}"
-              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
-              untagged: false
-              vlan: 151
-              deploy: true
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw2_ipaddr }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            untagged: false
+            vlan: 151
+            deploy: true
   register: result
 
 - assert:
@@ -196,10 +196,10 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.40.1/24'
-          vlanId: 151
-          tag: 14346
-          mtu: 1500
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
   register: result
 
 - assert:
@@ -236,10 +236,10 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          vlanId: 1503
-          tag: 14345
-          mtu: 1500
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1503
+        tag: 14345
+        mtu: 1500
   register: result
 
 - assert:
@@ -275,41 +275,41 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          vlanId: 1503
-          tag: 14345
-          mtu: 1500
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw1_serial }}"
-              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-              torPorts: []
-              untagged: false
-              vlan: 1503
-              deploy: true
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1503
+        tag: 14345
+        mtu: 1500
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw1_ipaddr }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            torPorts: []
+            untagged: false
+            vlan: 1503
+            deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.40.1/24'
-          vlanId: 151
-          tag: 14346
-          mtu: 1500
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw2_serial }}"
-              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
-              untagged: false
-              vlan: 151
-              deploy: true
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw2_ipaddr }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            untagged: false
+            vlan: 151
+            deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -374,34 +374,34 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          tag: 14345
-          mtu: 2500
-          vlanId: 3509
-          isLayer2Only: True
-          suppressArp: True
-          intfDescription: "test interface"
-          vlanName: "testvlan"
-          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw1_serial }}"
-              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-              torPorts: []
-              untagged: false
-              deploy: true
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw2_serial }}"
-              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
-              torPorts: []
-              untagged: false
-              deploy: true
+        gatewayIpAddress: '192.168.30.1/24'
+        tag: 14345
+        mtu: 2500
+        vlanId: 3509
+        isLayer2Only: True
+        suppressArp: True
+        intfDescription: "test interface"
+        vlanName: "testvlan"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw1_ipaddr }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            torPorts: []
+            untagged: false
+            deploy: true
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw2_ipaddr }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            torPorts: []
+            untagged: false
+            deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -434,15 +434,15 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          tag: 14345
-          mtu: 2500
-          vlanId: 3509
-          isLayer2Only: True
-          suppressArp: True
-          intfDescription: "test interface"
-          vlanName: "testvlan"
-          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}   
+        gatewayIpAddress: '192.168.30.1/24'
+        tag: 14345
+        mtu: 2500
+        vlanId: 3509
+        isLayer2Only: True
+        suppressArp: True
+        intfDescription: "test interface"
+        vlanName: "testvlan"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}   
   register: result
 
 - assert:
@@ -478,45 +478,45 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.30.1/24'
-          tag: 14345
-          mtu: 2500
-          vlanId: 3509
-          isLayer2Only: True
-          suppressArp: True
-          intfDescription: "test interface"
-          vlanName: "testvlan"
-          dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw1_serial }}"
-              switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-              torPorts: []
-              untagged: false
-              deploy: true
+        gatewayIpAddress: '192.168.30.1/24'
+        tag: 14345
+        mtu: 2500
+        vlanId: 3509
+        isLayer2Only: True
+        suppressArp: True
+        intfDescription: "test interface"
+        vlanName: "testvlan"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw1_ipaddr }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            torPorts: []
+            untagged: false
+            deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7010
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.40.1/24'
-          vlanId: 151
-          tag: 14346
-          mtu: 1500
-          attach:
-            - deployment: true
-              dot1QVlan: 1
-              fabric: "{{ test_fabric }}"
-              instanceValues: ""
-              serialNumber: "{{ sw2_serial }}"
-              switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
-              untagged: false
-              vlan: 151
-              deploy: true
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
+        attach:
+          - deployment: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ sw2_ipaddr }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            untagged: false
+            vlan: 151
+            deploy: true
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -581,8 +581,8 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.40.1/24'
-          vlanId: 151
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
   register: result
   ignore_errors: yes
 
@@ -602,8 +602,8 @@
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
-        - gatewayIpAddress: '192.168.40.1/24'
-          vlanId: 151
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
   register: result
   ignore_errors: yes
 
