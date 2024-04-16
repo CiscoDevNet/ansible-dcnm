@@ -441,13 +441,17 @@ class FabricDetailsByNvPair(FabricDetails):
 
         - raise ValueError if self.filter_key has not been set.
         """
+        method_name = inspect.stack()[0][3]
+
         if self.filter_key is None:
-            msg = "set instance.filter_key to a nvPair key "
-            msg += "before calling refresh()."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"set {self.class_name}.filter_key to a nvPair key "
+            msg += f"before calling {self.class_name}.refresh()."
             raise ValueError(msg)
         if self.filter_value is None:
-            msg = "set instance.filter_value to a nvPair value "
-            msg += "before calling refresh()."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"set {self.class_name}.filter_value to a nvPair value "
+            msg += f"before calling {self.class_name}.refresh()."
             raise ValueError(msg)
 
         self.refresh_super()
