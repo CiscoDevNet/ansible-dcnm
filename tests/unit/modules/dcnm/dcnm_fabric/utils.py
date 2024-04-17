@@ -33,6 +33,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
+    TemplateGet
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get_all import \
+    TemplateGetAll
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
     FabricUpdateBulk
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
@@ -233,6 +237,22 @@ def fabric_update_bulk_fixture():
     return FabricUpdateBulk(instance.params)
 
 
+@pytest.fixture(name="template_get")
+def template_get_fixture():
+    """
+    mock TemplateGet
+    """
+    return TemplateGet()
+
+
+@pytest.fixture(name="template_get_all")
+def template_get_all_fixture():
+    """
+    mock TemplateGetAll
+    """
+    return TemplateGetAll()
+
+
 @contextmanager
 def does_not_raise():
     """
@@ -386,6 +406,26 @@ def responses_fabric_update_bulk(key: str) -> Dict[str, str]:
     Return responses for FabricUpdateBulk
     """
     data_file = "responses_FabricUpdateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_template_get(key: str) -> Dict[str, str]:
+    """
+    Return responses for TemplateGet
+    """
+    data_file = "responses_TemplateGet"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_template_get_all(key: str) -> Dict[str, str]:
+    """
+    Return responses for TemplateGetAll
+    """
+    data_file = "responses_TemplateGetAll"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
