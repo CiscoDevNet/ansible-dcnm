@@ -641,8 +641,8 @@ class DcnmVpcPair:
             # Check the peering before deleting. Delete only the peering that is requested for.
             if (
                 (have == [])
-                or (xelem["peerOneId"] != have["peerOneId"])
-                or (xelem["peerTwoId"] != have["peerTwoId"])
+                or (xelem["peerOneId"] != have["peerOneId"] and xelem["peerOneId"] != have["peerTwoId"])
+                or (xelem["peerTwoId"] != have["peerTwoId"] and xelem["peerTwoId"] != have["peerOneId"])
             ):
                 continue
 
@@ -822,11 +822,25 @@ class DcnmVpcPair:
             # another peering, say, peer1 and peer3 or peer2 and peer4, then this should be flagged as an error.
 
             if have != [] and (
-                (elem["peerOneId"] != have["peerOneId"])
-                or (elem["peerTwoId"] != have["peerTwoId"])
+                (
+                    elem["peerOneId"] != have["peerOneId"]
+                    and elem["peerOneId"] != have["peerTwoId"]
+                )
+                or (
+                    elem["peerTwoId"] != have["peerTwoId"]
+                    and elem["peerTwoId"] != have["peerOneId"]
+                )
             ):
                 mesg = f"Peering {have['peerOneId']}-{have['peerTwoId']} already exists. Cannot create peering for {elem['peerOneId']}-{elem['peerTwoId']}"
                 self.module.fail_json(msg=mesg)
+
+            # In some cases, specifically on VXLAN fabrics, the peerOneId and peerTwoId will get swapped on NDFC server. The peerOneId and peerTwoId selection
+            # happens based on some internal logic. Users may not be aware of which switch is peer1 and which is peer2.
+            # To handle such cases transparently, we will swap the peerOneId and peerTwoId fields in WANT, to be consistent with 'have'.
+            # Otherwise idempotence cases may fail.
+            if have != []:
+                elem["peerOneId"] = have["peerOneId"]
+                elem["peerTwoId"] = have["peerTwoId"]
 
             if (have != []) and (have not in self.have):
                 self.have.append(have)
