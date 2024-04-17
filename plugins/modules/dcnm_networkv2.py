@@ -975,7 +975,6 @@ class DcnmNetworkv2:
                 del attach["switchSerialNo"]
                 del attach["switchName"]
                 del attach["switchRole"]
-                #del attach["ipAddress"]
                 del attach["lanAttachState"]
                 del attach["isLanAttached"]
                 del attach["fabricName"]
@@ -1093,6 +1092,8 @@ class DcnmNetworkv2:
             )
 
         attach.update({"serialNumber": serial})
+        if not attach.get("fabric"):
+            attach.update({"fabric": self.fabric})
 
         for atch_h in self.have_attach:
             if net_name == atch_h["networkName"]:
@@ -1269,7 +1270,7 @@ class DcnmNetworkv2:
             update_path = path + "/{0}".format(net["networkName"])
             resp = dcnm_send(self.module, method, update_path, json.dumps(net))
             self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "create")
+            fail, self.result["changed"] = self.handle_response(resp, "create",self.result["changed"])
             if fail:
                 if is_rollback:
                     self.failed_to_rollback = True
@@ -1301,7 +1302,7 @@ class DcnmNetworkv2:
             self.module, method, detach_path, json.dumps(self.diff_detach)
         )
         self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "attach")
+        fail, self.result["changed"] = self.handle_response(resp, "attach", self.result["changed"])
         if fail:
             if is_rollback:
                 self.failed_to_rollback = True
@@ -1345,7 +1346,7 @@ class DcnmNetworkv2:
         #         )
 
         self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        fail, self.result["changed"] = self.handle_response(resp, "deploy", self.result["changed"])
         if fail:
             if is_rollback:
                 self.failed_to_rollback = True
@@ -1380,7 +1381,7 @@ class DcnmNetworkv2:
                 delete_path = path + "/" + net
                 resp = dcnm_send(self.module, method, delete_path)
                 self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "delete")
+                fail, self.result["changed"] = self.handle_response(resp, "delete", self.result["changed"])
                 if fail:
                     if is_rollback:
                         self.failed_to_rollback = True
@@ -1410,15 +1411,11 @@ class DcnmNetworkv2:
             None
         """
 
-        for net in self.diff_create:
-            json_to_dict = net["networkTemplateConfig"]
-            net.update({"networkTemplateConfig": json_to_dict})
-
         method = "POST"
         bulk_path = self.paths["BULK_NET"]
         resp = dcnm_send(self.module, method, bulk_path, json.dumps(self.diff_create))
         self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "create")
+        fail, self.result["changed"] = self.handle_response(resp, "create", self.result["changed"])
         if fail:
             if is_rollback:
                 self.failed_to_rollback = True
@@ -1469,7 +1466,7 @@ class DcnmNetworkv2:
 
             break
         self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "attach")
+        fail, self.result["changed"] = self.handle_response(resp, "attach", self.result["changed"])
         # If we get here and an update_in_progress is True then
         # not all of the attachments were successful which represents a
         # failure condition.
@@ -1504,7 +1501,7 @@ class DcnmNetworkv2:
             self.module, method, deploy_path, json.dumps(self.diff_deploy)
         )
         self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        fail, self.result["changed"] = self.handle_response(resp, "deploy", self.result["changed"])
         if fail:
             if is_rollback:
                 self.failed_to_rollback = True
@@ -1750,7 +1747,7 @@ class DcnmNetworkv2:
 
         self.diff_input_format = diff
 
-    def handle_response(self, resp, op):
+    def handle_response(self, resp, op, change=False):
         """
         Handles the response received from the NDFC API.
 
@@ -1790,12 +1787,12 @@ class DcnmNetworkv2:
             changed = False
         if op == "attach" and "is in use already" in str(res.values()):
             fail = True
-            changed = False
+            changed = False | change
         if op == "attach" and "Invalid interfaces" in str(res.values()):
             fail = True
             changed = True
         if op == "deploy" and "No switches PENDING for deployment" in str(res.values()):
-            changed = False
+            changed = False | change
 
         return fail, changed
     
