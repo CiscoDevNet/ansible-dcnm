@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import inspect
 import json
 import logging
 import re
@@ -18,10 +19,13 @@ class RuleSetCommon:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.conversion = ConversionUtils()
 
+        self.re_multi_rule = re.compile(r"^\s*(\(.*\))(.*)(\(.*\))\s*$")
+
         self.rule = None
         self.properties = {}
         self.properties["template"] = None
         self.properties["ruleset"] = {}
+
 
     def clean_rule(self):
         """
@@ -40,8 +44,8 @@ class RuleSetCommon:
         self.rule = self.rule.replace("!=", " != ")
         self.rule = self.rule.replace("(", " ( ")
         self.rule = self.rule.replace(")", " ) ")
-        self.rule = self.rule.replace("true", " True")
-        self.rule = self.rule.replace("false", " False")
+        self.rule = self.rule.replace("true", "True")
+        self.rule = self.rule.replace("false", "False")
         self.rule = re.sub(r"\s+", " ", self.rule)
         msg = f"{self.class_name}.{method_name}: "
         msg += f"PRE2 : RULE: {self.rule}"
@@ -181,43 +185,85 @@ class RuleSet(RuleSetCommon):
 
     def _update_ruleset_no_boolean(self):
         """
-        # Process rules that contain no boolean terms
+        - Process rules that contain no boolean terms
+        - Raise ``ValueError`` for unhandle case if rule is a list.
 
         ```python
         "VRF_LITE_AUTOCONFIG != Manual"
         ```
+
+        - Ruleset Structure (no boolean):
+
+        ```python
+        AUTO_VRFLITE_IFC_DEFAULT_VRF: {
+            "terms": {
+                "na": [
+                    {
+                        "operator": "!=",
+                        "parameter": "VRF_LITE_AUTOCONFIG",
+                        "value": "Manual"
+                    }
+                ]
+            }
+        }        
+
         """
+        method_name = inspect.stack()[0][3]
         msg = f"key {self.param_name}: {self.rule}"
         self.log.debug(msg)
 
+        self.ruleset[self.param_name] = {}
+        self.ruleset[self.param_name]["terms"] = {}
+        self.ruleset[self.param_name]["terms"]["na"] = []
+
         if isinstance(self.rule, list):
-            for item in self.rule:
-                lhs, op, rhs = item.split(" ")
-                rhs = self.conversion.make_boolean(rhs)
-                if self.param_name not in self.ruleset:
-                    self.ruleset[self.param_name] = {}
-                    self.ruleset[self.param_name]["mandatory"] = {}
-                self.ruleset[self.param_name]["mandatory"][lhs] = {}
-                self.ruleset[self.param_name]["mandatory"][lhs]["operator"] = op
-                self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
-            return
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "UNHANDLED_CASE: rule is a list."
+            raise ValueError(msg)
+
         lhs, op, rhs = self.rule.split(" ")
         rhs = self.conversion.make_boolean(rhs)
-        if self.param_name not in self.ruleset:
-            self.ruleset[self.param_name] = {}
-            self.ruleset[self.param_name]["mandatory"] = {}
-        self.ruleset[self.param_name]["mandatory"][lhs] = {}
-        self.ruleset[self.param_name]["mandatory"][lhs]["operator"] = op
-        self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
+        term = {}
+        term["parameter"] = lhs
+        term["operator"] = op
+        term["value"] = rhs
+        self.ruleset[self.param_name]["terms"]["na"].append(term)
+
+        msg = f"NA: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _update_ruleset_rule_and(self):
         """
-        # Process rules that contain only boolean "and" terms
+        - Process rules that contain only boolean "and" terms
 
-        NOTE: ``&&`` is replaced with `` and `` in ``clean_rule()``
+        NOTES:
+            - ``&&`` is replaced with `` and `` in ``clean_rule()``
+
 
         ```python
+        PARAM = INBAND_MGMT
         "IsShow": "\"LINK_STATE_ROUTING==ospf && UNDERLAY_IS_V6==false\""
+        ```
+
+        - Ruleset Structure (AND):
+
+        ```python
+        SUBNET_RANGE: {
+            "terms": {
+                "and": [
+                    {
+                        "operator": "==",
+                        "parameter": "UNDERLAY_IS_V6",
+                        "value": false
+                    },
+                    {
+                        "operator": "==",
+                        "parameter": "STATIC_UNDERLAY_IP_ALLOC",
+                        "value": false
+                    }
+                ]
+            }
+        }        
         ```
         """
         self.rule = self.rule.split("and")
@@ -226,18 +272,87 @@ class RuleSet(RuleSetCommon):
         self.rule = [re.sub(r"\"", "", x) for x in self.rule]
         self.rule = [re.sub(r"\'", "", x) for x in self.rule]
         new_rule = []
+
+        self.ruleset[self.param_name] = {}
+        self.ruleset[self.param_name]["terms"] = {}
+        self.ruleset[self.param_name]["terms"]["and"] = []
+
         for item in self.rule:
             lhs, op, rhs = item.split(" ")
             rhs = rhs.replace('"', "")
             rhs = rhs.replace("'", "")
             rhs = self.conversion.make_boolean(rhs)
             new_rule.append(f"{lhs} {op} {rhs}")
-            if self.param_name not in self.ruleset:
-                self.ruleset[self.param_name] = {}
-                self.ruleset[self.param_name]["mandatory"] = {}
-            self.ruleset[self.param_name]["mandatory"][lhs] = {}
-            self.ruleset[self.param_name]["mandatory"][lhs]["operator"] = op
-            self.ruleset[self.param_name]["mandatory"][lhs]["value"] = rhs
+
+            term = {}
+            term["parameter"] = lhs
+            term["operator"] = op
+            term["value"] = rhs
+            self.ruleset[self.param_name]["terms"]["and"].append(term)
+        msg = f"AND: key {self.param_name}: {new_rule}"
+        self.log.debug(msg)
+        msg = f"AND: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def _update_ruleset_rule_or(self):
+        """
+        # Process rules that contain only boolean "or" terms
+
+        NOTES
+            - ``||`` is replaced with `` or `` in ``clean_rule()``
+
+        ```python
+        STP_ROOT_OPTION == rpvst+ or STP_ROOT_OPTION == mst
+        ```
+
+        - Ruleset Structure (OR):
+            
+        ```python
+        STP_BRIDGE_PRIORITY: {
+            "terms": {
+                "or": [
+                    {
+                        "operator": "==",
+                        "parameter": "STP_ROOT_OPTION",
+                        "value": "rpvst+"
+                    },
+                    {
+                        "operator": "==",
+                        "parameter": "STP_ROOT_OPTION",
+                        "value": "mst"
+                    }
+                ]
+            }
+        }
+        ```
+        """
+        self.rule = self.rule.split("or")
+        self.rule = [x.strip() for x in self.rule]
+        self.rule = [re.sub(r"\s+", " ", x) for x in self.rule]
+        self.rule = [re.sub(r"\"", "", x) for x in self.rule]
+        self.rule = [re.sub(r"\'", "", x) for x in self.rule]
+        new_rule = []
+
+        self.ruleset[self.param_name] = {}
+        self.ruleset[self.param_name]["terms"] = {}
+        self.ruleset[self.param_name]["terms"]["or"] = []
+
+        for item in self.rule:
+            lhs, op, rhs = item.split(" ")
+            rhs = rhs.replace('"', "")
+            rhs = rhs.replace("'", "")
+            rhs = self.conversion.make_boolean(rhs)
+            new_rule.append(f"{lhs} {op} {rhs}")
+
+            term = {}
+            term["parameter"] = lhs
+            term["operator"] = op
+            term["value"] = rhs
+            self.ruleset[self.param_name]["terms"]["or"].append(term)
+        msg = f"OR: key {self.param_name}: {new_rule}"
+        self.log.debug(msg)
+        msg = f"OR: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _update_ruleset(self) -> None:
         """
@@ -251,16 +366,28 @@ class RuleSet(RuleSetCommon):
         if self.rule in ("false", "False", False):
             return
         self.clean_rule()
-        if "and" in self.rule and "or" in self.rule:
-            # TODO: handle this case
-            msg = "TODO: UNHANDLED_CASE: and+or in rule. "
+
+        match = re.match(self.re_multi_rule, self.rule)
+        if match:
+            msg = "TODO: multi-rule: "
             msg += f"param_name: {self.param_name} rule: {self.rule}"
             self.log.debug(msg)
-            pass
-        if "and" in self.rule and "or" not in self.rule:
+            msg = f"match.group(1): {match.group(1)}"
+            self.log.debug(msg)
+            msg = f"match.group(2): {match.group(2)}"
+            self.log.debug(msg)
+            msg = f"match.group(3): {match.group(3)}"
+            self.log.debug(msg)
+        elif "and" in self.rule and "or" not in self.rule:
             self._update_ruleset_rule_and()
-        if "and" not in self.rule and "or" not in self.rule:
+        elif "or" in self.rule and "and" not in self.rule:
+            self._update_ruleset_rule_or()
+        elif "and" not in self.rule and "or" not in self.rule:
             self._update_ruleset_no_boolean()
+        else:
+            msg = "TODO: UNHANDLED_CASE: "
+            msg += f"param_name: {self.param_name} rule: {self.rule}"
+            self.log.debug(msg)
 
     def refresh(self) -> None:
         """

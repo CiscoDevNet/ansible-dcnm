@@ -32,7 +32,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
 
 class VerifyPlaybookParams:
     """
-    # Verify playbook parameters for a controller fabric.
+    - Verify playbook parameters for a controller fabric.
 
     VerifyPlaybookParams() uses three sources of information in its
     verification of the user's playbook parameters:
@@ -138,7 +138,7 @@ class VerifyPlaybookParams:
         """
         -   getter: return the controller fabric config to be verified
         -   setter: set the controller fabric config to be verified
-        -   setter: raise TypeError if the controller conffig is not a dict
+        -   setter: raise TypeError if the controller config is not a dict
         """
         return self.properties["config_controller"]
 
@@ -196,20 +196,39 @@ class VerifyPlaybookParams:
             raise TypeError(msg)
         self.properties["template"] = value
 
-    def eval_parameter_rule(self, parameter, param_value, rule) -> bool:
+    def eval_parameter_rule(self, rule) -> bool:
         """
-        Evaluate a dependent parameter value against a rule
-        from the fabric template.
+        -   Evaluate a user parameter value against a rule from
+            the fabric template.
+        -   Return the result of the evaluation.
+        -   Raise KeyError if the rule does not contain expected keys.
 
-        - Return the result of the evaluation.
-        - raise KeyError if the rule does not contain expected keys.
+        - rule format:
+        ```python
+        {
+            "user_value": <user value for parameter>,
+            "parameter": "parameter_name",
+            "operator": "operator",
+            "value": "<template value for parameter>"
+        }
+        ```
 
         """
         method_name = inspect.stack()[0][3]
 
-        rule_operator = rule.get("operator", None)
-        if rule_operator is None:
-            msg = f"'op' not found in parameter {parameter} rule: {rule}"
+        parameter = rule.get("parameter", None)
+        if parameter is None:
+            msg = f"'parameter' not found in rule: {rule}"
+            raise KeyError(msg)
+
+        user_value = rule.get("user_value", None)
+        if user_value is None:
+            msg = f"'user_value' not found in parameter {parameter} rule: {rule}"
+            raise KeyError(msg)
+
+        operator = rule.get("operator", None)
+        if operator is None:
+            msg = f"'operator' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
         rule_value = rule.get("value", None)
@@ -220,20 +239,20 @@ class VerifyPlaybookParams:
         # While eval() can be dangerous with unknown input, the input
         # we're feeding it is from a known source and has been pretty
         # heavily massaged before it gets here.
-        eval_string = f"param_value {rule_operator} rule_value"
+        eval_string = f"user_value {operator} rule_value"
         result = eval(eval_string)  # pylint: disable=eval-used
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
-        msg += f"{param_value} "
-        msg += f"{rule_operator} "
+        msg += f"{user_value} "
+        msg += f"{operator} "
         msg += f"{rule_value} "
         msg += f"result: {result}"
         self.log.debug(msg)
 
         return result
 
-    def controller_param_is_valid(self, parameter, rule) -> bool:
+    def controller_param_is_valid(self, item) -> bool:
         """
         -   Return None if the controller fabric config does not contain
             the dependent parameter.  This removes the controller result
@@ -248,35 +267,43 @@ class VerifyPlaybookParams:
         -   raise KeyError if self.eval_parameter_rule() fails
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        msg = f"parameter: {parameter}, "
-        msg += f"rule: {rule}, "
+        rule_parameter = item.get("parameter", None)
+        rule_value = item.get("value", None)
+        rule_operator = item.get("operator", None)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg = f"rule_parameter: {rule_parameter}, "
+        msg += f"rule_operator: {rule_operator}, "
+        msg += f"rule_value: {rule_value}, "
         self.log.debug(msg)
 
         # Caller indicated that the fabric does not exist.
         # Return None to remove controller parameter result from consideration.
         if self.config_controller == {}:
-            msg = f"Early return: {parameter} fabric does not exist. "
+            msg = f"Early return: {rule_parameter} fabric does not exist. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
         # The controller config does not contain the parameter.
         # Return None to remove controller parameter result from consideration.
-        if parameter not in self.config_controller:
-            msg = f"Early return: {parameter} not in config_controller. "
+        if rule_parameter not in self.config_controller:
+            msg = f"Early return: {rule_parameter} not in config_controller. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        parameter_value = self.conversion.make_boolean(
-            self.config_controller[parameter]
+        user_value = self.conversion.make_boolean(
+            self.config_controller[rule_parameter]
         )
+        # update item with user's parameter value
+        item["user_value"] = user_value
         try:
-            return self.eval_parameter_rule(parameter, parameter_value, rule)
+            return self.eval_parameter_rule(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def playbook_param_is_valid(self, parameter, rule) -> bool:
+    def playbook_param_is_valid(self, item) -> bool:
         """
         -   Return None if the playbook config does not contain the
             dependent parameter. This removes the playbook parameter from
@@ -291,27 +318,34 @@ class VerifyPlaybookParams:
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        rule_parameter = item.get("parameter", None)
+        rule_value = item.get("value", None)
+        rule_operator = item.get("operator", None)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg = f"rule_parameter: {rule_parameter}, "
+        msg += f"rule_operator: {rule_operator}, "
+        msg += f"rule_value: {rule_value}, "
+        self.log.debug(msg)
+
         # The playbook config does not contain the parameter.
         # Return None to remove playbook parameter result from consideration.
-        if parameter not in self.config_playbook:
-            msg = f"Early return: {parameter} not in config_playbook. "
+        if rule_parameter not in self.config_playbook:
+            msg = f"Early return: {rule_parameter} not in config_playbook. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        msg = f"parameter: {parameter}, "
-        msg += f"rule: {rule}, "
-        msg += f"parameter_value: {self.config_playbook[parameter]}"
-        self.log.debug(msg)
+        user_value = self.conversion.make_boolean(self.config_playbook[rule_parameter])
 
-        parameter_value = self.conversion.make_boolean(self.config_playbook[parameter])
-
+        # update item with user's parameter value
+        item["user_value"] = user_value
         try:
-            return self.eval_parameter_rule(parameter, parameter_value, rule)
+            return self.eval_parameter_rule(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def default_param_is_valid(self, parameter, rule) -> bool:
+    def default_param_is_valid(self, item) -> bool:
         """
         -   Return None if the fabric defaults (in the fabric template)
             do not contain the dependent parameter. This removes the
@@ -327,35 +361,48 @@ class VerifyPlaybookParams:
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        rule_parameter = item.get("parameter", None)
+        rule_value = item.get("value", None)
+        rule_operator = item.get("operator", None)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg = f"rule_parameter: {rule_parameter}, "
+        msg += f"rule_operator: {rule_operator}, "
+        msg += f"rule_value: {rule_value}, "
+        self.log.debug(msg)
+
         # The playbook config contains the parameter.
         # Return None to remove default_param result from consideration.
-        if parameter in self.config_playbook:
-            msg = f"Early return: parameter: {parameter} in config_playbook. "
+        if rule_parameter in self.config_playbook:
+            msg = f"Early return: parameter: {rule_parameter} in config_playbook. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
         # The controller config contains the parameter.
         # Return None to remove default_param result from consideration.
-        if parameter in self.config_controller:
-            msg = f"Early return: parameter: {parameter} in config_controller. "
+        if rule_parameter in self.config_controller:
+            msg = f"Early return: parameter: {rule_parameter} in config_controller. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
 
-        default_value = self._param_info.parameter(parameter).get("default", None)
+        default_value = self._param_info.parameter(rule_parameter).get("default", None)
         if default_value is None:
-            msg = f"Early return: parameter: {parameter} has no default value. "
+            msg = f"Early return: parameter: {rule_parameter} has no default value. "
             msg += "Returning None."
             self.log.debug(msg)
             return None
+
+        # update item with user's parameter value
+        item["user_value"] = default_value
 
         try:
-            return self.eval_parameter_rule(parameter, default_value, rule)
+            return self.eval_parameter_rule(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def update_decision_set(self, dependent_param, rule) -> set:
+    def update_decision_set(self, item) -> set:
         """
         Update the decision set with the aggregate of results from the
         - controller fabric configuration
@@ -369,17 +416,17 @@ class VerifyPlaybookParams:
         """
         decision_set = set()
         try:
-            controller_is_valid = self.controller_param_is_valid(dependent_param, rule)
+            controller_is_valid = self.controller_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
         try:
-            playbook_is_valid = self.playbook_param_is_valid(dependent_param, rule)
+            playbook_is_valid = self.playbook_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
         try:
-            default_is_valid = self.default_param_is_valid(dependent_param, rule)
+            default_is_valid = self.default_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
@@ -394,8 +441,7 @@ class VerifyPlaybookParams:
             decision_set = {False}
 
         msg = f"parameter {self.parameter}, "
-        msg += f"dependent_param: {dependent_param}, "
-        msg += f"rule: {rule}, "
+        msg += f"item: {item}, "
         msg += f"controller_is_valid: {controller_is_valid}, "
         msg += f"playbook_is_valid: {playbook_is_valid}, "
         msg += f"default_is_valid: {default_is_valid}, "
@@ -444,11 +490,6 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return
 
-        msg = "param_info: "
-        msg += f"parameter: {self.parameter}, "
-        msg += f"{json.dumps(param_info, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
         # Return if the parameter is found in the template and the template
         # does not mandate specific choices for the parameter
         if param_info["choices"] is None:
@@ -468,11 +509,6 @@ class VerifyPlaybookParams:
             msg += f"Valid values: {param_info['choices']}"
             raise ValueError(msg)
 
-        msg = f"Parameter: {self.parameter}, "
-        msg += f"playbook_value: {playbook_value}, "
-        msg += f"valid values: {param_info['choices']}"
-        self.log.debug(msg)
-
         # Return if the parameter is found in the template and the parameter
         # value matches a valid choice for the parameter
         if playbook_value in param_info["choices"]:
@@ -490,13 +526,160 @@ class VerifyPlaybookParams:
         msg += f"Valid values: {param_info['choices']}"
         raise ValueError(msg)
 
+    def update_decision_set_for_and_rules(self, param_rule) -> None:
+        """
+        -   Update the decision set for rules containing only AND'd terms.
+        -   Update self.params_are_valid with the result of the decision set.
+        -   Add the parameter to the bad_params dict if the controller
+            would return an error for the parameter (i.e. the updated
+            decision set does not contain True).
+        -   Raise ``KeyError`` if an error is encountered while updating
+            the decision set.
+        """
+        for item in param_rule.get("terms", {}).get("and"):
+            try:
+                decision_set = self.update_decision_set(item)
+            except KeyError as error:
+                raise KeyError(f"{error}") from error
+
+            # bad_params[fabric][param] = <list of bad_param dict>
+            if True not in decision_set:
+                self.params_are_valid.add(False)
+
+                if self.fabric_name not in self.bad_params:
+                    self.bad_params[self.fabric_name] = {}
+                if self.parameter not in self.bad_params[self.fabric_name]:
+                    self.bad_params[self.fabric_name][self.parameter] = []
+                bad_param = {}
+                bad_param["fabric_name"] = self.fabric_name
+                bad_param["config_param"] = self.parameter
+                bad_param["config_value"] = self.config_playbook[self.parameter]
+                bad_param["dependent_param"] = item.get("parameter")
+                bad_param["dependent_operator"] = item.get("operator")
+                bad_param["dependent_value"] = item.get("value")
+                bad_param["boolean_operator"] = "and"
+                self.bad_params[self.fabric_name][self.parameter].append(bad_param)
+            else:
+                self.params_are_valid.add(True)
+
+    def update_decision_set_for_or_rules(self, param_rule) -> None:
+        """
+        -   Update the decision set for rules containing only OR'd terms.
+        -   Update self.params_are_valid with the result of the decision set.
+        -   Add the parameter to the bad_params dict if the controller
+            would return an error for the parameter (i.e. the updated
+            decision set does not contain True).
+        -   Raise ``KeyError`` if an error is encountered while updating
+            the decision set.
+        -   Raise ``ValueError`` if an unexpected number of dependent
+            parameters are found in param_rule.
+        """
+        method_name = inspect.stack()[0][3]
+
+        decision_set = set()
+        # valid_values is used in the error message or OR'd parameters
+        valid_values = set()
+        terms = param_rule.get("terms", {}).get("or")
+
+        # update decision_set with the aggregate of results from
+        # all terms in the rule.
+        for item in terms:
+            valid_values.add(item.get("value"))
+            try:
+                decision_set.update(self.update_decision_set(item))
+            except KeyError as error:
+                raise KeyError(f"{error}") from error
+
+        # Update params_are_valid with True and return if all params are valid.
+        if True in decision_set:
+            self.params_are_valid.add(True)
+            return
+
+        # Update params_are_valid with False and populate self.bad_params
+        # if any of the params were invalid.
+        self.params_are_valid.add(False)
+
+        # bad_params[fabric][param] = <list of bad_param dict>
+        if self.fabric_name not in self.bad_params:
+            self.bad_params[self.fabric_name] = {}
+        if self.parameter not in self.bad_params[self.fabric_name]:
+            self.bad_params[self.fabric_name][self.parameter] = []
+
+        # OR'd parameters have (thus far) only had one dependent parameter.
+        # Specifically, STP_BRIDGE_PRIORITY has two rule terms, each with the
+        # same dependent parameter (STP_ROOT_OPTION) but with different values
+        # (mst and rstp+).  Raise a ValueError here to alert us if this
+        # ever changes.
+        verify_one_dependent_parameter_is_present = set()
+        for item in terms:
+            verify_one_dependent_parameter_is_present.add(item.get("parameter"))
+        if len(verify_one_dependent_parameter_is_present) != 1:
+            msg = f"{self.class_name}.{method_name}: "
+            msg = "OR'd parameters must have one dependent parameter. "
+            msg += f"Got: {verify_one_dependent_parameter_is_present}. "
+            msg += f"parameter {self.parameter}, rule {param_rule}."
+            raise ValueError(msg)
+
+        bad_param = {}
+        bad_param["fabric_name"] = self.fabric_name
+        bad_param["config_param"] = self.parameter
+        bad_param["config_value"] = self.config_playbook[self.parameter]
+        bad_param["dependent_param"] = terms[0].get("parameter")
+        bad_param["dependent_operator"] = terms[0].get("operator")
+        bad_param["dependent_value"] = valid_values
+        bad_param["boolean_operator"] = "or"
+        self.bad_params[self.fabric_name][self.parameter].append(bad_param)
+
+    def update_decision_set_for_na_rules(self, param_rule) -> str:
+        """
+        -   eval() a rule that contains the key 'na'
+        -   Raise ``KeyError`` if the rule does not contain keys:
+            - ["na"]
+            - ["na"]["terms")
+        - Raise ``ValueError`` if the rule["na"]["terms"] does not contain one element
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+
+        if len(param_rule.get("terms", {}).get("na")) != 1:
+            msg += "Rules not containing boolean operators must "
+            msg += "contain one term. "
+            msg += f"Got rule: {param_rule}"
+            raise ValueError(msg)
+
+        for item in param_rule.get("terms", {}).get("na"):
+            try:
+                decision_set = self.update_decision_set(item)
+            except KeyError as error:
+                raise KeyError(f"{error}") from error
+
+            # bad_params[fabric][param] = <list of bad_param dict>
+            if True not in decision_set:
+                self.params_are_valid.add(False)
+
+                if self.fabric_name not in self.bad_params:
+                    self.bad_params[self.fabric_name] = {}
+                if self.parameter not in self.bad_params[self.fabric_name]:
+                    self.bad_params[self.fabric_name][self.parameter] = []
+                bad_param = {}
+                bad_param["fabric_name"] = self.fabric_name
+                bad_param["config_param"] = self.parameter
+                bad_param["config_value"] = self.config_playbook[self.parameter]
+                bad_param["dependent_param"] = item.get("parameter")
+                bad_param["dependent_operator"] = item.get("operator")
+                bad_param["dependent_value"] = item.get("value")
+                bad_param["boolean_operator"] = "na"
+                self.bad_params[self.fabric_name][self.parameter].append(bad_param)
+            else:
+                self.params_are_valid.add(True)
+
     def verify_parameter(self):
         """
         Verify a parameter against the template.
 
-        -   raise ValueError if FABRIC_NAME is not present in the playbook
-        -   raise ValueError if the parameter does not match any of the valid
-            values specified in the template for the parameter
+        -   Raise ``ValueError`` if FABRIC_NAME is not present in the playbook.
+        -   Raise ``ValueError`` if the parameter does not match any of the
+            valid values specified in the template for the parameter
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -509,6 +692,8 @@ class VerifyPlaybookParams:
             msg = "FABRIC_NAME not found in playbook config."
             raise ValueError(msg)
 
+        # Verify the parameter value against a list of valid choices
+        # in the template.
         try:
             self.verify_parameter_value()
         except ValueError as error:
@@ -528,31 +713,30 @@ class VerifyPlaybookParams:
         self.log.debug(msg)
 
         param_rule = self._ruleset.ruleset[self.parameter]
-
-        for dependent_param, rule in param_rule.get("mandatory", {}).items():
-            try:
-                decision_set = self.update_decision_set(dependent_param, rule)
-            except KeyError as error:
-                raise KeyError(f"{error}") from error
-
-            # bad_params[fabric][param] = <list of bad_param dict>
-            if True not in decision_set:
-                self.params_are_valid.add(False)
-
-                if self.fabric_name not in self.bad_params:
-                    self.bad_params[self.fabric_name] = {}
-                if self.parameter not in self.bad_params[self.fabric_name]:
-                    self.bad_params[self.fabric_name][self.parameter] = []
-                bad_param = {}
-                bad_param["fabric_name"] = self.fabric_name
-                bad_param["config_param"] = self.parameter
-                bad_param["config_value"] = self.config_playbook[self.parameter]
-                bad_param["dependent_param"] = dependent_param
-                bad_param["dependent_operator"] = rule.get("operator")
-                bad_param["dependent_value"] = rule.get("value")
-                self.bad_params[self.fabric_name][self.parameter].append(bad_param)
+        case_and_rule = (
+            "and" in param_rule.get("terms") and
+            "or" not in param_rule.get("terms")
+        )
+        case_or_rule = (
+            "or" in param_rule.get("terms") and
+            "and" not in param_rule.get("terms")
+        )
+        case_na_rule = "na" in param_rule.get("terms")
+        try:
+            if case_and_rule:
+                self.update_decision_set_for_and_rules(param_rule)
+            elif case_or_rule:
+                self.update_decision_set_for_or_rules(param_rule)
+            elif case_na_rule:
+                self.update_decision_set_for_na_rules(param_rule)
             else:
-                self.params_are_valid.add(True)
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "TODO: Unhandled parameter rule: "
+                msg += f"parameter {self.parameter}, "
+                msg += f"rule: {param_rule}"
+                self.log.debug(msg)
+        except (KeyError, ValueError) as error:
+            raise ValueError(f"{error}") from error
 
         msg = f"self.params_are_valid: {self.params_are_valid}"
         self.log.debug(msg)
@@ -612,14 +796,55 @@ class VerifyPlaybookParams:
         msg += f"{json.dumps(self._ruleset.ruleset, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+    def generate_error_message(self):
+        """
+        -   Generate an error message describing the bad parameters and their
+            respective resolutions.
+        -   Raise ``ValueError`` with this error message so the the main
+            task module can catch and handle the error.
+        """
+        msg = "The following parameter(value) combination(s) are invalid "
+        msg += "and need to be reviewed: "
+
+        # bad_params[fabric][param] = <list of bad param dict>
+        for fabric_name, fabric_dict in self.bad_params.items():
+            msg += f"Fabric: {fabric_name}, "
+            for _, bad_param_list in fabric_dict.items():
+                for bad_param in bad_param_list:
+                    boolean_operator = bad_param.get("boolean_operator")
+                    config_param = bad_param.get("config_param")
+                    config_value = bad_param.get("config_value")
+                    dependent_param = bad_param.get("dependent_param")
+                    dependent_operator = bad_param.get("dependent_operator")
+                    dependent_value = bad_param.get("dependent_value")
+
+                    msg += f"{config_param}({config_value}) requires "
+                    if boolean_operator == "or":
+                        msg += f"{dependent_param} to be one of "
+                        msg += f"[{', '.join(sorted(dependent_value))}]. "
+                        msg += f"{dependent_param} valid values: "
+                        msg += f"{self._param_info.info[dependent_param]['choices']}. "
+                    if boolean_operator == "and":
+                        msg += f"{dependent_param} {dependent_operator} {dependent_value}, "
+                        msg += f"{dependent_param} valid values: "
+                        msg += f"{self._param_info.info[dependent_param]['choices']}. "
+                    if boolean_operator == "na":
+                        msg += f"{dependent_param} {dependent_operator} {dependent_value}. "
+                        msg += f"{dependent_param} valid values: "
+                        msg += f"{self._param_info.info[dependent_param]['choices']}. "
+
+            msg.rstrip(", ")
+        self.log.debug(msg)
+        raise ValueError(msg)
+
     def commit(self):
         """
-        verify the config against the retrieved template
+        -   Verify the playbook config against the retrieved template
 
-        raise ValueError in the following cases:
-        - required parameters are not set prior to calling commit()
-        - ParamInfo() returns errors(s)
-        - A parameter fails verification
+        -   Raise ValueError in the following cases:
+            - Required parameters are not set prior to calling commit()
+            - ParamInfo() returns errors(s)
+            - A parameter fails verification
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -648,21 +873,4 @@ class VerifyPlaybookParams:
         if False not in self.params_are_valid:
             return
 
-        msg = "The following parameter(value) combination(s) are invalid "
-        msg += "and need to be reviewed: "
-        # bad_params[fabric][param] = <list of bad param dict>
-        for fabric_name, fabric_dict in self.bad_params.items():
-            msg += f"Fabric: {fabric_name}, "
-            for _, bad_param_list in fabric_dict.items():
-                for bad_param in bad_param_list:
-                    config_param = bad_param.get("config_param")
-                    config_value = bad_param.get("config_value")
-                    dependent_param = bad_param.get("dependent_param")
-                    dependent_operator = bad_param.get("dependent_operator")
-                    dependent_value = bad_param.get("dependent_value")
-                    msg += f"{config_param}({config_value}) requires "
-                    msg += f"{dependent_param} {dependent_operator} {dependent_value}, "
-                    msg += f"{dependent_param} valid values: {self._param_info.info[dependent_param]['choices']}. "
-            msg.rstrip(", ")
-        self.log.debug(msg)
-        raise ValueError(msg)
+        self.generate_error_message()
