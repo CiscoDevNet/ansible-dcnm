@@ -525,8 +525,6 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    print(f"key: {key}")
-
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods
         """
         Mock the ApiEndpoints.fabric_delete property to raise ``ValueError``.
