@@ -232,12 +232,13 @@ class RuleSet(RuleSetCommon):
         msg = f"NA: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def _update_ruleset_rule_and(self):
+    def _update_ruleset_boolean(self):
         """
-        - Process rules that contain only boolean "and" terms
+        - Process rules that contain only boolean "and" or "or" terms
 
         NOTES:
             - ``&&`` is replaced with `` and `` in ``clean_rule()``
+            - ``||`` is replaced with `` or `` in ``clean_rule()``
 
 
         ```python
@@ -263,46 +264,7 @@ class RuleSet(RuleSetCommon):
                     }
                 ]
             }
-        }        
-        ```
-        """
-        self.rule = self.rule.split("and")
-        self.rule = [x.strip() for x in self.rule]
-        self.rule = [re.sub(r"\s+", " ", x) for x in self.rule]
-        self.rule = [re.sub(r"\"", "", x) for x in self.rule]
-        self.rule = [re.sub(r"\'", "", x) for x in self.rule]
-        new_rule = []
-
-        self.ruleset[self.param_name] = {}
-        self.ruleset[self.param_name]["terms"] = {}
-        self.ruleset[self.param_name]["terms"]["and"] = []
-
-        for item in self.rule:
-            lhs, op, rhs = item.split(" ")
-            rhs = rhs.replace('"', "")
-            rhs = rhs.replace("'", "")
-            rhs = self.conversion.make_boolean(rhs)
-            new_rule.append(f"{lhs} {op} {rhs}")
-
-            term = {}
-            term["parameter"] = lhs
-            term["operator"] = op
-            term["value"] = rhs
-            self.ruleset[self.param_name]["terms"]["and"].append(term)
-        msg = f"AND: key {self.param_name}: {new_rule}"
-        self.log.debug(msg)
-        msg = f"AND: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-    def _update_ruleset_rule_or(self):
-        """
-        # Process rules that contain only boolean "or" terms
-
-        NOTES
-            - ``||`` is replaced with `` or `` in ``clean_rule()``
-
-        ```python
-        STP_ROOT_OPTION == rpvst+ or STP_ROOT_OPTION == mst
+        }
         ```
 
         - Ruleset Structure (OR):
@@ -324,9 +286,17 @@ class RuleSet(RuleSetCommon):
                 ]
             }
         }
-        ```
+        ```       
         """
-        self.rule = self.rule.split("or")
+        if "and" in self.rule:
+            boolean_type = "and"
+        elif "or" in self.rule:
+            boolean_type = "or"
+        else:
+            return
+
+        self.rule = self.rule.split(boolean_type)
+
         self.rule = [x.strip() for x in self.rule]
         self.rule = [re.sub(r"\s+", " ", x) for x in self.rule]
         self.rule = [re.sub(r"\"", "", x) for x in self.rule]
@@ -335,7 +305,7 @@ class RuleSet(RuleSetCommon):
 
         self.ruleset[self.param_name] = {}
         self.ruleset[self.param_name]["terms"] = {}
-        self.ruleset[self.param_name]["terms"]["or"] = []
+        self.ruleset[self.param_name]["terms"][boolean_type] = []
 
         for item in self.rule:
             lhs, op, rhs = item.split(" ")
@@ -348,10 +318,11 @@ class RuleSet(RuleSetCommon):
             term["parameter"] = lhs
             term["operator"] = op
             term["value"] = rhs
-            self.ruleset[self.param_name]["terms"]["or"].append(term)
-        msg = f"OR: key {self.param_name}: {new_rule}"
+            self.ruleset[self.param_name]["terms"][boolean_type].append(term)
+        msg = f"{boolean_type.upper()}: key {self.param_name}: {new_rule}"
         self.log.debug(msg)
-        msg = f"OR: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
+        msg = f"{boolean_type.upper()}: key {self.param_name}: "
+        msg += f"{json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _update_ruleset(self) -> None:
@@ -379,9 +350,9 @@ class RuleSet(RuleSetCommon):
             msg = f"match.group(3): {match.group(3)}"
             self.log.debug(msg)
         elif "and" in self.rule and "or" not in self.rule:
-            self._update_ruleset_rule_and()
+            self._update_ruleset_boolean()
         elif "or" in self.rule and "and" not in self.rule:
-            self._update_ruleset_rule_or()
+            self._update_ruleset_boolean()
         elif "and" not in self.rule and "or" not in self.rule:
             self._update_ruleset_no_boolean()
         else:
