@@ -370,6 +370,7 @@ class DcnmPolicy:
             "POLICY_WITH_ID": "/rest/control/policies/{}",
             "POLICY_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
             "POLICY_BULK_CREATE": "/rest/control/policies/bulk-create",
+            "POLICY_BULK_UPDATE": "/rest/control/policies/{}/bulk",
             "POLICY_MARK_DELETE": "/rest/control/policies/{}/mark-delete",
             "POLICY_DEPLOY": "/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
