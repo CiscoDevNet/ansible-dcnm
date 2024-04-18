@@ -873,18 +873,18 @@ def dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(self):
                     == self.ip_sn.get(elem["peerOneId"], None)
                 )
                 or (
-                    vpc_pair_info["peerOneId"]
-                    == self.ip_sn.get(elem["peerTwoId"], None)
+                    vpc_pair_info["peerTwoId"]
+                    == self.ip_sn.get(elem["peerOneId"], None)
                 )
             ) and (
                 (elem.get("peerTwoId", None) is None)
                 or (
-                    vpc_pair_info["peerTwoId"]
+                    vpc_pair_info["peerOneId"]
                     == self.ip_sn.get(elem["peerTwoId"], None)
                 )
                 or (
                     vpc_pair_info["peerTwoId"]
-                    == self.ip_sn.get(elem["peerOneId"], None)
+                    == self.ip_sn.get(elem["peerTwoId"], None)
                 )
             ):
                 if vpc_pair_info not in vpc_pair_list:
