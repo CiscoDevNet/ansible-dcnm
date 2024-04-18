@@ -44,6 +44,13 @@ options:
       - query
     default: merged
 
+  use_desc_as_key:
+    description:
+    - A flag specifying whether using the description as unique key for policies.
+    type: bool
+    required: false
+    default: false
+
   deploy:
     description:
     - A flag specifying if a policy is to be deployed on the switches
