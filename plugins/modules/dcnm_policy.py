@@ -373,6 +373,7 @@ class DcnmPolicy:
             "POLICY_WITH_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
             "POLICY_GET_SWITCHES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
             "POLICY_BULK_CREATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/bulk-create",
+            "POLICY_BULK_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/bulk",
             "POLICY_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/mark-delete",
             "POLICY_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
@@ -385,6 +386,7 @@ class DcnmPolicy:
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
+        self.use_desc_as_key = module.params["use_desc_as_key"]
         self.config = copy.deepcopy(module.params.get("config"))
         self.deploy = True  # Global 'deploy' flag
         self.pb_input = []
@@ -469,6 +471,10 @@ class DcnmPolicy:
                 mesg = 'Invalid parameters in playbook: while processing policy "{0}", Error: {1}'.format(
                     cfg["name"], invalid_params
                 )
+                self.module.fail_json(msg=mesg)
+            # Fail the module when use_desc_as_key is True but description is not given or empty
+            if self.use_desc_as_key and cfg.get("description", "") == "":
+                mesg = f"description can't be empty when use_desc_as_key is True: {cfg}"
                 self.module.fail_json(msg=mesg)
             self.policy_info.extend(policy_info)
 
@@ -637,12 +643,20 @@ class DcnmPolicy:
             pl
             for pl in plist
             for wp in self.want
-            if (pl["templateName"] == wp["templateName"])
+            if pl.get("source", "") == ""
+            and (
+                (pl["templateName"] == wp["templateName"])
+                or (
+                    not self.use_desc_as_key
+                    or (pl.get("description") == wp.get("description", ""))
+                )
+            )
         ]
 
         # match_pol can be a list of dicts, containing duplicates. Remove the duplicate entries
+        # also exclude the policies that are marked for deletion
         for pol in match_pol:
-            if pol not in self.have:
+            if pol not in self.have and not pol.get("deleted", True):
                 self.have.append(pol)
 
     def dcnm_policy_compare_nvpairs(self, pnv, hnv):
@@ -658,8 +672,12 @@ class DcnmPolicy:
         return "DCNM_POLICY_MATCH"
 
     def dcnm_policy_compare_policies(self, policy):
-
-        found = False
+        # use list to instead of boolean
+        # need to handle two templates associated with switch have the same description
+        # when use_desc_as_key is true, raise error
+        found = []
+        match = False
+        template_changed = False
 
         if self.have == []:
             return ("DCNM_POLICY_ADD_NEW", None)
@@ -669,6 +687,8 @@ class DcnmPolicy:
 
         if policy.get("policyId", None) is not None:
             key = "policyId"
+        elif self.use_desc_as_key:
+            key = "description"
         else:
             key = "templateName"
 
@@ -676,8 +696,16 @@ class DcnmPolicy:
             if (have[key] == policy[key]) and (
                 have.get("serialNumber", None) == policy["serialNumber"]
             ):
-                found = True
-                # Have a policy with matching template name. Check for other objects
+                found.append(have)
+                # if use description as key, use policyId got from the target
+                # if templateName is changed, remove the original policy and create a new one
+                if self.use_desc_as_key:
+                    policy["policyId"] = have.get("policyId")
+                    if have["templateName"] != policy["templateName"]:
+                        template_changed = True
+                        continue
+
+                # Have a policy with matching key. Check for other objects
                 if have.get("description", None) == policy["description"]:
                     if have.get("priority", None) == policy["priority"]:
                         if (
@@ -687,11 +715,22 @@ class DcnmPolicy:
                             )
                             == "DCNM_POLICY_MATCH"
                         ):
-                            return ("DCNM_POLICY_DONT_ADD", have["policyId"])
-        if found is True:
+                            match = True
+
+        if len(found) == 1 and not match and not template_changed:
             # Found a matching policy with the given template name, but other objects don't match.
             # Go ahead and merge the objects into the existing policy
-            return ("DCNM_POLICY_MERGE", have["policyId"])
+            return ("DCNM_POLICY_MERGE", found[0]["policyId"])
+        elif len(found) == 1 and not match and template_changed:
+            return ("DCNM_POLICY_TEMPLATE_CHANGED", found[0]["policyId"])
+        elif len(found) == 1 and match:
+            return ("DCNM_POLICY_DONT_ADD", found[0]["policyId"])
+        elif len(found) > 1 and self.use_desc_as_key:
+            # module will raise error when duplicated description is found
+            return ("DCNM_POLICY_DUPLICATED", None)
+        elif len(found) > 1 and not self.use_desc_as_key:
+            # if not using description as the key, new
+            return ("DCNM_POLICY_DONT_ADD", found[0]["policyId"])
         else:
             return ("DCNM_POLICY_ADD_NEW", None)
 
@@ -715,7 +754,11 @@ class DcnmPolicy:
 
             rc, policy_id = self.dcnm_policy_compare_policies(policy)
 
-            if rc == "DCNM_POLICY_ADD_NEW":
+            if rc == "DCNM_POLICY_DUPLICATED":
+                self.module.fail_json(
+                    f"Policies with the same description are found in DCNM/NDFC: {self.use_desc_as_key}, {policy['description']}"
+                )
+            elif rc == "DCNM_POLICY_ADD_NEW":
                 # A policy does not exists, create a new one. Even if one exists, if create_additional_policy
                 # is specified, then create the policy
                 if (policy not in self.diff_create) or (
@@ -730,6 +773,11 @@ class DcnmPolicy:
                 # will not know which policy the user is referring to. In the case where a user is providing
                 # a templateName and we are here, ignore the policy.
                 if policy.get("policyId", None) is not None:
+                    # id is needed for policy update
+                    id = policy["policyId"].split("-")[1]
+                    policy["id"] = id
+                    policy["policy_id_given"] = True
+
                     if policy not in self.diff_modify:
                         self.changed_dict[0]["merged"].append(policy)
                         self.diff_modify.append(policy)
@@ -760,6 +808,21 @@ class DcnmPolicy:
                     self.changed_dict[0]["merged"].append(policy)
                     self.diff_create.append(policy)
                     policy_id = None
+            elif rc == "DCNM_POLICY_TEMPLATE_CHANGED":
+                # A policy exists and the template name is changed
+                # Remove the existing policy and create a new one
+                del_payload = self.dcnm_policy_get_delete_payload(policy)
+                if del_payload not in self.diff_delete:
+                    self.diff_delete.append(del_payload)
+                    self.changed_dict[0]["deleted"].append(
+                        {
+                            "policy": policy["policyId"],
+                            "templateName": policy["templateName"],
+                        }
+                    )
+                policy.pop("policyId")
+                self.changed_dict[0]["merged"].append(policy)
+                self.diff_create.append(policy)
 
             # Check the 'deploy' flag and decide if this policy is to be deployed
             if self.deploy is True:
@@ -814,13 +877,22 @@ class DcnmPolicy:
             for pl in plist
             for wp in self.want
             if (
-                (wp["policy_id_given"] is False)
-                and (pl["templateName"] == wp["templateName"])
-                or (wp["policy_id_given"] is True)
-                and (pl["policyId"] == wp["policyId"])
+                pl["deleted"] == False
+                and (
+                    (wp["policy_id_given"] is False)
+                    and (pl["templateName"] == wp["templateName"])
+                    and (
+                        # When use_desc_as_key is True, only add the policy match the description
+                        not self.use_desc_as_key
+                        or (pl.get("description", "") == wp.get("description", ""))
+                    )
+                )
+                or (
+                    (wp["policy_id_given"] is True)
+                    and (pl["policyId"] == wp["policyId"])
+                )
             )
         ]
-
         # match_pol contains all the policies which exist and are to be deleted
         # Build the delete payloads
 
@@ -919,6 +991,35 @@ class DcnmPolicy:
         path = self.paths["POLICY_BULK_CREATE"]
 
         json_payload = json.dumps(policy)
+
+        retries = 0
+        while retries < 3:
+            resp = dcnm_send(self.module, command, path, json_payload)
+
+            if (
+                (resp.get("DATA", None) is not None)
+                and (isinstance(resp["DATA"], dict))
+                and (resp["DATA"].get("failureList", None) is not None)
+            ):
+                if isinstance(resp["DATA"]["failureList"], list):
+                    fl = resp["DATA"]["failureList"][0]
+                else:
+                    fl = resp["DATA"]["failureList"]
+
+                if "is not unique" in fl.get("message", ""):
+                    retries = retries + 1
+                    continue
+            break
+
+        self.result["response"].append(resp)
+
+        return resp
+
+    def dcnm_policy_update_policy(self, policy, command):
+
+        path = self.paths["POLICY_BULK_UPDATE"].format(policy["policyId"])
+
+        json_payload = json.dumps([policy])
 
         retries = 0
         while retries < 3:
@@ -1137,7 +1238,8 @@ class DcnmPolicy:
         for policy in self.diff_modify:
             # POP the 'create_additional_policy' object before sending create
             policy.pop("create_additional_policy")
-            resp = self.dcnm_policy_create_policy(policy, "PUT")
+            policy.pop("policy_id_given", "")
+            resp = self.dcnm_policy_update_policy(policy, "PUT")
             if isinstance(resp, list):
                 resp = resp[0]
             if (
@@ -1262,6 +1364,7 @@ def main():
     element_spec = dict(
         fabric=dict(required=True, type="str"),
         config=dict(required=False, type="list", elements="dict"),
+        use_desc_as_key=dict(required=False, type="bool", default=False),
         state=dict(
             type="str",
             default="merged",
