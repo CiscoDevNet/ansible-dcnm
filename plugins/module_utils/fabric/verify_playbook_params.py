@@ -473,7 +473,7 @@ class VerifyPlaybookParams:
         try:
             self.conversion.reject_boolean_string(self.parameter, playbook_value)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         # Skip "local" parameters i.e. parameters that are valid in a
         # playbook but not found in the template retrieved from the controller
@@ -697,7 +697,7 @@ class VerifyPlaybookParams:
         try:
             self.verify_parameter_value()
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         if self.parameter not in self._ruleset.ruleset:
             msg = f"SKIP {self.parameter}: Not in ruleset."
@@ -736,7 +736,7 @@ class VerifyPlaybookParams:
                 msg += f"rule: {param_rule}"
                 self.log.debug(msg)
         except (KeyError, ValueError) as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         msg = f"self.params_are_valid: {self.params_are_valid}"
         self.log.debug(msg)
@@ -779,7 +779,7 @@ class VerifyPlaybookParams:
         try:
             self._param_info.refresh()
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         msg = "self._param_info.info: "
         msg += f"{json.dumps(self._param_info.info, indent=4, sort_keys=True)}"

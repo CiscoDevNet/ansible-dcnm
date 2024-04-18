@@ -91,7 +91,7 @@ class TemplateGetAll:
         try:
             endpoint = self.endpoints.templates
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
@@ -108,7 +108,7 @@ class TemplateGetAll:
         try:
             self._set_templates_endpoint()
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "

@@ -130,7 +130,7 @@ class FabricDelete(FabricCommon):
         try:
             self.fabric_summary.refresh()
         except (ControllerResponseError, ValueError) as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         if self.fabric_summary.fabric_is_empty is True:
             return
@@ -147,12 +147,12 @@ class FabricDelete(FabricCommon):
         try:
             self._endpoints.fabric_name = fabric_name
         except (ValueError, TypeError) as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         try:
             endpoint = self._endpoints.fabric_delete
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
 
         self.path = endpoint.get("path")
         self.verb = endpoint.get("verb")
