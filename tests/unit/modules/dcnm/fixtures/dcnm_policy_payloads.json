@@ -942,7 +942,7 @@
       {
         "id": 101101, 
         "policyId": "POLICY-101101", 
-        "description": "", 
+        "description": "policy101", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -964,7 +964,7 @@
       {
         "id": 102102, 
         "policyId": "POLICY-102102", 
-        "description": "102 - No piority given", 
+        "description": "policy102", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -986,7 +986,7 @@
       {
         "id": 103103, 
         "policyId": "POLICY-103103", 
-        "description": "Both description and priority given", 
+        "description": "policy103", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -1008,7 +1008,7 @@
       {
         "id": 104104, 
         "policyId": "POLICY-104104", 
-        "description": "", 
+        "description": "policy104", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -1030,7 +1030,7 @@
       {
         "id": 105105, 
         "policyId": "POLICY-105105", 
-        "description": "", 
+        "description": "policy105", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -1204,7 +1204,7 @@
       {
         "id": 123810, 
         "policyId": "POLICY-123810", 
-        "description": "", 
+        "description": "policy101", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -1226,7 +1226,7 @@
       {
         "id": 123820, 
         "policyId": "POLICY-123820", 
-        "description": "102 - No piority given", 
+        "description": "policy102", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 
@@ -1248,7 +1248,7 @@
       {
         "id": 123830, 
         "policyId": "POLICY-123830", 
-        "description": "Both description and priority given", 
+        "description": "policy103", 
         "serialNumber": "XYZKSJHSMK1", 
         "entityType": "SWITCH", 
         "entityName": "SWITCH", 

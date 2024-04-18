@@ -142,17 +142,18 @@
   {
     "create_additional_policy": false,
     "name": "template_101",
+    "description": "policy101",
     "priority": 101
   },
   {
     "create_additional_policy": false,
-    "description": "102 - No piority given",
+    "description": "policy102",
     "name": "template_102"
   },
   {
     "create_additional_policy": false,
-    "description": "Both description and priority given",
     "name": "template_103",
+    "description": "policy103",
     "priority": 500
   },
   {
@@ -162,11 +163,13 @@
       "policies": [
       {
         "create_additional_policy": false,
-        "name": "template_104"
+        "name": "template_104",
+        "description": "policy104"
       },
       {
         "create_additional_policy": false,
-        "name": "template_105"
+        "name": "template_105",
+        "description": "policy105"
       }
       ]
     },

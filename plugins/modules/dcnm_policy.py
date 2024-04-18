@@ -46,7 +46,7 @@ options:
 
   use_desc_as_key:
     description:
-    - A flag specifying whether using the description as unique key for policies.
+    - Flag to enforce using the description parameter as the unique key for policy management.
     type: bool
     required: false
     default: false
@@ -764,7 +764,7 @@ class DcnmPolicy:
 
             if rc == "DCNM_POLICY_DUPLICATED":
                 self.module.fail_json(
-                    f"Policies with the same description are found in DCNM/NDFC: {self.use_desc_as_key}, {policy['description']}"
+                    f"Multiple policies found with the same description in DCNM/NDFC: {self.use_desc_as_key}, {policy['description']}"
                 )
             elif rc == "DCNM_POLICY_ADD_NEW":
                 # A policy does not exists, create a new one. Even if one exists, if create_additional_policy
@@ -819,13 +819,19 @@ class DcnmPolicy:
             elif rc == "DCNM_POLICY_TEMPLATE_CHANGED":
                 # A policy exists and the template name is changed
                 # Remove the existing policy and create a new one
+
+                pinfo = self.dcnm_policy_get_policy_info_from_dcnm(policy["policyId"])
+                prev_template_name = policy["templateName"]
+                if pinfo != []:
+                    prev_template_name = pinfo["templateName"]
+
                 del_payload = self.dcnm_policy_get_delete_payload(policy)
                 if del_payload not in self.diff_delete:
                     self.diff_delete.append(del_payload)
                     self.changed_dict[0]["deleted"].append(
                         {
                             "policy": policy["policyId"],
-                            "templateName": policy["templateName"],
+                            "templateName": prev_template_name,
                         }
                     )
                 policy.pop("policyId")

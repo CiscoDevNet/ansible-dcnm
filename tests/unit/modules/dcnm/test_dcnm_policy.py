@@ -166,6 +166,23 @@ class TestDcnmPolicyModule(TestDcnmModule):
                 deploy_succ_resp,
             ]
 
+        if (
+            "test_dcnm_policy_merged_existing_and_non_exist_desc_as_key"
+            == self._testMethodName
+        ):
+
+            have_101_103_resp = self.payloads_data.get("have_response_101_103")
+            create_succ_resp4 = self.payloads_data.get("success_create_response_104")
+            create_succ_resp5 = self.payloads_data.get("success_create_response_105")
+            deploy_succ_resp = self.payloads_data.get("success_deploy_response_101_105")
+
+            self.run_dcnm_send.side_effect = [
+                have_101_103_resp,
+                create_succ_resp4,
+                create_succ_resp5,
+                deploy_succ_resp,
+            ]
+
         if "test_dcnm_policy_without_state" == self._testMethodName:
 
             create_succ_resp4 = self.payloads_data.get("success_create_response_104")
@@ -823,6 +840,35 @@ class TestDcnmPolicyModule(TestDcnmModule):
                     (len(resp["DATA"][0]["successPTIList"].split(",")) == 5), True
                 )
             count = count + 1
+
+    def test_dcnm_policy_merged_existing_and_non_exist_desc_as_key(self):
+
+        # Idempotence case
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_policy_configs")
+        self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
+
+        # get mock ip_sn and fabric_inventory_details
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+
+        # load required config data
+        self.playbook_config = self.config_data.get("create_policy_101_105")
+
+        set_module_args(
+            dict(
+                state="merged",
+                deploy=True,
+                fabric="mmudigon",
+                use_desc_as_key=True,
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 2)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["query"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 5)
 
     def test_dcnm_policy_without_state(self):
 
