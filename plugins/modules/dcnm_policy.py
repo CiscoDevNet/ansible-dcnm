@@ -885,7 +885,7 @@ class DcnmPolicy:
             for pl in plist
             for wp in self.want
             if (
-                pl["deleted"] == False
+                not pl["deleted"]
                 and (
                     (wp["policy_id_given"] is False)
                     and (pl["templateName"] == wp["templateName"])
