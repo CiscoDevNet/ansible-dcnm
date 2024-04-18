@@ -15,21 +15,6 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
         "RETURN_CODE": 200
     },
-    "test_fabric_delete_00041a": {
-        "DATA": {
-            "switchConfig": {},
-            "switchHWVersions": {},
-            "switchHealth": {},
-            "switchRoles": {
-                "leaf": 4
-            },
-            "switchSWVersions": {}
-        },
-        "MESSAGE": "OK",
-        "METHOD": "GET",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
-        "RETURN_CODE": 200
-    },
     "test_fabric_delete_00042a": {
         "DATA": {
             "switchConfig": {},
@@ -68,6 +53,33 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
         "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00050a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {
+                "leaf": 4
+            },
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00051a": {
+        "DATA": {
+            "timestamp": 1713467047741,
+            "status": 404,
+            "error": "Not Found",
+            "path": "/rest/control/switches/MyFabric/overview"            
+        },
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 404
     },
     "test_fabric_summary_00033a": {
         "DATA": {
