@@ -20,6 +20,8 @@ import copy
 import inspect
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 # Import Results() only for the case where the user has not set Results()
 # prior to calling commit().  In this case, we instantiate Results()
 # in _validate_commit_parameters() so that we can register the failure
@@ -124,7 +126,12 @@ class FabricDelete(FabricCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.fabric_summary.fabric_name = fabric_name
-        self.fabric_summary.refresh()
+
+        try:
+            self.fabric_summary.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            raise ValueError(f"{error}") from error
+
         if self.fabric_summary.fabric_is_empty is True:
             return
         msg = f"{self.class_name}.{method_name}: " 

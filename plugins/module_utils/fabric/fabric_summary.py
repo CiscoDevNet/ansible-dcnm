@@ -23,6 +23,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
@@ -121,12 +123,15 @@ class FabricSummary(FabricCommon):
 
     def _update_device_counts(self):
         """
-        Get the device counts from the controller.
+        -   Get the device counts from the controller.
+        -   Raise ``ValueError`` if ``self.data`` is None i.e. ``refresh()``
+            has not been called.
         """
         method_name = inspect.stack()[0][3]
         if self.data is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"refresh() must be called before accessing {method_name}."
+            msg += f"refresh() must be called before accessing "
+            msg += f"{self.class_name}.{method_name}."
             raise ValueError(msg)
 
         msg = f"{self.class_name}.{method_name}: "
@@ -144,28 +149,11 @@ class FabricSummary(FabricCommon):
             self.leaf_count + self.spine_count + self.border_gateway_count
         )
 
-    def refresh(self):
+    def _set_fabric_summary_endpoint(self):
         """
-        -   Refresh fabric summary info from the controller and
-            populate ``self.data`` with the result.
-        -   ``self.data`` is a ``dict`` of fabric summary info for one fabric.
-        -   raise ``ValueError`` if ``fabric_name`` is not set.
-        -   raise ``ValueError`` if unable to retrieve the fabric_summary endpoint.
-        -   raise ``ValueError`` if ``_update_device_counts()`` fails.
-
+        -   Set the fabric_summary endpoint.
+        -   Raise ``ValueError`` if unable to retrieve the endpoint.
         """
-        method_name = inspect.stack()[0][3]
-        if self.fabric_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_name is required."
-            raise ValueError(msg)
-
-        if self.rest_send is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling "
-            msg += "FabricSummary.refresh()."
-            raise ValueError(msg)
-
         try:
             self.endpoints.fabric_name = self.fabric_name
             self.rest_send.path = self.endpoints.fabric_summary.get("path")
@@ -175,6 +163,49 @@ class FabricSummary(FabricCommon):
             msg += f"Detail: {error}"
             self.log.debug(msg)
             raise ValueError(msg) from error
+
+    def _verify_controller_response(self):
+        method_name = inspect.stack()[0][3]
+
+        controller_return_code = self.rest_send.response_current.get("RETURN_CODE", None)
+        controller_message = self.rest_send.response_current.get("MESSAGE", None)
+        if controller_return_code != 200:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Failed to retrieve fabric_summary for fabric_name "
+            msg += f"{self.fabric_name}. "
+            msg += f"RETURN_CODE: {controller_return_code}. "
+            msg += f"MESSAGE: {controller_message}."
+            self.log.error(msg)
+            raise ControllerResponseError(msg)
+
+    def refresh(self):
+        """
+        -   Refresh fabric summary info from the controller and
+            populate ``self.data`` with the result.
+        -   ``self.data`` is a ``dict`` of fabric summary info for one fabric.
+        -   raise ``ValueError`` if ``fabric_name`` is not set.
+        -   raise ``ValueError`` if unable to retrieve fabric_summary endpoint.
+        -   raise ``ValueError`` if ``_update_device_counts()`` fails.
+        -   raise ``ControllerResponseError`` if the controller
+            ``RETURN_CODE`` != 200
+        """
+        method_name = inspect.stack()[0][3]
+        if self.fabric_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Set {self.class_name}.fabric_name prior to calling "
+            msg += f"{self.class_name}.refresh()."
+            raise ValueError(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Set {self.class_name}.rest_send prior to calling "
+            msg += f"{self.class_name}.refresh()."
+            raise ValueError(msg)
+
+        try:
+            self._set_fabric_summary_endpoint()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         # We always want to get the controller's current fabric state,
         # regardless of the current value of check_mode.
@@ -194,6 +225,12 @@ class FabricSummary(FabricCommon):
         self.results.response = self.rest_send.response_current
         self.results.result_current = self.rest_send.result_current
         self.results.result = self.rest_send.result_current
+        self.results.register_task_result()
+
+        try:
+            self._verify_controller_response()
+        except ControllerResponseError as error:
+            raise ControllerResponseError(error) from error
 
         # self.refreshed must be True before calling
         # self._update_device_counts() below
