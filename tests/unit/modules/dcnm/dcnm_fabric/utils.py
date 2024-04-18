@@ -31,6 +31,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import (
     FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
+    FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
@@ -225,6 +227,16 @@ def fabric_query_fixture():
     instance = MockAnsibleModule()
     instance.state = "query"
     return FabricQuery(instance.params)
+
+
+@pytest.fixture(name="fabric_summary")
+def fabric_summary_fixture():
+    """
+    mock FabricSummary
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricSummary(instance.params)
 
 
 @pytest.fixture(name="fabric_update_bulk")
