@@ -123,16 +123,12 @@ class FabricSummary(FabricCommon):
 
     def _update_device_counts(self):
         """
-        -   Get the device counts from the controller.
-        -   Raise ``ValueError`` if ``self.data`` is None i.e. ``refresh()``
-            has not been called.
+        -   From the controller response, update class properties
+            pertaining to device counts.
+        -   By the time refresh() calls this method, self.data
+            has been verified, so no need to verify it here.
         """
         method_name = inspect.stack()[0][3]
-        if self.data is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"refresh() must be called before accessing "
-            msg += f"{self.class_name}.{method_name}."
-            raise ValueError(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
@@ -165,6 +161,10 @@ class FabricSummary(FabricCommon):
             raise ValueError(msg) from error
 
     def _verify_controller_response(self):
+        """
+        -  Raise ``ControllerResponseError`` if RETURN_CODE != 200.
+        -  Raise ``ControllerResponseError`` if DATA is missing or empty.
+        """
         method_name = inspect.stack()[0][3]
 
         controller_return_code = self.rest_send.response_current.get("RETURN_CODE", None)
@@ -176,6 +176,13 @@ class FabricSummary(FabricCommon):
             msg += f"RETURN_CODE: {controller_return_code}. "
             msg += f"MESSAGE: {controller_message}."
             self.log.error(msg)
+            raise ControllerResponseError(msg)
+
+        # DATA is set to an empty dict in refresh() if the controller response
+        # does not contain a DATA key.
+        if len(self.data) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Controller responded with missing or empty DATA."
             raise ControllerResponseError(msg)
 
     def refresh(self):
@@ -235,11 +242,7 @@ class FabricSummary(FabricCommon):
         # self.refreshed must be True before calling
         # self._update_device_counts() below
         self.refreshed = True
-
-        try:
-            self._update_device_counts()
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
+        self._update_device_counts()
 
     def verify_refresh_has_been_called(self, attempted_method_name):
         """
@@ -255,14 +258,14 @@ class FabricSummary(FabricCommon):
     @property
     def all_data(self) -> dict:
         """
-        - Return all fabric details from the controller.
+        - Return raw fabric summary data from the controller.
         - Raise ``ValueError`` if ``refresh()`` has not been called.
         """
         method_name = inspect.stack()[0][3]
         try:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
         return self.data
 
     @property
@@ -275,7 +278,7 @@ class FabricSummary(FabricCommon):
         try:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
         return self._properties["border_gateway_count"]
 
     @property
@@ -288,7 +291,7 @@ class FabricSummary(FabricCommon):
         try:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
         return self._properties["device_count"]
 
     @property
@@ -301,7 +304,7 @@ class FabricSummary(FabricCommon):
         try:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
         if self.device_count == 0:
             return True
         return False
@@ -309,12 +312,20 @@ class FabricSummary(FabricCommon):
     @property
     def fabric_name(self) -> str:
         """
-        Set the fabric_name to query.
+        -   getter: Return the fabric_name to query.
+        -   setter: Set the fabric_name to query.
+        -   setter: Raise ``ValueError`` if fabric_name is not a string.
+        -   setter: Raise ``ValueError`` if fabric_name is invalid (i.e.
+            the controller would return an error due to invalid characters).
         """
         return self._properties.get("fabric_name")
 
     @fabric_name.setter
     def fabric_name(self, value: str):
+        try:
+            self.endpoints._validate_fabric_name(value)
+        except ValueError as error:
+            raise ValueError(error) from error
         self._properties["fabric_name"] = value
 
     @property
@@ -327,7 +338,7 @@ class FabricSummary(FabricCommon):
         try:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
         return self._properties["leaf_count"]
 
     @property
@@ -340,5 +351,5 @@ class FabricSummary(FabricCommon):
         try:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
-            raise ValueError(f"{error}") from error
+            raise ValueError(error) from error
         return self._properties["spine_count"]
