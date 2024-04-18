@@ -86,24 +86,24 @@ MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
 
 
 @pytest.mark.parametrize(
-    "fabric_name, expected",
+    "fabric_name, expected, does_raise",
     [
-        ("MyFabric", does_not_raise()),
-        ("My_Fabric", does_not_raise()),
-        ("My-Fabric", does_not_raise()),
-        ("M", does_not_raise()),
-        (1, pytest.raises(TypeError, match=MATCH_00020a)),
-        ({}, pytest.raises(TypeError, match=MATCH_00020a)),
-        ([1, 2, 3], pytest.raises(TypeError, match=MATCH_00020a)),
-        ("1", pytest.raises(ValueError, match=MATCH_00020b)),
-        ("-MyFabric", pytest.raises(ValueError, match=MATCH_00020b)),
-        ("_MyFabric", pytest.raises(ValueError, match=MATCH_00020b)),
-        ("1MyFabric", pytest.raises(ValueError, match=MATCH_00020b)),
-        ("My Fabric", pytest.raises(ValueError, match=MATCH_00020b)),
-        ("My*Fabric", pytest.raises(ValueError, match=MATCH_00020b)),
+        ("MyFabric", does_not_raise(), False),
+        ("My_Fabric", does_not_raise(), False),
+        ("My-Fabric", does_not_raise(), False),
+        ("M", does_not_raise(), False),
+        (1, pytest.raises(TypeError, match=MATCH_00020a), True),
+        ({}, pytest.raises(TypeError, match=MATCH_00020a), True),
+        ([1, 2, 3], pytest.raises(TypeError, match=MATCH_00020a), True),
+        ("1", pytest.raises(ValueError, match=MATCH_00020b), True),
+        ("-MyFabric", pytest.raises(ValueError, match=MATCH_00020b), True),
+        ("_MyFabric", pytest.raises(ValueError, match=MATCH_00020b), True),
+        ("1MyFabric", pytest.raises(ValueError, match=MATCH_00020b), True),
+        ("My Fabric", pytest.raises(ValueError, match=MATCH_00020b), True),
+        ("My*Fabric", pytest.raises(ValueError, match=MATCH_00020b), True),
     ],
 )
-def test_endpoints_00020(fabric_name, expected) -> None:
+def test_endpoints_00020(fabric_name, expected, does_raise) -> None:
     """
     Classes and Methods
     - ApiEndpoints
@@ -120,6 +120,8 @@ def test_endpoints_00020(fabric_name, expected) -> None:
         instance = ApiEndpoints()
     with expected:
         instance.fabric_name = fabric_name
+    if does_raise is False:
+        assert instance.fabric_name == fabric_name
 
 
 def test_endpoints_00030() -> None:
