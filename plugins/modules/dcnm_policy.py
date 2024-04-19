@@ -356,39 +356,39 @@ EXAMPLES = """
 #       the user must make sure no policies with the same description are created on NDFC out of the playbook.
 #       If the description is not unique, the module will raise an error.
 
-## Below task will policies with description "radius_policy" on swtich1, switch2 and switch3,
+## Below task will policies with description "policy_radius" on swtich1, switch2 and switch3,
 ## and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
 
 - name: Create policies
-    cisco.dcnm.dcnm_policy:
+  cisco.dcnm.dcnm_policy:
     fabric: fabric_prod
     use_desc_as_key: true
     config:
-        - name: switch_freeform
+      - name: switch_freeform
         create_additional_policy: false
         description: policy_radius
         policy_vars:
-            CONF: |
+          CONF: |
             radius-server host 10.1.1.2 key 7 "ljw3976!" authentication accounting
-        - switch:
-            - ip: {{ switch1 }}
+      - switch:
+          - ip: "{{ switch1 }}"
             policies:
-                - name: switch_freeform
+              - name: switch_freeform
                 create_additional_policy: false
                 priority: 101
                 description: feature bfd
                 policy_vars:
-                    CONF: |
+                  CONF: |
                     feature bfd
-                - name: switch_freeform
+              - name: switch_freeform
                 create_additional_policy: false
                 priority: 102
                 description: feature bash-shell
                 policy_vars:
-                    CONF: |
+                  CONF: |
                     feature bash-shell
-            - ip: {{ switch2 }}
-            - ip: {{ switch3 }}
+          - ip: "{{ switch2 }}"
+          - ip: "{{ switch3 }}"
 """
 
 import json
