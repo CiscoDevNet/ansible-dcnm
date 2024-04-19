@@ -120,6 +120,10 @@ class FabricUpdateCommon(FabricCommon):
             raise ValueError(error) from error
 
         if self.fabric_summary.fabric_is_empty is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {fabric_name} is empty. "
+            msg += "Cannot deploy an empty fabric."
+            self.log.debug(msg)
             self.cannot_deploy_fabric_reason = "Fabric is empty"
             return False
         return True
@@ -205,27 +209,20 @@ class FabricUpdateCommon(FabricCommon):
         """
         -   Add True to self._fabric_update_required set() if the fabric needs
             to be updated.
-        -   raise ``ValueError`` if the payload is missing the FABRIC_NAME key
         -   raise ``ValueError`` if any payload parameter would raise an
             error on the controller.
 
         The fabric needs to be updated if any of the following are true:
         -   A parameter in the payload has a different value than the
             corresponding parameter in fabric configuration on the controller.
+        
+        NOTES:
+        -   We've already verified that the fabric exists on the
+            controller in ``_build_payloads_to_commit()``.
         """
         method_name = inspect.stack()[0][3]
 
-        # We should never hit this since the payload is verified to contain
-        # FABRIC_NAME _verify_payload()
         fabric_name = payload.get("FABRIC_NAME", None)
-        if fabric_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload is missing FABRIC_NAME key"
-            self.log.debug(msg)
-            raise ValueError(msg)
-
-        if fabric_name not in self.fabric_details.all_data:
-            return False
 
         nv_pairs = self.fabric_details.all_data[fabric_name].get("nvPairs", {})
 
@@ -305,33 +302,34 @@ class FabricUpdateCommon(FabricCommon):
 
         Populates self._payloads_to_commit with a list of payloads to commit.
         """
-
         self.fabric_details.refresh()
-
         self._payloads_to_commit = []
+
         for payload in self.payloads:
-            if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
+            if payload.get("FABRIC_NAME", None) not in self.fabric_details.all_data:
+                continue
 
-                self._fabric_update_required = set()
-                try:
-                    self._fabric_needs_update(payload)
-                except ValueError as error:
-                    raise ValueError(error) from error
+            self._fabric_update_required = set()
+            try:
+                self._fabric_needs_update(payload)
+            except ValueError as error:
+                raise ValueError(error) from error
 
-                if True not in self._fabric_update_required:
-                    continue
-                self._payloads_to_commit.append(copy.deepcopy(payload))
+            if True not in self._fabric_update_required:
+                continue
+            self._payloads_to_commit.append(copy.deepcopy(payload))
 
     def _send_payloads(self):
         """
-        - If check_mode is False, send the payloads to the controller
-        - If check_mode is True, do not send the payloads to the controller
-        - In both cases, update results
-        - raise ``ValueError`` if ``_build_fabrics_to_config_deploy`` fails
-        - raise ``ValueError` if ``_fixup_payloads_to_commit`` fails
-        - raise ``ValueError` if ``_send_payload`` fails
-        - raise ``ValueError` if ``_config_save`` fails
-        - raise ``ValueError` if ``_config_deploy`` fails
+        -   If check_mode is False, send the payloads to the controller
+        -   If check_mode is True, do not send the payloads to the controller
+        -   In both cases, update results
+        -   Re-raise ``ValueError`` if any of the following fail:
+            -   ``FabricUpdateCommon()._build_fabrics_to_config_deploy()``
+            -   ``FabricCommon()._fixup_payloads_to_commit()``
+            -   ``FabricUpdateCommon()._send_payload()``
+            -   ``FabricUpdateCommon()._config_save()``
+            -   ``FabricUpdateCommon()._config_deploy()``
         """
         self.rest_send.check_mode = self.check_mode
 
@@ -351,8 +349,7 @@ class FabricUpdateCommon(FabricCommon):
             except ValueError as error:
                 raise ValueError(error) from error
 
-        # Skip config-save if any errors were encountered with fabric updates.
-        # TODO: Review this. Since we ValueError above, it may not be necessary.
+        # Skip config-save if prior actions encountered errors.
         if True in self.results.failed:
             return
 
@@ -361,8 +358,7 @@ class FabricUpdateCommon(FabricCommon):
         except ValueError as error:
             raise ValueError(error) from error
 
-        # Skip config-deploy if any errors were encountered with config-save.
-        # TODO: Review this. Since we ValueError above, it may not be necessary.
+        # Skip config-deploy if prior actions encountered errors.
         if True in self.results.failed:
             return
 
@@ -399,18 +395,7 @@ class FabricUpdateCommon(FabricCommon):
                 raise ValueError(error) from error
 
             if can_deploy_fabric is False:
-                    continue
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "_can_fabric_be_deployed: "
-            msg += f"{self._can_fabric_be_deployed(fabric_name)}, "
-            msg += "self.cannot_deploy_fabric_reason: "
-            msg += f"{self.cannot_deploy_fabric_reason}"
-            self.log.debug(msg)
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Adding fabric_name: {fabric_name}"
-            self.log.debug(msg)
+                continue
 
             self._fabrics_to_config_deploy.append(fabric_name)
             self._fabrics_to_config_save.append(fabric_name)
@@ -479,17 +464,17 @@ class FabricUpdateCommon(FabricCommon):
 
     def _config_save(self):
         """
-        - Save the fabric configuration to the controller
-        - raise ``ValueError`` if the endpoint assignment fails
+        -   Save the fabric configuration to the controller.
+        -   Raise ``ValueError`` if the endpoint assignment fails.
         """
         method_name = inspect.stack()[0][3]
         for fabric_name in self._fabrics_to_config_save:
             msg = f"{self.class_name}.{method_name}: fabric_name: {fabric_name}"
             self.log.debug(msg)
             if fabric_name not in self.send_payload_result:
-                # Skip config-save if send_payload failed
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"WARNING: fabric_name: {fabric_name} not in send_payload_result"
+                msg += f"WARNING: fabric_name: {fabric_name}"
+                msg += "not in send_payload_result."
                 self.log.debug(msg)
                 continue
             if self.send_payload_result[fabric_name] is False:
@@ -529,8 +514,6 @@ class FabricUpdateCommon(FabricCommon):
             )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
-
-            self.config_save_result = self.rest_send.result_current
 
     def _config_deploy(self):
         """
