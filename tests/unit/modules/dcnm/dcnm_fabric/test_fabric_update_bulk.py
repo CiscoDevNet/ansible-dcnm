@@ -390,13 +390,13 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._build_fabrics_to_config_deploy()
     -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
-        FabricUpdateCommon()._can_be_deployed()
-    -   FabricUpdateCommon()._can_be_deployed() calls
+        FabricUpdateCommon()._can_fabric_be_deployed()
+    -   FabricUpdateCommon()._can_fabric_be_deployed() calls
         FabricSummary().refresh() and then references
         FabricSummary().fabric_is_empty to determine if the fabric is empty.
         If the fabric is empty, it can be deployed, otherwise it cannot.
-        Hence, _can_be_deployed() returns either True or False.
-        In this testcase, the fabric is empty, so _can_be_deployed() returns True.
+        Hence, _can_fabric_be_deployed() returns either True or False.
+        In this testcase, the fabric is empty, so _can_fabric_be_deployed() returns True.
     -   FabricUpdateCommon()._build_fabrics_to_config_deploy() appends fabric f1 to both:
         -   FabricUpdateCommon()._fabrics_to_config_deploy
         -   FabricUpdateCommon()._fabrics_to_config_save
@@ -607,15 +607,16 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         - commit()
 
     Summary
-    Verify behavior when user attempts to update a fabric when the payload
-    includes ANYCAST_GW_MAC, formatted to be incompatible with the controller's
-    expectations, and not able to be fixed by
-    FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   Verify behavior when user attempts to update a fabric when the payload
+        includes ANYCAST_GW_MAC, formatted to be incompatible with the
+        controller's expectations, and not able to be fixed by
+        FabricUpdateCommon()._fixup_payloads_to_commit().
 
     Setup
-    -   FabricUpdateBulk().payloads is set to contain one payload for a fabric (f1)
-        that exists on the controller, and the payload includes ANYCAST_GW_MAC
-        formatted to be incompatible with the controller's expectations.
+    -   FabricUpdateBulk().payloads is set to contain one payload for a fabric
+        (f1) that exists on the controller, and the payload includes
+        ANYCAST_GW_MAC formatted to be incompatible with the controller's
+        expectations.
 
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
@@ -688,3 +689,121 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     assert True in instance.results.failed
     assert False not in instance.results.failed
     assert False in instance.results.changed
+
+
+def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+    - FabricQuery
+        - __init__()
+        - fabric_names setter
+        - commit()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+        - _can_fabric_be_deployed()
+
+    Summary
+    -   Verify behavior when user attempts to update a fabric which
+        exists on the controller, but a ``ControllerResponseError``
+        is raised by FabricSummary().refresh() when called from
+        FabricUpdateBulk()._can_fabric_be_deployed().
+
+    Code Flow
+    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
+        that exists on the controller.
+    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
+        which returns a dict with fabric f1 information and RETURN_CODE == 200
+    -   FabricUpdateCommon()._build_payloads_to_commit() appends the payload in
+        FabricUpdateBulk.payloads to FabricUpdate()._payloads_to_commit
+    -   FabricUpdateBulk.commit() updates the following:
+        -   instance.results.diff_current to an empty dict
+        -   instance.results.response_current a synthesized response dict
+            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
+        -  instance.results.result_current to a synthesized result dict
+           {"success": True, "changed": False}
+    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
+    -   FabricUpdateCommon()._send_payloads() calls
+        FabricUpdateCommon()._build_fabrics_to_config_deploy()
+    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
+        FabricUpdateCommon()._can_fabric_be_deployed()
+    -   FabricUpdateCommon()._can_fabric_be_deployed() calls
+        FabricSummary().refresh() which raises ``ControllerResponseError``.
+    -   FabricUpdateCommon()._can_fabric_be_deployed() re-raises the exception
+        as a ``ValueError``.
+    -   FabricUpdateCommon()._build_fabrics_to_config_deploy()
+        re-raises the ``ValueError``.
+    -   FabricUpdateCommon()._send_payloads() re-raises the ``ValueError``.
+    -   FabricUpdateBulk.commit() re-raises the ``ValueError``.
+
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_summary(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.payloads = payloads_fabric_update_bulk(key)
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+    match = r"FabricSummary\._verify_controller_response:\s+"
+    match += r"Failed to retrieve fabric_summary for fabric_name f1.\s+"
+    match += r"RETURN_CODE: 404.\s+"
+    match += r"MESSAGE: Not Found."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+    assert isinstance(instance.results.diff, list)
+    assert isinstance(instance.results.result, list)
+    assert isinstance(instance.results.response, list)
+
+    assert len(instance.results.diff) == 1
+    assert len(instance.results.metadata) == 1
+    assert len(instance.results.response) == 1
+    assert len(instance.results.result) == 1
+
+    assert instance.results.metadata[0].get("action", None) == "update"
+    assert instance.results.metadata[0].get("check_mode", None) is False
+    assert instance.results.metadata[0].get("sequence_number", None) == 1
+    assert instance.results.metadata[0].get("state", None) == "merged"
+
+    assert instance.results.result[0].get("changed", None) is False
+    assert instance.results.result[0].get("success", None) is False
+
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
+    assert False in instance.results.changed
+    assert True not in instance.results.changed
+

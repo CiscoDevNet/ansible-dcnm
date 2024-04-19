@@ -183,5 +183,17 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
         "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00040a": {
+        "DATA": {
+            "timestamp": 1713467047741,
+            "status": 404,
+            "error": "Not Found",
+            "path": "/rest/control/switches/MyFabric/overview"            
+        },
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 404
     }
 }
