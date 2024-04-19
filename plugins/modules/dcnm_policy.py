@@ -352,10 +352,12 @@ EXAMPLES = """
 
 # Use the description as key
 
-# NOTE: As the description of the policy in NDFC/DCNM is not unique, the user must make sure no policies with the same description are created on NDFC out of the playbook.
+# NOTE: As the description of the policy in NDFC/DCNM is not unique,
+#       the user must make sure no policies with the same description are created on NDFC out of the playbook.
 #       If the description is not unique, the module will raise an error.
 
-## Below task will policies with description "radius_policy" on swtich1, switch2 and switch3, and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
+## Below task will policies with description "radius_policy" on swtich1, switch2 and switch3,
+## and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
 
     - name: Create policies
       cisco.dcnm.dcnm_policy:
