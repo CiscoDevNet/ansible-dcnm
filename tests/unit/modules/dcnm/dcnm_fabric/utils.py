@@ -323,6 +323,26 @@ def payloads_fabric_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_config_deploy(key: str) -> Dict[str, str]:
+    """
+    Return responses for config_deploy requests
+    """
+    data_file = "responses_ConfigDeploy"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_config_save(key: str) -> Dict[str, str]:
+    """
+    Return responses for config_save requests
+    """
+    data_file = "responses_ConfigSave"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_fabric_common(key: str) -> Dict[str, str]:
     """
     Return responses for FabricCommon

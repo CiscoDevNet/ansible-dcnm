@@ -56,7 +56,28 @@
             "ANYCAST_GW_MAC": "0001zzbbccdd"
         }
     ],
-    "test_fabric_update_bulk_00040a": [
+    "test_fabric_update_bulk_00034a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "VPC_DELAY_RESTORE_TIME": 60,
+            "FABRIC_NAME": "f1",
+            "STATIC_UNDERLAY_IP_ALLOC": false,
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00035a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "VPC_DELAY_RESTORE_TIME": 300,
+            "FABRIC_NAME": "f1",
+            "STATIC_UNDERLAY_IP_ALLOC": false,
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "0001aabbccdd"
+        }
+    ],
+   "test_fabric_update_bulk_00040a": [
         {
             "BGP_AS": 65001,
             "DEPLOY": true,

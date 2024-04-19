@@ -42,6 +42,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary i
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_update_bulk_fixture, params, payloads_fabric_update_bulk,
+    responses_config_deploy, responses_config_save,
     responses_fabric_details_by_name, responses_fabric_summary,
     responses_fabric_update_bulk)
 
@@ -161,8 +162,9 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
     payloads is not set prior to calling commit
 
     Test
-    - ValueError is raised because payloads is not set prior to calling commit
-    - instance.payloads retains its initial value of None
+    -   ``ValueError`` is raised because payloads is not set
+        prior to calling commit
+    -   instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk\.commit: "
     match += r"payloads must be set prior to calling commit\."
@@ -197,9 +199,10 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
     -   payloads is set to an empty list
 
     NOTES:
-    -   element_spec in dcnm_fabric.py.main() is configured such that AnsibleModule will
-        raise an exception when config is not a list of dict.  Hence, we do not test
-        instance.commit() here since it would never be reached.
+    -   element_spec in dcnm_fabric.py.main() is configured such that
+        AnsibleModule will raise an exception when config is not a list
+        of dict.  Hence, we do not test instance.commit() here since it
+        would never be reached.
     """
     with does_not_raise():
         instance = fabric_update_bulk
@@ -363,29 +366,38 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         - commit()
 
     Summary
-    -   Verify behavior when user attempts to update a fabric and the
-        fabric exists on the controller and the RestSend() RETURN_CODE is 200.
+    -   Verify behavior when user requests to update a fabric and the
+        fabric exists on the controller and the payload contains
+        values that would result in changes to the fabric.
     -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
         with the controller's requirements, but able to be fixed by
         FabricUpdateCommon()._fixup_payloads_to_commit().
     -   The fabric payload also contains keys that include ``bool`
         and ``int`` values.
+    -   The fabric is empty, so is updated, but not deployed/saved.
 
+    See Also
+    -   test_fabric_update_bulk_00035 for case where fabric is not empty.
 
     Code Flow
-    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
-        that exists on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
-        which returns a dict with fabric f1 information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() appends the payload in
-        FabricUpdateBulk.payloads to FabricUpdate()._payloads_to_commit
-    -   FabricUpdateBulk.commit() updates the following:
-        -   instance.results.diff_current to an empty dict
-        -   instance.results.response_current a synthesized response dict
-            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
-        -  instance.results.result_current to a synthesized result dict
-           {"success": True, "changed": False}
+    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric
+        (f1) that exists on the controller.
+    -   The payload keys contain values that would result in changes to
+        the fabric.
+    -   FabricUpdateBulk.commit() calls
+        FabricUpdateCommon()._build_payloads_to_commit()
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricDetails().refresh() which returns a dict with fabric f1
+        information and RETURN_CODE == 200
+    -   FabricUpdateCommon()._build_payloads_to_commit() sets 
+        _fabric_update_required to an empty set() and calls
+        FabricUpdateCommon()._fabric_needs_update() with the payload.
+    -   FabricUpdateCommon()._fabric_needs_update() updates compares the
+        payload to the fabric details and determines that changes are
+        required.  Hence, it adds True to _fabric_update_required.
+    -   FabricUpdateCommon()._build_payloads_to_commit() finds True in
+        _fabric_update_required and appends the payload to the
+        _payloads_to_commit list.
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._build_fabrics_to_config_deploy()
@@ -394,20 +406,28 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._can_fabric_be_deployed() calls
         FabricSummary().refresh() and then references
         FabricSummary().fabric_is_empty to determine if the fabric is empty.
-        If the fabric is empty, it can be deployed, otherwise it cannot.
+        If the fabric is empty, it cannot be deployed, otherwise it can.
         Hence, _can_fabric_be_deployed() returns either True or False.
-        In this testcase, the fabric is empty, so _can_fabric_be_deployed() returns True.
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() appends fabric f1 to both:
-        -   FabricUpdateCommon()._fabrics_to_config_deploy
-        -   FabricUpdateCommon()._fabrics_to_config_save
+        In this testcase, the fabric is empty, so _can_fabric_be_deployed()
+        returns False.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._fixup_payloads_to_commit()
-    -   FabricUpdateCommon()._fixup_payloads_to_commit() updates ANYCAST_GW_MAC,
-        if present, to conform with the controller's requirements.
+    -   FabricUpdateCommon()._fixup_payloads_to_commit() updates ANYCAST_GW_MAC
+        to conform with the controller's requirements.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._send_payload() for each fabric in
         FabricUpdateCommon()._payloads_to_commit
-
+    -   FabricUpdateCommon()._send_payload() calls
+        FabricUpdateCommon()._config_save() if no errors were encountered during
+        the fabric update.
+    -   FabricUpdateCommon()._config_save() returns without saving since fabric f1
+        is not in list FabricUpdateCommon()._fabrics_to_config_save
+    -   FabricUpdateCommon()._send_payload() calls
+        FabricUpdateCommon()._config_deploy() if no errors were encountered during
+        the fabric update or the config_save.
+    -   FabricUpdateCommon()._config_deploy() returns without deploying since
+        fabric f1 is not in list FabricUpdateCommon()._fabrics_to_config_deploy
+    -   FabricUpdateBulk.commit() returns.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -689,6 +709,330 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     assert True in instance.results.failed
     assert False not in instance.results.failed
     assert False in instance.results.changed
+
+
+def test_fabric_update_bulk_00034(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+    - FabricQuery
+        - __init__()
+        - fabric_names setter
+        - commit()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Idempotence test.
+    -   Verify behavior when user requests to update a fabric and the
+        fabric exists on the controller but the payload does not contain
+        any values that would result in changes to the fabric.
+
+    Code Flow
+    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric
+        (f1) that exists on the controller.
+    -   The payload key/values do not contain any values that would result
+        in changes to the fabric.
+    -   FabricUpdateBulk.commit() calls
+        FabricUpdateCommon()._build_payloads_to_commit()
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricDetails().refresh() which returns a dict with fabric f1
+        information and RETURN_CODE == 200
+    -   FabricUpdateCommon()._build_payloads_to_commit() sets 
+        _fabric_update_required to an empty set() and calls
+        FabricUpdateCommon()._fabric_needs_update() with the payload.
+    -   FabricUpdateCommon()._fabric_needs_update() compares the
+        payload to the fabric details and determines that no changes are
+        required.  Hence, it does not update _fabric_update_required set().
+    -   FabricUpdateCommon()._build_payloads_to_commit() returns without
+        adding the fabric to the _payloads_to_commit list.
+    -   FabricUpdateBulk.commit() updates the following, since the
+        _payloads_to_commit list is empty:
+        -   instance.results.diff_current to an empty dict
+        -   instance.results.response_current a synthesized response dict
+            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
+        -  instance.results.result_current to a synthesized result dict
+           {"success": True, "changed": False}
+    -   FabricUpdateBulk.commit() returns
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_summary(key)
+        yield responses_fabric_update_bulk(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.payloads = payloads_fabric_update_bulk(key)
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+    with does_not_raise():
+        instance.commit()
+
+    assert isinstance(instance.results.diff, list)
+    assert isinstance(instance.results.result, list)
+    assert isinstance(instance.results.response, list)
+
+    assert len(instance.results.diff) == 1
+    assert len(instance.results.metadata) == 1
+    assert len(instance.results.response) == 1
+    assert len(instance.results.result) == 1
+
+    assert instance.results.diff[0].get("sequence_number", None) == 1
+
+    assert instance.results.metadata[0].get("action", None) == "update"
+    assert instance.results.metadata[0].get("check_mode", None) is False
+    assert instance.results.metadata[0].get("sequence_number", None) == 1
+    assert instance.results.metadata[0].get("state", None) == "merged"
+
+    assert instance.results.response[0].get("RETURN_CODE", None) == 200
+    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update."
+    assert instance.results.response[0].get("sequence_number", None) == 1
+
+    assert instance.results.result[0].get("changed", None) is False
+    assert instance.results.result[0].get("success", None) is True
+    assert instance.results.result[0].get("sequence_number", None) == 1
+
+    assert False in instance.results.failed
+    assert True not in instance.results.failed
+    assert False in instance.results.changed
+    assert True not in instance.results.changed
+
+
+def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+    - FabricQuery
+        - __init__()
+        - fabric_names setter
+        - commit()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify behavior when user requests to update a fabric and the
+        fabric exists on the controller and the payload contains
+        values that would result in changes to the fabric.
+    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
+        with the controller's requirements, but able to be fixed by
+        FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   The fabric payload also contains keys that include ``bool`
+        and ``int`` values.
+    -   The fabric is not empty, so is also deployed/saved.
+
+    See Also
+    -   test_fabric_update_bulk_00031 for case where fabric is empty.
+
+    Code Flow
+    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric
+        (f1) that exists on the controller.
+    -   The payload keys contain values that would result in changes to
+        the fabric.
+    -   FabricUpdateBulk.commit() calls
+        FabricUpdateCommon()._build_payloads_to_commit()
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricDetails().refresh() which returns a dict with fabric f1
+        information and RETURN_CODE == 200
+    -   FabricUpdateCommon()._build_payloads_to_commit() sets 
+        _fabric_update_required to an empty set() and calls
+        FabricUpdateCommon()._fabric_needs_update() with the payload.
+    -   FabricUpdateCommon()._fabric_needs_update() updates compares the
+        payload to the fabric details and determines that changes are
+        required.  Hence, it adds True to _fabric_update_required.
+    -   FabricUpdateCommon()._build_payloads_to_commit() finds True in
+        _fabric_update_required and appends the payload to the
+        _payloads_to_commit list.
+    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
+    -   FabricUpdateCommon()._send_payloads() calls
+        FabricUpdateCommon()._build_fabrics_to_config_deploy()
+    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
+        FabricUpdateCommon()._can_fabric_be_deployed()
+    -   FabricUpdateCommon()._can_fabric_be_deployed() calls
+        FabricSummary().refresh() and then references
+        FabricSummary().fabric_is_empty to determine if the fabric is empty.
+        If the fabric is empty, it cannot be deployed, otherwise it can.
+        Hence, _can_fabric_be_deployed() returns either True or False.
+        In this testcase, the fabric is not empty, so _can_fabric_be_deployed()
+        returns True.
+    -   FabricUpdateCommon()._send_payloads() calls
+        FabricUpdateCommon()._fixup_payloads_to_commit()
+    -   FabricUpdateCommon()._fixup_payloads_to_commit() updates ANYCAST_GW_MAC
+        to conform with the controller's requirements.
+    -   FabricUpdateCommon()._send_payloads() calls
+        FabricUpdateCommon()._send_payload() for each fabric in
+        FabricUpdateCommon()._payloads_to_commit
+    -   FabricUpdateCommon()._send_payload() calls
+        FabricUpdateCommon()._config_save() if no errors were encountered during
+        the fabric update.
+    -   FabricUpdateCommon()._config_save() performs a config_save on fabric f1
+        since it is in list FabricUpdateCommon()._fabrics_to_config_save.
+    -   FabricUpdateCommon()._send_payload() calls
+        FabricUpdateCommon()._config_deploy() if no errors were encountered during
+        the fabric update or the config_save.
+    -   FabricUpdateCommon()._config_deploy() deploys fabric f1 since it is in
+        list FabricUpdateCommon()._fabrics_to_config_deploy
+    -   FabricUpdateBulk.commit() returns.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_summary(key)
+        yield responses_fabric_update_bulk(key)
+        yield responses_config_save(key)
+        yield responses_config_deploy(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.payloads = payloads_fabric_update_bulk(key)
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+    with does_not_raise():
+        instance.commit()
+
+    assert isinstance(instance.results.diff, list)
+    assert isinstance(instance.results.result, list)
+    assert isinstance(instance.results.response, list)
+
+    assert len(instance.results.diff) == 3
+    assert len(instance.results.metadata) == 3
+    assert len(instance.results.response) == 3
+    assert len(instance.results.result) == 3
+
+    assert instance.results.diff[0].get("sequence_number", None) == 1
+    assert instance.results.diff[0].get("BGP_AS", None) == 65001
+    assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
+
+    assert instance.results.diff[1].get("sequence_number", None) == 2
+    assert instance.results.diff[1].get("config_save", None) == "OK"
+    assert instance.results.diff[1].get("FABRIC_NAME", None) == "f1"
+
+    assert instance.results.diff[2].get("sequence_number", None) == 3
+    assert instance.results.diff[2].get("config_deploy", None) == "OK"
+    assert instance.results.diff[2].get("FABRIC_NAME", None) == "f1"
+
+    assert instance.results.metadata[0].get("action", None) == "update"
+    assert instance.results.metadata[1].get("action", None) == "config_save"
+    assert instance.results.metadata[2].get("action", None) == "config_deploy"
+
+    assert instance.results.metadata[0].get("check_mode", None) is False
+    assert instance.results.metadata[1].get("check_mode", None) is False
+    assert instance.results.metadata[2].get("check_mode", None) is False
+
+    assert instance.results.metadata[0].get("sequence_number", None) == 1
+    assert instance.results.metadata[1].get("sequence_number", None) == 2
+    assert instance.results.metadata[2].get("sequence_number", None) == 3
+
+    assert instance.results.metadata[0].get("state", None) == "merged"
+    assert instance.results.metadata[1].get("state", None) == "merged"
+    assert instance.results.metadata[2].get("state", None) == "merged"
+
+    assert instance.results.response[0].get("sequence_number", None) == 1
+    assert instance.results.response[1].get("sequence_number", None) == 2
+    assert instance.results.response[2].get("sequence_number", None) == 3
+
+    assert instance.results.response[0].get("METHOD", None) == "PUT"
+    assert instance.results.response[1].get("METHOD", None) == "POST"
+    assert instance.results.response[2].get("METHOD", None) == "POST"
+
+    assert instance.results.response[0].get("RETURN_CODE", None) == 200
+    assert instance.results.response[1].get("RETURN_CODE", None) == 200
+    assert instance.results.response[2].get("RETURN_CODE", None) == 200
+
+    assert (
+        instance.results.response[0]
+        .get("DATA", {})
+        .get("nvPairs", {})
+        .get("BGP_AS", None)
+        == "65001"
+    )
+
+    assert (
+        instance.results.response[1]
+        .get("DATA", {})
+        .get("status", None)
+        == "Config save is completed"
+    )
+
+    assert (
+        instance.results.response[2]
+        .get("DATA", {})
+        .get("status", None)
+        == "Configuration deployment completed."
+    )
+
+    assert instance.results.result[0].get("changed", None) is True
+    assert instance.results.result[1].get("changed", None) is True
+    assert instance.results.result[2].get("changed", None) is True
+
+    assert instance.results.result[0].get("success", None) is True
+    assert instance.results.result[1].get("success", None) is True
+    assert instance.results.result[2].get("success", None) is True
+
+    assert False in instance.results.failed
+    assert True not in instance.results.failed
+    assert True in instance.results.changed
+    assert False not in instance.results.changed
 
 
 def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
