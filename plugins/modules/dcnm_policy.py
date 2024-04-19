@@ -359,36 +359,36 @@ EXAMPLES = """
 ## Below task will policies with description "radius_policy" on swtich1, switch2 and switch3,
 ## and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
 
-    - name: Create policies
-      cisco.dcnm.dcnm_policy:
-        fabric: fabric_prod
-        use_desc_as_key: true
-        config:
-          - name: switch_freeform
-            create_additional_policy: false
-            description: policy_radius
-            policy_vars:
-              CONF: |
-                radius-server host 10.1.1.2 key 7 "ljw3976!" authentication accounting
-          - switch:
-              - ip: {{ switch1 }}
-                policies:
-                  - name: switch_freeform
-                    create_additional_policy: false
-                    priority: 101
-                    description: feature bfd
-                    policy_vars:
-                      CONF: |
-                        feature bfd
-                  - name: switch_freeform
-                    create_additional_policy: false
-                    priority: 102
-                    description: feature bash-shell
-                    policy_vars:
-                      CONF: |
-                        feature bash-shell
-              - ip: {{ switch2 }}
-              - ip: {{ switch3 }}
+- name: Create policies
+    cisco.dcnm.dcnm_policy:
+    fabric: fabric_prod
+    use_desc_as_key: true
+    config:
+        - name: switch_freeform
+        create_additional_policy: false
+        description: policy_radius
+        policy_vars:
+            CONF: |
+            radius-server host 10.1.1.2 key 7 "ljw3976!" authentication accounting
+        - switch:
+            - ip: {{ switch1 }}
+            policies:
+                - name: switch_freeform
+                create_additional_policy: false
+                priority: 101
+                description: feature bfd
+                policy_vars:
+                    CONF: |
+                    feature bfd
+                - name: switch_freeform
+                create_additional_policy: false
+                priority: 102
+                description: feature bash-shell
+                policy_vars:
+                    CONF: |
+                    feature bash-shell
+            - ip: {{ switch2 }}
+            - ip: {{ switch3 }}
 """
 
 import json
