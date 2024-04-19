@@ -93,8 +93,12 @@ class FabricUpdateCommon(FabricCommon):
 
     def _can_fabric_be_deployed(self, fabric_name):
         """
-        return True if the fabric configuration can be saved and deployed
-        return False otherwise
+        -   Return True if the fabric configuration can be saved and deployed.
+        -   Return False otherwise.
+        -   Re-raise ``ValueError`` if FabricSummary().fabric_name raises
+            ``ValueError`` 
+        -   Raise ``ValueError`` if a problem is encountered during
+            FabricSummary().refresh()
 
         NOTES:
         -   If the fabric is empty, the controller will throw an error when
@@ -105,7 +109,10 @@ class FabricUpdateCommon(FabricCommon):
         msg += "ENTERED"
         self.log.debug(msg)
 
-        self.fabric_summary.fabric_name = fabric_name
+        try:
+            self.fabric_summary.fabric_name = fabric_name
+        except ValueError as error:
+            raise ValueError(error) from error
 
         try:
             self.fabric_summary.refresh()
@@ -320,6 +327,7 @@ class FabricUpdateCommon(FabricCommon):
         - If check_mode is False, send the payloads to the controller
         - If check_mode is True, do not send the payloads to the controller
         - In both cases, update results
+        - raise ``ValueError`` if ``_build_fabrics_to_config_deploy`` fails
         - raise ``ValueError` if ``_fixup_payloads_to_commit`` fails
         - raise ``ValueError` if ``_send_payload`` fails
         - raise ``ValueError` if ``_config_save`` fails
@@ -327,7 +335,10 @@ class FabricUpdateCommon(FabricCommon):
         """
         self.rest_send.check_mode = self.check_mode
 
-        self._build_fabrics_to_config_deploy()
+        try:
+            self._build_fabrics_to_config_deploy()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         try:
             self._fixup_payloads_to_commit()
@@ -362,8 +373,9 @@ class FabricUpdateCommon(FabricCommon):
 
     def _build_fabrics_to_config_deploy(self):
         """
-        - Build a list of fabrics to config-deploy and config-save
-        - This also removes the DEPLOY key from the payload
+        -   Build a list of fabrics to config-deploy and config-save
+        -   This also removes the DEPLOY key from the payload
+        -   raise ``ValueError`` if ``_can_fabric_be_deployed`` fails
 
         Skip:
 
@@ -379,8 +391,15 @@ class FabricUpdateCommon(FabricCommon):
             deploy = payload.pop("DEPLOY", None)
             if deploy is not True:
                 continue
-            if self._can_fabric_be_deployed(fabric_name) is False:
-                continue
+
+            can_deploy_fabric = False
+            try:
+                can_deploy_fabric = self._can_fabric_be_deployed(fabric_name)
+            except ValueError as error:
+                raise ValueError(error) from error
+
+            if can_deploy_fabric is False:
+                    continue
 
             msg = f"{self.class_name}.{method_name}: "
             msg += "_can_fabric_be_deployed: "
@@ -692,4 +711,11 @@ class FabricUpdateBulk(FabricUpdateCommon):
         try:
             self._send_payloads()
         except ValueError as error:
+            self.results.diff_current = {}
+            self.results.result_current = {"success": False, "changed": False}
+            return_code = self.rest_send.response_current.get("RETURN_CODE", None)
+            msg = f"ValueError self.results.response: {self.results.response}"
+            self.log.debug(msg)
+            self.results.response_current = {"RETURN_CODE": f"{return_code}", "MESSAGE": f"{error}"}
+            self.results.register_task_result()
             raise ValueError(error) from error
