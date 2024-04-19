@@ -336,6 +336,26 @@ class TestDcnmPolicyModule(TestDcnmModule):
                 deploy_succ_resp,
             ]
 
+        if (
+            "test_dcnm_policy_merged_existing_different_template_desc_as_key"
+            == self._testMethodName
+        ):
+            have_all_resp = self.payloads_data.get("have_response_101_105")
+            create_succ_resp_101 = self.payloads_data.get("success_create_response_101")
+            create_succ_resp_102 = self.payloads_data.get("success_create_response_102")
+            get_resp_101 = self.payloads_data.get("get_response_101")
+            get_resp_102 = self.payloads_data.get("get_response_102")
+            mark_delete_resp_101 = self.payloads_data.get("mark_delete_response_101")
+            mark_delete_resp_102 = self.payloads_data.get("mark_delete_response_102")
+            self.run_dcnm_send.side_effect = [
+                have_all_resp,
+                get_resp_101,
+                get_resp_102,
+                mark_delete_resp_101,
+                mark_delete_resp_102,
+                create_succ_resp_101,
+                create_succ_resp_102,
+            ]
         if "test_dcnm_policy_modify_with_policy_id" == self._testMethodName:
 
             create_succ_resp4 = self.payloads_data.get("success_create_response_104")
@@ -466,6 +486,30 @@ class TestDcnmPolicyModule(TestDcnmModule):
                 [],
                 [],
                 [],
+                [],
+                [],
+                [],
+            ]
+        if "test_dcnm_policy_delete_with_desc_as_key" == self._testMethodName:
+
+            have_resp_101_105_multi = self.payloads_data.get(
+                "have_response_101_105_multi"
+            )
+            mark_delete_resp_101 = self.payloads_data.get("mark_delete_response_101")
+            mark_delete_resp_104 = self.payloads_data.get("mark_delete_response_104")
+            mark_delete_resp_105 = self.payloads_data.get("mark_delete_response_105")
+            get_response_101 = self.payloads_data.get("get_response_101")
+            get_response_104 = self.payloads_data.get("get_response_104")
+            get_response_105 = self.payloads_data.get("get_response_105")
+            delete_config_save_resp = self.payloads_data.get(
+                "delete_config_deploy_response_101_105"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                have_resp_101_105_multi,
+                mark_delete_resp_101,
+                mark_delete_resp_104,
+                mark_delete_resp_105,
                 [],
                 [],
                 [],
@@ -843,8 +887,6 @@ class TestDcnmPolicyModule(TestDcnmModule):
 
     def test_dcnm_policy_merged_existing_and_non_exist_desc_as_key(self):
 
-        # Idempotence case
-        # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_policy_configs")
         self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
 
@@ -869,6 +911,33 @@ class TestDcnmPolicyModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["query"]), 0)
         self.assertEqual(len(result["diff"][0]["deploy"]), 5)
+
+    def test_dcnm_policy_merged_existing_different_template_desc_as_key(self):
+
+        self.config_data = loadPlaybookData("dcnm_policy_configs")
+        self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
+
+        # get mock ip_sn and fabric_inventory_details
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+
+        # load required config data
+        self.playbook_config = self.config_data.get("modify_policy_101_102")
+
+        set_module_args(
+            dict(
+                state="merged",
+                deploy=False,
+                fabric="mmudigon",
+                use_desc_as_key=True,
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 2)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 2)
+        self.assertEqual(len(result["diff"][0]["query"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
 
     def test_dcnm_policy_without_state(self):
 
@@ -1408,6 +1477,38 @@ class TestDcnmPolicyModule(TestDcnmModule):
                     ("Deleted successfully" in resp["DATA"]["message"]), True
                 )
             count = count + 1
+
+    def test_dcnm_policy_delete_with_desc_as_key(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_policy_configs")
+        self.payloads_data = loadPlaybookData("dcnm_policy_payloads")
+
+        # get mock ip_sn and fabric_inventory_details
+        self.mock_fab_inv = self.payloads_data.get("mock_fab_inv")
+        self.mock_ip_sn = self.payloads_data.get("mock_ip_sn")
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "delete_policy_template_desc_101_105"
+        )
+
+        set_module_args(
+            dict(
+                state="deleted",
+                deploy=False,
+                fabric="mmudigon",
+                use_desc_as_key=True,
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 3)
+        self.assertEqual(len(result["diff"][0]["query"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
 
     def test_dcnm_policy_delete_with_policy_id(self):
 

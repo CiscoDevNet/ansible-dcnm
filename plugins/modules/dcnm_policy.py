@@ -47,6 +47,10 @@ options:
   use_desc_as_key:
     description:
     - Flag to enforce using the description parameter as the unique key for policy management.
+    - When set to True, the description parameter must be unique and non-empty for each policy in the playbook.
+      The module will also use the description to find the policy to modify or delete.
+      If exsiting policies have the same description, the module will raise an error.
+      If the existing policy with the matching description is using differnet template name, the module will delete the existing policy and create a new one.
     type: bool
     required: false
     default: false
@@ -345,6 +349,44 @@ EXAMPLES = """
       - name: POLICY-103103
       - switch:
           - ip: "{{ ansible_switch1 }}"
+
+# Use the description as key
+
+# NOTE: As the description of the policy in NDFC/DCNM is not unique, the user must make sure no policies with the same description are created on NDFC out of the playbook.
+#       If the description is not unique, the module will raise an error.
+
+## Below task will policies with description "radius_policy" on swtich1, switch2 and switch3, and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
+
+    - name: Create policies
+      cisco.dcnm.dcnm_policy:
+        fabric: fabric_prod
+        use_desc_as_key: true
+        config:
+          - name: switch_freeform
+            create_additional_policy: false
+            description: policy_radius
+            policy_vars:
+              CONF: |
+                radius-server host 10.1.1.2 key 7 "ljw3976!" authentication accounting
+          - switch:
+              - ip: {{ switch1 }}
+                policies:
+                  - name: switch_freeform
+                    create_additional_policy: false
+                    priority: 101
+                    description: feature bfd
+                    policy_vars:
+                      CONF: |
+                        feature bfd
+                  - name: switch_freeform
+                    create_additional_policy: false
+                    priority: 102
+                    description: feature bash-shell
+                    policy_vars:
+                      CONF: |
+                        feature bash-shell
+              - ip: {{ switch2 }}
+              - ip: {{ switch3 }}
 """
 
 import json
@@ -468,6 +510,8 @@ class DcnmPolicy:
             switch=dict(required=True, type="list"),
         )
 
+        desc_hash = {}  # hash table to store the count of policy descriptions
+
         for cfg in self.config:
 
             clist = []
@@ -480,11 +524,30 @@ class DcnmPolicy:
                     cfg["name"], invalid_params
                 )
                 self.module.fail_json(msg=mesg)
-            # Fail the module when use_desc_as_key is True but description is not given or empty
-            if self.use_desc_as_key and cfg.get("description", "") == "":
-                mesg = f"description can't be empty when use_desc_as_key is True: {cfg}"
-                self.module.fail_json(msg=mesg)
+            if self.use_desc_as_key:
+                # Fail the module when use_desc_as_key is True but description is not given or empty
+                if cfg.get("description", "") == "":
+                    mesg = f"description can't be empty when use_desc_as_key is True: {cfg}"
+                    self.module.fail_json(msg=mesg)
+                # Count the occurance of the "description|switch"
+                for sw in cfg["switch"]:
+                    if desc_hash.get(f"{cfg['description']}|{sw}", -1) == -1:
+                        desc_hash[f"{cfg['description']}|{sw}"] = 1
+                    else:
+                        desc_hash[f"{cfg['description']}|{sw}"] += 1
+
             self.policy_info.extend(policy_info)
+        # Find the duplicated description per swtich
+        dup_desc = []
+        for desc in desc_hash.keys():
+            if desc_hash[desc] == 1:
+                continue
+            dup_desc.append(
+                f"description: {desc.split('|')[0]}, switch: {desc.split('|')[1]}"
+            )
+        if dup_desc != []:
+            mesg = f"duplicated description found: description: {dup_desc}"
+            self.module.fail_json(msg=mesg)
 
     def dcnm_get_policy_payload_with_template_name(self, pelem, sw):
 
@@ -961,7 +1024,7 @@ class DcnmPolicy:
                     self.result["response"].append(pinfo)
             else:
                 # templateName is given. Note this down
-                match_templates.append(cfg["name"])
+                match_templates.append(cfg)
 
         if (get_specific_policies is False) or (match_templates != []):
 
@@ -976,12 +1039,16 @@ class DcnmPolicy:
                 match_pol = [
                     pl
                     for pl in plist
-                    for mt_name in match_templates
-                    if (pl["templateName"] == mt_name)
+                    for mt in match_templates
+                    if (pl["templateName"] == mt["name"])
+                    # When use_desc_as_key is True, only add the policy match the description
+                    and (
+                        not self.use_desc_as_key
+                        or pl.get("description", "") == mt["description"]
+                    )
                 ]
             else:
                 match_pol = plist
-
         if match_pol:
             # match_pol contains all the policies which exist and match the given templates
             self.changed_dict[0]["query"].extend(
@@ -1347,8 +1414,9 @@ class DcnmPolicy:
                     cfg["switch"] = []
                 if sw["ip"] not in cfg["switch"]:
                     cfg["switch"].append(sw["ip"])
-
-        if config:
+        # if use_desc_as_key is true, don't override the policy with the same templateName
+        # the per-switch polices will be simpliy merged with global policies config
+        if config and not self.use_desc_as_key:
             updated_config = []
             for ovr_cfg in override_config:
                 for cfg in config:
@@ -1367,7 +1435,7 @@ class DcnmPolicy:
                     updated_config.append(cfg)
             config = updated_config
         else:
-            config = override_config
+            config += override_config
 
         return config
 
@@ -1427,11 +1495,7 @@ def main():
     if module.params["state"] != "query":
         # Translate the given playbook config to some convenient format. Each policy should
         # have the switches to be deployed.
-
-        dcnm_policy.config = dcnm_policy.dcnm_translate_config(
-            dcnm_policy.config
-        )
-
+        dcnm_policy.config = dcnm_policy.dcnm_translate_config(dcnm_policy.config)
         # See if this is required
         dcnm_policy.dcnm_policy_copy_config()
         dcnm_policy.dcnm_policy_validate_input()
