@@ -1,5 +1,7 @@
 plugins/modules/dcnm_vrf.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_image_policy.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_network.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_image_upgrade.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_interface.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_inventory.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_policy.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
