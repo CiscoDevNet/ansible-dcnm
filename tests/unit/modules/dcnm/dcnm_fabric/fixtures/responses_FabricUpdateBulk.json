@@ -586,7 +586,7 @@
                 "V6_SUBNET_TARGET_MASK": "",
                 "VPC_AUTO_RECOVERY_TIME": "360",
                 "VPC_DELAY_RESTORE": "150",
-                "VPC_DELAY_RESTORE_TIME": "60",
+                "VPC_DELAY_RESTORE_TIME": "300",
                 "VPC_DOMAIN_ID_RANGE": "1-1000",
                 "VPC_ENABLE_IPv6_ND_SYNC": "true",
                 "VPC_PEER_KEEP_ALIVE_OPTION": "management",

@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -389,7 +390,7 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._build_payloads_to_commit() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets 
+    -   FabricUpdateCommon()._build_payloads_to_commit() sets
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update() with the payload.
     -   FabricUpdateCommon()._fabric_needs_update() updates compares the
@@ -474,9 +475,10 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     assert len(instance.results.response) == 1
     assert len(instance.results.result) == 1
 
-    assert instance.results.diff[0].get("sequence_number", None) == 1
-    assert instance.results.diff[0].get("BGP_AS", None) == 65001
+    assert instance.results.diff[0].get("ANYCAST_GW_MAC", None) == "0001.aabb.ccdd"
     assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
+    assert instance.results.diff[0].get("sequence_number", None) == 1
+    assert instance.results.diff[0].get("VPC_DELAY_RESTORE_TIME", None) == "300"
 
     assert instance.results.metadata[0].get("action", None) == "update"
     assert instance.results.metadata[0].get("check_mode", None) is False
@@ -746,7 +748,7 @@ def test_fabric_update_bulk_00034(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._build_payloads_to_commit() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets 
+    -   FabricUpdateCommon()._build_payloads_to_commit() sets
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update() with the payload.
     -   FabricUpdateCommon()._fabric_needs_update() compares the
@@ -872,7 +874,7 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._build_payloads_to_commit() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets 
+    -   FabricUpdateCommon()._build_payloads_to_commit() sets
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update() with the payload.
     -   FabricUpdateCommon()._fabric_needs_update() updates compares the
@@ -960,8 +962,8 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
     assert len(instance.results.result) == 3
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
-    assert instance.results.diff[0].get("BGP_AS", None) == 65001
-    assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
+    assert instance.results.diff[0].get("VPC_DELAY_RESTORE_TIME", None) == "300"
+    assert instance.results.diff[0].get("ANYCAST_GW_MAC", None) == "0001.aabb.ccdd"
 
     assert instance.results.diff[1].get("sequence_number", None) == 2
     assert instance.results.diff[1].get("config_save", None) == "OK"
@@ -1003,21 +1005,25 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
         instance.results.response[0]
         .get("DATA", {})
         .get("nvPairs", {})
-        .get("BGP_AS", None)
-        == "65001"
+        .get("VPC_DELAY_RESTORE_TIME", None)
+        == "300"
     )
 
     assert (
-        instance.results.response[1]
+        instance.results.response[0]
         .get("DATA", {})
-        .get("status", None)
+        .get("nvPairs", {})
+        .get("ANYCAST_GW_MAC", None)
+        == "0001.aabb.ccdd"
+    )
+
+    assert (
+        instance.results.response[1].get("DATA", {}).get("status", None)
         == "Config save is completed"
     )
 
     assert (
-        instance.results.response[2]
-        .get("DATA", {})
-        .get("status", None)
+        instance.results.response[2].get("DATA", {}).get("status", None)
         == "Configuration deployment completed."
     )
 
@@ -1150,4 +1156,3 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
     assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
-
