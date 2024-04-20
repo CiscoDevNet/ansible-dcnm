@@ -253,6 +253,7 @@ class Common(FabricCommon):
     """
     Common methods, properties, and resources for all states.
     """
+
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -484,14 +485,15 @@ class Merged(Common):
 
             self.template.rest_send = self.rest_send
             self.template.template_name = template_name
+
             try:
                 self.template.refresh()
             except ValueError as error:
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
             except ControllerResponseError as error:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"Controller returned {error.return_code} when "
-                msg += f"attempting to retrieve template: {template_name}. "
+                msg += "Controller returned error when attempting to retrieve "
+                msg += f"template: {template_name}. "
                 msg += f"Error detail: {error}"
                 self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
 
@@ -688,7 +690,9 @@ def main():
         "choices": ["deleted", "merged", "query"],
     }
 
-    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    ansible_module = AnsibleModule(
+        argument_spec=argument_spec, supports_check_mode=True
+    )
 
     # Create the base/parent logger for the dcnm collection.
     # To enable logging, set enable_logging to True.
