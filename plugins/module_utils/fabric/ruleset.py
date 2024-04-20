@@ -65,10 +65,19 @@ class RuleSetCommon:
 
     @property
     def template(self):
+        """
+        -   getter : return a controller template.
+        -   setter : set a controller template.
+        -   The template is a dictionary retrieved from the controller.
+        """
         return self.properties["template"]
 
     @template.setter
     def template(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name} must be a dictionary."
+            raise ValueError(msg)
         self.properties["template"] = value
 
     @staticmethod
