@@ -530,3 +530,12 @@ def templates_param_info(key: str) -> Dict[str, str]:
     data_file = "templates_ParamInfo"
     data = load_fixture(data_file).get(key)
     return data
+
+
+def templates_ruleset(key: str) -> Dict[str, str]:
+    """
+    Return fabric templates for RuleSet
+    """
+    data_file = "templates_RuleSet"
+    data = load_fixture(data_file).get(key)
+    return data
