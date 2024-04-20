@@ -142,3 +142,89 @@ def test_ruleset_00031(bad_value) -> None:
     match = r"RuleSet\.template must be a dictionary."
     with pytest.raises(ValueError, match=match):
         instance.template = templates_ruleset(key)
+
+
+def test_ruleset_00040() -> None:
+    """
+    Classes and Methods
+    - RuleSet
+        - __init__()
+        - refresh()
+
+    Summary
+    -   Verify ``ValueError`` is raised if refresh() is called before
+        setting template.
+    """
+    with does_not_raise():
+        instance = RuleSet()
+    match = r"RuleSet\.refresh: template is not set.\s+"
+    match += r"Set RuleSet\.template before calling RuleSet\.refresh\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_ruleset_00041() -> None:
+    """
+    Classes and Methods
+    - RuleSet
+        - __init__()
+        - template.setter
+        - refresh()
+
+    Summary
+    -   Verify ``ValueError`` is raised if parameters key is missing.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = RuleSet()
+        instance.template = templates_ruleset(key)
+    match = r"RuleSet\.refresh: No parameters in template\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_ruleset_00042() -> None:
+    """
+    Classes and Methods
+    - RuleSet
+        - __init__()
+        - template.setter
+        - refresh()
+
+    Summary
+    -   Verify ``ValueError`` is raised if parameters is not a list.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = RuleSet()
+        instance.template = templates_ruleset(key)
+    match = r"RuleSet\.refresh: template\[parameters\] is not a list\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_ruleset_00043() -> None:
+    """
+    Classes and Methods
+    - RuleSet
+        - __init__()
+        - template.setter
+        - refresh()
+
+    Summary
+    -   Verify ``ValueError`` is raised if ``name`` key is missing
+        from parameter.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = RuleSet()
+        instance.template = templates_ruleset(key)
+    match = r"RuleSet\.refresh: name key missing from parameter:"
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()

@@ -5120,26 +5120,46 @@
         "importedTemplates": null,
         "implements": ""
     },
-    "test_ruleset_00032a": {
+    "test_ruleset_00041a": {
         "TEST_NOTES": [
             "parameters key is missing"
         ]
     },
-    "test_ruleset_00033a": {
+    "test_ruleset_00042a": {
         "TEST_NOTES": [
             "parameters not a list"
         ],
         "parameters": {"bing": "bang"}
     },
-    "test_ruleset_00040a": {
+
+    "test_ruleset_00043a": {
         "TEST_NOTES": [
-            "parameters is missing key FOO"
+            "parameter name is missing"
         ],
         "parameters": [
-            {"bing": "bang"}
+            {
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "576",
+                    "max": "9216",
+                    "defaultValue": "9216"
+                },
+                "annotations": {
+                    "DisplayName": "Intra Fabric Interface MTU",
+                    "Description": "(Min:576, Max:9216). Must be an even number",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\"",
+                    "IsMTU": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            }
         ]
     },
-    "test_ruleset_00050a": {
+    "test_ruleset_00060a": {
         "TEST_NOTES": [
             "Enum key is missing and parameterType is not boolean",
             "_get_choices returns None"
@@ -5161,7 +5181,7 @@
             }
         ]
     },
-    "test_ruleset_00051a": {
+    "test_ruleset_0005Xa": {
         "TEST_NOTES": [
             "Enum key is missing and parameterType is boolean",
             "_get_choices returns [True, False]"
@@ -5185,7 +5205,7 @@
             }
         ]
     },
-    "test_ruleset_00052a": {
+    "test_ruleset_000X1a": {
         "TEST_NOTES": [
             "choices key is missing and parameterType is boolean",
             "_get_choices returns [True, False]"
@@ -5214,7 +5234,7 @@
             }
         ]
     },
-    "test_ruleset_00053a": {
+    "test_ruleset_000X3a": {
         "TEST_NOTES": [
             "Enum key is present",
             "Enum key's values are string representations of integers",
@@ -5242,7 +5262,7 @@
             }
         ]
     },
-    "test_ruleset_00060a": {
+    "test_ruleset_000X4a": {
         "TEST_NOTES": [
             "metaProperties.defaultValue key is present",
             "metaProperties.defaultValue is a string representation of integer",
@@ -5271,7 +5291,7 @@
             }
         ]
     },
-    "test_ruleset_00061a": {
+    "test_ruleset_000X5a": {
         "TEST_NOTES": [
             "metaProperties.defaultValue key is present",
             "metaProperties.defaultValue is a string representation of boolean",
@@ -5299,7 +5319,7 @@
             }
         ]
     },
-    "test_ruleset_00062a": {
+    "test_ruleset_000X6a": {
         "TEST_NOTES": [
             "metaProperties.defaultValue key is present",
             "metaProperties.defaultValue is a string (not boolean or integer)",
@@ -5328,7 +5348,7 @@
             }
         ]
     },
-    "test_ruleset_00063a": {
+    "test_ruleset_000X7a": {
         "TEST_NOTES": [
             "metaProperties.defaultValue key is not present",
             "defaultValue is present and null",
@@ -5357,7 +5377,7 @@
             }
         ]
     },
-    "test_ruleset_00064a": {
+    "test_ruleset_000X8a": {
         "TEST_NOTES": [
             "metaProperties.defaultValue key is present and == '0'",
             "defaultValue is present and null",
@@ -5386,7 +5406,7 @@
             }
         ]
     },
-    "test_ruleset_00065a": {
+    "test_ruleset_000X9a": {
         "TEST_NOTES": [
             "metaProperties.defaultValue key is present and == '1'",
             "defaultValue is present and null",
