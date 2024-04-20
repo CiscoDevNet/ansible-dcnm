@@ -377,28 +377,29 @@ class RuleSet(RuleSetCommon):
         - raise ValueError if template has no parameters.
         - raise ValueError if template[parameters] is not a list.
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
         if self.template is None:
-            msg = "template is not set.  "
-            msg += "Call instance.template = <template> "
-            msg += "before calling instance.refresh()."
+            msg += "template is not set.  "
+            msg += f"Set {self.class_name}.template "
+            msg += f"before calling {self.class_name}.{method_name}()."
             raise ValueError(msg)
         if self.template.get("parameters") is None:
-            msg = "No parameters in template."
+            msg += "No parameters in template."
             raise ValueError(msg)
         if isinstance(self.template["parameters"], list) is False:
-            msg = "template[parameters] is not a list."
+            msg += "template[parameters] is not a list."
             raise ValueError(msg)
         for parameter in self.template["parameters"]:
-            parameter_name = parameter.get("name")
-            self.log.debug(f"REFRESH: parameter_name: {parameter_name}")
+            # msg += f"parameter: {json.dumps(parameter, indent=4, sort_keys=True)}"
+            # self.log.debug(msg)
             if self.is_internal(parameter) is True:
                 continue
             if "Hidden" in self.section(parameter):
                 continue
             self.param_name = self.name(parameter)
-            if parameter_name == "AUTO_SYMMETRIC_VRF_LITE":
-                self.log.debug(f"parameter: {self.param_name}")
             if self.param_name is None:
-                continue
+                msg += f"name key missing from parameter: {parameter}"
+                raise ValueError(msg)
             self.rule = self.is_show(parameter)
             self._update_ruleset()
