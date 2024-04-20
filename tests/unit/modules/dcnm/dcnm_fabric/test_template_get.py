@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
@@ -41,7 +42,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
     ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
-    template_get_fixture, responses_template_get)
+    responses_template_get, template_get_fixture)
 
 
 def test_template_get_00010(template_get) -> None:
@@ -72,6 +73,8 @@ def test_template_get_00010(template_get) -> None:
 
 MATCH_00020 = r"TemplateGet\.rest_send: "
 MATCH_00020 += r"rest_send must be an instance of RestSend\."
+
+
 @pytest.mark.parametrize(
     "value, expected, raised",
     [
@@ -81,8 +84,8 @@ MATCH_00020 += r"rest_send must be an instance of RestSend\."
         ("foo", pytest.raises(TypeError, match=MATCH_00020), True),
         (10, pytest.raises(TypeError, match=MATCH_00020), True),
         ([10], pytest.raises(TypeError, match=MATCH_00020), True),
-        ({10}, pytest.raises(TypeError, match=MATCH_00020), True)
-    ]
+        ({10}, pytest.raises(TypeError, match=MATCH_00020), True),
+    ],
 )
 def test_template_get_00020(template_get, value, expected, raised) -> None:
     """
@@ -98,9 +101,6 @@ def test_template_get_00020(template_get, value, expected, raised) -> None:
     -   Verify that ``TypeError`` is raised, when an invalid value
         is passed to TemplateGet().rest_send.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     with does_not_raise():
         instance = template_get
     with expected:
@@ -111,6 +111,8 @@ def test_template_get_00020(template_get, value, expected, raised) -> None:
 
 MATCH_00030 = r"TemplateGet\.results: "
 MATCH_00030 += r"results must be an instance of Results\."
+
+
 @pytest.mark.parametrize(
     "value, expected, raised",
     [
@@ -120,8 +122,8 @@ MATCH_00030 += r"results must be an instance of Results\."
         ("foo", pytest.raises(TypeError, match=MATCH_00030), True),
         (10, pytest.raises(TypeError, match=MATCH_00030), True),
         ([10], pytest.raises(TypeError, match=MATCH_00030), True),
-        ({10}, pytest.raises(TypeError, match=MATCH_00030), True)
-    ]
+        ({10}, pytest.raises(TypeError, match=MATCH_00030), True),
+    ],
 )
 def test_template_get_00030(template_get, value, expected, raised) -> None:
     """
@@ -137,9 +139,6 @@ def test_template_get_00030(template_get, value, expected, raised) -> None:
     -   Verify that ``TypeError`` is raised, when an invalid value
         is passed to TemplateGet().results.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     with does_not_raise():
         instance = template_get
     with expected:
@@ -150,6 +149,8 @@ def test_template_get_00030(template_get, value, expected, raised) -> None:
 
 MATCH_00040 = r"TemplateGet\.template: "
 MATCH_00040 += r"template must be an instance of dict\."
+
+
 @pytest.mark.parametrize(
     "value, expected, raised",
     [
@@ -159,8 +160,8 @@ MATCH_00040 += r"template must be an instance of dict\."
         ("foo", pytest.raises(TypeError, match=MATCH_00040), True),
         (10, pytest.raises(TypeError, match=MATCH_00040), True),
         ([10], pytest.raises(TypeError, match=MATCH_00040), True),
-        ({10}, pytest.raises(TypeError, match=MATCH_00040), True)
-    ]
+        ({10}, pytest.raises(TypeError, match=MATCH_00040), True),
+    ],
 )
 def test_template_get_00040(template_get, value, expected, raised) -> None:
     """
@@ -176,9 +177,6 @@ def test_template_get_00040(template_get, value, expected, raised) -> None:
     -   Verify that ``TypeError`` is raised, when an invalid value
         is passed to TemplateGet().template.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     with does_not_raise():
         instance = template_get
     with expected:
@@ -189,6 +187,8 @@ def test_template_get_00040(template_get, value, expected, raised) -> None:
 
 MATCH_00050 = r"TemplateGet\.template_name: "
 MATCH_00050 += r"template_name must be an instance of str\."
+
+
 @pytest.mark.parametrize(
     "value, expected, raised",
     [
@@ -199,7 +199,7 @@ MATCH_00050 += r"template_name must be an instance of str\."
         ([10], pytest.raises(TypeError, match=MATCH_00050), True),
         ({10}, pytest.raises(TypeError, match=MATCH_00050), True),
         ({"foo": "bar"}, pytest.raises(TypeError, match=MATCH_00050), True),
-    ]
+    ],
 )
 def test_template_get_00050(template_get, value, expected, raised) -> None:
     """
@@ -215,9 +215,6 @@ def test_template_get_00050(template_get, value, expected, raised) -> None:
     -   Verify that ``TypeError`` is raised, when an invalid value
         is passed to TemplateGet().template_name.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     with does_not_raise():
         instance = template_get
     with expected:
@@ -243,9 +240,6 @@ def test_template_get_00060(template_get) -> None:
     -   ``ValueError`` is raised because the TemplateGet().template_name
         property is not set.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     match = r"TemplateGet\._set_template_endpoint: "
     match += r"Set instance\.template_name property before "
     match += r"calling instance\.refresh\(\)"
@@ -274,9 +268,6 @@ def test_template_get_00061(template_get) -> None:
     -   ``ValueError`` is raised because the TemplateGet().rest_send
         property is not set.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     match = r"TemplateGet\.refresh: "
     match += r"Set instance\.rest_send property before "
     match += r"calling instance\.refresh\(\)"
@@ -399,13 +390,11 @@ def test_template_get_00070(monkeypatch, template_get) -> None:
     -   Verify that TemplateGet()._set_template_endpoint() re-raises
         ``ValueError`` when ApiEndpoints() raises ``ValueError``.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods
         """
         Mock the ApiEndpoints.template getter property to raise ``ValueError``.
         """
+
         @property
         def template(self):
             """

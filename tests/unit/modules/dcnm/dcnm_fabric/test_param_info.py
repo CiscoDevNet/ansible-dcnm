@@ -31,6 +31,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
     ParamInfo
@@ -56,7 +57,7 @@ def test_param_info_00010() -> None:
     with does_not_raise():
         instance = ParamInfo()
     assert instance.class_name == "ParamInfo"
-    assert instance.info == {}
+    assert not instance.info
     assert instance.properties["template"] is None
 
 
@@ -190,7 +191,7 @@ def test_param_info_00040() -> None:
     with does_not_raise():
         instance = ParamInfo()
         instance.template = templates_param_info(key)
-    
+
     match = r"ParamInfo\._get_param_name: "
     match += r"Parameter is missing name key:"
     with pytest.raises(KeyError, match=match):
@@ -269,7 +270,10 @@ def test_param_info_00052() -> None:
         instance = ParamInfo()
         instance.template = templates_param_info(key)
         instance.refresh()
-    assert instance.parameter("REPLICATION_MODE").get("choices") == ["Ingress", "Multicast"]
+    assert instance.parameter("REPLICATION_MODE").get("choices") == [
+        "Ingress",
+        "Multicast",
+    ]
 
 
 def test_param_info_00053() -> None:
@@ -296,7 +300,7 @@ def test_param_info_00053() -> None:
         instance = ParamInfo()
         instance.template = templates_param_info(key)
         instance.refresh()
-    assert instance.parameter("RR_COUNT").get("choices") == [2,4]
+    assert instance.parameter("RR_COUNT").get("choices") == [2, 4]
 
 
 def test_param_info_00060() -> None:
