@@ -167,7 +167,9 @@ class FabricSummary(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        controller_return_code = self.rest_send.response_current.get("RETURN_CODE", None)
+        controller_return_code = self.rest_send.response_current.get(
+            "RETURN_CODE", None
+        )
         controller_message = self.rest_send.response_current.get("MESSAGE", None)
         if controller_return_code != 200:
             msg = f"{self.class_name}.{method_name}: "

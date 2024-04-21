@@ -713,13 +713,11 @@ class VerifyPlaybookParams:
         self.log.debug(msg)
 
         param_rule = self._ruleset.ruleset[self.parameter]
-        case_and_rule = (
-            "and" in param_rule.get("terms") and
-            "or" not in param_rule.get("terms")
+        case_and_rule = "and" in param_rule.get("terms") and "or" not in param_rule.get(
+            "terms"
         )
-        case_or_rule = (
-            "or" in param_rule.get("terms") and
-            "and" not in param_rule.get("terms")
+        case_or_rule = "or" in param_rule.get("terms") and "and" not in param_rule.get(
+            "terms"
         )
         case_na_rule = "na" in param_rule.get("terms")
         try:

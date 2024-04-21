@@ -100,7 +100,7 @@ class FabricDetails(FabricCommon):
 
         self.data = {}
         if self.rest_send.response_current.get("DATA") is None:
-            # The DATA key should always be present. We should never hit this. 
+            # The DATA key should always be present. We should never hit this.
             self._update_results()
             return
         for item in self.rest_send.response_current.get("DATA"):
@@ -376,7 +376,9 @@ class FabricDetailsByName(FabricDetails):
             raise ValueError(msg)
 
         return self.conversion.make_none(
-            self.conversion.make_boolean(self.data_subclass[self.filter].get("nvPairs").get(item))
+            self.conversion.make_boolean(
+                self.data_subclass[self.filter].get("nvPairs").get(item)
+            )
         )
 
     @property

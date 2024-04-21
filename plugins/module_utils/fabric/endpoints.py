@@ -66,8 +66,7 @@ class ApiEndpoints:
         self._init_properties()
 
     def _init_properties(self):
-        """
-        """
+        """ """
         self.properties = {}
         self.properties["fabric_name"] = None
         self.properties["template_name"] = None

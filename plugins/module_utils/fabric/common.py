@@ -25,6 +25,7 @@ from typing import Any, Dict
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 
+
 class FabricCommon:
     """
     Common methods used by the other classes supporting
@@ -124,7 +125,7 @@ class FabricCommon:
         """
         method_name = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
-            if not "ANYCAST_GW_MAC" in payload:
+            if "ANYCAST_GW_MAC" not in payload:
                 continue
             try:
                 payload["ANYCAST_GW_MAC"] = self.translate_mac_address(

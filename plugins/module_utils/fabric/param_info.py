@@ -2,8 +2,10 @@ import inspect
 import json
 import logging
 import re
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+
 
 class ParamInfo:
     """
@@ -212,7 +214,7 @@ class ParamInfo:
             return None
         return self.conversion.make_int(value)
 
-    def _get_param_name(self,parameter):
+    def _get_param_name(self, parameter):
         """
         -   Return the ``name`` key from the parameter dict.
         -   Raise ``KeyError`` if ``name`` key is missing

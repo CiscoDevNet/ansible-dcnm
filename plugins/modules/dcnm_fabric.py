@@ -106,7 +106,7 @@ options:
         default: False
       auto_symmetric_vrf_lite:
         description:
-        - Enable (True) or disable (False) auto generation of Whether to auto generate VRF LITE sub-interface and BGP peering configuration on managed neighbor devices.
+        - Enable (True) or disable (False) auto generation of VRF LITE sub-interface and BGP peering configuration on managed neighbor devices.
         - If True, auto created VRF Lite IFC links will have 'Auto Deploy for Peer' enabled.
         - NDFC GUI label, Auto Deploy for Peer
         - NDFC GUI tab, Resources

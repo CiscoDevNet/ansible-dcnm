@@ -134,7 +134,7 @@ class FabricDelete(FabricCommon):
 
         if self.fabric_summary.fabric_is_empty is True:
             return
-        msg = f"{self.class_name}.{method_name}: " 
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"Fabric {fabric_name} cannot be deleted since it is not "
         msg += "empty. Remove all devices from the fabric and try again."
         raise ValueError(msg)

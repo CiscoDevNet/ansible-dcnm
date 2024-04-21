@@ -3,8 +3,10 @@ import inspect
 import json
 import logging
 import re
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+
 
 class RuleSetCommon:
     """
@@ -25,7 +27,6 @@ class RuleSetCommon:
         self.properties = {}
         self.properties["template"] = None
         self.properties["ruleset"] = {}
-
 
     def clean_rule(self):
         """
@@ -214,7 +215,7 @@ class RuleSet(RuleSetCommon):
                     }
                 ]
             }
-        }        
+        }
 
         """
         method_name = inspect.stack()[0][3]
@@ -277,7 +278,7 @@ class RuleSet(RuleSetCommon):
         ```
 
         - Ruleset Structure (OR):
-            
+
         ```python
         STP_BRIDGE_PRIORITY: {
             "terms": {
@@ -295,7 +296,7 @@ class RuleSet(RuleSetCommon):
                 ]
             }
         }
-        ```       
+        ```
         """
         if "and" in self.rule:
             boolean_type = "and"
