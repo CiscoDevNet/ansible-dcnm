@@ -1281,16 +1281,19 @@ def test_fabric_update_bulk_00080(monkeypatch, fabric_update_bulk) -> None:
     Summary
     -   Verify _config_deploy() re-raises ``ValueError`` raised by ApiEndpoints().
     """
+
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods
         """
         Mock the ApiEndpoints.fabric_name() setter to raise ``ValueError``.
         """
+
         @property
         def fabric_name(self):
             """
             Mocked method
             """
             return "f1"
+
         @fabric_name.setter
         def fabric_name(self, value):
             raise ValueError("mocked exception")
