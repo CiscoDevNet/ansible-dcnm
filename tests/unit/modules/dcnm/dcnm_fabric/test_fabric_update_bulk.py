@@ -1156,3 +1156,172 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
     assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
+
+
+def test_fabric_update_bulk_00050(fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify commit() raises ``ValueError`` if ``fabric_details`` is not set.
+    """
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.payloads = [
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": "true",
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+            }
+        ]
+
+    match = r"FabricUpdateBulk\.commit:\s+"
+    match += r"fabric_details must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk.commit()
+
+
+def test_fabric_update_bulk_00060(fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify commit() raises ``ValueError`` if ``fabric_summary`` is not set.
+    """
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.payloads = [
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": "true",
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+            }
+        ]
+
+    match = r"FabricUpdateBulk\.commit:\s+"
+    match += r"fabric_summary must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk.commit()
+
+
+def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify commit() raises ``ValueError`` if ``rest_send`` is not set.
+    """
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.results = Results()
+        instance.payloads = [
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": "true",
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+            }
+        ]
+
+    match = r"FabricUpdateBulk\.commit:\s+"
+    match += r"rest_send must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk.commit()
+
+
+def test_fabric_update_bulk_00080(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateBulk()
+        - __init__()
+        - _config_deploy()
+
+    Summary
+    -   Verify _config_deploy() re-raises ``ValueError`` raised by ApiEndpoints().
+    """
+    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+        """
+        Mock the ApiEndpoints.fabric_name() setter to raise ``ValueError``.
+        """
+        @property
+        def fabric_name(self):
+            """
+            Mocked method
+            """
+            return "f1"
+        @fabric_name.setter
+        def fabric_name(self, value):
+            raise ValueError("mocked exception")
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.endpoints = MockApiEndpoints()
+
+        instance._fabrics_to_config_deploy = ["f1"]
+        instance.config_save_result = {"f1": True}
+
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.payloads = [
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": "true",
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+            }
+        ]
+
+    match = "mocked exception"
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk._config_deploy()

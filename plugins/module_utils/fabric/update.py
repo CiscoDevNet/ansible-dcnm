@@ -550,8 +550,8 @@ class FabricUpdateCommon(FabricCommon):
 
     def _config_deploy(self):
         """
-        - Deploy the fabric configuration to the controller
-        - raise ``ValueError`` if the endpoint assignment fails
+        - Deploy the fabric configuration to the controller.
+        - Raise ``ValueError`` if the endpoint assignment fails.
         """
         for fabric_name in self._fabrics_to_config_deploy:
             if self.config_save_result.get(fabric_name) is False:
