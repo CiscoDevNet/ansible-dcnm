@@ -167,7 +167,7 @@ def test_fabric_summary_00032(monkeypatch, fabric_summary) -> None:
         Mock the ApiEndpoints.fabric_summary getter property to raise ``ValueError``.
         """
 
-        def _validate_fabric_name(self, value="MyFabric"):
+        def validate_fabric_name(self, value="MyFabric"):
             """
             Mocked method required for test, but not relevant to test result.
             """
@@ -598,7 +598,7 @@ def test_fabric_summary_00040(fabric_summary) -> None:
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.all_data\."
     with pytest.raises(ValueError, match=match):
-        _ = instance.all_data
+        instance.all_data  # pylint: disable=pointless-statement
 
 
 def test_fabric_summary_00050(fabric_summary) -> None:
@@ -631,7 +631,7 @@ def test_fabric_summary_00050(fabric_summary) -> None:
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.border_gateway_count\."
     with pytest.raises(ValueError, match=match):
-        _ = instance.border_gateway_count
+        instance.border_gateway_count  # pylint: disable=pointless-statement
 
 
 def test_fabric_summary_00060(fabric_summary) -> None:
@@ -664,7 +664,7 @@ def test_fabric_summary_00060(fabric_summary) -> None:
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.device_count\."
     with pytest.raises(ValueError, match=match):
-        _ = instance.device_count
+        instance.device_count  # pylint: disable=pointless-statement
 
 
 def test_fabric_summary_00070(fabric_summary) -> None:
@@ -697,14 +697,14 @@ def test_fabric_summary_00070(fabric_summary) -> None:
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.fabric_is_empty\."
     with pytest.raises(ValueError, match=match):
-        _ = instance.fabric_is_empty
+        instance.fabric_is_empty  # pylint: disable=pointless-statement
 
 
-MATCH_00080a = r"ApiEndpoints\._validate_fabric_name: "
+MATCH_00080a = r"ApiEndpoints\.validate_fabric_name: "
 MATCH_00080a = r"Invalid fabric name\. "
 MATCH_00080a += r"Expected string\. Got.*\."
 
-MATCH_00080b = r"ApiEndpoints\._validate_fabric_name: "
+MATCH_00080b = r"ApiEndpoints\.validate_fabric_name: "
 MATCH_00080b = r"Invalid fabric name:.*\. "
 MATCH_00080b += "Fabric name must start with a letter A-Z or a-z and "
 MATCH_00080b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
@@ -792,7 +792,7 @@ def test_fabric_summary_00090(fabric_summary) -> None:
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.leaf_count\."
     with pytest.raises(ValueError, match=match):
-        _ = instance.leaf_count
+        instance.leaf_count  # pylint: disable=pointless-statement
 
 
 def test_fabric_summary_00100(fabric_summary) -> None:
@@ -825,4 +825,4 @@ def test_fabric_summary_00100(fabric_summary) -> None:
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.spine_count\."
     with pytest.raises(ValueError, match=match):
-        _ = instance.spine_count
+        instance.spine_count  # pylint: disable=pointless-statement

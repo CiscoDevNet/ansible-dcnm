@@ -807,7 +807,7 @@ class VerifyPlaybookParams:
         # bad_params[fabric][param] = <list of bad param dict>
         for fabric_name, fabric_dict in self.bad_params.items():
             msg += f"Fabric: {fabric_name}, "
-            for _, bad_param_list in fabric_dict.items():
+            for bad_param_list in fabric_dict.values():
                 for bad_param in bad_param_list:
                     boolean_operator = bad_param.get("boolean_operator")
                     config_param = bad_param.get("config_param")

@@ -75,11 +75,11 @@ def test_endpoints_00010() -> None:
     assert instance.properties["template_name"] is None
 
 
-MATCH_00020a = r"ApiEndpoints\._validate_fabric_name: "
+MATCH_00020a = r"ApiEndpoints\.validate_fabric_name: "
 MATCH_00020a = r"Invalid fabric name\. "
 MATCH_00020a += r"Expected string\. Got.*\."
 
-MATCH_00020b = r"ApiEndpoints\._validate_fabric_name: "
+MATCH_00020b = r"ApiEndpoints\.validate_fabric_name: "
 MATCH_00020b = r"Invalid fabric name:.*\. "
 MATCH_00020b += "Fabric name must start with a letter A-Z or a-z and "
 MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
@@ -109,7 +109,7 @@ def test_endpoints_00020(fabric_name, expected, does_raise) -> None:
     - ApiEndpoints
         - __init__()
         - fabric_name.setter
-        - _validate_fabric_name()
+        - validate_fabric_name()
 
     Summary
     - Verify ``TypeError`` is raised for non-string fabric_name.

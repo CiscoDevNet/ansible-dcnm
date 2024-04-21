@@ -71,7 +71,7 @@ class ApiEndpoints:
         self.properties["fabric_name"] = None
         self.properties["template_name"] = None
 
-    def _validate_fabric_name(self, value):
+    def validate_fabric_name(self, value):
         """
         -   Validate the fabric name meets the requirements of the controller.
         -   Raise ``TypeError`` if value is not a string.
@@ -267,7 +267,7 @@ class ApiEndpoints:
 
     @fabric_name.setter
     def fabric_name(self, value):
-        self._validate_fabric_name(value)
+        self.validate_fabric_name(value)
         self.properties["fabric_name"] = value
 
     @property

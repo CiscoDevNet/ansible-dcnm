@@ -173,7 +173,7 @@ class FabricSummary(FabricCommon):
         controller_message = self.rest_send.response_current.get("MESSAGE", None)
         if controller_return_code != 200:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Failed to retrieve fabric_summary for fabric_name "
+            msg += "Failed to retrieve fabric_summary for fabric_name "
             msg += f"{self.fabric_name}. "
             msg += f"RETURN_CODE: {controller_return_code}. "
             msg += f"MESSAGE: {controller_message}."
@@ -184,7 +184,7 @@ class FabricSummary(FabricCommon):
         # does not contain a DATA key.
         if len(self.data) == 0:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Controller responded with missing or empty DATA."
+            msg += "Controller responded with missing or empty DATA."
             raise ControllerResponseError(msg)
 
     def refresh(self):
@@ -250,7 +250,6 @@ class FabricSummary(FabricCommon):
         """
         - raise ``ValueError`` if ``refresh()`` has not been called.
         """
-        method_name = inspect.stack()[0][3]
         if self.refreshed is True:
             return
         msg = f"{self.class_name}.refresh() must be called before accessing "
@@ -325,7 +324,7 @@ class FabricSummary(FabricCommon):
     @fabric_name.setter
     def fabric_name(self, value: str):
         try:
-            self.endpoints._validate_fabric_name(value)
+            self.endpoints.validate_fabric_name(value)
         except ValueError as error:
             raise ValueError(error) from error
         self._properties["fabric_name"] = value
