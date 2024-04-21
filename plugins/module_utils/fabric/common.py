@@ -17,7 +17,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 import logging
 import re
@@ -63,6 +62,8 @@ class FabricCommon:
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
+
+        self._payloads_to_commit: list = []
 
         self._valid_fabric_types = {"VXLAN_EVPN"}
 
