@@ -629,7 +629,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
         Results
 
-    payloads = [ 
+    payloads = [
         { "FABRIC_NAME": "fabric1", "BGP_AS": 65000, "DEPLOY": True },
         { "FABRIC_NAME": "fabric2", "BGP_AS": 65001, "DEPLOY: False }
     ]
