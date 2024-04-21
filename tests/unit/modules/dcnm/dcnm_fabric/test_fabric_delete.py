@@ -114,12 +114,12 @@ def test_fabric_delete_00021(fabric_delete) -> None:
         _set_fabric_delete_endpoint() is missing argument
         ``fabric_name``.
     """
-    match = r"FabricDelete\._set_fabric_delete_endpoint\(\) "
-    match += "missing 1 required positional argument: 'fabric_name'"
-
     with does_not_raise():
         instance = fabric_delete
         instance.results = Results()
+
+    match = r"_set_fabric_delete_endpoint\(\)\s+"
+    match += r"missing 1 required positional argument: 'fabric_name'"
     with pytest.raises(TypeError, match=match):
         instance._set_fabric_delete_endpoint()
 
