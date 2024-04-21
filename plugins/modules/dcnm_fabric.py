@@ -25,7 +25,7 @@ short_description: Create Fabrics.
 version_added: "0.9.0"
 description:
     - "Create Fabrics."
-author: Allen Robel
+author: Allen Robel (@quantumonion)
 options:
   state:
     description:
@@ -33,6 +33,7 @@ options:
     - I(merged) and I(query) are the only states supported.
     type: str
     choices:
+      - deleted
       - merged
       - query
     default: merged
@@ -98,8 +99,8 @@ options:
         - vrf_lite_autoconfig must be set to 1
         - auto_symmetric_vrf_lite must be set to True
         - auto_vrflite_ifc_default_vrf must be set to True
-        - NDFC GUI label: Auto Deploy Default VRF for Peer
-        - NDFC GUI tab: Resources
+        - NDFC GUI label, Auto Deploy Default VRF for Peer
+        - NDFC GUI tab, Resources
         type: bool
         required: false
         default: False
@@ -136,7 +137,7 @@ options:
         - NDFC GUI label, Redistribute BGP Route-map Name
         - NDFC GUI tab, Resources
         type: str
-        required: false, unless auto_vrflite_ifc_default_vrf is set to True
+        required: false
       fabric_name:
         description:
         - The name of the fabric
