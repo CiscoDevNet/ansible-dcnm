@@ -80,7 +80,7 @@ class ConversionUtils:
             return False
         try:
             asn = str(value)
-        except:
+        except UnicodeEncodeError:
             msg = f"BGP ASN ({value}) could not be converted to a string."
             self.bgp_as_invalid_reason = msg
             return False
