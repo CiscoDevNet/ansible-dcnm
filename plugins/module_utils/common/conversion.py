@@ -19,7 +19,7 @@ __author__ = "Allen Robel"
 
 import re
 
-
+# pylint: disable=line-too-long
 class ConversionUtils:
     """
     Utility methods for converting, translating, and validating values.
