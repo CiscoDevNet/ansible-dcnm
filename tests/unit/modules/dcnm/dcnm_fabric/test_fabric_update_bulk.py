@@ -1589,7 +1589,7 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
         """
         Mock FabricCommon()._config_save() ``ValueError``.
         """
-        raise ValueError("raised FabricCommon.config_save exception.")
+        raise ValueError("raised FabricCommon._config_save exception.")
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
@@ -1597,7 +1597,6 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
-        yield responses_fabric_update_bulk(key)
 
     gen = ResponseGenerator(responses())
 
@@ -1627,9 +1626,82 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
         ]
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-
     monkeypatch.setattr(instance, "_config_save", mock_config_save)
 
-    match = r"raised FabricCommon\.config_save exception\."
+    match = r"raised FabricCommon\._config_save exception\."
+    with pytest.raises(ValueError, match=match):
+        instance._send_payloads()
+
+
+def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+        - _fixup_payloads_to_commit()
+    - FabricUpdateCommon()
+        - __init__()
+        - _send_payloads()
+
+
+    Summary
+    -   Verify FabricUpdateCommon()._send_payloads() catches and
+        re-raises ``ValueError`` raised by
+        FabricCommon()._config_deploy()
+
+    Setup
+    -   Mock FabricCommon()._config_deploy() method to
+        raise ``ValueError``.
+    -   Monkeypatch FabricCommon()._config_deploy() to the mocked method.
+    -   Populate FabricUpdateCommon._payloads_to_commit with a payload
+        which contains a valid payload.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def mock_config_deploy() -> None:
+        """
+        Mock FabricCommon()._config_deploy() ``ValueError``.
+        """
+        raise ValueError("raised FabricCommon._config_deploy exception.")
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_summary(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance._payloads_to_commit = [
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": "true",
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+            }
+        ]
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+    monkeypatch.setattr(instance, "_config_deploy", mock_config_deploy)
+
+    match = r"raised FabricCommon\._config_deploy exception\."
     with pytest.raises(ValueError, match=match):
         instance._send_payloads()
