@@ -1620,8 +1620,7 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
                 "BGP_AS": "65001",
                 "DEPLOY": "true",
                 "FABRIC_NAME": "f1",
-                "FABRIC_TYPE": "VXLAN_EVPN",
-                "DEPLOY": "true"
+                "FABRIC_TYPE": "VXLAN_EVPN"
             }
         ]
 
