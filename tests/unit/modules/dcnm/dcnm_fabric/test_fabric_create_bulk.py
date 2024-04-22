@@ -606,13 +606,17 @@ def test_fabric_create_bulk_00033(monkeypatch, fabric_create_bulk) -> None:
     -   FabricCreateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.  ``ANYCAST_GW_MAC`` in this payload
         has a malformed mac address.
-    -   FabricCreateBulk.commit() calls FabricCreate()._build_payloads_to_commit()
-    -   FabricCreate()._build_payloads_to_commit() calls FabricDetails().refresh()
-        which returns a dict with keys DATA == [], RETURN_CODE == 200
-    -   FabricCreate()._build_payloads_to_commit() sets FabricCreate()._payloads_to_commit
-        to a list containing fabric f1 payload
-    -   FabricCreateBulk.commit() calls FabricCommon_fixup_payloads_to_commit() which
-        raises ``ValueError`` because the mac address is malformed.
+    -   FabricCreateBulk().commit() calls
+        FabricCreate()._build_payloads_to_commit()
+    -   FabricCreate()._build_payloads_to_commit() calls
+        FabricDetails().refresh() which returns a dict with keys
+        DATA == [], RETURN_CODE == 200
+    -   FabricCreate()._build_payloads_to_commit() sets
+        FabricCreate()._payloads_to_commit to a list containing fabric f1 payload
+    -   FabricCreateBulk().commit() calls FabricCommon()._fixup_payloads_to_commit()
+    -   FabricCommon()._fixup_payloads_to_commit() calls
+        FabricCommon()._fixup_anycast_gw_mac() which raises ``ValueError``
+        because the mac address is malformed.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -644,7 +648,7 @@ def test_fabric_create_bulk_00033(monkeypatch, fabric_create_bulk) -> None:
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    match = r"FabricCreateBulk\._fixup_payloads_to_commit: "
+    match = r"FabricCreateBulk\._fixup_anycast_gw_mac: "
     match += "Error translating ANYCAST_GW_MAC for fabric f1, "
     match += "ANYCAST_GW_MAC: 00:12:34:56:78:9, "
     match += "Error detail: Invalid MAC address: 00123456789"

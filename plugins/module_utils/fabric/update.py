@@ -197,7 +197,7 @@ class FabricUpdateCommon(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
         try:
-            mac_address = self.translate_mac_address(mac_address)
+            mac_address = self.conversion.translate_mac_address(mac_address)
         except ValueError as error:
             self.results.failed = True
             self.results.changed = False

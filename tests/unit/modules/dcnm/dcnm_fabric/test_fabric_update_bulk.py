@@ -413,7 +413,9 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         returns False.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._fixup_payloads_to_commit()
-    -   FabricUpdateCommon()._fixup_payloads_to_commit() updates ANYCAST_GW_MAC
+    -   FabricUpdateCommon()._fixup_payloads_to_commit() calls
+        FabricUpdateCommon()._fixup_anycast_gw_mac() which calls
+        Conversion().conversion.translate_mac_address() which updates ANYCAST_GW_MAC
         to conform with the controller's requirements.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._send_payload() for each fabric in
@@ -911,7 +913,9 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
         returns True.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._fixup_payloads_to_commit()
-    -   FabricUpdateCommon()._fixup_payloads_to_commit() updates ANYCAST_GW_MAC
+    -   FabricUpdateCommon()._fixup_payloads_to_commit() calls
+        FabricUpdateCommon()._fixup_anycast_gw_mac() which calls
+        Conversion().conversion.translate_mac_address() which updates ANYCAST_GW_MAC
         to conform with the controller's requirements.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._send_payload() for each fabric in
@@ -1544,13 +1548,11 @@ def test_fabric_update_bulk_00120(monkeypatch, fabric_update_bulk) -> None:
                 "BGP_AS": "65001",
                 "DEPLOY": "true",
                 "FABRIC_NAME": "f1",
-                "FABRIC_TYPE": "VXLAN_EVPN"
+                "FABRIC_TYPE": "VXLAN_EVPN",
             }
         ]
 
-    monkeypatch.setattr(
-        instance, "_send_payload", mock_send_payload
-    )
+    monkeypatch.setattr(instance, "_send_payload", mock_send_payload)
 
     match = r"raised FabricCommon\.self_payload exception\."
     with pytest.raises(ValueError, match=match):
@@ -1620,15 +1622,13 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
                 "BGP_AS": "65001",
                 "DEPLOY": "true",
                 "FABRIC_NAME": "f1",
-                "FABRIC_TYPE": "VXLAN_EVPN"
+                "FABRIC_TYPE": "VXLAN_EVPN",
             }
         ]
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    monkeypatch.setattr(
-        instance, "_config_save", mock_config_save
-    )
+    monkeypatch.setattr(instance, "_config_save", mock_config_save)
 
     match = r"raised FabricCommon\.config_save exception\."
     with pytest.raises(ValueError, match=match):

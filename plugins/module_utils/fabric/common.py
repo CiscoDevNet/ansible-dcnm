@@ -122,22 +122,51 @@ class FabricCommon:
 
         Modifications:
         - Translate ANYCAST_GW_MAC to a format the controller understands
+        - Validate BGP_AS
+        """
+        try:
+            self._fixup_anycast_gw_mac()
+            self._fixup_bgp_as()
+        except ValueError as error:
+            self.results.failed = True
+            self.results.changed = False
+            self.results.register_task_result()
+            raise ValueError(error) from error
+
+    def _fixup_bgp_as(self) -> None:
+        """
+        Raise ``ValueError`` if BGP_AS is not a valid BGP ASN.
+        """
+        method_name = inspect.stack()[0][3]
+        for payload in self._payloads_to_commit:
+            if "BGP_AS" not in payload:
+                continue
+            bgp_as = payload["BGP_AS"]
+            if not self.conversion.bgp_as_is_valid(bgp_as):
+                fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Invalid BGP_AS {bgp_as} "
+                msg += f"for fabric {fabric_name}, "
+                msg += f"Error detail: {self.conversion.bgp_as_invalid_reason}"
+                raise ValueError(msg)
+
+    def _fixup_anycast_gw_mac(self) -> None:
+        """
+        -   Translate the ANYCAST_GW_MAC address to the format the
+            controller expects.
+        -   Raise ``ValueError`` if the translation fails.
         """
         method_name = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
             if "ANYCAST_GW_MAC" not in payload:
                 continue
             try:
-                payload["ANYCAST_GW_MAC"] = self.translate_mac_address(
+                payload["ANYCAST_GW_MAC"] = self.conversion.translate_mac_address(
                     payload["ANYCAST_GW_MAC"]
                 )
             except ValueError as error:
                 fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
                 anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
-
-                self.results.failed = True
-                self.results.changed = False
-                self.results.register_task_result()
 
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error translating ANYCAST_GW_MAC "
@@ -145,20 +174,6 @@ class FabricCommon:
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
                 raise ValueError(msg) from error
-
-    @staticmethod
-    def translate_mac_address(mac_addr):
-        """
-        Accept mac address with any (or no) punctuation and convert it
-        into the dotted-quad format that the controller expects.
-
-        Return mac address formatted for the controller on success
-        Raise ValueError on failure.
-        """
-        mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
-        if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
-            raise ValueError(f"Invalid MAC address: {mac_addr}")
-        return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
 
     def _handle_response(self, response, verb) -> Dict[str, Any]:
         """

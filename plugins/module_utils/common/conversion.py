@@ -17,8 +17,79 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import re
+
 
 class ConversionUtils:
+    """
+    Utility methods for converting, translating, and validating values.
+
+    - bgp_asn_is_valid: Return True if value is a valid BGP ASN, False otherwise.
+    - make_boolean: Return value converted to boolean, if possible.
+    - make_int: Return value converted to int, if possible.
+    - make_none: Return None if value is a string representation of a None type.
+    - reject_boolean_string: Reject quoted boolean values e.g. "False", "true"
+    """
+
+    def __init__(self):
+        re_asn_string = "^(("
+        re_asn_string += "(\\+)?[1-9]{1}[0-9]{0,8}|"
+        re_asn_string += "(\\+)?[1-3]{1}[0-9]{1,9}|"
+        re_asn_string += "(\\+)?"
+        re_asn_string += "[4]{1}([0-1]{1}[0-9]{8}|"
+        re_asn_string += "[2]{1}([0-8]{1}[0-9]{7}|"
+        re_asn_string += "[9]{1}([0-3]{1}[0-9]{6}|"
+        re_asn_string += "[4]{1}([0-8]{1}[0-9]{5}|"
+        re_asn_string += "[9]{1}([0-5]{1}[0-9]{4}|"
+        re_asn_string += "[6]{1}([0-6]{1}[0-9]{3}|"
+        re_asn_string += "[7]{1}([0-1]{1}[0-9]{2}|"
+        re_asn_string += "[2]{1}([0-8]{1}[0-9]{1}|"
+        re_asn_string += "[9]{1}[0-5]{1})))))))))|"
+        re_asn_string += "([1-5]\\d{4}|"
+        re_asn_string += "[1-9]\\d{0,3}|"
+        re_asn_string += "6[0-4]\\d{3}|"
+        re_asn_string += "65[0-4]\\d{2}|"
+        re_asn_string += "655[0-2]\\d|"
+        re_asn_string += "6553[0-5])(\\.[1-5]\\d{4}|[1-9]\\d{0,3}|"
+        re_asn_string += "6[0-4]\\d{3}|65[0-4]\\d{2}|"
+        re_asn_string += "655[0-2]\\d|6553[0-5]|0)?)$"
+        self.re_asn = re.compile(re_asn_string)
+
+        self.bgp_as_invalid_reason = None
+
+    def bgp_as_is_valid(self, value):
+        """
+        -   Return True if value is a valid BGP ASN.
+        -   Return False, otherwise.
+        -   Set ConversionUtils().bgp_as_invalid_reason to a string with the
+            reason why the value is not a valid BGP ASN.
+
+        Usage example:
+
+        ```python
+        conversion = ConversionUtils()
+        if not conversion.bgp_as_is_valid(value):
+            print(conversion.bgp_as_invalid_reason)
+        ```
+        """
+        if isinstance(value, float):
+            msg = f"BGP ASN ({value}) cannot be type float() due to "
+            msg += "loss of trailing zeros. "
+            msg += "Use a string or integer instead."
+            self.bgp_as_invalid_reason = msg
+            return False
+        try:
+            asn = str(value)
+        except:
+            msg = f"BGP ASN ({value}) could not be converted to a string."
+            self.bgp_as_invalid_reason = msg
+            return False
+        if not self.re_asn.match(asn):
+            msg = f"BGP ASN {value} failed regex validation."
+            self.bgp_as_invalid_reason = msg
+            return False
+        return True
+
     @staticmethod
     def make_boolean(value):
         """
@@ -59,7 +130,7 @@ class ConversionUtils:
     def reject_boolean_string(parameter, value) -> None:
         """
         -   Reject quoted boolean values e.g. "False", "true"
-        -   raise ValueError with informative message if the value is
+        -   Raise ``ValueError`` with informative message if the value is
             a string representation of a boolean.
         """
         if isinstance(value, int):
@@ -73,3 +144,16 @@ class ConversionUtils:
             msg += "(e.g. True/False or true/false, instead of "
             msg += "'True'/'False' or 'true'/'false')."
             raise ValueError(msg)
+
+    @staticmethod
+    def translate_mac_address(mac_addr):
+        """
+        -   Accept mac address with any (or no) punctuation and convert it
+            into the dotted-quad format that the controller expects.
+        -   On success, return translated mac address.
+        -   On failure, raise ``ValueError``.
+        """
+        mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
+        if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
+            raise ValueError(f"Invalid MAC address: {mac_addr}")
+        return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))

@@ -124,7 +124,7 @@ def test_fabric_common_00020(fabric_common) -> None:
         instance = fabric_common
         instance.results = Results()
         instance._payloads_to_commit = payloads_fabric_common(key)
-    match = r"FabricCommon\._fixup_payloads_to_commit: "
+    match = r"FabricCommon\._fixup_anycast_gw_mac: "
     match += "Error translating ANYCAST_GW_MAC for fabric f1, "
     match += r"ANYCAST_GW_MAC: 00\.54, Error detail: Invalid MAC address"
     with pytest.raises(ValueError, match=match):

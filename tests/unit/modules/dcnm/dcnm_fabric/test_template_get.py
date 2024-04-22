@@ -390,6 +390,7 @@ def test_template_get_00070(monkeypatch, template_get) -> None:
     -   Verify that TemplateGet()._set_template_endpoint() re-raises
         ``ValueError`` when ApiEndpoints() raises ``ValueError``.
     """
+
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods
         """
         Mock the ApiEndpoints.template getter property to raise ``ValueError``.
