@@ -104,7 +104,11 @@ class FabricDetails(FabricCommon):
             self._update_results()
             return
         for item in self.rest_send.response_current.get("DATA"):
-            self.data[item["fabricName"]] = item
+            fabric_name = item.get("nvPairs", {}).get("FABRIC_NAME", None)
+            if fabric_name is None:
+                self._update_results()
+                return
+            self.data[fabric_name] = item
 
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -117,12 +121,12 @@ class FabricDetails(FabricCommon):
 
         self._update_results()
 
-    def _get(self, item=None):
+    def _get(self, item):
         """
         overridden in subclasses
         """
 
-    def _get_nv_pair(self, item=None):
+    def _get_nv_pair(self, item):
         """
         overridden in subclasses
         """
