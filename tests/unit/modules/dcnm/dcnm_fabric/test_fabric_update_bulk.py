@@ -524,23 +524,32 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         - commit()
 
     Summary
-    Verify behavior when user attempts to update a fabric and the
-    fabric exists on the controller but the RestSend() RETURN_CODE is 500.
+    -   Verify behavior when user attempts to update a fabric and the fabric
+        exists on the controller but the RestSend() RETURN_CODE is 500.
 
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
-        that exists on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
-        which returns a dict with fabric f1 information and RETURN_CODE == 200
+        that exists on the controller.  This payload contains an invalid parameter
+        (``BOO``) that will cause the update to fail.
+    -   FabricUpdateBulk.commit() calls
+        FabricUpdateCommon()._build_payloads_to_commit()
     -   FabricUpdateCommon()._build_payloads_to_commit() calls
-        FabricUpdateCommon()._fabric_needs_update() which updates:
+        FabricDetails().refresh() which returns a dict with fabric f1
+        information and RETURN_CODE == 200
+    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._fabric_needs_update() which does not find
+        parameter ``BOO`` in the controller fabric configuration for fabric
+        f1 returned by FabricDetails().refresh().
+    -   FabricUpdateCommon()._fabric_needs_update() updates the following:
         -   Results().result_current to add a synthesized failed result dict
         -   Results().changed adding False
         -   Results().failed adding True
-        -   Results().failed_result to add a message indicating the reason for the failure
-        And calls Results().register_task_result()
-        It raises ValueError because the payload contains an invalid key.
+        -   Results().failed_result to add a message indicating the reason for
+            the failure
+    -   FabricUpdateCommon()._fabric_needs_update() calls
+        Results().register_task_result()
+    -   FabricUpdateCommon()._fabric_needs_update() raises ``ValueError``
+        because the payload contains an invalid key.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -620,24 +629,29 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     - FabricDetailsByName()
         - __init__()
         - refresh()
-    - FabricQuery
+        - all_data.getter
+    - FabricSummary()
         - __init__()
-        - fabric_names setter
-        - commit()
+    - FabricUpdateCommon()
+        - __init__()
+        - _build_payloads_to_commit()
+        - _fabric_needs_update()
+        - _prepare_payload_value_for_comparison()
+        - _prepare_anycast_gw_mac_for_comparison()
     - FabricUpdateBulk()
         - __init__()
         - commit()
 
     Summary
     -   Verify behavior when user attempts to update a fabric when the payload
-        includes ANYCAST_GW_MAC, formatted to be incompatible with the
+        includes ``ANYCAST_GW_MAC``, formatted to be incompatible with the
         controller's expectations, and not able to be fixed by
         FabricUpdateCommon()._fixup_payloads_to_commit().
 
     Setup
     -   FabricUpdateBulk().payloads is set to contain one payload for a fabric
         (f1) that exists on the controller, and the payload includes
-        ANYCAST_GW_MAC formatted to be incompatible with the controller's
+        ``ANYCAST_GW_MAC`` formatted to be incompatible with the controller's
         expectations.
 
     Code Flow
@@ -647,11 +661,11 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._build_payloads_to_commit() calls
         FabricUpdateCommon()._fabric_needs_update()
     -   FabricUpdateCommon()._fabric_needs_update() calls
-        FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison() because ANYCAST_GW_MAC
-        key is present in the payload.
+        FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison() because
+        ``ANYCAST_GW_MAC`` key is present in the payload.
     -   FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison():
         -   Updates Results()
-        -   raises ValueError because the mac address is not convertable.
+        -   raises ``ValueError`` because the mac address is not convertable.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -1169,6 +1183,10 @@ def test_fabric_update_bulk_00050(fabric_update_bulk) -> None:
 
     Summary
     -   Verify commit() raises ``ValueError`` if ``fabric_details`` is not set.
+
+    Setup
+    -   Set everything that FabricUpdateBulk() expects to be set, prior to
+        calling commit(), EXCEPT fabric_details.
     """
     with does_not_raise():
         instance = fabric_update_bulk
@@ -1205,6 +1223,10 @@ def test_fabric_update_bulk_00060(fabric_update_bulk) -> None:
 
     Summary
     -   Verify commit() raises ``ValueError`` if ``fabric_summary`` is not set.
+
+    Setup
+    -   Set everything that FabricUpdateBulk() expects to be set, prior to
+        calling commit(), EXCEPT fabric_summary.
     """
     with does_not_raise():
         instance = fabric_update_bulk
@@ -1241,6 +1263,10 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
 
     Summary
     -   Verify commit() raises ``ValueError`` if ``rest_send`` is not set.
+
+    Setup
+    -   Set everything that FabricUpdateBulk() expects to be set, prior to
+        calling commit(), EXCEPT rest_send.
     """
     with does_not_raise():
         instance = fabric_update_bulk
@@ -1279,7 +1305,17 @@ def test_fabric_update_bulk_00080(monkeypatch, fabric_update_bulk) -> None:
         - _config_deploy()
 
     Summary
-    -   Verify _config_deploy() re-raises ``ValueError`` raised by ApiEndpoints().
+    -   Verify _config_deploy() re-raises ``ValueError`` raised by
+        ApiEndpoints().
+
+    Setup
+    -   Populate FabricUpdateCommon._fabrics_to_config_deploy list with
+        fabric "f1" so that the for-loop in _config_deploy() is entered.
+    -   Set FabricUpdateCommon.config_save_result to {"f1": True} so that
+        FabricUpdateCommon.endpoints.fabric_name setter is called.
+    -   Mock the ApiEndpoints.fabric_name() setter to raise ``ValueError``.
+    -   Monkeypatch FabricUpdateCommon.endpoints to use the mocked
+        ApiEndpoints().
     """
 
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods
@@ -1298,33 +1334,168 @@ def test_fabric_update_bulk_00080(monkeypatch, fabric_update_bulk) -> None:
         def fabric_name(self, value):
             raise ValueError("mocked exception")
 
+    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.fabric_name"
+
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.endpoints = MockApiEndpoints()
+        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
 
         instance._fabrics_to_config_deploy = ["f1"]
         instance.config_save_result = {"f1": True}
 
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
+    match = "mocked exception"
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk._config_deploy()
 
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
 
+def test_fabric_update_bulk_00090(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateBulk()
+        - __init__()
+        - _config_deploy()
+
+    Summary
+    -   Verify _can_fabric_be_deployed() re-raises ``ValueError`` raised by
+        FabricSummary().fabric_name
+
+    Setup
+    -   Mock the FabricSummary().fabric_name() setter to raise ``ValueError``.
+    -   Monkeypatch FabricSummary().fabric_name to use the mocked
+        FabricSummary().
+    """
+
+    class MockFabricSummary:  # pylint: disable=too-few-public-methods
+        """
+        Mock the FabricSummary.fabric_name() setter to raise ``ValueError``.
+        """
+
+        @property
+        def fabric_name(self):
+            """
+            Mocked method
+            """
+            return "f1"
+
+        @fabric_name.setter
+        def fabric_name(self, value):
+            raise ValueError("mocked exception")
+
+    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_API_ENDPOINTS += (
+        "module_utils.fabric.fabric_summary.FabricSummary.fabric_name"
+    )
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+        monkeypatch.setattr(instance, "fabric_summary", MockFabricSummary())
+
+    match = "mocked exception"
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk._can_fabric_be_deployed("f1")
+
+
+@pytest.mark.parametrize(
+    "value, expected_return_value",
+    [
+        (True, "true"),
+        (10, "10"),
+        (65000.100, "65000.1"),
+        ("65000.100", "65000.100"),
+        (65000.101, "65000.101"),
+        ("NOT_CONVERTED", "NOT_CONVERTED"),
+        ([10, 20, 30], [10, 20, 30]),
+        (None, None),
+    ],
+)
+def test_fabric_update_bulk_00100(
+    value, expected_return_value, fabric_update_bulk
+) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateCommon()
+        - __init__()
+        - _prepare_payload_value_for_comparison()
+    - FabricUpdateBulk()
+        - __init__()
+
+    Summary
+    -   Verify _prepare_payload_value_for_comparison() returns appropriate
+        values.
+
+    NOTES:
+    -   Python truncates trailing zeros in float values.  This presents a problem
+        if users are expecting a float to be returned as a string with the
+        trailing zeros intact.  For example with BGP_AS ASDot notation, as shown
+        below:
+
+        str(65001.100) = "65001.1"
+        BGP_AS: 65000.100 = 4259840100
+        BGP_AS: 65000.1   = 4259840001
+
+    """
+    with does_not_raise():
+        instance = fabric_update_bulk
+        expected = instance._prepare_payload_value_for_comparison(value)
+    assert expected == expected_return_value
+
+
+def test_fabric_update_bulk_00110(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+        - _fixup_payloads_to_commit()
+    - FabricUpdateCommon()
+        - __init__()
+        - _send_payloads()
+
+
+    Summary
+    -   Verify FabricUpdateCommon()._send_payloads() catches and
+        re-raises ``ValueError`` raised by
+        FabricCommon()._fixup_payloads_to_commit()
+
+    Setup
+    -   Mock FabricCommon()._fixup_payloads_to_commit() method to
+        raise ``ValueError``.
+    -   Monkeypatch FabricCommon()._fixup_payloads_to_commit to
+        use the mocked method.
+    -   Populate FabricUpdateCommon._payloads_to_commit with a payload
+        which contains an invalid key/value pair (``INVALID_KEY``).
+    """
+
+    def mock_fixup_payloads_to_commit() -> None:
+        """
+        Mock the FabricSummary.fabric_name() setter to raise ``ValueError``.
+        """
+        raise ValueError("mocked exception.")
+
+    PATCH = "ansible_collections.cisco.dcnm.plugins."
+    PATCH += "module_utils.fabric.fabric_common.FabricCommon._fixup_payloads_to_commit"
+
+    with does_not_raise():
+        instance = fabric_update_bulk
         instance.rest_send = RestSend(MockAnsibleModule())
-        instance.results = Results()
-        instance.payloads = [
+        instance._payloads_to_commit = [
             {
                 "BGP_AS": "65001",
                 "DEPLOY": "true",
                 "FABRIC_NAME": "f1",
                 "FABRIC_TYPE": "VXLAN_EVPN",
+                "INVALID_KEY": True,
             }
         ]
 
-    match = "mocked exception"
+    monkeypatch.setattr(
+        instance, "_fixup_payloads_to_commit", mock_fixup_payloads_to_commit
+    )
+
+    match = r"mocked exception\."
     with pytest.raises(ValueError, match=match):
-        fabric_update_bulk._config_deploy()
+        instance._send_payloads()
