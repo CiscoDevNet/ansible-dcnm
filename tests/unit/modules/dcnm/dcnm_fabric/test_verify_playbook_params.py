@@ -214,6 +214,84 @@ def test_verify_playbook_params_00050() -> None:
         instance.commit()
 
 
+def test_verify_playbook_params_00051() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - validate_commit_parameters()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify ``ValueError`` is raised when commit() is called without having
+        first set VerifyPlaybookParams().config_controller
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+    match = r"VerifyPlaybookParams\.validate_commit_parameters:\s+"
+    match += r"instance\.config_controller must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_verify_playbook_params_00052() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - validate_commit_parameters()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify ``ValueError`` is raised when commit() is called without having
+        first set VerifyPlaybookParams().config_playbook
+    """
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_controller = None
+    match = r"VerifyPlaybookParams\.validate_commit_parameters:\s+"
+    match += r"instance\.config_playbook must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_verify_playbook_params_00053() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - validate_commit_parameters()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify ``ValueError`` is raised when commit() is called without having
+        first set VerifyPlaybookParams().template
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+    match = r"VerifyPlaybookParams\.validate_commit_parameters:\s+"
+    match += r"instance\.template must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
 def test_verify_playbook_params_00060() -> None:
     """
     Classes and Methods
@@ -722,3 +800,54 @@ def test_verify_playbook_params_00520(monkeypatch) -> None:
     match = r"default_param_is_valid: KeyError"
     with pytest.raises(KeyError, match=match):
         instance.update_decision_set(item)
+
+
+def test_verify_playbook_params_00600(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - update_decision_set_for_or_rules()
+
+    Rule type
+    -   OR
+
+    Summary
+    -   Verify update_decision_set_for_or_rules() raises ``ValueError`` when
+        param_rule contains terms with more than one parameter.
+
+    Notes
+        -   OR'd parameters have (thus far) only had one dependent parameter.
+            Specifically, STP_BRIDGE_PRIORITY has two rule terms, each with the
+            same dependent parameter (STP_ROOT_OPTION) but with different
+            values (mst and rstp+).  The code raises a ValueError here to alert
+            us if this ever changes.
+    """
+
+    def mock_default_param_is_valid(*args):
+        return False
+
+    def mock_playbook_param_is_valid(*args):
+        return False
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.config_controller = None
+
+    monkeypatch.setattr(instance, "default_param_is_valid", mock_default_param_is_valid)
+    monkeypatch.setattr(
+        instance, "playbook_param_is_valid", mock_playbook_param_is_valid
+    )
+
+    param_rule = {
+        "terms": {
+            "or": [
+                {"operator": "==", "parameter": "PARAM_1", "value": "foo"},
+                {"operator": "==", "parameter": "PARAM_2", "value": "bar"},
+            ]
+        }
+    }
+    match = r"VerifyPlaybookParams\.update_decision_set_for_or_rules: "
+    match += r"OR'd parameters must have one dependent parameter.\s+"
+    match += r"Got: \['PARAM_1', 'PARAM_2'\]\.\s+"
+    with pytest.raises(ValueError, match=match):
+        instance.update_decision_set_for_or_rules(param_rule)

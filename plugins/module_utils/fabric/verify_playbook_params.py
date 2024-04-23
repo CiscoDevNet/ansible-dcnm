@@ -573,10 +573,10 @@ class VerifyPlaybookParams:
         -   Raise ``ValueError`` if an unexpected number of dependent
             parameters are found in param_rule.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         decision_set = set()
-        # valid_values is used in the error message or OR'd parameters
+        # valid_values is used in the error message for OR'd parameters
         valid_values = set()
         terms = param_rule.get("terms", {}).get("or")
 
@@ -614,8 +614,11 @@ class VerifyPlaybookParams:
             verify_one_dependent_parameter_is_present.add(item.get("parameter"))
         if len(verify_one_dependent_parameter_is_present) != 1:
             msg = f"{self.class_name}.{method_name}: "
-            msg = "OR'd parameters must have one dependent parameter. "
-            msg += f"Got: {verify_one_dependent_parameter_is_present}. "
+            msg += "OR'd parameters must have one dependent parameter. Got: "
+            # sorted(list()) because set() ordering is random which destabilizes
+            # unit test regex match.  Also, it's good for consistent
+            # (i.e. alphabetized) error messages for the user.
+            msg += f"{sorted(list(verify_one_dependent_parameter_is_present))}. "
             msg += f"parameter {self.parameter}, rule {param_rule}."
             raise ValueError(msg)
 

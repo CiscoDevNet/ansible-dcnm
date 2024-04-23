@@ -14,6 +14,24 @@
             "REPLICATION_MODE": "Ingress",
             "UNDERLAY_IS_V6": false
     },
+    "test_verify_playbook_params_00051a": {
+        "TEST_NOTES": [
+            "Valid minimal playbook config."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_verify_playbook_params_00053a": {
+        "TEST_NOTES": [
+            "Valid minimal playbook config."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
     "test_verify_playbook_params_00060a": {
         "TEST_NOTES": [
             "Dependent parameters for REPLICATION_MODE are not satisfied."
