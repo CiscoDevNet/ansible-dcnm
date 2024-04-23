@@ -243,7 +243,7 @@ def test_verify_playbook_params_00060() -> None:
         instance.config_controller = nv_pairs_verify_playbook_params(key)
     match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
     match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
@@ -277,7 +277,7 @@ def test_verify_playbook_params_00070() -> None:
         instance.config_controller = None
     match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
     match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
@@ -311,5 +311,68 @@ def test_verify_playbook_params_00080() -> None:
         instance.config_controller = nv_pairs_verify_playbook_params(key)
     match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
     match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_verify_playbook_params_00090() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   Playbook contains a parameter with an invalid value.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+    match = r"Parameter: REPLICATION_MODE, Invalid value:\s+"
+    match += r"\(INVALID_VALUE\)\.\s+"
+    match += r"Valid values: \['Ingress', 'Multicast'\]"
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_verify_playbook_params_00100() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   Playbook contains a parameter which accepts a boolean but the
+            user provided 0 instead of False.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+    match = r"Parameter: ADVERTISE_PIP_BGP, Invalid value:\s+"
+    match += r"\(0\)\.\s+"
+    match += r"Valid values: \[False, True\]"
+    with pytest.raises(ValueError, match=match):
         instance.commit()

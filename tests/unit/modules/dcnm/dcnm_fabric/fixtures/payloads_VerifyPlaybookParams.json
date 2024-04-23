@@ -43,5 +43,25 @@
         "FABRIC_NAME": "f1",
         "FABRIC_TYPE": "VXLAN_EVPN",
         "REPLICATION_MODE": "Ingress"
+    },
+    "test_verify_playbook_params_00090a": {
+        "TEST_NOTES": [
+            "REPLICATION_MODE value is invalid."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "REPLICATION_MODE": "INVALID_VALUE"
+    },
+    "test_verify_playbook_params_00100a": {
+        "TEST_NOTES": [
+            "ADVERTISE_PIP_BGP accepts boolean, but user provided 0."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "ADVERTISE_PIP_BGP": 0
     }
 }
