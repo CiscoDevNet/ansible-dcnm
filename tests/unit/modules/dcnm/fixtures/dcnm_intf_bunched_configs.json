@@ -6,7 +6,7 @@
         "serialNumber": "SAL1819SAN8",
         "isVpcConfigured": "True",
         "vpcDomain": 1,
-        "switchRoleEnum": "Leaf",
+        "switchRole": "Leaf",
         "managable": "True"
     },
       "192.168.1.109": {
@@ -14,7 +14,7 @@
         "serialNumber": "FOX1821H035",
         "isVpcConfigured": "True",
         "vpcDomain": 1,
-        "switchRoleEnum": "Leaf",
+        "switchRole": "Leaf",
         "managable": "True"
       },
       "10.69.69.1": {
@@ -22,7 +22,7 @@
         "serialNumber": "TEST-SNO-1",
         "isVpcConfigured": "True",
         "vpcDomain": 1,
-        "switchRoleEnum": "None",
+        "switchRole": "None",
         "managable": "False"
       }
   },
