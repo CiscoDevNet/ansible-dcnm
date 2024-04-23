@@ -1705,3 +1705,58 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
     match = r"raised FabricCommon\._config_deploy exception\."
     with pytest.raises(ValueError, match=match):
         instance._send_payloads()
+
+
+def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
+    """
+    Classes and Methods
+    - ApiEndpoints().fabric_update
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateCommon()
+        - __init__()
+        - _send_payload()
+
+
+    Summary
+    -   Verify FabricUpdateCommon()._send_payload() catches and
+        re-raises ``ValueError`` raised by
+        ApiEndpoints().fabric_update
+
+    Setup
+    -   Mock ApiEndpoints().fabric_update property to raise ``ValueError``.
+    -   Monkeypatch ApiEndpoints().fabric_update to the mocked method.
+    -   Populate FabricUpdateCommon._payloads_to_commit with a payload
+        which contains a valid payload.
+    """
+
+    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+        """
+        Mock the ApiEndpoints.fabric_update property to raise ``ValueError``.
+        """
+
+        @property
+        def fabric_update(self):
+            """
+            Mocked property getter
+            """
+            raise ValueError("mocked ApiEndpoints().fabric_update getter exception.")
+
+    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.fabric_delete"
+
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+    monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
+
+    payload = {
+        "BGP_AS": "65001",
+        "DEPLOY": "true",
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+    }
+
+    match = r"mocked ApiEndpoints\(\)\.fabric_update getter exception\."
+    with pytest.raises(ValueError, match=match):
+        instance._send_payload(payload)
