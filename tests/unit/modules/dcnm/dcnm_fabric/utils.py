@@ -539,3 +539,12 @@ def templates_ruleset(key: str) -> Dict[str, str]:
     data_file = "templates_RuleSet"
     data = load_fixture(data_file).get(key)
     return data
+
+
+def templates_verify_playbook_params(key: str) -> Dict[str, str]:
+    """
+    Return fabric templates for VerifyPlaybookParams
+    """
+    data_file = "templates_VerifyPlaybookParams"
+    data = load_fixture(data_file).get(key)
+    return data
