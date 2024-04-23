@@ -22,8 +22,6 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
     ParamInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
@@ -108,23 +106,22 @@ class VerifyPlaybookParams:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.conversion = ConversionUtils()
 
+        self.conversion = ConversionUtils()
         self._ruleset = RuleSet()
         self._param_info = ParamInfo()
-        self.results = Results()
-        self.params_are_valid = set()
         self.bad_params = {}
-        self.parameter = None
         self.fabric_name = None
         self.local_params = {"DEPLOY"}
+        self.parameter = None
+        self.params_are_valid = set()
 
         msg = "ENTERED VerifyPlaybookParams(): "
         self.log.debug(msg)
 
-        self._build_properties()
+        self._init_properties()
 
-    def _build_properties(self):
+    def _init_properties(self):
         """
         self.properties holds property values for the class
         """
@@ -136,9 +133,9 @@ class VerifyPlaybookParams:
     @property
     def config_controller(self):
         """
-        -   getter: return the controller fabric config to be verified
-        -   setter: set the controller fabric config to be verified
-        -   setter: raise TypeError if the controller config is not a dict
+        -   getter: return the controller fabric config to be verified.
+        -   setter: set the controller fabric config to be verified.
+        -   setter: raise ``TypeError`` if the controller config is not a dict.
         """
         return self.properties["config_controller"]
 
@@ -150,7 +147,7 @@ class VerifyPlaybookParams:
             return
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "config_controller must be a dict, or None. "
+            msg += f"{method_name} must be a dict, or None. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             raise TypeError(msg)
