@@ -273,6 +273,16 @@ def does_not_raise():
     yield
 
 
+def nv_pairs_verify_playbook_params(key: str) -> Dict[str, str]:
+    """
+    Return fabric nvPairs for VerifyPlaybookParams
+    """
+    data_file = "nv_pairs_VerifyPlaybookParams"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def payloads_fabric_common(key: str) -> Dict[str, str]:
     """
     Return payloads for FabricCommon
@@ -318,6 +328,16 @@ def payloads_fabric_update_bulk(key: str) -> Dict[str, str]:
     Return payloads for FabricUpdateBulk
     """
     data_file = "payloads_FabricUpdateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_verify_playbook_params(key: str) -> Dict[str, str]:
+    """
+    Return payloads for VerifyPlaybookParams
+    """
+    data_file = "payloads_VerifyPlaybookParams"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

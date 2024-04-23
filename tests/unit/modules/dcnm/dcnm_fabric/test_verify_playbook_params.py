@@ -30,6 +30,8 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 
+import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
@@ -40,7 +42,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
     VerifyPlaybookParams
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, templates_verify_playbook_params)
+    does_not_raise, nv_pairs_verify_playbook_params,
+    payloads_verify_playbook_params, templates_verify_playbook_params)
 
 
 def test_verify_playbook_params_00010() -> None:
@@ -178,3 +181,135 @@ def test_verify_playbook_params_00040(value, returned, does_raise, expected) -> 
         instance.template = value
     if not does_raise:
         assert instance.template == returned
+
+
+def test_verify_playbook_params_00050() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify exception is not raised when the playbook contains all
+        dependent parameters to satisfy the rule for user parameter.
+    -   User parameter: REPLICATION_MODE == "Ingress"
+    -   Dependent parameters:
+        -   UNDERLAY_IS_V6 != True
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = nv_pairs_verify_playbook_params(key)
+        instance.commit()
+
+
+def test_verify_playbook_params_00060() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   Playbook does not contain adequate dependent parameters to
+            satisfy the rule.
+        -   Controller configuration does not contain adequate dependent
+            parameters to satisfy the rule.
+        -   Default values are not such that the rule is satisfied.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = nv_pairs_verify_playbook_params(key)
+    match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
+    match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
+    with pytest.raises(ValueError):
+        instance.commit()
+
+
+def test_verify_playbook_params_00070() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   Playbook does not contain adequate dependent parameters to
+            satisfy the rule.
+        -   Caller has indicated that the fabric does not yet exist (i.e.
+            has set config_controller to None).
+        -   Default values are not such that the rule is satisfied.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+    match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
+    match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
+    with pytest.raises(ValueError):
+        instance.commit()
+
+
+def test_verify_playbook_params_00080() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   Playbook does not contain adequate dependent parameters to
+            satisfy the rule.
+        -   Controller configuration does not contain the relevant dependent
+            parameters.
+        -   Default values are not such that the rule is satisfied.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = nv_pairs_verify_playbook_params(key)
+    match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
+    match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
+    with pytest.raises(ValueError):
+        instance.commit()

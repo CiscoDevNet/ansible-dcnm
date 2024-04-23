@@ -1,7 +1,7 @@
 {
-    "test_verify_playbook_params_00XX0a": {
+    "easy_fabric": {
         "TEST_NOTES": [
-            "Valid template"
+            "Valid Easy_Fabric template"
         ],
         "instanceClassId": 1000,
         "assignedInstanceClassId": 0,
