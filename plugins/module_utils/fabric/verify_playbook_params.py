@@ -464,6 +464,7 @@ class VerifyPlaybookParams:
         -   Raise ``ValueError`` for all parameters, if the parameter value
             is a boolean string.
         """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         playbook_value = self.config_playbook.get(self.parameter)
 
         # Reject quoted boolean values e.g. "False", "true"
@@ -482,7 +483,8 @@ class VerifyPlaybookParams:
         try:
             param_info = self._param_info.parameter(self.parameter)
         except KeyError as error:
-            msg = f"parameter: {self.parameter} not found in template. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {self.parameter} not found in template. "
             msg += f"Error detail: {error}"
             self.log.debug(msg)
             return

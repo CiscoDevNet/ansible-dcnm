@@ -190,6 +190,7 @@ def test_verify_playbook_params_00050() -> None:
         - template.setter
         - config_playbook.setter
         - config_controller.setter
+        - update_decision_set_for_na_rules() happy path
         - commit()
 
     Template
@@ -220,6 +221,7 @@ def test_verify_playbook_params_00060() -> None:
         - template.setter
         - config_playbook.setter
         - config_controller.setter
+        - update_decision_set_for_na_rules() sad path
         - commit()
 
     Template
@@ -254,6 +256,7 @@ def test_verify_playbook_params_00070() -> None:
         - template.setter
         - config_playbook.setter
         - config_controller.setter
+        - update_decision_set_for_na_rules() sad path
         - commit()
 
     Template
@@ -288,6 +291,7 @@ def test_verify_playbook_params_00080() -> None:
         - template.setter
         - config_playbook.setter
         - config_controller.setter
+        - update_decision_set_for_na_rules() sad path
         - commit()
 
     Template
@@ -322,6 +326,7 @@ def test_verify_playbook_params_00090() -> None:
         - template.setter
         - config_playbook.setter
         - config_controller.setter
+        - verify_parameter_value() sad path
         - commit()
 
     Template
@@ -376,3 +381,344 @@ def test_verify_playbook_params_00100() -> None:
     match += r"Valid values: \[False, True\]"
     with pytest.raises(ValueError, match=match):
         instance.commit()
+
+
+def test_verify_playbook_params_00200() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - update_decision_set_for_and_rules() happy path
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   AND
+
+    Summary
+    - Verify Exception is not raised for AND'ed rule, when:
+        -   Playbook contains all requisite parameters and values
+            to satisfy the rule.
+    - User parameter: V6_SUBNET_TARGET_MASK == 127
+    - Dependent parameters:
+        - UNDERLAY_IS_V6 == True
+        - USE_LINK_LOCAL == False
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_00210() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - update_decision_set_for_and_rules() sad path
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   AND
+
+    Summary
+    - Verify ``ValueError`` is raised for AND'ed rule, when:
+        -   Playbook contains all requisite parameters to satisfy
+            the rule, but the value of one parameter does not satisfy
+            the rule.
+    - User parameter: V6_SUBNET_TARGET_MASK == 127
+    - Dependent parameters:
+        - UNDERLAY_IS_V6 == True
+        - USE_LINK_LOCAL == True
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+
+    match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
+    match += r"and need to be reviewed: Fabric: f1,\s+"
+    match += r"V6_SUBNET_TARGET_MASK\(127\) requires\s+"
+    match += r"USE_LINK_LOCAL == False,\s+"
+    match += r"USE_LINK_LOCAL valid values: \[False, True\]\.\s+"
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["test_verify_playbook_params_00300a", "test_verify_playbook_params_00300b"],
+)
+def test_verify_playbook_params_00300(key) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - update_decision_set_for_or_rules() happy path
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   OR
+
+    Summary
+    - Verify Exception is not raised for OR'ed rule, when:
+        -   Playbook contains all requisite parameters and values
+            to satisfy the rule.
+    - User parameter: STP_BRIDGE_PRIORITY == 45056
+    - Dependent parameters:
+        - STP_ROOT_OPTION == rpvst+, mst
+    """
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_00310() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - update_decision_set_for_or_rules() sad path
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   OR
+
+    Summary
+    - Verify ``ValueError`` is raised for OR'ed rule, when:
+        -   Playbook does not contain all requisite parameters and values
+            to satisfy the rule.
+        -   The caller has indicated that the controller fabric does not exist.
+    - User parameter: STP_BRIDGE_PRIORITY == 45056
+    - Dependent parameters:
+        - STP_ROOT_OPTION == Missing from playbook
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+
+    match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
+    match += r"and need to be reviewed: Fabric: f1,\s+"
+    match += r"STP_BRIDGE_PRIORITY\(45056\) requires\s+"
+    match += r"STP_ROOT_OPTION to be one of \[mst, rpvst\+\].\s+"
+    match += r"STP_ROOT_OPTION valid values:\s+"
+    match += r"\['mst', 'rpvst\+', 'unmanaged'\]\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_verify_playbook_params_00400() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - eval_parameter_rule()
+
+    Summary
+    -   Verify ``KeyError`` is raised when rule ``parameter`` key
+        is missing.
+    """
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+
+    rule = {
+        "operator": "==",
+        "rule_value": "mst",
+        "value": "45056",
+    }
+    match = r"^.*'parameter' not found in rule:.*$"
+    with pytest.raises(KeyError, match=match):
+        instance.eval_parameter_rule(rule)
+
+
+def test_verify_playbook_params_00410() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - eval_parameter_rule()
+
+    Summary
+    -   Verify ``KeyError`` is raised when rule ``user_value`` key
+        is missing.
+    """
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+
+    rule = {
+        "operator": "==",
+        "parameter": "STP_BRIDGE_PRIORITY",
+        "value": "mst",
+    }
+    match = r"^.*'user_value' not found in parameter STP_BRIDGE_PRIORITY rule:.*$"
+    with pytest.raises(KeyError, match=match):
+        instance.eval_parameter_rule(rule)
+
+
+def test_verify_playbook_params_00420() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - eval_parameter_rule()
+
+    Summary
+    -   Verify ``KeyError`` is raised when rule ``value`` key
+        is missing.
+    """
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+
+    rule = {
+        "operator": "==",
+        "parameter": "STP_BRIDGE_PRIORITY",
+        "user_value": "45056",
+    }
+    match = r"^.*'value' not found in parameter STP_BRIDGE_PRIORITY rule:.*$"
+    with pytest.raises(KeyError, match=match):
+        instance.eval_parameter_rule(rule)
+
+
+def test_verify_playbook_params_00430() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - eval_parameter_rule()
+
+    Summary
+    -   Verify ``KeyError`` is raised when rule ``operator`` key
+        is missing.
+    """
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+
+    rule = {
+        "parameter": "STP_BRIDGE_PRIORITY",
+        "user_value": "45056",
+        "value": "mst",
+    }
+    match = r"^.*'operator' not found in parameter STP_BRIDGE_PRIORITY rule:.*$"
+    with pytest.raises(KeyError, match=match):
+        instance.eval_parameter_rule(rule)
+
+
+def test_verify_playbook_params_00500(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - update_decision_set()
+
+    Summary
+    -   Verify update_decision_set() re-raises ``KeyError`` when
+        controller_param_is_valid() raises ``KeyError``.
+    """
+
+    def mock_controller_param_is_valid(*args):
+        msg = "controller_param_is_valid: KeyError"
+        raise KeyError(msg)
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+
+    monkeypatch.setattr(
+        instance, "controller_param_is_valid", mock_controller_param_is_valid
+    )
+    item = {"operator": "==", "parameter": "STP_ROOT_OPTION", "value": "rpvst+"}
+    match = r"controller_param_is_valid: KeyError"
+    with pytest.raises(KeyError, match=match):
+        instance.update_decision_set(item)
+
+
+def test_verify_playbook_params_00510(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - update_decision_set()
+
+    Summary
+    -   Verify update_decision_set() re-raises ``KeyError`` when
+        playbook_param_is_valid() raises ``KeyError``.
+    """
+
+    def mock_playbook_param_is_valid(*args):
+        msg = "playbook_param_is_valid: KeyError"
+        raise KeyError(msg)
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.config_controller = None
+
+    monkeypatch.setattr(
+        instance, "playbook_param_is_valid", mock_playbook_param_is_valid
+    )
+    item = {"operator": "==", "parameter": "STP_ROOT_OPTION", "value": "rpvst+"}
+    match = r"playbook_param_is_valid: KeyError"
+    with pytest.raises(KeyError, match=match):
+        instance.update_decision_set(item)
+
+
+def test_verify_playbook_params_00520(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - update_decision_set()
+
+    Summary
+    -   Verify update_decision_set() re-raises ``KeyError`` when
+        default_param_is_valid() raises ``KeyError``.
+    """
+
+    def mock_default_param_is_valid(*args):
+        msg = "default_param_is_valid: KeyError"
+        raise KeyError(msg)
+
+    def mock_playbook_param_is_valid(*args):
+        return True
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.config_controller = None
+
+    monkeypatch.setattr(instance, "default_param_is_valid", mock_default_param_is_valid)
+    monkeypatch.setattr(
+        instance, "playbook_param_is_valid", mock_playbook_param_is_valid
+    )
+
+    item = {"operator": "==", "parameter": "STP_ROOT_OPTION", "value": "rpvst+"}
+    match = r"default_param_is_valid: KeyError"
+    with pytest.raises(KeyError, match=match):
+        instance.update_decision_set(item)
