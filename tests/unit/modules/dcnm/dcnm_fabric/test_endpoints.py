@@ -58,7 +58,6 @@ def test_endpoints_00010() -> None:
     with does_not_raise():
         instance = ApiEndpoints()
     assert instance.class_name == "ApiEndpoints"
-    assert instance._re_valid_fabric_name == re.compile(r"[a-zA-Z]+[a-zA-Z0-9_-]*")
     assert instance.endpoint_api_v1 == "/appcenter/cisco/ndfc/api/v1"
     assert instance.endpoint_fabrics == (
         f"{instance.endpoint_api_v1}" + "/rest/control/fabrics"
@@ -75,12 +74,12 @@ def test_endpoints_00010() -> None:
     assert instance.properties["template_name"] is None
 
 
-MATCH_00020a = r"ApiEndpoints\.validate_fabric_name: "
-MATCH_00020a = r"Invalid fabric name\. "
+MATCH_00020a = r"ConversionUtils\.validate_fabric_name: "
+MATCH_00020a += r"Invalid fabric name\. "
 MATCH_00020a += r"Expected string\. Got.*\."
 
-MATCH_00020b = r"ApiEndpoints\.validate_fabric_name: "
-MATCH_00020b = r"Invalid fabric name:.*\. "
+MATCH_00020b = r"ConversionUtils\.validate_fabric_name: "
+MATCH_00020b += r"Invalid fabric name:.*\. "
 MATCH_00020b += "Fabric name must start with a letter A-Z or a-z and "
 MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
 
@@ -109,6 +108,7 @@ def test_endpoints_00020(fabric_name, expected, does_raise) -> None:
     - ApiEndpoints
         - __init__()
         - fabric_name.setter
+    - ConversionUtils
         - validate_fabric_name()
 
     Summary

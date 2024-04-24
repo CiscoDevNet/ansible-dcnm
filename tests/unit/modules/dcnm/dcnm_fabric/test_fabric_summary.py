@@ -700,12 +700,12 @@ def test_fabric_summary_00070(fabric_summary) -> None:
         instance.fabric_is_empty  # pylint: disable=pointless-statement
 
 
-MATCH_00080a = r"ApiEndpoints\.validate_fabric_name: "
-MATCH_00080a = r"Invalid fabric name\. "
+MATCH_00080a = r"ConversionUtils\.validate_fabric_name: "
+MATCH_00080a += r"Invalid fabric name\. "
 MATCH_00080a += r"Expected string\. Got.*\."
 
-MATCH_00080b = r"ApiEndpoints\.validate_fabric_name: "
-MATCH_00080b = r"Invalid fabric name:.*\. "
+MATCH_00080b = r"ConversionUtils\.validate_fabric_name: "
+MATCH_00080b += r"Invalid fabric name:.*\. "
 MATCH_00080b += "Fabric name must start with a letter A-Z or a-z and "
 MATCH_00080b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
 

@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import inspect
 import re
 
 
@@ -29,9 +30,13 @@ class ConversionUtils:
     - make_int: Return value converted to int, if possible.
     - make_none: Return None if value is a string representation of a None type.
     - reject_boolean_string: Reject quoted boolean values e.g. "False", "true"
+    - translate_mac_address: Convert mac address to dotted-quad format expected by the controller.
+    - validate_fabric_name: Validate the fabric name meets the requirements of the controller.
     """
 
     def __init__(self):
+        self.class_name = self.__class__.__name__
+
         re_asn_str = "^(((\\+)?[1-9]{1}[0-9]{0,8}|(\\+)?[1-3]{1}[0-9]{1,9}|(\\+)?[4]"
         re_asn_str += "{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}"
         re_asn_str += "[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]"
@@ -41,6 +46,8 @@ class ConversionUtils:
         re_asn_str += "(\\.([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]"
         re_asn_str += "\\d{2}|655[0-2]\\d|6553[0-5]|0))?)$"
         self.re_asn = re.compile(re_asn_str)
+        self.re_valid_fabric_name = re.compile(r"[a-zA-Z]+[a-zA-Z0-9_-]*")
+
         self.bgp_as_invalid_reason = None
 
     def bgp_as_is_valid(self, value):
@@ -143,3 +150,24 @@ class ConversionUtils:
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
             raise ValueError(f"Invalid MAC address: {mac_addr}")
         return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
+
+    def validate_fabric_name(self, value):
+        """
+        -   Validate the fabric name meets the requirements of the controller.
+        -   Raise ``TypeError`` if value is not a string.
+        -   Raise ``ValueError`` if value does not meet the requirements.
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        if not isinstance(value, str):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid fabric name. Expected string. Got {value}."
+            raise TypeError(msg)
+
+        if re.fullmatch(self.re_valid_fabric_name, value) is not None:
+            return
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Invalid fabric name: {value}. "
+        msg += "Fabric name must start with a letter A-Z or a-z and "
+        msg += "contain only the characters in: [A-Z,a-z,0-9,-,_]."
+        raise ValueError(msg)

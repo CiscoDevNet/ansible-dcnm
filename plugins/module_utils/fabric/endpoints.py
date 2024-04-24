@@ -22,6 +22,9 @@ import inspect
 import logging
 import re
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+
 
 class ApiEndpoints:
     """
@@ -49,7 +52,7 @@ class ApiEndpoints:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ApiEndpoints()")
 
-        self._re_valid_fabric_name = re.compile(r"[a-zA-Z]+[a-zA-Z0-9_-]*")
+        self.conversion = ConversionUtils()
 
         self.endpoint_api_v1 = "/appcenter/cisco/ndfc/api/v1"
 
@@ -70,27 +73,6 @@ class ApiEndpoints:
         self.properties = {}
         self.properties["fabric_name"] = None
         self.properties["template_name"] = None
-
-    def validate_fabric_name(self, value):
-        """
-        -   Validate the fabric name meets the requirements of the controller.
-        -   Raise ``TypeError`` if value is not a string.
-        -   Raise ``ValueError`` if value does not meet the requirements.
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        if not isinstance(value, str):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid fabric name. Expected string. Got {value}."
-            raise TypeError(msg)
-
-        if re.fullmatch(self._re_valid_fabric_name, value) is not None:
-            return
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Invalid fabric name: {value}. "
-        msg += "Fabric name must start with a letter A-Z or a-z and "
-        msg += "contain only the characters in: [A-Z,a-z,0-9,-,_]."
-        raise ValueError(msg)
 
     @property
     def fabric_config_deploy(self):
@@ -267,7 +249,7 @@ class ApiEndpoints:
 
     @fabric_name.setter
     def fabric_name(self, value):
-        self.validate_fabric_name(value)
+        self.conversion.validate_fabric_name(value)
         self.properties["fabric_name"] = value
 
     @property

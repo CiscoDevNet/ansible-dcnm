@@ -23,6 +23,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
@@ -95,6 +97,7 @@ class FabricSummary(FabricCommon):
 
         self.data = None
         self.endpoints = ApiEndpoints()
+        self.conversion = ConversionUtils()
 
         # set to True in refresh() after a successful request to the controller
         # Used by getter properties to ensure refresh() has been called prior
@@ -324,7 +327,7 @@ class FabricSummary(FabricCommon):
     @fabric_name.setter
     def fabric_name(self, value: str):
         try:
-            self.endpoints.validate_fabric_name(value)
+            self.conversion.validate_fabric_name(value)
         except ValueError as error:
             raise ValueError(error) from error
         self._properties["fabric_name"] = value

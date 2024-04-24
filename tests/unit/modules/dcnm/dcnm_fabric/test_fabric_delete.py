@@ -137,10 +137,11 @@ def test_fabric_delete_00022(fabric_delete, fabric_name) -> None:
         - ApiEndpoints.fabric_delete
 
     Summary
-    -   Verify ApiEndpoints raises ``TypeError`` because ``fabric_name``
-        argument passed to _set_fabric_delete_endpoint() is not a string.
+    -   Verify ApiEndpoints re-raises ``TypeError`` raised by
+        ConversionUtils() because ``fabric_name`` argument passed
+        to _set_fabric_delete_endpoint() is not a string.
     """
-    match = r"ApiEndpoints\.validate_fabric_name: "
+    match = r"ConversionUtils\.validate_fabric_name: "
     match += "Invalid fabric name. Expected string. Got"
 
     with does_not_raise():
@@ -162,11 +163,11 @@ def test_fabric_delete_00023(fabric_delete, fabric_name) -> None:
         - ApiEndpoints.fabric_delete
 
     Summary
-    -   Verify ApiEndpoints raises ``ValueError`` because ``fabric_name``
-        argument passed to _set_fabric_delete_endpoint() is an
-        invalid string.
+    -   Verify ApiEndpoints() re-raises ``ValueError`` raised by
+        ConversionUtils() because ``fabric_name`` argument passed
+        to _set_fabric_delete_endpoint() is an invalid string.
     """
-    match = r"ApiEndpoints\.validate_fabric_name: "
+    match = r"ConversionUtils\.validate_fabric_name: "
     match += rf"Invalid fabric name: {fabric_name}\. "
     match += "Fabric name must start with a letter A-Z "
     match += "or a-z and contain only the characters in: "
