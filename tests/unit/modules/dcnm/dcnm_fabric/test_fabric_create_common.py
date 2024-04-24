@@ -62,72 +62,6 @@ def test_fabric_create_common_00010(fabric_create_common) -> None:
     assert instance.verb is None
     assert instance.state == "merged"
     assert instance._payloads_to_commit == []
-    assert instance._mandatory_payload_keys == {"BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"}
-
-
-def test_fabric_create_common_00020(fabric_create_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-    - FabricCreateCommon
-        - __init__()
-    - FabricCreateCommon
-        - _verify_payload()
-
-    Summary
-    -   Verify ``ValueError`` is raised when payload is not a `dict``.
-    """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
-    payload = payloads_fabric_create_common(key)
-
-    with does_not_raise():
-        instance = fabric_create_common
-        instance._build_properties()
-
-    match = r"FabricCreateCommon\._verify_payload: payload must be a dict\."
-    with pytest.raises(ValueError, match=match):
-        instance._verify_payload(payload)
-
-
-@pytest.mark.parametrize(
-    "mandatory_key",
-    [
-        "BGP_AS",
-        "FABRIC_NAME",
-        "FABRIC_TYPE",
-    ],
-)
-def test_fabric_create_common_00021(fabric_create_common, mandatory_key) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-    - FabricCreateCommon
-        - __init__()
-    - FabricCreateCommon
-        - _verify_payload()
-
-    Summary
-    -   Verify ``ValueError`` is raised when payload is missing mandatory keys.
-    """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
-    payload = payloads_fabric_create_common(key)
-
-    payload.pop(mandatory_key, None)
-
-    with does_not_raise():
-        instance = fabric_create_common
-        instance._build_properties()
-
-    match = r"FabricCreateCommon\._verify_payload: "
-    match += rf"payload is missing mandatory keys: \['{mandatory_key}'\]"
-    with pytest.raises(ValueError, match=match):
-        instance._verify_payload(payload)
 
 
 def test_fabric_create_common_00030(fabric_create_common) -> None:
@@ -151,8 +85,7 @@ def test_fabric_create_common_00030(fabric_create_common) -> None:
         instance = fabric_create_common
         instance._build_properties()
 
-    match = r"FabricCreateCommon\.fabric_type: FABRIC_TYPE must be one of "
-    match += r"\['VXLAN_EVPN'\]. "
+    match = r"FabricCreateCommon\.fabric_type: FABRIC_TYPE must be one of\s+.*"
     match += "Got INVALID_FABRIC_TYPE"
     with pytest.raises(ValueError, match=match):
         instance._set_fabric_create_endpoint(payload)

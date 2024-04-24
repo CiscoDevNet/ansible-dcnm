@@ -17,9 +17,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import logging
-import re
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
@@ -66,10 +66,23 @@ class FabricCommon:
 
         self._payloads_to_commit: list = []
 
-        self._valid_fabric_types = {"VXLAN_EVPN"}
-
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
+        self.fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
+
+        self._valid_fabric_types = set(self.fabric_type_to_template_name_map.keys())
+
+        self._mandatory_payload_keys_all_fabrics = []
+        self._mandatory_payload_keys_all_fabrics.append("FABRIC_NAME")
+        self._mandatory_payload_keys_all_fabrics.append("FABRIC_TYPE")
+        self._mandatory_payload_keys = {}
+        self._mandatory_payload_keys["VXLAN_EVPN"] = copy.copy(
+            self._mandatory_payload_keys_all_fabrics
+        )
+        self._mandatory_payload_keys["LAN_CLASSIC"] = copy.copy(
+            self._mandatory_payload_keys_all_fabrics
+        )
+        self._mandatory_payload_keys["VXLAN_EVPN"].append("BGP_AS")
 
         self._init_properties()
         self._init_key_translations()
@@ -149,6 +162,71 @@ class FabricCommon:
                 msg += f"for fabric {fabric_name}, "
                 msg += f"Error detail: {self.conversion.bgp_as_invalid_reason}"
                 raise ValueError(msg)
+
+    def _verify_payload(self, payload) -> None:
+        """
+        - Verify that the payload is a dict and contains all mandatory keys
+        - raise ``ValueError`` if the payload is not a dict
+        - raise ``ValueError`` if the payload is missing mandatory keys
+        """
+        method_name = inspect.stack()[0][3]
+        if self.state not in {"merged"}:
+            return
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"payload: {payload}"
+        self.log.debug(msg)
+
+        if not isinstance(payload, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Playbook configuration for fabrics must be a dict. "
+            msg += f"Got type {type(payload).__name__}, "
+            msg += f"value {payload}."
+            raise ValueError(msg)
+
+        sorted_payload = dict(sorted(payload.items(), key=lambda item: item[0]))
+        fabric_type = payload.get("FABRIC_TYPE", None)
+        fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
+
+        if fabric_type is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Playbook configuration for fabric {fabric_name} "
+            msg += "is missing mandatory key FABRIC_TYPE. "
+            msg += f"Valid values for FABRIC_TYPE: {sorted(self._valid_fabric_types)}. "
+            msg += f"Bad configuration: {sorted_payload}."
+            raise ValueError(msg)
+
+        if fabric_type not in self._valid_fabric_types:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Playbook configuration for fabric {fabric_name} "
+            msg += f"contains invalid FABRIC_TYPE ({fabric_type}). "
+            msg += f"Valid values for FABRIC_TYPE: {sorted(self._valid_fabric_types)}. "
+            msg += f"Bad configuration: {sorted_payload}."
+            raise ValueError(msg)
+
+        try:
+            self.conversion.validate_fabric_name(fabric_name)
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Playbook configuration for fabric {fabric_name} "
+            msg += "contains an invalid FABRIC_NAME. "
+            # error below already contains a period "." at the end
+            msg += f"Error detail: {error} "
+            msg += f"Bad configuration: {sorted_payload}."
+            raise ValueError(msg) from error
+
+        missing_keys = []
+        for key in self._mandatory_payload_keys[fabric_type]:
+            if key not in payload:
+                missing_keys.append(key)
+        if len(missing_keys) == 0:
+            return
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Playbook configuration for fabric {fabric_name} "
+        msg += "is missing mandatory keys: "
+        msg += f"{sorted(missing_keys)}. "
+        msg += f"Bad configuration: {sorted_payload}"
+        raise ValueError(msg)
 
     def _fixup_anycast_gw_mac(self) -> None:
         """

@@ -30,6 +30,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
+import inspect
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
@@ -67,9 +68,23 @@ def test_fabric_common_00010(fabric_common) -> None:
     assert instance.class_name == "FabricCommon"
     assert instance.state == "merged"
     assert instance.check_mode is False
-    assert len(instance._valid_fabric_types) == 1
+
     assert "VXLAN_EVPN" in instance._valid_fabric_types
+    assert "LAN_CLASSIC" in instance._valid_fabric_types
+
     assert instance.fabric_type_to_template_name_map["VXLAN_EVPN"] == "Easy_Fabric"
+    assert instance.fabric_type_to_template_name_map["LAN_CLASSIC"] == "LAN_Classic"
+
+    assert sorted(instance._mandatory_payload_keys["LAN_CLASSIC"]) == [
+        "FABRIC_NAME",
+        "FABRIC_TYPE",
+    ]
+    assert sorted(instance._mandatory_payload_keys["VXLAN_EVPN"]) == [
+        "BGP_AS",
+        "FABRIC_NAME",
+        "FABRIC_TYPE",
+    ]
+
     assert instance._properties["fabric_details"] is None
     assert instance._properties["fabric_summary"] is None
     assert instance._properties["fabric_type"] == "VXLAN_EVPN"
@@ -457,3 +472,66 @@ def test_fabric_common_00080(fabric_common, value, expected_return_value) -> Non
         instance = fabric_common
         return_value = instance.conversion.make_boolean(value)
     assert return_value == expected_return_value
+
+
+def test_fabric_common_00100(fabric_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _verify_payload()
+
+    Summary
+    -   Verify ``ValueError`` is raised when payload is not a `dict``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    payload = payloads_fabric_common(key)
+
+    with does_not_raise():
+        instance = fabric_common
+        # instance._build_properties()
+
+    match = r"FabricCommon\._verify_payload:\s+"
+    match += r"Playbook configuration for fabrics must be a dict\.\s+"
+    match += r"Got type str, value NOT_A_DICT\."
+    with pytest.raises(ValueError, match=match):
+        instance._verify_payload(payload)
+
+
+@pytest.mark.parametrize(
+    "mandatory_key",
+    [
+        "BGP_AS",
+        "FABRIC_NAME",
+        "FABRIC_TYPE",
+    ],
+)
+def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricCreateCommon
+        - __init__()
+    - FabricCreateCommon
+        - _verify_payload()
+
+    Summary
+    -   Verify ``ValueError`` is raised when payload is missing mandatory keys.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    payload = payloads_fabric_common(key)
+
+    payload.pop(mandatory_key, None)
+
+    with does_not_raise():
+        instance = fabric_common
+
+    match = r"FabricCommon\._verify_payload:\s+"
+    match += r"Playbook configuration for fabric .* is missing mandatory key.*\."
+    with pytest.raises(ValueError, match=match):
+        instance._verify_payload(payload)

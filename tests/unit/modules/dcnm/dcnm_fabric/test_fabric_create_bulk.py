@@ -131,7 +131,8 @@ def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
         initial value of None
     """
     match = r"FabricCreateBulk._verify_payload: "
-    match += r"payload must be a dict\."
+    match += r"Playbook configuration for fabrics must be a dict\.\s+"
+    match += r"Got type int, value 1\."
 
     with does_not_raise():
         instance = fabric_create_bulk
@@ -204,20 +205,14 @@ def test_fabric_create_bulk_00024(fabric_create_bulk) -> None:
     assert instance.payloads == []
 
 
-def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
+def test_fabric_create_bulk_00025(fabric_create_bulk) -> None:
     """
     Classes and Methods
-    - FabricCommon
+    - FabricCreateCommon
         - __init__()
         - payloads setter
     - FabricCreateBulk
         - __init__()
-        - rest_send
-        - fabric_details
-        - fabric_details.rest_send
-        - results
-        - payloads
-        - commit()
 
     Summary
     -   Verify behavior when payloads contains a dict with an unexpected
@@ -233,18 +228,6 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
-    def responses():
-        yield responses_fabric_details_by_name(key)
-
-    gen = ResponseGenerator(responses())
-
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
-
     with does_not_raise():
         instance = fabric_create_bulk
 
@@ -256,13 +239,13 @@ def test_fabric_create_bulk_00025(monkeypatch, fabric_create_bulk) -> None:
         instance.rest_send.unit_test = True
 
         instance.results = Results()
-        instance.payloads = payloads_fabric_create_bulk(key)
 
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-
-    match = r"FabricCreateBulk\.fabric_type: FABRIC_TYPE must be one of"
+    match = r"FabricCreateBulk\._verify_payload:\s+"
+    match += r"Playbook configuration for fabric f1 contains invalid\s+"
+    match += r"FABRIC_TYPE \(INVALID_FABRIC_TYPE\)\.\s+"
+    match += r"Valid values for FABRIC_TYPE:"
     with pytest.raises(ValueError, match=match):
-        instance.commit()
+        instance.payloads = payloads_fabric_create_bulk(key)
 
 
 def test_fabric_create_bulk_00026(fabric_create_bulk) -> None:

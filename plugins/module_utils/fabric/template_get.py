@@ -20,7 +20,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 from typing import Any, Dict
 
@@ -227,7 +226,8 @@ class TemplateGet:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "template_name must be an instance of str."
+            msg += "template_name must be an instance of str. "
+            msg += f"Got type: {type(value)} for value: {value}."
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["template_name"] = value

@@ -259,8 +259,6 @@ class FabricDelete(FabricCommon):
         -   Send a delete request to the controller and register the result.
         -   Raise ``ValueError`` if the fabric delete endpoint cannot be set
         """
-        method_name = inspect.stack()[0][3]
-
         try:
             self._set_fabric_delete_endpoint(fabric_name)
         except ValueError as error:

@@ -138,8 +138,9 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
     - ``ValueError`` is raised because payloads is a list with non-dict elements
     - instance.payloads retains its initial value of None
     """
-    match = r"FabricUpdateBulk._verify_payload: "
-    match += r"payload must be a dict\."
+    match = r"FabricUpdateBulk._verify_payload:\s+"
+    match += r"Playbook configuration for fabrics must be a dict\.\s+"
+    match += r"Got type int, value 1\."
 
     with does_not_raise():
         instance = fabric_update_bulk
@@ -214,19 +215,21 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
 
 @pytest.mark.parametrize(
     "mandatory_key",
-    ["BGP_AS", "DEPLOY", "FABRIC_NAME", "FABRIC_TYPE"],
+    ["BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"],
 )
 def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
     """
     Classes and Methods
-    - FabricCommon
+    - FabricUpdateCommon
         - __init__()
         - payloads setter
     - FabricUpdateBulk
         - __init__()
 
     Summary
-    -   Verify ``ValueError`` is raised when payloads is missing mandatory keys.
+    -   Verify FabricUpdateCommon().payloads setter re-raises ``ValueError``
+        raised by FabricCommon()._verify_payload() when payloads is missing
+        mandatory keys.
     -   Verify instance.payloads retains its initial value of None.
 
     """
@@ -242,7 +245,7 @@ def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
     payloads[0].pop(mandatory_key, None)
 
     match = r"FabricUpdateBulk\._verify_payload: "
-    match += r"payload is missing mandatory keys:"
+    match += r"Playbook configuration for fabric .* is missing mandatory key.*"
     with pytest.raises(ValueError, match=match):
         instance.payloads = payloads
     assert instance.payloads is None

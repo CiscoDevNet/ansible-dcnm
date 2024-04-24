@@ -2,13 +2,6 @@
     "test_notes": [
         "Mocked responses for FabricDetails() class"
     ],
-    "test_fabric_create_00025a": {
-        "DATA": [],
-        "MESSAGE": "OK",
-        "METHOD": "GET",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
-        "RETURN_CODE": 200
-    },
     "test_fabric_create_00030a": {
         "DATA": [],
         "MESSAGE": "OK",
@@ -337,13 +330,6 @@
         "RETURN_CODE": 200
     },
     "test_fabric_create_00033a": {
-        "DATA": [],
-        "MESSAGE": "OK",
-        "METHOD": "GET",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
-        "RETURN_CODE": 200
-    },
-    "test_fabric_create_bulk_00025a": {
         "DATA": [],
         "MESSAGE": "OK",
         "METHOD": "GET",

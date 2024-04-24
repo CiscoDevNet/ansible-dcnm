@@ -328,6 +328,10 @@ class Common(FabricCommon):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         merged_configs = []
         for config in self.config:
+            try:
+                self._verify_payload(config)
+            except ValueError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
             merged_configs.append(copy.deepcopy(config))
 
         self.want = []
@@ -445,9 +449,6 @@ class Merged(Common):
 
         self._implemented_states.add("merged")
 
-        self._fabric_type_to_template_name = {}
-        self._fabric_type_to_template_name["VXLAN_EVPN"] = "Easy_Fabric"
-
     def get_need(self):
         """
         Caller: commit()
@@ -457,23 +458,6 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.payloads = {}
         for want in self.want:
-            fabric_name = want.get("FABRIC_NAME", None)
-            if fabric_name is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Fabric config with missing FABRIC_NAME "
-                msg += "parameter: "
-                msg += f"{want}"
-                self.log.debug(msg)
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
-
-            fabric_type = want.get("FABRIC_TYPE", None)
-            if fabric_type is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Fabric {fabric_name} is missing FABRIC_TYPE "
-                msg += "parameter: "
-                msg += f"{want}"
-                self.log.debug(msg)
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
 
             try:
                 self._verify_playbook_params.config_playbook = want
@@ -481,7 +465,7 @@ class Merged(Common):
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
             fabric_type = want.get("FABRIC_TYPE", None)
-            template_name = self._fabric_type_to_template_name.get(fabric_type)
+            template_name = self.fabric_type_to_template_name(fabric_type)
 
             self.template.rest_send = self.rest_send
             self.template.template_name = template_name
@@ -502,6 +486,8 @@ class Merged(Common):
             except TypeError as error:
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
+            # Append to need_create if the fabric does not exist.
+            # Otherwise, append to need_update.
             if want["FABRIC_NAME"] not in self.have.all_data:
                 try:
                     self._verify_playbook_params.config_controller = None

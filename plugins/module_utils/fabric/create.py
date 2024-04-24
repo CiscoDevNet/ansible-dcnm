@@ -53,11 +53,6 @@ class FabricCreateCommon(FabricCommon):
 
         self._payloads_to_commit: list = []
 
-        self._mandatory_payload_keys = set()
-        self._mandatory_payload_keys.add("BGP_AS")
-        self._mandatory_payload_keys.add("FABRIC_NAME")
-        self._mandatory_payload_keys.add("FABRIC_TYPE")
-
         self._build_properties()
 
         msg = "ENTERED FabricCreateCommon(): "
@@ -71,37 +66,6 @@ class FabricCreateCommon(FabricCommon):
         - Add properties specific to this class
         - self._properties is initialized in FabricCommon
         """
-
-    def _verify_payload(self, payload) -> None:
-        """
-        - Verify that the payload is a dict and contains all mandatory keys
-        - raise ``ValueError`` if the payload is not a dict
-        - raise ``ValueError`` if the payload is missing mandatory keys
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"payload: {payload}"
-        self.log.debug(msg)
-
-        if not isinstance(payload, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload must be a dict. "
-            msg += f"Got type {type(payload).__name__}, "
-            msg += f"value {payload}"
-            raise ValueError(msg)
-
-        missing_keys = []
-        for key in self._mandatory_payload_keys:
-            if key not in payload:
-                missing_keys.append(key)
-        if len(missing_keys) == 0:
-            return
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "payload is missing mandatory keys: "
-        msg += f"{sorted(missing_keys)}"
-        msg += f"payload: {sorted(payload)}"
-        raise ValueError(msg)
 
     def _build_payloads_to_commit(self) -> None:
         """

@@ -42,6 +42,7 @@ class RuleSetCommon:
 
         self.re_multi_rule = re.compile(r"^\s*(\(.*\))(.*)(\(.*\))\s*$")
 
+        self.param_name = None
         self.rule = None
         self.properties = {}
         self.properties["template"] = None
@@ -208,9 +209,6 @@ class RuleSet(RuleSetCommon):
     rules = ruleset.ruleset
     ```
     """
-
-    def __init__(self) -> None:
-        super().__init__()
 
     def _update_ruleset_no_boolean(self):
         """
