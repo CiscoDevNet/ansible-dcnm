@@ -851,3 +851,122 @@ def test_verify_playbook_params_00600(monkeypatch) -> None:
     match += r"Got: \['PARAM_1', 'PARAM_2'\]\.\s+"
     with pytest.raises(ValueError, match=match):
         instance.update_decision_set_for_or_rules(param_rule)
+
+
+def test_verify_playbook_params_00700(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - controller_param_is_valid()
+
+    Summary
+    -   Verify controller_param_is_valid() re-raises ``KeyError`` when
+        self.eval_parameter_rule() raises ``KeyError``.
+    """
+
+    def mock_eval_parameter_rule(*args):
+        msg = "eval_parameter_rule_00700: KeyError."
+        raise KeyError(msg)
+
+    item = {"operator": "==", "parameter": "PARAM_1", "value": "foo"}
+    config_controller = {"PARAM_1": "foo"}
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.config_controller = config_controller
+
+    monkeypatch.setattr(instance, "eval_parameter_rule", mock_eval_parameter_rule)
+    match = r"eval_parameter_rule_00700: KeyError\."
+    with pytest.raises(KeyError, match=match):
+        instance.controller_param_is_valid(item)
+
+
+def test_verify_playbook_params_00710(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - playbook_param_is_valid()
+
+    Summary
+    -   Verify playbook_param_is_valid() re-raises ``KeyError`` when
+        self.eval_parameter_rule() raises ``KeyError``.
+    """
+
+    def mock_eval_parameter_rule(*args):
+        msg = "eval_parameter_rule_00710: KeyError."
+        raise KeyError(msg)
+
+    item = {"operator": "==", "parameter": "PARAM_1", "value": "foo"}
+    config_playbook = {"PARAM_1": "foo"}
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.config_playbook = config_playbook
+
+    monkeypatch.setattr(instance, "eval_parameter_rule", mock_eval_parameter_rule)
+    match = r"eval_parameter_rule_00710: KeyError\."
+    with pytest.raises(KeyError, match=match):
+        instance.playbook_param_is_valid(item)
+
+
+def test_verify_playbook_params_00720(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - default_param_is_valid()
+
+    Summary
+    -   Verify default_param_is_valid() re-raises ``KeyError`` when
+        self.eval_parameter_rule() raises ``KeyError``.
+    """
+
+    def mock_eval_parameter_rule(*args):
+        msg = "eval_parameter_rule_00720: KeyError."
+        raise KeyError(msg)
+
+    def mock_param_info_parameter(*args):
+        return {"default": "foo"}
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.param_info = ParamInfo()
+        instance.config_playbook = {"PARAM_2": "foo"}
+        instance.config_controller = None
+
+    monkeypatch.setattr(instance, "eval_parameter_rule", mock_eval_parameter_rule)
+    monkeypatch.setattr(instance._param_info, "parameter", mock_param_info_parameter)
+
+    item = {"operator": "==", "parameter": "PARAM_1", "value": "foo"}
+
+    match = r"eval_parameter_rule_00720: KeyError\."
+    with pytest.raises(KeyError, match=match):
+        instance.default_param_is_valid(item)
+
+
+def test_verify_playbook_params_00800(monkeypatch) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - default_param_is_valid()
+
+    Summary
+    -   Verify default_param_is_valid() returns None when the parameter
+        has no default value.
+    """
+
+    def mock_param_info_parameter(*args):
+        return {"default_key_is_missing": "foo"}
+
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.param_info = ParamInfo()
+        instance.config_playbook = {"PARAM_2": "foo"}
+        instance.config_controller = None
+
+    monkeypatch.setattr(instance._param_info, "parameter", mock_param_info_parameter)
+
+    item = {"operator": "==", "parameter": "PARAM_1", "value": "foo"}
+
+    with does_not_raise():
+        value = instance.default_param_is_valid(item)
+    assert value is None

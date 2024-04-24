@@ -375,7 +375,6 @@ class VerifyPlaybookParams:
             msg += "Returning None."
             self.log.debug(msg)
             return None
-
         # The controller config contains the parameter.
         # Return None to remove default_param result from consideration.
         if rule_parameter in self.config_controller:
