@@ -40,12 +40,12 @@
         vlanName: "test-vlan"
         intfDescription: "test-interface"
         attach:
-          - deployment: true
+          - attached: true
             dot1QVlan: 1
             extensionValues: ""
             fabric: "{{ test_fabric }}"
             instanceValues: ""
-            ipAddress: "{{ sw1_ipaddr }}"
+            ipAddress: "{{ ansible_switch1 }}"
             switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
             untagged: false
             vlan: 1501
@@ -61,11 +61,11 @@
         tag: 14346
         mtu: 1500
         attach:
-          - deployment: true
+          - attached: true
             dot1QVlan: 1
             fabric: "{{ test_fabric }}"
             instanceValues: ""
-            ipAddress: "{{ sw2_ipaddr }}"
+            ipAddress: "{{ ansible_switch2 }}"
             switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
             untagged: false
             vlan: 151
@@ -254,11 +254,11 @@
         vlanName: "testvlan"
         dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
         attach:
-          - deployment: true
+          - attached: true
             dot1QVlan: 1
             fabric: "{{ test_fabric }}"
             instanceValues: ""
-            ipAddress: "{{ sw1_ipaddr }}"
+            ipAddress: "{{ ansible_switch1 }}"
             switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
             torPorts: []
             untagged: false
@@ -276,11 +276,11 @@
         vlanName: "testvlan1"
         dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
         attach:
-          - deployment: true
+          - attached: true
             dot1QVlan: 1
             fabric: "{{ test_fabric }}"
             instanceValues: ""
-            ipAddress: "{{ sw2_ipaddr }}"
+            ipAddress: "{{ ansible_switch2 }}"
             switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
             untagged: false
             vlan: 151

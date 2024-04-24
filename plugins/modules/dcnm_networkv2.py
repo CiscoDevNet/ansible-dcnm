@@ -99,7 +99,7 @@ options:
                 - IP address of the switch to be attached to network
                 type: str
                 required: true
-              deployment:
+              attached:
                 description:
                 - To specify if the switch should be attached/detached to/from network
                 type: bool
@@ -173,7 +173,7 @@ EXAMPLES = """
             - fabric: vxlan-fabric
               networkName: "net1"
               ipAddress: "FDO1234QWER"
-              deployment: true
+              attached: true
               vlan: 100
               switchPorts: "Ethernet1/1,Ethernett1/2"
               torPorts: "Tor1(Ethernet1/13),Tor2(Ethernet1/14)"
@@ -993,6 +993,7 @@ class DcnmNetworkv2:
                 attach.update({"vlan": vlan})
                 attach.update({"serialNumber": sn})
                 attach.update({"deployment": deployment})
+                attach.update({"attached": deployment})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": ""})
                 attach.update({"freeformConfig": ""})
@@ -1090,8 +1091,13 @@ class DcnmNetworkv2:
                     self.fabric, attach["ipAddress"]
                 )
             )
-
         attach.update({"serialNumber": serial})
+
+        if attach["attached"]:
+            attach.update({"deployment": True})
+        else:
+            attach.update({"deployment": False})
+
         if not attach.get("fabric"):
             attach.update({"fabric": self.fabric})
 
@@ -1449,6 +1455,8 @@ class DcnmNetworkv2:
                     del v_a["d_key"]
                 if v_a.get("ipAddress") is not None:
                     del v_a["ipAddress"]
+                if v_a.get("attached") is not None:
+                    del v_a["attached"]
 
         for attempt in range(0, 50):
             resp = dcnm_send(
@@ -1608,7 +1616,7 @@ class DcnmNetworkv2:
         )
 
         net_attach_spec = dict(
-            deployment=dict(type="bool", default=False),
+            attached=dict(type="bool", default=False),
             detachSwitchPorts=dict(type="list", default=[]),
             dot1QVlan=dict(type="int", default="1"),
             extensionValues=dict(type="string", default=""),
@@ -1662,8 +1670,6 @@ class DcnmNetworkv2:
                     )
                     invalid_params.extend(invalid_net)
                     net["network_template_config"] = valid_dyn_net[0]
-                    # if net["network_template_config"]["mcastGroup"] == "":
-                    #     net["network_template_config"]["mcastGroup"] = "239.1.1.1"
                     
                     if att_present:
                         net["attach"] = valid_att
@@ -1741,6 +1747,13 @@ class DcnmNetworkv2:
 
             if found_a:
                 attach = found_a.get("lanAttachList")
+                for atch in attach:
+                    if atch.get("d_key"):
+                        del atch["d_key"]
+                    if atch.get("deployment"):
+                        del atch["deployment"]
+                    if atch.get("serialNumber"):
+                        del atch["serialNumber"]
                 found_c["attach"].append(attach)
 
             diff.append(found_c)
