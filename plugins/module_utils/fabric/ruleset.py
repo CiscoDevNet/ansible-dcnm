@@ -356,7 +356,6 @@ class RuleSet(RuleSetCommon):
         """
         Update the ruleset for self.parameter and self.rule
         """
-        # print(f"_update_ruleset: 1. self.rule: {self.rule}")
         if self.rule is None:
             return
         if self.rule in ("true", "True", True):
@@ -409,8 +408,6 @@ class RuleSet(RuleSetCommon):
             msg += "template[parameters] is not a list."
             raise ValueError(msg)
         for parameter in self.template["parameters"]:
-            # msg += f"parameter: {json.dumps(parameter, indent=4, sort_keys=True)}"
-            # self.log.debug(msg)
             if self.is_internal(parameter) is True:
                 continue
             if "Hidden" in self.section(parameter):
