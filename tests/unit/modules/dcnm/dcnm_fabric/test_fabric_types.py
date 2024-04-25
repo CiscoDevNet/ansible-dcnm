@@ -38,9 +38,9 @@ def test_fabric_types_00010(fabric_types) -> None:
     - FabricTypes
         - __init__()
 
-    Test
-    - Class attributes are initialized to expected values
-    - Exception is not raised
+    Summary
+    -   Verify class attributes are initialized to expected values.
+    -   Verify exception is not raised.
     """
     with does_not_raise():
         instance = fabric_types
@@ -83,11 +83,13 @@ def test_fabric_types_00020(
     - FabricTypes
         - __init__()
         - fabric_type.setter
+        - template_name.getter
 
     Summary
-    -    FabricTypes().template returns the expected template name, given
-        a valid fabric_type.
-    -   ``ValueError`` is raised user tries to set an invalid fabric_type.
+    -   Verify FabricTypes().template returns the expected template name,
+        given a valid fabric_type.
+    -   Verify ``ValueError`` is raised if user tries to set an invalid
+        fabric_type.
     """
     with does_not_raise():
         instance = fabric_types
@@ -97,11 +99,31 @@ def test_fabric_types_00020(
         assert instance.template_name == template_name
 
 
+def test_fabric_types_00030(fabric_types) -> None:
+    """
+    Classes and Methods
+    - FabricTypes
+        - __init__()
+        - template_name.getter
+
+    Summary
+    -   Verify ``ValueError`` is raised if FabricTypes().fabric_type
+        is not set prior to accessing FabricTypes().template_name.
+    """
+    with does_not_raise():
+        instance = fabric_types
+    match = r"FabricTypes\.template_name:\s+"
+    match += r"Set FabricTypes\.fabric_type before accessing\s+"
+    match += r"FabricTypes\.template_name"
+    with pytest.raises(ValueError, match=match):
+        instance.template_name  # pylint: disable=pointless-statement
+
+
 VXLAN_EVPN_PARAMETERS = ["BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"]
 LAN_CLASSIC_PARAMETERS = ["FABRIC_NAME", "FABRIC_TYPE"]
 VXLAN_EVPN_MSD_PARAMETERS = ["FABRIC_NAME", "FABRIC_TYPE"]
-MATCH_00030 = r"FabricTypes\.fabric_type.setter:\s+"
-MATCH_00030 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
+MATCH_00040 = r"FabricTypes\.fabric_type.setter:\s+"
+MATCH_00040 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
 
 
 @pytest.mark.parametrize(
@@ -114,11 +136,11 @@ MATCH_00030 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
             "INVALID_FABRIC_TYPE",
             None,
             True,
-            pytest.raises(ValueError, match=MATCH_00030),
+            pytest.raises(ValueError, match=MATCH_00040),
         ),
     ],
 )
-def test_fabric_types_00030(
+def test_fabric_types_00040(
     fabric_types, fabric_type, parameters, does_raise, expected
 ) -> None:
     """
@@ -126,11 +148,13 @@ def test_fabric_types_00030(
     - FabricTypes
         - __init__()
         - fabric_type.setter
+        - mandatory_parameters.getter
 
     Summary
-    -    FabricTypes().template returns the expected template name, given
-        a valid fabric_type.
-    -   ``ValueError`` is raised user tries to set an invalid fabric_type.
+    -   Verify FabricTypes().mandatory_parameters returns the expected
+        mandatory parameters, given a valid fabric_type.
+    -   Verify ``ValueError`` is raised if user tries to set an invalid
+        fabric_type.
     """
     with does_not_raise():
         instance = fabric_types
@@ -138,3 +162,23 @@ def test_fabric_types_00030(
         instance.fabric_type = fabric_type
     if not does_raise:
         assert instance.mandatory_parameters == parameters
+
+
+def test_fabric_types_00050(fabric_types) -> None:
+    """
+    Classes and Methods
+    - FabricTypes
+        - __init__()
+        - mandatory_parameters.getter
+
+    Summary
+    -   Verify that ``ValueError`` is raised if FabricTypes().fabric_type
+        is not set prior to accessing FabricTypes().mandatory_parameters.
+    """
+    with does_not_raise():
+        instance = fabric_types
+    match = r"FabricTypes\.mandatory_parameters:\s+"
+    match += r"Set FabricTypes\.fabric_type before accessing\s+"
+    match += r"FabricTypes\.mandatory_parameters"
+    with pytest.raises(ValueError, match=match):
+        instance.mandatory_parameters  # pylint: disable=pointless-statement

@@ -41,6 +41,9 @@ class FabricTypes:
 
     # Access the template name for the VXLAN_EVPN fabric type
     template_name = fabric_types.template_name
+
+    # Access mandatory parameters for the VXLAN_EVPN fabric type
+    mandatory_parameters = fabric_types.mandatory_parameters
     """
 
     def __init__(self):
@@ -130,7 +133,7 @@ class FabricTypes:
             is not set.
         """
         if self.fabric_type is None:
-            msg = f"{self.class_name}.mandatory_parameters.getter: "
+            msg = f"{self.class_name}.mandatory_parameters: "
             msg += f"Set {self.class_name}.fabric_type before accessing "
             msg += f"{self.class_name}.mandatory_parameters"
             raise ValueError(msg)
@@ -143,7 +146,7 @@ class FabricTypes:
         -   getter: raise ``ValueError`` if FabricTypes().fabric_type is not set.
         """
         if self.fabric_type is None:
-            msg = f"{self.class_name}.template_name.getter: "
+            msg = f"{self.class_name}.template_name: "
             msg += f"Set {self.class_name}.fabric_type before accessing "
             msg += f"{self.class_name}.template_name"
             raise ValueError(msg)
