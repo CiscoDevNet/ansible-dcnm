@@ -29,6 +29,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
+    FabricTypes
 
 
 class FabricUpdateCommon(FabricCommon):
@@ -46,6 +48,7 @@ class FabricUpdateCommon(FabricCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.endpoints = ApiEndpoints()
+        self.fabric_types = FabricTypes()
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in
@@ -407,9 +410,16 @@ class FabricUpdateCommon(FabricCommon):
         """
         self.endpoints.fabric_name = payload.get("FABRIC_NAME")
         self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
-        self.endpoints.template_name = self.fabric_type_to_template_name(
-            self.fabric_type
-        )
+        try:
+            self.fabric_types.fabric_type = self.fabric_type
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.endpoints.template_name = self.fabric_types.template_name
+        except ValueError as error:
+            raise ValueError(error) from error
+
         try:
             endpoint = self.endpoints.fabric_update
         except ValueError as error:

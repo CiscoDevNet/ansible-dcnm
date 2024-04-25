@@ -17,13 +17,14 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 import logging
 from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
+    FabricTypes
 
 
 class FabricCommon:
@@ -44,6 +45,7 @@ class FabricCommon:
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.conversion = ConversionUtils()
+        self.fabric_types = FabricTypes()
 
         self.params = params
 
@@ -65,28 +67,6 @@ class FabricCommon:
         self.log.debug(msg)
 
         self._payloads_to_commit: list = []
-
-        self.fabric_type_to_template_name_map = {}
-        self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
-        self.fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
-        self.fabric_type_to_template_name_map["MSD"] = "MSD_Fabric"
-
-        self._valid_fabric_types = set(self.fabric_type_to_template_name_map.keys())
-
-        self._mandatory_payload_keys_all_fabrics = []
-        self._mandatory_payload_keys_all_fabrics.append("FABRIC_NAME")
-        self._mandatory_payload_keys_all_fabrics.append("FABRIC_TYPE")
-        self._mandatory_payload_keys = {}
-        self._mandatory_payload_keys["LAN_CLASSIC"] = copy.copy(
-            self._mandatory_payload_keys_all_fabrics
-        )
-        self._mandatory_payload_keys["MSD"] = copy.copy(
-            self._mandatory_payload_keys_all_fabrics
-        )
-        self._mandatory_payload_keys["VXLAN_EVPN"] = copy.copy(
-            self._mandatory_payload_keys_all_fabrics
-        )
-        self._mandatory_payload_keys["VXLAN_EVPN"].append("BGP_AS")
 
         self._init_properties()
         self._init_key_translations()
@@ -194,16 +174,18 @@ class FabricCommon:
         if fabric_type is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Playbook configuration for fabric {fabric_name} "
-            msg += "is missing mandatory key FABRIC_TYPE. "
-            msg += f"Valid values for FABRIC_TYPE: {sorted(self._valid_fabric_types)}. "
+            msg += "is missing mandatory parameter FABRIC_TYPE. "
+            msg += "Valid values for FABRIC_TYPE: "
+            msg += f"{self.fabric_types.valid_fabric_types}. "
             msg += f"Bad configuration: {sorted_payload}."
             raise ValueError(msg)
 
-        if fabric_type not in self._valid_fabric_types:
+        if fabric_type not in self.fabric_types.valid_fabric_types:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Playbook configuration for fabric {fabric_name} "
             msg += f"contains invalid FABRIC_TYPE ({fabric_type}). "
-            msg += f"Valid values for FABRIC_TYPE: {sorted(self._valid_fabric_types)}. "
+            msg += "Valid values for FABRIC_TYPE: "
+            msg += f"{self.fabric_types.valid_fabric_types}. "
             msg += f"Bad configuration: {sorted_payload}."
             raise ValueError(msg)
 
@@ -218,17 +200,22 @@ class FabricCommon:
             msg += f"Bad configuration: {sorted_payload}."
             raise ValueError(msg) from error
 
-        missing_keys = []
-        for key in self._mandatory_payload_keys[fabric_type]:
-            if key not in payload:
-                missing_keys.append(key)
-        if len(missing_keys) == 0:
+        missing_parameters = []
+        try:
+            self.fabric_types.fabric_type = fabric_type
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        for parameter in self.fabric_types.mandatory_parameters:
+            if parameter not in payload:
+                missing_parameters.append(parameter)
+        if len(missing_parameters) == 0:
             return
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Playbook configuration for fabric {fabric_name} "
-        msg += "is missing mandatory keys: "
-        msg += f"{sorted(missing_keys)}. "
+        msg += "is missing mandatory parameters: "
+        msg += f"{sorted(missing_parameters)}. "
         msg += f"Bad configuration: {sorted_payload}"
         raise ValueError(msg)
 
@@ -385,17 +372,17 @@ class FabricCommon:
         - setter: Set the type of fabric to create/update.
         - setter: raise ``ValueError`` if ``value`` is not a valid fabric type
 
-        See ``self._valid_fabric_types`` for valid values
+        See ``FabricTypes().valid_fabric_types`` for valid values
         """
         return self._properties["fabric_type"]
 
     @fabric_type.setter
     def fabric_type(self, value):
         method_name = inspect.stack()[0][3]
-        if value not in self._valid_fabric_types:
+        if value not in self.fabric_types.valid_fabric_types:
             msg = f"{self.class_name}.{method_name}: "
             msg += "FABRIC_TYPE must be one of "
-            msg += f"{sorted(self._valid_fabric_types)}. "
+            msg += f"{self.fabric_types.valid_fabric_types}. "
             msg += f"Got {value}"
             raise ValueError(msg)
         self._properties["fabric_type"] = value

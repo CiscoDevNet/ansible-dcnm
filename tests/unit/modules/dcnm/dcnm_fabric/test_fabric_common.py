@@ -69,22 +69,6 @@ def test_fabric_common_00010(fabric_common) -> None:
     assert instance.state == "merged"
     assert instance.check_mode is False
 
-    assert "VXLAN_EVPN" in instance._valid_fabric_types
-    assert "LAN_CLASSIC" in instance._valid_fabric_types
-
-    assert instance.fabric_type_to_template_name_map["VXLAN_EVPN"] == "Easy_Fabric"
-    assert instance.fabric_type_to_template_name_map["LAN_CLASSIC"] == "LAN_Classic"
-
-    assert sorted(instance._mandatory_payload_keys["LAN_CLASSIC"]) == [
-        "FABRIC_NAME",
-        "FABRIC_TYPE",
-    ]
-    assert sorted(instance._mandatory_payload_keys["VXLAN_EVPN"]) == [
-        "BGP_AS",
-        "FABRIC_NAME",
-        "FABRIC_TYPE",
-    ]
-
     assert instance._properties["fabric_details"] is None
     assert instance._properties["fabric_summary"] is None
     assert instance._properties["fabric_type"] == "VXLAN_EVPN"
@@ -372,41 +356,6 @@ MATCH_00060a += "Unknown fabric type:"
 
 
 @pytest.mark.parametrize(
-    "fabric_type, expected_template_name, result",
-    [
-        ("VXLAN_EVPN", "Easy_Fabric", does_not_raise()),
-        ("UNKNOWN", None, pytest.raises(ValueError, match=MATCH_00060a)),
-    ],
-)
-def test_fabric_common_00060(
-    fabric_common, fabric_type, expected_template_name, result
-) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - fabric_type_to_template_name()
-
-    Summary
-    -   Verify fabric_type_to_template_name() behavior for:
-        -   Valid fabric_type
-        -   Invalid fabric_type
-
-    Test
-    - Verify ``ValueError`` is not raised given valid fabric_type
-    - Verify expected template name is returned given valid fabric_type
-    - Verify ``ValueError`` is raised given invalid fabric_type
-    """
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-    template_name = None
-    with result:
-        template_name = instance.fabric_type_to_template_name(fabric_type)
-    assert template_name == expected_template_name
-
-
-@pytest.mark.parametrize(
     "value, expected_return_value",
     [
         ("", None),
@@ -532,6 +481,6 @@ def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
         instance = fabric_common
 
     match = r"FabricCommon\._verify_payload:\s+"
-    match += r"Playbook configuration for fabric .* is missing mandatory key.*\."
+    match += r"Playbook configuration for fabric .* is missing mandatory parameter.*\."
     with pytest.raises(ValueError, match=match):
         instance._verify_payload(payload)

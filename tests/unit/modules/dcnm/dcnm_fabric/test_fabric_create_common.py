@@ -91,38 +91,6 @@ def test_fabric_create_common_00030(fabric_create_common) -> None:
         instance._set_fabric_create_endpoint(payload)
 
 
-def test_fabric_create_common_00031(fabric_create_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-    - FabricCreateCommon
-        - __init__()
-        - _set_fabric_create_endpoint
-
-    Summary
-    -   ``ValueError`` is raised when FabricCommon().fabric_type_to_template_name_map
-        does not contain ``FABRIC_TYPE``.
-    -   Since test 00030 already tests for invalid ``FABRIC_TYPE``, this test simulates
-        the error condition by removing a valid key (``VXLAN_EVPN``) from
-        ``fabric_type_to_template_name_map``.
-    """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
-    payload = payloads_fabric_create_common(key)
-
-    with does_not_raise():
-        instance = fabric_create_common
-        instance._build_properties()
-        instance.fabric_type_to_template_name_map.pop("VXLAN_EVPN", None)
-
-    match = r"FabricCreateCommon\.fabric_type_to_template_name: "
-    match += "Unknown fabric type: VXLAN_EVPN"
-    with pytest.raises(ValueError, match=match):
-        instance._set_fabric_create_endpoint(payload)
-
-
 def test_fabric_create_common_00032(monkeypatch, fabric_create_common) -> None:
     """
     Classes and Methods

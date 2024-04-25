@@ -214,10 +214,10 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
 
 
 @pytest.mark.parametrize(
-    "mandatory_key",
+    "mandatory_parameter",
     ["BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"],
 )
-def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
+def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_parameter) -> None:
     """
     Classes and Methods
     - FabricUpdateCommon
@@ -242,10 +242,11 @@ def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_key) -> None:
         instance.results = Results()
 
     payloads = payloads_fabric_update_bulk(key)
-    payloads[0].pop(mandatory_key, None)
+    payloads[0].pop(mandatory_parameter, None)
 
     match = r"FabricUpdateBulk\._verify_payload: "
-    match += r"Playbook configuration for fabric .* is missing mandatory key.*"
+    match += r"Playbook configuration for fabric .* is missing mandatory\s+"
+    match += r"parameter.*"
     with pytest.raises(ValueError, match=match):
         instance.payloads = payloads
     assert instance.payloads is None

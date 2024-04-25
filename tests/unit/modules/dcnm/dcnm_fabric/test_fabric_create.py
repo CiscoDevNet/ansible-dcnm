@@ -140,10 +140,10 @@ def test_fabric_create_00022(fabric_create) -> None:
 
 
 @pytest.mark.parametrize(
-    "mandatory_key",
+    "mandatory_parameter",
     ["BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"],
 )
-def test_fabric_create_00023(fabric_create, mandatory_key) -> None:
+def test_fabric_create_00023(fabric_create, mandatory_parameter) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -154,14 +154,14 @@ def test_fabric_create_00023(fabric_create, mandatory_key) -> None:
 
     Summary
     -   Verify that ``ValueError`` is raised because payload is missing
-        mandatory keys.
+        mandatory parameters.
 
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
     payload = payloads_fabric_create(key)
-    payload.pop(mandatory_key, None)
+    payload.pop(mandatory_parameter, None)
 
     with does_not_raise():
         instance = fabric_create
@@ -169,7 +169,8 @@ def test_fabric_create_00023(fabric_create, mandatory_key) -> None:
         instance.rest_send = RestSend(MockAnsibleModule())
 
     match = r"FabricCreate\._verify_payload: "
-    match += r"Playbook configuration for fabric .* is missing mandatory key"
+    match += r"Playbook configuration for fabric .* is missing mandatory\s+"
+    match += r"parameter"
     with pytest.raises(ValueError, match=match):
         instance.payload = payload
     assert instance.payload is None
