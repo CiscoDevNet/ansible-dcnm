@@ -2,8 +2,7 @@
 - name: collect dcnm test cases
   find:
     paths: ["{{ role_path }}/tests/dcnm"]
-    #patterns: "{{ testcase }}.yaml"
-    patterns: "merged.yaml"
+    patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
   tags: sanity

@@ -568,6 +568,7 @@ def build_arg_spec(module, path):
             arg = {}
             hidden = False
             reqcode = False
+            isshow = None
             for key in i.keys():
                 if key == "name":
                     name = i[key]
@@ -590,6 +591,8 @@ def build_arg_spec(module, path):
                             break
                         if anonkey == "Section" and k[anonkey] == "\"Attach/Hidden\"":
                             reqcode = True
+                        if anonkey == "IsShow":
+                            isshow = k[anonkey]
                 if hidden:
                     break
                 if key == "metaProperties":
@@ -622,6 +625,8 @@ def build_arg_spec(module, path):
                     vars()[name].update({"length_min": length_min})
                 if length_max:
                     vars()[name].update({"length_max": length_max})
+                if isshow:
+                    vars()[name].update({"is_show": isshow})
                 #vars()[name] = dict(type=type, default=default, required=required,
                 #                  range_min=range_min, range_max=range_max,
                 #                  length_min=length_min, length_max=length_max)
@@ -630,6 +635,18 @@ def build_arg_spec(module, path):
         return arg_spec
     else:
         return []
+
+
+def resolve_dependency(spec, template):
+
+    for param in spec:
+        if spec[param].get("is_show"):
+            value = json.loads(spec[param].get("is_show"))
+            dep = value.split("==")
+            if template.get(dep[0]) != dep[1]:
+                del template[param]
+            del spec[param]["is_show"]
+
 
 def get_diff(have, want):
     """

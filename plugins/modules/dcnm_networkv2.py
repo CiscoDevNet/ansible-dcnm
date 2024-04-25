@@ -198,6 +198,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_url,
     build_arg_spec,
     get_diff,
+    resolve_dependency
 )
 from ansible.module_utils.basic import AnsibleModule
 
@@ -1049,8 +1050,6 @@ class DcnmNetworkv2:
                 "networkExtensionTemplate": ne_template,
             }
             net_upd.update({"networkTemplateConfig": net["network_template_config"]})
-            if not net_upd["networkTemplateConfig"]["trmEnabled"]:
-                net_upd["networkTemplateConfig"]["igmpVersion"] = ""
 
         return net_upd
 
@@ -1669,6 +1668,7 @@ class DcnmNetworkv2:
                         net_template, net_dyn_spec
                     )
                     invalid_params.extend(invalid_net)
+                    resolve_dependency(net_dyn_spec, valid_dyn_net[0])
                     net["network_template_config"] = valid_dyn_net[0]
                     
                     if att_present:
