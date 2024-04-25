@@ -69,6 +69,7 @@ class FabricCommon:
         self.fabric_type_to_template_name_map = {}
         self.fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
         self.fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
+        self.fabric_type_to_template_name_map["MSD"] = "MSD_Fabric"
 
         self._valid_fabric_types = set(self.fabric_type_to_template_name_map.keys())
 
@@ -76,10 +77,13 @@ class FabricCommon:
         self._mandatory_payload_keys_all_fabrics.append("FABRIC_NAME")
         self._mandatory_payload_keys_all_fabrics.append("FABRIC_TYPE")
         self._mandatory_payload_keys = {}
-        self._mandatory_payload_keys["VXLAN_EVPN"] = copy.copy(
+        self._mandatory_payload_keys["LAN_CLASSIC"] = copy.copy(
             self._mandatory_payload_keys_all_fabrics
         )
-        self._mandatory_payload_keys["LAN_CLASSIC"] = copy.copy(
+        self._mandatory_payload_keys["MSD"] = copy.copy(
+            self._mandatory_payload_keys_all_fabrics
+        )
+        self._mandatory_payload_keys["VXLAN_EVPN"] = copy.copy(
             self._mandatory_payload_keys_all_fabrics
         )
         self._mandatory_payload_keys["VXLAN_EVPN"].append("BGP_AS")
