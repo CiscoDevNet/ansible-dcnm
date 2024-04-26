@@ -52,10 +52,6 @@ class RuleSetCommon:
         """
         Clean the rule string.
         """
-        method_name = "clean_rule"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"PRE1 : RULE: {self.rule}"
-        self.log.debug(msg)
         self.rule = self.rule.strip('"')
         self.rule = self.rule.strip("'")
         self.rule = self.rule.replace("$$", "")
@@ -68,9 +64,6 @@ class RuleSetCommon:
         self.rule = self.rule.replace("true", "True")
         self.rule = self.rule.replace("false", "False")
         self.rule = re.sub(r"\s+", " ", self.rule)
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"PRE2 : RULE: {self.rule}"
-        self.log.debug(msg)
 
     @property
     def ruleset(self):
@@ -198,7 +191,7 @@ class RuleSetCommon:
 
 class RuleSet(RuleSetCommon):
     """
-    # Generate a ruleset from a template
+    # Generate a ruleset from a controller template
 
     ## Usage
 
@@ -207,13 +200,32 @@ class RuleSet(RuleSetCommon):
     ruleset.template = <template>
     ruleset.commit()
     rules = ruleset.ruleset
+
+    parameter = "MY_PARAM"
+
+    # Retrieve annotations for MY_PARAM
+    annotations = ruleset.annotations(parameter)
+
+    # Retrieve the annotations.section for MY_PARAM
+    section = ruleset.section(parameter)
+
+    # Retrieve whether "MY_PARAM" is an internal
+    # parameter. (is_internal will be boolean)
+    is_internal = rule.is_internal(parameter)
+
+    # Retrieve whether "MY_PARAM" is mandatory
+    # (is_mandatory will be boolean)
+    is_mandatory = rule.is_mandatory(parameter)
+    
+    # Retrieve IsShow for "MY_PARAM"
+    is_show = rule.is_show(parameter)
     ```
     """
 
     def _update_ruleset_no_boolean(self):
         """
         - Process rules that contain no boolean terms
-        - Raise ``ValueError`` for unhandle case if rule is a list.
+        - Raise ``ValueError`` for unhandled case if rule is a list.
 
         ```python
         "VRF_LITE_AUTOCONFIG != Manual"
