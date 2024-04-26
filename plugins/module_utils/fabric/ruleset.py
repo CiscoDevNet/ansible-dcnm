@@ -216,7 +216,7 @@ class RuleSet(RuleSetCommon):
     # Retrieve whether "MY_PARAM" is mandatory
     # (is_mandatory will be boolean)
     is_mandatory = rule.is_mandatory(parameter)
-    
+
     # Retrieve IsShow for "MY_PARAM"
     is_show = rule.is_show(parameter)
     ```
