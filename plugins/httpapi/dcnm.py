@@ -62,6 +62,8 @@ class HttpApi(HttpApiBase):
     def set_version(self, version):
         self.version = version
 
+    # This function is used to store the authentication token information received. This will be used to build auth headers
+    # when using "requests" module for uploading images whih uses multi-part-frames.
     def set_token(self, token):
         self.token = token
 
