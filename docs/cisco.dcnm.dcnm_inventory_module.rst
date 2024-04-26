@@ -88,7 +88,9 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
-                        <div>Maximum Hops to reach the switch</div>
+                        <div>Maximum Hops to reach the switch.</div>
+                        <div>This parameter is deprecated(as on 2024-03-06)</div>
+                        <div>Defaults to 0 irrespective of configured value.</div>
                 </td>
             </tr>
             <tr>

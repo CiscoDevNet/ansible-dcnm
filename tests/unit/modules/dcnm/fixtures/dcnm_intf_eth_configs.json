@@ -95,7 +95,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"ifname": "Ethernet1/30",
 				"fabric": "test_fabric"
 			},
@@ -121,7 +121,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"fabric": "test_fabric"
 			},
 			"name": "eth1/31",
@@ -147,7 +147,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/32",
@@ -172,7 +172,7 @@
 				"admin_state": "False",
 				"ifname": "Ethernet1/33",
 				"route_tag": "",
-				"speed": "auto",
+				"speed": "Auto",
 				"cmds": [
 					"no shutdown"
 				],
@@ -341,7 +341,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"ifname": "Ethernet1/30",
 				"fabric": "test_fabric"
 			},
@@ -367,7 +367,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"fabric": "test_fabric"
 			},
 			"name": "eth1/31",
@@ -393,7 +393,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/32",
@@ -418,7 +418,7 @@
 				"admin_state": "False",
 				"ifname": "Ethernet1/33",
 				"route_tag": "",
-				"speed": "auto",
+				"speed": "Auto",
 				"cmds": [
 					"no shutdown"
 				],
@@ -463,7 +463,7 @@
 					"no shutdown",
 				"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"ifname": "Ethernet1/30",
 				"fabric": "test_fabric"
 			},
@@ -491,7 +491,7 @@
 					"no shutdown",
 				"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"ifname": "Ethernet1/2",
 				"fabric": "test_fabric"
 			},
