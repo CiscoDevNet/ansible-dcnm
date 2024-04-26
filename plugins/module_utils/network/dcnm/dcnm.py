@@ -26,6 +26,7 @@ from ansible.module_utils.connection import Connection
 import datetime
 import inspect
 
+
 def log(msg):
     with open('/tmp/netv2.log', 'a') as of:
         callerframerecord = inspect.stack()[1]
@@ -112,7 +113,7 @@ def validate_list_of_dicts(param_list, spec, module=None):
                                     param, item, spec[param].get("length_max")
                                 )
                             )
-                elif type == "int" or type == "integer" or type == "long": 
+                elif type == "int" or type == "integer" or type == "long":
                     item = v.check_type_int(item)
                     min_value = 1
                     if spec[param].get("range_min") is not None:
@@ -557,7 +558,7 @@ def build_arg_spec(module, path):
     ):
         params = resp["DATA"]["parameters"]
         for i in params:
-            name=None
+            name = None
             type = "string"
             default = None
             required = False
@@ -574,19 +575,20 @@ def build_arg_spec(module, path):
                     name = i[key]
                 if key == "parameterType":
                     type = i[key]
-                #if key ==  "defaultValue":
-                #    default = i[key]
+                # if key ==  "defaultValue":
+                #     default = i[key]
                 if key == "optional":
                     required = not i[key]
                 if key == "annotations":
                     k = i[key]
                     for anonkey in k.keys():
-                        if anonkey =="IsHidden" or anonkey == "IsInternal" or anonkey == "ReadOnly":
+                        if anonkey == "IsHidden" or anonkey == "IsInternal" or anonkey == "ReadOnly":
                             if k[anonkey]:
                                 hidden = True
                                 break
+                        # if anonkey == "Section" and
+                        #     (k[anonkey] == "\"Hidden\"" or k[anonkey] == "\"Attach/Hidden\""):
                         if anonkey == "Section" and k[anonkey] == "\"Hidden\"":
-                        #if anonkey == "Section" and (k[anonkey] == "\"Hidden\"" or k[anonkey] == "\"Attach/Hidden\""):
                             hidden = True
                             break
                         if anonkey == "Section" and k[anonkey] == "\"Attach/Hidden\"":
@@ -598,7 +600,7 @@ def build_arg_spec(module, path):
                 if key == "metaProperties":
                     j = i[key]
                     for metakey in j.keys():
-                        if metakey =="min":
+                        if metakey == "min":
                             range_min = j[metakey]
                         if metakey == "max":
                             range_max = j[metakey]
@@ -627,10 +629,10 @@ def build_arg_spec(module, path):
                     vars()[name].update({"length_max": length_max})
                 if isshow:
                     vars()[name].update({"is_show": isshow})
-                #vars()[name] = dict(type=type, default=default, required=required,
-                #                  range_min=range_min, range_max=range_max,
-                #                  length_min=length_min, length_max=length_max)
-                arg = {name:vars()[name]}
+                # vars()[name] = dict(type=type, default=default, required=required,
+                #                   range_min=range_min, range_max=range_max,
+                #                   length_min=length_min, length_max=length_max)
+                arg = {name: vars()[name]}
                 arg_spec.update(arg)
         return arg_spec
     else:
@@ -664,7 +666,7 @@ def get_diff(have, want):
     """
     key_list = []
 
-    if  isinstance(have, list):
+    if isinstance(have, list):
         diff_create = []
         diff_not_w_in_h = have.copy()
         diff_create_update = []
@@ -675,7 +677,7 @@ def get_diff(have, want):
                 key_list = keys.split(",")
             found = False
             for ha in have:
-                #update_param = False
+                # update_param = False
                 match = False
                 if key_list:
                     for key in key_list:
@@ -747,7 +749,7 @@ def get_diff(have, want):
                     else:
                         needs_update = True
             if needs_update:
-                    diff_create_update.update(want)
+                diff_create_update.update(want)
         if not found:
             diff_create.update(want)
 

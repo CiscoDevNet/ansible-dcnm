@@ -252,7 +252,7 @@
         suppressArp: True
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
@@ -274,7 +274,7 @@
         tag: 14346
         mtu: 1500
         vlanName: "testvlan1"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
@@ -326,7 +326,7 @@
         suppressArp: True
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
     - net_name: ansible-net12
       net_id: 7010
       vrf_name: Tenant-2
@@ -338,7 +338,7 @@
         tag: 14346
         mtu: 1500
         vlanName: "testvlan1"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
   register: result
 
 - assert:

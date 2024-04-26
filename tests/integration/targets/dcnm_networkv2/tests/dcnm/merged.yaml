@@ -506,7 +506,7 @@
         suppressArp: True
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
@@ -579,7 +579,7 @@
         suppressArp: false
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
@@ -652,7 +652,7 @@
         suppressArp: false
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
   register: result
 
 - name: Query fabric state until networkName is present
@@ -688,7 +688,7 @@
         suppressArp: false
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
@@ -887,7 +887,6 @@
       net_extension_template: Default_Network_Extension_Universal
       network_template_config:
         gatewayIpAddress: '192.168.30.1/24'
-        tag: 14345
         mtu: 2500
         vlanId: 3504
         suppressArp: false

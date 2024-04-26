@@ -20,7 +20,7 @@ __author__ = "Praveen Ramoorthy"
 
 DOCUMENTATION = """
 ---
-module: dcnm_network
+module: dcnm_networkv2
 short_description: Add and remove custom Networks from a NDFC managed VXLAN fabric.
 version_added: "4.0.0"
 description:
@@ -113,6 +113,7 @@ options:
                 description:
                 - List of switch ports to be attached to network
                 type: list
+                elements: str
                 default: []
               torPorts:
                 description:
@@ -128,12 +129,13 @@ options:
                     description:
                     - List of TOR ports to be attached to network
                     type: list
+                    elements: str
                     default: []
-                default: ""
               detachSwitchPorts:
                 description:
                 - List of switch ports to be detached from network
                 type: list
+                elements: str
                 default: []
               instanceValues:
                 description:
@@ -419,7 +421,7 @@ class DcnmNetworkv2:
         self.diff_delete = diff_delete
         self.diff_detach = diff_detach
         return warn_msg
-    
+
     def get_diff_replace(self):
         """
         Retrieves the differences for replacing network and attachments.
@@ -467,7 +469,7 @@ class DcnmNetworkv2:
                             a_h.update({"detachSwitchPorts": ""})
                             r_net_list.append(a_h)
                             if diff_deploy.get(a_h["serialNumber"]):
-                                diff_deploy[a_h["serialNumber"]].append(a_h["networkName"]) 
+                                diff_deploy[a_h["serialNumber"]].append(a_h["networkName"])
                             else:
                                 diff_deploy[a_h["serialNumber"]] = [a_h["networkName"]]
                     break
@@ -518,7 +520,7 @@ class DcnmNetworkv2:
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
         return warn_msg
-    
+
     def get_deploy_diff(self, diff_deploy):
         """
         Get the difference between the desired deployment and the current deployment.
@@ -551,9 +553,9 @@ class DcnmNetworkv2:
                             diff_deploy[w_deploy] = [net]
             else:
                 diff_deploy[w_deploy] = self.want_deploy[w_deploy]
-                            
+
     def compute_deploy_diff(self, w_attach, diff_deploy):
-        
+
         if self.want_deploy.get(w_attach["serialNumber"]):
             if w_attach["networkName"] in self.want_deploy[w_attach["serialNumber"]]:
                 if diff_deploy.get(w_attach["serialNumber"]):
@@ -655,7 +657,7 @@ class DcnmNetworkv2:
                 for tor_h in h_attach.get("torPorts"):
                     torconfig = tor_h["switch"] + "(" + (",".join(tor_h["ports"])).strip() + ")"
                     w_attach.update({"torPorts": torconfig})
-        
+
     def get_diff_merge(self, replace=False):
         """
         This method calculates the differences between the `have_create`, `want_create`,
@@ -730,11 +732,11 @@ class DcnmNetworkv2:
                 diff_attach.append(want_a)
                 for attach in want_a.get("lanAttachList"):
                     attach.update(
-                    {
-                        "switchPorts": ",".join(attach["switchPorts"])
-                        if attach.get("switchPorts")
-                        else ""
-                    }
+                        {
+                            "switchPorts": ",".join(attach["switchPorts"])
+                            if attach.get("switchPorts")
+                            else ""
+                        }
                     )
                     if attach.get("torPorts"):
                         for tor_h in attach.get("torPorts"):
@@ -748,7 +750,7 @@ class DcnmNetworkv2:
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
         return warn_msg
-    
+
     def get_diff_query(self):
         """
         Retrieves the difference query for the network.
@@ -1222,7 +1224,7 @@ class DcnmNetworkv2:
                 while not state:
                     resp = dcnm_send(self.module, method, path)
                     state = True
-                    iter+=1
+                    iter += 1
                     if resp["DATA"]:
                         attach_list = resp["DATA"][0]["lanAttachList"]
                         for atch in attach_list:
@@ -1230,7 +1232,7 @@ class DcnmNetworkv2:
                                 atch["lanAttachState"] == "OUT-OF-SYNC"
                                 or atch["lanAttachState"] == "FAILED"
                             ):
-                                if iter<10:
+                                if iter < 10:
                                     self.diff_delete.update({net: "DEPLOYED"})
                                     state = False
                                     time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
@@ -1253,7 +1255,7 @@ class DcnmNetworkv2:
         for list_elem in diff:
             for node in list_elem["lanAttachList"]:
                 node["fabric"] = self.sn_fab[node["serialNumber"]]
-    
+
     def push_to_remote_update(self, path, is_rollback=False):
         """
         Pushes the Network updates to the NDFC.
@@ -1275,7 +1277,7 @@ class DcnmNetworkv2:
             update_path = path + "/{0}".format(net["networkName"])
             resp = dcnm_send(self.module, method, update_path, json.dumps(net))
             self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "create",self.result["changed"])
+            fail, self.result["changed"] = self.handle_response(resp, "create", self.result["changed"])
             if fail:
                 if is_rollback:
                     self.failed_to_rollback = True
@@ -1321,7 +1323,7 @@ class DcnmNetworkv2:
         Pushes the undeploy NDFC network.
 
         Args:
-            is_rollback (bool, optional): Indicates whether the undeploy action is part of a rollback process. 
+            is_rollback (bool, optional): Indicates whether the undeploy action is part of a rollback process.
                                           Defaults to False.
 
         Returns:
@@ -1527,7 +1529,7 @@ class DcnmNetworkv2:
 
         if self.diff_create_update:
             self.push_to_remote_update(path, is_rollback)
-            
+
         # The detach and un-deploy operations are executed before the create, attach, and deploy to particularly
         # address cases where a VLAN of a network being deleted is re-used on a new network being created. This is
         # needed especially for state: overridden.
@@ -1581,7 +1583,7 @@ class DcnmNetworkv2:
             net_ext_dyn_spec = build_arg_spec(self.module, path)
             self.dyn_arg_spec.update({ext_template_name: net_ext_dyn_spec})
 
-        net_dyn_spec =  {**net_ext_dyn_spec, **net_uni_dyn_spec}
+        net_dyn_spec = {**net_ext_dyn_spec, **net_uni_dyn_spec}
         return net_dyn_spec
 
     def validate_input(self):
@@ -1653,7 +1655,7 @@ class DcnmNetworkv2:
 
             for net in valid_net:
                 net_template = []
-                att_present=False
+                att_present = False
                 net_dyn_spec = self.get_arg_spec(net)
                 if net.get("network_template_config"):
                     if net["network_template_config"].get("attach"):
@@ -1661,7 +1663,7 @@ class DcnmNetworkv2:
                             net["network_template_config"]["attach"], net_attach_spec
                         )
                         invalid_params.extend(invalid_att)
-                        att_present=True
+                        att_present = True
 
                     net_template.append(net["network_template_config"])
                     valid_dyn_net, invalid_net = validate_list_of_dicts(
@@ -1670,7 +1672,7 @@ class DcnmNetworkv2:
                     invalid_params.extend(invalid_net)
                     resolve_dependency(net_dyn_spec, valid_dyn_net[0])
                     net["network_template_config"] = valid_dyn_net[0]
-                    
+
                     if att_present:
                         net["attach"] = valid_att
                         for attach in net["attach"]:
@@ -1808,7 +1810,7 @@ class DcnmNetworkv2:
             changed = False | change
 
         return fail, changed
-    
+
     def failure(self, resp):
 
         # # Donot Rollback for Multi-site fabrics
@@ -1915,6 +1917,7 @@ class DcnmNetworkv2:
                 continue
 
             self.dcnm_update_network_information(net, match_have[0], match_cfg[0])
+
 
 def main():
     """main entry point for module execution"""

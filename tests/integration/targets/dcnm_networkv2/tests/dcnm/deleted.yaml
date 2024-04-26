@@ -382,7 +382,7 @@
         suppressArp: True
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
@@ -442,7 +442,7 @@
         suppressArp: True
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}   
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
   register: result
 
 - assert:
@@ -486,7 +486,7 @@
         suppressArp: True
         intfDescription: "test interface"
         vlanName: "testvlan"
-        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1","srvrVrf":"vrf1"},{"srvrAddr":"2.2.2.2","srvrVrf":"vrf2"}]}
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
         attach:
           - attached: true
             dot1QVlan: 1
