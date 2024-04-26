@@ -232,6 +232,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
+    FabricTypes
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
@@ -436,6 +438,7 @@ class Merged(Common):
         self.fabric_details = FabricDetailsByName(self.params)
         self.fabric_summary = FabricSummary(self.params)
         self.fabric_create = FabricCreateBulk(self.params)
+        self.fabric_types = FabricTypes()
         self.fabric_update = FabricUpdateBulk(self.params)
         self.template = TemplateGet()
 
@@ -465,7 +468,15 @@ class Merged(Common):
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
             fabric_type = want.get("FABRIC_TYPE", None)
-            template_name = self.fabric_type_to_template_name(fabric_type)
+            try:
+                self.fabric_types.fabric_type = fabric_type
+            except ValueError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+            try:
+                template_name = self.fabric_types.template_name
+            except ValueError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
             self.template.rest_send = self.rest_send
             self.template.template_name = template_name

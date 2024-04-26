@@ -331,18 +331,6 @@ class FabricCommon:
         result["changed"] = True
         return result
 
-    def fabric_type_to_template_name(self, value):
-        """
-        - Return the template name for a given fabric type
-        - raise ``ValueError`` if value is not a valid fabric type
-        """
-        method_name = inspect.stack()[0][3]
-        if value not in self.fabric_type_to_template_name_map:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Unknown fabric type: {value}"
-            raise ValueError(msg)
-        return self.fabric_type_to_template_name_map[value]
-
     @property
     def fabric_details(self):
         """
