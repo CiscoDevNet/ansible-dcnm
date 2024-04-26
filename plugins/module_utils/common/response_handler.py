@@ -52,7 +52,7 @@ class ResponseHandler:
     """
 
     def __init__(self):
-        self.class_name = __class__.__name__
+        self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
