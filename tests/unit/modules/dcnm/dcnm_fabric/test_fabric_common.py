@@ -351,10 +351,6 @@ def test_fabric_common_00052(fabric_common) -> None:
     assert result.get("success") is True
 
 
-MATCH_00060a = r"FabricCommon\.fabric_type_to_template_name: "
-MATCH_00060a += "Unknown fabric type:"
-
-
 @pytest.mark.parametrize(
     "value, expected_return_value",
     [
