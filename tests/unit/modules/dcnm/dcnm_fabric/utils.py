@@ -23,6 +23,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
@@ -259,6 +261,14 @@ def fabric_update_bulk_fixture():
     return FabricUpdateBulk(instance.params)
 
 
+@pytest.fixture(name="response_handler")
+def response_handler_fixture():
+    """
+    mock ResponseHandler()
+    """
+    return ResponseHandler()
+
+
 @pytest.fixture(name="template_get")
 def template_get_fixture():
     """
@@ -468,6 +478,16 @@ def responses_fabric_update_bulk(key: str) -> Dict[str, str]:
     Return responses for FabricUpdateBulk
     """
     data_file = "responses_FabricUpdateBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_response_handler(key: str) -> Dict[str, str]:
+    """
+    Return responses for ResponseHandler
+    """
+    data_file = "responses_ResponseHandler"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
