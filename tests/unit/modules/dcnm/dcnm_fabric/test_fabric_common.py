@@ -195,7 +195,7 @@ def test_fabric_common_00070(fabric_common, value, expected_return_value) -> Non
     """
     Classes and Methods
     - ConversionUtils
-        - make_none() 
+        - make_none()
     - FabricCommon
         - __init__()
 
@@ -231,7 +231,7 @@ def test_fabric_common_00080(fabric_common, value, expected_return_value) -> Non
     """
     Classes and Methods
     - ConversionUtils
-        - make_boolean() 
+        - make_boolean()
     - FabricCommon
         - __init__()
         - conversion.make_boolean()
