@@ -33,16 +33,10 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     does_not_raise, fabric_common_fixture, params, payloads_fabric_common,
     responses_fabric_common)
@@ -114,11 +108,13 @@ def test_fabric_common_00020(fabric_common) -> None:
     - FabricCommon
         - __init__()
         - _fixup_payloads_to_commit()
+        - _fixup_anycast_gw_mac()
 
     Summary
     - Verify ``ValueError`` is raised when ANYCAST_GW_MAC is malformed.
     """
-    key = "test_fabric_create_bulk_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
     with does_not_raise():
         instance = fabric_common
         instance.results = Results()
@@ -130,225 +126,52 @@ def test_fabric_common_00020(fabric_common) -> None:
         instance._fixup_payloads_to_commit()
 
 
-def test_fabric_common_00030(fabric_common) -> None:
+MATCH_00021a = r"FabricCommon\._fixup_bgp_as:\s+"
+MATCH_00021a += r"Invalid BGP_AS .* for fabric f1,\s+"
+MATCH_00021a += r"Error detail: BGP ASN .* failed regex validation\."
+
+MATCH_00021b = r"FabricCommon\._fixup_bgp_as:\s+"
+MATCH_00021b += r"Invalid BGP_AS .* for fabric f1,\s+"
+MATCH_00021b += r"Error detail: BGP ASN \(.*\) cannot be type float\(\)\s+"
+MATCH_00021b += r"due to loss of trailing zeros\.\s+"
+MATCH_00021b += r"Use a string or integer instead\."
+
+
+@pytest.mark.parametrize(
+    "bgp_as, expected",
+    [
+        ("65001.65535", does_not_raise()),
+        ("65001.0", does_not_raise()),
+        ("65001", does_not_raise()),
+        (65001, does_not_raise()),
+        (4294967295, does_not_raise()),
+        (0, pytest.raises(ValueError, match=MATCH_00021a)),
+        (4294967296, pytest.raises(ValueError, match=MATCH_00021a)),
+        ("FOOBAR", pytest.raises(ValueError, match=MATCH_00021a)),
+        ("65001.65536", pytest.raises(ValueError, match=MATCH_00021a)),
+        ("65001:65000", pytest.raises(ValueError, match=MATCH_00021a)),
+        (65001.65000, pytest.raises(ValueError, match=MATCH_00021b)),
+    ],
+)
+def test_fabric_common_00021(fabric_common, bgp_as, expected) -> None:
     """
     Classes and Methods
     - FabricCommon
         - __init__()
-        - _handle_response()
-        - _handle_unknown_request_verbs()
+        - _fixup_payloads_to_commit()
+        - _fixup_bgp_as()
 
     Summary
-    - Verify ``ValueError`` is raised when request verb is unknown.
+    - Verify ``ValueError`` is raised when BGP_AS fails regex validation.
     """
-    key = "test_fabric_common_00030a"
-    response = responses_fabric_common(key)
     with does_not_raise():
         instance = fabric_common
         instance.results = Results()
-    match = r"FabricCommon\._handle_unknown_request_verbs: "
-    match += r"Unknown request verb \(FOO\) for response"
-    with pytest.raises(ValueError, match=match):
-        instance._handle_response(response, response.get("METHOD", None))
-
-
-def test_fabric_common_00040(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_get_response()
-
-    Summary
-    -   Verify _handle_get_response() for:
-        -   MESSAGE: "Not Found"
-        -   METHOD: GET
-        -   RETURN_CODE: 404
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00040a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("found") is False
-    assert result.get("success") is True
-
-
-def test_fabric_common_00041(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_get_response()
-
-    Summary
-    -   Verify _handle_get_response() for:
-        -   MESSAGE: don't care
-        -   METHOD: GET
-        -   RETURN_CODE: 500 (not in {200, 404})
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00041a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("found") is False
-    assert result.get("success") is False
-
-
-def test_fabric_common_00042(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_get_response()
-
-    Summary
-    -   Verify _handle_get_response() for:
-        -   MESSAGE: "ERROR" (!= "OK")
-        -   METHOD: GET
-        -   RETURN_CODE: 200 (don't care)
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00042a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("found") is False
-    assert result.get("success") is False
-
-
-def test_fabric_common_00043(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_get_response()
-
-    Summary
-    -   Verify _handle_get_response() for:
-        -   MESSAGE: "OK"
-        -   METHOD: GET
-        -   RETURN_CODE: 200
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00043a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("found") is True
-    assert result.get("success") is True
-
-
-def test_fabric_common_00050(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_post_put_delete_response()
-
-    Summary
-    -   Verify _handle_post_put_delete_response() for:
-        -   ERROR: key is present
-        -   MESSAGE: "OK" (don't care)
-        -   METHOD: POST
-        -   RETURN_CODE: 200 (don't care)
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00050a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("changed") is False
-    assert result.get("success") is False
-
-
-def test_fabric_common_00051(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_post_put_delete_response()
-
-    Summary
-    -   Verify _handle_post_put_delete_response() for:
-        -   ERROR: not present (don't care)
-        -   MESSAGE: "NOK" (!= OK)
-        -   METHOD: POST
-        -   RETURN_CODE: 200 (don't care)
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00051a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("changed") is False
-    assert result.get("success") is False
-
-
-def test_fabric_common_00052(fabric_common) -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-        - _handle_response()
-        - _handle_post_put_delete_response()
-
-    Summary
-    -   Verify _handle_post_put_delete_response() for:
-        -   ERROR: not present
-        -   MESSAGE: "OK"
-        -   METHOD: POST
-        -   RETURN_CODE: don't care
-
-    Test
-    - Verify ``ValueError`` is not raised
-    - Verify ``result`` values are as expected
-    """
-    key = "test_fabric_common_00052a"
-    response = responses_fabric_common(key)
-    with does_not_raise():
-        instance = fabric_common
-        instance.results = Results()
-        result = instance._handle_response(response, response.get("METHOD", None))
-    assert result.get("changed") is True
-    assert result.get("success") is True
+        instance._payloads_to_commit = [
+            {"BGP_AS": bgp_as, "FABRIC_NAME": "f1", "FABRIC_TYPE": "VXLAN_EVPN"}
+        ]
+    with expected:
+        instance._fixup_payloads_to_commit()
 
 
 @pytest.mark.parametrize(
@@ -371,12 +194,13 @@ def test_fabric_common_00052(fabric_common) -> None:
 def test_fabric_common_00070(fabric_common, value, expected_return_value) -> None:
     """
     Classes and Methods
+    - ConversionUtils
+        - make_none() 
     - FabricCommon
         - __init__()
-        - make_none()
 
     Summary
-    -   Verify expected values are returned:
+    -   Verify FabricCommon().conversion.make_none returns expected values.
     """
     with does_not_raise():
         instance = fabric_common
@@ -406,12 +230,14 @@ def test_fabric_common_00070(fabric_common, value, expected_return_value) -> Non
 def test_fabric_common_00080(fabric_common, value, expected_return_value) -> None:
     """
     Classes and Methods
+    - ConversionUtils
+        - make_boolean() 
     - FabricCommon
         - __init__()
         - conversion.make_boolean()
 
     Summary
-    -   Verify expected values are returned:
+    -   Verify FabricCommon().conversion.make_boolean returns expected values.
     """
     with does_not_raise():
         instance = fabric_common
@@ -436,7 +262,6 @@ def test_fabric_common_00100(fabric_common) -> None:
 
     with does_not_raise():
         instance = fabric_common
-        # instance._build_properties()
 
     match = r"FabricCommon\._verify_payload:\s+"
     match += r"Playbook configuration for fabrics must be a dict\.\s+"
@@ -458,13 +283,11 @@ def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
     Classes and Methods
     - FabricCommon
         - __init__()
-    - FabricCreateCommon
-        - __init__()
-    - FabricCreateCommon
         - _verify_payload()
 
     Summary
-    -   Verify ``ValueError`` is raised when payload is missing mandatory keys.
+    -   Verify ``ValueError`` is raised when payload is missing
+        mandatory parameters.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -477,6 +300,124 @@ def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
         instance = fabric_common
 
     match = r"FabricCommon\._verify_payload:\s+"
-    match += r"Playbook configuration for fabric .* is missing mandatory parameter.*\."
+    match += r"Playbook configuration for fabric .* is missing mandatory\s+"
+    match += r"parameter.*\."
     with pytest.raises(ValueError, match=match):
+        instance._verify_payload(payload)
+
+
+def test_fabric_common_00111(fabric_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _verify_payload()
+
+    Summary
+    -   Verify FabricCommon()_verify_payload() returns if state != "merged".
+
+    NOTES:
+    -   Since state == "query", FabricCommon()._verify_payload() does not
+        reach its validation checks and so does not raise ``ValueError``
+        when its input parameter is the wrong type (str vs dict).
+    """
+    with does_not_raise():
+        instance = fabric_common
+        instance.state = "query"
+        instance._verify_payload("NOT_A_DICT")
+
+
+MATCH_00112a = r"FabricCommon\._verify_payload:\s+"
+MATCH_00112a += r"Playbook configuration for fabric .* contains an invalid\s+"
+MATCH_00112a += r"FABRIC_NAME\.\s+"
+MATCH_00112a += r"Error detail: ConversionUtils\.validate_fabric_name:\s+"
+MATCH_00112a += r"Invalid fabric name:\s+.*\.\s+"
+MATCH_00112a += r"Fabric name must start with a letter A-Z or a-z and\s+"
+MATCH_00112a += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\.\s+"
+MATCH_00112a += r"Bad configuration:.*"
+
+
+MATCH_00112b = r"FabricCommon\._verify_payload:\s+"
+MATCH_00112b += r"Playbook configuration for fabric .* contains an invalid\s+"
+MATCH_00112b += r"FABRIC_NAME\.\s+"
+MATCH_00112b += r"Error detail: ConversionUtils\.validate_fabric_name:\s+"
+MATCH_00112b += r"Invalid fabric name\. Expected string. Got .*\.\s+"
+MATCH_00112b += r"Bad configuration:.*"
+
+
+@pytest.mark.parametrize(
+    "fabric_name, expected",
+    [
+        ("MyFabric", does_not_raise()),
+        ("My_Fabric", does_not_raise()),
+        ("My-Fabric-66", does_not_raise()),
+        (0, pytest.raises(ValueError, match=MATCH_00112b)),
+        (100.100, pytest.raises(ValueError, match=MATCH_00112b)),
+        ("10_MyFabric", pytest.raises(ValueError, match=MATCH_00112a)),
+        ("My:Fabric", pytest.raises(ValueError, match=MATCH_00112a)),
+        ("My,Fabric", pytest.raises(ValueError, match=MATCH_00112a)),
+        ("@MyFabric", pytest.raises(ValueError, match=MATCH_00112a)),
+    ],
+)
+def test_fabric_common_00112(fabric_common, fabric_name, expected) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _verify_payload()
+
+    Summary
+    - Verify ``ValueError`` is raised when FABRIC_NAME fails regex validation.
+    """
+    payload = {
+        "BGP_AS": "65000.100",
+        "FABRIC_NAME": fabric_name,
+        "FABRIC_TYPE": "VXLAN_EVPN",
+    }
+
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+    with expected:
+        instance._verify_payload(payload)
+
+
+MATCH_00113a = r"FabricCommon\._verify_payload:\s+"
+MATCH_00113a += r"Playbook configuration for fabric .* contains an invalid\s+"
+MATCH_00113a += r"FABRIC_TYPE\s+\(.*\)\.\s+"
+MATCH_00113a += r"Valid values for FABRIC_TYPE:\s+"
+MATCH_00113a += r"\['LAN_CLASSIC', 'VXLAN_EVPN', 'VXLAN_EVPN_MSD'\]\.\s+"
+MATCH_00113a += r"Bad configuration:\s+"
+
+
+@pytest.mark.parametrize(
+    "fabric_type, expected",
+    [
+        ("LAN_CLASSIC", does_not_raise()),
+        ("VXLAN_EVPN", does_not_raise()),
+        ("VXLAN_EVPN_MSD", does_not_raise()),
+        (0, pytest.raises(ValueError, match=MATCH_00113a)),
+        ("FOOBAR", pytest.raises(ValueError, match=MATCH_00113a)),
+    ],
+)
+def test_fabric_common_00113(fabric_common, fabric_type, expected) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+        - _verify_payload()
+
+    Summary
+    - Verify ``ValueError`` is raised when FABRIC_TYPE is invalid.
+    """
+    payload = {
+        "BGP_AS": "65000.100",
+        "FABRIC_NAME": "MyFabric",
+        "FABRIC_TYPE": fabric_type,
+    }
+
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+    with expected:
         instance._verify_payload(payload)

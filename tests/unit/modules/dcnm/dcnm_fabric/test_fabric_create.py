@@ -236,7 +236,7 @@ def test_fabric_create_00025(fabric_create) -> None:
         instance.results = Results()
 
     match = r"FabricCreate\._verify_payload:\s+"
-    match += r"Playbook configuration for fabric f1 contains invalid\s+"
+    match += r"Playbook configuration for fabric f1 contains an invalid\s+"
     match += r"FABRIC_TYPE \(INVALID_FABRIC_TYPE\)\."
     with pytest.raises(ValueError, match=match):
         instance.payload = payloads_fabric_create(key)

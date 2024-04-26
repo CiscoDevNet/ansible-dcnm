@@ -183,7 +183,7 @@ class FabricCommon:
         if fabric_type not in self.fabric_types.valid_fabric_types:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Playbook configuration for fabric {fabric_name} "
-            msg += f"contains invalid FABRIC_TYPE ({fabric_type}). "
+            msg += f"contains an invalid FABRIC_TYPE ({fabric_type}). "
             msg += "Valid values for FABRIC_TYPE: "
             msg += f"{self.fabric_types.valid_fabric_types}. "
             msg += f"Bad configuration: {sorted_payload}."
@@ -201,10 +201,9 @@ class FabricCommon:
             raise ValueError(msg) from error
 
         missing_parameters = []
-        try:
-            self.fabric_types.fabric_type = fabric_type
-        except ValueError as error:
-            raise ValueError(error) from error
+        # FABRIC_TYPE is already validated above.
+        # No need for try/except block here.
+        self.fabric_types.fabric_type = fabric_type
 
         for parameter in self.fabric_types.mandatory_parameters:
             if parameter not in payload:
@@ -243,93 +242,6 @@ class FabricCommon:
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
                 raise ValueError(msg) from error
-
-    def _handle_response(self, response, verb) -> Dict[str, Any]:
-        """
-        - Call the appropriate handler for response based on verb
-        - Raise ``ValueError`` if verb is unknown
-        """
-        if verb == "GET":
-            return self._handle_get_response(response)
-        if verb in {"POST", "PUT", "DELETE"}:
-            return self._handle_post_put_delete_response(response)
-        try:
-            return self._handle_unknown_request_verbs(response, verb)
-        except ValueError as error:
-            raise ValueError(error) from error
-
-    def _handle_unknown_request_verbs(self, response, verb):
-        """
-        Raise ``ValueError`` if verb is unknown
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Unknown request verb ({verb}) for response {response}."
-        raise ValueError(msg)
-
-    def _handle_get_response(self, response) -> Dict[str, Any]:
-        """
-        Caller:
-            - self._handle_response()
-        Handle controller responses to GET requests
-        Returns: dict() with the following keys:
-        - found:
-            - False, if request error was "Not found" and RETURN_CODE == 404
-            - True otherwise
-        - success:
-            - False if RETURN_CODE != 200 or MESSAGE != "OK"
-            - True otherwise
-        """
-        result = {}
-        success_return_codes = {200, 404}
-        if (
-            response.get("RETURN_CODE") == 404
-            and response.get("MESSAGE") == "Not Found"
-        ):
-            result["found"] = False
-            result["success"] = True
-            return result
-        if (
-            response.get("RETURN_CODE") not in success_return_codes
-            or response.get("MESSAGE") != "OK"
-        ):
-            result["found"] = False
-            result["success"] = False
-            return result
-        result["found"] = True
-        result["success"] = True
-        return result
-
-    def _handle_post_put_delete_response(self, response) -> Dict[str, Any]:
-        """
-        Caller:
-            - self.self._handle_response()
-
-        Handle POST, PUT, DELETE responses from the controller.
-
-        Returns: dict() with the following keys:
-        - changed:
-            - True if changes were made to by the controller
-                - ERROR key is not present
-                - MESSAGE == "OK"
-            - False otherwise
-        - success:
-            - False if MESSAGE != "OK" or ERROR key is present
-            - True otherwise
-        """
-        result = {}
-        if response.get("ERROR") is not None:
-            result["success"] = False
-            result["changed"] = False
-            return result
-        if response.get("MESSAGE") != "OK" and response.get("MESSAGE") is not None:
-            result["success"] = False
-            result["changed"] = False
-            return result
-        result["success"] = True
-        result["changed"] = True
-        return result
 
     @property
     def fabric_details(self):

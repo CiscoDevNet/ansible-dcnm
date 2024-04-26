@@ -241,7 +241,7 @@ def test_fabric_create_bulk_00025(fabric_create_bulk) -> None:
         instance.results = Results()
 
     match = r"FabricCreateBulk\._verify_payload:\s+"
-    match += r"Playbook configuration for fabric f1 contains invalid\s+"
+    match += r"Playbook configuration for fabric f1 contains an invalid\s+"
     match += r"FABRIC_TYPE \(INVALID_FABRIC_TYPE\)\.\s+"
     match += r"Valid values for FABRIC_TYPE:"
     with pytest.raises(ValueError, match=match):
