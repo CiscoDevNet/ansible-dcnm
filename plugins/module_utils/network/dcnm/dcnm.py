@@ -54,6 +54,7 @@ dcnm_template_type_xlations = {
     "ipV6AddressWithSubnet": "ipv6_subnet"
 }
 
+
 def validate_ip_address_format(type, item, invalid_params):
 
     if (type == "ipv4_subnet") or (type == "ipv4"):
@@ -559,6 +560,7 @@ def dcnm_get_url(module, fabric, path, items, module_name):
 
     return attach_objects
 
+
 def dcnm_load_mapping_data():
 
     path = os.path.join("./", "{0}.json".format("type_mappings"))
@@ -744,6 +746,7 @@ def dcnm_get_template_specs(module, name, version):
                 pb_template[name + "_spec"][p["name"]]["default"] = ""
 
         return pb_template
+
 
 # The following functions are used for uploading images to DCNM. We use "requests" module to send multi-part-frames to DCNM
 # which requires, auth headers and the correct URL. The requests.post method will encode the multi-part-frames appropriately
