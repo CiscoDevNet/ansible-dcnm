@@ -207,10 +207,27 @@ class ParamInfo:
             value = parameter.get("defaultValue", None)
         if value is None:
             return None
-
-        value = self.conversion.make_int(value)
+        value = re.sub('"',"", value)
+        value_type = self._get_type(parameter)
+        if value_type == "string":
+            # This prevents things like MPLS_ISIS_AREA_NUM
+            # from being converted from "0001" to 1
+            return value
+        if value_type == "integer":
+            value = self.conversion.make_int(value)
         if isinstance(value, int):
             return value
+        return self.conversion.make_boolean(value)
+
+    def _get_internal(self, parameter):
+        """
+        -   Return the parameter's annotations.IsInternal value,
+            if specified in the template.
+        -   Return None otherwise.
+        """
+        value = parameter.get("annotations", {}).get("IsInternal", None)
+        if value is None:
+            return None
         return self.conversion.make_boolean(value)
 
     def _get_min(self, parameter):
@@ -261,21 +278,38 @@ class ParamInfo:
 
         ## Parameter information is culled from the template.
 
-        - type: (``bool, str, int, dict, set, list, None``),
         - choices: (``list``, or ``None``)
-        - min: (``int``, or ``None``)
-        - max: (``int``, or ``None``)
         - default: (``str``, ``int``, etc, or ``None``)
+        - internal: (``bool``, or ``None``)
+        - max: (``int``, or ``None``)
+        - min: (``int``, or ``None``)
+        - type:
+            -   boolean
+            -   enum
+            -   integer
+            -   integerRange
+            -   interface
+            -   interfaceRange
+            -   ipAddressList
+            -   ipV4Address
+            -   ipV4AddressWithSubnet
+            -   ipV6AddressWithSubnet
+            -   macAddress
+            -   string
+            -   string[]
+            -   structureArray
+            -   None
 
         Example:
 
         ```python
         self.info[parameter] = {
-            "type": str,
             "choices": ["Ingress", "Multicast"],
-            "min": None,
+            "default": "Multicast",
+            "internal": False,
             "max": None,
-            "default": "Multicast"
+            "min": None,
+            "type": "string"
         }
         ```
 
@@ -294,3 +328,8 @@ class ParamInfo:
             self.info[param_name]["max"] = self._get_max(parameter)
             self.info[param_name]["min"] = self._get_min(parameter)
             self.info[param_name]["type"] = self._get_type(parameter)
+            self.info[param_name]["internal"] = self._get_internal(parameter)
+            self.info[param_name]["type"] = self._get_type(parameter)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"info[{param_name}]: {json.dumps(self.info[param_name], indent=4, sort_keys=True)}"
+            self.log.debug(msg)
