@@ -207,7 +207,7 @@ class ParamInfo:
             value = parameter.get("defaultValue", None)
         if value is None:
             return None
-        value = re.sub('"',"", value)
+        value = re.sub('"', "", value)
         value_type = self._get_type(parameter)
         if value_type == "string":
             # This prevents things like MPLS_ISIS_AREA_NUM
