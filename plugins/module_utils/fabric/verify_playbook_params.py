@@ -506,9 +506,7 @@ class VerifyPlaybookParams:
         # use 0/1 as a substitute for boolean values and fail here instead.
         # NOTE: self.conversion.make_int() should not (and does not)
         # convert boolean values to integers.
-        if (
-            param_info["type"] == "boolean" and not 
-            isinstance(playbook_value, bool)):
+        if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Parameter: {self.parameter}, "
             msg += f"Invalid value: ({playbook_value}). "
