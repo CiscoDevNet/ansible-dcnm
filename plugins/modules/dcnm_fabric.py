@@ -36,6 +36,7 @@ options:
       - deleted
       - merged
       - query
+      - replaced
     default: merged
   config:
     description:
@@ -236,6 +237,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types imp
     FabricTypes
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import \
+    FabricReplacedBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
     TemplateGet
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
@@ -601,7 +604,7 @@ class Merged(Common):
 
         if len(self.need_update) == 0:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "No fabrics to update."
+            msg += "No fabrics to update for merged state."
             self.log.debug(msg)
             return
 
@@ -677,6 +680,162 @@ class Query(Common):
             )
 
 
+class Replaced(Common):
+    """
+    Handle replaced state
+    """
+
+    def __init__(self, params):
+        self.class_name = self.__class__.__name__
+        super().__init__(params)
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self.fabric_details = FabricDetailsByName(self.params)
+        self.fabric_summary = FabricSummary(self.params)
+        self.fabric_create = FabricCreateBulk(self.params)
+        self.fabric_types = FabricTypes()
+        self.fabric_replaced = FabricReplacedBulk(self.params)
+        self.template = TemplateGet()
+
+        msg = f"ENTERED Replaced.{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+        self.need_replaced = []
+
+        self._implemented_states.add("replaced")
+
+    def get_need(self):
+        """
+        Caller: commit()
+
+        Build self.need for replaced state
+        """
+        self.payloads = {}
+        for want in self.want:
+            # Skip fabrics that do not exist on the controller
+            if want["FABRIC_NAME"] not in self.have.all_data:
+                continue
+            self.need_replaced.append(want)
+
+            msg = f"MMM: self.need_replaced: {self.need_replaced}"
+            self.log.debug(msg)
+            # TODO: Validation of parameters is going to have to be done AFTER we
+            # synthesize the payload. This is because the payload is going to
+            # be a combination of the playbook parameters and the controller
+            # default parameters.
+            # Hence, this needs to be done in FabricReplacedBulk()
+            # Move this into FabricReplacedBulk if needed.
+            # try:
+            #     self._verify_playbook_params.config_playbook = want
+            # except TypeError as error:
+            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+            # fabric_type = want.get("FABRIC_TYPE", None)
+            # try:
+            #     self.fabric_types.fabric_type = fabric_type
+            # except ValueError as error:
+            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+            # try:
+            #     template_name = self.fabric_types.template_name
+            # except ValueError as error:
+            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+            # self.template.rest_send = self.rest_send
+            # self.template.template_name = template_name
+
+            # try:
+            #     self.template.refresh()
+            # except ValueError as error:
+            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+            # except ControllerResponseError as error:
+            #     msg = f"{self.class_name}.{method_name}: "
+            #     msg += "Controller returned error when attempting to retrieve "
+            #     msg += f"template: {template_name}. "
+            #     msg += f"Error detail: {error}"
+            #     self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
+
+            # try:
+            #     self._verify_playbook_params.template = self.template.template
+            # except TypeError as error:
+            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
+            # Move this into FabricReplacedBulk if needed.
+            # nv_pairs = self.have.all_data[want["FABRIC_NAME"]]["nvPairs"]
+            # try:
+            #     self._verify_playbook_params.config_controller = nv_pairs
+            # except TypeError as error:
+            #     self.ansible_module.fail_json(
+            #         f"{error}", **self.results.failed_result
+            #     )
+            # try:
+            #     self._verify_playbook_params.commit()
+            # except (ValueError, KeyError) as error:
+            #     self.ansible_module.fail_json(
+            #         f"{error}", **self.results.failed_result
+            #     )
+
+    def commit(self):
+        """
+        Commit the merged state request
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
+
+        self.rest_send = RestSend(self.ansible_module)
+        self.fabric_details.rest_send = self.rest_send
+        self.fabric_summary.rest_send = self.rest_send
+
+        self.get_want()
+        self.get_have()
+        self.get_need()
+        self.send_need_replaced()
+
+    def send_need_replaced(self) -> None:
+        """
+        Caller: commit()
+
+        Build and send the payload to modify fabrics specified in the
+        playbook per replaced state handling.
+
+        """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        msg = f"{self.class_name}.{method_name}: entered. "
+        msg += "self.need_replaced: "
+        msg += f"{json_pretty(self.need_replaced)}"
+        self.log.debug(msg)
+
+        if len(self.need_replaced) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "No fabrics to update for replaced state."
+            self.log.debug(msg)
+            return
+
+        self.fabric_replaced.fabric_details = self.fabric_details
+        self.fabric_replaced.fabric_summary = self.fabric_summary
+        self.fabric_replaced.rest_send = RestSend(self.ansible_module)
+        self.fabric_replaced.results = self.results
+
+        try:
+            self.fabric_replaced.payloads = self.need_replaced
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_replaced.results.failed_result
+            )
+
+        try:
+            self.fabric_replaced.commit()
+        except ValueError as error:
+            self.ansible_module.fail_json(
+                f"{error}", **self.fabric_replaced.results.failed_result
+            )
+
+
 def main():
     """main entry point for module execution"""
 
@@ -684,7 +843,7 @@ def main():
     argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
     argument_spec["state"] = {
         "default": "merged",
-        "choices": ["deleted", "merged", "query"],
+        "choices": ["deleted", "merged", "query", "replaced"],
     }
 
     ansible_module = AnsibleModule(
@@ -721,6 +880,10 @@ def main():
         task.commit()
     elif ansible_module.params["state"] == "query":
         task = Query(ansible_module.params)
+        task.ansible_module = ansible_module
+        task.commit()
+    elif ansible_module.params["state"] == "replaced":
+        task = Replaced(ansible_module.params)
         task.ansible_module = ansible_module
         task.commit()
     else:
