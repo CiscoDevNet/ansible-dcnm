@@ -837,10 +837,10 @@ class FabricReplacedBulk(FabricReplacedCommon):
             self.results.register_task_result()
             return
 
-        try:
-            self._final_payload_verification()
-        except ValueError as error:
-            raise ValueError(error) from error
+        # try:
+        #     self._final_payload_verification()
+        # except ValueError as error:
+        #     raise ValueError(error) from error
 
         try:
             self._send_payloads()
