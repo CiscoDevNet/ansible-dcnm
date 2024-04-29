@@ -411,6 +411,14 @@ class FabricReplacedCommon(FabricCommon):
             if fabric_name not in self.fabric_details.all_data:
                 continue
 
+            # Validate explicitly-set user parameters and inter-parameter
+            # dependencies.  The user must provide a complete valid
+            # non-default config since replaced-state defaults everything else.
+            try:
+                self._initial_payload_validation(payload)
+            except ValueError as error:
+                raise ValueError(error) from error
+
             self._fabric_update_required = set()
             try:
                 self._fabric_needs_update_for_replaced_state(payload)
@@ -423,45 +431,41 @@ class FabricReplacedCommon(FabricCommon):
                 copy.deepcopy(self._fabric_changes_payload[fabric_name])
             )
 
-    def _final_payload_verification(self) -> None:
+    def _initial_payload_validation(self, payload) -> None:
         """
-        -   Verify the final payloads before sending them to the controller.
-        -   Perform parameter verification and inter-parameter dependency
-            checks.
-        -   Raise ``ValueError`` if a payload verification fails.
+        -   Perform parameter validation and inter-parameter dependency
+            checks on parameters the user is explicitely setting.
+        -   Raise ``ValueError`` if a payload validation fails.
         """
-        for payload in self._payloads_to_commit:
-            fabric_type = payload.get("FABRIC_TYPE", None)
-            fabric_name = payload.get("FABRIC_NAME", None)
-            try:
-                self.verify_playbook_params.config_playbook = payload
-            except TypeError as error:
-                raise ValueError(error) from error
+        fabric_type = payload.get("FABRIC_TYPE", None)
+        fabric_name = payload.get("FABRIC_NAME", None)
+        try:
+            self.verify_playbook_params.config_playbook = payload
+        except TypeError as error:
+            raise ValueError(error) from error
 
-            try:
-                self.fabric_types.fabric_type = fabric_type
-            except ValueError as error:
-                raise ValueError(error) from error
+        try:
+            self.fabric_types.fabric_type = fabric_type
+        except ValueError as error:
+            raise ValueError(error) from error
 
-            try:
-                self.verify_playbook_params.template = self.fabric_templates[
-                    fabric_type
-                ]
-            except TypeError as error:
-                raise ValueError(error) from error
-            config_controller = self.fabric_details.all_data.get(fabric_name, {}).get(
-                "nvPairs", {}
-            )
+        try:
+            self.verify_playbook_params.template = self.fabric_templates[fabric_type]
+        except TypeError as error:
+            raise ValueError(error) from error
+        config_controller = self.fabric_details.all_data.get(fabric_name, {}).get(
+            "nvPairs", {}
+        )
 
-            try:
-                self.verify_playbook_params.config_controller = config_controller
-            except TypeError as error:
-                raise ValueError(error) from error
+        try:
+            self.verify_playbook_params.config_controller = config_controller
+        except TypeError as error:
+            raise ValueError(error) from error
 
-            try:
-                self.verify_playbook_params.commit()
-            except ValueError as error:
-                raise ValueError(error) from error
+        try:
+            self.verify_playbook_params.commit()
+        except ValueError as error:
+            raise ValueError(error) from error
 
     def _send_payloads(self):
         """
@@ -836,11 +840,6 @@ class FabricReplacedBulk(FabricReplacedCommon):
             self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
             self.results.register_task_result()
             return
-
-        # try:
-        #     self._final_payload_verification()
-        # except ValueError as error:
-        #     raise ValueError(error) from error
 
         try:
             self._send_payloads()
