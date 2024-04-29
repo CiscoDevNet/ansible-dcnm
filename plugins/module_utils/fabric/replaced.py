@@ -221,6 +221,7 @@ class FabricReplacedCommon(FabricCommon):
             payload_to_send_to_controller.update(result)
         ```
         """
+        raise_value_error = False
         if playbook is None:
             if default is None:
                 return None
@@ -230,14 +231,22 @@ class FabricReplacedCommon(FabricCommon):
                 return None
             if controller == default:
                 return None
-            raise ValueError(f"{parameter}: UNHANDLED playbook None")
+            raise_value_error = True
+            msg = "UNHANDLED case when playbook value is None. "
         if playbook is not None:
             if playbook == controller:
                 return None
             if playbook != controller:
                 return {parameter: playbook}
-            raise ValueError(f"{parameter}: UNHANDLED playbook not None")
-        raise ValueError(f"Parameter {parameter}. UNHANDLED")
+            raise_value_error = True
+            msg = "UNHANDLED case when playbook value is not None. "
+        if raise_value_error is False:
+            msg = "UNHANDLED case "
+        msg += f"parameter {parameter}, "
+        msg += f"playbook: {playbook}, "
+        msg += f"controller: {controller}, "
+        msg += f"default: {default}"
+        raise ValueError(msg)
 
     def _fabric_needs_update(self, payload):
         """
@@ -338,11 +347,11 @@ class FabricReplacedCommon(FabricCommon):
             self.log.debug(msg)
 
             type_set = set()
-            if type(user_value) is not type(None):
+            if user_value is not None:
                 type_set.add(type(user_value))
-            if type(controller_value) is not type(None):
+            if controller_value is not None:
                 type_set.add(type(controller_value))
-            if type(default_value) is not type(None):
+            if default_value is not None:
                 type_set.add(type(default_value))
             if len(type_set) > 1:
                 msg = f"parameter: {parameter}, "
