@@ -467,10 +467,11 @@ class VerifyPlaybookParams:
         playbook_value = self.config_playbook.get(self.parameter)
 
         # Reject quoted boolean values e.g. "False", "true"
-        try:
-            self.conversion.reject_boolean_string(self.parameter, playbook_value)
-        except ValueError as error:
-            raise ValueError(error) from error
+        # try:
+        #     self.conversion.reject_boolean_string(self.parameter, playbook_value)
+        # except ValueError as error:
+        #     playbook_value = self.conversion.make_boolean(playbook_value)
+        #     raise ValueError(error) from error
 
         # Skip "local" parameters i.e. parameters that are valid in a
         # playbook but not found in the template retrieved from the controller
@@ -496,13 +497,20 @@ class VerifyPlaybookParams:
         # Convert string representations of integers to integers
         playbook_value = self.conversion.make_int(playbook_value)
 
+        # Try to convert to boolean, for comparison purposes, if the
+        # parameter's type is defined to be boolean in the template.
+        if param_info["type"] == "boolean":
+            playbook_value = self.conversion.make_boolean(playbook_value)
         # If the user specifies 0/1 for False/True, NDFC fails with a 500 error
         # (at least for ADVERTISE_PIP_BGP).  Let's mandate that the user cannot
         # use 0/1 as a substitute for boolean values and fail here instead.
         # NOTE: self.conversion.make_int() should not (and does not)
         # convert boolean values to integers.
-        if param_info["type"] == "boolean" and not isinstance(playbook_value, bool):
-            msg = f"Parameter: {self.parameter}, "
+        if (
+            param_info["type"] == "boolean" and not 
+            isinstance(playbook_value, bool)):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Parameter: {self.parameter}, "
             msg += f"Invalid value: ({playbook_value}). "
             msg += f"Valid values: {param_info['choices']}"
             raise ValueError(msg)
@@ -510,7 +518,8 @@ class VerifyPlaybookParams:
         # Return if the parameter is found in the template and the parameter
         # value matches a valid choice for the parameter
         if playbook_value in param_info["choices"]:
-            msg = f"Parameter: {self.parameter}, "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Parameter: {self.parameter}, "
             msg += f"playbook_value ({playbook_value}). "
             msg += f"in valid values: {param_info['choices']}. "
             msg += "Returning."
@@ -519,7 +528,8 @@ class VerifyPlaybookParams:
 
         # Raise ValueError if the parameter value does not match any of the
         # choices specified in the template for the parameter
-        msg = f"Parameter: {self.parameter}, "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Parameter: {self.parameter}, "
         msg += f"Invalid value: ({playbook_value}). "
         msg += f"Valid values: {param_info['choices']}"
         raise ValueError(msg)
