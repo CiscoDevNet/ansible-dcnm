@@ -693,10 +693,9 @@ class Replaced(Common):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.fabric_details = FabricDetailsByName(self.params)
-        self.fabric_summary = FabricSummary(self.params)
-        self.fabric_create = FabricCreateBulk(self.params)
-        self.fabric_types = FabricTypes()
         self.fabric_replaced = FabricReplacedBulk(self.params)
+        self.fabric_summary = FabricSummary(self.params)
+        self.fabric_types = FabricTypes()
         self.template = TemplateGet()
 
         msg = f"ENTERED Replaced.{method_name}: "
@@ -720,64 +719,6 @@ class Replaced(Common):
             if want["FABRIC_NAME"] not in self.have.all_data:
                 continue
             self.need_replaced.append(want)
-
-            msg = f"MMM: self.need_replaced: {self.need_replaced}"
-            self.log.debug(msg)
-            # TODO: Validation of parameters is going to have to be done AFTER we
-            # synthesize the payload. This is because the payload is going to
-            # be a combination of the playbook parameters and the controller
-            # default parameters.
-            # Hence, this needs to be done in FabricReplacedBulk()
-            # Move this into FabricReplacedBulk if needed.
-            # try:
-            #     self._verify_playbook_params.config_playbook = want
-            # except TypeError as error:
-            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
-
-            # fabric_type = want.get("FABRIC_TYPE", None)
-            # try:
-            #     self.fabric_types.fabric_type = fabric_type
-            # except ValueError as error:
-            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
-
-            # try:
-            #     template_name = self.fabric_types.template_name
-            # except ValueError as error:
-            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
-
-            # self.template.rest_send = self.rest_send
-            # self.template.template_name = template_name
-
-            # try:
-            #     self.template.refresh()
-            # except ValueError as error:
-            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
-            # except ControllerResponseError as error:
-            #     msg = f"{self.class_name}.{method_name}: "
-            #     msg += "Controller returned error when attempting to retrieve "
-            #     msg += f"template: {template_name}. "
-            #     msg += f"Error detail: {error}"
-            #     self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
-
-            # try:
-            #     self._verify_playbook_params.template = self.template.template
-            # except TypeError as error:
-            #     self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
-
-            # Move this into FabricReplacedBulk if needed.
-            # nv_pairs = self.have.all_data[want["FABRIC_NAME"]]["nvPairs"]
-            # try:
-            #     self._verify_playbook_params.config_controller = nv_pairs
-            # except TypeError as error:
-            #     self.ansible_module.fail_json(
-            #         f"{error}", **self.results.failed_result
-            #     )
-            # try:
-            #     self._verify_playbook_params.commit()
-            # except (ValueError, KeyError) as error:
-            #     self.ansible_module.fail_json(
-            #         f"{error}", **self.results.failed_result
-            #     )
 
     def commit(self):
         """

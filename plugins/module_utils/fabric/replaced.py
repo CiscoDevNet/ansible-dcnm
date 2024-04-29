@@ -23,8 +23,6 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -37,6 +35,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
     RuleSet
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
     TemplateGet
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
+    VerifyPlaybookParams
 
 
 class FabricReplacedCommon(FabricCommon):
@@ -57,6 +57,7 @@ class FabricReplacedCommon(FabricCommon):
         self.param_info = ParamInfo()
         self.ruleset = RuleSet()
         self.template_get = TemplateGet()
+        self.verify_playbook_params = VerifyPlaybookParams()
 
         # path and verb cannot be defined here because endpoints.fabric name
         # must be set first.  Set these to None here and define them later in
@@ -74,13 +75,13 @@ class FabricReplacedCommon(FabricCommon):
         self._fabrics_to_config_save = []
 
         # Reset in self._build_payloads_to_commit()
-        # Updated in self._fabric_needs_update()
+        # Updated in self._fabric_needs_update_for_replaced_state()
         self._fabric_update_required = set()
 
         self._payloads_to_commit = []
 
         # key: fabric_name, value: dict
-        # Updated in self._fabric_needs_update()
+        # Updated in self._fabric_needs_update_for_replaced_state()
         # Used to update the fabric configuration on the controller
         # with key/values that bring the controller to the replaced
         # state configuration.  This may include values not in the
@@ -105,7 +106,7 @@ class FabricReplacedCommon(FabricCommon):
 
         # key: fabric_name, value: dict containing the current
         # controller fabric configuration for fabric_name.
-        # Populated in _fabric_needs_update()
+        # Populated in _fabric_needs_update_for_replaced_state()
         self._controller_config = {}
 
         msg = "ENTERED FabricReplacedCommon(): "
@@ -113,43 +114,6 @@ class FabricReplacedCommon(FabricCommon):
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
-
-    def _can_fabric_be_deployed(self, fabric_name):
-        """
-        -   Return True if the fabric configuration can be saved and deployed.
-        -   Return False otherwise.
-        -   Re-raise ``ValueError`` if FabricSummary().fabric_name raises
-            ``ValueError``
-        -   Raise ``ValueError`` if a problem is encountered during
-            FabricSummary().refresh()
-
-        NOTES:
-        -   If the fabric is empty, the controller will throw an error when
-            attempting to deploy the fabric.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "ENTERED"
-        self.log.debug(msg)
-
-        try:
-            self.fabric_summary.fabric_name = fabric_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            self.fabric_summary.refresh()
-        except (ControllerResponseError, ValueError) as error:
-            raise ValueError(error) from error
-
-        if self.fabric_summary.fabric_is_empty is True:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} is empty. "
-            msg += "Cannot deploy an empty fabric."
-            self.log.debug(msg)
-            self.cannot_deploy_fabric_reason = "Fabric is empty"
-            return False
-        return True
 
     def _translate_payload_for_comparison(self, payload: dict) -> dict:
         """
@@ -273,18 +237,16 @@ class FabricReplacedCommon(FabricCommon):
             msg += f"conflicting value types {type_set}."
             raise ValueError(msg)
 
-    def _fabric_needs_update(self, payload):
+    def _fabric_needs_update_for_replaced_state(self, payload):
         """
         -   Add True to self._fabric_update_required set() if the fabric needs
-            to be updated.
+            to be updated for replaced state.
         -   Populate self._fabric_changes_payload[fabric_name],
             with key/values that are required to:
             -   Bring the fabric configuration to a default state
             -   Apply the user's non-default parameters onto this
                 default configuration
         -   This payload will be used to update the fabric.
-        -   TODO: raise ``ValueError`` if any payload parameter in
-            the resulting payload would raise an error on the controller.
         -   Raise ``ValueError`` if the fabric template is not found.
         -   Raise ``ValueError`` if ParamInfo().refresh() fails.
         -   Raise ``ValueError`` if the value types differ between the
@@ -426,15 +388,17 @@ class FabricReplacedCommon(FabricCommon):
         """
         -   Build a list of dict of payloads to commit.  Skip payloads
             for fabrics that do not exist on the controller.
-        -   raise ``ValueError`` if ``_fabric_needs_update`` fails.
+        -   raise ``ValueError`` if ``_fabric_needs_update_for_replaced_state``
+            fails.
         -   Expects self.payloads to be a list of dict, with each dict
             being a payload for the fabric create API endpoint.
         -   Populates self._payloads_to_commit with a list of payloads to
             commit.
 
         NOTES:
-        -   self._fabric_needs_update() may remove payload key/values
-            that would not change the controller configuration.
+        -   self._fabric_needs_update_for_replaced_state() may remove
+            payload key/values that would not change the controller
+            configuration.
         """
         self.fabric_details.refresh()
         self._payloads_to_commit = []
@@ -449,7 +413,7 @@ class FabricReplacedCommon(FabricCommon):
 
             self._fabric_update_required = set()
             try:
-                self._fabric_needs_update(payload)
+                self._fabric_needs_update_for_replaced_state(payload)
             except ValueError as error:
                 raise ValueError(error) from error
 
@@ -458,6 +422,46 @@ class FabricReplacedCommon(FabricCommon):
             self._payloads_to_commit.append(
                 copy.deepcopy(self._fabric_changes_payload[fabric_name])
             )
+
+    def _final_payload_verification(self) -> None:
+        """
+        -   Verify the final payloads before sending them to the controller.
+        -   Perform parameter verification and inter-parameter dependency
+            checks.
+        -   Raise ``ValueError`` if a payload verification fails.
+        """
+        for payload in self._payloads_to_commit:
+            fabric_type = payload.get("FABRIC_TYPE", None)
+            fabric_name = payload.get("FABRIC_NAME", None)
+            try:
+                self.verify_playbook_params.config_playbook = payload
+            except TypeError as error:
+                raise ValueError(error) from error
+
+            try:
+                self.fabric_types.fabric_type = fabric_type
+            except ValueError as error:
+                raise ValueError(error) from error
+
+            try:
+                self.verify_playbook_params.template = self.fabric_templates[
+                    fabric_type
+                ]
+            except TypeError as error:
+                raise ValueError(error) from error
+            config_controller = self.fabric_details.all_data.get(fabric_name, {}).get(
+                "nvPairs", {}
+            )
+
+            try:
+                self.verify_playbook_params.config_controller = config_controller
+            except TypeError as error:
+                raise ValueError(error) from error
+
+            try:
+                self.verify_playbook_params.commit()
+            except ValueError as error:
+                raise ValueError(error) from error
 
     def _send_payloads(self):
         """
@@ -825,8 +829,6 @@ class FabricReplacedBulk(FabricReplacedCommon):
         except ValueError as error:
             raise ValueError(error) from error
 
-        # TODO: This is where we need to verify the payload.
-
         if len(self._payloads_to_commit) == 0:
             self.results.diff_current = {}
             self.results.result_current = {"success": True, "changed": False}
@@ -834,6 +836,11 @@ class FabricReplacedBulk(FabricReplacedCommon):
             self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
             self.results.register_task_result()
             return
+
+        try:
+            self._final_payload_verification()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         try:
             self._send_payloads()

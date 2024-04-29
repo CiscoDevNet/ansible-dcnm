@@ -23,8 +23,6 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -64,13 +62,13 @@ class FabricUpdateCommon(FabricCommon):
         self._fabrics_to_config_save = []
 
         # Reset in self._build_payloads_to_commit()
-        # Updated in self._fabric_needs_update()
+        # Updated in self._fabric_needs_update_for_merged_state()
         self._fabric_update_required = set()
 
         self._payloads_to_commit = []
 
         # key: fabric_name, value: dict
-        # Updated in self._fabric_needs_update()
+        # Updated in self._fabric_needs_update_for_merged_state()
         # Used to update the fabric configuration on the controller
         # with only the key/values that differ from the controller
         # fabric configuration.
@@ -91,47 +89,10 @@ class FabricUpdateCommon(FabricCommon):
         msg += f"state: {self.state}"
         self.log.debug(msg)
 
-    def _can_fabric_be_deployed(self, fabric_name):
-        """
-        -   Return True if the fabric configuration can be saved and deployed.
-        -   Return False otherwise.
-        -   Re-raise ``ValueError`` if FabricSummary().fabric_name raises
-            ``ValueError``
-        -   Raise ``ValueError`` if a problem is encountered during
-            FabricSummary().refresh()
-
-        NOTES:
-        -   If the fabric is empty, the controller will throw an error when
-            attempting to deploy the fabric.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "ENTERED"
-        self.log.debug(msg)
-
-        try:
-            self.fabric_summary.fabric_name = fabric_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            self.fabric_summary.refresh()
-        except (ControllerResponseError, ValueError) as error:
-            raise ValueError(error) from error
-
-        if self.fabric_summary.fabric_is_empty is True:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} is empty. "
-            msg += "Cannot deploy an empty fabric."
-            self.log.debug(msg)
-            self.cannot_deploy_fabric_reason = "Fabric is empty"
-            return False
-        return True
-
-    def _fabric_needs_update(self, payload):
+    def _fabric_needs_update_for_merged_state(self, payload):
         """
         -   Add True to self._fabric_update_required set() if the fabric needs
-            to be updated.
+            to be updated for merged state.
         -   Populate self._fabric_changes_payload[fabric_name],
             a modified payload with key/values that differ from the fabric
             configuration on the controller.  This payload will be used to
@@ -243,15 +204,16 @@ class FabricUpdateCommon(FabricCommon):
         """
         -   Build a list of dict of payloads to commit.  Skip payloads
             for fabrics that do not exist on the controller.
-        -   raise ``ValueError`` if ``_fabric_needs_update`` fails.
+        -   raise ``ValueError`` if ``_fabric_needs_update_for_merged_state``
+            fails.
         -   Expects self.payloads to be a list of dict, with each dict
             being a payload for the fabric create API endpoint.
         -   Populates self._payloads_to_commit with a list of payloads to
             commit.
 
         NOTES:
-        -   self._fabric_needs_update() may remove payload key/values
-            that would not change the controller configuration.
+        -   self._fabric_needs_update_for_merged_state() may remove payload
+            key/values that would not change the controller configuration.
         """
         self.fabric_details.refresh()
         self._payloads_to_commit = []
@@ -263,7 +225,7 @@ class FabricUpdateCommon(FabricCommon):
 
             self._fabric_update_required = set()
             try:
-                self._fabric_needs_update(payload)
+                self._fabric_needs_update_for_merged_state(payload)
             except ValueError as error:
                 raise ValueError(error) from error
 

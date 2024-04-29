@@ -21,6 +21,8 @@ import inspect
 import logging
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
@@ -294,6 +296,43 @@ class FabricCommon:
                 msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
                 msg += f"Error detail: {error}"
                 raise ValueError(msg) from error
+
+    def _can_fabric_be_deployed(self, fabric_name):
+        """
+        -   Return True if the fabric configuration can be saved and deployed.
+        -   Return False otherwise.
+        -   Re-raise ``ValueError`` if FabricSummary().fabric_name raises
+            ``ValueError``
+        -   Raise ``ValueError`` if a problem is encountered during
+            FabricSummary().refresh()
+
+        NOTES:
+        -   If the fabric is empty, the controller will throw an error when
+            attempting to deploy the fabric.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "ENTERED"
+        self.log.debug(msg)
+
+        try:
+            self.fabric_summary.fabric_name = fabric_name
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.fabric_summary.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            raise ValueError(error) from error
+
+        if self.fabric_summary.fabric_is_empty is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {fabric_name} is empty. "
+            msg += "Cannot deploy an empty fabric."
+            self.log.debug(msg)
+            self.cannot_deploy_fabric_reason = "Fabric is empty"
+            return False
+        return True
 
     @property
     def fabric_details(self):

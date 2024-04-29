@@ -845,8 +845,6 @@ class VerifyPlaybookParams:
             - ParamInfo() returns errors(s)
             - A parameter fails verification
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         try:
             self.validate_commit_parameters()
         except ValueError as error:

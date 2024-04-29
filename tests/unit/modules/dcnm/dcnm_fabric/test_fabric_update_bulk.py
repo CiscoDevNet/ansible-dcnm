@@ -597,7 +597,8 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
-    match = r"FabricUpdateBulk\._fabric_needs_update: Invalid key:.*found in payload for fabric.*"
+    match = r"FabricUpdateBulk\._fabric_needs_update_for_merged_state:\s+"
+    match += r"Invalid key:.*found in payload for fabric.*"
 
     with pytest.raises(ValueError, match=match):
         instance.commit()
