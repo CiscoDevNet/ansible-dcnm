@@ -29,8 +29,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
     FabricTypes
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
@@ -104,6 +102,11 @@ class FabricReplacedCommon(FabricCommon):
         self.config_save_result = {}
         self.config_deploy_result = {}
         self.send_payload_result = {}
+
+        # key: fabric_name, value: dict containing the current
+        # controller fabric configuration for fabric_name.
+        # Populated in _fabric_needs_update()
+        self._controller_config = {}
 
         msg = "ENTERED FabricReplacedCommon(): "
         msg += f"action: {self.action}, "
@@ -248,6 +251,28 @@ class FabricReplacedCommon(FabricCommon):
         msg += f"default: {default}"
         raise ValueError(msg)
 
+    def _verify_value_types_for_comparison(
+        self, fabric_name, parameter, user_value, controller_value, default_value
+    ) -> None:
+        """
+        -   Raise ``ValueError`` if the value types differ between:
+            playbook, controller, and default values.
+        """
+        method_name = inspect.stack()[0][3]
+        type_set = set()
+        if user_value is not None:
+            type_set.add(type(user_value))
+        if controller_value is not None:
+            type_set.add(type(controller_value))
+        if default_value is not None:
+            type_set.add(type(default_value))
+        if len(type_set) > 1:
+            msg = f"{self.class_name}.{method_name}: "
+            msg = f"parameter: {parameter}, "
+            msg += f"fabric: {fabric_name}, "
+            msg += f"conflicting value types {type_set}."
+            raise ValueError(msg)
+
     def _fabric_needs_update(self, payload):
         """
         -   Add True to self._fabric_update_required set() if the fabric needs
@@ -346,18 +371,9 @@ class FabricReplacedCommon(FabricCommon):
             msg = f"default_value: {default_value}, type: {type(default_value)}"
             self.log.debug(msg)
 
-            type_set = set()
-            if user_value is not None:
-                type_set.add(type(user_value))
-            if controller_value is not None:
-                type_set.add(type(controller_value))
-            if default_value is not None:
-                type_set.add(type(default_value))
-            if len(type_set) > 1:
-                msg = f"parameter: {parameter}, "
-                msg += f"fabric: {fabric_name}, "
-                msg += f"types: {type_set}"
-                raise ValueError(msg)
+            self._verify_value_types_for_comparison(
+                fabric_name, parameter, user_value, controller_value, default_value
+            )
 
             result = self.update_replaced_playload(
                 parameter, user_value, controller_value, default_value
