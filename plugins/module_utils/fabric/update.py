@@ -76,10 +76,6 @@ class FabricUpdateCommon(FabricCommon):
         # fabric configuration.
         self._fabric_changes_payload = {}
 
-        # Number of successful fabric update payloads
-        # Used to determine if all fabric updates were successful
-        self.successful_fabric_payloads = 0
-
         self.cannot_deploy_fabric_reason = ""
 
         # key: fabric_name, value: boolean
@@ -131,52 +127,6 @@ class FabricUpdateCommon(FabricCommon):
             self.cannot_deploy_fabric_reason = "Fabric is empty"
             return False
         return True
-
-    def _prepare_payload_value_for_comparison(self, value):
-        """
-        convert payload values to controller formats
-
-        Comparison order is important.
-        bool needs to be checked before int since:
-            isinstance(True, int) == True
-            isinstance(False, int) == True
-        """
-        if isinstance(value, bool):
-            return str(value).lower()
-        if isinstance(value, int):
-            return str(value)
-        if isinstance(value, float):
-            return str(value)
-        return value
-
-    def _prepare_anycast_gw_mac_for_comparison(self, fabric_name, mac_address):
-        """
-        Try to translate the ANYCAST_GW_MAC payload value to the format
-        expected by the controller.
-
-        - Return the translated mac_address if successful
-        - Otherwise:
-            -   Set results.failed to True
-            -   Set results.changed to False
-            -   Register the task result
-            -   raise ``ValueError``
-        """
-        method_name = inspect.stack()[0][3]
-        try:
-            mac_address = self.conversion.translate_mac_address(mac_address)
-        except ValueError as error:
-            self.results.failed = True
-            self.results.changed = False
-            self.results.register_task_result()
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Error translating ANYCAST_GW_MAC: "
-            msg += f"for fabric {fabric_name}, "
-            msg += f"ANYCAST_GW_MAC: {mac_address}, "
-            msg += f"Error detail: {error}"
-            self.log.debug(msg)
-            raise ValueError(msg) from error
-        return mac_address
 
     def _fabric_needs_update(self, payload):
         """
@@ -250,7 +200,7 @@ class FabricUpdateCommon(FabricCommon):
             msg += f"key: {key}, payload_value: {payload_value}, "
             msg += f"fabric_value: {nv_pairs.get(key)}"
             self.log.debug(msg)
-            value = self._prepare_payload_value_for_comparison(payload_value)
+            value = self._prepare_parameter_value_for_comparison(payload_value)
 
             if key == "ANYCAST_GW_MAC":
                 try:
@@ -648,7 +598,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
     def commit(self):
         """
         - Update fabrics and register results.
-        - Return if there are no fabrics to update.
+        - Return if there are no fabrics to update for merged state.
         - raise ``ValueError`` if ``fabric_details`` is not set
         - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
@@ -689,7 +639,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
         if len(self._payloads_to_commit) == 0:
             self.results.diff_current = {}
             self.results.result_current = {"success": True, "changed": False}
-            msg = "No fabrics to update."
+            msg = "No fabrics to update for merged state."
             self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
             self.results.register_task_result()
             return

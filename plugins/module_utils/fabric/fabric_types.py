@@ -37,7 +37,10 @@ class FabricTypes:
     <do something with valid_fabric_types omitted>
 
     # Set the fabric type for which further operations will be performed
-    fabric_types.fabric_type = "VXLAN_EVPN"
+    try:
+        fabric_types.fabric_type = "VXLAN_EVPN"
+    except ValueError as error:
+        raise ValueError(error) from error
 
     # Access the template name for the VXLAN_EVPN fabric type
     template_name = fabric_types.template_name

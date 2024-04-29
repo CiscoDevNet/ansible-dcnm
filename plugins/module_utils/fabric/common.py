@@ -108,6 +108,58 @@ class FabricCommon:
         )
         self._key_translations["DEPLOY"] = None
 
+    def _prepare_parameter_value_for_comparison(self, value):
+        """
+        convert payload values to controller formats
+
+        Comparison order is important.
+        bool needs to be checked before int since:
+            isinstance(True, int) == True
+            isinstance(False, int) == True
+        """
+        msg = f"value {value}, type {type(value)}."
+        self.log.debug(msg)
+        if isinstance(value, bool):
+            return str(value).lower()
+        if isinstance(value, int):
+            msg = f"NNNN: Converting int {value} to str {str(value)}."
+            self.log.debug(msg)
+            return str(value)
+        if isinstance(value, float):
+            return str(value)
+        msg = f"NNNN: Returning Value {value}."
+        self.log.debug(msg)
+        return value
+
+    def _prepare_anycast_gw_mac_for_comparison(self, fabric_name, mac_address):
+        """
+        Try to translate the ANYCAST_GW_MAC payload value to the format
+        expected by the controller.
+
+        - Return the translated mac_address if successful
+        - Otherwise:
+            -   Set results.failed to True
+            -   Set results.changed to False
+            -   Register the task result
+            -   raise ``ValueError``
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            mac_address = self.conversion.translate_mac_address(mac_address)
+        except ValueError as error:
+            self.results.failed = True
+            self.results.changed = False
+            self.results.register_task_result()
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error translating ANYCAST_GW_MAC: "
+            msg += f"for fabric {fabric_name}, "
+            msg += f"ANYCAST_GW_MAC: {mac_address}, "
+            msg += f"Error detail: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
+        return mac_address
+
     def _fixup_payloads_to_commit(self) -> None:
         """
         -   Make any modifications to the payloads prior to sending them

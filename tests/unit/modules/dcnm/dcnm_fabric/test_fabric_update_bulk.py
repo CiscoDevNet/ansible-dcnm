@@ -283,7 +283,7 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateBulk.commit() updates the following:
         -   instance.results.diff_current to an empty dict
         -   instance.results.response_current a synthesized response dict
-            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
+            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update for merged state." }
         -  instance.results.result_current to a synthesized result dict
            {"success": True, "changed": False}
     -   FabricUpdateBulk.commit() calls Results().register_task_result()
@@ -340,7 +340,10 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update."
+    assert (
+        instance.results.response[0].get("MESSAGE", None)
+        == "No fabrics to update for merged state."
+    )
 
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is True
@@ -642,7 +645,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         - __init__()
         - _build_payloads_to_commit()
         - _fabric_needs_update()
-        - _prepare_payload_value_for_comparison()
+        - _prepare_parameter_value_for_comparison()
         - _prepare_anycast_gw_mac_for_comparison()
     - FabricUpdateBulk()
         - __init__()
@@ -780,7 +783,7 @@ def test_fabric_update_bulk_00034(monkeypatch, fabric_update_bulk) -> None:
         _payloads_to_commit list is empty:
         -   instance.results.diff_current to an empty dict
         -   instance.results.response_current a synthesized response dict
-            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
+            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update for merged state." }
         -  instance.results.result_current to a synthesized result dict
            {"success": True, "changed": False}
     -   FabricUpdateBulk.commit() returns
@@ -838,7 +841,10 @@ def test_fabric_update_bulk_00034(monkeypatch, fabric_update_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update."
+    assert (
+        instance.results.response[0].get("MESSAGE", None)
+        == "No fabrics to update for merged state."
+    )
     assert instance.results.response[0].get("sequence_number", None) == 1
 
     assert instance.results.result[0].get("changed", None) is False
@@ -1100,7 +1106,7 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
     -   FabricUpdateBulk.commit() updates the following:
         -   instance.results.diff_current to an empty dict
         -   instance.results.response_current a synthesized response dict
-            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update." }
+            { "RETURN_CODE": 200, "MESSAGE": "No fabrics to update for merged state." }
         -  instance.results.result_current to a synthesized result dict
            {"success": True, "changed": False}
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
@@ -1428,12 +1434,12 @@ def test_fabric_update_bulk_00100(
         - __init__()
     - FabricUpdateCommon()
         - __init__()
-        - _prepare_payload_value_for_comparison()
+        - _prepare_parameter_value_for_comparison()
     - FabricUpdateBulk()
         - __init__()
 
     Summary
-    -   Verify _prepare_payload_value_for_comparison() returns appropriate
+    -   Verify _prepare_parameter_value_for_comparison() returns appropriate
         values.
 
     NOTES:
@@ -1449,7 +1455,7 @@ def test_fabric_update_bulk_00100(
     """
     with does_not_raise():
         instance = fabric_update_bulk
-        expected = instance._prepare_payload_value_for_comparison(value)
+        expected = instance._prepare_parameter_value_for_comparison(value)
     assert expected == expected_return_value
 
 
