@@ -17,7 +17,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 import logging
 from typing import Any, Dict
@@ -26,6 +25,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
+    FabricConfigDeploy
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
+    FabricConfigSave
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
     FabricTypes
 
@@ -45,12 +48,9 @@ class FabricCommon:
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+        self.params = params
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.conversion = ConversionUtils()
-        self.fabric_types = FabricTypes()
-
-        self.params = params
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
@@ -63,6 +63,11 @@ class FabricCommon:
             msg = f"{self.class_name}.__init__(): "
             msg += "state is required"
             raise ValueError(msg)
+
+        self.conversion = ConversionUtils()
+        self.config_save = FabricConfigSave(params)
+        self.config_deploy = FabricConfigDeploy(params)
+        self.fabric_types = FabricTypes()
 
         msg = "ENTERED FabricCommon(): "
         msg += f"check_mode: {self.check_mode}, "
@@ -207,36 +212,15 @@ class FabricCommon:
                 self.config_save_result[fabric_name] = False
                 continue
 
+            self.config_save.fabric_name = fabric_name
+            self.config_save.rest_send = self.rest_send
+            self.config_save.results = self.results
             try:
-                self.endpoints.fabric_name = fabric_name
-                self.path = self.endpoints.fabric_config_save.get("path")
-                self.verb = self.endpoints.fabric_config_save.get("verb")
+                self.config_save.commit()
             except ValueError as error:
                 raise ValueError(error) from error
-
-            self.rest_send.path = self.path
-            self.rest_send.verb = self.verb
-            self.rest_send.payload = None
-            self.rest_send.commit()
-
             result = self.rest_send.result_current["success"]
             self.config_save_result[fabric_name] = result
-            if self.config_save_result[fabric_name] is False:
-                self.results.diff_current = {}
-            else:
-                self.results.diff_current = {
-                    "FABRIC_NAME": fabric_name,
-                    "config_save": "OK",
-                }
-
-            self.results.action = "config_save"
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
 
     def _config_deploy(self):
         """
@@ -248,36 +232,15 @@ class FabricCommon:
                 # Skip config-deploy if config-save failed
                 continue
 
+            self.config_deploy.fabric_name = fabric_name
+            self.config_deploy.rest_send = self.rest_send
+            self.config_deploy.results = self.results
             try:
-                self.endpoints.fabric_name = fabric_name
-                self.path = self.endpoints.fabric_config_deploy.get("path")
-                self.verb = self.endpoints.fabric_config_deploy.get("verb")
+                self.config_deploy.commit()
             except ValueError as error:
                 raise ValueError(error) from error
-
-            self.rest_send.path = self.path
-            self.rest_send.verb = self.verb
-            self.rest_send.payload = None
-            self.rest_send.commit()
-
             result = self.rest_send.result_current["success"]
             self.config_deploy_result[fabric_name] = result
-            if self.config_deploy_result[fabric_name] is False:
-                self.results.diff_current = {}
-            else:
-                self.results.diff_current = {
-                    "FABRIC_NAME": fabric_name,
-                    "config_deploy": "OK",
-                }
-
-            self.results.action = "config_deploy"
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
 
     def _prepare_parameter_value_for_comparison(self, value):
         """
@@ -288,18 +251,12 @@ class FabricCommon:
             isinstance(True, int) == True
             isinstance(False, int) == True
         """
-        msg = f"value {value}, type {type(value)}."
-        self.log.debug(msg)
         if isinstance(value, bool):
             return str(value).lower()
         if isinstance(value, int):
-            msg = f"NNNN: Converting int {value} to str {str(value)}."
-            self.log.debug(msg)
             return str(value)
         if isinstance(value, float):
             return str(value)
-        msg = f"NNNN: Returning Value {value}."
-        self.log.debug(msg)
         return value
 
     def _prepare_anycast_gw_mac_for_comparison(self, fabric_name, mac_address):
