@@ -48,41 +48,6 @@ class FabricUpdateCommon(FabricCommon):
         self.endpoints = ApiEndpoints()
         self.fabric_types = FabricTypes()
 
-        # path and verb cannot be defined here because endpoints.fabric name
-        # must be set first.  Set these to None here and define them later in
-        # the commit() method.
-        self.path = None
-        self.verb = None
-        # List of fabrics that have the deploy flag set to True
-        # and that are not empty.
-        # Updated in _build_fabrics_to_config_deploy()
-        self._fabrics_to_config_deploy = []
-        # List of fabrics that have the deploy flag set to True
-        # Updated in _build_fabrics_to_config_save()
-        self._fabrics_to_config_save = []
-
-        # Reset in self._build_payloads_to_commit()
-        # Updated in self._fabric_needs_update_for_merged_state()
-        self._fabric_update_required = set()
-
-        self._payloads_to_commit = []
-
-        # key: fabric_name, value: dict
-        # Updated in self._fabric_needs_update_for_merged_state()
-        # Used to update the fabric configuration on the controller
-        # with only the key/values that differ from the controller
-        # fabric configuration.
-        self._fabric_changes_payload = {}
-
-        self.cannot_deploy_fabric_reason = ""
-
-        # key: fabric_name, value: boolean
-        # If True, the operation was successful
-        # If False, the operation was not successful
-        self.config_save_result = {}
-        self.config_deploy_result = {}
-        self.send_payload_result = {}
-
         msg = "ENTERED FabricUpdateCommon(): "
         msg += f"action: {self.action}, "
         msg += f"check_mode: {self.check_mode}, "
@@ -106,7 +71,7 @@ class FabricUpdateCommon(FabricCommon):
 
         NOTES:
         -   We've already verified that the fabric exists on the
-            controller in ``_build_payloads_to_commit()``.
+            controller in ``_build_payloads_for_merged_state()``.
         """
         method_name = inspect.stack()[0][3]
 
@@ -200,10 +165,10 @@ class FabricUpdateCommon(FabricCommon):
         msg += f"{json.dumps(self._fabric_changes_payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def _build_payloads_to_commit(self):
+    def _build_payloads_for_merged_state(self):
         """
-        -   Build a list of dict of payloads to commit.  Skip payloads
-            for fabrics that do not exist on the controller.
+        -   Build a list of dict of payloads to commit for merged state.
+            Skip payloads for fabrics that do not exist on the controller.
         -   raise ``ValueError`` if ``_fabric_needs_update_for_merged_state``
             fails.
         -   Expects self.payloads to be a list of dict, with each dict
@@ -241,7 +206,7 @@ class FabricUpdateCommon(FabricCommon):
         -   If check_mode is True, do not send the payloads to the controller
         -   In both cases, update results
         -   Re-raise ``ValueError`` if any of the following fail:
-            -   ``FabricUpdateCommon()._build_fabrics_to_config_deploy()``
+            -   ``FabricCommon()._build_fabrics_to_config_deploy()``
             -   ``FabricCommon()._fixup_payloads_to_commit()``
             -   ``FabricUpdateCommon()._send_payload()``
             -   ``FabricUpdateCommon()._config_save()``
@@ -282,38 +247,6 @@ class FabricUpdateCommon(FabricCommon):
             self._config_deploy()
         except ValueError as error:
             raise ValueError(error) from error
-
-    def _build_fabrics_to_config_deploy(self):
-        """
-        -   Build a list of fabrics to config-deploy and config-save
-        -   This also removes the DEPLOY key from the payload
-        -   raise ``ValueError`` if ``_can_fabric_be_deployed`` fails
-
-        Skip:
-
-        - payloads without FABRIC_NAME key (shouldn't happen, but just in case)
-        - fabrics with DEPLOY key set to False
-        - Empty fabrics (these cannot be config-deploy'ed or config-save'd)
-        """
-        for payload in self._payloads_to_commit:
-            fabric_name = payload.get("FABRIC_NAME", None)
-            if fabric_name is None:
-                continue
-            deploy = payload.pop("DEPLOY", None)
-            if deploy is not True:
-                continue
-
-            can_deploy_fabric = False
-            try:
-                can_deploy_fabric = self._can_fabric_be_deployed(fabric_name)
-            except ValueError as error:
-                raise ValueError(error) from error
-
-            if can_deploy_fabric is False:
-                continue
-
-            self._fabrics_to_config_deploy.append(fabric_name)
-            self._fabrics_to_config_save.append(fabric_name)
 
     def _set_fabric_update_endpoint(self, payload):
         """
@@ -565,7 +498,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
         - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
         - raise ``ValueError`` if ``rest_send`` is not set
-        - raise ``ValueError`` if ``_build_payloads_to_commit`` fails
+        - raise ``ValueError`` if ``_build_payloads_for_merged_state`` fails
         - raise ``ValueError`` if ``_send_payloads`` fails
         """
         method_name = inspect.stack()[0][3]
@@ -594,7 +527,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
         self.results.state = self.state
 
         try:
-            self._build_payloads_to_commit()
+            self._build_payloads_for_merged_state()
         except ValueError as error:
             raise ValueError(error) from error
 

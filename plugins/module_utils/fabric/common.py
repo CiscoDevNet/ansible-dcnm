@@ -21,10 +21,10 @@ import inspect
 import logging
 from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
     FabricTypes
 
@@ -68,7 +68,51 @@ class FabricCommon:
         msg += f"state: {self.state}"
         self.log.debug(msg)
 
+        # Updated in _can_fabric_be_deployed()
+        self.cannot_deploy_fabric_reason = ""
+
+        # key: fabric_name, value: boolean
+        # If True, the operation was successful
+        # If False, the operation was not successful
+        self.config_save_result = {}
+        self.config_deploy_result = {}
+        self.send_payload_result = {}
+
+        # key: fabric_name, value: dict
+        # Depending on state, updated in:
+        # - self._fabric_needs_update_for_merged_state()
+        # - self._fabric_needs_update_for_replaced_state()
+        # Used to update the fabric configuration on the controller
+        # with key/values that bring the controller to the intended
+        # configuration.  This may include values not in the user
+        # configuration that are needed to set the fabric to its
+        # intended state.
+        self._fabric_changes_payload = {}
+
+        # List of fabrics that have the deploy flag set to True
+        # and that are not empty.
+        # Updated in _build_fabrics_to_config_deploy()
+        self._fabrics_to_config_deploy = []
+
+        # List of fabrics that have the deploy flag set to True
+        # Updated in _build_fabrics_to_config_save()
+        self._fabrics_to_config_save = []
+
+        # Reset (depending on state) in:
+        # - self._build_payloads_for_merged_state()
+        # - self._build_payloads_for_replaced_state()
+        # Updated (depending on state) in:
+        # - self._fabric_needs_update_for_merged_state()
+        # - self._fabric_needs_update_for_replaced_state()
+        self._fabric_update_required = set()
+
         self._payloads_to_commit: list = []
+
+        # path and verb cannot be defined here because endpoints.fabric name
+        # must be set first.  Set these to None here and define them later in
+        # the commit() method.
+        self.path = None
+        self.verb = None
 
         self._init_properties()
         self._init_key_translations()
@@ -109,6 +153,38 @@ class FabricCommon:
             "DEAFULT_QUEUING_POLICY_R_SERIES"
         )
         self._key_translations["DEPLOY"] = None
+
+    def _build_fabrics_to_config_deploy(self):
+        """
+        -   Build a list of fabrics to config-deploy and config-save
+        -   This also removes the DEPLOY key from the payload
+        -   raise ``ValueError`` if ``_can_fabric_be_deployed`` fails
+
+        Skip:
+
+        - payloads without FABRIC_NAME key (shouldn't happen, but just in case)
+        - fabrics with DEPLOY key set to False
+        - Empty fabrics (these cannot be config-deploy'ed or config-save'd)
+        """
+        for payload in self._payloads_to_commit:
+            fabric_name = payload.get("FABRIC_NAME", None)
+            if fabric_name is None:
+                continue
+            deploy = payload.pop("DEPLOY", None)
+            if deploy is not True:
+                continue
+
+            can_deploy_fabric = False
+            try:
+                can_deploy_fabric = self._can_fabric_be_deployed(fabric_name)
+            except ValueError as error:
+                raise ValueError(error) from error
+
+            if can_deploy_fabric is False:
+                continue
+
+            self._fabrics_to_config_deploy.append(fabric_name)
+            self._fabrics_to_config_save.append(fabric_name)
 
     def _prepare_parameter_value_for_comparison(self, value):
         """
@@ -208,7 +284,7 @@ class FabricCommon:
         - raise ``ValueError`` if the payload is missing mandatory keys
         """
         method_name = inspect.stack()[0][3]
-        if self.state not in {"merged"}:
+        if self.state not in {"merged", "replaced"}:
             return
         msg = f"{self.class_name}.{method_name}: "
         msg += f"payload: {payload}"

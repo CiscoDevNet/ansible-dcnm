@@ -275,10 +275,10 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
+    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls FabricDetails().refresh()
         which returns a dict with keys DATA == [], RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets FabricUpdate()._payloads_to_commit
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() sets FabricUpdate()._payloads_to_commit
         to an empty list.
     -   FabricUpdateBulk.commit() updates the following:
         -   instance.results.diff_current to an empty dict
@@ -393,25 +393,25 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     -   The payload keys contain values that would result in changes to
         the fabric.
     -   FabricUpdateBulk.commit() calls
-        FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update() with the payload.
     -   FabricUpdateCommon()._fabric_needs_update() updates compares the
         payload to the fabric details and determines that changes are
         required.  Hence, it adds True to _fabric_update_required.
-    -   FabricUpdateCommon()._build_payloads_to_commit() finds True in
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() finds True in
         _fabric_update_required and appends the payload to the
         _payloads_to_commit list.
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
     -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._build_fabrics_to_config_deploy()
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
-        FabricUpdateCommon()._can_fabric_be_deployed()
-    -   FabricUpdateCommon()._can_fabric_be_deployed() calls
+        FabricCommon()._build_fabrics_to_config_deploy()
+    -   FabricCommon()._build_fabrics_to_config_deploy() calls
+        FabricCommon()._can_fabric_be_deployed()
+    -   FabricCommon()._can_fabric_be_deployed() calls
         FabricSummary().refresh() and then references
         FabricSummary().fabric_is_empty to determine if the fabric is empty.
         If the fabric is empty, it cannot be deployed, otherwise it can.
@@ -541,11 +541,11 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         that exists on the controller.  This payload contains an invalid parameter
         (``BOO``) that will cause the update to fail.
     -   FabricUpdateBulk.commit() calls
-        FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
         FabricUpdateCommon()._fabric_needs_update() which does not find
         parameter ``BOO`` in the controller fabric configuration for fabric
         f1 returned by FabricDetails().refresh().
@@ -644,7 +644,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         - __init__()
     - FabricUpdateCommon()
         - __init__()
-        - _build_payloads_to_commit()
+        - _build_payloads_for_merged_state()()
         - _fabric_needs_update()
         - _prepare_parameter_value_for_comparison()
         - _prepare_anycast_gw_mac_for_comparison()
@@ -667,8 +667,8 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
         that exists on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
         FabricUpdateCommon()._fabric_needs_update()
     -   FabricUpdateCommon()._fabric_needs_update() calls
         FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison() because
@@ -768,17 +768,17 @@ def test_fabric_update_bulk_00034(monkeypatch, fabric_update_bulk) -> None:
     -   The payload key/values do not contain any values that would result
         in changes to the fabric.
     -   FabricUpdateBulk.commit() calls
-        FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update() with the payload.
     -   FabricUpdateCommon()._fabric_needs_update() compares the
         payload to the fabric details and determines that no changes are
         required.  Hence, it does not update _fabric_update_required set().
-    -   FabricUpdateCommon()._build_payloads_to_commit() returns without
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() returns without
         adding the fabric to the _payloads_to_commit list.
     -   FabricUpdateBulk.commit() updates the following, since the
         _payloads_to_commit list is empty:
@@ -897,25 +897,25 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
     -   The payload keys contain values that would result in changes to
         the fabric.
     -   FabricUpdateBulk.commit() calls
-        FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls
+        FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() sets
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update() with the payload.
     -   FabricUpdateCommon()._fabric_needs_update() updates compares the
         payload to the fabric details and determines that changes are
         required.  Hence, it adds True to _fabric_update_required.
-    -   FabricUpdateCommon()._build_payloads_to_commit() finds True in
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() finds True in
         _fabric_update_required and appends the payload to the
         _payloads_to_commit list.
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
     -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._build_fabrics_to_config_deploy()
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
-        FabricUpdateCommon()._can_fabric_be_deployed()
-    -   FabricUpdateCommon()._can_fabric_be_deployed() calls
+        FabricCommon()._build_fabrics_to_config_deploy()
+    -   FabricCommon()._build_fabrics_to_config_deploy() calls
+        FabricCommon()._can_fabric_be_deployed()
+    -   FabricCommon()._can_fabric_be_deployed() calls
         FabricSummary().refresh() and then references
         FabricSummary().fabric_is_empty to determine if the fabric is empty.
         If the fabric is empty, it cannot be deployed, otherwise it can.
@@ -1099,10 +1099,10 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
         that exists on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_to_commit()
-    -   FabricUpdateCommon()._build_payloads_to_commit() calls FabricDetails().refresh()
+    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls FabricDetails().refresh()
         which returns a dict with fabric f1 information and RETURN_CODE == 200
-    -   FabricUpdateCommon()._build_payloads_to_commit() appends the payload in
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() appends the payload in
         FabricUpdateBulk.payloads to FabricUpdate()._payloads_to_commit
     -   FabricUpdateBulk.commit() updates the following:
         -   instance.results.diff_current to an empty dict
@@ -1112,14 +1112,14 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
            {"success": True, "changed": False}
     -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._send_payloads()
     -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._build_fabrics_to_config_deploy()
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy() calls
-        FabricUpdateCommon()._can_fabric_be_deployed()
-    -   FabricUpdateCommon()._can_fabric_be_deployed() calls
+        FabricCommon()._build_fabrics_to_config_deploy()
+    -   FabricCommon()._build_fabrics_to_config_deploy() calls
+        FabricCommon()._can_fabric_be_deployed()
+    -   FabricCommon()._can_fabric_be_deployed() calls
         FabricSummary().refresh() which raises ``ControllerResponseError``.
     -   FabricUpdateCommon()._can_fabric_be_deployed() re-raises the exception
         as a ``ValueError``.
-    -   FabricUpdateCommon()._build_fabrics_to_config_deploy()
+    -   FabricCommon()._build_fabrics_to_config_deploy()
         re-raises the ``ValueError``.
     -   FabricUpdateCommon()._send_payloads() re-raises the ``ValueError``.
     -   FabricUpdateBulk.commit() re-raises the ``ValueError``.
