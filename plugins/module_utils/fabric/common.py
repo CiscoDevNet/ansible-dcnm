@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import logging
 from typing import Any, Dict
@@ -185,6 +186,98 @@ class FabricCommon:
 
             self._fabrics_to_config_deploy.append(fabric_name)
             self._fabrics_to_config_save.append(fabric_name)
+
+    def _config_save(self):
+        """
+        -   Save the fabric configuration to the controller.
+        -   Raise ``ValueError`` if the endpoint assignment fails.
+        """
+        method_name = inspect.stack()[0][3]
+
+        for fabric_name in self._fabrics_to_config_save:
+            if fabric_name not in self.send_payload_result:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"WARNING: fabric_name: {fabric_name}"
+                msg += "not in send_payload_result."
+                self.log.debug(msg)
+                continue
+            if self.send_payload_result[fabric_name] is False:
+                # Skip config-save if send_payload failed
+                # Set config_save_result to False so that config_deploy is skipped
+                self.config_save_result[fabric_name] = False
+                continue
+
+            try:
+                self.endpoints.fabric_name = fabric_name
+                self.path = self.endpoints.fabric_config_save.get("path")
+                self.verb = self.endpoints.fabric_config_save.get("verb")
+            except ValueError as error:
+                raise ValueError(error) from error
+
+            self.rest_send.path = self.path
+            self.rest_send.verb = self.verb
+            self.rest_send.payload = None
+            self.rest_send.commit()
+
+            result = self.rest_send.result_current["success"]
+            self.config_save_result[fabric_name] = result
+            if self.config_save_result[fabric_name] is False:
+                self.results.diff_current = {}
+            else:
+                self.results.diff_current = {
+                    "FABRIC_NAME": fabric_name,
+                    "config_save": "OK",
+                }
+
+            self.results.action = "config_save"
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
+
+    def _config_deploy(self):
+        """
+        - Deploy the fabric configuration to the controller.
+        - Raise ``ValueError`` if the endpoint assignment fails.
+        """
+        for fabric_name in self._fabrics_to_config_deploy:
+            if self.config_save_result.get(fabric_name) is False:
+                # Skip config-deploy if config-save failed
+                continue
+
+            try:
+                self.endpoints.fabric_name = fabric_name
+                self.path = self.endpoints.fabric_config_deploy.get("path")
+                self.verb = self.endpoints.fabric_config_deploy.get("verb")
+            except ValueError as error:
+                raise ValueError(error) from error
+
+            self.rest_send.path = self.path
+            self.rest_send.verb = self.verb
+            self.rest_send.payload = None
+            self.rest_send.commit()
+
+            result = self.rest_send.result_current["success"]
+            self.config_deploy_result[fabric_name] = result
+            if self.config_deploy_result[fabric_name] is False:
+                self.results.diff_current = {}
+            else:
+                self.results.diff_current = {
+                    "FABRIC_NAME": fabric_name,
+                    "config_deploy": "OK",
+                }
+
+            self.results.action = "config_deploy"
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
 
     def _prepare_parameter_value_for_comparison(self, value):
         """

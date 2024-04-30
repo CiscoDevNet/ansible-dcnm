@@ -123,11 +123,14 @@ class FabricCreateCommon(FabricCommon):
     def _send_payloads(self):
         """
         -   If ``check_mode`` is ``False``, send the payloads
-            to the controller
+            to the controller.
         -   If ``check_mode`` is ``True``, do not send the payloads
-            to the controller
-        -   In both cases, register results
+            to the controller.
+        -   In both cases, register results.
         -   raise ``ValueError`` if the fabric_create endpoint assignment fails
+
+        NOTES:
+        -   This overrides the parent class method.
         """
         self.rest_send.check_mode = self.check_mode
 
