@@ -27,6 +27,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
+    FabricConfigDeploy
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
+    FabricConfigSave
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
     FabricCreate, FabricCreateBulk, FabricCreateCommon)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
@@ -39,6 +43,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types imp
     FabricTypes
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
     FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import \
+    FabricReplacedBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
     TemplateGet
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get_all import \
@@ -153,6 +159,24 @@ def fabric_common_fixture():
     return FabricCommon(instance.params)
 
 
+@pytest.fixture(name="fabric_config_deploy")
+def fabric_config_deploy_fixture():
+    """
+    return instance of FabricConfigDeploy()
+    """
+    instance = MockAnsibleModule()
+    return FabricConfigDeploy(instance.params)
+
+
+@pytest.fixture(name="fabric_config_save")
+def fabric_config_save_fixture():
+    """
+    return instance of FabricConfigSave()
+    """
+    instance = MockAnsibleModule()
+    return FabricConfigSave(instance.params)
+
+
 @pytest.fixture(name="fabric_create")
 def fabric_create_fixture():
     """
@@ -231,6 +255,16 @@ def fabric_query_fixture():
     instance = MockAnsibleModule()
     instance.state = "query"
     return FabricQuery(instance.params)
+
+
+@pytest.fixture(name="fabric_replaced_bulk")
+def fabric_replaced_bulk_fixture():
+    """
+    mock FabricReplacedBulk
+    """
+    instance = MockAnsibleModule()
+    instance.state = "replaced"
+    return FabricReplacedBulk(instance.params)
 
 
 @pytest.fixture(name="fabric_summary")
@@ -343,6 +377,16 @@ def payloads_fabric_create_common(key: str) -> Dict[str, str]:
     return data
 
 
+def payloads_fabric_replaced_bulk(key: str) -> Dict[str, str]:
+    """
+    Return payloads for FabricReplacedBulk
+    """
+    data_file = "payloads_FabricReplacedBulk"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def payloads_fabric_update_bulk(key: str) -> Dict[str, str]:
     """
     Return payloads for FabricUpdateBulk
@@ -378,6 +422,26 @@ def responses_config_save(key: str) -> Dict[str, str]:
     Return responses for config_save requests
     """
     data_file = "responses_ConfigSave"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_config_deploy(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricConfigDeploy() class
+    """
+    data_file = "responses_FabricConfigDeploy"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_config_save(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricConfigSave() class
+    """
+    data_file = "responses_FabricConfigSave"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -458,6 +522,16 @@ def responses_fabric_query(key: str) -> Dict[str, str]:
     Return responses for FabricQuery
     """
     data_file = "responses_FabricQuery"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_replaced_bulk(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricReplacedBulk
+    """
+    data_file = "responses_FabricReplacedBulk"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
