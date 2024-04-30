@@ -24,6 +24,12 @@ from typing import Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+# Used only to verify RestSend instance in rest_send property setter
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
+# Used only to verify RestSend instance in rest_send property setter
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
 
@@ -57,17 +63,18 @@ class FabricConfigSave:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.params = params
+        self.action = "config_save"
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
             msg = f"{self.class_name}.__init__(): "
-            msg += "check_mode is required"
+            msg += "params is missing mandatory check_mode parameter."
             raise ValueError(msg)
 
         self.state = self.params.get("state", None)
         if self.state is None:
             msg = f"{self.class_name}.__init__(): "
-            msg += "state is required"
+            msg += "params is missing mandatory state parameter."
             raise ValueError(msg)
 
         self.config_save_result: Dict[str, bool] = {}
@@ -99,15 +106,18 @@ class FabricConfigSave:
 
         if self.fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_name is required"
+            msg += f"{self.class_name}.fabric_name must be set "
+            msg += "before calling commit."
             raise ValueError(msg)
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send is required"
+            msg += f"{self.class_name}.rest_send must be set "
+            msg += "before calling commit."
             raise ValueError(msg)
         if self.results is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "results is required"
+            msg += f"{self.class_name}.results must be set "
+            msg += "before calling commit."
             raise ValueError(msg)
 
         try:
@@ -129,10 +139,10 @@ class FabricConfigSave:
         else:
             self.results.diff_current = {
                 "FABRIC_NAME": self.fabric_name,
-                "config_save": "OK",
+                f"{self.action}": "OK",
             }
 
-        self.results.action = "config_save"
+        self.results.action = self.action
         self.results.check_mode = self.check_mode
         self.results.state = self.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
@@ -157,21 +167,39 @@ class FabricConfigSave:
     @property
     def rest_send(self):
         """
-        An instance of the RestSend class.
+        -   getter: Return an instance of the RestSend class.
+        -   setter: Set an instance of the RestSend class.
+        -   setter: Raise ``TypeError`` if the value is not an
+            instance of RestSend.
         """
         return self._properties["rest_send"]
 
     @rest_send.setter
     def rest_send(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, RestSend):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be an instance of RestSend."
+            self.log.debug(msg)
+            raise TypeError(msg)
         self._properties["rest_send"] = value
 
     @property
     def results(self):
         """
-        An instance of the Results class.
+        -   getter: Return an instance of the Results class.
+        -   setter: Set an instance of the Results class.
+        -   setter: Raise ``TypeError`` if the value is not an
+            instance of Results.
         """
         return self._properties["results"]
 
     @results.setter
     def results(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, Results):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be an instance of Results."
+            self.log.debug(msg)
+            raise TypeError(msg)
         self._properties["results"] = value
