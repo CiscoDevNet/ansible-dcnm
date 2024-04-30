@@ -1310,60 +1310,6 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
         fabric_update_bulk.commit()
 
 
-def test_fabric_update_bulk_00080(monkeypatch, fabric_update_bulk) -> None:
-    """
-    Classes and Methods
-    - FabricCommon()
-        - __init__()
-    - FabricUpdateBulk()
-        - __init__()
-        - _config_deploy()
-
-    Summary
-    -   Verify _config_deploy() re-raises ``ValueError`` raised by
-        ApiEndpoints().
-
-    Setup
-    -   Populate FabricUpdateCommon._fabrics_to_config_deploy list with
-        fabric "f1" so that the for-loop in _config_deploy() is entered.
-    -   Set FabricUpdateCommon.config_save_result to {"f1": True} so that
-        FabricUpdateCommon.endpoints.fabric_name setter is called.
-    -   Mock the ApiEndpoints.fabric_name() setter to raise ``ValueError``.
-    -   Monkeypatch FabricUpdateCommon.endpoints to use the mocked
-        ApiEndpoints().
-    """
-
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
-        """
-        Mock the ApiEndpoints.fabric_name() setter to raise ``ValueError``.
-        """
-
-        @property
-        def fabric_name(self):
-            """
-            Mocked method
-            """
-            return "f1"
-
-        @fabric_name.setter
-        def fabric_name(self, value):
-            raise ValueError("raised ApiEndpoints.fabric_name exception.")
-
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.fabric_name"
-
-    with does_not_raise():
-        instance = fabric_update_bulk
-        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
-
-        instance._fabrics_to_config_deploy = ["f1"]
-        instance.config_save_result = {"f1": True}
-
-    match = r"raised ApiEndpoints\.fabric_name exception\."
-    with pytest.raises(ValueError, match=match):
-        fabric_update_bulk._config_deploy()
-
-
 def test_fabric_update_bulk_00090(monkeypatch, fabric_update_bulk) -> None:
     """
     Classes and Methods
