@@ -185,17 +185,22 @@ class FabricReplacedCommon(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
         type_set = set()
+        value_source_set = set()
         if user_value is not None:
             type_set.add(type(user_value))
+            value_source_set.add("playbook")
         if controller_value is not None:
             type_set.add(type(controller_value))
+            value_source_set.add("controller")
         if default_value is not None:
             type_set.add(type(default_value))
+            value_source_set.add("default")
         if len(type_set) > 1:
             msg = f"{self.class_name}.{method_name}: "
-            msg = f"parameter: {parameter}, "
+            msg += f"parameter: {parameter}, "
             msg += f"fabric: {fabric_name}, "
-            msg += f"conflicting value types {type_set}."
+            msg += f"conflicting value types {type_set} between "
+            msg += f"the following sources: {value_source_set}."
             raise ValueError(msg)
 
     def _fabric_needs_update_for_replaced_state(self, payload):
