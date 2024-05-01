@@ -53,10 +53,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get imp
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
     VerifyPlaybookParams
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_replaced_bulk_fixture, params,
-    payloads_fabric_replaced_bulk, responses_config_deploy,
-    responses_config_save, responses_fabric_details_by_name,
-    responses_fabric_replaced_bulk, responses_fabric_summary)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    fabric_replaced_bulk_fixture, params, payloads_fabric_replaced_bulk,
+    responses_config_deploy, responses_config_save,
+    responses_fabric_details_by_name, responses_fabric_replaced_bulk,
+    responses_fabric_summary)
 
 
 def test_fabric_replaced_bulk_00010(fabric_replaced_bulk) -> None:
@@ -441,3 +442,172 @@ def test_fabric_replaced_bulk_00050(
         instance._verify_value_types_for_comparison(
             fabric, parameter, user_value, controller_value, default_value
         )
+
+
+def test_fabric_replaced_bulk_00200(fabric_replaced_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricReplacedBulk
+        - commit()
+
+    Summary
+    -   Verify `ValueError`` is raised when FabricReplacedBulk().fabric_details
+        is not set before calling FabricReplacedBulk().commit().
+    """
+    match = r"FabricReplacedBulk\.commit:\s+"
+    match += r"fabric_details must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance = fabric_replaced_bulk
+        instance.fabric_summary = FabricSummary(params)
+        instance.payloads = []
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.commit()
+
+
+def test_fabric_replaced_bulk_00210(fabric_replaced_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricReplacedBulk
+        - commit()
+
+    Summary
+    -   Verify `ValueError`` is raised when FabricReplacedBulk().fabric_summary
+        is not set before calling FabricReplacedBulk().commit().
+    """
+    match = r"FabricReplacedBulk\.commit:\s+"
+    match += r"fabric_summary must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance = fabric_replaced_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.payloads = []
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.commit()
+
+
+def test_fabric_replaced_bulk_00220(fabric_replaced_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricReplacedBulk
+        - commit()
+
+    Summary
+    -   Verify `ValueError`` is raised when FabricReplacedBulk().payloads
+        is not set before calling FabricReplacedBulk().commit().
+    """
+    match = r"FabricReplacedBulk\.commit:\s+"
+    match += r"payloads must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance = fabric_replaced_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_summary = FabricSummary(params)
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+        instance.commit()
+
+
+def test_fabric_replaced_bulk_00230(fabric_replaced_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricReplacedBulk
+        - commit()
+
+    Summary
+    -   Verify `ValueError`` is raised when FabricReplacedBulk().rest_send
+        is not set before calling FabricReplacedBulk().commit().
+    """
+    match = r"FabricReplacedBulk\.commit:\s+"
+    match += r"rest_send must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance = fabric_replaced_bulk
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_summary = FabricSummary(params)
+        instance.payloads = []
+        instance.results = Results()
+        instance.commit()
+
+
+def test_fabric_replaced_bulk_00240(monkeypatch, fabric_replaced_bulk) -> None:
+    """
+    Classes and Methods
+    - FabricReplacedCommon
+        - __init__()
+    - FabricReplacedBulk
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify FabricReplacedBulk().Results() properties are
+        set by FabricReplacedBulk().commit().
+    -   Verify FabricReplacedBulk().rest_send.state is set to "replaced"
+    -   Verify FabricReplacedBulk().results.action is set to "replace"
+    -   Verify FabricReplacedBulk().results.state is set to "replaced"
+    -   Verify FabricReplacedBulk().template_get.rest_send is set to
+        FabricReplacedBulk().rest_send
+    -   Verify FabricReplacedBulk()._build_payloads_for_replaced_state()
+        does not raise ``ValueError`` when called by commit().
+    -   Verify FabricReplacedBulk()._payloads_to_commit is set to an empty
+        because FabricReplacedBulk().payloads is empty.
+    -   Verify FabricReplacedBulk().results.failed contains False
+    -   Verify FabricReplacedBulk().results.failed does not contain True
+    -   Verify FabricReplacedBulk().results.changed contains False
+    -   Verify FabricReplacedBulk().results.changed does not contain True
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_replaced_bulk(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
+    with does_not_raise():
+        instance = fabric_replaced_bulk
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send.unit_test = True
+        instance.rest_send.timeout = 1
+        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details.rest_send = instance.rest_send
+        instance.fabric_summary = FabricSummary(params)
+        instance.fabric_summary.rest_send = instance.rest_send
+        instance.payloads = []
+        instance.results = Results()
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
+    with does_not_raise():
+        instance.commit()
+    assert instance.rest_send.state == "replaced"
+    assert instance.results.action == "replace"
+    assert instance.results.state == "replaced"
+    assert instance.template_get.rest_send == instance.rest_send
+    assert instance._payloads_to_commit == []
+    assert False in instance.results.failed
+    assert True not in instance.results.failed
+    assert False in instance.results.changed
+    assert True not in instance.results.changed
+
+    assert instance.results.metadata[0].get("sequence_number") == 1
+    assert instance.results.response[0].get("sequence_number") == 1
+    assert instance.results.result[0].get("sequence_number") == 1
+
+    assert instance.results.metadata[0].get("action") == "replace"
+    assert instance.results.metadata[0].get("check_mode") is False
+    assert instance.results.metadata[0].get("state") == "replaced"
+
+    assert (
+        instance.results.response[0].get("MESSAGE")
+        == "No fabrics to update for replaced state."
+    )
+    assert instance.results.response[0].get("RETURN_CODE") == 200
+
+    assert instance.results.result[0].get("changed") is False
+    assert instance.results.result[0].get("success") is True
