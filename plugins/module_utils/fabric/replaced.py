@@ -200,7 +200,7 @@ class FabricReplacedCommon(FabricCommon):
             msg += f"parameter: {parameter}, "
             msg += f"fabric: {fabric_name}, "
             msg += f"conflicting value types {type_set} between "
-            msg += f"the following sources: {value_source_set}."
+            msg += f"the following sources: {sorted(value_source_set)}."
             raise ValueError(msg)
 
     def _fabric_needs_update_for_replaced_state(self, payload):
