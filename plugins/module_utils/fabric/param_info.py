@@ -72,9 +72,9 @@ class ParamInfo:
         self.conversion = ConversionUtils()
 
         self.info = {}
-        self._build_properties()
+        self._init_properties()
 
-    def _build_properties(self):
+    def _init_properties(self):
         """
         Initialize the properties dict containing properties used by the class.
         """
