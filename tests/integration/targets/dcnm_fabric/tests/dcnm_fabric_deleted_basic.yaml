@@ -466,4 +466,3 @@
     - result.result[0].changed == false
     - result.result[0].success == true
     - result.result[0].sequence_number == 1
-
