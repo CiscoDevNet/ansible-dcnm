@@ -42,9 +42,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy im
     FabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
     ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+    FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
+    FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_config_deploy_fixture, params, responses_fabric_config_deploy)
+    fabric_config_deploy_fixture, fabric_details_by_name_fixture,
+    fabric_summary_fixture, params, responses_fabric_config_deploy,
+    responses_fabric_details_by_name, responses_fabric_summary)
 
 
 def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
@@ -251,7 +257,9 @@ def test_fabric_config_deploy_00040(
         assert instance.results == value
 
 
-def test_fabric_config_deploy_00050(fabric_config_deploy) -> None:
+def test_fabric_config_deploy_00120(
+    fabric_config_deploy, fabric_details_by_name, fabric_summary
+) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -272,13 +280,17 @@ def test_fabric_config_deploy_00050(fabric_config_deploy) -> None:
 
     with does_not_raise():
         instance = fabric_config_deploy
+        instance.fabric_details = fabric_details_by_name
+        instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
-def test_fabric_config_deploy_00060(fabric_config_deploy) -> None:
+def test_fabric_config_deploy_00130(
+    fabric_config_deploy, fabric_details_by_name, fabric_summary
+) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -299,13 +311,17 @@ def test_fabric_config_deploy_00060(fabric_config_deploy) -> None:
 
     with does_not_raise():
         instance = fabric_config_deploy
+        instance.fabric_details = fabric_details_by_name
         instance.fabric_name = "MyFabric"
+        instance.fabric_summary = fabric_summary
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
-def test_fabric_config_deploy_00070(fabric_config_deploy) -> None:
+def test_fabric_config_deploy_00140(
+    fabric_config_deploy, fabric_details_by_name, fabric_summary
+) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -326,13 +342,76 @@ def test_fabric_config_deploy_00070(fabric_config_deploy) -> None:
 
     with does_not_raise():
         instance = fabric_config_deploy
+        instance.fabric_details = fabric_details_by_name
+        instance.fabric_name = "MyFabric"
+        instance.fabric_summary = fabric_summary
+        instance.rest_send = RestSend(MockAnsibleModule())
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_fabric_config_deploy_00150(fabric_config_deploy, fabric_summary) -> None:
+    """
+    Classes and Methods
+    - FabricConfigDeploy
+        - __init__()
+        - fabric_details setter
+        - commit()
+
+    Summary
+    -   Verify behavior when fabric_details is not set before calling commit()
+
+    Test
+    -   ValueError is raised because results is not set before
+        calling commit()
+    """
+    match = r"FabricConfigDeploy\.commit: "
+    match += r"FabricConfigDeploy\.fabric_details must be set "
+    match += r"before calling commit\."
+
+    with does_not_raise():
+        instance = fabric_config_deploy
+        instance.fabric_name = "MyFabric"
+        instance.fabric_summary = fabric_summary
+        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.results = Results()
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_fabric_config_deploy_00160(
+    fabric_config_deploy, fabric_details_by_name
+) -> None:
+    """
+    Classes and Methods
+    - FabricConfigDeploy
+        - __init__()
+        - fabric_summary setter
+        - commit()
+
+    Summary
+    -   Verify behavior when fabric_summary is not set before calling commit()
+
+    Test
+    -   ValueError is raised because fabric_summary is not set before
+        calling commit()
+    """
+    match = r"FabricConfigDeploy\.commit: "
+    match += r"FabricConfigDeploy\.fabric_summary must be set "
+    match += r"before calling commit\."
+
+    with does_not_raise():
+        instance = fabric_config_deploy
+        instance.fabric_details = fabric_details_by_name
         instance.fabric_name = "MyFabric"
         instance.rest_send = RestSend(MockAnsibleModule())
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
-def test_fabric_config_deploy_00080(monkeypatch, fabric_config_deploy) -> None:
+def test_fabric_config_deploy_00200(
+    monkeypatch, fabric_config_deploy, fabric_details_by_name, fabric_summary
+) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy()
@@ -388,19 +467,25 @@ def test_fabric_config_deploy_00080(monkeypatch, fabric_config_deploy) -> None:
     with does_not_raise():
         instance = fabric_config_deploy
         monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
+        instance.fabric_details = fabric_details_by_name
         instance.fabric_name = "MyFabric"
+        instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
-def test_fabric_config_deploy_00090(monkeypatch, fabric_config_deploy) -> None:
+def test_fabric_config_deploy_00210(
+    monkeypatch, fabric_config_deploy, fabric_details_by_name, fabric_summary
+) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
         - __init__()
+        - fabric_details setter
         - fabric_names setter
+        - fabric_summary setter
         - rest_send setter
         - results setter
         - commit()
@@ -422,7 +507,18 @@ def test_fabric_config_deploy_00090(monkeypatch, fabric_config_deploy) -> None:
     -   FabricConfigDeploy().commit() sets ApiEndpoints().fabric_name
     -   FabricConfigDeploy().commit() accesses
         ApiEndpoints().fabric_config_deploy to set verb and path
-    -   FabricConfigDeploy() calls RestSend().commit() which sets
+    -   FabricConfigDeploy().commit() calls
+        FabricConfigDeploy()_can_fabric_be_deployed()
+    -   FabricConfigDeploy()._can_fabric_be_deployed() calls
+        FabricSummary().fabric_is_empty which returns False
+        (hence, the fabric can be deployed).
+    -   FabricConfigDeploy()._can_fabric_be_deployed() calls
+        FabricDetailsByName().deployment_freeze which returns False
+        (hence, the fabric can be deployed).
+    -   FabricConfigDeploy()._can_fabric_be_deployed() calls
+        FabricDetailsByName().is_read_only which returns False
+        (hence, the fabric can be deployed).
+    -   FabricConfigDeploy().commit() calls RestSend().commit() which calls
         RestSend().response_current to a dict with keys:
         -   DATA == {"status": "Configuration deployment completed."}
         -   RETURN_CODE == 200
@@ -444,6 +540,8 @@ def test_fabric_config_deploy_00090(monkeypatch, fabric_config_deploy) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
+        yield responses_fabric_summary(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_config_deploy(key)
 
     gen = ResponseGenerator(responses())
@@ -454,8 +552,12 @@ def test_fabric_config_deploy_00090(monkeypatch, fabric_config_deploy) -> None:
 
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_name = "f1"
         instance.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details.rest_send = instance.rest_send
+        instance.fabric_name = "f1"
+        instance.fabric_summary = fabric_summary
+        instance.fabric_summary.rest_send = instance.rest_send
         instance.results = Results()
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
@@ -487,7 +589,9 @@ def test_fabric_config_deploy_00090(monkeypatch, fabric_config_deploy) -> None:
     assert False not in instance.results.changed
 
 
-def test_fabric_config_deploy_00100(monkeypatch, fabric_config_deploy) -> None:
+def test_fabric_config_deploy_00220(
+    monkeypatch, fabric_config_deploy, fabric_details_by_name, fabric_summary
+) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -539,6 +643,8 @@ def test_fabric_config_deploy_00100(monkeypatch, fabric_config_deploy) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
+        yield responses_fabric_summary(key)
+        yield responses_fabric_details_by_name(key)
         yield responses_fabric_config_deploy(key)
 
     gen = ResponseGenerator(responses())
@@ -549,10 +655,14 @@ def test_fabric_config_deploy_00100(monkeypatch, fabric_config_deploy) -> None:
 
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_name = "f1"
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.rest_send.unit_test = True
         instance.rest_send.timeout = 1
+        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details.rest_send = instance.rest_send
+        instance.fabric_name = "f1"
+        instance.fabric_summary = fabric_summary
+        instance.fabric_summary.rest_send = instance.rest_send
         instance.results = Results()
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)

@@ -76,6 +76,8 @@ class FabricCommon:
 
         # Updated in _can_fabric_be_deployed()
         self.cannot_deploy_fabric_reason = ""
+        # Updated in _can_fabric_be_saved()
+        self.cannot_save_fabric_reason = ""
 
         # key: fabric_name, value: boolean
         # If True, the operation was successful
@@ -94,15 +96,6 @@ class FabricCommon:
         # configuration that are needed to set the fabric to its
         # intended state.
         self._fabric_changes_payload = {}
-
-        # List of fabrics that have the deploy flag set to True
-        # and that are not empty.
-        # Updated in _build_fabrics_to_config_deploy()
-        self._fabrics_to_config_deploy = []
-
-        # List of fabrics that have the deploy flag set to True
-        # Updated in _build_fabrics_to_config_save()
-        self._fabrics_to_config_save = []
 
         # Reset (depending on state) in:
         # - self._build_payloads_for_merged_state()
@@ -160,87 +153,53 @@ class FabricCommon:
         )
         self._key_translations["DEPLOY"] = None
 
-    def _build_fabrics_to_config_deploy(self):
-        """
-        -   Build a list of fabrics to config-deploy and config-save
-        -   This also removes the DEPLOY key from the payload
-        -   raise ``ValueError`` if ``_can_fabric_be_deployed`` fails
-
-        Skip:
-
-        - payloads without FABRIC_NAME key (shouldn't happen, but just in case)
-        - fabrics with DEPLOY key set to False
-        - Empty fabrics (these cannot be config-deploy'ed or config-save'd)
-        """
-        for payload in self._payloads_to_commit:
-            fabric_name = payload.get("FABRIC_NAME", None)
-            if fabric_name is None:
-                continue
-            deploy = payload.pop("DEPLOY", None)
-            if deploy is not True:
-                continue
-
-            can_deploy_fabric = False
-            try:
-                can_deploy_fabric = self._can_fabric_be_deployed(fabric_name)
-            except ValueError as error:
-                raise ValueError(error) from error
-
-            if can_deploy_fabric is False:
-                continue
-
-            self._fabrics_to_config_deploy.append(fabric_name)
-            self._fabrics_to_config_save.append(fabric_name)
-
-    def _config_save(self):
+    def _config_save(self, fabric_name):
         """
         -   Save the fabric configuration to the controller.
         -   Raise ``ValueError`` if the endpoint assignment fails.
         """
         method_name = inspect.stack()[0][3]
 
-        for fabric_name in self._fabrics_to_config_save:
-            if fabric_name not in self.send_payload_result:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"WARNING: fabric_name: {fabric_name}"
-                msg += "not in send_payload_result."
-                self.log.debug(msg)
-                continue
-            if self.send_payload_result[fabric_name] is False:
-                # Skip config-save if send_payload failed
-                # Set config_save_result to False so that config_deploy is skipped
-                self.config_save_result[fabric_name] = False
-                continue
+        if self.send_payload_result[fabric_name] is False:
+            # Skip config-save if send_payload failed
+            # Set config_save_result to False so that config_deploy is skipped
+            self.config_save_result[fabric_name] = False
+            return
 
-            self.config_save.fabric_name = fabric_name
-            self.config_save.rest_send = self.rest_send
-            self.config_save.results = self.results
-            try:
-                self.config_save.commit()
-            except ValueError as error:
-                raise ValueError(error) from error
-            result = self.rest_send.result_current["success"]
-            self.config_save_result[fabric_name] = result
+        self.config_save.fabric_name = fabric_name
+        self.config_save.rest_send = self.rest_send
+        self.config_save.results = self.results
+        try:
+            self.config_save.commit()
+        except ValueError as error:
+            raise ValueError(error) from error
+        result = self.rest_send.result_current["success"]
+        self.config_save_result[fabric_name] = result
 
-    def _config_deploy(self):
+    def _config_deploy(self, fabric_name):
         """
-        - Deploy the fabric configuration to the controller.
-        - Raise ``ValueError`` if the endpoint assignment fails.
+        -   Deploy the fabric configuration to the controller.
+        -   Skip config-deploy if config-save failed
+        -   Re-raise ``ValueError`` from FabricConfigDeploy(), if any.
         """
-        for fabric_name in self._fabrics_to_config_deploy:
-            if self.config_save_result.get(fabric_name) is False:
-                # Skip config-deploy if config-save failed
-                continue
+        if self.config_save_result.get(fabric_name) is False:
+            # Skip config-deploy if config-save failed
+            return
 
+        try:
+            self.config_deploy.fabric_details = self.fabric_details
             self.config_deploy.fabric_name = fabric_name
+            self.config_deploy.fabric_summary = self.fabric_summary
             self.config_deploy.rest_send = self.rest_send
             self.config_deploy.results = self.results
-            try:
-                self.config_deploy.commit()
-            except ValueError as error:
-                raise ValueError(error) from error
-            result = self.rest_send.result_current["success"]
-            self.config_deploy_result[fabric_name] = result
+        except TypeError as error:
+            raise ValueError(error) from error
+        try:
+            self.config_deploy.commit()
+        except ValueError as error:
+            raise ValueError(error) from error
+        result = self.config_deploy.results.result_current["success"]
+        self.config_deploy_result[fabric_name] = result
 
     def _prepare_parameter_value_for_comparison(self, value):
         """
@@ -423,6 +382,39 @@ class FabricCommon:
                 msg += f"Error detail: {error}"
                 raise ValueError(msg) from error
 
+    def _can_fabric_be_saved(self, fabric_name):
+        """
+        -   Return True if the fabric configuration can be saved.
+        -   Return False otherwise.
+        -   Re-raise ``ValueError`` if FabricDetails().fabric_name raises
+            ``ValueError``
+
+        NOTES:
+        -   If the fabric is_read_only is True, the controller will throw an
+            error when attempting to save the fabric configuration.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "ENTERED"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"fabric_name: {fabric_name}"
+        self.log.debug(msg)
+
+        try:
+            self.fabric_details.filter = fabric_name
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        if self.fabric_details.is_read_only is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {fabric_name} is read only. "
+            msg += "Cannot save a read only fabric."
+            self.log.debug(msg)
+            self.cannot_save_fabric_reason = "Fabric is read only"
+            return False
+
     def _can_fabric_be_deployed(self, fabric_name):
         """
         -   Return True if the fabric configuration can be saved and deployed.
@@ -458,6 +450,28 @@ class FabricCommon:
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = "Fabric is empty"
             return False
+
+        try:
+            self.fabric_details.filter = fabric_name
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        if self.fabric_details.deployment_freeze is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {fabric_name} has deployment freeze enabled. "
+            msg += "Cannot deploy a fabric with deployment freeze enabled."
+            self.log.debug(msg)
+            self.cannot_deploy_fabric_reason = "Deployment freeze enabled"
+            return False
+
+        if self.fabric_details.is_read_only is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {fabric_name} is read only. "
+            msg += "Cannot deploy a read only fabric."
+            self.log.debug(msg)
+            self.cannot_deploy_fabric_reason = "Fabric is read only"
+            return False
+
         return True
 
     @property

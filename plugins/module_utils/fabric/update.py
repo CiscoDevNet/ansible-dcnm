@@ -23,6 +23,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
@@ -208,7 +210,6 @@ class FabricUpdateCommon(FabricCommon):
             to the controller.
         -   In both cases, register results.
         -   Re-raise ``ValueError`` if any of the following fail:
-            -   ``FabricCommon()._build_fabrics_to_config_deploy()``
             -   ``FabricCommon()._fixup_payloads_to_commit()``
             -   ``FabricUpdateCommon()._send_payload()``
             -   ``FabricUpdateCommon()._config_save()``
@@ -217,18 +218,16 @@ class FabricUpdateCommon(FabricCommon):
         self.rest_send.check_mode = self.check_mode
 
         try:
-            self._build_fabrics_to_config_deploy()
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
             raise ValueError(error) from error
 
         for payload in self._payloads_to_commit:
+            commit_payload = copy.deepcopy(payload)
+            if commit_payload.get("DEPLOY", None) is not None:
+                commit_payload.pop("DEPLOY")
             try:
-                self._send_payload(payload)
+                self._send_payload(commit_payload)
             except ValueError as error:
                 raise ValueError(error) from error
 
@@ -236,19 +235,21 @@ class FabricUpdateCommon(FabricCommon):
         if True in self.results.failed:
             return
 
-        try:
-            self._config_save()
-        except ValueError as error:
-            raise ValueError(error) from error
+        for payload in self._payloads_to_commit:
+            try:
+                self._config_save(payload.get("FABRIC_NAME"))
+            except ValueError as error:
+                raise ValueError(error) from error
 
         # Skip config-deploy if prior actions encountered errors.
         if True in self.results.failed:
             return
 
-        try:
-            self._config_deploy()
-        except ValueError as error:
-            raise ValueError(error) from error
+        for payload in self._payloads_to_commit:
+            try:
+                self._config_deploy(payload.get("FABRIC_NAME"))
+            except (ControllerResponseError, ValueError) as error:
+                raise ValueError(error) from error
 
     def _set_fabric_update_endpoint(self, payload):
         """

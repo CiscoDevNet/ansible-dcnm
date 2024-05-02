@@ -69,7 +69,7 @@ class FabricDetails(FabricCommon):
         if self.results.response_current.get("RETURN_CODE") == 200:
             self.results.failed = False
         else:
-            self.results.success = True
+            self.results.failed = True
         # FabricDetails never changes the controller state
         self.results.changed = False
 
@@ -157,6 +157,25 @@ class FabricDetails(FabricCommon):
             return None
 
     @property
+    def deployment_freeze(self):
+        """
+        Return the nvPairs.DEPLOYMENT_FREEZE of the fabric specified with filter,
+        if it exists.
+        Return None otherwise
+
+        Type: string
+        Possible values:
+            - true
+            - false
+        """
+        try:
+            return self._get_nv_pair("DEPLOYMENT_FREEZE")
+        except ValueError as error:
+            msg = f"Failed to retrieve deployment_freeze: Error detail: {error}"
+            self.log.debug(msg)
+            return None
+
+    @property
     def enable_pbr(self):
         """
         Return the PBR enable state of the fabric specified with filter,
@@ -211,6 +230,25 @@ class FabricDetails(FabricCommon):
             return self._get_nv_pair("FABRIC_TYPE")
         except ValueError as error:
             msg = f"Failed to retrieve fabric_type: Error detail: {error}"
+            self.log.debug(msg)
+            return None
+
+    @property
+    def is_read_only(self):
+        """
+        Return the nvPairs.IS_READ_ONLY of the fabric specified with filter,
+        if it exists.
+        Return None otherwise
+
+        Type: string
+        Possible values:
+            - true
+            - false
+        """
+        try:
+            return self._get_nv_pair("IS_READ_ONLY")
+        except ValueError as error:
+            msg = f"Failed to retrieve is_read_only: Error detail: {error}"
             self.log.debug(msg)
             return None
 

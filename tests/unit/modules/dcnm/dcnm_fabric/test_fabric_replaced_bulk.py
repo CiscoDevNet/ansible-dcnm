@@ -81,7 +81,6 @@ def test_fabric_replaced_bulk_00010(fabric_replaced_bulk) -> None:
     assert instance.path is None
     assert instance.verb is None
     assert instance.state == "replaced"
-    assert instance._fabrics_to_config_deploy == []
     assert isinstance(instance.endpoints, ApiEndpoints)
     assert isinstance(instance.fabric_details, FabricDetailsByName)
     assert isinstance(instance.fabric_summary, FabricSummary)
