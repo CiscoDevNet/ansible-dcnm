@@ -132,11 +132,13 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
         - __init__()
 
     Summary
-    ``payloads`` setter is presented with a list that contains a non-dict element.
+    ``payloads`` setter is presented with a list that contains a
+    non-dict element.
 
     Test
-    - ``ValueError`` is raised because payloads is a list with non-dict elements
-    - instance.payloads retains its initial value of None
+    -   ``ValueError`` is raised because payloads is a list with
+        non-dict elements
+    -   instance.payloads retains its initial value of None
     """
     match = r"FabricUpdateBulk._verify_payload:\s+"
     match += r"Playbook configuration for fabrics must be a dict\.\s+"
@@ -275,9 +277,11 @@ def test_fabric_update_bulk_00030(monkeypatch, fabric_update_bulk) -> None:
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_for_merged_state()
-    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls FabricDetails().refresh()
-        which returns a dict with keys DATA == [], RETURN_CODE == 200
+    -   FabricUpdateBulk.commit() calls
+        FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
+        FabricDetails().refresh() which returns a dict with keys
+        DATA == [], RETURN_CODE == 200
     -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         FabricUpdate()._payloads_to_commit to an empty list.
     -   FabricUpdateBulk.commit() updates the following:
@@ -399,10 +403,11 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         information and RETURN_CODE == 200
     -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
-        FabricUpdateCommon()._fabric_needs_update() with the payload.
-    -   FabricUpdateCommon()._fabric_needs_update() updates compares the
-        payload to the fabric details and determines that changes are
-        required.  Hence, it adds True to _fabric_update_required.
+        FabricUpdateCommon()._fabric_needs_update_for_merged_state() with
+        the payload.
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() updates
+        compares the payload to the fabric details and determines that changes
+        are required.  Hence, it adds True to _fabric_update_required.
     -   FabricUpdateCommon()._build_payloads_for_merged_state() finds True in
         _fabric_update_required and appends the payload to the
         _payloads_to_commit list.
@@ -566,19 +571,20 @@ def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
         FabricDetails().refresh() which returns a dict with fabric f1
         information and RETURN_CODE == 200
     -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
-        FabricUpdateCommon()._fabric_needs_update() which does not find
-        parameter ``BOO`` in the controller fabric configuration for fabric
-        f1 returned by FabricDetails().refresh().
-    -   FabricUpdateCommon()._fabric_needs_update() updates the following:
+        FabricUpdateCommon()._fabric_needs_update_for_merged_state() which
+        does not find parameter ``BOO`` in the controller fabric configuration
+        for fabric f1 returned by FabricDetails().refresh().
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state()
+        updates the following:
         -   Results().result_current to add a synthesized failed result dict
         -   Results().changed adding False
         -   Results().failed adding True
         -   Results().failed_result to add a message indicating the reason for
             the failure
-    -   FabricUpdateCommon()._fabric_needs_update() calls
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() calls
         Results().register_task_result()
-    -   FabricUpdateCommon()._fabric_needs_update() raises ``ValueError``
-        because the payload contains an invalid key.
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() raises
+        ``ValueError`` because the payload contains an invalid key.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -653,6 +659,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     Classes and Methods
     - FabricCommon()
         - __init__()
+        - translate_anycast_gw_mac()
     - FabricDetails()
         - __init__()
         - refresh_super()
@@ -665,9 +672,8 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     - FabricUpdateCommon()
         - __init__()
         - _build_payloads_for_merged_state()()
-        - _fabric_needs_update()
+        - _fabric_needs_update_for_merged_state()
         - _prepare_parameter_value_for_comparison()
-        - _prepare_anycast_gw_mac_for_comparison()
     - FabricUpdateBulk()
         - __init__()
         - commit()
@@ -687,13 +693,14 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     Code Flow
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
         that exists on the controller.
-    -   FabricUpdateBulk.commit() calls FabricUpdateCommon()._build_payloads_for_merged_state()
+    -   FabricUpdateBulk.commit() calls
+        FabricUpdateCommon()._build_payloads_for_merged_state()
     -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
-        FabricUpdateCommon()._fabric_needs_update()
-    -   FabricUpdateCommon()._fabric_needs_update() calls
-        FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison() because
+        FabricUpdateCommon()._fabric_needs_update_for_merged_state()
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() calls
+        FabricCommon().translate_anycast_gw_mac() because
         ``ANYCAST_GW_MAC`` key is present in the payload.
-    -   FabricUpdateCommon()._prepare_anycast_gw_mac_for_comparison():
+    -   FabricCommon().translate_anycast_gw_mac():
         -   Updates Results()
         -   raises ``ValueError`` because the mac address is not convertable.
     """
@@ -731,7 +738,7 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
         instance.fabric_details.rest_send.unit_test = True
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    match = r"FabricUpdateBulk\._prepare_anycast_gw_mac_for_comparison: "
+    match = r"FabricUpdateBulk\.translate_anycast_gw_mac: "
     match += r"Error translating ANYCAST_GW_MAC"
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -794,9 +801,10 @@ def test_fabric_update_bulk_00034(monkeypatch, fabric_update_bulk) -> None:
         information and RETURN_CODE == 200
     -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
-        FabricUpdateCommon()._fabric_needs_update() with the payload.
-    -   FabricUpdateCommon()._fabric_needs_update() compares the
-        payload to the fabric details and determines that no changes are
+        FabricUpdateCommon()._fabric_needs_update_for_merged_state() with the
+        payload.
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() compares
+        the payload to the fabric details and determines that no changes are
         required.  Hence, it does not update _fabric_update_required set().
     -   FabricUpdateCommon()._build_payloads_for_merged_state() returns without
         adding the fabric to the _payloads_to_commit list.
@@ -901,9 +909,9 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
     -   Verify behavior when user requests to update a fabric and the
         fabric exists on the controller and the payload contains
         values that would result in changes to the fabric.
-    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
-        with the controller's requirements, but able to be fixed by
-        FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be
+        incompatible with the controller's requirements, but able to
+        be fixed by FabricUpdateCommon()._fixup_payloads_to_commit().
     -   The fabric payload also contains keys that include ``bool`
         and ``int`` values.
     -   The fabric is not empty, so is also deployed/saved.
@@ -923,10 +931,11 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
         information and RETURN_CODE == 200
     -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
-        FabricUpdateCommon()._fabric_needs_update() with the payload.
-    -   FabricUpdateCommon()._fabric_needs_update() updates compares the
-        payload to the fabric details and determines that changes are
-        required.  Hence, it adds True to _fabric_update_required.
+        FabricUpdateCommon()._fabric_needs_update_for_merged_state() with
+        the payload.
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state()
+        compares the payload to the fabric details and determines that changes
+        are required.  Hence, it adds True to _fabric_update_required.
     -   FabricUpdateCommon()._build_payloads_for_merged_state() finds True in
         _fabric_update_required and appends the payload to the
         _payloads_to_commit list.
@@ -935,8 +944,8 @@ def test_fabric_update_bulk_00035(monkeypatch, fabric_update_bulk) -> None:
         FabricUpdateCommon()._fixup_payloads_to_commit()
     -   FabricUpdateCommon()._fixup_payloads_to_commit() calls
         FabricUpdateCommon()._fixup_anycast_gw_mac() which calls
-        Conversion().conversion.translate_mac_address() which updates ANYCAST_GW_MAC
-        to conform with the controller's requirements.
+        Conversion().conversion.translate_mac_address() which updates
+        ANYCAST_GW_MAC to conform with the controller's requirements.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._send_payload() for each fabric in
         FabricUpdateCommon()._payloads_to_commit
@@ -1112,9 +1121,9 @@ def test_fabric_update_bulk_00036(monkeypatch, fabric_update_bulk) -> None:
         contains an invalid parameter.
 
     Code Flow
-    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric (f1)
-        that exists on the controller.  This payload contains an invalid parameter
-        (``BOO``).
+    -   FabricUpdateBulk.payloads is set to contain one payload for a fabric
+        (f1) that exists on the controller.  This payload contains an invalid
+        parameter (BOO).
     -   FabricUpdateBulk.commit() calls
         FabricUpdateCommon()._build_payloads_for_merged_state()
     -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
@@ -1124,16 +1133,17 @@ def test_fabric_update_bulk_00036(monkeypatch, fabric_update_bulk) -> None:
         FabricUpdateCommon()._fabric_needs_update_for_merged_state() which
         does not find parameter ``BOO`` in the controller fabric configuration
         for fabric f1.
-    -   FabricUpdateCommon()._fabric_needs_update() updates the following:
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() updates
+        the following:
         -   Results().result_current to add a synthesized failed result dict
         -   Results().changed adding False
         -   Results().failed adding True
         -   Results().failed_result to add a message indicating the reason for
             the failure
-    -   FabricUpdateCommon()._fabric_needs_update() calls
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() calls
         Results().register_task_result()
-    -   FabricUpdateCommon()._fabric_needs_update() raises ``ValueError``
-        because the payload contains an invalid key.
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() raises
+        ``ValueError`` because the payload contains an invalid key.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -1222,9 +1232,9 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
     -   Verify behavior when user requests to update a fabric and the
         fabric exists on the controller and the payload contains
         values that would result in changes to the fabric.
-    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
-        with the controller's requirements, but able to be fixed by
-        FabricUpdateCommon()._fixup_payloads_to_commit().
+    -   The fabric payload includes ANYCAST_GW_MAC, formatted to be
+        incompatible with the controller's requirements, but able to be
+        fixed by FabricUpdateCommon()._fixup_payloads_to_commit().
     -   The fabric payload also contains keys that include ``bool`
         and ``int`` values.
     -   The fabric is saved, but FabricSummary().refresh() raises a
@@ -1245,10 +1255,12 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
         information and RETURN_CODE == 200
     -   FabricUpdateCommon()._build_payloads_for_merged_state() sets
         _fabric_update_required to an empty set() and calls
-        FabricUpdateCommon()._fabric_needs_update() with the payload.
-    -   FabricUpdateCommon()._fabric_needs_update() updates compares the
-        payload to the fabric details and determines that changes are
-        required.  Hence, it adds True to _fabric_update_required.
+        FabricUpdateCommon()._fabric_needs_update_for_merged_state()
+        with the payload.
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state()
+        updates compares the payload to the fabric details and determines
+        that changes are required.  Hence, it adds True to
+        _fabric_update_required.
     -   FabricUpdateCommon()._build_payloads_for_merged_state() finds True in
         _fabric_update_required and appends the payload to the
         _payloads_to_commit list.
@@ -1257,14 +1269,14 @@ def test_fabric_update_bulk_00040(monkeypatch, fabric_update_bulk) -> None:
         FabricUpdateCommon()._fixup_payloads_to_commit()
     -   FabricUpdateCommon()._fixup_payloads_to_commit() calls
         FabricUpdateCommon()._fixup_anycast_gw_mac() which calls
-        Conversion().conversion.translate_mac_address() which updates ANYCAST_GW_MAC
-        to conform with the controller's requirements.
+        Conversion().conversion.translate_mac_address() which updates
+        ANYCAST_GW_MAC to conform with the controller's requirements.
     -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._send_payload() for each fabric in
         FabricUpdateCommon()._payloads_to_commit
     -   FabricUpdateCommon()._send_payload() calls
-        FabricUpdateCommon()._config_save() if no errors were encountered during
-        the fabric update.
+        FabricUpdateCommon()._config_save() if no errors were encountered
+        during the fabric update.
     -   FabricConfigSave(), called from FabricUpdateCommon()._config_save()
         performs a config_save on fabric f1 since it is in list
         FabricUpdateCommon()._fabrics_to_config_save.
@@ -1520,55 +1532,6 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
     match += r"rest_send must be set prior to calling commit\."
     with pytest.raises(ValueError, match=match):
         fabric_update_bulk.commit()
-
-
-def test_fabric_update_bulk_00090(monkeypatch, fabric_update_bulk) -> None:
-    """
-    Classes and Methods
-    - FabricCommon()
-        - __init__()
-    - FabricUpdateBulk()
-        - __init__()
-        - _config_deploy()
-
-    Summary
-    -   Verify _can_fabric_be_deployed() re-raises ``ValueError`` raised by
-        FabricSummary().fabric_name
-
-    Setup
-    -   Mock the FabricSummary().fabric_name() setter to raise ``ValueError``.
-    -   Monkeypatch FabricSummary().fabric_name to use the mocked
-        FabricSummary().
-    """
-
-    class MockFabricSummary:  # pylint: disable=too-few-public-methods
-        """
-        Mock the FabricSummary.fabric_name() setter to raise ``ValueError``.
-        """
-
-        @property
-        def fabric_name(self):
-            """
-            Mocked method
-            """
-            return "f1"
-
-        @fabric_name.setter
-        def fabric_name(self, value):
-            raise ValueError("raised FabricSummary.fabric_name exception.")
-
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += (
-        "module_utils.fabric.fabric_summary.FabricSummary.fabric_name"
-    )
-
-    with does_not_raise():
-        instance = fabric_update_bulk
-        monkeypatch.setattr(instance, "fabric_summary", MockFabricSummary())
-
-    match = r"raised FabricSummary\.fabric_name exception\."
-    with pytest.raises(ValueError, match=match):
-        fabric_update_bulk._can_fabric_be_deployed("f1")
 
 
 @pytest.mark.parametrize(

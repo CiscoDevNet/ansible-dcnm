@@ -117,9 +117,7 @@ class FabricReplacedCommon(FabricCommon):
             user_value = self._prepare_parameter_value_for_comparison(user_value)
             if user_parameter == "ANYCAST_GW_MAC":
                 try:
-                    user_value = self._prepare_anycast_gw_mac_for_comparison(
-                        fabric_name, user_value
-                    )
+                    user_value = self.translate_anycast_gw_mac(fabric_name, user_value)
                 except ValueError as error:
                     raise ValueError(error) from error
 
@@ -266,10 +264,8 @@ class FabricReplacedCommon(FabricCommon):
         for parameter, controller_value in self._controller_config.items():
 
             msg = f"parameter: {parameter}, "
-            self.log.debug(msg)
-            msg = (
-                f"controller_value: {controller_value}, type: {type(controller_value)}"
-            )
+            msg += f"controller_value: {controller_value}, "
+            msg += f"type: {type(controller_value)}"
             self.log.debug(msg)
 
             try:
@@ -291,14 +287,13 @@ class FabricReplacedCommon(FabricCommon):
             default_value = self._prepare_parameter_value_for_comparison(default_value)
 
             msg = f"parameter: {parameter}, "
+            msg += f"user_value: {user_value}, "
+            msg += f"type: {type(user_value)}"
             self.log.debug(msg)
-            msg = f"user_value: {user_value}, type: {type(user_value)}"
-            self.log.debug(msg)
-            msg = (
-                f"controller_value: {controller_value}, type: {type(controller_value)}"
-            )
-            self.log.debug(msg)
-            msg = f"default_value: {default_value}, type: {type(default_value)}"
+
+            msg = f"parameter: {parameter}, "
+            msg += f"default_value: {default_value}, "
+            msg += f"type: {type(default_value)}"
             self.log.debug(msg)
 
             self._verify_value_types_for_comparison(

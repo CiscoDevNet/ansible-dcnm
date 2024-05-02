@@ -330,6 +330,3 @@ class ParamInfo:
             self.info[param_name]["type"] = self._get_type(parameter)
             self.info[param_name]["internal"] = self._get_internal(parameter)
             self.info[param_name]["type"] = self._get_type(parameter)
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"info[{param_name}]: {json.dumps(self.info[param_name], indent=4, sort_keys=True)}"
-            self.log.debug(msg)

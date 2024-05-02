@@ -23,8 +23,6 @@ from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
     FabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
@@ -73,11 +71,6 @@ class FabricCommon:
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
-
-        # Updated in _can_fabric_be_deployed()
-        self.cannot_deploy_fabric_reason = ""
-        # Updated in _can_fabric_be_saved()
-        self.cannot_save_fabric_reason = ""
 
         # key: fabric_name, value: boolean
         # If True, the operation was successful
@@ -158,8 +151,6 @@ class FabricCommon:
         -   Save the fabric configuration to the controller.
         -   Raise ``ValueError`` if the endpoint assignment fails.
         """
-        method_name = inspect.stack()[0][3]
-
         if self.send_payload_result[fabric_name] is False:
             # Skip config-save if send_payload failed
             # Set config_save_result to False so that config_deploy is skipped
@@ -218,7 +209,7 @@ class FabricCommon:
             return str(value)
         return value
 
-    def _prepare_anycast_gw_mac_for_comparison(self, fabric_name, mac_address):
+    def translate_anycast_gw_mac(self, fabric_name, mac_address):
         """
         Try to translate the ANYCAST_GW_MAC payload value to the format
         expected by the controller.
@@ -268,6 +259,31 @@ class FabricCommon:
             self.results.changed = False
             self.results.register_task_result()
             raise ValueError(error) from error
+
+    def _fixup_anycast_gw_mac(self) -> None:
+        """
+        -   Translate the ANYCAST_GW_MAC address to the format the
+            controller expects.
+        -   Raise ``ValueError`` if the translation fails.
+        """
+        method_name = inspect.stack()[0][3]
+        for payload in self._payloads_to_commit:
+            if "ANYCAST_GW_MAC" not in payload:
+                continue
+            try:
+                payload["ANYCAST_GW_MAC"] = self.conversion.translate_mac_address(
+                    payload["ANYCAST_GW_MAC"]
+                )
+            except ValueError as error:
+                fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
+                anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
+
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error translating ANYCAST_GW_MAC "
+                msg += f"for fabric {fabric_name}, "
+                msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
 
     def _fixup_bgp_as(self) -> None:
         """
@@ -356,123 +372,6 @@ class FabricCommon:
         msg += f"{sorted(missing_parameters)}. "
         msg += f"Bad configuration: {sorted_payload}"
         raise ValueError(msg)
-
-    def _fixup_anycast_gw_mac(self) -> None:
-        """
-        -   Translate the ANYCAST_GW_MAC address to the format the
-            controller expects.
-        -   Raise ``ValueError`` if the translation fails.
-        """
-        method_name = inspect.stack()[0][3]
-        for payload in self._payloads_to_commit:
-            if "ANYCAST_GW_MAC" not in payload:
-                continue
-            try:
-                payload["ANYCAST_GW_MAC"] = self.conversion.translate_mac_address(
-                    payload["ANYCAST_GW_MAC"]
-                )
-            except ValueError as error:
-                fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
-                anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
-
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Error translating ANYCAST_GW_MAC "
-                msg += f"for fabric {fabric_name}, "
-                msg += f"ANYCAST_GW_MAC: {anycast_gw_mac}, "
-                msg += f"Error detail: {error}"
-                raise ValueError(msg) from error
-
-    def _can_fabric_be_saved(self, fabric_name):
-        """
-        -   Return True if the fabric configuration can be saved.
-        -   Return False otherwise.
-        -   Re-raise ``ValueError`` if FabricDetails().fabric_name raises
-            ``ValueError``
-
-        NOTES:
-        -   If the fabric is_read_only is True, the controller will throw an
-            error when attempting to save the fabric configuration.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "ENTERED"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"fabric_name: {fabric_name}"
-        self.log.debug(msg)
-
-        try:
-            self.fabric_details.filter = fabric_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        if self.fabric_details.is_read_only is True:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} is read only. "
-            msg += "Cannot save a read only fabric."
-            self.log.debug(msg)
-            self.cannot_save_fabric_reason = "Fabric is read only"
-            return False
-
-    def _can_fabric_be_deployed(self, fabric_name):
-        """
-        -   Return True if the fabric configuration can be saved and deployed.
-        -   Return False otherwise.
-        -   Re-raise ``ValueError`` if FabricSummary().fabric_name raises
-            ``ValueError``
-        -   Raise ``ValueError`` if a problem is encountered during
-            FabricSummary().refresh()
-
-        NOTES:
-        -   If the fabric is empty, the controller will throw an error when
-            attempting to deploy the fabric.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "ENTERED"
-        self.log.debug(msg)
-
-        try:
-            self.fabric_summary.fabric_name = fabric_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            self.fabric_summary.refresh()
-        except (ControllerResponseError, ValueError) as error:
-            raise ValueError(error) from error
-
-        if self.fabric_summary.fabric_is_empty is True:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} is empty. "
-            msg += "Cannot deploy an empty fabric."
-            self.log.debug(msg)
-            self.cannot_deploy_fabric_reason = "Fabric is empty"
-            return False
-
-        try:
-            self.fabric_details.filter = fabric_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        if self.fabric_details.deployment_freeze is True:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} has deployment freeze enabled. "
-            msg += "Cannot deploy a fabric with deployment freeze enabled."
-            self.log.debug(msg)
-            self.cannot_deploy_fabric_reason = "Deployment freeze enabled"
-            return False
-
-        if self.fabric_details.is_read_only is True:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} is read only. "
-            msg += "Cannot deploy a read only fabric."
-            self.log.debug(msg)
-            self.cannot_deploy_fabric_reason = "Fabric is read only"
-            return False
-
-        return True
 
     @property
     def fabric_details(self):

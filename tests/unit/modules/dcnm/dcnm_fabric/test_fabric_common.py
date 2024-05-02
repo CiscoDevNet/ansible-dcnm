@@ -421,3 +421,42 @@ def test_fabric_common_00113(fabric_common, fabric_type, expected) -> None:
         instance.results = Results()
     with expected:
         instance._verify_payload(payload)
+
+
+MATCH_00120a = r"FabricCommon\.translate_anycast_gw_mac:\s+"
+MATCH_00120a += r"Error translating ANYCAST_GW_MAC: for fabric MyFabric,\s+"
+MATCH_00120a += r"ANYCAST_GW_MAC: .*, Error detail: Invalid MAC address:\s+.*"
+
+
+@pytest.mark.parametrize(
+    "mac_in, mac_out, raises, expected",
+    [
+        ("0001aabbccdd", "0001.aabb.ccdd", False, does_not_raise()),
+        ("00:01:aa:bb:cc:dd", "0001.aabb.ccdd", False, does_not_raise()),
+        ("00:---01:***aa:b//b:cc:dd", "0001.aabb.ccdd", False, does_not_raise()),
+        ("00zz.aabb.ccdd", None, True, pytest.raises(ValueError, match=MATCH_00120a)),
+        ("0001", None, True, pytest.raises(ValueError, match=MATCH_00120a)),
+    ],
+)
+def test_fabric_common_00120(fabric_common, mac_in, mac_out, raises, expected) -> None:
+    """
+    Classes and Methods
+    - FabricCommon()
+        - __init__()
+        - translate_anycast_gw_mac()
+
+    Summary
+    -   Verify FabricCommon().translate_anycast_gw_mac()
+        raises ``ValueError`` if mac_in cannot be translated into a format
+        expected by the controller.
+    -   Verify the error message when ``ValueError`` is raised.
+    -   Verify ``ValueError`` is not raised when ANYCAST_GW_MAC can be
+        translated.
+    """
+    with does_not_raise():
+        instance = fabric_common
+        instance.results = Results()
+    with expected:
+        result = instance.translate_anycast_gw_mac("MyFabric", mac_in)
+    if raises is False:
+        assert result == mac_out

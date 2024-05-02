@@ -88,7 +88,7 @@
     ],
    "test_fabric_update_bulk_00040a": [
         {
-            "ANYCAST_GW_MAC": "0001.aabb.ccdd",
+            "ANYCAST_GW_MAC": "0001aabbccdd",
             "BGP_AS": 65001,
             "DEPLOY": true,
             "FABRIC_NAME": "f1",

@@ -330,33 +330,54 @@ def test_fabric_replaced_bulk_00030(fabric_replaced_bulk) -> None:
     assert payload.get("VPC_DELAY_RESTORE_TIME") == "300"
 
 
-def test_fabric_replaced_bulk_00031(fabric_replaced_bulk) -> None:
+MATCH_00031a = r"FabricReplacedBulk\.translate_anycast_gw_mac:\s+"
+MATCH_00031a += r"Error translating ANYCAST_GW_MAC: for fabric MyFabric,\s+"
+MATCH_00031a += r"ANYCAST_GW_MAC: .*, Error detail: Invalid MAC address:\s+.*"
+
+
+@pytest.mark.parametrize(
+    "mac_in, mac_out, raises, expected",
+    [
+        ("0001aabbccdd", "0001.aabb.ccdd", False, does_not_raise()),
+        ("00:01:aa:bb:cc:dd", "0001.aabb.ccdd", False, does_not_raise()),
+        ("00:---01:***aa:b//b:cc:dd", "0001.aabb.ccdd", False, does_not_raise()),
+        ("00zz.aabb.ccdd", None, True, pytest.raises(ValueError, match=MATCH_00031a)),
+        ("0001", None, True, pytest.raises(ValueError, match=MATCH_00031a)),
+    ],
+)
+def test_fabric_replaced_bulk_00031(
+    fabric_replaced_bulk, mac_in, mac_out, raises, expected
+) -> None:
     """
     Classes and Methods
+    - FabricCommon()
+        - __init__()
+        - translate_anycast_gw_mac()
     - FabricReplacedCommon
         - __init__()
-        - payloads setter
         - _translate_payload_for_comparison()
 
     Summary
     -   Verify FabricReplacedCommon()._translate_payload_for_comparison()
         re-raises ``ValueError`` if ANYCAST_GW_MAC cannot be translated.
+    -   Verify the error message when ``ValueError`` is raised.
+    -   Verify ``ValueError`` is not raised when ANYCAST_GW_MAC can be
+        translated.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
-    payloads = payloads_fabric_replaced_bulk(key)
-
     with does_not_raise():
         instance = fabric_replaced_bulk
         instance.results = Results()
-    match = r"FabricReplacedBulk\._prepare_anycast_gw_mac_for_comparison:\s+"
-    match += r"Error translating ANYCAST_GW_MAC: for fabric f1,\s+"
-    match += r"ANYCAST_GW_MAC: 0001, Error detail: Invalid MAC address: 0001"
-    with pytest.raises(ValueError, match=match):
-        payload = instance._translate_payload_for_comparison(  # pylint: disable=unused-variable
-            payloads[0]
-        )
+    payload = {
+        "BGP_AS": 65000,
+        "ANYCAST_GW_MAC": mac_in,
+        "DEPLOY:": True,
+        "FABRIC_NAME": "MyFabric",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+    }
+    with expected:
+        result = instance._translate_payload_for_comparison(payload)
+    if raises is False:
+        assert result.get("ANYCAST_GW_MAC", None) == mac_out
 
 
 @pytest.mark.parametrize(

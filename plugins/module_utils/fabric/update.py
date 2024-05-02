@@ -132,9 +132,7 @@ class FabricUpdateCommon(FabricCommon):
 
             if key == "ANYCAST_GW_MAC":
                 try:
-                    value = self._prepare_anycast_gw_mac_for_comparison(
-                        fabric_name, value
-                    )
+                    value = self.translate_anycast_gw_mac(fabric_name, value)
                 except ValueError as error:
                     raise ValueError(error) from error
 
@@ -169,14 +167,13 @@ class FabricUpdateCommon(FabricCommon):
 
     def _build_payloads_for_merged_state(self):
         """
-        -   Build a list of dict of payloads to commit for merged state.
-            Skip payloads for fabrics that do not exist on the controller.
+        -   Populate self._payloads_to_commit. A list of dict of payloads to
+            commit for merged state.
+        -   Skip payloads for fabrics that do not exist on the controller.
         -   raise ``ValueError`` if ``_fabric_needs_update_for_merged_state``
             fails.
         -   Expects self.payloads to be a list of dict, with each dict
             being a payload for the fabric create API endpoint.
-        -   Populates self._payloads_to_commit with a list of payloads to
-            commit.
 
         NOTES:
         -   self._fabric_needs_update_for_merged_state() may remove payload

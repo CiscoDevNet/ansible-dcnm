@@ -43,14 +43,5 @@
             "STATIC_UNDERLAY_IP_ALLOC": false,
             "VPC_DELAY_RESTORE_TIME": 300
         }
-    ],
-    "test_fabric_replaced_bulk_00031a": [
-        {
-            "BGP_AS": 65001,
-            "DEPLOY": true,
-            "FABRIC_NAME": "f1",
-            "FABRIC_TYPE": "VXLAN_EVPN",
-            "ANYCAST_GW_MAC": "0001"
-        }
     ]
 }
