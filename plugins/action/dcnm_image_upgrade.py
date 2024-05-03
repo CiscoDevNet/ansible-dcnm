@@ -31,7 +31,7 @@ class ActionModule(ActionNetworkModule):
         persistent_connect_timeout = connection.get_option("persistent_connect_timeout")
         persistent_command_timeout = connection.get_option("persistent_command_timeout")
 
-        timeout = 1000
+        timeout = 1800
 
         if (persistent_command_timeout < timeout or persistent_connect_timeout < timeout):
             display.warning(
