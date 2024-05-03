@@ -3785,57 +3785,123 @@ class DcnmIntf:
         intf_nv = intf.get("interfaces")[0].get("nvPairs")
         have_nv = have.get("interfaces")[0].get("nvPairs")
 
-        if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("IP") != have_nv.get("IP"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("PREFIX") != have_nv.get("PREFIX"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("ROUTING_TAG") != have_nv.get("ROUTING_TAG"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("MTU") != have_nv.get("MTU"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("SPEED") != have_nv.get("SPEED"):
+        if (
+            str(intf_nv.get("SPEED")).lower()
+            != str(have_nv.get("SPEED")).lower()
+        ):
             return "DCNM_INTF_NOT_MATCH"
         if intf_nv.get("DESC") != have_nv.get("DESC"):
             return "DCNM_INTF_NOT_MATCH"
         if intf_nv.get("CONF") != have_nv.get("CONF"):
             return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("ADMIN_STATE") != have_nv.get("ADMIN_STATE"):
+        if (
+            str(intf_nv.get("ADMIN_STATE")).lower()
+            != str(have_nv.get("ADMIN_STATE")).lower()
+        ):
             return "DCNM_INTF_NOT_MATCH"
+        if str(intf_nv.get("MTU")).lower() != str(have_nv.get("MTU")).lower():
+            return "DCNM_INTF_NOT_MATCH"
+
+        if intf.get("policy") == "int_routed_host":
+            if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("IP")).lower()
+                != str(have_nv.get("IP")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("PREFIX")).lower()
+                != str(have_nv.get("PREFIX")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("ROUTING_TAG")).lower()
+                != str(have_nv.get("ROUTING_TAG")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+        elif intf.get("policy") == "int_trunk_host":
+            if (
+                str(intf_nv.get("BPDUGUARD_ENABLED")).lower()
+                != str(have_nv.get("BPDUGUARD_ENABLED")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+                != str(have_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("ALLOWED_VLANS")).lower()
+                != str(have_nv.get("ALLOWED_VLANS")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
 
-        # default payload to be sent to DCNM for override case
         eth_payload = {
-            "policy": self.pol_types[self.dcnm_version]["eth_routed"],
+            "policy": "",
             "interfaces": [
                 {
                     "interfaceType": "INTERFACE_ETHERNET",
-                    "serialNumber": sno,
+                    "serialNumber": "",
                     "ifName": "",
-                    "fabricName": fabric,
+                    "fabricName": "",
                     "nvPairs": {
                         "interfaceType": "INTERFACE_ETHERNET",
-                        "INTF_VRF": "",
-                        "IP": "",
-                        "PREFIX": "",
-                        "ROUTING_TAG": "",
-                        "MTU": "9216",
-                        "SPEED": "Auto",
+                        "MTU": "",
+                        "SPEED": "",
                         "DESC": "",
-                        "CONF": "no shutdown",
-                        "ADMIN_STATE": "true",
-                        "INTF_NAME": ifname,
+                        "CONF": "",
+                        "ADMIN_STATE": True,
+                        "INTF_NAME": "",
                     },
                 }
             ],
         }
 
-        eth_payload["interfaces"][0]["ifName"] = ifname
-        eth_payload["interfaces"][0]["serialNumber"] = sno
-        eth_payload["interfaces"][0]["fabricName"] = fabric
+        # Default payload depends on switch role. For switches with 'leaf' role the default policy must be
+        # 'trunk'. For other roles it must be 'routed'.
+
+        if self.sno_to_switch_role[sno] == "leaf":
+            # default ehternet 'trunk' payload to be sent to DCNM for override case
+            eth_payload["policy"] = self.pol_types[self.dcnm_version][
+                "eth_trunk"
+            ]
+            eth_payload["interfaces"][0]["nvPairs"]["MTU"] = "jumbo"
+            eth_payload["interfaces"][0]["nvPairs"]["SPEED"] = "Auto"
+            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = "no shutdown"
+            eth_payload["interfaces"][0]["nvPairs"][
+                "BPDUGUARD_ENABLED"
+            ] = False
+            eth_payload["interfaces"][0]["nvPairs"][
+                "PORTTYPE_FAST_ENABLED"
+            ] = True
+            eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
+            eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+            eth_payload["interfaces"][0]["ifName"] = ifname
+            eth_payload["interfaces"][0]["serialNumber"] = sno
+            eth_payload["interfaces"][0]["fabricName"] = fabric
+
+        else:
+            # default ehternet 'routed' payload to be sent to DCNM for override case
+            eth_payload["policy"] = self.pol_types[self.dcnm_version][
+                "eth_routed"
+            ]
+            eth_payload["interfaces"][0]["nvPairs"]["MTU"] = 9216
+            eth_payload["interfaces"][0]["nvPairs"]["SPEED"] = "Auto"
+            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = "no shutdown"
+            eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            eth_payload["interfaces"][0]["nvPairs"]["INTF_VRF"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["IP"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["PREFIX"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = ""
+
+            eth_payload["interfaces"][0]["ifName"] = ifname
+            eth_payload["interfaces"][0]["serialNumber"] = sno
+            eth_payload["interfaces"][0]["fabricName"] = fabric
 
         return eth_payload
 
@@ -4000,10 +4066,11 @@ class DcnmIntf:
                         delem["serialNumber"] = sno
                         delem["ifName"] = name
                         delem["fabricName"] = self.fabric
-                        self.diff_deploy.append(delem)
-                        self.changed_dict[0]["deploy"].append(
-                            copy.deepcopy(delem)
-                        )
+                        if str(deploy).lower() == "true":
+                            self.diff_deploy.append(delem)
+                            self.changed_dict[0]["deploy"].append(
+                                copy.deepcopy(delem)
+                            )
             # Sub-interafces are returned as INTERFACE_ETHERNET in have_all. So do an
             # additional check to see if it is physical. If not assume it to be sub-interface
             # for now. We will have to re-visit this check if there are additional non-physical
@@ -4817,6 +4884,19 @@ class DcnmIntf:
             ]
 
             managable = dict(managable_ip + managable_hosts)
+
+            # Build a mapping of serial numbers to switch roles. This will be required to build default ethernet
+            # payload during overridden state. for switch role leaf the default policy for ethernet interface must
+            # be 'trunk' and for other roles it must be 'routed'.
+            self.sno_to_switch_role = {}
+            for key in self.inventory_data:
+                self.sno_to_switch_role.update(
+                    {
+                        self.inventory_data[key][
+                            "serialNumber"
+                        ]: self.inventory_data[key]["switchRole"]
+                    }
+                )
 
             # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
             ronly_sw_list = []
