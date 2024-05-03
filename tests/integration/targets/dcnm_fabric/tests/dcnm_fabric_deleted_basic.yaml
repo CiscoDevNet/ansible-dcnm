@@ -5,6 +5,13 @@
 # Recent run times (MM:SS.ms):
 # 00:49.83
 ################################################################################
+# DESCRIPTION - BASIC FABRIC DELETED STATE TEST
+# 
+# Test basic deletion of fabrics verify results.
+# - Deletion of populated fabrics not tested here.
+# - See dcnm_fabric_deleted_populated.yaml instead.
+################################################################################
+################################################################################
 # STEPS
 ################################################################################
 
@@ -19,13 +26,13 @@
 #    - dcnm_fabric_type_3
 # 2. Delete fabrics under test, if they exist
 #    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_2
+#    - dcnm_fabric_name_3
 # TEST
 # 3. Create fabrics and verify result
 #    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_2
+#    - dcnm_fabric_name_3
 # 4. Delete dcnm_fabric_name_1 and dcnm_fabric_name_2. Verify result
 # 5. Delete dcnm_fabric_name_3. Verify result
 # 6. Delete dcnm_fabric_name_3 again to verify idempotence.

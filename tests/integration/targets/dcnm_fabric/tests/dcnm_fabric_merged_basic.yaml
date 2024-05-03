@@ -1,0 +1,792 @@
+################################################################################
+# RUNTIME
+################################################################################
+
+# Recent run times (MM:SS.ms):
+# 00:59.47
+################################################################################
+# DESCRIPTION - BASIC FABRIC MERGED STATE TEST
+#
+# Test basic merge of new fabric configurations and verify results.
+# - config-deploy not tested here. See dcnm_fabric_merged_deploy.yaml instead.
+################################################################################
+
+################################################################################
+# STEPS
+################################################################################
+
+# SETUP
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - dcnm_fabric_name_1
+#    - dcnm_fabric_type_1
+#    - dcnm_fabric_name_2
+#    - dcnm_fabric_type_2
+#    - dcnm_fabric_name_3
+#    - dcnm_fabric_type_3
+# 3. Delete fabrics under test, if they exist
+#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_2
+#    - dcnm_fabric_name_3
+# TEST
+# 4. Create fabrics and verify result
+#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_1
+# 5. Merge additional configs into fabric_1 and fabric_2 and verify result
+# 6. Merge additional config into fabric_3 and verify result
+# CLEANUP
+# 7. Delete fabrics under test
+#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_1
+#    - dcnm_fabric_name_1
+
+################################################################################
+# REQUIREMENTS
+################################################################################
+
+# Example vars for dcnm_image_policy integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: deleted
+#   dcnm_fabric_name_1: VXLAN_EVPN_Fabric
+#   dcnm_fabric_type_1: VXLAN_EVPN
+#   dcnm_fabric_name_2: VXLAN_EVPN_MSD_Fabric
+#   dcnm_fabric_type_2: VXLAN_EVPN_MSD
+#   dcnm_fabric_name_3: LAN_CLASSIC_Fabric
+#   dcnm_fabric_type_3: LAN_CLASSIC
+################################################################################
+# SETUP
+################################################################################
+
+- name: MERGED - SETUP - Delete fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+    - fabric_name: "{{ dcnm_fabric_name_1 }}"
+    - fabric_name: "{{ dcnm_fabric_name_2 }}"
+    - fabric_name: "{{ dcnm_fabric_name_3 }}"
+  register: result
+
+- debug:
+    var: result
+################################################################################
+# MERGED - TEST - Create all supported fabric types with basic config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "BGP_AS": 65535,
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "BOOTSTRAP_ENABLE": false,
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "IS_READ_ONLY": false,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BGP_AS": "65535",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric/MSD_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "IS_READ_ONLY": "false",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+- name: MERGED - TEST - Create all supported fabric types with minimal config
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+    # VXLAN_EVPN
+    - FABRIC_NAME: "{{ dcnm_fabric_name_1 }}"
+      FABRIC_TYPE: "{{ dcnm_fabric_type_1 }}"
+      BGP_AS: 65535
+      DEPLOY: true
+    # VXLAN_EVPN_MSD
+    - FABRIC_NAME: "{{ dcnm_fabric_name_2 }}"
+      FABRIC_TYPE: "{{ dcnm_fabric_type_2 }}"
+      DEPLOY: true
+    # LAN_CLASSIC
+    - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
+      FABRIC_TYPE: "{{ dcnm_fabric_type_3 }}"
+      BOOTSTRAP_ENABLE: false
+      IS_READ_ONLY: false
+      DEPLOY: true
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 3
+    - result.diff[0].BGP_AS == 65535
+    - result.diff[0].FABRIC_NAME == dcnm_fabric_name_1
+    - result.diff[0].sequence_number == 1
+    - result.diff[1].FABRIC_NAME == dcnm_fabric_name_2
+    - result.diff[1].sequence_number == 2
+    - result.diff[2].FABRIC_NAME == dcnm_fabric_name_3
+    - result.diff[2].sequence_number == 3
+    - result.diff[2].BOOTSTRAP_ENABLE == false
+    - result.diff[2].IS_READ_ONLY == false
+    - result.metadata[0].action == "create"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "merged"
+    - result.metadata[1].action == "create"
+    - result.metadata[1].check_mode == False
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "merged"
+    - (result.response | length) == 3
+    - result.response[0].sequence_number == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "POST"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].sequence_number == 2
+    - result.response[1].MESSAGE == "OK"
+    - result.response[1].METHOD == "POST"
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].sequence_number == 3
+    - result.response[2].MESSAGE == "OK"
+    - result.response[2].METHOD == "POST"
+    - result.response[2].RETURN_CODE == 200
+
+################################################################################
+# MERGED - TEST - Merge additional valid configs into fabric_1 and fabric_2
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "REPLICATION_MODE": "Ingress",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             },
+#             {
+#                 "sequence_number": 4
+#             },
+#             {
+#                 "sequence_number": 5
+#             },
+#             {
+#                 "sequence_number": 6
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "update",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "update",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "config_save",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "config_save",
+#                 "check_mode": false,
+#                 "sequence_number": 4,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "config_deploy",
+#                 "check_mode": false,
+#                 "sequence_number": 5,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "config_deploy",
+#                 "check_mode": false,
+#                 "sequence_number": 6,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                         "REPLICATION_MODE": "Ingress",
+#                         "UNDERLAY_IS_V6": "false",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "PUT",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "PUT",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric/MSD_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "MESSAGE": "Fabric VXLAN_EVPN_Fabric DEPLOY is False or None. Skipping config-save.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             },
+#             {
+#                 "MESSAGE": "Fabric VXLAN_EVPN_MSD_Fabric DEPLOY is False or None. Skipping config-save.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 4
+#             },
+#             {
+#                 "MESSAGE": "Fabric VXLAN_EVPN_Fabric DEPLOY is False or None. Skipping config-deploy.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 5
+#             },
+#             {
+#                 "MESSAGE": "Fabric VXLAN_EVPN_MSD_Fabric DEPLOY is False or None. Skipping config-deploy.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 6
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 4,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 5,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 6,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+- name: MERGED - TEST - Merge additional configs into fabric_1 and fabric_2
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+    # VXLAN_EVPN
+    - FABRIC_NAME: "{{ dcnm_fabric_name_1 }}"
+      FABRIC_TYPE: "{{ dcnm_fabric_type_1 }}"
+      BGP_AS: 65535
+      ANYCAST_GW_MAC: aaaabbbbcccc
+      REPLICATION_MODE: Ingress
+      UNDERLAY_IS_V6: false
+      DEPLOY: false
+    # VXLAN_EVPN_MSD
+    - FABRIC_NAME: "{{ dcnm_fabric_name_2 }}"
+      FABRIC_TYPE: "{{ dcnm_fabric_type_2 }}"
+      ANYCAST_GW_MAC: aa:aa:bb:bb:cc:cc
+      DEPLOY: false
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 6
+    - result.diff[0].FABRIC_NAME == dcnm_fabric_name_1
+    - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+    - result.diff[0].sequence_number == 1
+    - result.diff[1].FABRIC_NAME == dcnm_fabric_name_2
+    - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+    - result.diff[1].sequence_number == 2
+    - (result.metadata | length) == 6
+    - result.metadata[0].action == "update"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "merged"
+    - result.metadata[1].action == "update"
+    - result.metadata[1].check_mode == False
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "merged"
+    - result.metadata[2].action == "config_save"
+    - result.metadata[2].check_mode == False
+    - result.metadata[2].sequence_number == 3
+    - result.metadata[2].state == "merged"
+    - result.metadata[3].action == "config_save"
+    - result.metadata[3].check_mode == False
+    - result.metadata[3].sequence_number == 4
+    - result.metadata[3].state == "merged"
+    - result.metadata[4].action == "config_deploy"
+    - result.metadata[4].check_mode == False
+    - result.metadata[4].sequence_number == 5
+    - result.metadata[4].state == "merged"
+    - result.metadata[5].action == "config_deploy"
+    - result.metadata[5].check_mode == False
+    - result.metadata[5].sequence_number == 6
+    - result.metadata[5].state == "merged"
+    - (result.response | length) == 6
+    - result.response[0].sequence_number == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "PUT"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+    - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
+    - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
+    - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
+    - result.response[1].sequence_number == 2
+    - result.response[1].MESSAGE == "OK"
+    - result.response[1].METHOD == "PUT"
+    - result.response[1].RETURN_CODE == 200
+    - result.response[1].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+    - result.response[1].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_MSD_Fabric"
+    - result.response[2].sequence_number == 3
+    - result.response[2].RETURN_CODE == 200
+    - result.response[2].MESSAGE is match '.*Skipping config-save.*'
+    - result.response[3].sequence_number == 4
+    - result.response[3].RETURN_CODE == 200
+    - result.response[3].MESSAGE is match '.*Skipping config-save.*'
+    - result.response[4].sequence_number == 5
+    - result.response[4].RETURN_CODE == 200
+    - result.response[4].MESSAGE is match '.*Skipping config-deploy.*'
+    - result.response[5].sequence_number == 6
+    - result.response[5].RETURN_CODE == 200
+    - result.response[5].MESSAGE is match '.*Skipping config-deploy.*'
+    - (result.result | length) == 6
+    - result.result[0].changed == true
+    - result.result[0].success == true
+    - result.result[0].sequence_number == 1
+    - result.result[1].changed == true
+    - result.result[1].success == true
+    - result.result[1].sequence_number == 2
+    - result.result[2].changed == true
+    - result.result[2].success == true
+    - result.result[2].sequence_number == 3
+    - result.result[3].changed == true
+    - result.result[3].success == true
+    - result.result[3].sequence_number == 4
+    - result.result[4].changed == true
+    - result.result[4].success == true
+    - result.result[4].sequence_number == 5
+    - result.result[5].changed == true
+    - result.result[5].success == true
+    - result.result[5].sequence_number == 6
+
+################################################################################
+# MERGED - TEST - Merge additional valid configs into fabric_3
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "SUBINTERFACE_RANGE": "2-101",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "update",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "config_save",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "config_deploy",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "IS_READ_ONLY": "false",
+#                         "SUBINTERFACE_RANGE": "2-101"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "PUT",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "MESSAGE": "Fabric LAN_CLASSIC_Fabric DEPLOY is False or None. Skipping config-save.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "MESSAGE": "Fabric LAN_CLASSIC_Fabric DEPLOY is False or None. Skipping config-deploy.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+- name: MERGED - TEST - Merge additional config into fabric_3
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+    # LAN_CLASSIC
+    - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
+      FABRIC_TYPE: "{{ dcnm_fabric_type_3 }}"
+      SUBINTERFACE_RANGE: 2-101
+      DEPLOY: false
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 3
+    - result.diff[0].SUBINTERFACE_RANGE == "2-101"
+    - result.diff[0].FABRIC_NAME == dcnm_fabric_name_3
+    - result.diff[0].sequence_number == 1
+    - result.diff[1].sequence_number == 2
+    - result.diff[2].sequence_number == 3
+    - (result.metadata | length) == 3
+    - result.metadata[0].action == "update"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "merged"
+    - result.metadata[1].action == "config_save"
+    - result.metadata[1].check_mode == False
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "merged"
+    - result.metadata[2].action == "config_deploy"
+    - result.metadata[2].check_mode == False
+    - result.metadata[2].sequence_number == 3
+    - result.metadata[2].state == "merged"
+    - (result.response | length) == 3
+    - result.response[0].sequence_number == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "PUT"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].DATA.nvPairs.BOOTSTRAP_ENABLE == "false"
+    - result.response[0].DATA.nvPairs.FABRIC_NAME == "LAN_CLASSIC_Fabric"
+    - result.response[0].DATA.nvPairs.IS_READ_ONLY == "false"
+    - result.response[0].DATA.nvPairs.SUBINTERFACE_RANGE == "2-101"
+    - result.response[1].sequence_number == 2
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].sequence_number == 3
+    - result.response[2].RETURN_CODE == 200
+
+################################################################################
+# MERGED - CLEANUP - Delete the fabrics
+################################################################################
+# Expected result
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "fabric_name": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "fabric_name": "VXLAN_EVPN_MSD_Fabric",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "fabric_name": "LAN_CLASSIC_Fabric",
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             },
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "deleted"
+#             },
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": "Fabric 'VXLAN_EVPN_MSD_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "DATA": "Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+- name: MERGED - CLEANUP - Delete the fabrics
+  cisco.dcnm.dcnm_fabric:
+      state: deleted
+      config:
+      - fabric_name: "{{ dcnm_fabric_name_1 }}"
+      - fabric_name: "{{ dcnm_fabric_name_2 }}"
+      - fabric_name: "{{ dcnm_fabric_name_3 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 3
+    - result.diff[0].fabric_name == dcnm_fabric_name_1
+    - result.diff[0].sequence_number == 1
+    - result.diff[1].fabric_name == dcnm_fabric_name_2
+    - result.diff[1].sequence_number == 2
+    - result.diff[2].fabric_name == dcnm_fabric_name_3
+    - result.diff[2].sequence_number == 3
+    - (result.metadata | length) == 3
+    - result.metadata[0].action == "delete"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "deleted"
+    - result.metadata[1].action == "delete"
+    - result.metadata[1].check_mode == False
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "deleted"
+    - result.metadata[2].action == "delete"
+    - result.metadata[2].check_mode == False
+    - result.metadata[2].sequence_number == 3
+    - result.metadata[2].state == "deleted"
+    - (result.response | length) == 3
+    - result.response[0].DATA is match '.*deleted successfully.*'
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "DELETE"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
+    - result.response[1].DATA is match '.*deleted successfully.*'
+    - result.response[1].MESSAGE == "OK"
+    - result.response[1].METHOD == "DELETE"
+    - result.response[1].RETURN_CODE == 200
+    - result.response[1].sequence_number == 2
+    - result.response[2].DATA is match '.*deleted successfully.*'
+    - result.response[2].MESSAGE == "OK"
+    - result.response[2].METHOD == "DELETE"
+    - result.response[2].RETURN_CODE == 200
+    - result.response[2].sequence_number == 3
+    - (result.result | length) == 3
+    - result.result[0].changed == true
+    - result.result[0].success == true
+    - result.result[0].sequence_number == 1
+    - result.result[1].changed == true
+    - result.result[1].success == true
+    - result.result[1].sequence_number == 2
+    - result.result[2].changed == true
+    - result.result[2].success == true
+    - result.result[2].sequence_number == 3
