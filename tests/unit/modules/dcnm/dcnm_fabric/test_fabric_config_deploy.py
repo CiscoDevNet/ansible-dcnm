@@ -264,18 +264,18 @@ def test_fabric_config_deploy_00120(
     Classes and Methods
     - FabricConfigDeploy
         - __init__()
-        - fabric_name setter
+        - payload setter
         - commit()
 
     Summary
-    -   Verify behavior when fabric_name is not set before calling commit()
+    -   Verify behavior when payload is not set before calling commit()
 
     Test
-    -   ValueError is raised because fabric_name is not set before
+    -   ValueError is raised because payload is not set before
         calling commit()
     """
     match = r"FabricConfigDeploy\.commit: "
-    match += r"FabricConfigDeploy\.fabric_name must be set "
+    match += r"FabricConfigDeploy\.payload must be set "
     match += r"before calling commit\."
 
     with does_not_raise():
@@ -312,7 +312,7 @@ def test_fabric_config_deploy_00130(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.fabric_details = fabric_details_by_name
-        instance.fabric_name = "MyFabric"
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.fabric_summary = fabric_summary
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
@@ -343,7 +343,7 @@ def test_fabric_config_deploy_00140(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.fabric_details = fabric_details_by_name
-        instance.fabric_name = "MyFabric"
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(MockAnsibleModule())
     with pytest.raises(ValueError, match=match):
@@ -371,7 +371,7 @@ def test_fabric_config_deploy_00150(fabric_config_deploy, fabric_summary) -> Non
 
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_name = "MyFabric"
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
@@ -403,7 +403,7 @@ def test_fabric_config_deploy_00160(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.fabric_details = fabric_details_by_name
-        instance.fabric_name = "MyFabric"
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.rest_send = RestSend(MockAnsibleModule())
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -423,6 +423,8 @@ def test_fabric_config_deploy_00200(
         re-raises ``ValueError`` when ApiEndpoints() raises
         ``ValueError``.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     class MockApiEndpoints:  # pylint: disable=too-few-public-methods
         """
@@ -462,14 +464,39 @@ def test_fabric_config_deploy_00200(
     PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints."
     PATCH_API_ENDPOINTS += "fabric_config_deploy"
 
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+
+    def responses():
+        yield responses_fabric_summary(key)
+        yield responses_fabric_details_by_name(key)
+        # yield responses_fabric_config_deploy(key)
+
+    gen = ResponseGenerator(responses())
+
+    def mock_dcnm_send(*args, **kwargs):
+        item = gen.next
+        return item
+
     match = r"mocked ApiEndpoints\(\)\.fabric_config_deploy getter exception"
+
+    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+
+    payload = {
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": 65000,
+        "DEPLOY": True,
+    }
 
     with does_not_raise():
         instance = fabric_config_deploy
         monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
         instance.fabric_details = fabric_details_by_name
-        instance.fabric_name = "MyFabric"
+        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.payload = payload
         instance.fabric_summary = fabric_summary
+        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
@@ -550,12 +577,19 @@ def test_fabric_config_deploy_00210(
         item = gen.next
         return item
 
+    payload = {
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": 65000,
+        "DEPLOY": True,
+    }
+
     with does_not_raise():
         instance = fabric_config_deploy
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.fabric_details = fabric_details_by_name
         instance.fabric_details.rest_send = instance.rest_send
-        instance.fabric_name = "f1"
+        instance.payload = payload
         instance.fabric_summary = fabric_summary
         instance.fabric_summary.rest_send = instance.rest_send
         instance.results = Results()
@@ -653,6 +687,13 @@ def test_fabric_config_deploy_00220(
         item = gen.next
         return item
 
+    payload = {
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": 65000,
+        "DEPLOY": True,
+    }
+
     with does_not_raise():
         instance = fabric_config_deploy
         instance.rest_send = RestSend(MockAnsibleModule())
@@ -660,7 +701,7 @@ def test_fabric_config_deploy_00220(
         instance.rest_send.timeout = 1
         instance.fabric_details = fabric_details_by_name
         instance.fabric_details.rest_send = instance.rest_send
-        instance.fabric_name = "f1"
+        instance.payload = payload
         instance.fabric_summary = fabric_summary
         instance.fabric_summary.rest_send = instance.rest_send
         instance.results = Results()

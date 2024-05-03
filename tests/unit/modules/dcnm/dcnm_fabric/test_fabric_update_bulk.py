@@ -422,10 +422,11 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
         FabricUpdateCommon()._send_payload() for each fabric in
         FabricUpdateCommon()._payloads_to_commit
     -   FabricUpdateCommon()._send_payloads() calls
-        FabricUpdateCommon()._config_save() since no errors were encountered during
-        the fabric update.
-    -   FabricUpdateCommon()._config_save() saves fabric f1 and returns
-    -   FabricUpdateCommon()._send_payload() calls
+        FabricCommon()._config_save() with each payload in _payloads_to_commit,
+        since no errors were encountered during the fabric update.
+    -   FabricCommon()._config_save() calls
+        FabricConfigSave() which does not save an empty fabric.
+    -   FabricUpdateCommon()._send_payloads() calls
         FabricUpdateCommon()._config_deploy() since no errors were encountered
         during fabric update and config_save.
     -   FabricUpdateCommon()._config_deploy() returns without deploying since
@@ -533,9 +534,9 @@ def test_fabric_update_bulk_00031(monkeypatch, fabric_update_bulk) -> None:
     assert instance.results.result[0].get("success", None) is True
 
     assert False in instance.results.failed
-    assert True in instance.results.failed
+    assert True not in instance.results.failed
     assert True in instance.results.changed
-    assert False in instance.results.changed
+    assert False not in instance.results.changed
 
 
 def test_fabric_update_bulk_00032(monkeypatch, fabric_update_bulk) -> None:
@@ -1717,10 +1718,11 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def mock_config_save(fabric_name) -> None:
+    def mock_config_save(payload) -> None:
         """
         Mock FabricCommon()._config_save() ``ValueError``.
         """
+        fabric_name = payload.get("FABRIC_NAME", "unknown")
         raise ValueError(f"raised FabricCommon._config_save {fabric_name} exception.")
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
@@ -1791,10 +1793,11 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def mock_config_deploy(fabric_name) -> None:
+    def mock_config_deploy(payload) -> None:
         """
         Mock FabricCommon()._config_deploy() ``ValueError``.
         """
+        fabric_name = payload.get("FABRIC_NAME", "unknown")
         msg = f"raised FabricCommon._config_deploy {fabric_name} exception."
         raise ValueError(msg)
 

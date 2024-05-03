@@ -465,7 +465,7 @@ class FabricReplacedCommon(FabricCommon):
 
         for payload in self._payloads_to_commit:
             try:
-                self._config_save(payload.get("FABRIC_NAME"))
+                self._config_save(payload)
             except ValueError as error:
                 raise ValueError(error) from error
 
@@ -475,7 +475,7 @@ class FabricReplacedCommon(FabricCommon):
 
         for payload in self._payloads_to_commit:
             try:
-                self._config_deploy(payload.get("FABRIC_NAME"))
+                self._config_deploy(payload)
             except (ControllerResponseError, ValueError) as error:
                 raise ValueError(error) from error
 

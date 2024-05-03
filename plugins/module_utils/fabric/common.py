@@ -146,18 +146,27 @@ class FabricCommon:
         )
         self._key_translations["DEPLOY"] = None
 
-    def _config_save(self, fabric_name):
+    def _config_save(self, payload):
         """
         -   Save the fabric configuration to the controller.
+            Raise ``ValueError`` if payload is missing FABRIC_NAME.
         -   Raise ``ValueError`` if the endpoint assignment fails.
         """
+        method_name = inspect.stack()[0][3]
+
+        fabric_name = payload.get("FABRIC_NAME", None)
+        if fabric_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payload is missing mandatory parameter: FABRIC_NAME."
+            raise ValueError(msg)
+
         if self.send_payload_result[fabric_name] is False:
             # Skip config-save if send_payload failed
             # Set config_save_result to False so that config_deploy is skipped
             self.config_save_result[fabric_name] = False
             return
 
-        self.config_save.fabric_name = fabric_name
+        self.config_save.payload = payload
         self.config_save.rest_send = self.rest_send
         self.config_save.results = self.results
         try:
@@ -167,19 +176,26 @@ class FabricCommon:
         result = self.rest_send.result_current["success"]
         self.config_save_result[fabric_name] = result
 
-    def _config_deploy(self, fabric_name):
+    def _config_deploy(self, payload):
         """
         -   Deploy the fabric configuration to the controller.
         -   Skip config-deploy if config-save failed
         -   Re-raise ``ValueError`` from FabricConfigDeploy(), if any.
+        -   Raise ``ValueError`` if the payload is missing the FABRIC_NAME key.
         """
+        method_name = inspect.stack()[0][3]
+        fabric_name = payload.get("FABRIC_NAME")
+        if fabric_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payload is missing mandatory parameter: FABRIC_NAME."
+            raise ValueError(msg)
         if self.config_save_result.get(fabric_name) is False:
             # Skip config-deploy if config-save failed
             return
 
         try:
             self.config_deploy.fabric_details = self.fabric_details
-            self.config_deploy.fabric_name = fabric_name
+            self.config_deploy.payload = payload
             self.config_deploy.fabric_summary = self.fabric_summary
             self.config_deploy.rest_send = self.rest_send
             self.config_deploy.results = self.results

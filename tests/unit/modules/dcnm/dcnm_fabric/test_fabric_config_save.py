@@ -65,6 +65,7 @@ def test_fabric_config_save_00010(fabric_config_save) -> None:
     assert instance.config_save_result == {}
     assert instance.fabric_name is None
     assert instance.path is None
+    assert instance.payload is None
     assert instance.rest_send is None
     assert instance.results is None
     assert instance.verb is None
@@ -383,12 +384,19 @@ def test_fabric_config_save_00080(monkeypatch, fabric_config_save) -> None:
     PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints."
     PATCH_API_ENDPOINTS += "fabric_config_save"
 
+    payload = {
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": 65000,
+        "DEPLOY": True,
+    }
+
     match = r"mocked ApiEndpoints\(\)\.fabric_config_save getter exception"
 
     with does_not_raise():
         instance = fabric_config_save
         monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
-        instance.fabric_name = "MyFabric"
+        instance.payload = payload
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
@@ -452,9 +460,16 @@ def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
         item = gen.next
         return item
 
+    payload = {
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": 65000,
+        "DEPLOY": True,
+    }
+
     with does_not_raise():
         instance = fabric_config_save
-        instance.fabric_name = "f1"
+        instance.payload = payload
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
 
@@ -547,9 +562,16 @@ def test_fabric_config_save_00100(monkeypatch, fabric_config_save) -> None:
         item = gen.next
         return item
 
+    payload = {
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": 65000,
+        "DEPLOY": True,
+    }
+
     with does_not_raise():
         instance = fabric_config_save
-        instance.fabric_name = "f1"
+        instance.payload = payload
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.rest_send.unit_test = True
         instance.rest_send.timeout = 1

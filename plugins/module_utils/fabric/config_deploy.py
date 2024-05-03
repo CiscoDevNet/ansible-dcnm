@@ -69,6 +69,7 @@ class FabricConfigDeploy:
         self.params = params
         self.action = "config_deploy"
         self.cannot_deploy_fabric_reason = ""
+        self.config_deploy_failed = False
         self.fabric_can_be_deployed = False
 
         self.check_mode = self.params.get("check_mode", None)
@@ -102,6 +103,7 @@ class FabricConfigDeploy:
         self._properties["fabric_details"] = None
         self._properties["fabric_name"] = None
         self._properties["fabric_summary"] = None
+        self._properties["payload"] = None
         self._properties["rest_send"] = None
         self._properties["results"] = None
 
@@ -112,11 +114,19 @@ class FabricConfigDeploy:
         -   Set self.fabric_can_be_deployed to False otherwise.
         """
         method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "ENTERED"
-        self.log.debug(msg)
 
         self.fabric_can_be_deployed = False
+
+        deploy = self.payload.get("DEPLOY", None)
+        if deploy is False or deploy is None:
+            msg = f"Fabric {self.fabric_name} DEPLOY is False or None. "
+            msg += "Skipping config-deploy."
+            self.log.debug(msg)
+            self.cannot_deploy_fabric_reason = msg
+            self.fabric_can_be_deployed = False
+            self.config_deploy_failed = False
+            return
+
         try:
             self.fabric_summary.fabric_name = self.fabric_name
         except ValueError as error:
@@ -126,6 +136,7 @@ class FabricConfigDeploy:
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
+            self.config_deploy_failed = True
             return
 
         try:
@@ -136,6 +147,7 @@ class FabricConfigDeploy:
             msg += f"Error detail: {error}"
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
+            self.config_deploy_failed = True
             return
 
         if self.fabric_summary.fabric_is_empty is True:
@@ -144,6 +156,7 @@ class FabricConfigDeploy:
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
+            self.config_deploy_failed = False
             return
 
         try:
@@ -154,6 +167,7 @@ class FabricConfigDeploy:
             msg += f"Error detail: {error}"
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
+            self.config_deploy_failed = True
             return
 
         self.fabric_details.filter = self.fabric_name
@@ -164,6 +178,7 @@ class FabricConfigDeploy:
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
+            self.config_deploy_failed = False
             return
 
         if self.fabric_details.is_read_only is True:
@@ -172,6 +187,7 @@ class FabricConfigDeploy:
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
+            self.config_deploy_failed = False
             return
 
         self.fabric_can_be_deployed = True
@@ -191,9 +207,9 @@ class FabricConfigDeploy:
             msg += f"{self.class_name}.fabric_details must be set "
             msg += "before calling commit."
             raise ValueError(msg)
-        if self.fabric_name is None:
+        if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.fabric_name must be set "
+            msg += f"{self.class_name}.payload must be set "
             msg += "before calling commit."
             raise ValueError(msg)
         if self.fabric_summary is None:
@@ -212,19 +228,13 @@ class FabricConfigDeploy:
             msg += "before calling commit."
             raise ValueError(msg)
 
-        try:
-            self.endpoints.fabric_name = self.fabric_name
-            self.path = self.endpoints.fabric_config_deploy.get("path")
-            self.verb = self.endpoints.fabric_config_deploy.get("verb")
-        except ValueError as error:
-            raise ValueError(error) from error
-
         self._can_fabric_be_deployed()
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"fabric_name: {self.fabric_name}, "
         msg += f"fabric_can_be_deployed: {self.fabric_can_be_deployed}, "
         msg += f"cannot_deploy_fabric_reason: {self.cannot_deploy_fabric_reason}"
+        msg += f"config_deploy_failed: {self.config_deploy_failed}"
         self.log.debug(msg)
 
         if self.fabric_can_be_deployed is False:
@@ -236,9 +246,19 @@ class FabricConfigDeploy:
                 "RETURN_CODE": 200,
                 "MESSAGE": self.cannot_deploy_fabric_reason,
             }
-            self.results.result_current = {"changed": False, "success": False}
+            if self.config_deploy_failed is True:
+                self.results.result_current = {"changed": False, "success": False}
+            else:
+                self.results.result_current = {"changed": True, "success": True}
             self.results.register_task_result()
             return
+
+        try:
+            self.endpoints.fabric_name = self.fabric_name
+            self.path = self.endpoints.fabric_config_deploy.get("path")
+            self.verb = self.endpoints.fabric_config_deploy.get("verb")
+        except ValueError as error:
+            raise ValueError(error) from error
 
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -255,9 +275,6 @@ class FabricConfigDeploy:
                 f"{self.action}": "OK",
             }
 
-        msg = f"MMM2: {self.class_name}.{method_name}: "
-        msg += f"self.results.action: {self.results.action}"
-        self.log.debug(msg)
         self.results.action = self.action
         self.results.check_mode = self.check_mode
         self.results.state = self.state
@@ -331,6 +348,35 @@ class FabricConfigDeploy:
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["fabric_summary"] = value
+
+    @property
+    def payload(self):
+        """
+        -   The fabric payload used to create/merge/replace the fabric.
+        -   Raise ``ValueError`` if the value is not a dictionary.
+        -   Raise ``ValueError`` the payload is missing FABRIC_NAME key.
+        """
+        return self._properties["payload"]
+
+    @payload.setter
+    def payload(self, value):
+        method_name = inspect.stack()[0][3]
+
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name} must be a dictionary. "
+            msg += f"Got type: {type(value).__name__}."
+            self.log.debug(msg)
+            raise ValueError(msg)
+        if value.get("FABRIC_NAME", None) is None:
+            msg = f"{self.class_name}.{method_name} payload is missing "
+            msg += "FABRIC_NAME."
+            self.log.debug(msg)
+            raise ValueError(msg)
+        try:
+            self.fabric_name = value["FABRIC_NAME"]
+        except ValueError as error:
+            raise ValueError(error) from error
+        self._properties["payload"] = value
 
     @property
     def rest_send(self):

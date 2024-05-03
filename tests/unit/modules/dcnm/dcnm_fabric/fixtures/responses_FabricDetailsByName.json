@@ -2,6 +2,21 @@
     "test_notes": [
         "Mocked responses for FabricDetails() class"
     ],
+    "test_fabric_config_deploy_00200a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "PUT",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1/LAN_Classic",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
     "test_fabric_config_deploy_00210a": {
         "DATA": [
             {
