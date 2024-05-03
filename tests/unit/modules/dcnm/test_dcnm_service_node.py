@@ -520,7 +520,7 @@ class TestDcnmServiceNodeModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "Invalid parameters in playbook: karth : Invalid choice provided",
+            "Invalid parameters in playbook: karth : Invalid choice [ karth ] provided for param [ type ]",
         )
 
     def test_dcnm_sn_merged_no_ff(self):
@@ -535,7 +535,7 @@ class TestDcnmServiceNodeModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "Invalid parameters in playbook: babu : Invalid choice provided",
+            "Invalid parameters in playbook: babu : Invalid choice [ babu ] provided for param [ form_factor ]",
         )
 
     def test_dcnm_sn_merged_no_vpc(self):

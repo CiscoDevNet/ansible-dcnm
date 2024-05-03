@@ -1,0 +1,1478 @@
+{
+    "vpc_pair_ip_sn":
+    {
+      "10.122.84.174":"SAL1820SDPP",
+        "10.122.84.175":"SAL1819S6K3",
+        "10.122.85.174":"SAL1820SDPQ",
+        "10.122.85.175":"SAL1819S6K4",
+        "10.122.86.174":"SAL1820SDPR",
+        "10.122.86.175":"SAL1819S6K5",
+        "10.122.84.190":"TEST820SDPR"
+    },
+
+    "vpc_pair_hn_sn":
+    {
+      "dt-n9k1": "SAL1820SDPP",
+      "dt-n9k2-1": "SAL1819S6K3",
+      "dt-n9k1Q": "SAL1820SDPQ",
+      "dt-n9k2-1Q": "SAL1819S6K4",
+      "dt-n9k1R": "SAL1820SDPR",
+      "dt-n9k2-1R": "SAL1819S6K5",
+      "dt-TEST": "TEST820SDPR"
+    },
+
+    "vpc_pair_sn_ip":
+    {
+      "SAL1820SDPP": "10.122.84.174",
+      "SAL1819S6K3": "10.122.84.175",
+      "SAL1820SDPQ": "10.122.85.174",
+      "SAL1819S6K4": "10.122.85.175",
+      "SAL1820SDPR": "10.122.86.174",
+      "SAL1819S6K5": "10.122.86.175",
+      "TEST820SDPR": "10.122.84.190"
+    },
+
+    "vpc_pair_sn_swids":
+    {
+      "SAL1820SDPP": 777660,
+      "SAL1819S6K3": 777620,
+      "SAL1820SDPQ": 777661,
+      "SAL1819S6K4": 777621,
+      "SAL1820SDPR": 777662,
+      "SAL1819S6K5": 777622
+    },
+
+    "vpc_pair_null_vpc_info": [],
+
+    "vpc_pair_null_cfg": [],
+
+    "vpc_pair_null_want": [],
+
+    "vpc_pair_null_have": [],
+
+    "vpc_pair_null_meta": [],
+
+    "vpc_pair_null_deploy_list": [],
+
+    "vpc_pair_want_00002":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None"
+    },
+
+    "vpc_pair_want":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "nvPairs": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+
+    "vpc_pair_have":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "nvPairs": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+
+    "vpc_pair_have_00002":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "peerOneDbId": 777660,
+      "peerTwoDbId": 777620,
+      "template": "vpc_pair"
+    },
+
+    "vpc_pair_have_00001":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "peerOneDbId": 777660,
+      "peerTwoDbId": 777620,
+      "template": "vpc_pair",
+      "nvPairs": {
+        "KEEP_ALIVE_VRF": "management",
+        "PEER1_SOURCE_LOOPBACK": "10",
+        "PEER1_MEMBER_INTERFACES": "e1/21",
+        "PEER2_PRIMARY_IP": "10.1.1.2",
+        "DOMAIN_ID": "1000",
+        "PC_MODE": "active",
+        "PRIORITY": "500",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PRIMARY_IP": "10.1.1.1",
+        "isVpcPlus": "false",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_PCID": "133",
+        "POLICY_DESC": "",
+        "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+        "NVE_INTERFACE": "1",
+        "clear_policy": "false",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_PO_DESC": "",
+        "PEER2_MEMBER_INTERFACES": "e1/21",
+        "PEER2_SOURCE_LOOPBACK": "20",
+        "PEER2_PO_DESC": "",
+        "LOOPBACK_SECONDARY_IP": "30.1.1.1",
+        "FABRIC_NAME": "mmudigon-svi",
+        "PEER1_PCID": "133",
+        "POLICY_ID": "POLICY-932540",
+        "isVTEPS": "false",
+        "fabricPath_switch_id": "1",
+        "PEER2_PO_CONF": "test command2",
+        "PEER1_PO_CONF": "test command2",
+        "ADMIN_STATE": "true",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "ALLOWED_VLANS": "all"
+      }
+    },
+
+    "vpc_pair_have_00008":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None"
+    },
+
+    "vpc_pair_query_cfg_00003_11":[
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    }],
+
+    "vpc_pair_query_cfg_00003_12":[
+    {
+      "peerOneId": "10.122.84.175",
+      "peerTwoId": "10.122.84.174"
+    }],
+
+    "vpc_pair_query_cfg_00003_2":[
+    {
+      "peerOneId": "10.122.84.174"
+    }],
+
+    "vpc_pair_query_cfg_00003_3":[
+    {
+      "peerTwoId": "10.122.84.175"
+    }],
+
+    "vpc_pair_query_invalid_cfg_00003":[
+    {
+      "PEERTWOID": "10.122.84.175"
+    }],
+
+    "vpc_pair_sn_swids_00003":
+    {
+      "SAL1820SDPP": 777660,
+      "SAL1819S6K3": 777620
+    },
+
+    "vpc_pair_want_00004_1":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "nvPairs": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+
+    "vpc_pair_cfg_00004_1":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None"
+    },
+
+    "vpc_pair_vpc_info_00005":
+      [
+      {
+        "peerOneId": "10.122.84.174",
+        "peerTwoId": "10.122.84.175",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink": "None",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER1_MEMBER_INTERFACES": [
+            "e1/10"
+          ],
+          "PEER1_PCID": 111,
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "PEER2_MEMBER_INTERFACES": [
+            "e1/10"
+          ],
+          "PEER2_PCID": 111,
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": ""
+        }
+      },
+      {
+        "peerOneId": "10.122.85.174",
+        "peerTwoId": "10.122.85.175",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink": "None",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER1_MEMBER_INTERFACES": [
+            "e1/20"
+          ],
+          "PEER1_PCID": 222,
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "PEER2_MEMBER_INTERFACES": [
+            "e1/20"
+          ],
+          "PEER2_PCID": 222,
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": ""
+        }
+      },
+      {
+        "peerOneId": "10.122.86.174",
+        "peerTwoId": "10.122.86.175",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink": "None",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER1_MEMBER_INTERFACES": [
+            "e1/30"
+          ],
+          "PEER1_PCID": 333,
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "PEER2_MEMBER_INTERFACES": [
+            "e1/30"
+          ],
+          "PEER2_PCID": 333,
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": ""
+        }
+      }
+    ],
+
+    "vpc_pair_have_00006":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "peerOneDbId": 777660,
+      "peerTwoDbId": 777620,
+      "template": "vpc_pair",
+      "nvPairs": {
+        "KEEP_ALIVE_VRF": "management",
+        "PEER1_SOURCE_LOOPBACK": "10",
+        "PEER1_MEMBER_INTERFACES": "e1/21",
+        "PEER2_PRIMARY_IP": "10.1.1.2",
+        "DOMAIN_ID": "1000",
+        "PC_MODE": "active",
+        "PRIORITY": "500",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PRIMARY_IP": "10.1.1.1",
+        "isVpcPlus": "false",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_PCID": "133",
+        "POLICY_DESC": "",
+        "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+        "NVE_INTERFACE": "1",
+        "clear_policy": "false",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_PO_DESC": "",
+        "PEER2_MEMBER_INTERFACES": "e1/21",
+        "PEER2_SOURCE_LOOPBACK": "20",
+        "PEER2_PO_DESC": "",
+        "LOOPBACK_SECONDARY_IP": "30.1.1.1",
+        "FABRIC_NAME": "mmudigon-svi",
+        "PEER1_PCID": "133",
+        "POLICY_ID": "POLICY-932540",
+        "isVTEPS": "false",
+        "fabricPath_switch_id": "1",
+        "PEER2_PO_CONF": "test command2",
+        "PEER1_PO_CONF": "test command2",
+        "ADMIN_STATE": "true",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "ALLOWED_VLANS": "all"
+      }
+    },
+
+    "vpc_pair_cfg_00008": [
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175",
+      "profile": {
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": "1000",
+        "FABRIC_NAME": "",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": "133",
+        "PEER1_PO_CONF": "",
+        "PEER1_PO_DESC": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": "133",
+        "PEER2_PO_CONF": "",
+        "PEER2_PO_DESC": "",
+        "clear_policy": false,
+        "isVTEPS": false,
+        "isVpcPlus": false
+      },
+      "templateName": "vpc_pair"
+    }],
+
+    "vpc_pair_want_00010": [
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "nvPairs": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "nvPairs": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+    {
+      "peerOneId": "SAL1820SDPQ",
+      "peerTwoId": "SAL1819S6K4",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "profile": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+    {
+      "peerOneId": "SAL1820SDPR",
+      "peerTwoId": "SAL1819S6K5",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": "None",
+      "profile": {
+        "PEER2_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_MEMBER_INTERFACES_defaulted": false,
+        "PEER1_PO_CONF_defaulted": false,
+        "PEER2_PO_CONF_defaulted": false,
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": "false",
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": "",
+        "NVE_INTERFACE": 1,
+        "PEER1_SOURCE_LOOPBACK": "",
+        "PEER2_SOURCE_LOOPBACK": "",
+        "PEER1_PRIMARY_IP": "",
+        "PEER2_PRIMARY_IP": "",
+        "LOOPBACK_SECONDARY_IP": "",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    }],
+
+    "vpc_pair_cfg_00011_1":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3"
+    },
+    "vpc_pair_cfg_00011_2":
+    {
+      "peerOneId": "10.122.84.174",
+      "peertwoid": "10.122.84.175"
+    },
+    "vpc_pair_cfg_00011_3":
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    },
+
+    "vpc_pair_cfg_00012_1":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3"
+    },
+    "vpc_pair_cfg_00012_2":
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    },
+    "vpc_pair_cfg_00012_3":
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    },
+
+    "vpc_pair_cfg_00013_1":
+    {
+      "peerOneId": "SAL1820SDPP",
+      "peerTwoId": "SAL1819S6K3"
+    },
+    "vpc_pair_cfg_00013_2":
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    },
+    "vpc_pair_cfg_00013_3":
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": false,
+      "profile": {
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": false,
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": 1,
+        "NVE_INTERFACE": 1,
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+    "vpc_pair_cfg_00013_4":
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175",
+      "templateName": "vpc_pair",
+      "useVirtualPeerLink": false,
+      "profile": {
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": 1000,
+        "FABRIC_NAME": "mmudigon-svi",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "Invalid Value",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": 101,
+        "PEER1_PO_DESC": "This is peer1 PC",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": 102,
+        "PEER2_PO_DESC": "This is peer2 PC",
+        "clear_policy": false,
+        "isVTEPS": false,
+        "isVpcPlus": false,
+        "fabricPath_switch_id": 1,
+        "NVE_INTERFACE": 1,
+        "PEER1_DOMAIN_CONF": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER1_PO_CONF": "test command1",
+        "PEER2_PO_CONF": "test command1"
+      }
+    },
+
+    "vpc_pair_cfg_00014_1": [
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175",
+      "profile": {
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": "1000",
+        "FABRIC_NAME": "",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": "133",
+        "PEER1_PO_CONF": "",
+        "PEER1_PO_DESC": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": "133",
+        "PEER2_PO_CONF": "",
+        "PEER2_PO_DESC": "",
+        "clear_policy": false,
+        "isVTEPS": false,
+        "isVpcPlus": false
+      },
+      "templateName": "vpc_pair"
+    },
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175",
+      "profile": {
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": "1000",
+        "FABRIC_NAME": "",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": "133",
+        "PEER1_PO_CONF": "",
+        "PEER1_PO_DESC": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": "133",
+        "PEER2_PO_CONF": "",
+        "PEER2_PO_DESC": "",
+        "clear_policy": false,
+        "isVTEPS": false,
+        "isVpcPlus": false
+      },
+      "templateName": "vpc_pair"
+    },
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175",
+      "profile": {
+        "ADMIN_STATE": true,
+        "ALLOWED_VLANS": "all",
+        "DOMAIN_ID": "1000",
+        "FABRIC_NAME": "",
+        "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+        "KEEP_ALIVE_VRF": "management",
+        "PC_MODE": "active",
+        "PEER1_DOMAIN_CONF": "",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+        "PEER1_MEMBER_INTERFACES": "e1/20",
+        "PEER1_PCID": "133",
+        "PEER1_PO_CONF": "",
+        "PEER1_PO_DESC": "",
+        "PEER2_DOMAIN_CONF": "",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+        "PEER2_MEMBER_INTERFACES": "e1/20",
+        "PEER2_PCID": "133",
+        "PEER2_PO_CONF": "",
+        "PEER2_PO_DESC": "",
+        "clear_policy": false,
+        "isVTEPS": false,
+        "isVpcPlus": false
+      },
+      "templateName": "vpc_pair"
+    }],
+
+    "vpc_pair_cfg_00014_2": [
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    },
+    {
+      "peerOneId": "10.122.85.174",
+      "peerTwoId": "10.122.85.175"
+    },
+    {
+      "peerOneId": "10.122.86.174",
+      "peerTwoId": "10.122.86.175"
+    }],
+
+    "vpc_pair_cfg_00014_3": [
+    {
+      "peerOneId": "10.122.84.174",
+      "peerTwoId": "10.122.84.175"
+    },
+    {
+      "peerOneId": "10.122.85.174",
+      "peerTwoId": "10.122.85.175"
+    },
+    {
+      "peerOneId": "10.122.86.174",
+      "peerTwoId": "10.122.86.175"
+    }],
+
+    "vpc_pair_fab_details": {
+      "fabricName": "mmudigon-svi",
+      "fabricTechnology": "LANClassic",
+      "nvPairs": {
+      }
+    },
+
+    "vpc_pair_inv_info":
+    {
+      "10.122.84.174": {
+        "ipAddress": "10.122.84.174",
+        "managable": true,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k1",
+        "switchDbID": 777660,
+        "serialNumber": "SAL1820SDPP",
+        "switchRoleEnum": "leaf"
+      },
+      "10.122.84.175": {
+        "ipAddress": "10.122.84.175",
+        "managable": true,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k2-1",
+        "switchDbID": 777620,
+        "serialNumber": "SAL1819S6K3",
+        "switchRoleEnum": "leaf"
+      },
+      "10.122.85.174": {
+        "ipAddress": "10.122.85.174",
+        "managable": true,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k85-174-1",
+        "switchDbID": 777670,
+        "serialNumber": "SAL1820SDPQ",
+        "switchRoleEnum": "leaf"
+      },
+      "10.122.85.175": {
+        "ipAddress": "10.122.85.175",
+        "managable": true,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k85-175-2",
+        "switchDbID": 777630,
+        "serialNumber": "SAL1819S6K4",
+        "switchRoleEnum": "leaf"
+      },
+      "10.122.86.174": {
+        "ipAddress": "10.122.86.174",
+        "managable": true,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k86-174-1",
+        "switchDbID": 777660,
+        "serialNumber": "SAL1820SDPR",
+        "switchRoleEnum": "leaf"
+      },
+      "10.122.86.175": {
+        "ipAddress": "10.122.86.175",
+        "managable": true,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k86-175-2",
+        "switchDbID": 777620,
+        "serialNumber": "SAL1819S6K5",
+        "switchRoleEnum": "leaf"
+      },
+      "10.122.94.174": {
+        "ipAddress": "10.122.94.174",
+        "managable": false,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k94-175-1",
+        "switchDbID": 777660,
+        "serialNumber": "SAL1820SDPS",
+        "switchRoleEnum": null
+      },
+      "10.122.94.175": {
+        "ipAddress": "10.122.94.175",
+        "managable": false,
+        "fabricName": "mmudigon-svi",
+        "logicalName": "dt-n9k94-175-2",
+        "switchDbID": 777620,
+        "serialNumber": "SAL1819S6K6",
+        "switchRoleEnum": null
+      }
+    },
+
+    "vpc_pair_managable":
+    {
+      "10.122.84.174": "SAL1820SDPP",
+      "dt-n9k1": "SAL1820SDPP",
+      "10.122.84.175": "SAL1819S6K3",
+      "dt-n9k2-1": "SAL1819S6K3"
+    },
+
+    "vpc_pair_managable_1":
+    {
+      "10.122.84.174": "SAL1820SDPP",
+      "dt-n9k1": "SAL1820SDPP"
+    },
+
+    "vpc_pair_managable_2":
+    {
+      "10.122.84.175": "SAL1819S6K3",
+      "dt-n9k2-1": "SAL1819S6K3"
+    },
+
+    "vpc_pair_meta_1": [
+      ["10.122.84.175", "dt-n9k2-1", "SAL1819S6K3"]
+    ],
+
+    "vpc_pair_meta_2":
+      [
+      ["10.122.84.174", "dt-n9k1", "SAL1820SDPP"]
+      ],
+
+      "vpc_pair_cfg_00017_1":
+      {
+        "peerOneId": "SAL1820SDPP",
+        "peerTwoId": "SAL1819S6K3",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink": null
+      },
+
+      "vpc_pair_del_list_1": [
+      {
+        "peerOneId": "SAL1820SDPP",
+        "peerTwoId": "SAL1819S6K3"
+      },
+      {
+        "peerOneId": "SAL1820SDPQ",
+        "peerTwoId": "SAL1819S6K4"
+      }],
+
+      "vpc_pair_del_list_2": [
+      {
+        "peerOneId": "SAL1820SDPQ",
+        "peerTwoId": "SAL1819S6K4"
+      }],
+
+      "vpc_pair_create_list": [
+      {
+        "peerOneId": "SAL1820SDPP",
+        "peerTwoId": "SAL1819S6K3",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink":null,
+        "nvPairs": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "mmudigon-svi",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": 101,
+          "PEER1_PO_DESC": "This is peer1 PC",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": 102,
+          "PEER2_PO_DESC": "This is peer2 PC",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PO_CONF": "",
+          "PEER2_PO_CONF": ""
+        }
+      },
+      {
+        "peerOneId": "SAL1820SDPQ",
+        "peerTwoId": "SAL1819S6K4",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink":null,
+        "nvPairs": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "mmudigon-svi",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": 101,
+          "PEER1_PO_DESC": "This is peer1 PC",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": 102,
+          "PEER2_PO_DESC": "This is peer2 PC",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PO_CONF": "",
+          "PEER2_PO_CONF": ""
+        }
+      },
+      {
+        "peerOneId": "SAL1820SDPR",
+        "peerTwoId": "SAL1819S6K5",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink":null,
+        "nvPairs": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "mmudigon-svi",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": 101,
+          "PEER1_PO_DESC": "This is peer1 PC",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": 102,
+          "PEER2_PO_DESC": "This is peer2 PC",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PO_CONF": "",
+          "PEER2_PO_CONF": ""
+        }
+      }],
+
+      "vpc_pair_modify_list": [
+      {
+        "peerOneId": "SAL1820SDPP",
+        "peerTwoId": "SAL1819S6K3",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink":null,
+        "nvPairs": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "mmudigon-svi",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": 101,
+          "PEER1_PO_DESC": "This is peer1 PC",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": 102,
+          "PEER2_PO_DESC": "This is peer2 PC",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PO_CONF": "",
+          "PEER2_PO_CONF": ""
+        }
+      },
+      {
+        "peerOneId": "SAL1820SDPQ",
+        "peerTwoId": "SAL1819S6K4",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink":null,
+        "nvPairs": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "mmudigon-svi",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": 101,
+          "PEER1_PO_DESC": "This is peer1 PC",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": 102,
+          "PEER2_PO_DESC": "This is peer2 PC",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PO_CONF": "",
+          "PEER2_PO_CONF": ""
+        }
+      },
+      {
+        "peerOneId": "SAL1820SDPR",
+        "peerTwoId": "SAL1819S6K5",
+        "templateName": "vpc_pair",
+        "useVirtualPeerLink":null,
+        "nvPairs": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": 1000,
+          "FABRIC_NAME": "mmudigon-svi",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": 101,
+          "PEER1_PO_DESC": "This is peer1 PC",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": 102,
+          "PEER2_PO_DESC": "This is peer2 PC",
+          "clear_policy": "false",
+          "isVTEPS": false,
+          "isVpcPlus": false,
+          "fabricPath_switch_id": "",
+          "NVE_INTERFACE": 1,
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER1_PRIMARY_IP": "",
+          "PEER2_PRIMARY_IP": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PO_CONF": "",
+          "PEER2_PO_CONF": ""
+        }
+      }],
+
+      "vpc_pair_deploy_list": [
+      {
+        "fabric": "mmudigon-svi",
+        "peerOneId": "SAL1820SDPQ",
+        "peerTwoId": "SAL1819S6K4"
+      }],
+
+      "vpc_pair_merge_new_cfg": [
+      {
+        "peerOneId": "10.122.84.174",
+        "peerTwoId": "10.122.84.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": "133",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": "133",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      },
+      {
+        "peerOneId": "10.122.85.174",
+        "peerTwoId": "10.122.85.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER1_MEMBER_INTERFACES": "e1/30",
+          "PEER1_PCID": "143",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "PEER2_MEMBER_INTERFACES": "e1/30",
+          "PEER2_PCID": "143",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      },
+      {
+        "peerOneId": "10.122.86.174",
+        "peerTwoId": "10.122.86.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER1_MEMBER_INTERFACES": "e1/40",
+          "PEER1_PCID": "153",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "PEER2_MEMBER_INTERFACES": "e1/40",
+          "PEER2_PCID": "153",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      }],
+
+      "vpc_pair_delete_existing": [
+      {
+        "peerOneId": "10.122.84.174",
+        "peerTwoId": "10.122.84.175"
+      },
+      {
+        "peerOneId": "10.122.85.174",
+        "peerTwoId": "10.122.85.175"
+      },
+      {
+        "peerOneId": "10.122.86.174",
+        "peerTwoId": "10.122.86.175"
+      }],
+
+      "vpc_pair_override_new": [
+      {
+        "peerOneId": "10.122.84.174",
+        "peerTwoId": "10.122.84.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": "133",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": "133",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      },
+      {
+        "peerOneId": "10.122.85.174",
+        "peerTwoId": "10.122.85.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER1_MEMBER_INTERFACES": "e1/30",
+          "PEER1_PCID": "143",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "PEER2_MEMBER_INTERFACES": "e1/30",
+          "PEER2_PCID": "143",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      },
+      {
+        "peerOneId": "10.122.86.174",
+        "peerTwoId": "10.122.86.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER1_MEMBER_INTERFACES": "e1/40",
+          "PEER1_PCID": "153",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "PEER2_MEMBER_INTERFACES": "e1/40",
+          "PEER2_PCID": "153",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      }],
+
+      "vpc_pair_override_one_pair": [
+      {
+        "peerOneId": "10.122.84.174",
+        "peerTwoId": "10.122.84.175",
+        "profile": {
+          "ADMIN_STATE": true,
+          "ALLOWED_VLANS": "all",
+          "DOMAIN_ID": "1000",
+          "FABRIC_NAME": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": 3,
+          "KEEP_ALIVE_VRF": "management",
+          "PC_MODE": "active",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PCID": "133",
+          "PEER1_PO_CONF": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER2_PCID": "133",
+          "PEER2_PO_CONF": "",
+          "PEER2_PO_DESC": "",
+          "clear_policy": false,
+          "isVTEPS": false,
+          "isVpcPlus": false
+        },
+        "templateName": "vpc_pair"
+      }]
+}
