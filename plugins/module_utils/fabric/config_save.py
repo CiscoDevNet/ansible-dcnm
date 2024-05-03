@@ -48,7 +48,7 @@ class FabricConfigSave:
     ```python
     config_save = FabricConfigSave(params)
     config_save.rest_send = RestSend()
-    config_save.fabric_name = "MyFabric"
+    config_deploy.payload = payload # a valid payload dictionary
     config_save.results = Results()
     try:
         config_save.commit()
@@ -127,9 +127,9 @@ class FabricConfigSave:
         """
         method_name = inspect.stack()[0][3]
 
-        if self.fabric_name is None:
+        if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.fabric_name must be set "
+            msg += f"{self.class_name}.payload must be set "
             msg += "before calling commit."
             raise ValueError(msg)
         if self.rest_send is None:

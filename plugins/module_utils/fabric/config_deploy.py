@@ -38,7 +38,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import
 
 class FabricConfigDeploy:
     """
-    # Initiate a fabric config-save operation on the controller.
+    # Initiate a fabric config-deploy operation on the controller.
 
     -   Raise ``ValueError`` for any caller errors, e.g. required properties
         not being set before calling FabricConfigDeploy().commit().
@@ -50,7 +50,7 @@ class FabricConfigDeploy:
     ```python
     config_deploy = FabricConfigDeploy(params)
     config_deploy.rest_send = RestSend()
-    config_deploy.fabric_name = "MyFabric"
+    config_deploy.payload = payload # a valid payload dictionary
     config_deploy.fabric_details = FabricDetailsByName(params)
     config_deploy.fabric_summary = FabricSummary(params)
     config_deploy.results = Results()
@@ -195,7 +195,7 @@ class FabricConfigDeploy:
     def commit(self):
         """
         -   Initiate a config-deploy operation on the controller.
-        -   Raise ``ValueError`` if FabricConfigDeploy().fabric_name is not set.
+        -   Raise ``ValueError`` if FabricConfigDeploy().payload is not set.
         -   Raise ``ValueError`` if FabricConfigDeploy().rest_send is not set.
         -   Raise ``ValueError`` if FabricConfigDeploy().results is not set.
         -   Raise ``ValueError`` if the endpoint assignment fails.

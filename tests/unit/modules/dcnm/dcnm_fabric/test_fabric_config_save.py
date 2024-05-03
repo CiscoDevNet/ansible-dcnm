@@ -257,18 +257,18 @@ def test_fabric_config_save_00050(fabric_config_save) -> None:
     Classes and Methods
     - FabricConfigSave
         - __init__()
-        - fabric_name setter
+        - payload setter
         - commit()
 
     Summary
-    -   Verify behavior when fabric_name is not set before calling commit()
+    -   Verify behavior when payload is not set before calling commit()
 
     Test
-    -   ValueError is raised because fabric_name is not set before
+    -   ValueError is raised because payload is not set before
         calling commit()
     """
     match = r"FabricConfigSave\.commit: "
-    match += r"FabricConfigSave\.fabric_name must be set "
+    match += r"FabricConfigSave\.payload must be set "
     match += r"before calling commit\."
 
     with does_not_raise():
@@ -300,7 +300,7 @@ def test_fabric_config_save_00060(fabric_config_save) -> None:
 
     with does_not_raise():
         instance = fabric_config_save
-        instance.fabric_name = "MyFabric"
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -327,7 +327,7 @@ def test_fabric_config_save_00070(fabric_config_save) -> None:
 
     with does_not_raise():
         instance = fabric_config_save
-        instance.fabric_name = "MyFabric"
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.rest_send = RestSend(MockAnsibleModule())
     with pytest.raises(ValueError, match=match):
         instance.commit()

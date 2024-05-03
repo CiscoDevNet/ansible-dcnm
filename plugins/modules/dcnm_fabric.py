@@ -722,7 +722,7 @@ class Replaced(Common):
 
     def commit(self):
         """
-        Commit the merged state request
+        Commit the replaced state request
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
