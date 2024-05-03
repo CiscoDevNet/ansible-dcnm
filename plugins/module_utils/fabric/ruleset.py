@@ -268,7 +268,8 @@ class RuleSet(RuleSetCommon):
         term["value"] = rhs
         self.ruleset[self.param_name]["terms"]["na"].append(term)
 
-        msg = f"NA: key {self.param_name}: {json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
+        msg = f"{self.param_name}: "
+        msg += f"{json.dumps(self.ruleset[self.param_name], indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _update_ruleset_boolean(self):
@@ -419,6 +420,9 @@ class RuleSet(RuleSetCommon):
         if isinstance(self.template["parameters"], list) is False:
             msg += "template[parameters] is not a list."
             raise ValueError(msg)
+
+        self.properties["ruleset"] = {}
+
         for parameter in self.template["parameters"]:
             if self.is_internal(parameter) is True:
                 continue
