@@ -5414,5 +5414,32 @@
                 "optional": false
             }
         ]
+    },
+    "test_param_info_00070a": {
+        "TEST_NOTES": [
+            "Test requires that UNDERLAY_IS_V6 is not in the template."
+        ],
+        "parameters": [
+            {
+                "name": "NVE_LB_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "1"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay VTEP Loopback Id",
+                    "Description": "(Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            }
+        ]
     }
 }

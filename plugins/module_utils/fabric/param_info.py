@@ -162,7 +162,9 @@ class ParamInfo:
             return self.info[value]
         except KeyError as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Parameter {value} not found in self.info. "
+            msg += f"Parameter {value} not found in fabric template. "
+            msg += f"This likely means that the parameter {value} is not "
+            msg += "appropriate for the fabric type."
             raise KeyError(msg) from error
 
     def _get_choices(self, parameter):

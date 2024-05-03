@@ -477,3 +477,31 @@ def test_param_info_00065() -> None:
         instance.refresh()
     assert instance.parameter("NVE_LB_ID").get("default") == 1
     assert str(instance.parameter("NVE_LB_ID").get("default")) == "1"
+
+
+def test_param_info_00070() -> None:
+    """
+    Classes and Methods
+    - ParamInfo
+        - __init__()
+        - template.setter
+        - refresh()
+        - parameter(value)
+
+    Summary
+    -   Verify parameter() raises ``KeyError`` when value is not in the
+        template.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ParamInfo()
+        instance.template = templates_param_info(key)
+        instance.refresh()
+    match = r"ParamInfo\.parameter:\s+"
+    match += r"Parameter UNDERLAY_IS_V6 not found in fabric template\.\s+"
+    match += r"This likely means that the parameter UNDERLAY_IS_V6 is\s+"
+    match += r"not appropriate for the fabric type\."
+    with pytest.raises(KeyError, match=match):
+        instance.parameter("UNDERLAY_IS_V6")
