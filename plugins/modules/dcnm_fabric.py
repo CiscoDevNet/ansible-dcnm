@@ -465,12 +465,14 @@ class Merged(Common):
         self.payloads = {}
         for want in self.want:
 
+            fabric_name = want.get("FABRIC_NAME", None)
+            fabric_type = want.get("FABRIC_TYPE", None)
+
             try:
                 self._verify_playbook_params.config_playbook = want
             except TypeError as error:
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
 
-            fabric_type = want.get("FABRIC_TYPE", None)
             try:
                 self.fabric_types.fabric_type = fabric_type
             except ValueError as error:
@@ -502,7 +504,7 @@ class Merged(Common):
 
             # Append to need_create if the fabric does not exist.
             # Otherwise, append to need_update.
-            if want["FABRIC_NAME"] not in self.have.all_data:
+            if fabric_name not in self.have.all_data:
                 try:
                     self._verify_playbook_params.config_controller = None
                 except TypeError as error:
@@ -521,7 +523,7 @@ class Merged(Common):
 
             else:
 
-                nv_pairs = self.have.all_data[want["FABRIC_NAME"]]["nvPairs"]
+                nv_pairs = self.have.all_data[fabric_name]["nvPairs"]
                 try:
                     self._verify_playbook_params.config_controller = nv_pairs
                 except TypeError as error:
