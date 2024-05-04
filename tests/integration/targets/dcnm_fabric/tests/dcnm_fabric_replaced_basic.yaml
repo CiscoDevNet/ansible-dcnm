@@ -2,8 +2,7 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-# 00:73.85
-# 00:63.33
+# 00:78.47
 ################################################################################
 # DESCRIPTION - BASIC FABRIC REPLACED STATE TEST
 #
@@ -630,7 +629,7 @@
 # }
 ################################################################################
 - name: REPLACED - TEST - Replace config for fabric_3 with default config (except IS_READ_ONLY and BOOTSTRAP_ENABLE)
-  cisco.dcnm.dcnm_fabric:
+  cisco.dcnm.dcnm_fabric: &replace_fabric_3
     state: replaced
     config:
       - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
@@ -692,7 +691,77 @@
       - result.result[2].success == true
       - result.result[2].sequence_number == 3
 ################################################################################
-# MERGED - CLEANUP - Delete the fabrics
+# REPLACED - TEST - Replace config for fabric_3 with default config
+#
+# NOTES:
+# The following parameters are retained since LAN_CLASSIC is read-only by default
+# and we want to delete it at the end of this playbook.
+# - IS_READ_ONLY
+# - BOOTSTRAP_ENABLE
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to update for replaced state.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace config for fabric_3 with default config - idempotence
+  cisco.dcnm.dcnm_fabric: *replace_fabric_3
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "No fabrics to update for replaced state."
+      - result.response[0].RETURN_CODE == 200
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+################################################################################
+# REPLACED - CLEANUP - Delete the fabrics
 ################################################################################
 # Expected result
 # ok: [ndfc1] => {
