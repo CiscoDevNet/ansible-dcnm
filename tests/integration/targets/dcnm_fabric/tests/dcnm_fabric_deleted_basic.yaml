@@ -1,7 +1,6 @@
 ################################################################################
 # RUNTIME
 ################################################################################
-
 # Recent run times (MM:SS.ms):
 # 00:49.83
 ################################################################################
@@ -14,7 +13,6 @@
 ################################################################################
 # STEPS
 ################################################################################
-
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
@@ -38,11 +36,9 @@
 # 6. Delete dcnm_fabric_name_3 again to verify idempotence.
 # CLEANUP
 # 7. No cleanup required
-
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-
 # Example vars for dcnm_image_policy integration tests
 # Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
 #
@@ -58,16 +54,14 @@
 ################################################################################
 # SETUP
 ################################################################################
-
 - name: DELETED - SETUP - Delete fabrics
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-    - fabric_name: "{{ dcnm_fabric_name_1 }}"
-    - fabric_name: "{{ dcnm_fabric_name_2 }}"
-    - fabric_name: "{{ dcnm_fabric_name_3 }}"
+      - fabric_name: "{{ dcnm_fabric_name_1 }}"
+      - fabric_name: "{{ dcnm_fabric_name_2 }}"
+      - fabric_name: "{{ dcnm_fabric_name_3 }}"
   register: result
-
 - debug:
     var: result
 ################################################################################
@@ -177,58 +171,53 @@
 #         ]
 #     }
 # }
+################################################################################
 - name: DELETED - SETUP - Create all supported fabric types
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-    # VXLAN_EVPN
-    - FABRIC_NAME: "{{ dcnm_fabric_name_1 }}"
-      FABRIC_TYPE: "{{ dcnm_fabric_type_1 }}"
-      BGP_AS: "65535.65534"
-      DEPLOY: true
-    # VXLAN_EVPN_MSD
-    - FABRIC_NAME: "{{ dcnm_fabric_name_2 }}"
-      FABRIC_TYPE: "{{ dcnm_fabric_type_2 }}"
-      DEPLOY: true
-    # LAN_CLASSIC
-    - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
-      FABRIC_TYPE: "{{ dcnm_fabric_type_3 }}"
-      BOOTSTRAP_ENABLE: false
-      IS_READ_ONLY: false
-      DEPLOY: true
+      - FABRIC_NAME: "{{ dcnm_fabric_name_1 }}"
+        FABRIC_TYPE: "{{ dcnm_fabric_type_1 }}"
+        BGP_AS: "65535.65534"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ dcnm_fabric_name_2 }}"
+        FABRIC_TYPE: "{{ dcnm_fabric_type_2 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
+        FABRIC_TYPE: "{{ dcnm_fabric_type_3 }}"
+        BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        DEPLOY: true
   register: result
-
 - debug:
     var: result
-
 - assert:
     that:
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 3
-    - result.diff[0].BGP_AS == "65535.65534"
-    - result.diff[0].FABRIC_NAME == dcnm_fabric_name_1
-    - result.diff[0].sequence_number == 1
-    - result.diff[1].FABRIC_NAME == dcnm_fabric_name_2
-    - result.diff[1].sequence_number == 2
-    - result.diff[2].FABRIC_NAME == dcnm_fabric_name_3
-    - result.diff[2].sequence_number == 3
-    - result.diff[2].BOOTSTRAP_ENABLE == false
-    - result.diff[2].IS_READ_ONLY == false
-    - (result.response | length) == 3
-    - result.response[0].sequence_number == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "POST"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[1].sequence_number == 2
-    - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "POST"
-    - result.response[1].RETURN_CODE == 200
-    - result.response[2].sequence_number == 3
-    - result.response[2].MESSAGE == "OK"
-    - result.response[2].METHOD == "POST"
-    - result.response[2].RETURN_CODE == 200
-
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 3
+      - result.diff[0].BGP_AS == "65535.65534"
+      - result.diff[0].FABRIC_NAME == dcnm_fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == dcnm_fabric_name_2
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].FABRIC_NAME == dcnm_fabric_name_3
+      - result.diff[2].sequence_number == 3
+      - result.diff[2].BOOTSTRAP_ENABLE == false
+      - result.diff[2].IS_READ_ONLY == false
+      - (result.response | length) == 3
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
 ###############################################################################################
 # DELETED - TEST - Delete first two fabrics (dcnm_fabric_name_1, dcnm_fabric_name_2) and verify
 ###############################################################################################
@@ -293,52 +282,49 @@
 #         ]
 #     }
 # }
+###############################################################################################
 - name: DELETED - TEST - Delete first two fabrics (dcnm_fabric_name_1, dcnm_fabric_name_2) and verify
   cisco.dcnm.dcnm_fabric:
-      state: deleted
-      config:
+    state: deleted
+    config:
       - fabric_name: "{{ dcnm_fabric_name_1 }}"
       - fabric_name: "{{ dcnm_fabric_name_2 }}"
   register: result
-
 - debug:
     var: result
-
 - assert:
     that:
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 2
-    - result.diff[0].fabric_name == dcnm_fabric_name_1
-    - result.diff[1].fabric_name == dcnm_fabric_name_2
-    - result.diff[0].sequence_number == 1
-    - result.diff[1].sequence_number == 2
-    - (result.metadata | length) == 2
-    - result.metadata[0].action == "delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - result.metadata[1].action == "delete"
-    - result.metadata[1].check_mode == False
-    - result.metadata[1].sequence_number == 2
-    - result.metadata[1].state == "deleted"
-    - (result.response | length) == 2
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
-    - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "DELETE"
-    - result.response[1].RETURN_CODE == 200
-    - result.response[1].sequence_number == 2
-    - result.result[0].changed == true
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
-    - result.result[1].changed == true
-    - result.result[1].success == true
-    - result.result[1].sequence_number == 2
-
-
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].fabric_name == dcnm_fabric_name_1
+      - result.diff[1].fabric_name == dcnm_fabric_name_2
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - (result.response | length) == 2
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "DELETE"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
 ################################################################################
 # DELETED - TEST - Delete third fabric (dcnm_fabric_name_3) and verify
 ################################################################################
@@ -380,37 +366,35 @@
 #         ]
 #     }
 # }
+################################################################################
 - name: DELETED - TEST - Delete third fabric (dcnm_fabric_name_3) and verify
   cisco.dcnm.dcnm_fabric: &fabric_deleted
-      state: deleted
-      config:
+    state: deleted
+    config:
       - fabric_name: "{{ dcnm_fabric_name_3 }}"
   register: result
-
 - debug:
     var: result
-
 - assert:
     that:
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 1
-    - result.diff[0].fabric_name == dcnm_fabric_name_3
-    - result.diff[0].sequence_number == 1
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
-    - result.result[0].changed == true
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
-
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].fabric_name == dcnm_fabric_name_3
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
 ################################################################################
 # DELETED - TEST - Delete third fabric (dcnm_fabric_name_3) idempotence
 ################################################################################
@@ -448,28 +432,27 @@
 #         ]
 #     }
 # }
+################################################################################
 - name: DELETED - TEST - Delete third fabric (dcnm_fabric_name_3) idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
-
 - debug:
     var: result
-
 - assert:
     that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 1
-    - result.diff[0].sequence_number == 1
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "No fabrics to delete"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
-    - result.result[0].changed == false
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No fabrics to delete"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
