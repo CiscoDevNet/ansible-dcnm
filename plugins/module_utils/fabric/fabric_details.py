@@ -20,7 +20,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
@@ -93,8 +92,11 @@ class FabricDetails(FabricCommon):
         # We save the current check_mode value, set rest_send.check_mode
         # to False so the request will be sent to the controller, and then
         # restore the original check_mode value.
+        msg = f"{self.class_name}.{method_name}: calling self.rest_send.commit()"
+        self.log.debug(msg)
         save_check_mode = self.rest_send.check_mode
         self.rest_send.check_mode = False
+        self.rest_send.timeout = 1
         self.rest_send.commit()
         self.rest_send.check_mode = save_check_mode
 
@@ -110,13 +112,7 @@ class FabricDetails(FabricCommon):
                 return
             self.data[fabric_name] = item
 
-        msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.rest_send.response_current: "
-        msg += (
-            f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
-        )
+        msg = f"{self.class_name}.{method_name}: calling self.rest_send.commit() DONE"
         self.log.debug(msg)
 
         self._update_results()
