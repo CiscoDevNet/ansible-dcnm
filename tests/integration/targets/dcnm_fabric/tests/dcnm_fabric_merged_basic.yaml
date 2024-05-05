@@ -7,7 +7,8 @@
 # DESCRIPTION - BASIC FABRIC MERGED STATE TEST
 #
 # Test basic merge of new fabric configurations and verify results.
-# - config-deploy not tested here. See dcnm_fabric_merged_deploy.yaml instead.
+# - config-save and config-deploy not tested here.
+# - See dcnm_fabric_merged_save_deploy.yaml instead.
 ################################################################################
 # STEPS
 ################################################################################
@@ -15,32 +16,32 @@
 ################################################################################
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_type_1
-#    - dcnm_fabric_name_2
-#    - dcnm_fabric_type_2
-#    - dcnm_fabric_name_3
-#    - dcnm_fabric_type_3
+#    - fabric_name_1
+#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_2
+#    - fabric_type_2  # VXLAN_EVPN_MSD
+#    - fabric_name_3
+#    - fabric_type_3  # LAN_CLASSIC
 # 3. Delete fabrics under test, if they exist
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_2
-#    - dcnm_fabric_name_3
+#    - fabric_name_1
+#    - fabric_name_2
+#    - fabric_name_3
 ################################################################################
 # TEST
 ################################################################################
 # 4. Create fabrics and verify result
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
 # 5. Merge additional configs into fabric_1 and fabric_2 and verify result
 # 6. Merge additional config into fabric_3 and verify result
 ################################################################################
 # CLEANUP
 ################################################################################
 # 7. Delete fabrics under test
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
-#    - dcnm_fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -50,12 +51,12 @@
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
 #   testcase: deleted
-#   dcnm_fabric_name_1: VXLAN_EVPN_Fabric
-#   dcnm_fabric_type_1: VXLAN_EVPN
-#   dcnm_fabric_name_2: VXLAN_EVPN_MSD_Fabric
-#   dcnm_fabric_type_2: VXLAN_EVPN_MSD
-#   dcnm_fabric_name_3: LAN_CLASSIC_Fabric
-#   dcnm_fabric_type_3: LAN_CLASSIC
+#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_2: VXLAN_EVPN_MSD_Fabric
+#   fabric_type_2: VXLAN_EVPN_MSD
+#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_type_3: LAN_CLASSIC
 ################################################################################
 # MERGED - SETUP - Delete fabrics
 ################################################################################
@@ -63,9 +64,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - fabric_name: "{{ dcnm_fabric_name_1 }}"
-      - fabric_name: "{{ dcnm_fabric_name_2 }}"
-      - fabric_name: "{{ dcnm_fabric_name_3 }}"
+      - fabric_name: "{{ fabric_name_1 }}"
+      - fabric_name: "{{ fabric_name_2 }}"
+      - fabric_name: "{{ fabric_name_3 }}"
   register: result
 - debug:
     var: result
@@ -181,15 +182,15 @@
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ dcnm_fabric_name_1 }}"
-        FABRIC_TYPE: "{{ dcnm_fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
         BGP_AS: 65535
         DEPLOY: true
-      - FABRIC_NAME: "{{ dcnm_fabric_name_2 }}"
-        FABRIC_TYPE: "{{ dcnm_fabric_type_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+        FABRIC_TYPE: "{{ fabric_type_2 }}"
         DEPLOY: true
-      - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
-        FABRIC_TYPE: "{{ dcnm_fabric_type_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+        FABRIC_TYPE: "{{ fabric_type_3 }}"
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
         DEPLOY: true
@@ -202,11 +203,11 @@
       - result.failed == false
       - (result.diff | length) == 3
       - result.diff[0].BGP_AS == 65535
-      - result.diff[0].FABRIC_NAME == dcnm_fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == dcnm_fabric_name_2
+      - result.diff[1].FABRIC_NAME == fabric_name_2
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == dcnm_fabric_name_3
+      - result.diff[2].FABRIC_NAME == fabric_name_3
       - result.diff[2].sequence_number == 3
       - result.diff[2].BOOTSTRAP_ENABLE == false
       - result.diff[2].IS_READ_ONLY == false
@@ -393,15 +394,15 @@
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ dcnm_fabric_name_1 }}"
-        FABRIC_TYPE: "{{ dcnm_fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
         BGP_AS: 65535
         ANYCAST_GW_MAC: aaaabbbbcccc
         REPLICATION_MODE: Ingress
         UNDERLAY_IS_V6: false
         DEPLOY: false
-      - FABRIC_NAME: "{{ dcnm_fabric_name_2 }}"
-        FABRIC_TYPE: "{{ dcnm_fabric_type_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+        FABRIC_TYPE: "{{ fabric_type_2 }}"
         ANYCAST_GW_MAC: aa:aa:bb:bb:cc:cc
         DEPLOY: false
   register: result
@@ -412,10 +413,10 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 6
-      - result.diff[0].FABRIC_NAME == dcnm_fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == dcnm_fabric_name_2
+      - result.diff[1].FABRIC_NAME == fabric_name_2
       - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
@@ -583,8 +584,8 @@
   cisco.dcnm.dcnm_fabric: &merge_fabric_3
     state: merged
     config:
-      - FABRIC_NAME: "{{ dcnm_fabric_name_3 }}"
-        FABRIC_TYPE: "{{ dcnm_fabric_type_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+        FABRIC_TYPE: "{{ fabric_type_3 }}"
         SUBINTERFACE_RANGE: 2-101
         DEPLOY: false
   register: result
@@ -596,7 +597,7 @@
       - result.failed == false
       - (result.diff | length) == 3
       - result.diff[0].SUBINTERFACE_RANGE == "2-101"
-      - result.diff[0].FABRIC_NAME == dcnm_fabric_name_3
+      - result.diff[0].FABRIC_NAME == fabric_name_3
       - result.diff[0].sequence_number == 1
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
@@ -782,9 +783,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - fabric_name: "{{ dcnm_fabric_name_1 }}"
-      - fabric_name: "{{ dcnm_fabric_name_2 }}"
-      - fabric_name: "{{ dcnm_fabric_name_3 }}"
+      - fabric_name: "{{ fabric_name_1 }}"
+      - fabric_name: "{{ fabric_name_2 }}"
+      - fabric_name: "{{ fabric_name_3 }}"
   register: result
 - debug:
     var: result
@@ -793,11 +794,11 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 3
-      - result.diff[0].fabric_name == dcnm_fabric_name_1
+      - result.diff[0].fabric_name == fabric_name_1
       - result.diff[0].sequence_number == 1
-      - result.diff[1].fabric_name == dcnm_fabric_name_2
+      - result.diff[1].fabric_name == fabric_name_2
       - result.diff[1].sequence_number == 2
-      - result.diff[2].fabric_name == dcnm_fabric_name_3
+      - result.diff[2].fabric_name == fabric_name_3
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
       - result.metadata[0].action == "delete"
