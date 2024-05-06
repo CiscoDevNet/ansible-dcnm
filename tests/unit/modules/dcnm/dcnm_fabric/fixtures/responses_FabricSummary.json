@@ -1,0 +1,386 @@
+{
+    "test_notes": [
+        "Mocked responses for FabricSummary() class"
+    ],
+    "test_fabric_config_deploy_00200a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_config_deploy_00210a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_config_deploy_00220a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00040a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00042a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00043a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00044a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00050a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {
+                "leaf": 4
+            },
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_delete_00051a": {
+        "DATA": {
+            "timestamp": 1713467047741,
+            "status": 404,
+            "error": "Not Found",
+            "path": "/rest/control/switches/MyFabric/overview"            
+        },
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 404
+    },
+    "test_fabric_summary_00033a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_summary_00034a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_summary_00035a": {
+        "DATA": {
+            "timestamp": 1713467047741,
+            "status": 404,
+            "error": "Not Found",
+            "path": "/rest/control/switches/MyFabric/overview"            
+        },
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 404
+    },
+    "test_fabric_summary_00036a": {
+        "TEST_NOTES": [
+            "DATA is missing.",
+            "This should never happen, but we need to handle it gracefully."
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/MyFabric/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00031a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00032a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00033a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00034a": {
+        "DATA": {
+            "switchConfig": {},
+            "switchHWVersions": {},
+            "switchHealth": {},
+            "switchRoles": {},
+            "switchSWVersions": {}
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00035a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00040a": {
+        "DATA": {
+            "timestamp": 1713467047741,
+            "status": 404,
+            "error": "Not Found",
+            "path": "/rest/control/switches/MyFabric/overview"            
+        },
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 404
+    },
+    "test_fabric_update_bulk_00130a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_update_bulk_00140a": {
+        "DATA": {
+            "switchSWVersions": {
+                "10.2(5)": 2,
+                "10.3(1)": 2
+            },
+            "switchHealth": {
+                "Healthy": 1,
+                "Minor": 3
+            },
+            "switchHWVersions": {
+                "N9K-C93180YC-EX": 2,
+                "N9K-C9336C-FX2": 1,
+                "N9K-C9504": 1
+            },
+            "switchConfig": {
+                "NA": 4
+            },
+            "switchRoles": {
+                "leaf": 2,
+                "spine": 1,
+                "border gateway": 1
+            }
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/f1/overview",
+        "RETURN_CODE": 200
+    }
+}

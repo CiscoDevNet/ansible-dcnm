@@ -1,0 +1,898 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 00:77.09
+################################################################################
+# DESCRIPTION - FABRIC REPLACED STATE TEST with SAVE and DEPLOY
+#
+# Test merge of new fabric configurations and verify results.
+# Test config-save and config-deploy on populated fabrics.
+# - VXLAN_EVPN_MSD fabric not tested.
+# - See dcnm_fabric_merged_basic.yaml for VXLAN_EVPN_MSD test.
+# - config-save and config-deploy are tested.
+# - See dcnm_fabric_merged_basic.yaml for quicker test without save/deploy.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+################################################################################
+# 1. The following fabrics must be empty on the controller (or not exist).
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_name_1
+#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_3
+#    - fabric_type_3  # LAN_CLASSIC
+# 2. Delete fabrics under test, if they exist
+#    - fabric_name_1
+#    - fabric_name_3
+################################################################################
+# TEST
+################################################################################
+# 3. Create fabrics and verify result
+#    - fabric_name_1
+#    - fabric_name_3
+# 4. Add switch to each fabric and verify result
+# 5. Merge additional configs into each fabric and verify result
+#    This step includes config-save and config-deploy
+################################################################################
+# CLEANUP
+################################################################################
+# 7. Delete fabrics under test
+#    - fabric_name_1
+#    - fabric_name_3
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Example vars for dcnm_fabric integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: deleted
+#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_type_3: LAN_CLASSIC
+#   leaf_1: 172.22.150.103
+#   leaf_2: 172.22.150.104
+################################################################################
+
+################################################################################
+# REPLACED - SETUP - Delete fabrics
+################################################################################
+- name: REPLACED - SETUP - Delete fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - fabric_name: "{{ fabric_name_1 }}"
+      - fabric_name: "{{ fabric_name_3 }}"
+  register: result
+- debug:
+    var: result
+
+################################################################################
+# REPLACED - TEST - Create fabric types that support adding switches.
+#                 Use minimal fabric config
+# DEPLOY is set to True for both fabrics but has no effect since the module
+# skips config-save and config-deploy for empty fabrics.
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
+#                 "BGP_AS": 65535,
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "REPLICATION_MODE": "Ingress",
+#                 "UNDERLAY_IS_V6": false,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "BOOTSTRAP_ENABLE": false,
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "IS_READ_ONLY": false,
+#                 "SUBINTERFACE_RANGE": "2-100",
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BGP_AS": "65535",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "IS_READ_ONLY": "false",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Create switch fabrics with non-default configs.
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
+        BGP_AS: 65535
+        ANYCAST_GW_MAC: aaaabbbbcccc
+        REPLICATION_MODE: Ingress
+        UNDERLAY_IS_V6: false
+        DEPLOY: true
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+        FABRIC_TYPE: "{{ fabric_type_3 }}"
+        BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        SUBINTERFACE_RANGE: 2-100
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].BGP_AS == 65535
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.diff[0].REPLICATION_MODE == "Ingress"
+      - result.diff[0].UNDERLAY_IS_V6 == false
+      - result.diff[1].FABRIC_NAME == fabric_name_3
+      - result.diff[1].sequence_number == 2
+      - result.diff[1].BOOTSTRAP_ENABLE == false
+      - result.diff[1].IS_READ_ONLY == false
+      - result.diff[1].SUBINTERFACE_RANGE == "2-100"
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "create"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "create"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+################################################################################
+# REPLACED - SETUP - Add one leaf switch to fabric_1
+################################################################################
+- name: Merge leaf_1 into fabric_1
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_1 }}"
+    state: merged
+    config:
+      - seed_ip: "{{ leaf_1 }}"
+        auth_proto: MD5
+        user_name: admin
+        password: Cisco!2345
+        max_hops: 0
+        role: leaf
+        preserve_config: false
+  register: result
+- debug:
+    var: result
+
+################################################################################
+# REPLACED - SETUP - Add one leaf switch to fabric_3
+################################################################################
+- name: Merge leaf_2 into fabric_3
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_3 }}"
+    state: merged
+    config:
+      - seed_ip: "{{ leaf_2 }}"
+        auth_proto: MD5
+        user_name: admin
+        password: Cisco!2345
+        max_hops: 0
+        role: leaf
+        # preserve_config must be True for LAN_CLASSIC
+        preserve_config: true
+  register: result
+- debug:
+    var: result
+
+################################################################################
+# REPLACED - TEST - Replace fabric_1 config with default config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "REPLICATION_MODE": "Multicast",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "config_save": "OK",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "config_deploy": "OK",
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             },
+#             {
+#                 "action": "config_save",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "replaced"
+#             },
+#             {
+#                 "action": "config_deploy",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                         "REPLICATION_MODE": "Multicast",
+#                         "UNDERLAY_IS_V6": "false",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "PUT",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {
+#                     "status": "Config save is completed"
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/config-save",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "DATA": {
+#                     "status": "Configuration deployment completed."
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/config-deploy?forceShowRun=false",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace fabric_1 config with default config
+  cisco.dcnm.dcnm_fabric: &replace_fabric_1
+    state: replaced
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
+        BGP_AS: 65535
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 3
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].ANYCAST_GW_MAC == "2020.0000.00aa"
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].REPLICATION_MODE == "Multicast"
+      - result.diff[1].sequence_number == 2
+      - result.diff[1].FABRIC_NAME == fabric_name_1
+      - result.diff[1].config_save == "OK"
+      - result.diff[2].sequence_number == 3
+      - result.diff[2].FABRIC_NAME == fabric_name_1
+      - result.diff[2].config_deploy == "OK"
+      - (result.metadata | length) == 3
+      - result.metadata[0].action == "replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - result.metadata[1].action == "config_save"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "replaced"
+      - result.metadata[2].action == "config_deploy"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "replaced"
+      - (result.response | length) == 3
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "PUT"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "2020.0000.00aa"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
+      - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Multicast"
+      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
+      - result.response[1].sequence_number == 2
+      - result.response[1].DATA.status == 'Config save is completed'
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].DATA.status == 'Configuration deployment completed.'
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - (result.result | length) == 3
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+
+################################################################################
+# REPLACED - TEST - Replace fabric_3 config with default config
+# Do not replace parameters that would make fabric read-only since the fabric
+# will be deleted at the end of this test:
+# - IS_READ_ONLY: false
+# - BOOTSTRAP_ENABLE: false
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "BOOTSTRAP_ENABLE": "false",
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "IS_READ_ONLY": "false",
+#                 "SUBINTERFACE_RANGE": "2-511",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "config_save": "OK",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             },
+#             {
+#                 "action": "config_save",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "replaced"
+#             },
+#             {
+#                 "action": "config_deploy",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "createdOn": 1714950108378,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-3",
+#                     "fabricName": "LAN_CLASSIC_Fabric",
+#                     "fabricTechnology": "LANClassic",
+#                     "fabricTechnologyFriendly": "Classic LAN",
+#                     "fabricType": "External",
+#                     "fabricTypeFriendly": "External",
+#                     "id": 3,
+#                     "modifiedOn": 1714950827987,
+#                     "nvPairs": {
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "IS_READ_ONLY": "false",
+#                         "SUBINTERFACE_RANGE": "2-511"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "PUT",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {
+#                     "status": "Config save is completed"
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/config-save",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "DATA": {
+#                     "status": "Configuration deployment completed."
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/config-deploy?forceShowRun=false",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace fabric_3 config with default config (except read-only parameters)
+  cisco.dcnm.dcnm_fabric: &replace_fabric_3
+    state: replaced
+    config:
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+        FABRIC_TYPE: "{{ fabric_type_3 }}"
+        BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 3
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].FABRIC_NAME == fabric_name_3
+      - result.diff[0].SUBINTERFACE_RANGE == "2-511"
+      - result.diff[1].sequence_number == 2
+      - result.diff[1].FABRIC_NAME == fabric_name_3
+      - result.diff[1].config_save == "OK"
+      - result.diff[2].sequence_number == 3
+      - result.diff[2].FABRIC_NAME == fabric_name_3
+      - result.diff[2].config_deploy == "OK"
+      - (result.metadata | length) == 3
+      - result.metadata[0].action == "replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - result.metadata[1].action == "config_save"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "replaced"
+      - result.metadata[2].action == "config_deploy"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "replaced"
+      - (result.response | length) == 3
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "PUT"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA.nvPairs.BOOTSTRAP_ENABLE == "false"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_3
+      - result.response[0].DATA.nvPairs.IS_READ_ONLY == "false"
+      - result.response[0].DATA.nvPairs.SUBINTERFACE_RANGE == "2-511"
+      - result.response[1].sequence_number == 2
+      - result.response[1].DATA.status == 'Config save is completed'
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].DATA.status == 'Configuration deployment completed.'
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - (result.result | length) == 3
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+
+################################################################################
+# REPLACED - TEST - Replace fabric_1 config with default config - idempotence
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to update for replaced state.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace fabric_1 config with default config - idempotence
+  cisco.dcnm.dcnm_fabric: *replace_fabric_1
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "No fabrics to update for replaced state."
+      - result.response[0].RETURN_CODE == 200
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+
+################################################################################
+# REPLACED - TEST - Replace fabric_3 config with default config - idempotence
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to update for replaced state.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace fabric_3 config with default config - idempotence
+  cisco.dcnm.dcnm_fabric: *replace_fabric_3
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "No fabrics to update for replaced state."
+      - result.response[0].RETURN_CODE == 200
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+
+################################################################################
+# REPLACED - CLEANUP - Delete switches from all fabrics
+################################################################################
+- name: Delete switches from fabric_1
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_1 }}"
+    state: deleted
+    config:
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+- name: Delete switches from fabric_3
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_3 }}"
+    state: deleted
+    config:
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+
+################################################################################
+# REPLACED - CLEANUP - Delete the fabrics
+################################################################################
+# Expected result
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "fabric_name": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "fabric_name": "LAN_CLASSIC_Fabric",
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             },
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "deleted"
+#             },
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": "Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - CLEANUP - Delete the fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - fabric_name: "{{ fabric_name_1 }}"
+      - fabric_name: "{{ fabric_name_3 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].fabric_name == fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].fabric_name == fabric_name_3
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - (result.response | length) == 2
+      - result.response[0].DATA is match '.*deleted successfully.*'
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.response[1].DATA is match '.*deleted successfully.*'
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "DELETE"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - (result.result | length) == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2

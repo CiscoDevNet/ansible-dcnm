@@ -1,0 +1,21 @@
+{
+    "test_notes": [
+        "Mocked responses for FabricDelete() class"
+    ],
+    "test_fabric_delete_00040a": {
+        "DATA": "Fabric 'f1' is deleted successfully!",
+        "MESSAGE": "OK",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_fabric_delete_00044a": {
+        "DATA": "Failed to delete the fabric.",
+        "MESSAGE": "ERROR",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1",
+        "RETURN_CODE": 500,
+        "sequence_number": 1
+    }
+}

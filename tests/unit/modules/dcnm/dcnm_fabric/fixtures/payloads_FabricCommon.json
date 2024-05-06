@@ -1,0 +1,40 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricCommon unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric/test_fabric_common.py"
+    ],
+    "test_fabric_common_00020a": [
+        {
+            "TEST_NOTES": [
+                "ANYCAST_GW_MAC is malformed."
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "00.54"
+        }
+    ],
+    "test_fabric_common_00021a": [
+        {
+            "TEST_NOTES": [
+                "BGP_AS is malformed."
+            ],
+            "BGP_AS": "65001.65536",
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_common_00100a": "NOT_A_DICT",
+    "test_fabric_common_00110a": {
+        "TEST_NOTES": [
+            "All mandatory keys are present.",
+            "Mandatory keys are pop()'ed in unit test."
+        ],
+        "BGP_AS": 65000,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    }
+}

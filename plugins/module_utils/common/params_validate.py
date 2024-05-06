@@ -326,7 +326,7 @@ class ParamsValidate:
 
         The ipaddress module accepts int and bool types and converts
         them to IP addresses or networks.  E.g. True becomes 0.0.0.1,
-        False becomes 0.0.0.0, 1 becomse 0.0.0.1, etc.  Because of
+        False becomes 0.0.0.0, 1 becomes 0.0.0.1, etc.  Because of
         this, we need to fail int and bool values if expected_type is
         one of ipv4, ipv6, ipv4_subnet, or ipv6_subnet.
         """

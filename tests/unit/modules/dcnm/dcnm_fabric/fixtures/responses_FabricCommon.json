@@ -1,0 +1,67 @@
+{
+    "test_fabric_common_00030a": {
+        "DATA": "Foo data",
+        "MESSAGE": "Foo message",
+        "METHOD": "FOO",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_fabric_common_00040a": {
+        "DATA": "Foo data",
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 404,
+        "sequence_number": 1
+    },
+    "test_fabric_common_00041a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 500,
+        "sequence_number": 1
+    },
+    "test_fabric_common_00042a": {
+        "DATA": "Foo data",
+        "MESSAGE": "ERROR",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_fabric_common_00043a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_fabric_common_00050a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "ERROR": "Foo error",
+        "sequence_number": 1
+    },
+    "test_fabric_common_00051a": {
+        "DATA": "Foo data",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_fabric_common_00052a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    }
+}
