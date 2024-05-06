@@ -89,7 +89,7 @@ class ApiEndpoints:
             raise ValueError(msg)
         path = self.endpoint_fabrics
         path += (
-            f"/{self.fabric_name}/config-deploy?forceShowRun=false&inclAllMSDSwitches"
+            f"/{self.fabric_name}/config-deploy?forceShowRun=false"
         )
         endpoint = {}
         endpoint["path"] = path

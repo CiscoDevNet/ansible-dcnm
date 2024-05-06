@@ -162,7 +162,7 @@ def test_endpoints_00031() -> None:
     assert endpoint.get("verb", None) == "POST"
     assert endpoint.get("path", None) == (
         f"{instance.endpoint_fabrics}/{fabric_name}"
-        + "/config-deploy?forceShowRun=false&inclAllMSDSwitches"
+        + "/config-deploy?forceShowRun=false"
     )
 
 
