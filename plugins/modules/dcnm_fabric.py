@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2020-2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1917,6 +1917,7 @@ import copy
 import inspect
 import json
 import logging
+from os import environ
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
@@ -2497,25 +2498,28 @@ def main():
     ansible_module = AnsibleModule(
         argument_spec=argument_spec, supports_check_mode=True
     )
+    log = Log(ansible_module)
 
     # Create the base/parent logger for the dcnm collection.
-    # To enable logging, set enable_logging to True.
-    # log.config can be either a dictionary, or a path to a JSON file
-    # Both dictionary and JSON file formats must be conformant with
-    # logging.config.dictConfig and must not log to the console.
-    # For an example configuration, see:
+    # Set the following environment variable to enable logging:
+    #   - NDFC_LOGGING_CONFIG=<path to logging_config.json>
+    # logging_config.json must be must be conformant with logging.config.dictConfig
+    # and must not log to the console.
+    # For an example logging_config.json configuration, see:
     # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
-    enable_logging = False
-    log = Log(ansible_module)
-    if enable_logging is True:
-        collection_path = (
-            "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-        )
-        config_file = (
-            f"{collection_path}/plugins/module_utils/common/logging_config.json"
-        )
+    config_file = environ.get("NDFC_LOGGING_CONFIG", None)
+    if config_file is not None:
         log.config = config_file
-    log.commit()
+    try:
+        log.commit()
+    except json.decoder.JSONDecodeError as error:
+        msg = f"Invalid logging configuration file: {log.config}. "
+        msg += f"Error detail: {error}"
+        ansible_module.fail_json(msg)
+    except ValueError as error:
+        msg = f"Invalid logging configuration file: {log.config}. "
+        msg += f"Error detail: {error}"
+        ansible_module.fail_json(msg)
 
     ansible_module.params["check_mode"] = ansible_module.check_mode
     if ansible_module.params["state"] == "merged":
