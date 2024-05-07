@@ -40,6 +40,7 @@ options:
   config:
     description:
       - A list of fabric configuration dictionaries
+    type: list
     elements: dict
     suboptions:
       - DEPLOY:
