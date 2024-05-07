@@ -22,2432 +22,1881 @@ DOCUMENTATION = """
 ---
 module: dcnm_fabric
 short_description: Manage creation and configuration of NDFC fabrics.
-version_added: 3.5.0
+version_added: "3.5.0"
 author: Allen Robel (@quantumonion)
 description:
-  - Create, delete, update NDFC fabrics.
+- Create, delete, update NDFC fabrics.
 options:
-  state:
-    choices:
-      - deleted
-      - merged
-      - query
-      - replaced
-    default: merged
-    description:
-      - The state of the feature or object after module completion
-    type: str
-  config:
-    description:
-      - A list of fabric configuration dictionaries
-    type: list
-    elements: dict
-    suboptions:
-      DEPLOY:
-        default: false
-        description:
-          - Save and deploy the fabric configuration.
-        required: false
-        type: bool
-      FABRIC_NAME:
-        description:
-          - The name of the fabric.
-        required: true
-        type: str
-      FABRIC_TYPE:
+    state:
         choices:
-          - VXLAN_EVPN
-          - VXLAN_EVPN_MSD
-          - LAN_CLASSIC
+        - deleted
+        - merged
+        - query
+        - replaced
+        default: merged
         description:
-          - The type of fabric.
-        required: true
+        - The state of the feature or object after module completion
         type: str
-      VXLAN_EVPN_FABRIC_PARAMETERS:
+    config:
         description:
-          - Data Center VXLAN EVPN fabric specific parameters.
-          - Fabric for a VXLAN EVPN deployment with Nexus 9000 and 3000 switches.
-          - The following parameters are specific to VXLAN EVPN fabrics.
-          - The indentation of these parameters is meant only to logically group
-            them.
-          - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
-        suboptions:
-          AAA_REMOTE_IP_ENABLED:
-            default: 0
-            description:
-              - Enable only, when IP Authorization is enabled in the AAA Server
-            ndfc_gui_label: Enable AAA IP Authorization
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          AAA_SERVER_CONF:
-            default: ""
-            description:
-              - AAA Configurations
-            ndfc_gui_label: AAA Freeform Config
-            ndfc_gui_section: Manageability
-            required: false
-            type: str
-          ADVERTISE_PIP_BGP:
-            default: 0
-            description:
-              - For Primary VTEP IP Advertisement As Next-Hop Of Prefix Routes
-            ndfc_gui_label: vPC advertise-pip
-            ndfc_gui_section: vPC
-            required: false
-            type: bool
-          ADVERTISE_PIP_ON_BORDER:
-            default: 1
-            description:
-              - Enable advertise-pip on vPC borders and border gateways only.
-                Applicable only when vPC advertise-pip is not enabled
-            ndfc_gui_label: vPC advertise-pip on Border only
-            ndfc_gui_section: vPC
-            required: false
-            type: bool
-          ANYCAST_BGW_ADVERTISE_PIP:
-            default: 0
-            description:
-              - To advertise Anycast Border Gateway PIP as VTEP. Effective on
-                MSD fabric Recalculate Config
-            ndfc_gui_label: Anycast Border Gateway advertise-pip
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ANYCAST_GW_MAC:
-            default: 2020.0000.00aa
-            description:
-              - Shared MAC address for all leafs (xxxx.xxxx.xxxx)
-            ndfc_gui_label: Anycast Gateway MAC
-            ndfc_gui_section: ""
-            required: true
-            type: macAddress
-          ANYCAST_LB_ID:
-            default: 10
-            description:
-              - "Used for vPC Peering in VXLANv6 Fabrics "
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay Anycast Loopback Id
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          ANYCAST_RP_IP_RANGE:
-            default: 10.254.254.0/24
-            description:
-              - Anycast or Phantom RP IP Address Range
-            ndfc_gui_label: Underlay RP Loopback IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          AUTO_SYMMETRIC_DEFAULT_VRF:
-            default: 0
-            description:
-              - Whether to auto generate Default VRF interface and BGP peering
-                configuration on managed neighbor devices. If set, auto created
-                VRF Lite IFC links will have Auto Deploy Default VRF for Peer
-                enabled.
-            ndfc_gui_label: Auto Deploy Default VRF for Peer
-            ndfc_gui_section: Resources
-            required: false
-            type: bool
-          AUTO_SYMMETRIC_VRF_LITE:
-            default: 0
-            description:
-              - Whether to auto generate VRF LITE sub-interface and BGP peering
-                configuration on managed neighbor devices. If set, auto created
-                VRF Lite IFC links will have Auto Deploy for Peer enabled.
-            ndfc_gui_label: Auto Deploy for Peer
-            ndfc_gui_section: Resources
-            required: false
-            type: bool
-          AUTO_UNIQUE_VRF_LITE_IP_PREFIX:
-            default: 0
-            description:
-              - When enabled, IP prefix allocated to the VRF LITE IFC is not
-                reused on VRF extension over VRF LITE IFC. Instead, unique IP
-                Subnet is allocated for each VRF extension over VRF LITE IFC.
-            ndfc_gui_label: Auto Allocation of Unique IP on VRF Extension over VRF Lite IFC
-            ndfc_gui_section: Resources
-            required: false
-            type: bool
-          AUTO_VRFLITE_IFC_DEFAULT_VRF:
-            default: 0
-            description:
-              - Whether to auto generate Default VRF interface and BGP peering
-                configuration on VRF LITE IFC auto deployment. If set, auto
-                created VRF Lite IFC links will have Auto Deploy Default VRF
-                enabled.
-            ndfc_gui_label: Auto Deploy Default VRF
-            ndfc_gui_section: Resources
-            required: false
-            type: bool
-          BANNER:
-            default: ""
-            description:
-              - Message of the Day (motd) banner. Delimiter char (very first
-                char is delimiter char) followed by message ending with
-                delimiter
-            ndfc_gui_label: Banner
-            ndfc_gui_section: Manageability
-            required: false
-            type: str
-          BFD_AUTH_ENABLE:
-            default: 0
-            description:
-              - Valid for P2P Interfaces only
-            ndfc_gui_label: Enable BFD Authentication
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BFD_AUTH_KEY:
-            default: ""
-            description:
-              - Encrypted SHA1 secret value
-            ndfc_gui_label: BFD Authentication Key
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          BFD_AUTH_KEY_ID:
-            default: 100
-            description:
-              - No description available
-            ndfc_gui_label: BFD Authentication Key ID
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          BFD_ENABLE:
-            default: 0
-            description:
-              - Valid for IPv4 Underlay only
-            ndfc_gui_label: Enable BFD
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BFD_IBGP_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable BFD For iBGP
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BFD_ISIS_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable BFD For ISIS
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BFD_OSPF_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable BFD For OSPF
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BFD_PIM_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable BFD For PIM
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BGP_AS:
-            default: ""
-            description:
-              - 1-4294967295 | 1-65535.0-65535 It is a good practice to have a
-                unique ASN for each Fabric.
-            ndfc_gui_label: BGP ASN
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          BGP_AUTH_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable BGP Authentication
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          BGP_AUTH_KEY:
-            default: ""
-            description:
-              - Encrypted BGP Authentication Key based on type
-            ndfc_gui_label: BGP Authentication Key
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          BGP_AUTH_KEY_TYPE:
-            choices:
-              - 3
-              - 7
-            default: 3
-            description:
-              - "BGP Key Encryption Type: 3 - 3DES, 7 - Cisco"
-            ndfc_gui_label: BGP Authentication Key Encryption Type
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          BGP_LB_ID:
-            default: 0
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay Routing Loopback Id
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          BOOTSTRAP_CONF:
-            default: ""
-            description:
-              - Additional CLIs required during device bootup/login e.g.
-                AAA/Radius
-            ndfc_gui_label: Bootstrap Freeform Config
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: str
-          BOOTSTRAP_ENABLE:
-            default: 0
-            description:
-              - Automatic IP Assignment For POAP
-            ndfc_gui_label: Enable Bootstrap
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          BOOTSTRAP_MULTISUBNET:
-            default: "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway,
-              Scope_Subnet_Prefix"
-            description:
-              - "lines with # prefix are ignored here"
-            ndfc_gui_label: DHCPv4 Multi Subnet Scope
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: str
-          BROWNFIELD_NETWORK_NAME_FORMAT:
-            default: Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$
-            description:
-              - Generated network name should be &lt; 64 characters
-            ndfc_gui_label: Brownfield Overlay Network Name Format
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS:
-            default: 0
-            description:
-              - Enable to skip overlay network interface attachments for
-                Brownfield and Host Port Resync cases
-            ndfc_gui_label: Skip Overlay Network Interface Attachments
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          CDP_ENABLE:
-            default: 0
-            description:
-              - Enable CDP on management interface
-            ndfc_gui_label: Enable CDP for Bootstrapped Switch
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          COPP_POLICY:
-            choices:
-              - dense
-              - lenient
-              - moderate
-              - strict
-              - manual
-            default: strict
-            description:
-              - Fabric Wide CoPP Policy. Customized CoPP policy should be
-                provided when manual is selected
-            ndfc_gui_label: CoPP Profile
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          DCI_SUBNET_RANGE:
-            default: 10.33.0.0/16
-            description:
-              - Address range to assign P2P Interfabric Connections
-            ndfc_gui_label: VRF Lite Subnet IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          DCI_SUBNET_TARGET_MASK:
-            default: 30
-            description:
-              - No description available
-            max: 31
-            min: 8
-            ndfc_gui_label: VRF Lite Subnet Mask
-            ndfc_gui_section: Resources
-            required: true
-            type: int
-          DEFAULT_QUEUING_POLICY_CLOUDSCALE:
-            choices:
-              - queuing_policy_default_4q_cloudscale
-              - queuing_policy_default_8q_cloudscale
-            default: queuing_policy_default_8q_cloudscale
-            description:
-              - Queuing Policy for all 92xx, -EX, -FX, -FX2, -FX3, -GX series
-                switches in the fabric
-            ndfc_gui_label: N9K Cloud Scale Platform Queuing Policy
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          DEFAULT_QUEUING_POLICY_OTHER:
-            choices:
-              - queuing_policy_default_other
-            default: queuing_policy_default_other
-            description:
-              - Queuing Policy for all other switches in the fabric
-            ndfc_gui_label: Other N9K Platform Queuing Policy
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          DEFAULT_QUEUING_POLICY_R_SERIES:
-            choices:
-              - queuing_policy_default_r_series
-            default: queuing_policy_default_r_series
-            description:
-              - Queuing Policy for all R-Series switches in the fabric
-            ndfc_gui_label: N9K R-Series Platform Queuing Policy
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          DEFAULT_VRF_REDIS_BGP_RMAP:
-            default: extcon-rmap-filter
-            description:
-              - Route Map used to redistribute BGP routes to IGP in default vrf
-                in auto created VRF Lite IFC links
-            ndfc_gui_label: Redistribute BGP Route-map Name
-            ndfc_gui_section: Resources
-            required: false
-            type: str
-          DHCP_ENABLE:
-            default: 0
-            description:
-              - Automatic IP Assignment For POAP From Local DHCP Server
-            ndfc_gui_label: Enable Local DHCP Server
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          DHCP_END:
-            default: ""
-            description:
-              - End Address For Switch POAP
-            ndfc_gui_label: DHCP Scope End Address
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          DHCP_IPV6_ENABLE:
-            choices:
-              - DHCPv4
-              - DHCPv6
-            default: DHCPv4
-            description:
-              - No description available
-            ndfc_gui_label: DHCP Version
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: str
-          DHCP_START:
-            default: ""
-            description:
-              - Start Address For Switch POAP
-            ndfc_gui_label: DHCP Scope Start Address
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          DNS_SERVER_IP_LIST:
-            default: ""
-            description:
-              - Comma separated list of IP Addresses(v4/v6)
-            ndfc_gui_label: DNS Server IPs
-            ndfc_gui_section: Manageability
-            required: false
-            type: ipAddressList
-          DNS_SERVER_VRF:
-            default: ""
-            description:
-              - One VRF for all DNS servers or a comma separated list of VRFs,
-                one per DNS server
-            ndfc_gui_label: DNS Server VRFs
-            ndfc_gui_section: Manageability
-            required: false
-            type: string[]
-          ENABLE_AAA:
-            default: 0
-            description:
-              - Include AAA configs from Manageability tab during device bootup
-            ndfc_gui_label: Enable AAA Config
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          ENABLE_DEFAULT_QUEUING_POLICY:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable Default Queuing Policies
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_FABRIC_VPC_DOMAIN_ID:
-            default: 0
-            description:
-              - (Not Recommended)
-            ndfc_gui_label: Enable the same vPC Domain Id for all vPC Pairs
-            ndfc_gui_section: vPC
-            required: false
-            type: bool
-          ENABLE_MACSEC:
-            default: 0
-            description:
-              - Enable MACsec in the fabric
-            ndfc_gui_label: Enable MACsec
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_NETFLOW:
-            default: 0
-            description:
-              - Enable Netflow on VTEPs
-            ndfc_gui_label: Enable Netflow
-            ndfc_gui_section: Flow Monitor
-            required: false
-            type: bool
-          ENABLE_NGOAM:
-            default: 1
-            description:
-              - Enable the Next Generation (NG) OAM feature for all switches in
-                the fabric to aid in trouble-shooting VXLAN EVPN fabrics
-            ndfc_gui_label: Enable VXLAN OAM
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_NXAPI:
-            default: 1
-            description:
-              - Enable HTTPS NX-API
-            ndfc_gui_label: Enable NX-API
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_NXAPI_HTTP:
-            default: 1
-            description:
-              - No description available
-            ndfc_gui_label: Enable HTTP NX-API
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_PBR:
-            default: 0
-            description:
-              - When ESR option is ePBR, enable ePBR will enable pbr, sla sender
-                and epbr features on the switch
-            ndfc_gui_label: Enable Policy-Based Routing (PBR)/Enhanced PBR (ePBR)
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_PVLAN:
-            default: 0
-            description:
-              - Enable PVLAN on switches except spines and super spines
-            ndfc_gui_label: Enable Private VLAN (PVLAN)
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_TENANT_DHCP:
-            default: 1
-            description:
-              - No description available
-            ndfc_gui_label: Enable Tenant DHCP
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_TRM:
-            default: 0
-            description:
-              - For Overlay Multicast Support In VXLAN Fabrics
-            ndfc_gui_label: Enable Tenant Routed Multicast (TRM)
-            ndfc_gui_section: Replication
-            required: false
-            type: bool
-          ENABLE_VPC_PEER_LINK_NATIVE_VLAN:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Make vPC Peer Link VLAN as Native VLAN
-            ndfc_gui_section: vPC
-            required: false
-            type: bool
-          ESR_OPTION:
-            default: PBR
-            description:
-              - Policy-Based Routing (PBR) or Enhanced PBR (ePBR)
-            ndfc_gui_label: Elastic Services Re-direction (ESR) Options
-            ndfc_gui_section: Advanced
-            required: false
-            type: enum
-          EXTRA_CONF_INTRA_LINKS:
-            default: ""
-            description:
-              - Additional CLIs For All Intra-Fabric Links
-            ndfc_gui_label: Intra-fabric Links Additional Config
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          EXTRA_CONF_LEAF:
-            default: ""
-            description:
-              - Additional CLIs For All Leafs As Captured From Show Running
-                Configuration
-            ndfc_gui_label: Leaf Freeform Config
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          EXTRA_CONF_SPINE:
-            default: ""
-            description:
-              - Additional CLIs For All Spines As Captured From Show Running
-                Configuration
-            ndfc_gui_label: Spine Freeform Config
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          EXTRA_CONF_TOR:
-            default: ""
-            description:
-              - Additional CLIs For All ToRs As Captured From Show Running
-                Configuration
-            ndfc_gui_label: ToR Freeform Config
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          FABRIC_INTERFACE_TYPE:
-            choices:
-              - p2p
-              - unnumbered
-            default: p2p
-            description:
-              - Numbered(Point-to-Point) or Unnumbered
-            ndfc_gui_label: Fabric Interface Numbering
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          FABRIC_MTU:
-            default: 9216
-            description:
-              - . Must be an even number
-            max: 9216
-            min: 576
-            ndfc_gui_label: Intra Fabric Interface MTU
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          FABRIC_NAME:
-            default: ""
-            description:
-              - Please provide the fabric name to create it (Max Size 32)
-            ndfc_gui_label: Fabric Name
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          FABRIC_VPC_DOMAIN_ID:
-            default: 1
-            description:
-              - vPC Domain Id to be used on all vPC pairs
-            ndfc_gui_label: vPC Domain Id
-            ndfc_gui_section: vPC
-            required: true
-            type: int
-          FABRIC_VPC_QOS:
-            default: 0
-            description:
-              - Qos on spines for guaranteed delivery of vPC Fabric Peering
-                communication
-            ndfc_gui_label: Enable Qos for Fabric vPC-Peering
-            ndfc_gui_section: vPC
-            required: false
-            type: bool
-          FABRIC_VPC_QOS_POLICY_NAME:
-            default: spine_qos_for_fabric_vpc_peering
-            description:
-              - Qos Policy name should be same on all spines
-            ndfc_gui_label: Qos Policy Name
-            ndfc_gui_section: vPC
-            required: true
-            type: str
-          FEATURE_PTP:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable Precision Time Protocol (PTP)
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          GRFIELD_DEBUG_FLAG:
-            choices:
-              - Enable
-              - Disable
-            default: Disable
-            description:
-              - Enable to clean switch configuration without reload when
-                PreserveConfig=no
-            ndfc_gui_label: Greenfield Cleanup Option
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          HD_TIME:
-            default: 180
-            description:
-              - NVE Source Inteface HoldDown Time  in seconds
-            max: 1500
-            min: 1
-            ndfc_gui_label: VTEP HoldDown Time
-            ndfc_gui_section: Advanced
-            required: false
-            type: int
-          HOST_INTF_ADMIN_STATE:
-            default: 1
-            description:
-              - No description available
-            ndfc_gui_label: Unshut Host Interfaces by Default
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          IBGP_PEER_TEMPLATE:
-            default: ""
-            description:
-              - Speficies the iBGP Peer-Template config used for RR and spines
-                with border role.
-            ndfc_gui_label: iBGP Peer-Template Config
-            ndfc_gui_section: Protocols
-            required: false
-            type: str
-          IBGP_PEER_TEMPLATE_LEAF:
-            default: ""
-            description:
-              - Specifies the config used for leaf, border or border gateway. If
-                this field is empty, the peer template defined in iBGP
-                Peer-Template Config is used on all BGP enabled devices
-                (RRs,leafs, border or border gateway roles.
-            ndfc_gui_label: Leaf/Border/Border Gateway iBGP Peer-Template Config
-            ndfc_gui_section: Protocols
-            required: false
-            type: str
-          INBAND_DHCP_SERVERS:
-            default: ""
-            description:
-              - Comma separated list of IPv4 Addresses (Max 3)
-            ndfc_gui_label: External DHCP Server IP Addresses
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipAddressList
-          INBAND_MGMT:
-            default: 0
-            description:
-              - Manage switches with only Inband connectivity
-            ndfc_gui_label: Inband Management
-            ndfc_gui_section: Manageability
-            required: false
-            type: bool
-          ISIS_AUTH_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable IS-IS Authentication
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          ISIS_AUTH_KEY:
-            default: ""
-            description:
-              - Cisco Type 7 Encrypted
-            ndfc_gui_label: IS-IS Authentication Key
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          ISIS_AUTH_KEYCHAIN_KEY_ID:
-            default: 127
-            description:
-              - No description available
-            max: 65535
-            min: 0
-            ndfc_gui_label: IS-IS Authentication Key ID
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          ISIS_AUTH_KEYCHAIN_NAME:
-            default: ""
-            description:
-              - No description available
-            ndfc_gui_label: IS-IS Authentication Keychain Name
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          ISIS_LEVEL:
-            choices:
-              - level-1
-              - level-2
-            default: level-2
-            description:
-              - "Supported IS types: level-1, level-2"
-            ndfc_gui_label: IS-IS Level
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          ISIS_OVERLOAD_ELAPSE_TIME:
-            default: 60
-            description:
-              - Clear the overload bit after an elapsed time in seconds
-            ndfc_gui_label: IS-IS Overload Bit Elapsed Time
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          ISIS_OVERLOAD_ENABLE:
-            default: 1
-            description:
-              - When enabled, set the overload bit for an elapsed time after a
-                reload
-            ndfc_gui_label: Set IS-IS Overload Bit
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          ISIS_P2P_ENABLE:
-            default: 1
-            description:
-              - This will enable network point-to-point on fabric interfaces
-                which are numbered
-            ndfc_gui_label: Enable IS-IS Network Point-to-Point
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          L2_HOST_INTF_MTU:
-            default: 9216
-            description:
-              - . Must be an even number
-            max: 9216
-            min: 1500
-            ndfc_gui_label: Layer 2 Host Interface MTU
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          L2_SEGMENT_ID_RANGE:
-            default: 30000-49000
-            description:
-              - "Overlay Network Identifier Range "
-            max: 16777214
-            min: 1
-            ndfc_gui_label: Layer 2 VXLAN VNI Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          L3VNI_MCAST_GROUP:
-            default: 239.1.1.0
-            description:
-              - Default Underlay Multicast group IP assigned for every overlay
-                VRF.
-            ndfc_gui_label: Default MDT Address for TRM VRFs
-            ndfc_gui_section: Replication
-            required: true
-            type: ipv4
-          L3_PARTITION_ID_RANGE:
-            default: 50000-59000
-            description:
-              - "Overlay VRF Identifier Range "
-            max: 16777214
-            min: 1
-            ndfc_gui_label: Layer 3 VXLAN VNI Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          LINK_STATE_ROUTING:
-            choices:
-              - ospf
-              - is-is
-            default: ospf
-            description:
-              - Used for Spine-Leaf Connectivity
-            ndfc_gui_label: Underlay Routing Protocol
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          LINK_STATE_ROUTING_TAG:
-            default: UNDERLAY
-            description:
-              - Underlay Routing Process Tag
-            ndfc_gui_label: Underlay Routing Protocol Tag
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          LOOPBACK0_IPV6_RANGE:
-            default: fd00::a02:0/119
-            description:
-              - Typically Loopback0 IPv6 Address Range
-            ndfc_gui_label: Underlay Routing Loopback IPv6 Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv6_subnet
-          LOOPBACK0_IP_RANGE:
-            default: 10.2.0.0/22
-            description:
-              - Typically Loopback0 IP Address Range
-            ndfc_gui_label: Underlay Routing Loopback IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          LOOPBACK1_IPV6_RANGE:
-            default: fd00::a03:0/118
-            description:
-              - Typically Loopback1 and Anycast Loopback IPv6 Address Range
-            ndfc_gui_label: Underlay VTEP Loopback IPv6 Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv6_subnet
-          LOOPBACK1_IP_RANGE:
-            default: 10.3.0.0/22
-            description:
-              - Typically Loopback1 IP Address Range
-            ndfc_gui_label: Underlay VTEP Loopback IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          MACSEC_ALGORITHM:
-            default: AES_128_CMAC
-            description:
-              - AES_128_CMAC or AES_256_CMAC
-            ndfc_gui_label: MACsec Primary Cryptographic Algorithm
-            ndfc_gui_section: Advanced
-            required: true
-            type: enum
-          MACSEC_CIPHER_SUITE:
-            default: GCM-AES-XPN-256
-            description:
-              - Configure Cipher Suite
-            ndfc_gui_label: MACsec Cipher Suite
-            ndfc_gui_section: Advanced
-            required: true
-            type: enum
-          MACSEC_FALLBACK_ALGORITHM:
-            default: AES_128_CMAC
-            description:
-              - AES_128_CMAC or AES_256_CMAC
-            ndfc_gui_label: MACsec Fallback Cryptographic Algorithm
-            ndfc_gui_section: Advanced
-            required: true
-            type: enum
-          MACSEC_FALLBACK_KEY_STRING:
-            default: ""
-            description:
-              - Cisco Type 7 Encrypted Octet String
-            ndfc_gui_label: MACsec Fallback Key String
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          MACSEC_KEY_STRING:
-            default: ""
-            description:
-              - Cisco Type 7 Encrypted Octet String
-            ndfc_gui_label: MACsec Primary Key String
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          MACSEC_REPORT_TIMER:
-            default: 5
-            description:
-              - MACsec Operational Status periodic report timer in minutes
-            ndfc_gui_label: MACsec Status Report Timer
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          MGMT_GW:
-            default: ""
-            description:
-              - Default Gateway For Management VRF On The Switch
-            ndfc_gui_label: Switch Mgmt Default Gateway
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          MGMT_PREFIX:
-            default: 24
-            description:
-              - No description available
-            max: 30
-            min: 8
-            ndfc_gui_label: Switch Mgmt IP Subnet Prefix
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: int
-          MGMT_V6PREFIX:
-            default: 64
-            description:
-              - No description available
-            max: 126
-            min: 64
-            ndfc_gui_label: Switch Mgmt IPv6 Subnet Prefix
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: int
-          MPLS_HANDOFF:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable MPLS Handoff
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          MPLS_LB_ID:
-            default: 101
-            description:
-              - "Used for VXLAN to MPLS SR/LDP Handoff "
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay MPLS Loopback Id
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          MPLS_LOOPBACK_IP_RANGE:
-            default: 10.101.0.0/25
-            description:
-              - Used for VXLAN to MPLS SR/LDP Handoff
-            ndfc_gui_label: Underlay MPLS Loopback IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          MST_INSTANCE_RANGE:
-            default: 0
-            description:
-              - "MST instance range, Example: 0-3,5,7-9, Default is 0"
-            ndfc_gui_label: MST Instance Range
-            ndfc_gui_section: Advanced
-            required: true
-            type: integerRange
-          MULTICAST_GROUP_SUBNET:
-            default: 239.1.1.0/25
-            description:
-              - Multicast pool prefix between 8 to 30. A multicast group IP from
-                this pool is used for BUM traffic for each overlay network.
-            ndfc_gui_label: Multicast Group Subnet
-            ndfc_gui_section: Replication
-            required: true
-            type: ipv4_subnet
-          NETFLOW_EXPORTER_LIST:
-            default: ""
-            description:
-              - One or Multiple Netflow Exporters
-            ndfc_gui_label: Netflow Exporter
-            ndfc_gui_section: Flow Monitor
-            required: true
-            type: structureArray
-          NETFLOW_MONITOR_LIST:
-            default: ""
-            description:
-              - One or Multiple Netflow Monitors
-            ndfc_gui_label: Netflow Monitor
-            ndfc_gui_section: Flow Monitor
-            required: true
-            type: structureArray
-          NETFLOW_RECORD_LIST:
-            default: ""
-            description:
-              - One or Multiple Netflow Records
-            ndfc_gui_label: Netflow Record
-            ndfc_gui_section: Flow Monitor
-            required: true
-            type: structureArray
-          NETWORK_VLAN_RANGE:
-            default: 2300-2999
-            description:
-              - "Per Switch Overlay Network VLAN Range "
-            max: 4094
-            min: 2
-            ndfc_gui_label: Network VLAN Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          NTP_SERVER_IP_LIST:
-            default: ""
-            description:
-              - Comma separated list of IP Addresses(v4/v6)
-            ndfc_gui_label: NTP Server IPs
-            ndfc_gui_section: Manageability
-            required: false
-            type: ipAddressList
-          NTP_SERVER_VRF:
-            default: ""
-            description:
-              - One VRF for all NTP servers or a comma separated list of VRFs,
-                one per NTP server
-            ndfc_gui_label: NTP Server VRFs
-            ndfc_gui_section: Manageability
-            required: false
-            type: string[]
-          NVE_LB_ID:
-            default: 1
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay VTEP Loopback Id
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          NXAPI_HTTPS_PORT:
-            default: 443
-            description:
-              - No description available
-            ndfc_gui_label: NX-API HTTPS Port Number
-            ndfc_gui_section: Advanced
-            required: false
-            type: int
-          NXAPI_HTTP_PORT:
-            default: 80
-            description:
-              - No description available
-            ndfc_gui_label: NX-API HTTP Port Number
-            ndfc_gui_section: Advanced
-            required: false
-            type: int
-          OBJECT_TRACKING_NUMBER_RANGE:
-            default: 100-299
-            description:
-              - "Per switch tracked object ID Range "
-            max: 512
-            min: 1
-            ndfc_gui_label: Tracked Object ID Range
-            ndfc_gui_section: Resources
-            required: false
-            type: integerRange
-          OSPF_AREA_ID:
-            default: 0.0.0.0
-            description:
-              - OSPF Area Id in IP address format
-            ndfc_gui_label: OSPF Area Id
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          OSPF_AUTH_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable OSPF Authentication
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          OSPF_AUTH_KEY:
-            default: ""
-            description:
-              - 3DES Encrypted
-            ndfc_gui_label: OSPF Authentication Key
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          OSPF_AUTH_KEY_ID:
-            default: 127
-            description:
-              - No description available
-            max: 255
-            min: 0
-            ndfc_gui_label: OSPF Authentication Key ID
-            ndfc_gui_section: Protocols
-            required: true
-            type: int
-          OVERLAY_MODE:
-            default: cli
-            description:
-              - VRF/Network configuration using config-profile or CLI
-            ndfc_gui_label: Overlay Mode
-            ndfc_gui_section: Advanced
-            required: false
-            type: enum
-          PER_VRF_LOOPBACK_AUTO_PROVISION:
-            default: 0
-            description:
-              - Auto provision a loopback on a VTEP on VRF attachment
-            ndfc_gui_label: Per VRF Per VTEP Loopback Auto-Provisioning
-            ndfc_gui_section: Resources
-            required: false
-            type: bool
-          PER_VRF_LOOPBACK_IP_RANGE:
-            default: 10.5.0.0/22
-            description:
-              - Prefix pool to assign IP addresses to loopbacks on VTEPs on a
-                per VRF basis
-            ndfc_gui_label: Per VRF Per VTEP IP Pool for Loopbacks
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          PHANTOM_RP_LB_ID1:
-            default: 2
-            description:
-              - "Used for Bidir-PIM Phantom RP "
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay Primary RP Loopback Id
-            ndfc_gui_section: Replication
-            required: true
-            type: int
-          PHANTOM_RP_LB_ID2:
-            default: 3
-            description:
-              - "Used for Fallback Bidir-PIM Phantom RP "
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay Backup RP Loopback Id
-            ndfc_gui_section: Replication
-            required: true
-            type: int
-          PHANTOM_RP_LB_ID3:
-            default: 4
-            description:
-              - "Used for second Fallback Bidir-PIM Phantom RP "
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay Second Backup RP Loopback Id
-            ndfc_gui_section: Replication
-            required: true
-            type: int
-          PHANTOM_RP_LB_ID4:
-            default: 5
-            description:
-              - "Used for third Fallback Bidir-PIM Phantom RP "
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay Third Backup RP Loopback Id
-            ndfc_gui_section: Replication
-            required: true
-            type: int
-          PIM_HELLO_AUTH_ENABLE:
-            default: 0
-            description:
-              - Valid for IPv4 Underlay only
-            ndfc_gui_label: Enable PIM Hello Authentication
-            ndfc_gui_section: Protocols
-            required: false
-            type: bool
-          PIM_HELLO_AUTH_KEY:
-            default: ""
-            description:
-              - 3DES Encrypted
-            ndfc_gui_label: PIM Hello Authentication Key
-            ndfc_gui_section: Protocols
-            required: true
-            type: str
-          PM_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable Performance Monitoring
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          POWER_REDUNDANCY_MODE:
-            choices:
-              - ps-redundant
-              - combined
-              - insrc-redundant
-            default: ps-redundant
-            description:
-              - Default Power Supply Mode For The Fabric
-            ndfc_gui_label: Power Supply Mode
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          PTP_DOMAIN_ID:
-            default: 0
-            description:
-              - "Multiple Independent PTP Clocking Subdomains on a Single
-                Network "
-            max: 127
-            min: 0
-            ndfc_gui_label: PTP Domain Id
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          PTP_LB_ID:
-            default: 0
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: PTP Source Loopback Id
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          REPLICATION_MODE:
-            choices:
-              - Multicast
-              - Ingress
-            default: Multicast
-            description:
-              - Replication Mode for BUM Traffic
-            ndfc_gui_label: Replication Mode
-            ndfc_gui_section: Replication
-            required: true
-            type: str
-          ROUTER_ID_RANGE:
-            default: 10.2.0.0/23
-            description:
-              - No description available
-            ndfc_gui_label: BGP Router ID Range for IPv6 Underlay
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          ROUTE_MAP_SEQUENCE_NUMBER_RANGE:
-            default: 1-65534
-            description:
-              - No description available
-            max: 65534
-            min: 1
-            ndfc_gui_label: Route Map Sequence Number Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          RP_COUNT:
-            choices:
-              - 2
-              - 4
-            default: 2
-            description:
-              - Number of spines acting as Rendezvous-Point (RP)
-            ndfc_gui_label: Rendezvous-Points
-            ndfc_gui_section: Replication
-            required: true
-            type: int
-          RP_LB_ID:
-            default: 254
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay RP Loopback Id
-            ndfc_gui_section: Replication
-            required: true
-            type: int
-          RP_MODE:
-            choices:
-              - asm
-              - bidir
-            default: asm
-            description:
-              - Multicast RP Mode
-            ndfc_gui_label: RP Mode
-            ndfc_gui_section: Replication
-            required: true
-            type: str
-          RR_COUNT:
-            choices:
-              - 2
-              - 4
-            default: 2
-            description:
-              - Number of spines acting as Route-Reflectors
-            ndfc_gui_label: Route-Reflectors
-            ndfc_gui_section: ""
-            required: true
-            type: int
-          SEED_SWITCH_CORE_INTERFACES:
-            default: ""
-            description:
-              - Core-facing Interface list on Seed Switch (e.g. e1/1-30,e1/32)
-            ndfc_gui_label: Seed Switch Fabric Interfaces
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: interfaceRange
-          SERVICE_NETWORK_VLAN_RANGE:
-            default: 3000-3199
-            description:
-              - "Per Switch Overlay Service Network VLAN Range "
-            max: 4094
-            min: 2
-            ndfc_gui_label: Service Network VLAN Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          SITE_ID:
-            default: ""
-            description:
-              - For EVPN Multi-Site Support . Defaults to Fabric ASN
-            max: 281474976710655
-            min: 1
-            ndfc_gui_label: Site Id
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          SLA_ID_RANGE:
-            default: 10000-19999
-            description:
-              - "Per switch SLA ID Range "
-            max: 2147483647
-            min: 1
-            ndfc_gui_label: Service Level Agreement (SLA) ID Range
-            ndfc_gui_section: Resources
-            required: false
-            type: integerRange
-          SNMP_SERVER_HOST_TRAP:
-            default: 1
-            description:
-              - Configure NDFC as a receiver for SNMP traps
-            ndfc_gui_label: Enable NDFC as Trap Host
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          SPINE_SWITCH_CORE_INTERFACES:
-            default: ""
-            description:
-              - Core-facing Interface list on all Spines (e.g. e1/1-30,e1/32)
-            ndfc_gui_label: Spine Switch Fabric Interfaces
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: interfaceRange
-          STATIC_UNDERLAY_IP_ALLOC:
-            default: 0
-            description:
-              - Checking this will disable Dynamic Underlay IP Address
-                Allocations
-            ndfc_gui_label: Manual Underlay IP Address Allocation
-            ndfc_gui_section: Resources
-            required: false
-            type: bool
-          STP_BRIDGE_PRIORITY:
-            default: 0
-            description:
-              - Bridge priority for the spanning tree in increments of 4096
-            ndfc_gui_label: Spanning Tree Bridge Priority
-            ndfc_gui_section: Advanced
-            required: true
-            type: enum
-          STP_ROOT_OPTION:
-            choices:
-              - rpvst+
-              - mst
-              - unmanaged
-            default: unmanaged
-            description:
-              - "Which protocol to use for configuring root bridge? rpvst+:
-                Rapid Per-VLAN Spanning Tree, mst: Multiple Spanning Tree,
-                unmanaged (default): STP Root not managed by NDFC"
-            ndfc_gui_label: Spanning Tree Root Bridge Protocol
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          STP_VLAN_RANGE:
-            default: 1-3967
-            description:
-              - "Vlan range, Example: 1,3-5,7,9-11, Default is 1-3967"
-            ndfc_gui_label: Spanning Tree VLAN Range
-            ndfc_gui_section: Advanced
-            required: true
-            type: integerRange
-          STRICT_CC_MODE:
-            default: 0
-            description:
-              - Enable bi-directional compliance checks to flag additional
-                configs in the running config that are not in the
-                intent/expected config
-            ndfc_gui_label: Enable Strict Config Compliance
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          SUBINTERFACE_RANGE:
-            default: 2-511
-            description:
-              - "Per Border Dot1q Range For VRF Lite Connectivity "
-            max: 4093
-            min: 2
-            ndfc_gui_label: Subinterface Dot1q Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          SUBNET_RANGE:
-            default: 10.4.0.0/16
-            description:
-              - Address range to assign Numbered and Peer Link SVI IPs
-            ndfc_gui_label: Underlay Subnet IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          SUBNET_TARGET_MASK:
-            choices:
-              - 30
-              - 31
-            default: 30
-            description:
-              - Mask for Underlay Subnet IP Range
-            ndfc_gui_label: Underlay Subnet IP Mask
-            ndfc_gui_section: ""
-            required: true
-            type: int
-          SYSLOG_SERVER_IP_LIST:
-            default: ""
-            description:
-              - Comma separated list of IP Addresses(v4/v6)
-            ndfc_gui_label: Syslog Server IPs
-            ndfc_gui_section: Manageability
-            required: false
-            type: ipAddressList
-          SYSLOG_SERVER_VRF:
-            default: ""
-            description:
-              - One VRF for all Syslog servers or a comma separated list of
-                VRFs, one per Syslog server
-            ndfc_gui_label: Syslog Server VRFs
-            ndfc_gui_section: Manageability
-            required: false
-            type: string[]
-          SYSLOG_SEV:
-            default: ""
-            description:
-              - "Comma separated list of Syslog severity values, one per Syslog
-                server "
-            max: 7
-            min: 0
-            ndfc_gui_label: Syslog Server Severity
-            ndfc_gui_section: Manageability
-            required: false
-            type: string[]
-          TCAM_ALLOCATION:
-            default: 1
-            description:
-              - TCAM commands are automatically generated for VxLAN and vPC
-                Fabric Peering when Enabled
-            ndfc_gui_label: Enable TCAM Allocation
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          UNDERLAY_IS_V6:
-            default: 0
-            description:
-              - If not enabled, IPv4 underlay is used
-            ndfc_gui_label: Enable IPv6 Underlay
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          UNNUM_BOOTSTRAP_LB_ID:
-            default: 253
-            description:
-              - No description available
-            ndfc_gui_label: Bootstrap Seed Switch Loopback Interface ID
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: int
-          UNNUM_DHCP_END:
-            default: ""
-            description:
-              - Must be a subset of IGP/BGP Loopback Prefix Pool
-            ndfc_gui_label: Switch Loopback DHCP Scope End Address
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          UNNUM_DHCP_START:
-            default: ""
-            description:
-              - Must be a subset of IGP/BGP Loopback Prefix Pool
-            ndfc_gui_label: Switch Loopback DHCP Scope Start Address
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          USE_LINK_LOCAL:
-            default: 1
-            description:
-              - If not enabled, Spine-Leaf interfaces will use global IPv6
-                addresses
-            ndfc_gui_label: Enable IPv6 Link-Local Address
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          V6_SUBNET_RANGE:
-            default: fd00::a04:0/112
-            description:
-              - IPv6 Address range to assign Numbered and Peer Link SVI IPs
-            ndfc_gui_label: Underlay Subnet IPv6 Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv6_subnet
-          V6_SUBNET_TARGET_MASK:
-            choices:
-              - 126
-              - 127
-            default: 126
-            description:
-              - Mask for Underlay Subnet IPv6 Range
-            ndfc_gui_label: Underlay Subnet IPv6 Mask
-            ndfc_gui_section: ""
-            required: true
-            type: int
-          VPC_AUTO_RECOVERY_TIME:
-            default: 360
-            description:
-              - No description available
-            max: 3600
-            min: 240
-            ndfc_gui_label: vPC Auto Recovery Time (In Seconds)
-            ndfc_gui_section: vPC
-            required: true
-            type: int
-          VPC_DELAY_RESTORE:
-            default: 150
-            description:
-              - No description available
-            max: 3600
-            min: 1
-            ndfc_gui_label: vPC Delay Restore Time (In Seconds)
-            ndfc_gui_section: vPC
-            required: true
-            type: int
-          VPC_DOMAIN_ID_RANGE:
-            default: 1-1000
-            description:
-              - vPC Domain id range to use for new pairings
-            ndfc_gui_label: vPC Domain Id Range
-            ndfc_gui_section: vPC
-            required: false
-            type: integerRange
-          VPC_ENABLE_IPv6_ND_SYNC:
-            default: 1
-            description:
-              - Enable IPv6 ND synchronization between vPC peers
-            ndfc_gui_label: vPC IPv6 ND Synchronize
-            ndfc_gui_section: vPC
-            required: false
-            type: bool
-          VPC_PEER_KEEP_ALIVE_OPTION:
-            choices:
-              - loopback
-              - management
-            default: management
-            description:
-              - Use vPC Peer Keep Alive with Loopback or Management
-            ndfc_gui_label: vPC Peer Keep Alive option
-            ndfc_gui_section: vPC
-            required: true
-            type: str
-          VPC_PEER_LINK_PO:
-            default: 500
-            description:
-              - No description available
-            max: 4096
-            min: 1
-            ndfc_gui_label: vPC Peer Link Port Channel ID
-            ndfc_gui_section: vPC
-            required: false
-            type: integerRange
-          VPC_PEER_LINK_VLAN:
-            default: 3600
-            description:
-              - "VLAN range for vPC Peer Link SVI "
-            max: 4094
-            min: 2
-            ndfc_gui_label: vPC Peer Link VLAN Range
-            ndfc_gui_section: vPC
-            required: true
-            type: integerRange
-          VRF_LITE_AUTOCONFIG:
-            choices:
-              - Manual
-              - Back2Back&ToExternal
-            default: Manual
-            description:
-              - VRF Lite Inter-Fabric Connection Deployment Options. If
-                Back2Back&ToExternal is selected, VRF Lite IFCs are auto created
-                between border devices of two Easy Fabrics, and between border
-                devices in Easy Fabric and edge routers in External Fabric. The
-                IP address is taken from the VRF Lite Subnet IP Range pool.
-            ndfc_gui_label: VRF Lite Deployment
-            ndfc_gui_section: Resources
-            required: true
-            type: str
-          VRF_VLAN_RANGE:
-            default: 2000-2299
-            description:
-              - "Per Switch Overlay VRF VLAN Range "
-            max: 4094
-            min: 2
-            ndfc_gui_label: VRF VLAN Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          default_network:
-            choices:
-              - Default_Network_Universal
-              - Service_Network_Universal
-            default: Default_Network_Universal
-            description:
-              - Default Overlay Network Template For Leafs
-            ndfc_gui_label: Network Template
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          default_pvlan_sec_network:
-            choices:
-              - Pvlan_Secondary_Network
-            default: Pvlan_Secondary_Network
-            description:
-              - Default PVLAN Secondary Network Template
-            ndfc_gui_label: PVLAN Secondary Network Template
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          default_vrf:
-            choices:
-              - Default_VRF_Universal
-            default: Default_VRF_Universal
-            description:
-              - Default Overlay VRF Template For Leafs
-            ndfc_gui_label: VRF Template
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          enableRealTimeBackup:
-            default: ""
-            description:
-              - Backup hourly only if there is any config deployment since last
-                backup
-            ndfc_gui_label: Hourly Fabric Backup
-            ndfc_gui_section: Configuration Backup
-            required: false
-            type: bool
-          enableScheduledBackup:
-            default: ""
-            description:
-              - Backup at the specified time
-            ndfc_gui_label: Scheduled Fabric Backup
-            ndfc_gui_section: Configuration Backup
-            required: false
-            type: bool
-          network_extension_template:
-            choices:
-              - Default_Network_Extension_Universal
-            default: Default_Network_Extension_Universal
-            description:
-              - Default Overlay Network Template For Borders
-            ndfc_gui_label: Network Extension Template
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          scheduledTime:
-            default: ""
-            description:
-              - Time (UTC) in 24hr format. (00:00 to 23:59)
-            ndfc_gui_label: Scheduled Time
-            ndfc_gui_section: Configuration Backup
-            required: true
-            type: str
-          vrf_extension_template:
-            choices:
-              - Default_VRF_Extension_Universal
-            default: Default_VRF_Extension_Universal
-            description:
-              - Default Overlay VRF Template For Borders
-            ndfc_gui_label: VRF Extension Template
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-      VXLAN_EVPN_FABRIC_MSD_PARAMETERS:
-        description:
-          - VXLAN EVPN Multi-Site fabric specific parameters.
-          - Domain that can contain multiple VXLAN EVPN Fabrics with
-            Layer-2/Layer-3 Overlay Extensions and other Fabric Types.
-          - The indentation of these parameters is meant only to logically group
-            them.
-          - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
-        suboptions:
-          ANYCAST_GW_MAC:
-            default: 2020.0000.00aa
-            description:
-              - Shared MAC address for all leaves
-            ndfc_gui_label: Anycast-Gateway-MAC
-            ndfc_gui_section: ""
-            required: false
-            type: str
-          BGP_RP_ASN:
-            default: ""
-            description:
-              - 1-4294967295 | 1-65535.0-65535, e.g. 65000, 65001
-            ndfc_gui_label: Multi-Site Route Server BGP ASN List
-            ndfc_gui_section: DCI
-            required: false
-            type: str
-          BGW_ROUTING_TAG:
-            default: 54321
-            description:
-              - Routing tag associated with IP address of loopback and DCI
-                interfaces
-            ndfc_gui_label: Border Gateway IP TAG
-            ndfc_gui_section: ""
-            required: false
-            type: str
-          BORDER_GWY_CONNECTIONS:
-            choices:
-              - Manual
-              - Centralized_To_Route_Server
-              - Direct_To_BGWS
-            default: Manual
-            description:
-              - Manual, Auto Overlay EVPN Peering to Route Servers, Auto Overlay
-                EVPN Direct Peering to Border Gateways
-            ndfc_gui_label: Multi-Site Overlay IFC Deployment Method
-            ndfc_gui_section: DCI
-            required: true
-            type: str
-          CLOUDSEC_ALGORITHM:
-            default: AES_128_CMAC
-            description:
-              - AES_128_CMAC or AES_256_CMAC
-            ndfc_gui_label: CloudSec Cryptographic Algorithm
-            ndfc_gui_section: DCI
-            required: true
-            type: enum
-          CLOUDSEC_AUTOCONFIG:
-            default: 0
-            description:
-              - Auto Config CloudSec on Border Gateways
-            ndfc_gui_label: Multi-Site CloudSec
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          CLOUDSEC_ENFORCEMENT:
-            default: ""
-            description:
-              - If set to strict, data across site must be encrypted.
-            ndfc_gui_label: CloudSec Enforcement
-            ndfc_gui_section: DCI
-            required: true
-            type: enum
-          CLOUDSEC_KEY_STRING:
-            default: ""
-            description:
-              - Cisco Type 7 Encrypted Octet String
-            ndfc_gui_label: CloudSec Key String
-            ndfc_gui_section: DCI
-            required: true
-            type: str
-          CLOUDSEC_REPORT_TIMER:
-            default: 5
-            description:
-              - CloudSec Operational Status periodic report timer in minutes
-            ndfc_gui_label: CloudSec Status Report Timer
-            ndfc_gui_section: DCI
-            required: true
-            type: int
-          DCI_SUBNET_RANGE:
-            default: 10.10.1.0/24
-            description:
-              - Address range to assign P2P DCI Links
-            ndfc_gui_label: DCI Subnet IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          DCI_SUBNET_TARGET_MASK:
-            default: 30
-            description:
-              - "Target Mask for Subnet Range "
-            max: 31
-            min: 8
-            ndfc_gui_label: Subnet Target Mask
-            ndfc_gui_section: Resources
-            required: true
-            type: int
-          DELAY_RESTORE:
-            default: 300
-            description:
-              - Multi-Site underlay and overlay control plane convergence
-                time  in seconds
-            max: 1000
-            min: 30
-            ndfc_gui_label: Delay Restore time
-            ndfc_gui_section: DCI
-            required: false
-            type: int
-          ENABLE_BGP_BFD:
-            default: 0
-            description:
-              - For auto-created Multi-Site Underlay IFCs
-            ndfc_gui_label: BGP BFD on Multi-Site Underlay IFC
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          ENABLE_BGP_LOG_NEIGHBOR_CHANGE:
-            default: 0
-            description:
-              - For auto-created Multi-Site Underlay IFCs
-            ndfc_gui_label: BGP log neighbor change on Multi-Site Underlay IFC
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          ENABLE_BGP_SEND_COMM:
-            default: 0
-            description:
-              - For auto-created Multi-Site Underlay IFCs
-            ndfc_gui_label: BGP Send-community on Multi-Site Underlay IFC
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          ENABLE_PVLAN:
-            default: 0
-            description:
-              - Enable PVLAN on MSD and its child fabrics
-            ndfc_gui_label: Enable Private VLAN (PVLAN)
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          ENABLE_RS_REDIST_DIRECT:
-            default: 0
-            description:
-              - For auto-created Multi-Site overlay IFCs in Route Servers.
-                Applicable only when Multi-Site Overlay IFC Deployment Method is
-                Centralized_To_Route_Server.
-            ndfc_gui_label: Enable redistribute direct on Route Servers
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          FABRIC_NAME:
-            default: ""
-            description:
-              - Please provide the fabric name to create it (Max Size 64)
-            ndfc_gui_label: Fabric Name
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          L2_SEGMENT_ID_RANGE:
-            default: 30000-49000
-            description:
-              - "Overlay Network Identifier Range "
-            max: 16777214
-            min: 1
-            ndfc_gui_label: Layer 2 VXLAN VNI Range
-            ndfc_gui_section: ""
-            required: true
-            type: integerRange
-          L3_PARTITION_ID_RANGE:
-            default: 50000-59000
-            description:
-              - "Overlay VRF Identifier Range "
-            max: 16777214
-            min: 1
-            ndfc_gui_label: Layer 3 VXLAN VNI Range
-            ndfc_gui_section: ""
-            required: true
-            type: integerRange
-          LOOPBACK100_IP_RANGE:
-            default: 10.10.0.0/24
-            description:
-              - Typically Loopback100 IP Address Range
-            ndfc_gui_label: Multi-Site VTEP VIP Loopback IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          MS_IFC_BGP_AUTH_KEY_TYPE:
-            choices:
-              - 3
-              - 7
-            default: 3
-            description:
-              - "BGP Key Encryption Type: 3 - 3DES, 7 - Cisco"
-            ndfc_gui_label: eBGP Authentication Key Encryption Type
-            ndfc_gui_section: DCI
-            required: true
-            type: str
-          MS_IFC_BGP_PASSWORD:
-            default: ""
-            description:
-              - Encrypted eBGP Password Hex String
-            ndfc_gui_label: eBGP Password
-            ndfc_gui_section: DCI
-            required: true
-            type: str
-          MS_IFC_BGP_PASSWORD_ENABLE:
-            default: 0
-            description:
-              - eBGP password for Multi-Site underlay/overlay IFCs
-            ndfc_gui_label: Enable Multi-Site eBGP Password
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          MS_LOOPBACK_ID:
-            default: 100
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: Multi-Site VTEP VIP Loopback Id
-            ndfc_gui_section: ""
-            required: true
-            type: int
-          MS_UNDERLAY_AUTOCONFIG:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Multi-Site Underlay IFC Auto Deployment Flag
-            ndfc_gui_section: DCI
-            required: false
-            type: bool
-          RP_SERVER_IP:
-            default: ""
-            description:
-              - Multi-Site Route-Server peer list (typically loopback IP address
-                on Route-Server for Multi-Site EVPN peering with BGWs), e.g.
-                128.89.0.1, 128.89.0.2
-            ndfc_gui_label: Multi-Site Route Server List
-            ndfc_gui_section: DCI
-            required: false
-            type: ipAddressList
-          RS_ROUTING_TAG:
-            default: 54321
-            description:
-              - Routing tag associated with Route Server IP for redistribute
-                direct. This is the IP used in eBGP EVPN peering.
-            ndfc_gui_label: Route Server IP TAG
-            ndfc_gui_section: DCI
-            required: false
-            type: str
-          TOR_AUTO_DEPLOY:
-            default: 0
-            description:
-              - Enables Overlay VLANs on uplink between ToRs and Leafs
-            ndfc_gui_label: ToR Auto-deploy Flag
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          default_network:
-            choices:
-              - Default_Network_Universal
-              - Service_Network_Universal
-            default: Default_Network_Universal
-            description:
-              - Default Overlay Network Template For Leafs
-            ndfc_gui_label: Network Template
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          default_pvlan_sec_network:
-            choices:
-              - Pvlan_Secondary_Network
-            default: Pvlan_Secondary_Network
-            description:
-              - Default PVLAN Secondary Network Template
-            ndfc_gui_label: PVLAN Secondary Network Template
-            ndfc_gui_section: ""
-            required: false
-            type: str
-          default_vrf:
-            choices:
-              - Default_VRF_Universal
-            default: Default_VRF_Universal
-            description:
-              - Default Overlay VRF Template For Leafs
-            ndfc_gui_label: VRF Template
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          enableScheduledBackup:
-            default: ""
-            description:
-              - "Backup at the specified time. Note: Fabric Backup/Restore
-                functionality is being deprecated for MSD fabrics.
-                Recommendation is to use NDFC Backup & Restore"
-            ndfc_gui_label: Scheduled Fabric Backup
-            ndfc_gui_section: Configuration Backup
-            required: false
-            type: bool
-          network_extension_template:
-            choices:
-              - Default_Network_Extension_Universal
-            default: Default_Network_Extension_Universal
-            description:
-              - Default Overlay Network Template For Borders
-            ndfc_gui_label: Network Extension Template
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          scheduledTime:
-            default: ""
-            description:
-              - Time (UTC) in 24hr format. (00:00 to 23:59)
-            ndfc_gui_label: Scheduled Time
-            ndfc_gui_section: Configuration Backup
-            required: true
-            type: str
-          vrf_extension_template:
-            choices:
-              - Default_VRF_Extension_Universal
-            default: Default_VRF_Extension_Universal
-            description:
-              - Default Overlay VRF Template For Borders
-            ndfc_gui_label: VRF Extension Template
-            ndfc_gui_section: ""
-            required: true
-            type: str
-      LAN_CLASSIC_PARAMETERS:
-        description:
-          - LAN Classic fabric specific parameters.
-          - The following parameters are specific to Classic LAN fabrics.
-          - Fabric to manage a legacy Classic LAN deployment with Nexus switches.
-          - The indentation of these parameters is meant only to logically group
-            them.
-          - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+        - A list of fabric configuration dictionaries
         type: list
         elements: dict
         suboptions:
-          AAA_REMOTE_IP_ENABLED:
-            default: 0
-            description:
-              - Enable only, when IP Authorization is enabled in the AAA Server
-            ndfc_gui_label: Enable AAA IP Authorization
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          AAA_SERVER_CONF:
-            default: ""
-            description:
-              - AAA Configurations
-            ndfc_gui_label: AAA Freeform Config
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          BOOTSTRAP_CONF:
-            default: ""
-            description:
-              - Additional CLIs required during device bootup/login e.g.
-                AAA/Radius
-            ndfc_gui_label: Bootstrap Freeform Config
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: str
-          BOOTSTRAP_ENABLE:
-            default: 0
-            description:
-              - Automatic IP Assignment For POAP
-            ndfc_gui_label: Enable Bootstrap (For NX-OS Switches Only)
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          BOOTSTRAP_MULTISUBNET:
-            default: "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway,
-              Scope_Subnet_Prefix"
-            description:
-              - "lines with # prefix are ignored here"
-            ndfc_gui_label: DHCPv4 Multi Subnet Scope
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: str
-          CDP_ENABLE:
-            default: 0
-            description:
-              - Enable CDP on management interface
-            ndfc_gui_label: Enable CDP for Bootstrapped Switch
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          DHCP_ENABLE:
-            default: 0
-            description:
-              - Automatic IP Assignment For POAP From Local DHCP Server
-            ndfc_gui_label: Enable Local DHCP Server
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          DHCP_END:
-            default: ""
-            description:
-              - End Address For Switch POAP
-            ndfc_gui_label: DHCP Scope End Address
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          DHCP_IPV6_ENABLE:
-            choices:
-              - DHCPv4
-              - DHCPv6
-            default: DHCPv4
-            description:
-              - No description available
-            ndfc_gui_label: DHCP Version
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: str
-          DHCP_START:
-            default: ""
-            description:
-              - Start Address For Switch POAP
-            ndfc_gui_label: DHCP Scope Start Address
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          ENABLE_AAA:
-            default: 0
-            description:
-              - Include AAA configs from Advanced tab during device bootup
-            ndfc_gui_label: Enable AAA Config
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          ENABLE_NETFLOW:
-            default: 0
-            description:
-              - Enable Netflow on VTEPs
-            ndfc_gui_label: Enable Netflow
-            ndfc_gui_section: Flow Monitor
-            required: false
-            type: bool
-          ENABLE_NXAPI:
-            default: 0
-            description:
-              - Enable HTTPS NX-API
-            ndfc_gui_label: Enable NX-API
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          ENABLE_NXAPI_HTTP:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable HTTP NX-API
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          FABRIC_FREEFORM:
-            default: ""
-            description:
-              - Additional supported CLIs for all same OS (e.g. all NxOS etc)
-                switches
-            ndfc_gui_label: Fabric Freeform
-            ndfc_gui_section: Advanced
-            required: false
-            type: str
-          FABRIC_NAME:
-            default: ""
-            description:
-              - Please provide the fabric name to create it (Max Size 64)
-            ndfc_gui_label: Fabric Name
-            ndfc_gui_section: ""
-            required: true
-            type: str
-          FEATURE_PTP:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable Precision Time Protocol (PTP)
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          INBAND_ENABLE:
-            default: 0
-            description:
-              - "Enable POAP over Inband Interface (Pre-req: Inband Mgmt Knob
-                should be Enabled)"
-            ndfc_gui_label: Enable Inband POAP
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: bool
-          INBAND_MGMT:
-            default: 0
-            description:
-              - Import switches with inband connectivity
-            ndfc_gui_label: Inband Mgmt
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          IS_READ_ONLY:
-            default: 1
-            description:
-              - If enabled, fabric is only monitored. No configuration will be
-                deployed
-            ndfc_gui_label: Fabric Monitor Mode
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          MGMT_GW:
-            default: ""
-            description:
-              - Default Gateway For Management VRF On The Switch
-            ndfc_gui_label: Switch Mgmt Default Gateway
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: ipv4
-          MGMT_PREFIX:
-            default: 24
-            description:
-              - No description available
-            max: 30
-            min: 8
-            ndfc_gui_label: Switch Mgmt IP Subnet Prefix
-            ndfc_gui_section: Bootstrap
-            required: true
-            type: int
-          MGMT_V6PREFIX:
-            default: 64
-            description:
-              - No description available
-            max: 126
-            min: 64
-            ndfc_gui_label: Switch Mgmt IPv6 Subnet Prefix
-            ndfc_gui_section: Bootstrap
-            required: false
-            type: int
-          MPLS_HANDOFF:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable MPLS Handoff
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          MPLS_LB_ID:
-            default: 101
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: Underlay MPLS Loopback Id
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          MPLS_LOOPBACK_IP_RANGE:
-            default: 10.102.0.0/25
-            description:
-              - MPLS Loopback IP Address Range
-            ndfc_gui_label: Underlay MPLS Loopback IP Range
-            ndfc_gui_section: Resources
-            required: true
-            type: ipv4_subnet
-          NETFLOW_EXPORTER_LIST:
-            default: ""
-            description:
-              - One or Multiple Netflow Exporters
-            ndfc_gui_label: Netflow Exporter
-            ndfc_gui_section: Flow Monitor
-            required: true
-            type: structureArray
-          NETFLOW_MONITOR_LIST:
-            default: ""
-            description:
-              - One or Multiple Netflow Monitors
-            ndfc_gui_label: Netflow Monitor
-            ndfc_gui_section: Flow Monitor
-            required: true
-            type: structureArray
-          NETFLOW_RECORD_LIST:
-            default: ""
-            description:
-              - One or Multiple Netflow Records
-            ndfc_gui_label: Netflow Record
-            ndfc_gui_section: Flow Monitor
-            required: true
-            type: structureArray
-          NETFLOW_SAMPLER_LIST:
-            default: ""
-            description:
-              - One or multiple netflow Samplers. Applicable to N7K only
-            ndfc_gui_label: Netflow Sampler
-            ndfc_gui_section: Flow Monitor
-            required: false
-            type: structureArray
-          NXAPI_HTTPS_PORT:
-            default: 443
-            description:
-              - No description available
-            ndfc_gui_label: NX-API HTTPS Port Number
-            ndfc_gui_section: Advanced
-            required: false
-            type: int
-          NXAPI_HTTP_PORT:
-            default: 80
-            description:
-              - No description available
-            ndfc_gui_label: NX-API HTTP Port Number
-            ndfc_gui_section: Advanced
-            required: false
-            type: int
-          PM_ENABLE:
-            default: 0
-            description:
-              - No description available
-            ndfc_gui_label: Enable Performance Monitoring (For NX-OS Switches Only)
-            ndfc_gui_section: ""
-            required: false
-            type: bool
-          POWER_REDUNDANCY_MODE:
-            choices:
-              - ps-redundant
-              - combined
-              - insrc-redundant
-            default: ps-redundant
-            description:
-              - Default Power Supply Mode For Bootstrapped NX-OS Switches
-            ndfc_gui_label: Power Supply Mode
-            ndfc_gui_section: Advanced
-            required: true
-            type: str
-          PTP_DOMAIN_ID:
-            default: 0
-            description:
-              - "Multiple Independent PTP Clocking Subdomains on a Single
-                Network "
-            max: 127
-            min: 0
-            ndfc_gui_label: PTP Domain Id
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          PTP_LB_ID:
-            default: 0
-            description:
-              - No description available
-            max: 1023
-            min: 0
-            ndfc_gui_label: PTP Source Loopback Id
-            ndfc_gui_section: Advanced
-            required: true
-            type: int
-          SNMP_SERVER_HOST_TRAP:
-            default: 1
-            description:
-              - Configure NDFC as a receiver for SNMP traps
-            ndfc_gui_label: Enable NDFC as Trap Host
-            ndfc_gui_section: Advanced
-            required: false
-            type: bool
-          SUBINTERFACE_RANGE:
-            default: 2-511
-            description:
-              - "Per Border Dot1q Range For VRF Lite Connectivity "
-            max: 4093
-            min: 2
-            ndfc_gui_label: Subinterface Dot1q Range
-            ndfc_gui_section: Resources
-            required: true
-            type: integerRange
-          enableRealTimeBackup:
-            default: 0
-            description:
-              - Backup hourly only if there is any config deployment since last
-                backup
-            ndfc_gui_label: Hourly Fabric Backup
-            ndfc_gui_section: Configuration Backup
-            required: false
-            type: bool
-          enableScheduledBackup:
-            default: 0
-            description:
-              - Backup at the specified time
-            ndfc_gui_label: Scheduled Fabric Backup
-            ndfc_gui_section: Configuration Backup
-            required: false
-            type: bool
-          scheduledTime:
-            default: ""
-            description:
-              - Time (UTC) in 24hr format. (00:00 to 23:59)
-            ndfc_gui_label: Scheduled Time
-            ndfc_gui_section: Configuration Backup
-            required: true
-            type: str
+            DEPLOY:
+                default: False
+                description:
+                - Save and deploy the fabric configuration.
+                required: false
+                type: bool
+            FABRIC_NAME:
+                description:
+                - The name of the fabric.
+                required: true
+                type: str
+            FABRIC_TYPE:
+                choices:
+                - VXLAN_EVPN
+                - VXLAN_EVPN_MSD
+                - LAN_CLASSIC
+                description:
+                - The type of fabric.
+                required: true
+                type: str
+            VXLAN_EVPN_FABRIC_PARAMETERS:
+                description:
+                - Data Center VXLAN EVPN fabric specific parameters.
+                - Fabric for a VXLAN EVPN deployment with Nexus 9000 and 3000 switches.
+                - The following parameters are specific to VXLAN EVPN fabrics.
+                - The indentation of these parameters is meant only to logically group them.
+                - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+                suboptions:
+                    AAA_REMOTE_IP_ENABLED:
+                        default: 0
+                        description:
+                        - Enable only, when IP Authorization is enabled in the AAA Server
+                        required: false
+                        type: bool
+                    AAA_SERVER_CONF:
+                        default: ''
+                        description:
+                        - AAA Configurations
+                        required: false
+                        type: str
+                    ADVERTISE_PIP_BGP:
+                        default: 0
+                        description:
+                        - For Primary VTEP IP Advertisement As Next-Hop Of Prefix Routes
+                        required: false
+                        type: bool
+                    ADVERTISE_PIP_ON_BORDER:
+                        default: 1
+                        description:
+                        - Enable advertise-pip on vPC borders and border gateways only. Applicable
+                            only when vPC advertise-pip is not enabled
+                        required: false
+                        type: bool
+                    ANYCAST_BGW_ADVERTISE_PIP:
+                        default: 0
+                        description:
+                        - To advertise Anycast Border Gateway PIP as VTEP. Effective on MSD
+                            fabric Recalculate Config
+                        required: false
+                        type: bool
+                    ANYCAST_GW_MAC:
+                        default: 2020.0000.00aa
+                        description:
+                        - Shared MAC address for all leafs (xxxx.xxxx.xxxx)
+                        required: true
+                        type: macAddress
+                    ANYCAST_LB_ID:
+                        default: 10
+                        description:
+                        - 'Used for vPC Peering in VXLANv6 Fabrics '
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    ANYCAST_RP_IP_RANGE:
+                        default: 10.254.254.0/24
+                        description:
+                        - Anycast or Phantom RP IP Address Range
+                        required: true
+                        type: ipv4_subnet
+                    AUTO_SYMMETRIC_DEFAULT_VRF:
+                        default: 0
+                        description:
+                        - Whether to auto generate Default VRF interface and BGP peering configuration
+                            on managed neighbor devices. If set, auto created VRF Lite IFC
+                            links will have Auto Deploy Default VRF for Peer enabled.
+                        required: false
+                        type: bool
+                    AUTO_SYMMETRIC_VRF_LITE:
+                        default: 0
+                        description:
+                        - Whether to auto generate VRF LITE sub-interface and BGP peering
+                            configuration on managed neighbor devices. If set, auto created
+                            VRF Lite IFC links will have Auto Deploy for Peer enabled.
+                        required: false
+                        type: bool
+                    AUTO_UNIQUE_VRF_LITE_IP_PREFIX:
+                        default: 0
+                        description:
+                        - When enabled, IP prefix allocated to the VRF LITE IFC is not reused
+                            on VRF extension over VRF LITE IFC. Instead, unique IP Subnet
+                            is allocated for each VRF extension over VRF LITE IFC.
+                        required: false
+                        type: bool
+                    AUTO_VRFLITE_IFC_DEFAULT_VRF:
+                        default: 0
+                        description:
+                        - Whether to auto generate Default VRF interface and BGP peering configuration
+                            on VRF LITE IFC auto deployment. If set, auto created VRF Lite
+                            IFC links will have Auto Deploy Default VRF enabled.
+                        required: false
+                        type: bool
+                    BANNER:
+                        default: ''
+                        description:
+                        - Message of the Day (motd) banner. Delimiter char (very first char
+                            is delimiter char) followed by message ending with delimiter
+                        required: false
+                        type: str
+                    BFD_AUTH_ENABLE:
+                        default: 0
+                        description:
+                        - Valid for P2P Interfaces only
+                        required: false
+                        type: bool
+                    BFD_AUTH_KEY:
+                        default: ''
+                        description:
+                        - Encrypted SHA1 secret value
+                        required: true
+                        type: str
+                    BFD_AUTH_KEY_ID:
+                        default: 100
+                        description:
+                        - No description available
+                        required: true
+                        type: int
+                    BFD_ENABLE:
+                        default: 0
+                        description:
+                        - Valid for IPv4 Underlay only
+                        required: false
+                        type: bool
+                    BFD_IBGP_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    BFD_ISIS_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    BFD_OSPF_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    BFD_PIM_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    BGP_AS:
+                        default: ''
+                        description:
+                        - 1-4294967295 | 1-65535.0-65535 It is a good practice to have a unique
+                            ASN for each Fabric.
+                        required: true
+                        type: str
+                    BGP_AUTH_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    BGP_AUTH_KEY:
+                        default: ''
+                        description:
+                        - Encrypted BGP Authentication Key based on type
+                        required: true
+                        type: str
+                    BGP_AUTH_KEY_TYPE:
+                        choices:
+                        - 3
+                        - 7
+                        default: 3
+                        description:
+                        - 'BGP Key Encryption Type: 3 - 3DES, 7 - Cisco'
+                        required: true
+                        type: str
+                    BGP_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    BOOTSTRAP_CONF:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_ENABLE:
+                        default: 0
+                        description:
+                        - Automatic IP Assignment For POAP
+                        required: false
+                        type: bool
+                    BOOTSTRAP_MULTISUBNET:
+                        default: '#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix'
+                        description:
+                        - 'lines with # prefix are ignored here'
+                        required: false
+                        type: str
+                    BROWNFIELD_NETWORK_NAME_FORMAT:
+                        default: Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$
+                        description:
+                        - Generated network name should be &lt; 64 characters
+                        required: false
+                        type: str
+                    BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS:
+                        default: 0
+                        description:
+                        - Enable to skip overlay network interface attachments for Brownfield
+                            and Host Port Resync cases
+                        required: false
+                        type: bool
+                    CDP_ENABLE:
+                        default: 0
+                        description:
+                        - Enable CDP on management interface
+                        required: false
+                        type: bool
+                    COPP_POLICY:
+                        choices:
+                        - dense
+                        - lenient
+                        - moderate
+                        - strict
+                        - manual
+                        default: strict
+                        description:
+                        - Fabric Wide CoPP Policy. Customized CoPP policy should be provided
+                            when manual is selected
+                        required: true
+                        type: str
+                    DCI_SUBNET_RANGE:
+                        default: 10.33.0.0/16
+                        description:
+                        - Address range to assign P2P Interfabric Connections
+                        required: true
+                        type: ipv4_subnet
+                    DCI_SUBNET_TARGET_MASK:
+                        default: 30
+                        description:
+                        - No description available
+                        max: 31
+                        min: 8
+                        required: true
+                        type: int
+                    DEFAULT_QUEUING_POLICY_CLOUDSCALE:
+                        choices:
+                        - queuing_policy_default_4q_cloudscale
+                        - queuing_policy_default_8q_cloudscale
+                        default: queuing_policy_default_8q_cloudscale
+                        description:
+                        - Queuing Policy for all 92xx, -EX, -FX, -FX2, -FX3, -GX series switches
+                            in the fabric
+                        required: true
+                        type: str
+                    DEFAULT_QUEUING_POLICY_OTHER:
+                        choices:
+                        - queuing_policy_default_other
+                        default: queuing_policy_default_other
+                        description:
+                        - Queuing Policy for all other switches in the fabric
+                        required: true
+                        type: str
+                    DEFAULT_QUEUING_POLICY_R_SERIES:
+                        choices:
+                        - queuing_policy_default_r_series
+                        default: queuing_policy_default_r_series
+                        description:
+                        - Queuing Policy for all R-Series switches in the fabric
+                        required: true
+                        type: str
+                    DEFAULT_VRF_REDIS_BGP_RMAP:
+                        default: extcon-rmap-filter
+                        description:
+                        - Route Map used to redistribute BGP routes to IGP in default vrf
+                            in auto created VRF Lite IFC links
+                        required: false
+                        type: str
+                    DHCP_ENABLE:
+                        default: 0
+                        description:
+                        - Automatic IP Assignment For POAP From Local DHCP Server
+                        required: false
+                        type: bool
+                    DHCP_END:
+                        default: ''
+                        description:
+                        - End Address For Switch POAP
+                        required: true
+                        type: ipv4
+                    DHCP_IPV6_ENABLE:
+                        choices:
+                        - DHCPv4
+                        - DHCPv6
+                        default: DHCPv4
+                        description:
+                        - No description available
+                        required: false
+                        type: str
+                    DHCP_START:
+                        default: ''
+                        description:
+                        - Start Address For Switch POAP
+                        required: true
+                        type: ipv4
+                    DNS_SERVER_IP_LIST:
+                        default: ''
+                        description:
+                        - Comma separated list of IP Addresses(v4/v6)
+                        required: false
+                        type: ipAddressList
+                    DNS_SERVER_VRF:
+                        default: ''
+                        description:
+                        - One VRF for all DNS servers or a comma separated list of VRFs, one
+                            per DNS server
+                        required: false
+                        type: string[]
+                    ENABLE_AAA:
+                        default: 0
+                        description:
+                        - Include AAA configs from Manageability tab during device bootup
+                        required: false
+                        type: bool
+                    ENABLE_DEFAULT_QUEUING_POLICY:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ENABLE_FABRIC_VPC_DOMAIN_ID:
+                        default: 0
+                        description:
+                        - (Not Recommended)
+                        required: false
+                        type: bool
+                    ENABLE_MACSEC:
+                        default: 0
+                        description:
+                        - Enable MACsec in the fabric
+                        required: false
+                        type: bool
+                    ENABLE_NETFLOW:
+                        default: 0
+                        description:
+                        - Enable Netflow on VTEPs
+                        required: false
+                        type: bool
+                    ENABLE_NGOAM:
+                        default: 1
+                        description:
+                        - Enable the Next Generation (NG) OAM feature for all switches in
+                            the fabric to aid in trouble-shooting VXLAN EVPN fabrics
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI:
+                        default: 1
+                        description:
+                        - Enable HTTPS NX-API
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI_HTTP:
+                        default: 1
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ENABLE_PBR:
+                        default: 0
+                        description:
+                        - When ESR option is ePBR, enable ePBR will enable pbr, sla sender
+                            and epbr features on the switch
+                        required: false
+                        type: bool
+                    ENABLE_PVLAN:
+                        default: 0
+                        description:
+                        - Enable PVLAN on switches except spines and super spines
+                        required: false
+                        type: bool
+                    ENABLE_TENANT_DHCP:
+                        default: 1
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ENABLE_TRM:
+                        default: 0
+                        description:
+                        - For Overlay Multicast Support In VXLAN Fabrics
+                        required: false
+                        type: bool
+                    ENABLE_VPC_PEER_LINK_NATIVE_VLAN:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ESR_OPTION:
+                        default: PBR
+                        description:
+                        - Policy-Based Routing (PBR) or Enhanced PBR (ePBR)
+                        required: false
+                        type: enum
+                    EXTRA_CONF_INTRA_LINKS:
+                        default: ''
+                        description:
+                        - Additional CLIs For All Intra-Fabric Links
+                        required: false
+                        type: str
+                    EXTRA_CONF_LEAF:
+                        default: ''
+                        description:
+                        - Additional CLIs For All Leafs As Captured From Show Running Configuration
+                        required: false
+                        type: str
+                    EXTRA_CONF_SPINE:
+                        default: ''
+                        description:
+                        - Additional CLIs For All Spines As Captured From Show Running Configuration
+                        required: false
+                        type: str
+                    EXTRA_CONF_TOR:
+                        default: ''
+                        description:
+                        - Additional CLIs For All ToRs As Captured From Show Running Configuration
+                        required: false
+                        type: str
+                    FABRIC_INTERFACE_TYPE:
+                        choices:
+                        - p2p
+                        - unnumbered
+                        default: p2p
+                        description:
+                        - Numbered(Point-to-Point) or Unnumbered
+                        required: true
+                        type: str
+                    FABRIC_MTU:
+                        default: 9216
+                        description:
+                        - . Must be an even number
+                        max: 9216
+                        min: 576
+                        required: true
+                        type: int
+                    FABRIC_NAME:
+                        default: ''
+                        description:
+                        - Please provide the fabric name to create it (Max Size 32)
+                        required: true
+                        type: str
+                    FABRIC_VPC_DOMAIN_ID:
+                        default: 1
+                        description:
+                        - vPC Domain Id to be used on all vPC pairs
+                        required: true
+                        type: int
+                    FABRIC_VPC_QOS:
+                        default: 0
+                        description:
+                        - Qos on spines for guaranteed delivery of vPC Fabric Peering communication
+                        required: false
+                        type: bool
+                    FABRIC_VPC_QOS_POLICY_NAME:
+                        default: spine_qos_for_fabric_vpc_peering
+                        description:
+                        - Qos Policy name should be same on all spines
+                        required: true
+                        type: str
+                    FEATURE_PTP:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    GRFIELD_DEBUG_FLAG:
+                        choices:
+                        - Enable
+                        - Disable
+                        default: Disable
+                        description:
+                        - Enable to clean switch configuration without reload when PreserveConfig=no
+                        required: true
+                        type: str
+                    HD_TIME:
+                        default: 180
+                        description:
+                        - NVE Source Inteface HoldDown Time  in seconds
+                        max: 1500
+                        min: 1
+                        required: false
+                        type: int
+                    HOST_INTF_ADMIN_STATE:
+                        default: 1
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    IBGP_PEER_TEMPLATE:
+                        default: ''
+                        description:
+                        - Speficies the iBGP Peer-Template config used for RR and spines with
+                            border role.
+                        required: false
+                        type: str
+                    IBGP_PEER_TEMPLATE_LEAF:
+                        default: ''
+                        description:
+                        - Specifies the config used for leaf, border or border gateway. If
+                            this field is empty, the peer template defined in iBGP Peer-Template
+                            Config is used on all BGP enabled devices (RRs,leafs, border or
+                            border gateway roles.
+                        required: false
+                        type: str
+                    INBAND_DHCP_SERVERS:
+                        default: ''
+                        description:
+                        - Comma separated list of IPv4 Addresses (Max 3)
+                        required: true
+                        type: ipAddressList
+                    INBAND_MGMT:
+                        default: 0
+                        description:
+                        - Manage switches with only Inband connectivity
+                        required: false
+                        type: bool
+                    ISIS_AUTH_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ISIS_AUTH_KEY:
+                        default: ''
+                        description:
+                        - Cisco Type 7 Encrypted
+                        required: true
+                        type: str
+                    ISIS_AUTH_KEYCHAIN_KEY_ID:
+                        default: 127
+                        description:
+                        - No description available
+                        max: 65535
+                        min: 0
+                        required: true
+                        type: int
+                    ISIS_AUTH_KEYCHAIN_NAME:
+                        default: ''
+                        description:
+                        - No description available
+                        required: true
+                        type: str
+                    ISIS_LEVEL:
+                        choices:
+                        - level-1
+                        - level-2
+                        default: level-2
+                        description:
+                        - 'Supported IS types: level-1, level-2'
+                        required: true
+                        type: str
+                    ISIS_OVERLOAD_ELAPSE_TIME:
+                        default: 60
+                        description:
+                        - Clear the overload bit after an elapsed time in seconds
+                        required: true
+                        type: int
+                    ISIS_OVERLOAD_ENABLE:
+                        default: 1
+                        description:
+                        - When enabled, set the overload bit for an elapsed time after a reload
+                        required: false
+                        type: bool
+                    ISIS_P2P_ENABLE:
+                        default: 1
+                        description:
+                        - This will enable network point-to-point on fabric interfaces which
+                            are numbered
+                        required: false
+                        type: bool
+                    L2_HOST_INTF_MTU:
+                        default: 9216
+                        description:
+                        - . Must be an even number
+                        max: 9216
+                        min: 1500
+                        required: true
+                        type: int
+                    L2_SEGMENT_ID_RANGE:
+                        default: 30000-49000
+                        description:
+                        - 'Overlay Network Identifier Range '
+                        max: 16777214
+                        min: 1
+                        required: true
+                        type: integerRange
+                    L3VNI_MCAST_GROUP:
+                        default: 239.1.1.0
+                        description:
+                        - Default Underlay Multicast group IP assigned for every overlay VRF.
+                        required: true
+                        type: ipv4
+                    L3_PARTITION_ID_RANGE:
+                        default: 50000-59000
+                        description:
+                        - 'Overlay VRF Identifier Range '
+                        max: 16777214
+                        min: 1
+                        required: true
+                        type: integerRange
+                    LINK_STATE_ROUTING:
+                        choices:
+                        - ospf
+                        - is-is
+                        default: ospf
+                        description:
+                        - Used for Spine-Leaf Connectivity
+                        required: true
+                        type: str
+                    LINK_STATE_ROUTING_TAG:
+                        default: UNDERLAY
+                        description:
+                        - Underlay Routing Process Tag
+                        required: true
+                        type: str
+                    LOOPBACK0_IPV6_RANGE:
+                        default: fd00::a02:0/119
+                        description:
+                        - Typically Loopback0 IPv6 Address Range
+                        required: true
+                        type: ipv6_subnet
+                    LOOPBACK0_IP_RANGE:
+                        default: 10.2.0.0/22
+                        description:
+                        - Typically Loopback0 IP Address Range
+                        required: true
+                        type: ipv4_subnet
+                    LOOPBACK1_IPV6_RANGE:
+                        default: fd00::a03:0/118
+                        description:
+                        - Typically Loopback1 and Anycast Loopback IPv6 Address Range
+                        required: true
+                        type: ipv6_subnet
+                    LOOPBACK1_IP_RANGE:
+                        default: 10.3.0.0/22
+                        description:
+                        - Typically Loopback1 IP Address Range
+                        required: true
+                        type: ipv4_subnet
+                    MACSEC_ALGORITHM:
+                        default: AES_128_CMAC
+                        description:
+                        - AES_128_CMAC or AES_256_CMAC
+                        required: true
+                        type: enum
+                    MACSEC_CIPHER_SUITE:
+                        default: GCM-AES-XPN-256
+                        description:
+                        - Configure Cipher Suite
+                        required: true
+                        type: enum
+                    MACSEC_FALLBACK_ALGORITHM:
+                        default: AES_128_CMAC
+                        description:
+                        - AES_128_CMAC or AES_256_CMAC
+                        required: true
+                        type: enum
+                    MACSEC_FALLBACK_KEY_STRING:
+                        default: ''
+                        description:
+                        - Cisco Type 7 Encrypted Octet String
+                        required: true
+                        type: str
+                    MACSEC_KEY_STRING:
+                        default: ''
+                        description:
+                        - Cisco Type 7 Encrypted Octet String
+                        required: true
+                        type: str
+                    MACSEC_REPORT_TIMER:
+                        default: 5
+                        description:
+                        - MACsec Operational Status periodic report timer in minutes
+                        required: true
+                        type: int
+                    MGMT_GW:
+                        default: ''
+                        description:
+                        - Default Gateway For Management VRF On The Switch
+                        required: true
+                        type: ipv4
+                    MGMT_PREFIX:
+                        default: 24
+                        description:
+                        - No description available
+                        max: 30
+                        min: 8
+                        required: true
+                        type: int
+                    MGMT_V6PREFIX:
+                        default: 64
+                        description:
+                        - No description available
+                        max: 126
+                        min: 64
+                        required: false
+                        type: int
+                    MPLS_HANDOFF:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    MPLS_LB_ID:
+                        default: 101
+                        description:
+                        - 'Used for VXLAN to MPLS SR/LDP Handoff '
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    MPLS_LOOPBACK_IP_RANGE:
+                        default: 10.101.0.0/25
+                        description:
+                        - Used for VXLAN to MPLS SR/LDP Handoff
+                        required: true
+                        type: ipv4_subnet
+                    MST_INSTANCE_RANGE:
+                        default: 0
+                        description:
+                        - 'MST instance range, Example: 0-3,5,7-9, Default is 0'
+                        required: true
+                        type: integerRange
+                    MULTICAST_GROUP_SUBNET:
+                        default: 239.1.1.0/25
+                        description:
+                        - Multicast pool prefix between 8 to 30. A multicast group IP from
+                            this pool is used for BUM traffic for each overlay network.
+                        required: true
+                        type: ipv4_subnet
+                    NETFLOW_EXPORTER_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Exporters
+                        required: true
+                        type: structureArray
+                    NETFLOW_MONITOR_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Monitors
+                        required: true
+                        type: structureArray
+                    NETFLOW_RECORD_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Records
+                        required: true
+                        type: structureArray
+                    NETWORK_VLAN_RANGE:
+                        default: 2300-2999
+                        description:
+                        - 'Per Switch Overlay Network VLAN Range '
+                        max: 4094
+                        min: 2
+                        required: true
+                        type: integerRange
+                    NTP_SERVER_IP_LIST:
+                        default: ''
+                        description:
+                        - Comma separated list of IP Addresses(v4/v6)
+                        required: false
+                        type: ipAddressList
+                    NTP_SERVER_VRF:
+                        default: ''
+                        description:
+                        - One VRF for all NTP servers or a comma separated list of VRFs, one
+                            per NTP server
+                        required: false
+                        type: string[]
+                    NVE_LB_ID:
+                        default: 1
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    NXAPI_HTTPS_PORT:
+                        default: 443
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    NXAPI_HTTP_PORT:
+                        default: 80
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    OBJECT_TRACKING_NUMBER_RANGE:
+                        default: 100-299
+                        description:
+                        - 'Per switch tracked object ID Range '
+                        max: 512
+                        min: 1
+                        required: false
+                        type: integerRange
+                    OSPF_AREA_ID:
+                        default: 0.0.0.0
+                        description:
+                        - OSPF Area Id in IP address format
+                        required: true
+                        type: str
+                    OSPF_AUTH_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    OSPF_AUTH_KEY:
+                        default: ''
+                        description:
+                        - 3DES Encrypted
+                        required: true
+                        type: str
+                    OSPF_AUTH_KEY_ID:
+                        default: 127
+                        description:
+                        - No description available
+                        max: 255
+                        min: 0
+                        required: true
+                        type: int
+                    OVERLAY_MODE:
+                        default: cli
+                        description:
+                        - VRF/Network configuration using config-profile or CLI
+                        required: false
+                        type: enum
+                    PER_VRF_LOOPBACK_AUTO_PROVISION:
+                        default: 0
+                        description:
+                        - Auto provision a loopback on a VTEP on VRF attachment
+                        required: false
+                        type: bool
+                    PER_VRF_LOOPBACK_IP_RANGE:
+                        default: 10.5.0.0/22
+                        description:
+                        - Prefix pool to assign IP addresses to loopbacks on VTEPs on a per
+                            VRF basis
+                        required: true
+                        type: ipv4_subnet
+                    PHANTOM_RP_LB_ID1:
+                        default: 2
+                        description:
+                        - 'Used for Bidir-PIM Phantom RP '
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    PHANTOM_RP_LB_ID2:
+                        default: 3
+                        description:
+                        - 'Used for Fallback Bidir-PIM Phantom RP '
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    PHANTOM_RP_LB_ID3:
+                        default: 4
+                        description:
+                        - 'Used for second Fallback Bidir-PIM Phantom RP '
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    PHANTOM_RP_LB_ID4:
+                        default: 5
+                        description:
+                        - 'Used for third Fallback Bidir-PIM Phantom RP '
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    PIM_HELLO_AUTH_ENABLE:
+                        default: 0
+                        description:
+                        - Valid for IPv4 Underlay only
+                        required: false
+                        type: bool
+                    PIM_HELLO_AUTH_KEY:
+                        default: ''
+                        description:
+                        - 3DES Encrypted
+                        required: true
+                        type: str
+                    PM_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    POWER_REDUNDANCY_MODE:
+                        choices:
+                        - ps-redundant
+                        - combined
+                        - insrc-redundant
+                        default: ps-redundant
+                        description:
+                        - Default Power Supply Mode For The Fabric
+                        required: true
+                        type: str
+                    PTP_DOMAIN_ID:
+                        default: 0
+                        description:
+                        - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
+                        max: 127
+                        min: 0
+                        required: true
+                        type: int
+                    PTP_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    REPLICATION_MODE:
+                        choices:
+                        - Multicast
+                        - Ingress
+                        default: Multicast
+                        description:
+                        - Replication Mode for BUM Traffic
+                        required: true
+                        type: str
+                    ROUTER_ID_RANGE:
+                        default: 10.2.0.0/23
+                        description:
+                        - No description available
+                        required: true
+                        type: ipv4_subnet
+                    ROUTE_MAP_SEQUENCE_NUMBER_RANGE:
+                        default: 1-65534
+                        description:
+                        - No description available
+                        max: 65534
+                        min: 1
+                        required: true
+                        type: integerRange
+                    RP_COUNT:
+                        choices:
+                        - 2
+                        - 4
+                        default: 2
+                        description:
+                        - Number of spines acting as Rendezvous-Point (RP)
+                        required: true
+                        type: int
+                    RP_LB_ID:
+                        default: 254
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    RP_MODE:
+                        choices:
+                        - asm
+                        - bidir
+                        default: asm
+                        description:
+                        - Multicast RP Mode
+                        required: true
+                        type: str
+                    RR_COUNT:
+                        choices:
+                        - 2
+                        - 4
+                        default: 2
+                        description:
+                        - Number of spines acting as Route-Reflectors
+                        required: true
+                        type: int
+                    SEED_SWITCH_CORE_INTERFACES:
+                        default: ''
+                        description:
+                        - Core-facing Interface list on Seed Switch (e.g. e1/1-30,e1/32)
+                        required: false
+                        type: interfaceRange
+                    SERVICE_NETWORK_VLAN_RANGE:
+                        default: 3000-3199
+                        description:
+                        - 'Per Switch Overlay Service Network VLAN Range '
+                        max: 4094
+                        min: 2
+                        required: true
+                        type: integerRange
+                    SITE_ID:
+                        default: ''
+                        description:
+                        - For EVPN Multi-Site Support . Defaults to Fabric ASN
+                        max: 281474976710655
+                        min: 1
+                        required: false
+                        type: str
+                    SLA_ID_RANGE:
+                        default: 10000-19999
+                        description:
+                        - 'Per switch SLA ID Range '
+                        max: 2147483647
+                        min: 1
+                        required: false
+                        type: integerRange
+                    SNMP_SERVER_HOST_TRAP:
+                        default: 1
+                        description:
+                        - Configure NDFC as a receiver for SNMP traps
+                        required: false
+                        type: bool
+                    SPINE_SWITCH_CORE_INTERFACES:
+                        default: ''
+                        description:
+                        - Core-facing Interface list on all Spines (e.g. e1/1-30,e1/32)
+                        required: false
+                        type: interfaceRange
+                    STATIC_UNDERLAY_IP_ALLOC:
+                        default: 0
+                        description:
+                        - Checking this will disable Dynamic Underlay IP Address Allocations
+                        required: false
+                        type: bool
+                    STP_BRIDGE_PRIORITY:
+                        default: 0
+                        description:
+                        - Bridge priority for the spanning tree in increments of 4096
+                        required: true
+                        type: enum
+                    STP_ROOT_OPTION:
+                        choices:
+                        - rpvst+
+                        - mst
+                        - unmanaged
+                        default: unmanaged
+                        description:
+                        - 'Which protocol to use for configuring root bridge? rpvst+: Rapid
+                            Per-VLAN Spanning Tree, mst: Multiple Spanning Tree, unmanaged
+                            (default): STP Root not managed by NDFC'
+                        required: false
+                        type: str
+                    STP_VLAN_RANGE:
+                        default: 1-3967
+                        description:
+                        - 'Vlan range, Example: 1,3-5,7,9-11, Default is 1-3967'
+                        required: true
+                        type: integerRange
+                    STRICT_CC_MODE:
+                        default: 0
+                        description:
+                        - Enable bi-directional compliance checks to flag additional configs
+                            in the running config that are not in the intent/expected config
+                        required: false
+                        type: bool
+                    SUBINTERFACE_RANGE:
+                        default: 2-511
+                        description:
+                        - 'Per Border Dot1q Range For VRF Lite Connectivity '
+                        max: 4093
+                        min: 2
+                        required: true
+                        type: integerRange
+                    SUBNET_RANGE:
+                        default: 10.4.0.0/16
+                        description:
+                        - Address range to assign Numbered and Peer Link SVI IPs
+                        required: true
+                        type: ipv4_subnet
+                    SUBNET_TARGET_MASK:
+                        choices:
+                        - 30
+                        - 31
+                        default: 30
+                        description:
+                        - Mask for Underlay Subnet IP Range
+                        required: true
+                        type: int
+                    SYSLOG_SERVER_IP_LIST:
+                        default: ''
+                        description:
+                        - Comma separated list of IP Addresses(v4/v6)
+                        required: false
+                        type: ipAddressList
+                    SYSLOG_SERVER_VRF:
+                        default: ''
+                        description:
+                        - One VRF for all Syslog servers or a comma separated list of VRFs,
+                            one per Syslog server
+                        required: false
+                        type: string[]
+                    SYSLOG_SEV:
+                        default: ''
+                        description:
+                        - 'Comma separated list of Syslog severity values, one per Syslog
+                            server '
+                        max: 7
+                        min: 0
+                        required: false
+                        type: string[]
+                    TCAM_ALLOCATION:
+                        default: 1
+                        description:
+                        - TCAM commands are automatically generated for VxLAN and vPC Fabric
+                            Peering when Enabled
+                        required: false
+                        type: bool
+                    UNDERLAY_IS_V6:
+                        default: 0
+                        description:
+                        - If not enabled, IPv4 underlay is used
+                        required: false
+                        type: bool
+                    UNNUM_BOOTSTRAP_LB_ID:
+                        default: 253
+                        description:
+                        - No description available
+                        required: true
+                        type: int
+                    UNNUM_DHCP_END:
+                        default: ''
+                        description:
+                        - Must be a subset of IGP/BGP Loopback Prefix Pool
+                        required: true
+                        type: ipv4
+                    UNNUM_DHCP_START:
+                        default: ''
+                        description:
+                        - Must be a subset of IGP/BGP Loopback Prefix Pool
+                        required: true
+                        type: ipv4
+                    USE_LINK_LOCAL:
+                        default: 1
+                        description:
+                        - If not enabled, Spine-Leaf interfaces will use global IPv6 addresses
+                        required: false
+                        type: bool
+                    V6_SUBNET_RANGE:
+                        default: fd00::a04:0/112
+                        description:
+                        - IPv6 Address range to assign Numbered and Peer Link SVI IPs
+                        required: true
+                        type: ipv6_subnet
+                    V6_SUBNET_TARGET_MASK:
+                        choices:
+                        - 126
+                        - 127
+                        default: 126
+                        description:
+                        - Mask for Underlay Subnet IPv6 Range
+                        required: true
+                        type: int
+                    VPC_AUTO_RECOVERY_TIME:
+                        default: 360
+                        description:
+                        - No description available
+                        max: 3600
+                        min: 240
+                        required: true
+                        type: int
+                    VPC_DELAY_RESTORE:
+                        default: 150
+                        description:
+                        - No description available
+                        max: 3600
+                        min: 1
+                        required: true
+                        type: int
+                    VPC_DOMAIN_ID_RANGE:
+                        default: 1-1000
+                        description:
+                        - vPC Domain id range to use for new pairings
+                        required: false
+                        type: integerRange
+                    VPC_ENABLE_IPv6_ND_SYNC:
+                        default: 1
+                        description:
+                        - Enable IPv6 ND synchronization between vPC peers
+                        required: false
+                        type: bool
+                    VPC_PEER_KEEP_ALIVE_OPTION:
+                        choices:
+                        - loopback
+                        - management
+                        default: management
+                        description:
+                        - Use vPC Peer Keep Alive with Loopback or Management
+                        required: true
+                        type: str
+                    VPC_PEER_LINK_PO:
+                        default: 500
+                        description:
+                        - No description available
+                        max: 4096
+                        min: 1
+                        required: false
+                        type: integerRange
+                    VPC_PEER_LINK_VLAN:
+                        default: 3600
+                        description:
+                        - 'VLAN range for vPC Peer Link SVI '
+                        max: 4094
+                        min: 2
+                        required: true
+                        type: integerRange
+                    VRF_LITE_AUTOCONFIG:
+                        choices:
+                        - Manual
+                        - Back2Back&ToExternal
+                        default: Manual
+                        description:
+                        - VRF Lite Inter-Fabric Connection Deployment Options. If Back2Back&ToExternal
+                            is selected, VRF Lite IFCs are auto created between border devices
+                            of two Easy Fabrics, and between border devices in Easy Fabric
+                            and edge routers in External Fabric. The IP address is taken from
+                            the VRF Lite Subnet IP Range pool.
+                        required: true
+                        type: str
+                    VRF_VLAN_RANGE:
+                        default: 2000-2299
+                        description:
+                        - 'Per Switch Overlay VRF VLAN Range '
+                        max: 4094
+                        min: 2
+                        required: true
+                        type: integerRange
+                    default_network:
+                        choices:
+                        - Default_Network_Universal
+                        - Service_Network_Universal
+                        default: Default_Network_Universal
+                        description:
+                        - Default Overlay Network Template For Leafs
+                        required: true
+                        type: str
+                    default_pvlan_sec_network:
+                        choices:
+                        - Pvlan_Secondary_Network
+                        default: Pvlan_Secondary_Network
+                        description:
+                        - Default PVLAN Secondary Network Template
+                        required: false
+                        type: str
+                    default_vrf:
+                        choices:
+                        - Default_VRF_Universal
+                        default: Default_VRF_Universal
+                        description:
+                        - Default Overlay VRF Template For Leafs
+                        required: true
+                        type: str
+                    enableRealTimeBackup:
+                        default: ''
+                        description:
+                        - Backup hourly only if there is any config deployment since last
+                            backup
+                        required: false
+                        type: bool
+                    enableScheduledBackup:
+                        default: ''
+                        description:
+                        - Backup at the specified time
+                        required: false
+                        type: bool
+                    network_extension_template:
+                        choices:
+                        - Default_Network_Extension_Universal
+                        default: Default_Network_Extension_Universal
+                        description:
+                        - Default Overlay Network Template For Borders
+                        required: true
+                        type: str
+                    scheduledTime:
+                        default: ''
+                        description:
+                        - Time (UTC) in 24hr format. (00:00 to 23:59)
+                        required: true
+                        type: str
+                    vrf_extension_template:
+                        choices:
+                        - Default_VRF_Extension_Universal
+                        default: Default_VRF_Extension_Universal
+                        description:
+                        - Default Overlay VRF Template For Borders
+                        required: true
+                        type: str
+            VXLAN_EVPN_FABRIC_MSD_PARAMETERS:
+                description:
+                - VXLAN EVPN Multi-Site fabric specific parameters.
+                - Domain that can contain multiple VXLAN EVPN Fabrics with Layer-2/Layer-3 Overlay Extensions and other Fabric Types.
+                - The indentation of these parameters is meant only to logically group them.
+                - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+                suboptions:
+                    ANYCAST_GW_MAC:
+                        default: 2020.0000.00aa
+                        description:
+                        - Shared MAC address for all leaves
+                        required: false
+                        type: str
+                    BGP_RP_ASN:
+                        default: ''
+                        description:
+                        - 1-4294967295 | 1-65535.0-65535, e.g. 65000, 65001
+                        required: false
+                        type: str
+                    BGW_ROUTING_TAG:
+                        default: 54321
+                        description:
+                        - Routing tag associated with IP address of loopback and DCI interfaces
+                        required: false
+                        type: str
+                    BORDER_GWY_CONNECTIONS:
+                        choices:
+                        - Manual
+                        - Centralized_To_Route_Server
+                        - Direct_To_BGWS
+                        default: Manual
+                        description:
+                        - Manual, Auto Overlay EVPN Peering to Route Servers, Auto Overlay
+                            EVPN Direct Peering to Border Gateways
+                        required: true
+                        type: str
+                    CLOUDSEC_ALGORITHM:
+                        default: AES_128_CMAC
+                        description:
+                        - AES_128_CMAC or AES_256_CMAC
+                        required: true
+                        type: enum
+                    CLOUDSEC_AUTOCONFIG:
+                        default: 0
+                        description:
+                        - Auto Config CloudSec on Border Gateways
+                        required: false
+                        type: bool
+                    CLOUDSEC_ENFORCEMENT:
+                        default: ''
+                        description:
+                        - If set to strict, data across site must be encrypted.
+                        required: true
+                        type: enum
+                    CLOUDSEC_KEY_STRING:
+                        default: ''
+                        description:
+                        - Cisco Type 7 Encrypted Octet String
+                        required: true
+                        type: str
+                    CLOUDSEC_REPORT_TIMER:
+                        default: 5
+                        description:
+                        - CloudSec Operational Status periodic report timer in minutes
+                        required: true
+                        type: int
+                    DCI_SUBNET_RANGE:
+                        default: 10.10.1.0/24
+                        description:
+                        - Address range to assign P2P DCI Links
+                        required: true
+                        type: ipv4_subnet
+                    DCI_SUBNET_TARGET_MASK:
+                        default: 30
+                        description:
+                        - 'Target Mask for Subnet Range '
+                        max: 31
+                        min: 8
+                        required: true
+                        type: int
+                    DELAY_RESTORE:
+                        default: 300
+                        description:
+                        - Multi-Site underlay and overlay control plane convergence time  in
+                            seconds
+                        max: 1000
+                        min: 30
+                        required: false
+                        type: int
+                    ENABLE_BGP_BFD:
+                        default: 0
+                        description:
+                        - For auto-created Multi-Site Underlay IFCs
+                        required: false
+                        type: bool
+                    ENABLE_BGP_LOG_NEIGHBOR_CHANGE:
+                        default: 0
+                        description:
+                        - For auto-created Multi-Site Underlay IFCs
+                        required: false
+                        type: bool
+                    ENABLE_BGP_SEND_COMM:
+                        default: 0
+                        description:
+                        - For auto-created Multi-Site Underlay IFCs
+                        required: false
+                        type: bool
+                    ENABLE_PVLAN:
+                        default: 0
+                        description:
+                        - Enable PVLAN on MSD and its child fabrics
+                        required: false
+                        type: bool
+                    ENABLE_RS_REDIST_DIRECT:
+                        default: 0
+                        description:
+                        - For auto-created Multi-Site overlay IFCs in Route Servers. Applicable
+                            only when Multi-Site Overlay IFC Deployment Method is Centralized_To_Route_Server.
+                        required: false
+                        type: bool
+                    FABRIC_NAME:
+                        default: ''
+                        description:
+                        - Please provide the fabric name to create it (Max Size 64)
+                        required: true
+                        type: str
+                    L2_SEGMENT_ID_RANGE:
+                        default: 30000-49000
+                        description:
+                        - 'Overlay Network Identifier Range '
+                        max: 16777214
+                        min: 1
+                        required: true
+                        type: integerRange
+                    L3_PARTITION_ID_RANGE:
+                        default: 50000-59000
+                        description:
+                        - 'Overlay VRF Identifier Range '
+                        max: 16777214
+                        min: 1
+                        required: true
+                        type: integerRange
+                    LOOPBACK100_IP_RANGE:
+                        default: 10.10.0.0/24
+                        description:
+                        - Typically Loopback100 IP Address Range
+                        required: true
+                        type: ipv4_subnet
+                    MS_IFC_BGP_AUTH_KEY_TYPE:
+                        choices:
+                        - 3
+                        - 7
+                        default: 3
+                        description:
+                        - 'BGP Key Encryption Type: 3 - 3DES, 7 - Cisco'
+                        required: true
+                        type: str
+                    MS_IFC_BGP_PASSWORD:
+                        default: ''
+                        description:
+                        - Encrypted eBGP Password Hex String
+                        required: true
+                        type: str
+                    MS_IFC_BGP_PASSWORD_ENABLE:
+                        default: 0
+                        description:
+                        - eBGP password for Multi-Site underlay/overlay IFCs
+                        required: false
+                        type: bool
+                    MS_LOOPBACK_ID:
+                        default: 100
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    MS_UNDERLAY_AUTOCONFIG:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    RP_SERVER_IP:
+                        default: ''
+                        description:
+                        - Multi-Site Route-Server peer list (typically loopback IP address
+                            on Route-Server for Multi-Site EVPN peering with BGWs), e.g. 128.89.0.1,
+                            128.89.0.2
+                        required: false
+                        type: ipAddressList
+                    RS_ROUTING_TAG:
+                        default: 54321
+                        description:
+                        - Routing tag associated with Route Server IP for redistribute direct.
+                            This is the IP used in eBGP EVPN peering.
+                        required: false
+                        type: str
+                    TOR_AUTO_DEPLOY:
+                        default: 0
+                        description:
+                        - Enables Overlay VLANs on uplink between ToRs and Leafs
+                        required: false
+                        type: bool
+                    default_network:
+                        choices:
+                        - Default_Network_Universal
+                        - Service_Network_Universal
+                        default: Default_Network_Universal
+                        description:
+                        - Default Overlay Network Template For Leafs
+                        required: true
+                        type: str
+                    default_pvlan_sec_network:
+                        choices:
+                        - Pvlan_Secondary_Network
+                        default: Pvlan_Secondary_Network
+                        description:
+                        - Default PVLAN Secondary Network Template
+                        required: false
+                        type: str
+                    default_vrf:
+                        choices:
+                        - Default_VRF_Universal
+                        default: Default_VRF_Universal
+                        description:
+                        - Default Overlay VRF Template For Leafs
+                        required: true
+                        type: str
+                    enableScheduledBackup:
+                        default: ''
+                        description:
+                        - 'Backup at the specified time. Note: Fabric Backup/Restore functionality
+                            is being deprecated for MSD fabrics. Recommendation is to use
+                            NDFC Backup & Restore'
+                        required: false
+                        type: bool
+                    network_extension_template:
+                        choices:
+                        - Default_Network_Extension_Universal
+                        default: Default_Network_Extension_Universal
+                        description:
+                        - Default Overlay Network Template For Borders
+                        required: true
+                        type: str
+                    scheduledTime:
+                        default: ''
+                        description:
+                        - Time (UTC) in 24hr format. (00:00 to 23:59)
+                        required: true
+                        type: str
+                    vrf_extension_template:
+                        choices:
+                        - Default_VRF_Extension_Universal
+                        default: Default_VRF_Extension_Universal
+                        description:
+                        - Default Overlay VRF Template For Borders
+                        required: true
+                        type: str
+            LAN_CLASSIC_PARAMETERS:
+                description:
+                - LAN Classic fabric specific parameters.
+                - The following parameters are specific to Classic LAN fabrics.
+                - Fabric to manage a legacy Classic LAN deployment with Nexus switches.
+                - The indentation of these parameters is meant only to logically group them.
+                - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+                type: list
+                elements: dict
+                suboptions:
+                    AAA_REMOTE_IP_ENABLED:
+                        default: 0
+                        description:
+                        - Enable only, when IP Authorization is enabled in the AAA Server
+                        required: false
+                        type: bool
+                    AAA_SERVER_CONF:
+                        default: ''
+                        description:
+                        - AAA Configurations
+                        required: false
+                        type: str
+                    BOOTSTRAP_CONF:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_ENABLE:
+                        default: 0
+                        description:
+                        - Automatic IP Assignment For POAP
+                        required: false
+                        type: bool
+                    BOOTSTRAP_MULTISUBNET:
+                        default: '#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix'
+                        description:
+                        - 'lines with # prefix are ignored here'
+                        required: false
+                        type: str
+                    CDP_ENABLE:
+                        default: 0
+                        description:
+                        - Enable CDP on management interface
+                        required: false
+                        type: bool
+                    DHCP_ENABLE:
+                        default: 0
+                        description:
+                        - Automatic IP Assignment For POAP From Local DHCP Server
+                        required: false
+                        type: bool
+                    DHCP_END:
+                        default: ''
+                        description:
+                        - End Address For Switch POAP
+                        required: true
+                        type: ipv4
+                    DHCP_IPV6_ENABLE:
+                        choices:
+                        - DHCPv4
+                        - DHCPv6
+                        default: DHCPv4
+                        description:
+                        - No description available
+                        required: false
+                        type: str
+                    DHCP_START:
+                        default: ''
+                        description:
+                        - Start Address For Switch POAP
+                        required: true
+                        type: ipv4
+                    ENABLE_AAA:
+                        default: 0
+                        description:
+                        - Include AAA configs from Advanced tab during device bootup
+                        required: false
+                        type: bool
+                    ENABLE_NETFLOW:
+                        default: 0
+                        description:
+                        - Enable Netflow on VTEPs
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI:
+                        default: 0
+                        description:
+                        - Enable HTTPS NX-API
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI_HTTP:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    FABRIC_FREEFORM:
+                        default: ''
+                        description:
+                        - Additional supported CLIs for all same OS (e.g. all NxOS etc) switches
+                        required: false
+                        type: str
+                    FABRIC_NAME:
+                        default: ''
+                        description:
+                        - Please provide the fabric name to create it (Max Size 64)
+                        required: true
+                        type: str
+                    FEATURE_PTP:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    INBAND_ENABLE:
+                        default: 0
+                        description:
+                        - 'Enable POAP over Inband Interface (Pre-req: Inband Mgmt Knob should
+                            be Enabled)'
+                        required: false
+                        type: bool
+                    INBAND_MGMT:
+                        default: 0
+                        description:
+                        - Import switches with inband connectivity
+                        required: false
+                        type: bool
+                    IS_READ_ONLY:
+                        default: 1
+                        description:
+                        - If enabled, fabric is only monitored. No configuration will be deployed
+                        required: false
+                        type: bool
+                    MGMT_GW:
+                        default: ''
+                        description:
+                        - Default Gateway For Management VRF On The Switch
+                        required: true
+                        type: ipv4
+                    MGMT_PREFIX:
+                        default: 24
+                        description:
+                        - No description available
+                        max: 30
+                        min: 8
+                        required: true
+                        type: int
+                    MGMT_V6PREFIX:
+                        default: 64
+                        description:
+                        - No description available
+                        max: 126
+                        min: 64
+                        required: false
+                        type: int
+                    MPLS_HANDOFF:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    MPLS_LB_ID:
+                        default: 101
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    MPLS_LOOPBACK_IP_RANGE:
+                        default: 10.102.0.0/25
+                        description:
+                        - MPLS Loopback IP Address Range
+                        required: true
+                        type: ipv4_subnet
+                    NETFLOW_EXPORTER_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Exporters
+                        required: true
+                        type: structureArray
+                    NETFLOW_MONITOR_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Monitors
+                        required: true
+                        type: structureArray
+                    NETFLOW_RECORD_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Records
+                        required: true
+                        type: structureArray
+                    NETFLOW_SAMPLER_LIST:
+                        default: ''
+                        description:
+                        - One or multiple netflow Samplers. Applicable to N7K only
+                        required: false
+                        type: structureArray
+                    NXAPI_HTTPS_PORT:
+                        default: 443
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    NXAPI_HTTP_PORT:
+                        default: 80
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    PM_ENABLE:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    POWER_REDUNDANCY_MODE:
+                        choices:
+                        - ps-redundant
+                        - combined
+                        - insrc-redundant
+                        default: ps-redundant
+                        description:
+                        - Default Power Supply Mode For Bootstrapped NX-OS Switches
+                        required: true
+                        type: str
+                    PTP_DOMAIN_ID:
+                        default: 0
+                        description:
+                        - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
+                        max: 127
+                        min: 0
+                        required: true
+                        type: int
+                    PTP_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        max: 1023
+                        min: 0
+                        required: true
+                        type: int
+                    SNMP_SERVER_HOST_TRAP:
+                        default: 1
+                        description:
+                        - Configure NDFC as a receiver for SNMP traps
+                        required: false
+                        type: bool
+                    SUBINTERFACE_RANGE:
+                        default: 2-511
+                        description:
+                        - 'Per Border Dot1q Range For VRF Lite Connectivity '
+                        max: 4093
+                        min: 2
+                        required: true
+                        type: integerRange
+                    enableRealTimeBackup:
+                        default: 0
+                        description:
+                        - Backup hourly only if there is any config deployment since last
+                            backup
+                        required: false
+                        type: bool
+                    enableScheduledBackup:
+                        default: 0
+                        description:
+                        - Backup at the specified time
+                        required: false
+                        type: bool
+                    scheduledTime:
+                        default: ''
+                        description:
+                        - Time (UTC) in 24hr format. (00:00 to 23:59)
+                        required: true
+                        type: str
 """
 
 EXAMPLES = """
