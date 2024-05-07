@@ -235,7 +235,7 @@ options:
                         description:
                         - 'BGP Key Encryption Type: 3 - 3DES, 7 - Cisco'
                         required: false
-                        type: str
+                        type: int
                     BGP_LB_ID:
                         default: 0
                         description:
@@ -769,7 +769,7 @@ options:
                         required: false
                         type: str
                     MST_INSTANCE_RANGE:
-                        default: 0
+                        default: "0"
                         description:
                         - 'MST instance range, Example: 0-3,5,7-9, Default is 0'
                         required: false
@@ -787,18 +787,21 @@ options:
                         - One or Multiple Netflow Exporters
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Records
                         required: false
                         type: list
+                        elements: str
                     NETWORK_VLAN_RANGE:
                         default: 2300-2999
                         description:
@@ -1050,7 +1053,7 @@ options:
                         description:
                         - Bridge priority for the spanning tree in increments of 4096
                         required: false
-                        type: str
+                        type: int
                     STP_ROOT_OPTION:
                         choices:
                         - rpvst+
@@ -1207,13 +1210,13 @@ options:
                         description:
                         - No description available
                         required: false
-                        type: str
+                        type: int
                     VPC_PEER_LINK_VLAN:
                         default: 3600
                         description:
                         - 'VLAN range for vPC Peer Link SVI '
                         required: false
-                        type: str
+                        type: int
                     VRF_LITE_AUTOCONFIG:
                         choices:
                         - Manual
@@ -1317,7 +1320,7 @@ options:
                         description:
                         - Routing tag associated with IP address of loopback and DCI interfaces
                         required: false
-                        type: str
+                        type: int
                     BORDER_GWY_CONNECTIONS:
                         choices:
                         - Manual
@@ -1441,7 +1444,7 @@ options:
                         description:
                         - 'BGP Key Encryption Type: 3 - 3DES, 7 - Cisco'
                         required: false
-                        type: str
+                        type: int
                     MS_IFC_BGP_PASSWORD:
                         default: ''
                         description:
@@ -1480,7 +1483,7 @@ options:
                         - Routing tag associated with Route Server IP for redistribute direct.
                             This is the IP used in eBGP EVPN peering.
                         required: false
-                        type: str
+                        type: int
                     TOR_AUTO_DEPLOY:
                         default: 0
                         description:
@@ -1730,12 +1733,14 @@ options:
                         - One or Multiple Netflow Records
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_SAMPLER_LIST:
                         default: ''
                         description:
                         - One or multiple netflow Samplers. Applicable to N7K only
                         required: false
                         type: list
+                        elements: str
                     NXAPI_HTTPS_PORT:
                         default: 443
                         description:
