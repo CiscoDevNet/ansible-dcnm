@@ -20,7 +20,6 @@ __author__ = "Allen Robel"
 
 DOCUMENTATION = """
 ---
----
 module: dcnm_fabric
 short_description: Manage creation and configuration of NDFC fabrics.
 version_added: 3.5.0
