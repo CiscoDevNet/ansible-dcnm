@@ -1721,12 +1721,14 @@ options:
                         - One or Multiple Netflow Exporters
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
